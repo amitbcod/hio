@@ -1,0 +1,52 @@
+.shopping-total, .checkout-total-block {
+        width: 100%;
+        float: right;
+        padding: 15px;
+        color: #3e4d5c;
+        border: 1px solid #f1eeee;
+        max-width: 300px;
+        background-color: #FFF;
+    }
+    .goods-page .chkout{
+      float:none;
+    }
+    .divcent{
+      position: relative;
+      background-color: #f9f9f9;
+      padding: 25px 0;
+    }
+    .divcent .btn-default{
+      float:none;
+      margin:0 auto;
+    }
+   .billdetails{
+    position: relative;
+    border: 2px solid #e84d1c;
+    margin: -20px 0 0 0;
+    padding: 10px 0 10px 10px;
+    background-color: #e84d1c;
+    color: #FFF;
+    text-transform: uppercase;
+   }
+   .shopping-total li.dvcode{
+    padding:8px !important;
+    margin-bottom: 15px !important;
+    border: 1px solid #dcdcdc;
+    box-shadow: 0 8px 6px -6px rgba(0,0,0,0.2);
+   }
+   #form-coupon input[type='text'], #form-voucher input[type='text']{
+    width:145px;
+    border:1px solid #ecebeb;
+   }
+   #form-coupon input:focus, #form-voucher input:focus{
+    outline:none;
+   }
+
+   @media (max-width: 992px) {
+     .billdetails{
+      margin-top: 5px;
+     } 
+   }
+.input-group-btn:first-child>.btn,.input-group-btn:last-child>.btn{
+    outline: 0 !important;
+}

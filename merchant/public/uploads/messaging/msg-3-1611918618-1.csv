@@ -1,0 +1,14 @@
+product_type,product_name,product_code,category,sub_category,tags,gender,description,highlights,product_reviews_code,launch_date,estimate_delivery_time,product_return_time,product_drop_shipment,sku,barcode,inventory,cost_price,price,images,default_img_name,status
+simple,"Ttesttest shirt",WERR,"Women Clothing",Tops,,,"<p>-</p>
+","<p>-</p>
+",,20-Jan-2021,,,1,WERR,sfdwerwrredfdfd,97,364.00,145.00,a0a00749_hewv__(1).jpg,,1
+simple,"T Shirt",KFLGJSDSd,"Women Clothing",Tops,,,"<p>-</p>
+","<p>-</p>
+",,20-Jan-2021,,,1,KFLGJSDSd,1252asassa,500,200.00,300.00,a0a01304_flmo_1209.jpg,a0a01304_flmo_1209.jpg,1
+simple,"Test Product",A1F00093IOEUER,"Women Clothing",Tops,,,"<p>testing</p>
+","<p>testing</p>
+",,28-Jan-2021,2days,,1,A1F00093IOEUER,A1F00093IOEUER,200,600.00,100.00,a0a00749_hewv__(1).jpg,,1
+configurable,"Zumba Original Twisted Back Tank",Z1T02059,"Women Clothing",Tops,,,"<p>-</p>
+","<p>-</p>
+",,13-Jan-2021,,,1,,,,,,"01_z1t02273_bblk_234.jpg,00_z1t02267_bblk_220.jpg",00_z1t02267_bblk_220.jpg,1,"color,size,"
+conf-simple,"Zumba Original Twisted Back Tank",Z1T02059,,,,,,,,,,,,Z1T02059-XS,Z1T02059-XS,461,600.00,2600.00,00_z2t00467_mult_375.jpg,,1,

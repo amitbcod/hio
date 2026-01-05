@@ -1,0 +1,416 @@
+[23-Oct-2025 23:15:40 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:16:05 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:16:07 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:16:12 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:16:12 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:16:14 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:16:14 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:16:58 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:16:59 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:08 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:08 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:09 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:10 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:11 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:13 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:13 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:14 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:14 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:15 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:16 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:16 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:17 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:23 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:33 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:17:58 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:19:42 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}

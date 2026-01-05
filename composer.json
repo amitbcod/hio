@@ -1,0 +1,31 @@
+{
+  "description": "Indiamags: Shop",
+  "name": "usha-kundar123/imags",
+  "type": "project",
+  "license": "proprietary",
+
+  "require": {
+    "php": "^8.0",
+    "codeigniter/framework": "^3.1",
+    "crazycodr/standard-exceptions": "^2.1",
+    "dragonbe/vies": "^2.3",
+    "google/recaptcha": "^1.2",
+    "stripe/stripe-php": "^9.6",
+    "mailjet/mailjet-apiv3-php": "^1.5",
+    "firebase/php-jwt": "^6.11"
+  },
+  "require-dev": {
+    "mikey179/vfsstream": "1.6.*",
+    "phpunit/phpunit": "^9.5",
+    "limedeck/phpunit-detailed-printer": "^6.0",
+    "mockery/mockery": "^1.0",
+    "spatie/ray": "^1.33"
+  },
+  "autoload": {
+    "classmap": [
+      "application/repositories",
+      "application/presenters",
+      "application/ViewComponents"
+    ]
+  }
+}

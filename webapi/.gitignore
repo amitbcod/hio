@@ -1,0 +1,12 @@
+.idea/
+.vscode/
+/coverage/
+/vendor/
+/logs/*
+!/logs/README.md
+.phpunit.result.cache
+src/Model/Config/Config.php
+error_log
+composer.phar
+.DS_Store
+.php-cs-fixer.cache

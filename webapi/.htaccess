@@ -1,0 +1,13 @@
+<IfModule mod_rewrite.c>
+   RewriteEngine on
+   RewriteRule ^$ public/     [L]
+   RewriteRule (.*) public/$1 [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+SetEnvIf Origin "http(s)?://(www\.)?(localhost:3000)$" AccessControlAllowOrigin=$0
+    Header set Access-Control-Allow-Origin %{AccessControlAllowOrigin}e env=AccessControlAllowOrigin
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "*"
+    Header set Access-Control-Allow-Credentials true
+</IfModule>

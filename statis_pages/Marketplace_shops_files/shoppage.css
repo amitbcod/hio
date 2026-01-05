@@ -1,0 +1,318 @@
+/**
+ * CedCommerce
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the End User License Agreement (EULA)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * https://cedcommerce.com/license-agreement.txt
+ *
+ * @category    Ced
+ * @package     Ced_CsMarketplace
+ * @author      CedCommerce Core Team <connect@cedcommerce.com>
+ * @copyright   Copyright CedCommerce (https://cedcommerce.com/)
+ * @license     https://cedcommerce.com/license-agreement.txt
+ */
+/*==================================
+=            vshop page            =
+==================================*/
+.block.block-poll.shop_search .top-search-wrap::after {
+	content: '';
+	clear: both;
+	display: table;
+}
+.csmarketplace-vshops-index .page-title-wrapper .page-title {
+	display: none!important;
+}
+.csmarketplace-vshops-index .columns {
+	display: block;
+}
+.about-shop {
+	word-break: break-all;
+	margin-top: 25px;
+    font-size: 20px;
+}
+.products-grid.csmarketplace-vendors-grid,
+.category-products .products-list {
+	padding-left: 0;
+}
+.products-grid.csmarketplace-vendors-grid .item {
+	float: left;
+	list-style: outside none none;
+	margin-bottom: 0;
+	/* min-height: 250px; */
+	text-align: center;
+	width: 20%;
+	padding: 5px;
+	box-sizing: border-box;
+}
+/* shop search  */
+
+.shop_grid_list_wrap {
+	border: 1px solid #e4e4e4;
+	padding: 10px;
+}
+.shop_grid_list_wrap .product-image {
+	display: block;
+}
+
+.products-grid.csmarketplace-vendors-grid::after,
+.products-list.csmarketplace-vendors-list .item::after {
+	clear: both;
+	content: "";
+	display: table;
+}
+.products-grid.csmarketplace-vendors-grid .csmarketplace-vendor-name {
+	margin: 5px 0px;
+}
+.products-grid.csmarketplace-vendors-grid .csmarketplace-vendor-name a,
+.products-list.csmarketplace-vendors-list .product-shop .product-name a {
+	color: #333;
+	font-size: 15px;
+	font-weight: 400;
+	text-decoration: none;
+	text-transform: capitalize;
+}
+.csmarketplace-vendors-grid .vendor-logo-image img,
+.csmarketplace-vendors-list .vendor-logo-image img {
+	height: auto;
+	width: 135px;
+}
+.shipping .form-list li {
+	list-style: outside none none;
+}
+.products-list.csmarketplace-vendors-list {
+	list-style: outside none none;
+	padding-left: 0;
+}
+.products-list.csmarketplace-vendors-list .vendor-logo-image {
+	float: left;
+	width: 25%;
+}
+.products-list.csmarketplace-vendors-list .product-shop {
+	float: right;
+	width: 70%;
+}
+.products-list.csmarketplace-vendors-list .product-shop .product-name {
+	margin: 0;
+}
+.products-list.csmarketplace-vendors-list .product-shop .rating-summary {
+	margin: 7px 0;
+}
+.products-list.csmarketplace-vendors-list .item {
+	margin-bottom: 30px;
+}
+.category-title h1 {
+	font-size: 30px;
+	margin-bottom: 20px;
+	margin-top: 10px;
+	border-bottom: 1px solid #cecece;
+	padding-bottom: 10px;
+}
+.sidebar.sidebar-additional .block-poll .block-content ul li {
+	border-bottom: 1px solid #cdcdcd;
+	padding-bottom: 10px;
+	list-style: none;
+}
+.sidebar.sidebar-additional .block-poll label {
+    color: #434343;
+    font-weight: bold;
+    display: block;
+}
+.sidebar .block-content ul {
+	padding: 0px;
+	margin-top: 10px;
+}
+.sidebar .block-content ul li span {
+	display: block;
+	margin-left: 23px;
+	font-size: 13px;
+	color: #5d5d5d;
+}
+.sidebar.sidebar-additional .block-poll label i {
+	width: 15px;
+}
+/*=====  End of vshop page  ======*/
+
+/*======================================
+=            VSHOP page RTL            =
+======================================*/
+
+.rtl-is-active .page-main {
+	direction: rtl;
+}
+.rtl-is-active .sidebar.sidebar-additional {
+	float: right;
+	padding-left: 2%;
+	padding-right: 0;
+	clear: right;
+}
+.rtl-is-active .column.main {
+	float: left!important;
+}
+.rtl-is-active .sidebar .shipping ul.form-list {
+	padding: 0;
+}
+.rtl-is-active .products-grid.csmarketplace-vendors-grid,
+.rtl-is-active .category-products .products-list {
+	padding-right: 0;
+}
+.rtl-is-active .sidebar.sidebar-additional .block-poll label i {
+	margin-right: 0;
+	margin-left: 5px;
+}
+.rtl-is-active  .sidebar .block-content ul li span {
+	margin-left: 0;
+	margin-right: 24px;
+}
+.rtl-is-active .block-layered-nav #tree-div {
+	margin-right: 0;
+}
+.rtl-is-active .tree-div .tree-node input {
+	margin-right: 0;
+	margin-left: 10px;
+	vertical-align: top;
+}
+/*=====  End of VSHOP page RTL  ======*/
+
+/*===================================
+=            media query            =
+===================================*/
+@media only screen and (max-width: 1024px) {
+	.products-grid.csmarketplace-vendors-grid .item {
+		width: 33.33%;
+
+	}
+}
+@media only screen and (max-width: 767px) {
+	.category-products .toolbar-amount,
+	.toolbar-products .toolbar-amount {
+		float: left;
+	}
+	.category-products .limiter,
+	.toolbar-products .limiter{
+		display: inline-block;
+	}
+}
+@media only screen and (max-width: 639px) {
+	.category-products .toolbar-products {
+		margin-bottom: 20px;
+	}
+}
+@media only screen and (max-width: 500px) {
+	.products-grid.csmarketplace-vendors-grid .item {
+		width: 50%;
+
+	}
+	.category-products .toolbar-amount,
+	.toolbar-products .toolbar-amount {
+		float: left;
+		width: 50%;
+	}
+	.category-products .limiter,
+	.toolbar-products .limiter {
+		float: right;
+		text-align: right;
+		width: 50%;
+	}
+	.category-products .toolbar-sorter.sorter,
+	.toolbar-products .toolbar-sorter.sorter {
+		float: left;
+		margin-top: 10px;
+		text-align: left;
+	}
+}
+/*=====  End of media query  ======*/
+
+/*==================================
+= moved css from vshop/view.phtml  =
+==================================*/
+.block-content h3:before, .block-content h3:after,
+.block-content li:before, .block-content li:after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+i {
+    font-size: 12px;
+    margin-right: 5px;
+}
+
+.block-poll .block-content li a {
+    color: black;
+    text-decoration: none;
+}
+
+.block-poll .block-content li a:hover {
+    color: #1E7EC8;
+}
+
+/*=====  End of moved css from vshop/view.phtml  ======*/
+/*=====product page====*/
+.toolbar.toolbar-products {
+    /*display: flex;*/
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+.toolbar.toolbar-products > * {
+    flex-grow: 1;
+}
+.toolbar.toolbar-products .field.limiter {
+    text-align: right;
+}
+/*===product page finish===*/
+
+@media (max-width: 767px){
+	.category-title h1 {
+		font-size: 20px;
+		text-align: left;
+	}
+	.block.block-poll.shop_search {
+		padding-top: 30px;
+		padding-bottom: 10px;
+	}
+	.top-search-wrap .block-search input {
+		position: static;
+		margin: 0;
+	}
+	.top-search-wrap .block-search .control {
+		margin: 0px;
+		position: relative;
+		padding: 0;
+		border: none;
+	}
+	.top-search-wrap .block-search .label {
+		text-decoration: none;
+		display: inline-block;
+		float: right;
+		top: 30px;
+		position: relative;
+		z-index: 9;
+	}
+	.page-products .toolbar-sorter.sorter {
+		position: static;
+		float: right !important;
+		width: auto;
+	}
+	.page-products .columns {
+		padding-top: 0;
+	}
+	.columns .column.main {
+		padding-bottom: 0px;
+	}
+}
+.sidebar.sidebar-main ul{
+ list-style: none;
+}
+.sidebar.sidebar-main ul li{
+  border-bottom:1px solid #e5e5e5;
+  padding: 10px 8px;
+  margin: 0;
+}
+.sidebar.sidebar-main ul li label{
+ font-weight:600;
+ margin-bottom: 5px;
+ display: block;
+}

@@ -1,0 +1,1488 @@
+/**
+ * CedCommerce
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the End User License Agreement (EULA)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * https://cedcommerce.com/license-agreement.txt
+ *
+ * @category    Ced
+ * @package     Ced_CsMarketplace
+ * @author      CedCommerce Core Team <connect@cedcommerce.com>
+ * @copyright   Copyright CedCommerce (https://cedcommerce.com/)
+ * @license      https://cedcommerce.com/license-agreement.txt
+ */
+.rtl-is-active {
+  direction: rtl;
+  overflow-x: hidden;
+}
+.rtl-is-active .navbar-brand {
+  float: right !important;
+}
+.rtl-is-active .navbar-right {
+  float: left !important;
+}
+.rtl-is-active .navbar-right .dropdown-menu {
+  float: right !important;
+  left: 0 !important;
+  right: auto !important;
+}
+.rtl-is-active #page-wrapper {
+  margin-left: 0 !important;
+
+  margin-right: 130px;
+}
+.rtl-is-active .largeview-submenu{
+  left: 0;
+}
+.rtl-is-active .largeview-submenu{
+  width: 310px;
+  display: none;
+}
+.rtl-is-active .slide .side-menu li .nav-second-level li a {
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+}
+.rtl-is-active .profile-vendor .vendor-profile-sta {
+  padding-left: 0;
+  padding-right: 15px;
+  text-align: right;
+  float: right;
+}
+.rtl-is-active .navbar-static-top .navbar-top-links > li .profile-vendor .pull-left.image {
+  float: right !important;
+}
+.rtl-is-active .sidebar-nav .nav.side-menu .item.active .largeview-submenu {
+  left: -313px;
+}
+.rtl-is-active .actions-split {
+  width: 150px;
+}
+.rtl-is-active .sidebar-nav .nav.side-menu .item.active .largeview-submenu i {
+  float: left;
+  margin-left: 0;
+  margin-right: 10px;
+  margin-top: -3px;
+}
+.rtl-is-active .sidebar-nav .nav.side-menu .item.active .largeview-submenu i + span {
+  float: right;
+}
+.rtl-is-active .sidebar-nav .nav.side-menu .item.active .largeview-submenu a::after {
+  clear: both;
+  content: "";
+  display: table;
+}
+.rtl-is-active .slide .side-menu li .nav-second-level {
+  left: auto !important;
+  right: 59px !important;
+}
+.rtl-is-active .vendor_profile_top .user-display {
+  border-left: 1px solid #d5d5d5;
+  border-right: medium none;
+  float: right;
+}
+.rtl-is-active .user-display-bottom {
+  float: right;
+}
+.rtl-is-active .user_display_wrapper .user_display_info {
+  float: left;
+  text-align: right;
+}
+.rtl-is-active .form-list .wide label.label {
+  float: right;
+  text-align: left;
+}
+.rtl-is-active .panel-body .wide .input-box {
+  padding-left: 0;
+  padding-right: 10px;
+}
+.rtl-is-active .sign_up_form_body .wide .input-box{
+  padding-right: 0px;
+}
+.rtl-is-active .vendor-login-wrapper .checkbox label {
+  padding-left: 0;
+  padding-right: 18px;
+  position: relative;
+  text-align: left;
+}
+.rtl-is-active .vendor-login-wrapper .checkbox label input {
+  float: right !important;
+  margin-left: 0;
+  position: absolute !important;
+  right: 0;
+}
+.rtl-is-active .sign-up-form-body-wrap .input-box {
+  text-align: right;
+}
+.rtl-is-active #report-form-validate .form-group .input-box {
+  width: 150px;
+}
+.rtl-is-active .admin__control-addon [class*="admin__control-"][class] ~ [class*="admin__addon-"]:last-child {
+  padding-right: 1rem;
+  margin-bottom: 0px;
+}
+.rtl-is-active .page-main-actions .page-actions._fixed{
+  left: 0px;
+  right: auto;
+  margin-left: 0px;
+}
+.rtl-is-active .admin__collapsible-block-wrapper .admin__collapsible-title {
+  padding: 1.9rem 1.8rem 1.9rem 5rem;
+}
+.rtl-is-active .logo {
+  margin: 4px auto 11px 0;
+}
+.rtl-is-active .navbar-default.sidebar {
+  margin-top: 72px;
+}
+.rtl-is-active .abs-actions-split-xl .action-default,
+.rtl-is-active .page-actions .actions-split .action-default {
+  float: right;
+  margin-left: 4rem;
+  margin-right: 0;
+}
+.rtl-is-active .actions-split.save.primary {
+  width: auto;
+}
+.rtl-is-active .admin__control-select:focus, .ui-datepicker .ui-datepicker-title select:focus {
+  /*background-image: none !important;*/
+}
+.rtl-is-active .largeview-submenu .nav-second-level a i {
+  margin-left: 15px;
+  margin-right: 0;
+}
+.rtl-is-active .panel_product_heading {
+  float: right;
+}
+.rtl-is-active .buttons-set p.required {
+  float: left !important;
+}
+.rtl-is-active .dropdown-menu > li > a i {
+  float: left;
+  margin-right: 10px !important;
+}
+.rtl-is-active .vendor_profile_image a i {
+  display: inline-block !important;
+}
+.rtl-is-active .dropdown-menu > li.vendor_status_info i {
+  float: right;
+  margin-right: 0px;
+  margin-left: 22px;
+}
+.rtl-is-active .dropdown-menu > li.vendor_status_info,
+.rtl-is-active .vendor_profile_name {
+  text-align: right;
+}
+.rtl-is-active .userinfosider .vendor_profile_name{
+  text-align: center;
+}
+.rtl-is-active .ced-vendor-sidebar li a i {
+  margin-left: 5px;
+  margin-right: 0px;
+  padding-right: 0;
+  width: 26px;
+}
+.rtl-is-active .ced-vendor-sidebar .side-menu > li ul li i{
+  padding-right: 5px;
+  width: 20px;
+}
+.rtl-is-active .ced-vendor-sidebar .side-menu > li ul li i.fa-angle-double-right {
+  padding-right: 5px;
+  width: 20px;
+  transform: rotate(180deg);
+}
+.rtl-is-active .nav.side-menu > li span.fa.arrow {
+  float: left;
+}
+.rtl-is-active .navbar-static-top .navbar-header .navbar-toggle {
+  left: auto;
+  right: 0;
+}
+
+.rtl-is-active .admin__fieldset > .admin__field > .admin__field-label {
+  float: right;
+  text-align: left;
+}
+.rtl-is-active .admin__fieldset > .admin__field > .admin__field-control{
+  float: right;
+}
+.rtl-is-active .admin__field:not(.admin__field-option) > .admin__field-label span[data-config-scope]::before,
+.rtl-is-active .accordion .config .label span[data-config-scope]::before{
+  left: 0px;
+  right: auto;
+}
+.rtl-is-active [class*="admin__control-grouped"] > .admin__field:first-child > .admin__field-label,
+.rtl-is-active .admin__control-fields > .admin__field:first-child > .admin__field-label {
+  right: 0;
+  text-align: left;
+  left: auto;
+}
+.rtl-is-active #add_new_product.actions-split,
+.rtl-is-active #add_new_product.actions-split:hover,
+.rtl-is-active .admin__control-support-text,
+.rtl-is-active .admin__data-grid-toolbar .admin__data-grid-pager-wrap {
+  float: left;
+    margin-left: 15px;
+    margin-right: 0;
+}
+.rtl-is-active .page-actions {
+  float: left;
+  margin-left: 17px;
+}
+.rtl-is-active .admin__data-grid-toolbar .admin__filter-actions,
+.rtl-is-active .admin__data-grid-toolbar .admin__grid-massaction {
+  float: right;
+}
+.rtl-is-active .action-next {
+  margin-left: 0;
+}
+/*.rtl-is-active th,
+.rtl-is-active td,
+.rtl-is-active .data-grid th,*/
+.rtl-is-active .csmarketplace-account-login .login-panel .ced-sociallogin-login h2,
+.rtl-is-active .sign-up-form-body-wrap .checkbox{
+  text-align: right !important;
+}
+.rtl-is-active div.ced-sociallogin-linkedin-inner,
+.rtl-is-active div.ced-sociallogin-twitter-inner,
+.rtl-is-active div.ced-sociallogin-facebook-inner,
+.rtl-is-active div.ced-sociallogin-google-inner{
+  float: right !important;
+}
+.rtl-is-active .action-.scalable.back:before{
+      display: inline-block;
+    transform: rotate(180deg) !important;
+    left: 0px !important;
+    right: 0px !important;
+}
+.rtl-is-active .page-actions > button.back::before,
+.rtl-is-active .page-actions .page-actions-buttons > button.back::before,
+.rtl-is-active .page-actions > button.action-back::before,
+.rtl-is-active .page-actions .page-actions-buttons > button.action-back::before,
+.rtl-is-active .page-actions > .block-footer .action-add.back::before,
+.rtl-is-active .page-actions .page-actions-buttons > .block-footer .action-add.back::before,
+.rtl-is-active .page-actions > .block-footer .action-add.action-back::before,
+.rtl-is-active .page-actions .page-actions-buttons > .block-footer .action-add.action-back::before {
+    display: inline-block;
+    transform: rotate(180deg) !important;
+}
+.rtl-is-active .validation-advice {
+  background-position: right 0;
+  padding-left: 0;
+  padding-right: 15px;
+}
+.rtl-is-active .ced_vendor_before_wrap .ced-sociallogin-login .ced-sociallogin-login-lower > div .clearer div {
+  margin-right: 0;
+  margin-left: 30px !important;
+}
+.rtl-is-active .ced-sociallogin-login-lower {
+  text-align: right;
+}
+.rtl-is-active .register-panel ul{
+  padding-left: 0px;
+  padding-right: 0px;
+}
+.rtl-is-active .page-actions > button.back::before,
+.rtl-is-active .page-actions .page-actions-buttons > button.back::before,
+.rtl-is-active .page-actions > button.action-back::before,
+.rtl-is-active .page-actions .page-actions-buttons > button.action-back::before,
+.rtl-is-active .page-actions > .block-footer .action-add.back::before,
+.rtl-is-active .page-actions .page-actions-buttons > .block-footer .action-add.back::before,
+.rtl-is-active .page-actions > .block-footer .action-add.action-back::before,
+.rtl-is-active .page-actions .page-actions-buttons > .block-footer .action-add.action-back::before {
+  display: inline-block;
+  transform: rotate(180deg);
+}
+.rtl-is-active .admin__fieldset > .admin__field > .admin__field-control .admin__field.admin__field-date:first-child{
+  float: right;
+}
+.rtl-is-active .admin__fieldset > .admin__field > .admin__field-control .admin__field.admin__field-date:last-child{
+  float: left;
+  margin-top: 0px;
+}
+.rtl-is-active .admin__control-grouped-date > .admin__field-date.admin__field > .admin__field-control{
+  float: right;
+}
+.rtl-is-active.page-layout-vendor-2columns-left .page-columns .main-col{
+  float: left;
+}
+.rtl-is-active.page-layout-vendor-2columns-left .page-columns .side-col{
+  float: right;
+}
+.rtl-is-active .fieldset > .field:not(.choice) > .label{
+  float: right;
+  width: 18.8%;
+}
+.rtl-is-active .fieldset > .field:not(.choice) > .label{
+  text-align: left;
+}
+.rtl-is-active .admin__collapsible-block-wrapper.fieldset-wrapper .fieldset-wrapper-content {
+  overflow-x: scroll;
+}
+.rtl-is-active .abs-margin-for-forms-desktop,
+.rtl-is-active .fieldset .legend,
+.rtl-is-active .column:not(.sidebar-main) form .actions-toolbar,
+.rtl-is-active .column:not(.sidebar-additional) form .actions-toolbar,
+.rtl-is-active .login-container .fieldset::after {
+  margin-left: 0;
+  margin-right: 25.8%;
+}
+.rtl-is-active .mage-new-video-dialog form.admin__scope-old{
+  float: right;
+  width: 50%;
+}
+.rtl-is-active .mage-new-video-dialog .video-player-sidebar,
+.rtl-is-active .welcome-msg .hello .approved_vendor,
+.rtl-is-active .my-account .col-2.addresses-primary,
+.rtl-is-active #report-form-validate .end-date{
+  float: left;
+}
+.rtl-is-active .welcome-msg .hello .col-md-6
+.rtl-is-active .my-account .col-1.addresses-primary
+.rtl-is-active #report-form-validate .start-date,
+.rtl-is-active #report-form-validate .period,
+.rtl-is-active #report-form-validate .vendor-payment-status,
+.rtl-is-active #report-form-validate .start-date,
+.rtl-is-active #report-form-validate .end-date{
+  float: right;
+}
+.rtl-is-active #report-form-validate .start-date img,
+.rtl-is-active #report-form-validate .end-date img{
+  float: right !important;
+}
+.rtl-is-active .panel-default > .panel-heading .head-products {
+  color: #fff;
+  float: right;
+  margin-bottom: 5px;
+  margin-top: 6px;
+}
+.rtl-is-active .action-previous::before,
+.rtl-is-active .action-next::before {
+  display: inline-block;
+  font-weight: 700;
+  line-height: 14px;
+  transform: rotate(180deg);
+}
+.rtl-is-active .admin__data-grid-pager label.admin__control-support-text {
+  float: right;
+  margin-right: 6px;
+}
+.rtl-is-active .admin__data-grid-pager button.action-previous {
+  float: right;
+}
+.rtl-is-active .admin__data-grid-pager-wrap .admin__control-support-text {
+  float: right;
+}
+.rtl-is-active .progress-bar{
+  float: right;
+}
+.rtl-is-active .navbar-top-links .dropdown-menu > li > a i {
+  display: inline;
+  float: none;
+  margin-left: 15px;
+  margin-right: 0 !important;
+  margin-top: 9px;
+}
+.rtl-is-active .navbar-top-links .dropdown-menu li.no-notification {
+  margin-bottom: 0;
+  padding-bottom: 5px;
+  padding-top: 5px;
+}
+.rtl-is-active .navbar-top-links .dropdown-menu > li > a {
+  text-align: right;
+}
+.rtl-is-active .columns .column .rtl-active {
+  float: right;
+}
+.rtl-is-active .mass-select-wrap{
+  right: 15px;
+  margin-top: 7.2rem;
+}
+.rtl-is-active select,
+.rtl-is-active div[data-role="selected-option"] {
+  text-align: right !important;
+}
+.rtl-is-active .admin__data-grid-header-row .admin__control-support-text {
+  float: right;
+  margin-right: 11px;
+}
+.rtl-is-active .admin__data-grid-toolbar .admin__data-grid-header-row > div,
+.rtl-is-active .admin__data-grid-toolbar .admin__data-grid-header-row > div .admin__data-grid-pager{
+  margin-left: 0px;
+}
+.rtl-is-active .data-grid-filters-actions-wrap{
+  float: left;
+}
+.rtl-is-active .row-gutter > [class*="col-"] .col-xs-3 {
+  float: right;
+}
+.rtl-is-active .row-gutter > [class*="col-"] .col-xs-9 {
+  float: left;
+}
+.rtl-is-active .admin__data-grid-pager-wrap {
+  float: left;
+}
+.rtl-is-active .admin__data-grid-pager-wrap > * {
+  display: inline-block;
+  float: none !important;
+}
+.rtl-is-active .admin__data-grid-toolbar .admin__control-select,
+.rtl-is-active .admin__data-grid-toolbar .ui-datepicker .ui-datepicker-title select{
+  background-position: calc(23px - 12px) -37px, 0 center, calc(32px) 0;
+}
+.rtl-is-active .admin__data-grid-toolbar .admin__control-select:focus,
+.rtl-is-active .admin__data-grid-toolbar .ui-datepicker .ui-datepicker-title select:focus{
+  background-position: calc(23px - 12px) 10px, 0 center, calc(32px) 0;
+}
+
+.rtl-is-active .selectmenu-item-action {
+  padding: 1rem 1rem 1rem 5.5rem;
+}
+.rtl-is-active .admin__control-group-equal > .admin__field {
+  padding: 10px !important;
+}
+.rtl-is-active  #multiple_image_delete .btn.btn-success.uptransform{
+  float: left !important;
+}
+.rtl-is-active  .admin__control-radio + .admin__field-label::before,
+.rtl-is-active  .admin__control-checkbox + .admin__field-label::before {
+  margin: 1px -2.5rem 0 -7.6rem;
+}
+.rtl-is-active  .admin__control-radio + .admin__field-label,
+.rtl-is-active  .admin__control-checkbox + .admin__field-label {
+  padding-left: 0;
+  padding-right: 25px;
+}
+.rtl-is-active  .admin__control-radio + label::before,
+.rtl-is-active  .admin__control-checkbox + label::before,
+.rtl-is-active  .mass-select-wrap select + label::before{
+  float: right;
+}
+.rtl-is-active .nav-bar-outer-actions {
+  float: left;
+}
+.rtl-is-active .nav-bar {
+  float: right;
+}
+.rtl-is-active .modal-slide{
+  left: 0px !important;
+  z-index: 999999 !important;
+}
+.rtl-is-active .steps-wizard-navigation .nav-bar-outer-actions .action-wrap-prev .action-default,
+.rtl-is-active .steps-wizard-navigation .nav-bar-outer-actions .action-wrap-next .action-default{
+  width: 100% !important;
+}
+.rtl-is-active .nav-bar a::after {
+  margin-left: -8px;
+}
+.rtl-is-active .panel-heading i + .pull-right{
+  float: left !important;
+}
+.rtl-is-active .panel-heading i + .pull-right .dropdown-menu{
+  left: 0px;
+  right: auto;
+  text-align: right;
+}
+.rtl-is-active .abs-field-no-label,
+.rtl-is-active .admin__fieldset > .admin__field.admin__field-no-label > .admin__field-control,
+.rtl-is-active .admin__field-no-label,
+.rtl-is-active .admin__field-group-additional {
+  margin-right: calc(100% * 0.25 + 30px);
+}
+.rtl-is-active.csmarketplace-account-logoutsuccess .login-panel .panel-body {
+  line-height: 30px;
+}
+.rtl-is-active.csmarketplace-account-logoutsuccess .page-title{
+  padding-right: 15px;
+  padding-left: 15px;
+}
+.rtl-is-active .admin__data-grid-filters-wrap .admin__form-field-legend,
+.rtl-is-active .admin__data-grid-filters-wrap .admin__form-field-label{
+  text-align: right;
+}
+.rtl-is-active .admin__data-grid-filters-wrap .admin__form-field .admin__form-field .admin__form-field-label{
+  float: right;
+}
+.rtl-is-active .admin__data-grid-filters-wrap .admin__form-field .admin__form-field .admin__form-field-control {
+  float: left;
+  margin-left: 0;
+  width: 73%;
+}
+.rtl-is-active .admin__data-grid-filters-wrap .admin__form-field .admin__form-field::after{
+  content: '';
+  display: table;
+  clear: both;
+}
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-role .admin__field-label span,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_image .admin__field-label span,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_small_image .admin__field-label span,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_thumbnail .admin__field-label span,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_swatch_image .admin__field-label span,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-new_video_disabled .admin__field-label span {
+  float: right;
+}
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-role .admin__field-label,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_image .admin__field-label,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_small_image .admin__field-label,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_thumbnail .admin__field-label,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_swatch_image .admin__field-label,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-new_video_disabled .admin__field-label {
+  padding-left: 0;
+  padding-right: 32px;
+  text-align: right;
+  margin: 0;
+  right: 220px;
+  position: absolute;
+  padding: 0;
+  width: 100%;
+}
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-role .admin__field-control,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_image .admin__field-control,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_small_image .admin__field-control,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_thumbnail .admin__field-control,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_swatch_image .admin__field-control,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-new_video_disabled .admin__field-control {
+  float: right;
+  margin-left: 0;
+  width: 170px!important;
+}
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-role .admin__field-control input,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_image .admin__field-control input,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_small_image .admin__field-control input,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_thumbnail .admin__field-control input,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-video_swatch_image .admin__field-control input,
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-new_video_disabled .admin__field-control input {
+  float: left;
+}
+.rtl-is-active .mage-new-video-dialog .admin__scope-old .admin__field.field-role-label .admin__field-control{
+  float: right;
+}
+.rtl-is-active .action-menu,
+.rtl-is-active .abs-action-menu .action-submenu,
+.rtl-is-active .action-menu .action-submenu,
+.rtl-is-active .actions-split .dropdown-menu .action-submenu,
+.rtl-is-active .actions-split .action-menu .action-submenu {
+  text-align: right;
+}
+.rtl-is-active .action-multicheck-wrap._active .action-menu{
+  left: auto;
+  right: 0;
+}
+.rtl-is-active .admin__data-grid-pager-wrap .selectmenu-value input[type="text"]{
+  text-align: right;
+}
+.rtl-is-active #date_from_trig,
+.rtl-is-active #date_to_trig {
+  float: right;
+}
+.rtl-is-active .admin__control-select,
+.rtl-is-active .ui-datepicker .ui-datepicker-title select {
+  background-position: calc(23px - 12px) -33px, 0 center, calc(32px) 0;
+  /*background-position: calc(15% - 12px) 13px, 0% center, calc(37% - 2.9rem) 0;*/
+  padding-right: 10px;
+  padding-left: 4.4rem;
+}
+.rtl-is-active .admin__control-select:focus,
+.rtl-is-active  .ui-datepicker .ui-datepicker-title select:focus{
+  background-position: calc(23px - 12px) 13px, 0% center, calc(32px) 0;
+  padding-right: 10px;
+}
+.rtl-is-active .data-grid .data-grid-filters select {
+  background-position: calc(5px) -37px, 0 center, calc(18px) 0;
+  padding-left: 1.8rem;
+  padding-right: 0.2rem;
+}
+.rtl-is-active .data-grid .data-grid-filters select:focus {
+  background-position: calc(5px) 11px, 0px center, calc(18px) 0;
+}
+.rtl-is-active .fieldset > .field:not(.choice) > .control {
+    margin-left: 0;
+    margin-right: 0;
+    float: right !important;
+}
+.rtl-is-active .admin__field:not(.admin__field-option) > .admin__field-label{
+  padding: 0 0px 0 25px;
+  margin-left: 0;
+}
+.rtl-is-active  .admin__table-primary.edit-order-table td.col-product div{
+  white-space: nowrap;
+}
+.rtl-is-active .admin__field + .admin__field {
+  margin-top: 0.5rem;
+}
+.rtl-is-active .admin__control-grouped-date > .admin__field-date + .admin__field-date > .admin__field-label {
+  float: right;
+  padding-left: 20px;
+  padding-right: 0;
+}
+.rtl-is-active .admin__action-multiselect-tree .action-menu-item._with-checkbox .admin__action-multiselect-label {
+  padding-left: 0;
+  padding-right: 35px;
+  padding-top: 3px;
+}
+.rtl-is-active .admin__action-multiselect-tree .admin__action-multiselect-label::before{
+  right: 0px;
+  left: auto;
+}
+/*Css for dashboard page*/
+.rtl-is-active .nav.navbar-top-links {
+  padding: 0;
+}
+.rtl-is-active .buttons_scb {
+  text-align: right!important;
+}
+.rtl-is-active .nav.side-menu {
+  padding-right: 0;
+}
+.rtl-is-active .delete-image .checkbox {
+  float: right;
+  margin-left: 5px;
+  margin-right: 0;
+  margin-top: 5px;
+}
+.rtl-is-active .input-box .image_set input {
+  float: unset!important;
+}
+.rtl-is-active .input-box #addimagefields input {
+  /*float: unset!important;*/
+}
+.rtl-is-active .fieldset {
+  margin: 0;
+}
+.rtl-is-active .input-box .image_set + #addimagefields input,
+.rtl-is-active .input-box .image_set + #addimagefields span {
+  display: inline-block;
+  float: none !important;
+  margin: 0;
+  vertical-align: middle;
+}
+.rtl-is-active .input-box .image_set + #addimagefields > div {
+  margin-bottom: 5px;
+  margin-top: 5px;
+}
+.rtl-is-active .input-box .image_set + #addimagefields input[type="radio"] {
+  margin-left: 5px;
+  margin-right: 14px;
+}
+
+.rtl-is-active .input-group-addon {
+  background-color: #eee;
+  border-bottom-right-radius: 5px;
+  border-color: #ccc #ccc #ccc currentcolor!important;
+  border-image: none;
+  border-style: solid solid solid none!important;
+  border-top-right-radius: 5px!important;
+  border-bottom-right-radius: 5px!important;
+  border-width: 1px 1px 1px 0!important;
+  color: #555;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+  padding: 6px 12px;
+  text-align: center;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.rtl-is-active .form-control{
+  border-radius: 0!important;
+}
+.rtl-is-active .tree-holder .root-category {
+  float: right;
+  padding: 0;
+}
+.rtl-is-active .order-items .head:first-child {
+  min-width: 60px;
+}
+.rtl-is-active #report-form-validate .form-group .input-box {
+  width: 100%;
+}
+.rtl-is-active .fieldset .legend {
+  font-size: 18px;
+  margin-right: 0;
+}
+.rtl-is-active .buttons-set.buttons_scb {
+  float: left!important;
+}
+.rtl-is-active .panel_product_heading {
+  float: right!important;
+}
+.rtl-is-active .panel-heading .panel_product_heading {
+  float: none;
+}
+.rtl-is-active .order_title .button {
+  float: left!important;
+  margin-top: 4px;
+}
+.rtl-is-active .order-title-heading {
+  float: right;
+}
+.rtl-is-active .col-1.addresses-primary.col-md-6 {
+  float: right;
+}
+.rtl-is-active .panel-body.sign-up-form-body-wrap .note > small {
+  float: right;
+  margin-top: 5px;
+  text-align: right;
+}
+.rtl-is-active .csmarketplace-vproducts-new.rtl-is-active .btn.btn-primary {
+  float: right!important;
+}
+.rtl-is-active .largeview-submenu {
+  width: 235px!important;
+}
+.rtl-is-active .sidebar-nav .nav.side-menu .item.active .largeview-submenu {
+  left: -239px!important;
+}
+.rtl-is-active .nav.nav-second-level {
+  padding: 0!important;
+}
+.rtl-is-active .nav.nav-second-level a {
+  color: #fff !important;
+  padding-right: 10px !important;
+}
+.rtl-is-active .side-menu li a {
+  padding: 10px 9px 10px 10px !important;
+}
+
+.rtl-is-active #page-wrapper {
+  float: left;
+}
+.rtl-is-active .item-container .item-options dd {
+  margin: 0;
+}
+.rtl-is-active .button-set.text-right {
+  text-align: left;
+}
+.rtl-is-active .form-list .wide label.label label {
+  float: none;
+}
+.rtl-is-active .order-reports input.validate-date, 
+.rtl-is-active .product-reports input.validate-date {
+  background: rgba(0, 0, 0, 0) url("../../../../images/callendor-input.png") no-repeat scroll calc(8px) center / 12px auto !important;
+  text-align: right !important;
+  padding-left: 25px;
+  padding-right: 10px !important;
+}
+
+.rtl-is-active .panel-heading .button,
+.rtl-is-active .new-product,
+.rtl-is-active .pager .pages,
+.rtl-is-active .order-reports #filter_butn12 button,
+.rtl-is-active .product-reports #filter_butn12 button {
+  float: left !important;
+}
+.rtl-is-active .panel-body .table-responsive1 {
+  margin-top: 14px;
+}
+.rtl-is-active .panel-body .back-link,
+.rtl-is-active .product-type,
+.rtl-is-active .pager .limiter,
+.rtl-is-active .pager .toolbar-amount,
+.rtl-is-active .order-list .vendor-button-set .export-button,
+.rtl-is-active .transaction-list .export-button,
+.rtl-is-active .transaction-list .export-button button,
+.rtl-is-active .ced-transactions-details .field,
+.rtl-is-active .order-list .export-button button,
+.rtl-is-active .order-reports .export-buttons,
+.rtl-is-active .default-values,
+.rtl-is-active .product-reports .export-btn,
+.rtl-is-active .panel-min-height .imagetype,
+.rtl-is-active .panel-min-height .defaultimage,
+.rtl-is-active .user-display-wrapper .user-display-bottom {
+  float: right!important;
+}
+.rtl-is-active .input-box .image_set .setimage > span {
+  margin-left: 10px !important;
+}
+.rtl-is-active .buttons_scb .btn-success,
+.rtl-is-active .buttons_scb .product-button {
+  margin-right: 5px;
+}
+.rtl-is-active .tree-wrapper .root-category-wrapper {
+  margin-right: 36px;
+  margin-left: 0px;
+}
+.rtl-is-active .tree-wrapper .root-category-wrapper .tree-node{
+  margin-bottom: 0px;
+}
+.rtl-is-active .image_set .dumimg.imagetype {
+
+  margin-left: 10px;
+}
+.rtl-is-active .image_set .defaultimage {
+  float: none!important;
+  margin-left: 6px;
+}
+.rtl-is-active .image_set > span {
+  vertical-align: top;
+}
+.rtl-is-active .order-list .filter-buttons,
+.rtl-is-active .transaction-list .filter-buttons,
+.rtl-is-active .panel-body .required,
+.rtl-is-active .order-reports #filter_butn12 {
+  text-align: left!important;
+  padding-left: 0px;
+}
+
+.rtl-is-active .order-list .vendor-button-set .export-button,
+.rtl-is-active .transaction-list .export-button,
+.rtl-is-active .default-values {
+
+
+}
+.rtl-is-active .for_print_order_button button {
+  margin-top: 0px!important;
+}
+.rtl-is-active .transaction-list form:after,
+.rtl-is-active .transaction-list .vendor-button-set::after,
+.rtl-is-active .order-reports:after,
+.rtl-is-active .order-list form:after,
+.rtl-is-active .root-category-wrapper .tree-node::after {
+  clear: both;
+  content: "";
+  display: table;
+}
+.rtl-is-active .root-category-wrapper .ced-folder .elements {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+.rtl-is-active .image_set .setimage .defaultimage {
+  margin-left: 0px!important;
+  margin-right: 8px!important;
+}
+.rtl-is-active .linearize-table-large .sample_add_btn , .rtl-is-active .linearize-table-large .btn-downloadable{
+  float: left;
+}
+.rtl-is-active .image_set .setimage .defaultimage {
+  margin-left: 0px!important;
+  margin-right: 8px!important;
+}
+
+.rtl-is-active .wide .admin__field-label, .rtl-is-active .wide label {
+  padding-right: 0;
+}
+.rtl-is-active .order-reports .v-middle,
+.rtl-is-active .product-reports .v-middle {
+  left: 0px!important;
+  right: auto!important;
+}
+.rtl-is-active .filter_button .filter-buttons,
+.rtl-is-active .order-details .data-table .a-right,
+.rtl-is-active .product-list .filter_button,
+.rtl-is-active .required,
+.rtl-is-active .order-reports #filter_butn6 {
+  text-align: left !important;
+}
+.rtl-is-active .product-list .filter_button {
+  padding-left: 15px;
+}
+.rtl-is-active .downloadable-information .form-group {
+  float: right;
+}
+.rtl-is-active .order-list .filter_button .filter-buttons,
+.rtl-is-active .transaction-list .filter_button .filter-buttons {
+  padding-left: 0;
+}
+.rtl-is-active .pages .action.previous::before,
+.rtl-is-active .pages .action.next::before {
+  margin: 0 0 0 -15px;
+  position: relative;
+}
+.rtl-is-active .pages .action.next::before {
+  right: -15px !important;
+}
+.rtl-is-active .bellow-list-wrapper li{
+  float: right;
+}
+.rtl-is-active .dropdown-tasks .top-lis .edit-profile-vendor {
+  text-align: right;
+}
+.rtl-is-active .ced_vendor_before_wrap .checkbox {
+  float: right;
+}
+.rtl-is-active .ced_vendor_before_wrap .f-right.forgotpass{
+  float: left;
+}
+.rtl-is-active .ced_vendor_before_wrap .checkbox label {
+  padding-left: 0;
+  padding-right: 25px;
+}
+.rtl-is-active .ced_vendor_before_wrap .checkbox label::after {
+  left: auto;
+  right: 0;
+  top: 1px;
+}
+.rtl-is-active .ced_vendor_before_wrap .checkbox input:checked + label::before {
+  right: 5px;
+  top: 2px;
+}
+.rtl-is-active .ced_vendor_before_wrap div.mage-error {
+  color: red;
+  font-size: 12px;
+  text-align: right;
+}
+.rtl-is-active .x_panel_tab .nav.nav-tabs .nav-item {
+  float: right;
+}
+.rtl-is-active #csmarketplace-vreports-vorders .order-items td,
+.rtl-is-active #csmarketplace-vreports-vorders .order-items th{
+  text-align: center !important;
+}
+.rtl-is-active .table-bordered .filter .list_filter ._has-datepicker {
+  background-position: calc(6px) center;
+}
+.rtl-is-active .for_print_order_button .space-adjust_left{
+  float: right;
+  margin-right: 0 !important;
+}
+.rtl-is-active .for_print_order_button .space-adjust_right{
+  float: left;
+  margin-left: 0 !important;
+}
+.rtl-is-active .vendor_exitance a {
+  display: inline-block;
+}
+.rtl-is-active .downloadable-information .data-table th,
+.rtl-is-active .downloadable-information .data-table td{
+  text-align: right !important;
+}
+.rtl-is-active .downloadable-information .data-table .sample_body ul,
+.rtl-is-active .downloadable-information .data-table .link_body ul{
+  text-align: right !important;
+}
+.rtl-is-active .downloadable-information .data-table .sample_body ul input,
+.rtl-is-active .downloadable-information .data-table .link_body ul input {
+  margin: 0 0 0 4px;
+  vertical-align: middle;
+}
+.rtl-is-active .downloadable-information .data-table .sample_body ul label,
+.rtl-is-active .downloadable-information .data-table .link_body ul label {
+  color: #000;
+  font-size: 12px;
+  font-weight: normal;
+}
+.rtl-is-active .downloadable-information .data-table td input[type="text"] {
+  max-width: 150px !important;
+}
+.rtl-is-active .downloadable-information .data-table .link_body td label {
+  color: #000;
+  font-size: 12px;
+  font-weight: normal;
+}
+.rtl-is-active .x_panel .card-block .text-right i{
+  float: right;
+}
+.rtl-is-active .x_panel .card-block .text-right span{
+  float: left;
+}
+.rtl-is-active .ced_vendor_before_wrap .ced-sociallogin-login h2{
+  text-align: right;
+}
+.rtl-is-active .ced_vendor_before_wrap{
+  text-align: right;
+}
+.rtl-is-active .ced_vendor_header .pull-left{
+  float: right !important;
+}
+.rtl-is-active .ced_vendor_header .pull-right{
+  float: left !important;
+}
+.rtl-is-active .ced_vendor_footer p{
+ /* text-align: right;*/
+}
+.rtl-is-active .admin__control-table tfoot td{
+  text-align: right;
+}
+.rtl-is-active .admin__control-table th{
+  text-align: right;
+}
+.rtl-is-active .admin__field-complex .admin__field-complex-elements{
+  float: left;
+}
+.rtl-is-active .page-main-actions .page-actions {
+  /*width: 100% !important;*/
+}
+.rtl-is-active .page-main-actions .page-actions-buttons {
+  float: left;
+}
+.rtl-is-active .page-actions > button,
+.rtl-is-active .page-actions .page-actions-buttons > button,
+.rtl-is-active .page-actions > .block-footer .action-add,
+.rtl-is-active .page-actions .page-actions-buttons > .block-footer .action-add {
+  float: left;
+  margin-left: 0px;
+  margin-right: 10px;
+}
+.rtl-is-active .admin__data-grid-pager{
+  margin-left: 0px;
+}
+.rtl-is-active .modal-popup .action-close,
+.rtl-is-active .modal-slide .action-close {
+  left: 0;
+  right: auto;
+}
+.rtl-is-active .modal-slide .modal-title {
+  margin-left: 5.7rem;
+  margin-right: 0;
+}
+.rtl-is-active .add-video-button-container{
+  float: left;
+}
+.rtl-is-active .message::before,
+.rtl-is-active .order-errors .admin__fieldset-wrapper .title::before {
+  left: auto;
+  right: 1.9rem;
+}
+.rtl-is-active .abs-action-wrap-triangle-left .action-default::before,
+.rtl-is-active .abs-action-wrap-triangle-left .action-default::after,
+.rtl-is-active .action-wrap-prev .action-default::before,
+.rtl-is-active .action-wrap-prev .action-default::after {
+  border-color: transparent transparent transparent #e5e5e5;
+  border-width: 1.7rem 0 1.6rem 1.4rem;
+  left: 99%;
+  right: auto;
+}
+.rtl-is-active .abs-action-wrap-triangle-right .action-default::before,
+.rtl-is-active .action-wrap-next .action-default::before {
+  right: 100%;
+}
+.rtl-is-active .abs-action-wrap-triangle-right .action-default::before,
+.rtl-is-active .abs-action-wrap-triangle-right .action-default::after,
+.rtl-is-active .action-wrap-next .action-default::before,
+.rtl-is-active .action-wrap-next .action-default::after {
+  border-color: transparent #3f51b5 transparent #e3e3e3;
+  border-width: 1.7rem 1.7rem 1.6rem 0;
+  left: 0;
+  margin-left: -1.7rem;
+  top: -1px;
+}
+.rtl-is-active .abs-action-wrap-triangle-left .action-default::before,
+.rtl-is-active .action-wrap-prev .action-default::before {
+  left: 100%;
+}
+.rtl-is-active .admin__control-radio:checked + label::after {
+  right: 3px;
+  top: 4px;
+}
+.rtl-is-active .nav-bar > li::after {
+  left: calc(50% + 0.7rem);
+  right: calc(-50% + 0.25rem);
+}
+.rtl-is-active .admin__field-option .admin__field-label{
+  text-align: right;
+}
+.rtl-is-active .data-grid-cell-content{
+  text-align: right;
+}
+.rtl-is-active .admin__collapsible-block-wrapper .admin__collapsible-title::before {
+  left: 13px;
+  right: auto;
+  top: 18px;
+}
+.rtl-is-active [class*="admin__control-grouped"] > .admin__field:nth-child(n+2) {
+  padding-left: 0;
+  padding-right: 15px;
+}
+.rtl-is-active .admin__page-section-title strong,
+.rtl-is-active .admin__page-section-title .title{
+  float: right;
+}
+.rtl-is-active .admin__page-section-item.order-payment-method{
+  float: right;
+}
+.rtl-is-active .order-totals table .a-right{
+  text-align: right;
+}
+.rtl-is-active .order-totals table .a-right.last{
+  text-align: left;
+}
+
+
+.rtl-is-active .admin__fieldset > .admin__field.admin__field-wide[class]:not(.admin__field-option) > .admin__field-label,
+.rtl-is-active .admin__field-row[class]:not(.admin__field-option) > .admin__field-label,
+.rtl-is-active .address-item-edit-content .admin__field[class]:not(.admin__field-option) > .admin__field-label,
+.rtl-is-active .image-panel .admin__fieldset .admin__field[class]:not(.admin__field-inline):not(.admin__field-option) > .admin__field-label,
+.rtl-is-active .page-layout-admin-login .admin__field[class]:not(.admin__field-option) > .admin__field-label,
+.rtl-is-active .affected-attribute-set .admin__fieldset .admin__field[class]:not(.admin__field-option) > .admin__field-label,
+.rtl-is-active .gift-options-popup .admin__field[class]:not(.admin__field-option) > .admin__field-label,
+.rtl-is-active .admin__page-section .admin__field[class]:not(.admin__field-option) > .admin__field-label{
+  text-align: right;
+}
+.rtl-is-active .admin__field:not(.admin__field-option) > .admin__field-label{
+  padding-right: 0px;
+}
+.rtl-is-active .admin__fieldset > .admin__field.admin__field-wide[class] > .admin__field-control,
+.rtl-is-active .admin__field-row[class] > .admin__field-control,
+.rtl-is-active .address-item-edit-content .admin__field[class] > .admin__field-control,
+.rtl-is-active .image-panel .admin__fieldset .admin__field[class]:not(.admin__field-inline) > .admin__field-control,
+.rtl-is-active .page-layout-admin-login .admin__field[class] > .admin__field-control,
+.rtl-is-active .affected-attribute-set .admin__fieldset .admin__field[class] > .admin__field-control,
+.rtl-is-active .gift-options-popup .admin__field[class] > .admin__field-control,
+.rtl-is-active .admin__page-section .admin__field[class] > .admin__field-control{
+  text-align: right;
+}
+.rtl-is-active .abs-admin__table-secondary-edit-order th,
+.rtl-is-active .order-payment-method-title .admin__table-secondary th,
+.rtl-is-active .order-information-table th,
+.rtl-is-active .order-account-information-table th{
+  text-align: right;
+}
+.rtl-is-active .csmarketplace-account-register .mage-error,
+.rtl-is-active .panel-body .required .mage-error{
+  text-align: right;
+}
+.rtl-is-active .admin__page-section-item-content > table tbody tr td{
+  text-align: right;
+}
+.rtl-is-active .edit-order-comments .note-list-status,
+.rtl-is-active .edit-order-comments .note-list-customer{
+  border-left: none;
+  border-right: 1px solid #a6a6a6;
+  margin-right: 5px;
+}
+.rtl-is-active .admin__page-section-item.order-billing-address{
+  float: right;
+}
+.rtl-is-active .admin__control-fields .admin__field-label ~ .admin__field-control{
+  text-align: right;
+}
+.rtl-is-active .admin__control-fields .admin__field-label ~ .admin__field-control .admin__field + .admin__field {
+  margin-top: 15px;
+}
+.rtl-is-active .admin__action-multiselect-wrap .admin__action-multiselect {
+  padding-left: 3.6rem;
+  padding-right: 0;
+  text-align: right;
+}
+.rtl-is-active .action-select-wrap .action-select::before {
+  height: 32px;
+  left: 0;
+  right: auto;
+  top: 0;
+}
+.rtl-is-active .action-select-wrap .action-select::after {
+  left: 12px;
+  right: auto;
+}
+.rtl-is-active .actions-split .action-toggle{
+  left: 0;
+  right: auto;
+}
+.rtl-is-active .admin__data-grid-actions-wrap {
+  float: left;
+  margin-left: 0;
+  margin-right: 1.1rem;
+}
+.rtl-is-active .admin__action-dropdown-wrap .admin__action-dropdown-menu {
+  left: 0;
+  right: auto;
+}
+.rtl-is-active .admin__data-grid-filters-footer .admin__footer-main-actions {
+  margin-left: 0;
+  text-align: left;
+}
+.rtl-is-active .steps-wizard .admin__data-grid-wrap .action-multicheck-wrap .action-menu,
+.rtl-is-active .steps-wizard .admin__data-grid-wrap .action-multicheck-wrap .abs-action-menu .action-submenu,
+.rtl-is-active .steps-wizard .admin__data-grid-wrap .action-multicheck-wrap .action-menu .action-submenu,
+.rtl-is-active .steps-wizard .admin__data-grid-wrap .action-multicheck-wrap .actions-split .dropdown-menu .action-submenu,
+.rtl-is-active .steps-wizard .admin__data-grid-wrap .action-multicheck-wrap .actions-split .action-menu .action-submenu {
+  left: auto;
+  right: 27px;
+}
+.rtl-is-active .admin__actions-switch-text::before {
+  padding-left: 0;
+  padding-right: 47px;
+}
+.rtl-is-active .admin__actions-switch-label::after {
+  left: auto;
+  right: 0;
+}
+.rtl-is-active .admin__actions-switch-checkbox:checked + .admin__actions-switch-label::before {
+  left: unset;
+  right: 15px;
+}
+.rtl-is-active .bulk-attribute-values .currency-addon .admin__control-text {
+  padding-left:0;
+  text-align: right;
+  padding-right: 25px;
+}
+.rtl-is-active .bulk-attribute-values .currency-addon .admin__control-text {
+  padding-left: 5px !important;
+  text-align: right;
+  padding-right: 35px;
+  border-left: 1px solid #adadad;
+  border-right: 0;
+}
+.rtl-is-active .currency-addon .currency-symbol {
+  right: 0;
+  padding-right: 4px;
+  border-left: 0;
+  border-right: 1px solid #adadad;
+}
+.rtl-is-active .admin__actions-switch-label::before,
+.rtl-is-active .admin__actions-switch-label::after {
+  left: 30px;
+}
+.rtl-is-active .admin__actions-switch-label::before {
+  left: unset;
+  right: 0;
+}
+.rtl-is-active .page-main-actions .page-actions._fixed .page-actions-inner::before {
+  float: right;
+}
+.rtl-is-active .admin__page-nav-item {
+  border-left: medium none;
+  border-right: 3px solid #fff;
+  margin-left: 0;
+  margin-right: 0.7rem;
+}
+.rtl-is-active .admin__page-nav-item.ui-state-active {
+  border-right: 3px solid #0165D0;
+}
+.rtl-is-active .admin__page-nav-item._active .admin__page-nav-link,
+.rtl-is-active .admin__page-nav-item.ui-state-active .admin__page-nav-link {
+  border-left: 1px solid #fff;
+  border-right: medium none;
+  margin-left: -1px;
+  margin-right: 0;
+}
+
+.rtl-is-active #add_new_product #add_new_product-button.action-default {
+  margin-right: 10px;
+}
+.rtl-is-active .abs-action-menu,
+.rtl-is-active .actions-split .dropdown-menu,
+.rtl-is-active .actions-split .action-menu,
+.rtl-is-active .actions-split .abs-action-menu .action-submenu,
+.rtl-is-active .actions-split .action-menu .action-submenu{
+  text-align: right;
+}
+.rtl-is-active .admin__control-table td,
+.rtl-is-active .admin__control-table th{
+  text-align: right;
+}
+.rtl-is-active .data-grid-th._sortable._ascend::before,
+.rtl-is-active .data-grid-th._sortable._descend::before {
+  left: 4px;
+  right: auto;
+}
+.rtl-is-active .data-grid-th._sortable._ascend,
+.rtl-is-active .data-grid-th._sortable._descend{
+  text-align: right;
+  padding-left: 2.7rem;
+  padding-right: 15px;
+}
+.rtl-is-active .order-subtotal-table tr td:last-child {
+  text-align: left;
+}
+.rtl-is-active .admin__table-secondary th,
+.rtl-is-active .admin__table-secondary td{
+  text-align: right;
+}
+.rtl-is-active .admin__table-primary th,
+.rtl-is-active .admin__table-primary td{
+  text-align: right;
+}
+.rtl-is-active .admin__table-primary td.col-product dl.item-options dt,
+.rtl-is-active .admin__table-primary td.col-product dl.item-options dd{
+   float: none;
+  display: inline-block;
+}
+
+.rtl-is-active .admin__page-section-content .admin__page-section-item.order-comments-history {
+  float: right !important;
+  padding-left: 15px;
+  width: 50%;
+}
+.rtl-is-active .admin__page-section-content .admin__page-section-item.order-totals{
+  float: left !important;
+  width: 50%;
+  padding-right: 12px;
+}
+.rtl-is-active .order-totals-actions .actions{
+  text-align: left;
+}
+.rtl-is-active .data-grid .data-grid-th._sortable,
+.rtl-is-active .data-grid .data-grid-th{
+  text-align: right;
+ background-color: #d6d6d6;
+border-left-color: #d0d0d0;
+}
+.rtl-is-active .admin__field-note {
+  text-align: right;
+}
+.rtl-is-active .admin__collapsible-content .admin__control-table-pagination .admin__data-grid-pager{
+    float: left;
+  }
+
+.rtl-is-active .input-box label.addafter .afterelment.note::before {
+  margin-right: 0;
+  margin-left: 5px;
+  transform: rotate(180deg);
+}
+.rtl-is-active .ced_vendor_before_wrap .right .hello {
+  text-align: right;
+}
+.rtl-is-active .ced_currency_setting .input-group-addon {
+  float: right;
+}
+.rtl-is-active .ced_currency_setting .input-text {
+  float: right;
+}
+.rtl-is-active #myvacation_form ._has-datepicker {
+  padding-left: 0 !important;
+  padding-right: 25px;
+}
+.rtl-is-active #edit_rma_form tr.headings th {
+  text-align: right;
+}
+.rtl-is-active .with-addon .admin__field-control.control { /*exportimport download file text*/
+  text-align: right!important;
+}
+.rtl-is-active .ced-vendor-sidebar .fa.arrow::before {
+  content: "\f104";
+}
+.rtl-is-active .ced-default-panel .ced-default-panel-header {
+  float: right;
+}
+.rtl-is-active .input-box .password-strength-meter {
+    text-align: right;
+  }
+.rtl-is-active .password-strength-meter::before {
+  right: 0;
+  left: unset;
+}
+/*Terms & conditions*/
+.rtl-is-active .search_form_overlay .ced-modal-content{
+  text-align: right;
+}
+.rtl-is-active .ced_close {
+  right: unset;
+  left: 10px;
+}
+.rtl-is-active .ced-modal-header .fa {
+  left: 46px;
+  right: unset;
+}
+.rtl-is-active .ced-modal-overlay .ced-modal-data ul li {
+  text-align: right;
+  padding-right: 25px;
+}
+.rtl-is-active .ced-modal-data ul li::before {
+  content: "\f060";
+  left: unset;
+  right: 5px;
+}
+.rtl-is-active .selectmenu-toggle {
+  left: 0;
+  right: auto;
+}
+.rtl-is-active .selectmenu-toggle::before {
+  left: 0;
+  right: auto;
+  border-right: 1px solid #adadad;
+  border-left: none;
+}
+.rtl-is-active .selectmenu-toggle::after {
+  right: auto;
+  left: 1.1rem;
+}
+.rtl-is-active .admin__data-grid-header-row .action-select {
+  text-align: right;
+}
+
+.rtl-is-active .fields .field,
+.rtl-is-active .order-shipment-table .item-options dt,
+.order-shipment-table .item-options dd,
+.rtl-is-active .x_panel .card-block .text-right span {
+    float: right;
+}
+
+.rtl-is-active .table-striped .attribute-value,.rtl-is-active .x_panel .card-block .text-right i  {
+  float: left;
+}
+
+/* new changes */
+.rtl-is-active .data-grid td:first-child {
+  border-right-style: solid;
+  border-left-style: dashed;
+}
+.rtl-is-active .data-grid td:last-child {
+  border-left-style: solid;
+  border-right-style: dashed;
+}
+.rtl-is-active .fields .field,.rtl-is-active .x_panel .card-block .text-right span {
+  float: right;
+}
+.rtl-is-active .data-grid-filters-action-wrap {
+  float: left;
+  padding-left: 0;
+}
+
+.rtl-is-active.csproduct-vproducts-index .mass-select-wrap {
+  right: 27px;
+}
+.rtl-is-active.csproduct-vproducts-index .page-wrapper .mass-select-wrap {
+  margin-top: 7.2rem;
+}
+.page-wrapper .data-grid-checkbox-cell-inner
+{
+  text-align: center;
+}
+
+.rtl-is-active .page-wrapper .page-actions > button.back::before, 
+.rtl-is-active .page-wrapper .page-actions .page-actions-buttons > button.back::before, 
+.rtl-is-active .page-wrapper .page-actions > button.action-back::before, 
+.rtl-is-active .page-wrapper .page-actions .page-actions-buttons > button.action-back::before, 
+.rtl-is-active .page-wrapper .page-actions > .block-footer .action-add.back::before, 
+.rtl-is-active .page-wrapper .page-actions .page-actions-buttons > .block-footer .action-add.back::before, 
+.rtl-is-active .page-wrapper .page-actions > .block-footer .action-add.action-back::before, 
+.rtl-is-active .page-wrapper .page-actions .page-actions-buttons > .block-footer .action-add.action-back::before {
+  transform: none;
+  right:0px;
+}
+
+.rtl-is-active #sorter{
+    font-size: 14px;
+  direction: ltr;
+}
+
+.page-products .page-wrapper .data-grid-checkbox-cell-inner {
+  text-align: center;
+}
+.rtl-is-active .page-wrapper .mass-select-wrap {
+  right: 14px;
+}
+.rtl-is-active .data-grid .data-grid-th,.rtl-is-active .data-grid .data-grid-th {
+  background-color: #d6d6d6;
+  border: .1rem solid #d0d0d0;
+}
+.data-grid .data-grid-filters select, 
+.data-grid .data-grid-filters input[type="text"] 
+.page-wrapper .data-grid th, 
+.page-wrapper .data-grid td,
+.page-wrapper .admin__data-grid-toolbar .admin__control-select, 
+.page-wrapper .admin__data-grid-toolbar .ui-datepicker .ui-datepicker-title select
+{
+  font-size: 13px !important;
+  font-family: 'opensans', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+}
+
+@media only screen and (max-width: 767px)
+{
+  .rtl-is-active .ced-vendor-sidebar-nav .side-menu > li.nav > a
+  {
+    text-align: right;
+  }
+  .rtl-is-active .ced-vendor-sidebar-nav .side-menu > li.nav > a i
+  {
+    text-align: center;
+  }
+}
+.rtl-is-active .edit-order-comments .note-list-date,
+.rtl-is-active .edit-order-comments .note-list-time {
+    display: inline-block;
+    padding: 0;
+}

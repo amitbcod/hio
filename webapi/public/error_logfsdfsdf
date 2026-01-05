@@ -1,0 +1,191 @@
+[07-Aug-2025 16:49:50 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Failed opening required '/home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php' (include_path='.:/opt/cpanel/ea-php81/root/usr/share/pear') in /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php:46
+Stack trace:
+#0 {main}
+  thrown in /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php on line 46
+[07-Aug-2025 16:49:50 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Failed opening required '/home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php' (include_path='.:/opt/cpanel/ea-php81/root/usr/share/pear') in /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php:46
+Stack trace:
+#0 {main}
+  thrown in /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php on line 46
+[07-Aug-2025 16:49:50 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Failed opening required '/home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php' (include_path='.:/opt/cpanel/ea-php81/root/usr/share/pear') in /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php:46
+Stack trace:
+#0 {main}
+  thrown in /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php on line 46
+[07-Aug-2025 16:49:50 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Failed opening required '/home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php' (include_path='.:/opt/cpanel/ea-php81/root/usr/share/pear') in /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php:46
+Stack trace:
+#0 {main}
+  thrown in /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php on line 46
+[07-Aug-2025 16:49:50 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Failed opening required '/home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php' (include_path='.:/opt/cpanel/ea-php81/root/usr/share/pear') in /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php:46
+Stack trace:
+#0 {main}
+  thrown in /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php on line 46
+[11-Aug-2025 16:39:40 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Failed opening required '/home4/whusovzv/ymstore.whuso.in/webapi/app/../src/Routes/webshop/Checkout.php' (include_path='.:/opt/cpanel/ea-php81/root/usr/share/pear') in /home4/whusovzv/ymstore.whuso.in/webapi/app/routes.php:36
+Stack trace:
+#0 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(75): {closure}(Object(Slim\App))
+#1 {main}
+  thrown in /home4/whusovzv/ymstore.whuso.in/webapi/app/routes.php on line 36
+[11-Aug-2025 16:39:40 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Failed opening required '/home4/whusovzv/ymstore.whuso.in/webapi/app/../src/Routes/webshop/Checkout.php' (include_path='.:/opt/cpanel/ea-php81/root/usr/share/pear') in /home4/whusovzv/ymstore.whuso.in/webapi/app/routes.php:36
+Stack trace:
+#0 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(75): {closure}(Object(Slim\App))
+#1 {main}
+  thrown in /home4/whusovzv/ymstore.whuso.in/webapi/app/routes.php on line 36
+[11-Aug-2025 16:39:40 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Failed opening required '/home4/whusovzv/ymstore.whuso.in/webapi/app/../src/Routes/webshop/Checkout.php' (include_path='.:/opt/cpanel/ea-php81/root/usr/share/pear') in /home4/whusovzv/ymstore.whuso.in/webapi/app/routes.php:36
+Stack trace:
+#0 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(75): {closure}(Object(Slim\App))
+#1 {main}
+  thrown in /home4/whusovzv/ymstore.whuso.in/webapi/app/routes.php on line 36
+[11-Aug-2025 16:39:40 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Failed opening required '/home4/whusovzv/ymstore.whuso.in/webapi/app/../src/Routes/webshop/Checkout.php' (include_path='.:/opt/cpanel/ea-php81/root/usr/share/pear') in /home4/whusovzv/ymstore.whuso.in/webapi/app/routes.php:36
+Stack trace:
+#0 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(75): {closure}(Object(Slim\App))
+#1 {main}
+  thrown in /home4/whusovzv/ymstore.whuso.in/webapi/app/routes.php on line 36
+[13-Aug-2025 09:50:45 Asia/Kolkata] STEP 1: Starting insert
+[13-Aug-2025 09:50:47 Asia/Kolkata] STEP 1: Starting insert
+[13-Aug-2025 09:50:49 Asia/Kolkata] STEP 1: Starting insert
+[22-Aug-2025 17:10:06 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 605 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Product.php on line 615
+[22-Aug-2025 17:10:06 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 605 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Product.php on line 615
+[22-Aug-2025 17:10:06 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 605 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Product.php on line 615
+[22-Aug-2025 17:10:06 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 2147 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Product.php on line 2149
+[25-Aug-2025 11:06:01 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 319 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 321
+[25-Aug-2025 11:06:01 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 319 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 321
+[25-Aug-2025 11:06:01 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 319 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 321
+[25-Aug-2025 11:06:01 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 319 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 321
+[25-Aug-2025 11:06:01 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 319 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 321
+[25-Aug-2025 11:06:01 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 319 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 321
+[25-Aug-2025 11:06:01 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 319 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 321
+[25-Aug-2025 11:06:01 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 319 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 321
+[25-Aug-2025 11:06:01 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 319 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 321
+[25-Aug-2025 11:06:01 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 319 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 321
+[25-Aug-2025 11:06:01 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 319 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 321
+[25-Aug-2025 11:06:01 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 1164 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 1168
+[25-Aug-2025 11:06:01 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 1164 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 1168
+[25-Aug-2025 11:06:02 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 1164 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 1168
+[25-Aug-2025 11:06:02 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 1164 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 1168
+[25-Aug-2025 11:06:02 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 1164 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 1168
+[25-Aug-2025 11:06:02 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 1164 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 1168
+[25-Aug-2025 11:06:02 Asia/Kolkata] PHP Parse error:  Unclosed '(' in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 2717
+[25-Aug-2025 11:06:02 Asia/Kolkata] PHP Parse error:  Unclosed '(' in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 2717
+[25-Aug-2025 11:06:02 Asia/Kolkata] PHP Parse error:  Unclosed '(' in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 2717
+[25-Aug-2025 11:06:02 Asia/Kolkata] PHP Parse error:  Unclosed '(' in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbProductFeature.php on line 2717
+[26-Sep-2025 13:31:49 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:31:50 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:31:59 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:31:59 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:03 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:04 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:10 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:11 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:12 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:13 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:14 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:15 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:18 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:19 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:35 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:35 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:53 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 13:32:54 Asia/Kolkata] PHP Parse error:  syntax error, unexpected identifier "_blank" in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 4637
+[26-Sep-2025 15:15:03 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 452 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbHomeFeature.php on line 589
+[26-Sep-2025 15:15:03 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 1202 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbHomeFeature.php on line 1243
+[26-Sep-2025 15:15:03 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 1202 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbHomeFeature.php on line 1243
+[26-Sep-2025 15:15:03 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 1202 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbHomeFeature.php on line 1243
+[26-Sep-2025 15:15:03 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 1202 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbHomeFeature.php on line 1243
+[26-Sep-2025 15:15:03 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 1202 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbHomeFeature.php on line 1243
+[26-Sep-2025 15:15:03 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 1202 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbHomeFeature.php on line 1243
+[08-Oct-2025 12:18:36 Asia/Kolkata] PHP Parse error:  Unclosed '{' on line 10709 in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 10786
+[08-Oct-2025 12:24:00 Asia/Kolkata] PHP Parse error:  Unclosed '(' in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Checkout.php on line 12643
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "increment_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 623
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "order_id" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 624
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "grand_total" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 625
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "status" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 626
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "is_split" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 627
+[08-Oct-2025 23:55:48 Asia/Kolkata] PHP Warning:  Attempt to read property "created_at" on array in /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Orders.php on line 628

@@ -1,0 +1,36 @@
+.DS_Store
+
+application/config/constants.php
+
+application/cache/*
+!application/cache/index.html
+
+application/logs/*
+!application/logs/index.html
+
+!application/*/.htaccess
+
+*/uploads/*
+cmsPagesImage/
+ckupload/
+*.log
+
+vendor/
+
+# IDE Files
+#-------------------------
+/nbproject/
+.idea/*
+
+## Sublime Text cache files
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+/tests/tests/
+/tests/results/
+
+
+# PHP CS FIXER (Github Actions)
+.php-cs-fixer.cache

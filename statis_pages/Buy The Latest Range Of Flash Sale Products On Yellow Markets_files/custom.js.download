@@ -1,0 +1,17 @@
+  require(['jquery'], function($){
+    $(document).ready(function() {
+        $("#sm_megamenu_289").attr("target", "_blank");
+       
+    });
+    $(".toggle-handle, .toggle-label").click(function() {
+            var ischecked = $('.toggle-input').is(":checked");
+            if (ischecked == false) {
+                $('.field-recaptcha').show();
+            } else {
+                $('.field-recaptcha').hide();
+            }
+        });
+       
+    
+});
+

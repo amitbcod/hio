@@ -1,0 +1,24 @@
+/**
+ * @category  Magebuddy_MytMoney
+
+ */
+
+define(
+    [
+        'uiComponent',
+        'Magento_Checkout/js/model/payment/renderer-list'
+    ],
+    function (
+        Component,
+        rendererList
+    ) {
+        'use strict';
+        rendererList.push(
+            {
+                type: 'mytmoney',
+                component: 'Magebuddy_MytMoney/js/view/payment/method-renderer/mytmoney-method'
+            }
+        );
+        return Component.extend({});
+    }
+);

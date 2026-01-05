@@ -1,0 +1,4 @@
+[23-Oct-2025 22:38:47 Asia/Kolkata] PHP Fatal error:  DbCommonFeature cannot use Psr\Log\LoggerInterface - it is not a trait in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbCommonFeature.php on line 5
+[23-Oct-2025 22:38:49 Asia/Kolkata] PHP Fatal error:  DbCommonFeature cannot use Psr\Log\LoggerInterface - it is not a trait in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbCommonFeature.php on line 5
+[23-Oct-2025 22:39:23 Asia/Kolkata] PHP Fatal error:  DbCommonFeature cannot use Psr\Log\LoggerInterface - it is not a trait in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbCommonFeature.php on line 5
+[23-Oct-2025 22:39:25 Asia/Kolkata] PHP Fatal error:  DbCommonFeature cannot use Psr\Log\LoggerInterface - it is not a trait in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbCommonFeature.php on line 5

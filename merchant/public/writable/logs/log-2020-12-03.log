@@ -1,0 +1,20 @@
+CRITICAL - 2020-12-03 00:11:00 --> Class 'App\Models\FbcUserSessionModel' not found
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->login_check()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-03 00:13:45 --> Too few arguments to function App\Models\FbcUserSessionModel::__construct(), 0 passed in /home/parkmosp/public_html/shopinshop/app/Controllers/Shop.php on line 77 and exactly 1 expected
+#0 /home/parkmosp/public_html/shopinshop/app/Controllers/Shop.php(77): App\Models\FbcUserSessionModel->__construct()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->login_check()
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#3 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#4 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#5 {main}
+CRITICAL - 2020-12-03 00:14:37 --> Too few arguments to function App\Models\FbcUserSessionModel::__construct(), 0 passed in /home/parkmosp/public_html/shopinshop/app/Controllers/Shop.php on line 77 and exactly 1 expected
+#0 /home/parkmosp/public_html/shopinshop/app/Controllers/Shop.php(77): App\Models\FbcUserSessionModel->__construct()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->login_check()
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#3 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#4 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#5 {main}

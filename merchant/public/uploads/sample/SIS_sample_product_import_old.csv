@@ -1,0 +1,5 @@
+product_type,product_name,product_code,category,sub_category,tags,gender,description,highlights,product_reviews_code,launch_date,estimate_delivery_time,product_drop_shipment,sku,barcode,inventory,cost_price,seller_price,tax_percent,images,default_img_name,status,meta_title,meta_keyword,meta_description,weight,attribute_fabric_type,attribute_material,master_variant,variant_color,variant_size
+simple,Simple product,smp_1,Mens clothing,tops,"shirt,sweat shirt","Men,unisex",Sample description,Sample description,,22-12-20,2 Days,1,smp_1,smp_1,20,50,40,,"img.png,img1.png,img3.png",img.png,1,Simple product,Simple product Keyword,Simple product Description,1.2,Value 1,Value 3,,,
+configurable,Config Product,conf_1,Women clothing,tops,"shirt,sweat shirt","WoMen,unisex",Sample description,Sample description,,22-12-20,2 Days,1,,,,,,,"img.png,img1.png,img3.png",img.png,1,CoSimple product,Simple product Keyword,Simple product Description,,Value 2,,"color,size",,
+conf-simple,Config Product,conf_1,,,,,,,,,,,conf-2-Red-S,124523566,25,50,50,,img4.png,,,,,,0.3,,,,Red,S
+conf-simple,Config Product,conf_1,,,,,,,,,,,conf-2-Red-M,124523566,25,50,50,,img5.png,,,,,,0.5,,,,Red,M

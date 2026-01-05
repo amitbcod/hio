@@ -1,0 +1,40 @@
+[23-Oct-2025 23:08:09 Asia/Kolkata] 405 Method Not Allowed
+Type: Slim\Exception\HttpMethodNotAllowedException
+Code: 405
+Message: Method not allowed. Must be one of: GET, OPTIONS
+File: /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php
+Line: 94
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(58): Slim\Middleware\RoutingMiddleware->performRouting(Object(Slim\Psr7\Request))
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#9 {main}
+[23-Oct-2025 23:08:09 Asia/Kolkata] Slim Application Error
+Type: ArgumentCountError
+Code: 0
+Message: Too few arguments to function DbCart::add_to_sales_quote_item(), 17 passed in /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbCommonFeature.php on line 1016 and exactly 18 expected
+File: /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbCart.php
+Line: 143
+Trace: #0 /home4/whusovzv/ymstore.whuso.in/webapi/src/Model/DbCommonFeature.php(1016): DbCart->add_to_sales_quote_item(345, 'simple', 'buy', 79, 'Hopscotch Boys ...', 'kid12', '2', 'kid12', NULL, '2.02', 4.04, 7, '', '', '1.00', '0.02', ' ')
+#1 /home4/whusovzv/ymstore.whuso.in/webapi/src/Routes/webshop/Login.php(52): DbCommonFeature->commonLoginFunction(7, 'Amitkumar', 'Patel', 'amit29592@gmail...', 2, '', '', '', '', '', '', '', '')
+#2 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Handlers/Strategies/RequestResponse.php(43): Closure->{closure}(Object(Slim\Psr7\Request), Object(Slim\Psr7\Response), Array)
+#3 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Routing/Route.php(384): Slim\Handlers\Strategies\RequestResponse->__invoke(Object(Closure), Object(Slim\Psr7\Request), Object(Slim\Psr7\Response), Array)
+#4 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Slim\Routing\Route->handle(Object(Slim\Psr7\Request))
+#5 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#6 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Routing/Route.php(341): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#7 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Routing/RouteRunner.php(84): Slim\Routing\Route->run(Object(Slim\Psr7\Request))
+#8 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/RoutingMiddleware.php(59): Slim\Routing\RouteRunner->handle(Object(Slim\Psr7\Request))
+#9 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\RoutingMiddleware->process(Object(Slim\Psr7\Request), Object(Slim\Routing\RouteRunner))
+#10 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/BodyParsingMiddleware.php(68): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#11 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\BodyParsingMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#12 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/Middleware/ErrorMiddleware.php(107): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#13 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(147): Slim\Middleware\ErrorMiddleware->process(Object(Slim\Psr7\Request), Object(Psr\Http\Server\RequestHandlerInterface@anonymous))
+#14 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/MiddlewareDispatcher.php(81): Psr\Http\Server\RequestHandlerInterface@anonymous->handle(Object(Slim\Psr7\Request))
+#15 /home4/whusovzv/ymstore.whuso.in/webapi/vendor/slim/slim/Slim/App.php(215): Slim\MiddlewareDispatcher->handle(Object(Slim\Psr7\Request))
+#16 /home4/whusovzv/ymstore.whuso.in/webapi/public/index.php(103): Slim\App->handle(Object(Slim\Psr7\Request))
+#17 {main}

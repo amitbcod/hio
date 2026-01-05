@@ -1,0 +1,34 @@
+/**
+ * @category  Magebuddy_MytMoney
+ */
+
+define(
+    [
+        'Magento_Checkout/js/view/payment/default',
+        'jquery',
+        'Magento_Checkout/js/model/quote',
+        'Magento_Checkout/js/model/url-builder',
+        'mage/storage',
+        'Magento_Checkout/js/model/error-processor',
+        'Magento_Customer/js/model/customer',
+        'Magento_Checkout/js/model/full-screen-loader',
+        'Magento_Checkout/js/model/payment/additional-validators',
+        'mage/url'
+    ],
+    function (Component, $, quote, urlBuilder, storage, errorProcessor, customer, fullScreenLoader, additionalValidators, url) {
+        'use strict';
+        return Component.extend({
+            defaults: {
+                template: 'Magebuddy_MytMoney/payment/mytmoney'
+            },
+            getMailingAddress: function () {
+                return window.checkoutConfig.payment.checkmo.mailingAddress;
+            },
+            redirectAfterPlaceOrder: false,
+            afterPlaceOrder: function () {
+                window.location.replace(url.build('mytmoney/payment/redirect'));
+            }
+
+        });
+    }
+);

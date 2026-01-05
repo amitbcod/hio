@@ -1,0 +1,90 @@
+CRITICAL - 2020-12-02 19:17:45 --> Class 'App\Models\ShopModel' not found
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->store()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 19:19:12 --> Class 'App\Models\ShopModel' not found
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->store()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 19:26:42 --> Class 'App\Models\ShopModel' not found
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->store()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 19:28:08 --> Class 'App\Models\ShopModel' not found
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->store()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 19:28:46 --> Class 'App\Models\ShopModel' not found
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->store()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 19:31:07 --> Class 'App\Models\ShopModel' not found
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->store()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 19:33:47 --> Class 'App\Models\ShopModel' not found
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->store()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 19:36:27 --> Class 'App\Models\ShopModel' not found
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->store()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 19:37:59 --> Class 'App\Models\ShopModel' not found
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->store()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 21:21:43 --> Call to a member function getLastQuery() on null
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->login_check()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 21:22:43 --> Call to a member function lastquery() on null
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->login_check()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 21:24:12 --> Call to a member function getLastQuery() on null
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->login_check()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 22:09:56 --> Call to a member function table() on null
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->login_check()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 22:13:30 --> Call to a member function table() on null
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->login_check()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
+CRITICAL - 2020-12-02 22:25:28 --> Call to a member function get_csrf_token_name() on null
+#0 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(918): App\Controllers\Shop->login_check()
+#1 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(404): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Shop))
+#2 /home/parkmosp/public_html/shopinshop/system/CodeIgniter.php(312): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /home/parkmosp/public_html/shopinshop/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}

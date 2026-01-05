@@ -1,0 +1,10 @@
+product_type,product_name,product_code,category,sub_category,tags,gender,description,highlights,product_reviews_code,launch_date,estimate_delivery_time,product_return_time,product_drop_shipment,sku,barcode,inventory,cost_price,price,images,default_img_name,status
+simple,"Anu New Collection - Top 1",Anu1,"Women Clothing",Tops,"Anu's New Collection",Women,"<p>Anu New Collection - Top 1 - Simple Product</p>
+","<p>Anu New Collection - Top 1</p>
+",,28-Jan-2021,"7 days","within 30 days of delivery",1,Anu1,anu1,10,150.00,200.00,"t3.jpg,t2.jpg,t1.jpg",t3.jpg,1
+simple,"Anu New Collection - Top 1",Anu2,"Women Clothing",Tops,"Anu's New Collection",Women,"<p>Anu New Collection - Top 1</p>
+","<p>Anu New Collection - Top 1</p>
+",,28-Jan-2021,"7 days","within 30 days of delivery",1,Anu2,anu2,10,100.00,200.00,"t3.jpg,t2.jpg,t1.jpg",t3.jpg,1
+simple,"Sample Product 123",smkdiefnf,"Women Clothing",Tops,"Anu's New Collection",,"<p>sample text</p>
+","<p>sample text</p>
+",,30-Jan-2021,,,1,smkdiefnf,smkdiefnf,200,100.00,500.00,a0a01304_flmo_01.jpg,a0a01304_flmo_01.jpg,1

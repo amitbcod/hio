@@ -1,0 +1,18 @@
+# Environment & secrets
+.env
+application/config/constants.php
+admin/application/config/constants.php
+merchant/application/config/constants.php
+
+# Vendors
+vendor/
+admin/vendor/
+merchant/vendor/
+
+# Cache & logs
+application/cache/
+application/logs/
+
+# OS
+.DS_Store
+Thumbs.db
