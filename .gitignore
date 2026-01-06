@@ -1,18 +1,39 @@
 # Environment & secrets
 .env
+
+# Constants (secrets)
 application/config/constants.php
 admin/application/config/constants.php
 merchant/application/config/constants.php
+
+# Config files (local only)
+application/config/config.php
+application/config/database.php
+admin/application/config/config.php
+admin/application/config/database.php
+merchant/application/config/config.php
+
+# Entry files
+index.php
+admin/index.php
+merchant/index.php
+
+# Apache
+.htaccess
+admin/.htaccess
+merchant/.htaccess
+
+# Cache & logs
+application/cache/
+application/logs/
+merchant/application/cache/
+merchant/application/logs/
 
 # Vendors
 vendor/
 admin/vendor/
 merchant/vendor/
 
-# Cache & logs
-application/cache/
-application/logs/
-
-# OS
+# OS files
 .DS_Store
 Thumbs.db
