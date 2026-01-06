@@ -29,7 +29,7 @@
 		</div>
 		<div class="col-sm-7 d-flex align-items-center right-side bkg-img">
 			<div class="right-content">
-				<h1 class="heading-welcome"><span class="fw-300">Welcome to</span> YELLOWMARKET</h1>
+				<h1 class="heading-welcome"><span class="fw-300">Welcome to</span> Holidays.Io</h1>
 				<span class="sub-heading">Sign In to Access your Account</span>
 			</div>
 		</div>
