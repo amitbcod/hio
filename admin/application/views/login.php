@@ -30,7 +30,7 @@
 						</div>
 					</div>
 					<input class="btn btn-lg btn-primary btn-block" type="submit" id="sign-in-btn" name="sign-in-btn" value="Sign in">
-				</form>
+					<p class="mt-4">Don't have an account? <a href="<?php echo base_url(); ?>OperatorRegistration/step1" class="btn btn-link">Register as Operator</a></p>
 			</div>
 			<div class="col-sm-7 d-flex align-items-center right-side bkg-img">
 				<div class="right-content">

@@ -55,6 +55,27 @@ $route['default_controller'] = 'UserController';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
+// Map 'auth' URLs to the new AuthController
+$route['auth'] = 'AuthController';
+$route['auth/(:any)'] = 'AuthController/$1';
+
+// Operator dashboard (separate from admin DashboardController)
+$route['operator'] = 'Dashboard/index';
+$route['operator/(:any)'] = 'Dashboard/$1';
+$route['operator/(:any)/(:any)'] = 'Dashboard/$1/$2';
+$route['operator/(:any)/(:any)/(:any)'] = 'Dashboard/$1/$2/$3';
+
+// Dashboard routes (newer operator dashboard)
+$route['dashboard'] = 'Dashboard/index';
+// Specific user management routes
+$route['dashboard/users/add'] = 'Dashboard/users_add';
+$route['dashboard/users/edit/(:num)'] = 'Dashboard/users_edit/$1';
+$route['dashboard/users/delete/(:num)'] = 'Dashboard/users_delete/$1';
+// Generic catchall routes
+$route['dashboard/(:any)'] = 'Dashboard/$1';
+$route['dashboard/(:any)/(:any)'] = 'Dashboard/$1/$2';
+$route['dashboard/(:any)/(:any)/(:any)'] = 'Dashboard/$1/$2/$3';
+
 $route['/'] = 'UserController/index';
 $route['register'] = 'UserController/register';
 $route['congratulations'] = 'UserController/getCongratulationsView';
@@ -77,8 +98,8 @@ $route['reset-password-unsuccessful'] = 'UserController/getPasswordUnsuccessView
 $route['reset-password-invalid-link'] = 'UserController/getPasswordInvalidLinkView';
 $route['reset-password-link'] = 'UserController/getPasswordLinkView';
 
-//Dashboard
-$route['dashboard'] = 'DashboardController/index';
+//Dashboard - Legacy routes
+//$route['dashboard'] = 'DashboardController/index';
 $route['employee_details'] = 'DashboardController/employee_details';
 $route['employee_details/(:any)'] = 'DashboardController/employee_details/$1';
 

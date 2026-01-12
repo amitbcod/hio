@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holidays.io - Operator Management</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            min-height: 600px;
+        }
+
+        .auth-row {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .auth-form-side {
+            flex: 1;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auth-branding-side {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .auth-logo {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .auth-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .auth-branding-side h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .auth-branding-side p {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .benefits-list {
+            list-style: none;
+            text-align: left;
+            margin-top: 30px;
+        }
+
+        .benefits-list li {
+            padding: 10px 0;
+            font-size: 0.95rem;
+        }
+
+        .benefits-list i {
+            margin-right: 10px;
+            color: #ffc107;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-control, .form-check-input {
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            font-size: 0.95rem;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .form-check {
+            margin-bottom: 12px;
+        }
+
+        .form-check-label {
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        .btn-auth {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-auth:active {
+            transform: translateY(0);
+        }
+
+        .form-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        .form-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .form-link a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .password-strength {
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .strength-item {
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .strength-item i {
+            margin-right: 8px;
+            width: 16px;
+        }
+
+        .strength-item.valid {
+            color: #28a745;
+        }
+
+        .strength-item.invalid {
+            color: #dc3545;
+        }
+
+        .required {
+            color: #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            .auth-row {
+                flex-direction: column;
+                min-height: auto;
+            }
+
+            .auth-form-side, .auth-branding-side {
+                padding: 40px 20px;
+            }
+
+            .auth-title {
+                font-size: 1.5rem;
+            }
+
+            .auth-branding-side {
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="auth-container">
+	<div class="auth-card">
+		<div class="auth-row">
+			<!-- Left Side: Form -->
+			<div class="auth-form-side">
+				<h2 class="auth-title">Create Account</h2>
+				<form id="signup-form" method="post" action="http://localhost/hio/admin/auth/signup">
+					
+					
+					<div class="form-fields text-left">
+						<!-- Account Type Selection -->
+						<div class="mb-4">
+							<label class="d-block mb-2"><strong>Account Type <span class="required">*</span></strong></label>
+							<div class="form-check">
+								<input type="radio" name="user_type" value="Operator" id="type_operator" class="form-check-input" checked required>
+								<label class="form-check-label" for="type_operator">Operator</label>
+							</div>
+							<div class="form-check">
+								<input type="radio" name="user_type" value="MPO" id="type_mpo" class="form-check-input">
+								<label class="form-check-label" for="type_mpo">MPO</label>
+							</div>
+							<div class="form-check">
+								<input type="radio" name="user_type" value="Agent" id="type_agent" class="form-check-input">
+								<label class="form-check-label" for="type_agent">Agent</label>
+							</div>
+						</div>
+
+						<!-- Owner Question -->
+						<div class="mb-4">
+							<label class="d-block mb-2"><strong>Are you the owner of this account? <span class="required">*</span></strong></label>
+							<div class="form-check">
+								<input type="radio" name="is_owner" value="yes" id="owner_yes" class="form-check-input" checked required onchange="toggleOwnerFields()">
+								<label class="form-check-label" for="owner_yes">Yes</label>
+							</div>
+							<div class="form-check">
+								<input type="radio" name="is_owner" value="no" id="owner_no" class="form-check-input" onchange="toggleOwnerFields()">
+								<label class="form-check-label" for="owner_no">No</label>
+							</div>
+						</div>
+
+						<!-- Owner Information (shown if "No") -->
+						<div id="owner_info_section" style="display:none; border: 1px solid #ddd; padding: 15px; border-radius: 4px; margin-bottom: 20px; background-color: #f9f9f9;">
+							<h5 class="mb-3">Owner Information</h5>
+							
+							<div class="mb-3">
+								<label for="owner_full_name">Owner's Full Name <span class="required">*</span></label>
+								<input type="text" name="owner_full_name" id="owner_full_name" class="form-control">
+															</div>
+
+							<div class="mb-3">
+								<label for="owner_email">Owner's Email <span class="required">*</span></label>
+								<input type="email" name="owner_email" id="owner_email" class="form-control">
+															</div>
+
+							<div class="mb-3">
+								<label for="owner_phone">Owner's Phone <span class="required">*</span></label>
+								<input type="tel" name="owner_phone" id="owner_phone" class="form-control" placeholder="+230 5xxxxxxxx">
+															</div>
+
+							<div class="mb-3">
+								<label for="owner_password">Owner's Password <span class="required">*</span></label>
+								<div class="input-group">
+									<input type="password" name="owner_password" id="owner_password" class="form-control" minlength="8">
+									<span class="input-group-text" style="cursor: pointer;" onclick="togglePasswordVisibility('owner_password')">
+										<i class="fa fa-eye"></i>
+									</span>
+								</div>
+								<small class="text-muted">Minimum 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special char</small>
+							</div>
+						</div>
+
+						<!-- Your Information -->
+						<h5 class="mt-4 mb-3">Your Information</h5>
+
+						<div class="mb-3">
+							<label for="user_full_name">Your Full Name <span class="required">*</span></label>
+							<input type="text" name="user_full_name" id="user_full_name" class="form-control" value="" required>
+													</div>
+
+						<div class="mb-3">
+							<label for="user_email">Your Email <span class="required">*</span></label>
+							<input type="email" name="user_email" id="user_email" class="form-control" value="" required>
+														<small id="email_status" class="form-text text-muted"></small>
+						</div>
+
+						<div class="mb-3">
+							<label for="user_phone">Your Phone <span class="required">*</span></label>
+							<input type="tel" name="user_phone" id="user_phone" class="form-control" placeholder="+230 5xxxxxxxx" value="" required>
+														<small class="form-text text-muted">E.164 format (e.g., +230 5701234)</small>
+						</div>
+
+						<!-- Password Setup -->
+						<div class="mb-3">
+							<label for="password">Set Password <span class="required">*</span></label>
+							<div class="input-group">
+								<input type="password" name="password" id="password" class="form-control" required minlength="8">
+								<span class="input-group-text" style="cursor: pointer;" onclick="togglePasswordVisibility('password')">
+									<i class="fa fa-eye"></i>
+								</span>
+							</div>
+							<small class="form-text text-muted">
+								Requirements: 
+								<ul style="margin-top: 5px; margin-bottom: 0;">
+									<li id="req_length">At least 8 characters</li>
+									<li id="req_upper">One uppercase letter (A-Z)</li>
+									<li id="req_lower">One lowercase letter (a-z)</li>
+									<li id="req_number">One number (0-9)</li>
+									<li id="req_special">One special character (!@#$%^&*)</li>
+								</ul>
+							</small>
+													</div>
+
+						<div class="mb-3">
+							<label for="password_confirm">Confirm Password <span class="required">*</span></label>
+							<div class="input-group">
+								<input type="password" name="password_confirm" id="password_confirm" class="form-control" required minlength="8">
+								<span class="input-group-text" style="cursor: pointer;" onclick="togglePasswordVisibility('password_confirm')">
+									<i class="fa fa-eye"></i>
+								</span>
+							</div>
+							<small id="password_match_status" class="form-text text-muted"></small>
+													</div>
+
+						<!-- Terms Agreement -->
+						<div class="form-check mb-4">
+							<input type="checkbox" name="agree_terms" id="agree_terms" class="form-check-input" value="1" required>
+							<label class="form-check-label" for="agree_terms">
+								I agree to the <a href="#" target="_blank">terms and conditions</a> <span class="required">*</span>
+							</label>
+						</div>
+					</div>
+
+					<button type="submit" class="btn btn-lg btn-primary btn-block mt-4">Create Account</button>
+					<p class="text-center mt-3">
+						Already have an account? <a href="http://localhost/hio/admin/auth/login">Sign in here</a>
+					</p>
+				</form>
+			</div>
+
+			<div class="col-sm-7 d-flex align-items-center right-side bkg-img">
+				<div class="right-content">
+					<h1 class="heading-welcome"><span class="fw-300">Welcome to </span>Holidays.io</h1>
+					<span class="sub-heading">Sign Up to Access your Account</span>
+					
+					<div class="mt-5">
+						<h5>Why Register?</h5>
+						<ul style="text-align: left; font-size: 14px; line-height: 1.8;">
+							<li><i class="fa fa-check text-success"></i> Manage your business profile</li>
+							<li><i class="fa fa-check text-success"></i> Upload legal documents</li>
+							<li><i class="fa fa-check text-success"></i> Configure payment settings</li>
+							<li><i class="fa fa-check text-success"></i> Manage staff users</li>
+							<li><i class="fa fa-check text-success"></i> Monitor compliance status</li>
+							<li><i class="fa fa-check text-success"></i> View payout history</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			function toggleOwnerFieldsLocal() {
+				const ownerSection = document.getElementById('owner_info_section');
+				const isOwner = document.getElementById('owner_yes') && document.getElementById('owner_yes').checked;
+				if (!ownerSection) return;
+
+				if (!isOwner) {
+					ownerSection.style.display = 'block';
+					['owner_full_name','owner_email','owner_phone','owner_password'].forEach(id => { const el = document.getElementById(id); if (el) el.required = true; });
+				} else {
+					ownerSection.style.display = 'none';
+					['owner_full_name','owner_email','owner_phone','owner_password'].forEach(id => { const el = document.getElementById(id); if (el) el.required = false; });
+				}
+			}
+			window.toggleOwnerFields = toggleOwnerFieldsLocal;
+
+			// Password visibility via delegation
+			document.body.addEventListener('click', function(ev) {
+				const btn = ev.target.closest('.input-group-text'); if (!btn) return;
+				const input = btn.parentElement.querySelector('input'); const icon = btn.querySelector('i'); if (!input || !icon) return;
+				if (input.type === 'password') { input.type = 'text'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+				else { input.type = 'password'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+			});
+
+			const passwordEl = document.getElementById('password');
+			const confirmEl = document.getElementById('password_confirm');
+			if (passwordEl) {
+				passwordEl.addEventListener('keyup', function() {
+					const password = this.value;
+					const map = { req_length: password.length >= 8, req_upper: /[A-Z]/.test(password), req_lower: /[a-z]/.test(password), req_number: /[0-9]/.test(password), req_special: /[\W_]/.test(password) };
+					Object.keys(map).forEach(id => { const el = document.getElementById(id); if (el) el.classList.toggle('text-success', map[id]); });
+				});
+			}
+			if (confirmEl && passwordEl) {
+				confirmEl.addEventListener('keyup', function() {
+					const status = document.getElementById('password_match_status'); if (!status) return;
+					if (this.value.length === 0) { status.textContent = ''; status.classList.remove('text-success','text-danger'); }
+					else if (this.value === passwordEl.value) { status.textContent = '✓ Passwords match'; status.classList.remove('text-danger'); status.classList.add('text-success'); }
+					else { status.textContent = '✗ Passwords do not match'; status.classList.remove('text-success'); status.classList.add('text-danger'); }
+				});
+			}
+
+			const form = document.getElementById('signup-form');
+			if (form) {
+				form.addEventListener('submit', function(e) {
+					const pw = document.getElementById('password') ? document.getElementById('password').value : '';
+					const cpw = document.getElementById('password_confirm') ? document.getElementById('password_confirm').value : '';
+					if (pw !== cpw) { e.preventDefault(); alert('Passwords do not match!'); return false; }
+					const agree = document.getElementById('agree_terms'); if (agree && !agree.checked) { e.preventDefault(); alert('You must agree to the terms and conditions'); return false; }
+				});
+			}
+		});
+	</script>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        // Password strength validator
+        function validatePassword(password) {
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password),
+                special: /[\W_]/.test(password)
+            };
+            return requirements;
+        }
+
+        // Update password strength display
+        function updatePasswordStrength(inputId, strengthId) {
+            const password = document.getElementById(inputId).value;
+            const requirements = validatePassword(password);
+            const strengthDiv = document.getElementById(strengthId);
+
+            if (password.length === 0) {
+                strengthDiv.innerHTML = '';
+                return;
+            }
+
+            let html = '<div class="password-strength">';
+            html += '<strong>Password Requirements:</strong>';
+            html += '<div class="strength-item ' + (requirements.length ? 'valid' : 'invalid') + '">';
+            html += '<i class="fas fa-' + (requirements.length ? 'check' : 'times') + '"></i>';
+            html += 'At least 8 characters</div>';
+
+            html += '<div class="strength-item ' + (requirements.uppercase ? 'valid' : 'invalid') + '">';
+            html += '<i class="fas fa-' + (requirements.uppercase ? 'check' : 'times') + '"></i>';
+            html += 'One uppercase letter</div>';
+
+            html += '<div class="strength-item ' + (requirements.lowercase ? 'valid' : 'invalid') + '">';
+            html += '<i class="fas fa-' + (requirements.lowercase ? 'check' : 'times') + '"></i>';
+            html += 'One lowercase letter</div>';
+
+            html += '<div class="strength-item ' + (requirements.number ? 'valid' : 'invalid') + '">';
+            html += '<i class="fas fa-' + (requirements.number ? 'check' : 'times') + '"></i>';
+            html += 'One number</div>';
+
+            html += '<div class="strength-item ' + (requirements.special ? 'valid' : 'invalid') + '">';
+            html += '<i class="fas fa-' + (requirements.special ? 'check' : 'times') + '"></i>';
+            html += 'One special character</div></div>';
+
+            strengthDiv.innerHTML = html;
+        }
+
+        // Check password match
+        function checkPasswordMatch(passwordId, confirmId, matchId) {
+            const password = document.getElementById(passwordId).value;
+            const confirm = document.getElementById(confirmId).value;
+            const matchDiv = document.getElementById(matchId);
+
+            if (confirm.length === 0) {
+                matchDiv.innerHTML = '';
+                return;
+            }
+
+            if (password === confirm) {
+                matchDiv.innerHTML = '<div class="alert alert-success mb-0"><i class="fas fa-check-circle"></i> Passwords match</div>';
+            } else {
+                matchDiv.innerHTML = '<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-circle"></i> Passwords do not match</div>';
+            }
+        }
+
+        // Toggle password visibility
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Toggle owner fields
+        function toggleOwnerFields() {
+            const isOwnerNo = document.getElementById('owner_no').checked;
+            const ownerFieldsSection = document.getElementById('owner-fields-section');
+            
+            if (isOwnerNo) {
+                ownerFieldsSection.style.display = 'block';
+            } else {
+                ownerFieldsSection.style.display = 'none';
+            }
+        }
+
+        // Form validation
+        function validateSignupForm(event) {
+            event.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            const requirements = validatePassword(password);
+            
+            // Check all requirements
+            if (!requirements.length || !requirements.uppercase || !requirements.lowercase || 
+                !requirements.number || !requirements.special) {
+                alert('Password does not meet all requirements');
+                return false;
+            }
+            
+            // Check password match
+            if (password !== confirmPassword) {
+                alert('Passwords do not match');
+                return false;
+            }
+            
+            // Check terms
+            const agreeTerms = document.getElementById('agree_terms').checked;
+            if (!agreeTerms) {
+                alert('You must agree to the terms and conditions');
+                return false;
+            }
+            
+            // If all valid, submit form
+            document.getElementById('signup-form').submit();
+        }
+    </script>
+</body>
+</html>
