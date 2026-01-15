@@ -122,30 +122,40 @@ class AuthController extends CI_Controller {
      * Validate signup form
      */
     private function validate_signup() {
-        // Basic validation rules
+        // Common validation rules
         $this->form_validation->set_rules('user_type', 'Account Type', 'required|in_list[Operator,MPO,Agent]');
         $this->form_validation->set_rules('is_owner', 'Owner Status', 'required|in_list[yes,no]');
-        $this->form_validation->set_rules('user_full_name', 'Full Name', 'required|min_length[3]|max_length[255]');
-        $this->form_validation->set_rules('user_email', 'Email', 'required|valid_email|max_length[255]');
-        $this->form_validation->set_rules('user_phone', 'Phone Number', 'required|regex_match[/^\+?[0-9\s\-\(\)]{7,20}$/]');
+        $this->form_validation->set_rules('business_legal_name', 'Business Legal Name', 'required|min_length[3]|max_length[255]');
+        $this->form_validation->set_rules('country_of_operation', 'Country of Operation', 'required');
         $this->form_validation->set_rules('password', 'Password', 'required|min_length[8]|regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).{8,}$/]');
         $this->form_validation->set_rules('password_confirm', 'Confirm Password', 'required|matches[password]');
         $this->form_validation->set_rules('agree_terms', 'Terms Agreement', 'required');
 
-        // Check if email already exists
-        if ($this->form_validation->run() !== FALSE) {
-            if ($this->AuthModel->email_exists($this->input->post('user_email'))) {
-                $this->form_validation->set_message('email_exists', 'This email is already registered.');
-                $this->form_validation->run(FALSE);
+        // If is_owner = yes, validate owner fields
+        if ($this->input->post('is_owner') == 'yes') {
+            $this->form_validation->set_rules('user_full_name', 'Full Name', 'required|min_length[3]|max_length[255]');
+            $this->form_validation->set_rules('user_email', 'Email', 'required|valid_email|max_length[255]');
+            $this->form_validation->set_rules('user_phone', 'Phone Number', 'required|regex_match[/^\+?[0-9\s\-\(\)]{7,20}$/]');
+            
+            // Check if email already exists for owner
+            $email_to_check = $this->input->post('user_email');
+            if (!empty($email_to_check) && $this->AuthModel->email_exists($email_to_check)) {
+                $this->form_validation->set_message('user_email', 'This email is already registered.');
                 return FALSE;
             }
-        }
-
-        // If is_owner = no, validate owner fields
-        if ($this->input->post('is_owner') == 'no') {
-            $this->form_validation->set_rules('owner_full_name', 'Owner Full Name', 'required|min_length[3]');
-            $this->form_validation->set_rules('owner_email', 'Owner Email', 'required|valid_email');
-            $this->form_validation->set_rules('owner_phone', 'Owner Phone', 'required|regex_match[/^\+?[0-9\s\-\(\)]{7,20}$/]');
+        } else {
+            // If is_owner = no, validate non-owner fields
+            $this->form_validation->set_rules('non_owner_full_name', 'Full Name', 'required|min_length[3]|max_length[255]');
+            $this->form_validation->set_rules('non_owner_email', 'Email', 'required|valid_email|max_length[255]');
+            $this->form_validation->set_rules('non_owner_phone', 'Phone Number', 'required|regex_match[/^\+?[0-9\s\-\(\)]{7,20}$/]');
+            $this->form_validation->set_rules('user_role', 'User Role', 'required');
+            
+            // Check if email already exists for non-owner
+            $email_to_check = $this->input->post('non_owner_email');
+            if (!empty($email_to_check) && $this->AuthModel->email_exists($email_to_check)) {
+                $this->form_validation->set_message('non_owner_email', 'This email is already registered.');
+                return FALSE;
+            }
         }
 
         return $this->form_validation->run();
@@ -156,21 +166,33 @@ class AuthController extends CI_Controller {
      */
     private function process_signup() {
         try {
-            $data = array(
-                'user_type' => $this->input->post('user_type'),
-                'is_owner' => $this->input->post('is_owner'),
-                'email' => $this->input->post('user_email'),
-                'phone' => $this->input->post('user_phone'),
-                'full_name' => $this->input->post('user_full_name'),
-                'password' => $this->input->post('password')
-            );
-
-            // Add owner data if not owner
-            if ($this->input->post('is_owner') == 'no') {
-                $data['owner_email'] = $this->input->post('owner_email');
-                $data['owner_phone'] = $this->input->post('owner_phone');
-                $data['owner_full_name'] = $this->input->post('owner_full_name');
-                $data['owner_password'] = $this->input->post('owner_password');
+            $is_owner = $this->input->post('is_owner');
+            
+            // Prepare data based on owner status
+            if ($is_owner == 'yes') {
+                $data = array(
+                    'user_type' => $this->input->post('user_type'),
+                    'is_owner' => 'yes',
+                    'business_legal_name' => $this->input->post('business_legal_name'),
+                    'country_of_operation' => $this->input->post('country_of_operation'),
+                    'email' => $this->input->post('user_email'),
+                    'phone' => $this->input->post('user_phone'),
+                    'full_name' => $this->input->post('user_full_name'),
+                    'password' => $this->input->post('password'),
+                    'role' => 'Owner'
+                );
+            } else {
+                $data = array(
+                    'user_type' => $this->input->post('user_type'),
+                    'is_owner' => 'no',
+                    'business_legal_name' => $this->input->post('business_legal_name'),
+                    'country_of_operation' => $this->input->post('country_of_operation'),
+                    'email' => $this->input->post('non_owner_email'),
+                    'phone' => $this->input->post('non_owner_phone'),
+                    'full_name' => $this->input->post('non_owner_full_name'),
+                    'password' => $this->input->post('password'),
+                    'role' => $this->input->post('user_role')
+                );
             }
 
             $operator_id = $this->AuthModel->register($data);

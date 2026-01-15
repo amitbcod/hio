@@ -36,6 +36,28 @@
 							</div>
 						</div>
 
+						<!-- Common Fields -->
+						<div class="mb-3">
+							<label for="business_legal_name">Business Legal Name <span class="required">*</span></label>
+							<input type="text" name="business_legal_name" id="business_legal_name" class="form-control" value="<?php echo set_value('business_legal_name'); ?>" required>
+							<?php echo form_error('business_legal_name', '<p class="error">', '</p>'); ?>
+						</div>
+
+						<div class="mb-3">
+							<label for="country_of_operation">Country of Operation <span class="required">*</span></label>
+							<select name="country_of_operation" id="country_of_operation" class="form-control" required>
+								<option value="">-- Select Country --</option>
+								<option value="Mauritius" <?php echo set_select('country_of_operation', 'Mauritius'); ?>>Mauritius</option>
+								<option value="India" <?php echo set_select('country_of_operation', 'India'); ?>>India</option>
+								<option value="South Africa" <?php echo set_select('country_of_operation', 'South Africa'); ?>>South Africa</option>
+								<option value="United Kingdom" <?php echo set_select('country_of_operation', 'United Kingdom'); ?>>United Kingdom</option>
+								<option value="United States" <?php echo set_select('country_of_operation', 'United States'); ?>>United States</option>
+								<option value="Australia" <?php echo set_select('country_of_operation', 'Australia'); ?>>Australia</option>
+								<option value="Other" <?php echo set_select('country_of_operation', 'Other'); ?>>Other</option>
+							</select>
+							<?php echo form_error('country_of_operation', '<p class="error">', '</p>'); ?>
+						</div>
+
 						<!-- Owner Question -->
 						<div class="mb-4">
 							<label class="d-block mb-2"><strong>Are you the owner of this account? <span class="required">*</span></strong></label>
@@ -49,61 +71,69 @@
 							</div>
 						</div>
 
-						<!-- Owner Information (shown if "No") -->
-						<div id="owner_info_section" style="display:none; border: 1px solid #ddd; padding: 15px; border-radius: 4px; margin-bottom: 20px; background-color: #f9f9f9;">
-							<h5 class="mb-3">Owner Information</h5>
-							
+						<!-- Owner Fields (shown if "Yes") -->
+						<div id="owner_fields_section">
+							<h5 class="mt-4 mb-3">Owner Information</h5>
+
 							<div class="mb-3">
-								<label for="owner_full_name">Owner's Full Name <span class="required">*</span></label>
-								<input type="text" name="owner_full_name" id="owner_full_name" class="form-control">
-								<?php echo form_error('owner_full_name', '<p class="error">', '</p>'); ?>
+								<label for="user_email">User ID / Email Address <span class="required">*</span></label>
+								<input type="email" name="user_email" id="user_email" class="form-control" value="<?php echo set_value('user_email'); ?>" required>
+								<?php echo form_error('user_email', '<p class="error">', '</p>'); ?>
+								<small id="email_status" class="form-text text-muted"></small>
 							</div>
 
 							<div class="mb-3">
-								<label for="owner_email">Owner's Email <span class="required">*</span></label>
-								<input type="email" name="owner_email" id="owner_email" class="form-control">
-								<?php echo form_error('owner_email', '<p class="error">', '</p>'); ?>
+								<label for="user_phone">Mobile Number / WhatsApp <span class="required">*</span></label>
+								<input type="tel" name="user_phone" id="user_phone" class="form-control" placeholder="+230 5xxxxxxxx" value="<?php echo set_value('user_phone'); ?>" required>
+								<?php echo form_error('user_phone', '<p class="error">', '</p>'); ?>
+								<small class="form-text text-muted">E.164 format (e.g., +230 5701234)</small>
 							</div>
 
 							<div class="mb-3">
-								<label for="owner_phone">Owner's Phone <span class="required">*</span></label>
-								<input type="tel" name="owner_phone" id="owner_phone" class="form-control" placeholder="+230 5xxxxxxxx">
-								<?php echo form_error('owner_phone', '<p class="error">', '</p>'); ?>
-							</div>
-
-							<div class="mb-3">
-								<label for="owner_password">Owner's Password <span class="required">*</span></label>
-								<div class="input-group">
-									<input type="password" name="owner_password" id="owner_password" class="form-control" minlength="8">
-									<span class="input-group-text" style="cursor: pointer;" onclick="togglePasswordVisibility('owner_password')">
-										<i class="fa fa-eye"></i>
-									</span>
-								</div>
-								<small class="text-muted">Minimum 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special char</small>
+								<label for="user_full_name">Controller (Owner's Full Name) <span class="required">*</span></label>
+								<input type="text" name="user_full_name" id="user_full_name" class="form-control" value="<?php echo set_value('user_full_name'); ?>" required>
+								<?php echo form_error('user_full_name', '<p class="error">', '</p>'); ?>
 							</div>
 						</div>
 
-						<!-- Your Information -->
-						<h5 class="mt-4 mb-3">Your Information</h5>
+						<!-- Non-Owner Fields (shown if "No") -->
+						<div id="non_owner_fields_section" style="display:none;">
+							<h5 class="mt-4 mb-3">Your Information</h5>
 
-						<div class="mb-3">
-							<label for="user_full_name">Your Full Name <span class="required">*</span></label>
-							<input type="text" name="user_full_name" id="user_full_name" class="form-control" value="<?php echo set_value('user_full_name'); ?>" required>
-							<?php echo form_error('user_full_name', '<p class="error">', '</p>'); ?>
-						</div>
+							<div class="mb-3">
+								<label for="non_owner_email">User ID / Email Address <span class="required">*</span></label>
+								<input type="email" name="non_owner_email" id="non_owner_email" class="form-control" value="<?php echo set_value('non_owner_email'); ?>">
+								<?php echo form_error('non_owner_email', '<p class="error">', '</p>'); ?>
+							</div>
 
-						<div class="mb-3">
-							<label for="user_email">Your Email <span class="required">*</span></label>
-							<input type="email" name="user_email" id="user_email" class="form-control" value="<?php echo set_value('user_email'); ?>" required>
-							<?php echo form_error('user_email', '<p class="error">', '</p>'); ?>
-							<small id="email_status" class="form-text text-muted"></small>
-						</div>
+							<div class="mb-3">
+								<label for="non_owner_phone">Mobile Number / WhatsApp <span class="required">*</span></label>
+								<input type="tel" name="non_owner_phone" id="non_owner_phone" class="form-control" placeholder="+230 5xxxxxxxx" value="<?php echo set_value('non_owner_phone'); ?>">
+								<?php echo form_error('non_owner_phone', '<p class="error">', '</p>'); ?>
+								<small class="form-text text-muted">E.164 format (e.g., +230 5701234)</small>
+							</div>
 
-						<div class="mb-3">
-							<label for="user_phone">Your Phone <span class="required">*</span></label>
-							<input type="tel" name="user_phone" id="user_phone" class="form-control" placeholder="+230 5xxxxxxxx" value="<?php echo set_value('user_phone'); ?>" required>
-							<?php echo form_error('user_phone', '<p class="error">', '</p>'); ?>
-							<small class="form-text text-muted">E.164 format (e.g., +230 5701234)</small>
+							<div class="mb-3">
+								<label for="non_owner_full_name">Your Full Name <span class="required">*</span></label>
+								<input type="text" name="non_owner_full_name" id="non_owner_full_name" class="form-control" value="<?php echo set_value('non_owner_full_name'); ?>">
+								<?php echo form_error('non_owner_full_name', '<p class="error">', '</p>'); ?>
+							</div>
+
+							<div class="mb-3">
+								<label for="user_role">User Role <span class="required">*</span></label>
+								<select name="user_role" id="user_role" class="form-control">
+									<option value="">-- Select Role --</option>
+									<option value="Admin" <?php echo set_select('user_role', 'Admin'); ?>>Admin</option>
+									<option value="Head of Department" <?php echo set_select('user_role', 'Head of Department'); ?>>Head of Department</option>
+									<option value="Reservation Manager" <?php echo set_select('user_role', 'Reservation Manager'); ?>>Reservation Manager</option>
+									<option value="Operational Manager" <?php echo set_select('user_role', 'Operational Manager'); ?>>Operational Manager</option>
+									<option value="Finance Manager" <?php echo set_select('user_role', 'Finance Manager'); ?>>Finance Manager</option>
+									<option value="Marketing Manager" <?php echo set_select('user_role', 'Marketing Manager'); ?>>Marketing Manager</option>
+									<option value="Support Manager" <?php echo set_select('user_role', 'Support Manager'); ?>>Support Manager</option>
+									<option value="Content Manager" <?php echo set_select('user_role', 'Content Manager'); ?>>Content Manager</option>
+								</select>
+								<?php echo form_error('user_role', '<p class="error">', '</p>'); ?>
+							</div>
 						</div>
 
 						<!-- Password Setup -->
@@ -180,16 +210,23 @@
 	<script>
 		document.addEventListener('DOMContentLoaded', function() {
 			function toggleOwnerFieldsLocal() {
-				const ownerSection = document.getElementById('owner_info_section');
+				const ownerSection = document.getElementById('owner_fields_section');
+				const nonOwnerSection = document.getElementById('non_owner_fields_section');
 				const isOwner = document.getElementById('owner_yes') && document.getElementById('owner_yes').checked;
-				if (!ownerSection) return;
+				if (!ownerSection || !nonOwnerSection) return;
 
-				if (!isOwner) {
+				if (isOwner) {
+					// Show owner fields, hide non-owner fields
 					ownerSection.style.display = 'block';
-					['owner_full_name','owner_email','owner_phone','owner_password'].forEach(id => { const el = document.getElementById(id); if (el) el.required = true; });
+					nonOwnerSection.style.display = 'none';
+					['user_full_name','user_email','user_phone'].forEach(id => { const el = document.getElementById(id); if (el) el.required = true; });
+					['non_owner_full_name','non_owner_email','non_owner_phone','user_role'].forEach(id => { const el = document.getElementById(id); if (el) el.required = false; });
 				} else {
+					// Show non-owner fields, hide owner fields
 					ownerSection.style.display = 'none';
-					['owner_full_name','owner_email','owner_phone','owner_password'].forEach(id => { const el = document.getElementById(id); if (el) el.required = false; });
+					nonOwnerSection.style.display = 'block';
+					['user_full_name','user_email','user_phone'].forEach(id => { const el = document.getElementById(id); if (el) el.required = false; });
+					['non_owner_full_name','non_owner_email','non_owner_phone','user_role'].forEach(id => { const el = document.getElementById(id); if (el) el.required = true; });
 				}
 			}
 			window.toggleOwnerFields = toggleOwnerFieldsLocal;
