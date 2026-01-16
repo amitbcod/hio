@@ -9,14 +9,6 @@
 
     <nav class="sidebar-nav">
         <ul class="nav flex-column">
-            <!-- Home -->
-            <li class="nav-item">
-                <a class="nav-link <?php echo (isset($current_section) && $current_section === 'home') ? 'active' : ''; ?>" 
-                   href="<?php echo site_url('operator'); ?>">
-                    <i class="fas fa-home"></i> <span>Home</span>
-                </a>
-            </li>
-
             <li class="sidebar-section-title">PROFILE CREATION</li>
 
             <?php
@@ -30,23 +22,42 @@
                 'status_review' => array('label' => 'Status Review', 'number' => 7, 'url' => site_url('operator/status_review')),
             );
 
+            $step_keys = array_keys($steps);
+            $previous_completed = true; // First step is always enabled
+
             foreach ($steps as $key => $s) {
                 $is_completed = isset($section_status[$key]) && $section_status[$key];
                 $is_current = isset($current_section) && $current_section === $key;
+                
+                // Check if this step should be enabled (previous step must be completed)
+                $is_enabled = $previous_completed || $is_current || $is_completed;
+                
                 $li_classes = 'nav-item step-item';
                 if ($is_completed) $li_classes .= ' completed';
                 if ($is_current) $li_classes .= ' active';
+                if (!$is_enabled) $li_classes .= ' disabled';
             ?>
                 <li class="<?php echo $li_classes; ?>">
-                    <a class="nav-link" href="<?php echo $s['url']; ?>">
-                        <span class="step-number"><?php echo $s['number']; ?></span>
-                        <span><?php echo $s['label']; ?></span>
-                        <?php if ($is_completed): ?>
-                            <span class="badge badge-success badge-pill ml-auto"><i class="fas fa-check"></i></span>
-                        <?php endif; ?>
-                    </a>
+                    <?php if ($is_enabled): ?>
+                        <a class="nav-link" href="<?php echo $s['url']; ?>">
+                            <span class="step-number"><?php echo $s['number']; ?></span>
+                            <span><?php echo $s['label']; ?></span>
+                            <?php if ($is_completed): ?>
+                                <span class="badge badge-success badge-pill ml-auto"><i class="fas fa-check"></i></span>
+                            <?php endif; ?>
+                        </a>
+                    <?php else: ?>
+                        <a class="nav-link disabled" href="javascript:void(0);" title="Complete previous step first">
+                            <span class="step-number"><?php echo $s['number']; ?></span>
+                            <span><?php echo $s['label']; ?></span>
+                            <i class="fas fa-lock" style="margin-left: auto; opacity: 0.5; font-size: 12px;"></i>
+                        </a>
+                    <?php endif; ?>
                 </li>
-            <?php } ?>
+            <?php 
+                // Update for next iteration: this step must be completed for next to be enabled
+                $previous_completed = $is_completed;
+            } ?>
 
             <!-- Additional section items removed to avoid duplication; steps above handle display and enablement -->
         </ul>

@@ -99,8 +99,7 @@ class OperatorProfileModel extends CI_Model {
             if (!empty($profile->business_legal_name) && 
                 !empty($profile->registered_address) && 
                 !empty($profile->operational_address) &&
-                !empty($profile->company_description) &&
-                !empty($profile->contact_number) &&
+                !empty($profile->contact_phone) &&
                 !empty($profile->contact_email)) {
                 return TRUE;
             }

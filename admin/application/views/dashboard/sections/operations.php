@@ -1,7 +1,4 @@
 <?php
-$header_data = isset($header_data) ? $header_data : array();
-$header_data['current_section'] = 'operations';
-$this->load->view('dashboard/header', $header_data);
 // normalize variable used in view
 $operations = isset($service_operations) ? $service_operations : (isset($operations) ? $operations : NULL);
 ?>

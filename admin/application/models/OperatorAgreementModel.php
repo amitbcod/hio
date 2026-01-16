@@ -72,9 +72,8 @@ class OperatorAgreementModel extends CI_Model {
         
         if ($query->num_rows() > 0) {
             $agreement = $query->row();
-            if (!empty($agreement->agreement_status) && 
-                $agreement->agreement_status === 'signed' &&
-                !empty($agreement->agreement_effective_date)) {
+            if (!empty($agreement->contact_management_name) && 
+                !empty($agreement->agreement_type)) {
                 return TRUE;
             }
         }

@@ -25,7 +25,12 @@ class AuthController extends CI_Controller {
         if ($this->input->post()) {
             if ($this->validate_signup()) {
                 if ($this->process_signup()) {
-                    $this->session->set_flashdata('success', 'Account created successfully! Please login with your credentials.');
+                    $is_owner = $this->input->post('is_owner');
+                    if ($is_owner == 'no') {
+                        $this->session->set_flashdata('success', 'Account created successfully! The owner will receive an email to verify their identity, accept the Terms & Conditions, and set an owner password before full access is granted.');
+                    } else {
+                        $this->session->set_flashdata('success', 'Account created successfully! The owner will receive an email to verify your identity and accept the Terms & Conditions before full access is granted.');
+                    }
                     redirect('auth/login');
                 } else {
                     $data['error'] = 'Registration failed. Please try again.';
@@ -69,7 +74,10 @@ class AuthController extends CI_Controller {
             } else {
                 $operator = $this->AuthModel->authenticate($email, $password);
 
-                if ($operator) {
+                if ($operator === 'not_approved') {
+                    $this->session->set_flashdata('error', 'Your account is not verified yet. Please try again later.');
+                    redirect('auth/login');
+                } else if ($operator) {
                     // Check account status
                     if ($operator->account_status == 'archived') {
                         $this->session->set_flashdata('error', 'Your account has been archived. Please contact support.');
@@ -94,8 +102,8 @@ class AuthController extends CI_Controller {
                         log_message('info', 'Operator login successful: ' . $operator->operator_id);
                         
                         $this->session->set_flashdata('success', 'Welcome back, ' . $operator->full_name . '!');
-                        // Redirect operators to their own dashboard area
-                        redirect('operator');
+                        // Redirect operators to profile page
+                        redirect('operator/profile');
                     }
                 } else {
                     $this->session->set_flashdata('error', 'Invalid email or password.');
@@ -150,10 +158,22 @@ class AuthController extends CI_Controller {
             $this->form_validation->set_rules('non_owner_phone', 'Phone Number', 'required|regex_match[/^\+?[0-9\s\-\(\)]{7,20}$/]');
             $this->form_validation->set_rules('user_role', 'User Role', 'required');
             
+            // Also validate owner information fields
+            $this->form_validation->set_rules('owner_full_name', 'Owner Full Name', 'required|min_length[3]|max_length[255]');
+            $this->form_validation->set_rules('owner_email', 'Owner Email', 'required|valid_email|max_length[255]');
+            $this->form_validation->set_rules('owner_phone', 'Owner Phone Number', 'required|regex_match[/^\+?[0-9\s\-\(\)]{7,20}$/]');
+            
             // Check if email already exists for non-owner
             $email_to_check = $this->input->post('non_owner_email');
             if (!empty($email_to_check) && $this->AuthModel->email_exists($email_to_check)) {
                 $this->form_validation->set_message('non_owner_email', 'This email is already registered.');
+                return FALSE;
+            }
+            
+            // Check if owner email already exists
+            $owner_email_to_check = $this->input->post('owner_email');
+            if (!empty($owner_email_to_check) && $this->AuthModel->email_exists($owner_email_to_check)) {
+                $this->form_validation->set_message('owner_email', 'This owner email is already registered.');
                 return FALSE;
             }
         }
@@ -191,7 +211,11 @@ class AuthController extends CI_Controller {
                     'phone' => $this->input->post('non_owner_phone'),
                     'full_name' => $this->input->post('non_owner_full_name'),
                     'password' => $this->input->post('password'),
-                    'role' => $this->input->post('user_role')
+                    'role' => $this->input->post('user_role'),
+                    // Owner information
+                    'owner_full_name' => $this->input->post('owner_full_name'),
+                    'owner_email' => $this->input->post('owner_email'),
+                    'owner_phone' => $this->input->post('owner_phone')
                 );
             }
 

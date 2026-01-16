@@ -1,9 +1,3 @@
-<?php
-$header_data = isset($header_data) ? $header_data : array();
-$header_data['current_section'] = 'system_process';
-$this->load->view('dashboard/header', $header_data);
-?>
-
 <div class="container-fluid dashboard-container">
     <div class="main-content">
         <div class="container-fluid p-0">
@@ -54,15 +48,19 @@ $this->load->view('dashboard/header', $header_data);
                                 <div class="col-md-6 mb-3">
                                     <label for="assigned_operator_name" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">Assigned Operator Name</label>
                                     <input type="text" class="form-control" id="assigned_operator_name" name="assigned_operator_name" 
-                                           value="<?php echo isset($system->assigned_operator_name) ? htmlspecialchars($system->assigned_operator_name) : ''; ?>" readonly 
+                                           value="System Administrator" 
+                                           disabled
                                            style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #f5f5f5;">
+                                    <input type="hidden" name="assigned_operator_name" value="System Administrator">
                                     </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label for="assigned_operator_role" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">Assigned Operator Role</label>
-                                    <input type="text" class="form-control" id="assigned_operator_role" name="assigned_operator_role" 
-                                           value="<?php echo isset($system->assigned_operator_role) ? htmlspecialchars($system->assigned_operator_role) : ''; ?>" readonly 
+                                    <input type="text" class="form-control" id="assigned_operator_role" name="assigned_operator_role_display" 
+                                           value="Primary Operator" 
+                                           disabled
                                            style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #f5f5f5;">
+                                    <input type="hidden" name="assigned_operator_role" value="Primary Operator">
                                     </div>
                                 </div>
 

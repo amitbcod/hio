@@ -118,6 +118,14 @@ class OperatorUserModel extends CI_Model {
         
         return $user_id;
     }
+
+    /**
+     * Get user count for operator
+     */
+    public function get_user_count($operator_id) {
+        $this->db->where('operator_id', $operator_id);
+        return $this->db->count_all_results($this->table);
+    }
 }
 
 /*defined('BASEPATH') OR exit('No direct script access allowed');

@@ -1,9 +1,3 @@
-<?php
-$header_data = isset($header_data) ? $header_data : array();
-$header_data['current_section'] = 'collaboration';
-$this->load->view('dashboard/header', $header_data);
-?>
-
 <div class="container-fluid dashboard-container">
     <div class="main-content">
         <div class="container-fluid p-0">
@@ -107,37 +101,8 @@ $this->load->view('dashboard/header', $header_data);
                                             <option value="OTO + Widget" <?php echo (isset($agreement->agreement_type) && $agreement->agreement_type === 'OTO + Widget') ? 'selected' : ''; ?>>OTO + Widget</option>
                                             <option value="Full Service" <?php echo (isset($agreement->agreement_type) && $agreement->agreement_type === 'Full Service') ? 'selected' : ''; ?>>Full Service</option>
                                         </select>
-                                    </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label for="commission_model" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">Commission Model <span style="color: #dc3545;">*</span></label>
-                                    <select class="form-control" id="commission_model" name="commission_model" required 
-                                            style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #fff;">
-                                            <option value="">Select Commission Model</option>
-                                            <option value="Percentage" <?php echo (isset($agreement->commission_model) && $agreement->commission_model === 'Percentage') ? 'selected' : ''; ?>>Percentage</option>
-                                            <option value="Fixed Fee" <?php echo (isset($agreement->commission_model) && $agreement->commission_model === 'Fixed Fee') ? 'selected' : ''; ?>>Fixed Fee</option>
-                                            <option value="Hybrid" <?php echo (isset($agreement->commission_model) && $agreement->commission_model === 'Hybrid') ? 'selected' : ''; ?>>Hybrid</option>
-                                        </select>
-                                    </div>
                                 </div>
 
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="commission_value" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">Commission Value <span style="color: #dc3545;">*</span></label>
-                                    <input type="number" step="0.01" class="form-control" id="commission_value" name="commission_value" 
-                                           value="<?php echo isset($agreement->commission_value) ? $agreement->commission_value : ''; ?>" required 
-                                           style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                                    </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label for="start_date" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">Start Date <span style="color: #dc3545;">*</span></label>
-                                    <input type="date" class="form-control" id="start_date" name="start_date" 
-                                           value="<?php echo isset($agreement->start_date) ? $agreement->start_date : ''; ?>" required 
-                                           style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                                    </div>
-                                </div>
-
-                            <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="agreement_file" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">Signed Agreement (PDF)</label>
                                     <input type="file" class="form-control" id="agreement_file" name="agreement_file" accept=".pdf" 
@@ -145,8 +110,91 @@ $this->load->view('dashboard/header', $header_data);
                                     <?php if (isset($agreement->agreement_file)): ?>
                                         <small style="color: #28a745; display: block; margin-top: 8px;">Uploaded</small>
                                     <?php endif; ?>
-                                    </div>
                                 </div>
+                            </div>
+
+                            <?php
+                            // Calculate dates
+                            $today = date('Y-m-d');
+                            $end_date = date('Y-m-d', strtotime('+1 year'));
+                            $renewal_date = date('Y-m-d', strtotime('+1 year'));
+                            ?>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="start_date" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">Start Date <span style="color: #dc3545;">*</span></label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date_display" 
+                                           value="<?php echo $today; ?>" readonly
+                                           style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #f5f5f5;">
+                                    <input type="hidden" name="start_date" value="<?php echo $today; ?>">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="end_date" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">End Date <span style="color: #dc3545;">*</span></label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date_display" 
+                                           value="<?php echo $end_date; ?>" readonly
+                                           style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #f5f5f5;">
+                                    <input type="hidden" name="end_date" value="<?php echo $end_date; ?>">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="renewal_date" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">Renewal Date <span style="color: #dc3545;">*</span></label>
+                                    <input type="date" class="form-control" id="renewal_date" name="renewal_date_display" 
+                                           value="<?php echo $renewal_date; ?>" readonly
+                                           style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #f5f5f5;">
+                                    <input type="hidden" name="renewal_date" value="<?php echo $renewal_date; ?>">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="commission_model" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">Commission Model</label>
+                                    <input type="text" class="form-control" id="commission_model" name="commission_model_display" 
+                                           value="0" readonly
+                                           style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #f5f5f5;">
+                                    <input type="hidden" name="commission_model" value="0">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="commission_value" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">Commission Value</label>
+                                    <input type="text" class="form-control" id="commission_value" name="commission_value_display" 
+                                           value="0" readonly
+                                           style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #f5f5f5;">
+                                    <input type="hidden" name="commission_value" value="0">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="marketing_contribution" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">Marketing Contribution %</label>
+                                    <input type="text" class="form-control" id="marketing_contribution" name="marketing_contribution_display" 
+                                           value="0" readonly
+                                           style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #f5f5f5;">
+                                    <input type="hidden" name="marketing_contribution" value="0">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="status" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">Status</label>
+                                    <input type="text" class="form-control" id="status" name="status_display" 
+                                           value="Active" readonly
+                                           style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #f5f5f5;">
+                                    <input type="hidden" name="status" value="Active">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="responsibilities" style="font-weight: 400; color: #555; font-size: 14px; display: block; margin-bottom: 8px;">Responsibilities</label>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="text" class="form-control" id="responsibilities" name="responsibilities_display" 
+                                               value="Standard Terms & Conditions Apply" readonly
+                                               style="flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #f5f5f5;">
+                                        <a href="<?php echo site_url('operator/download_responsibilities'); ?>" target="_blank" class="btn"
+                                           style="background-color: #17a2b8; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500; text-decoration: none; white-space: nowrap;">
+                                            <i class="fas fa-download"></i> Download
+                                        </a>
+                                    </div>
+                                    <input type="hidden" name="responsibilities" value="Standard Terms & Conditions Apply">
+                                </div>
+                            </div>
 
                             <div class="row">
                                 <div class="col-12">

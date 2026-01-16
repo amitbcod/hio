@@ -1,7 +1,4 @@
 <?php
-$header_data = isset($header_data) ? $header_data : array();
-$header_data['current_section'] = 'status_review';
-$this->load->view('dashboard/header', $header_data);
 $status_review = isset($status_review) ? $status_review : NULL;
 ?>
 

@@ -90,9 +90,8 @@ class OperatorSystemProcessModel extends CI_Model {
         
         if ($query->num_rows() > 0) {
             $process = $query->row();
-            if (!empty($process->system_name) && 
-                !empty($process->payment_gateway) &&
-                !empty($process->operating_system)) {
+            if (!empty($process->service_category) && 
+                !empty($process->communication_preference)) {
                 return TRUE;
             }
         }

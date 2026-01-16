@@ -60,7 +60,7 @@
 
 						<!-- Owner Question -->
 						<div class="mb-4">
-							<label class="d-block mb-2"><strong>Are you the owner of this account? <span class="required">*</span></strong></label>
+							<label class="d-block mb-2"><strong>Are you the owner of this business? <span class="required">*</span></strong></label>
 							<div class="form-check">
 								<input type="radio" name="is_owner" value="yes" id="owner_yes" class="form-check-input" checked required onchange="toggleOwnerFields()">
 								<label class="form-check-label" for="owner_yes">Yes</label>
@@ -133,6 +133,27 @@
 									<option value="Content Manager" <?php echo set_select('user_role', 'Content Manager'); ?>>Content Manager</option>
 								</select>
 								<?php echo form_error('user_role', '<p class="error">', '</p>'); ?>
+							</div>
+
+							<h5 class="mt-4 mb-3">Owner Information</h5>
+
+							<div class="mb-3">
+								<label for="owner_full_name">Owner's Full Name <span class="required">*</span></label>
+								<input type="text" name="owner_full_name" id="owner_full_name" class="form-control" value="<?php echo set_value('owner_full_name'); ?>">
+								<?php echo form_error('owner_full_name', '<p class="error">', '</p>'); ?>
+							</div>
+
+							<div class="mb-3">
+								<label for="owner_email">Owner's Email Address <span class="required">*</span></label>
+								<input type="email" name="owner_email" id="owner_email" class="form-control" value="<?php echo set_value('owner_email'); ?>">
+								<?php echo form_error('owner_email', '<p class="error">', '</p>'); ?>
+							</div>
+
+							<div class="mb-3">
+								<label for="owner_phone">Owner's Mobile Number <span class="required">*</span></label>
+								<input type="tel" name="owner_phone" id="owner_phone" class="form-control" placeholder="+230 5xxxxxxxx" value="<?php echo set_value('owner_phone'); ?>">
+								<?php echo form_error('owner_phone', '<p class="error">', '</p>'); ?>
+								<small class="form-text text-muted">E.164 format (e.g., +230 5701234)</small>
 							</div>
 						</div>
 
@@ -220,13 +241,13 @@
 					ownerSection.style.display = 'block';
 					nonOwnerSection.style.display = 'none';
 					['user_full_name','user_email','user_phone'].forEach(id => { const el = document.getElementById(id); if (el) el.required = true; });
-					['non_owner_full_name','non_owner_email','non_owner_phone','user_role'].forEach(id => { const el = document.getElementById(id); if (el) el.required = false; });
+					['non_owner_full_name','non_owner_email','non_owner_phone','user_role','owner_full_name','owner_email','owner_phone'].forEach(id => { const el = document.getElementById(id); if (el) el.required = false; });
 				} else {
 					// Show non-owner fields, hide owner fields
 					ownerSection.style.display = 'none';
 					nonOwnerSection.style.display = 'block';
 					['user_full_name','user_email','user_phone'].forEach(id => { const el = document.getElementById(id); if (el) el.required = false; });
-					['non_owner_full_name','non_owner_email','non_owner_phone','user_role'].forEach(id => { const el = document.getElementById(id); if (el) el.required = true; });
+					['non_owner_full_name','non_owner_email','non_owner_phone','user_role','owner_full_name','owner_email','owner_phone'].forEach(id => { const el = document.getElementById(id); if (el) el.required = true; });
 				}
 			}
 			window.toggleOwnerFields = toggleOwnerFieldsLocal;

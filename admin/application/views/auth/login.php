@@ -60,7 +60,7 @@
 			<!-- Right Side: Branding -->
 			<div class="auth-branding-side">
 				<div class="auth-logo">
-					<i class="fas fa-umbrella"></i>
+					<!-- <i class="fas fa-umbrella"></i> -->
 				</div>
 				<h2>Holidays.io</h2>
 				<p><strong>Operator Management System</strong></p>

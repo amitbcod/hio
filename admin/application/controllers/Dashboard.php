@@ -7,6 +7,13 @@ class Dashboard extends CI_Controller {
         parent::__construct();
         $this->load->helper('auth');
         $this->load->model('OperatorModel');
+        $this->load->model('OperatorProfileModel');
+        $this->load->model('OperatorLegalModel');
+        $this->load->model('OperatorSystemProcessModel');
+        $this->load->model('OperatorAgreementModel');
+        $this->load->model('OperatorUserModel');
+        $this->load->model('OperatorAccountingModel');
+        $this->load->model('OperatorServiceModel');
         
         // Require login for all methods
         AuthHelper::require_login();
@@ -16,19 +23,29 @@ class Dashboard extends CI_Controller {
      * Helper method to get section completion status
      */
     private function get_section_status($operator_id) {
-        $profile_complete = $this->OperatorModel->is_profile_complete($operator_id);
-        $legal_complete = $this->OperatorModel->is_legal_complete($operator_id);
-        $accounting_complete = $this->OperatorModel->is_accounting_complete($operator_id);
+        $profile_complete = $this->OperatorProfileModel->is_complete($operator_id);
+        $legal_complete = $this->OperatorLegalModel->is_complete($operator_id);
+        $system_process_complete = $this->OperatorSystemProcessModel->is_complete($operator_id);
+        $collaboration_complete = $this->OperatorAgreementModel->is_complete($operator_id);
+        $users_complete = $this->OperatorUserModel->get_user_count($operator_id) > 0;
+        $accounting_complete = $this->OperatorAccountingModel->is_complete($operator_id);
+        $operations_complete = $this->OperatorServiceModel->is_complete($operator_id);
+        
+        // Status review is complete when all other sections are complete
+        $status_review_complete = $profile_complete && $legal_complete && 
+                                  $system_process_complete && $collaboration_complete && 
+                                  $users_complete && $accounting_complete && 
+                                  $operations_complete;
         
         return array(
             'profile' => $profile_complete,
-            'legal' => $legal_complete,
-            'system_process' => false,
-            'collaboration' => false,
-            'users' => false,
+            'system_process' => $system_process_complete,
+            'collaboration' => $collaboration_complete,
+            'users' => $users_complete,
             'accounting' => $accounting_complete,
-            'operations' => false,
-            'status_review' => false
+            'operations' => $operations_complete,
+            'legal' => $legal_complete,
+            'status_review' => $status_review_complete
         );
     }
 
@@ -44,34 +61,10 @@ class Dashboard extends CI_Controller {
     }
 
     /**
-     * Main dashboard home
+     * Main dashboard home - redirect to profile
      */
     public function index() {
-        $operator_id = AuthHelper::get_operator_id();
-        
-        $operator = $this->OperatorModel->get_operator($operator_id);
-        
-        $data = array(
-            'operator' => $operator,
-            'page_title' => 'Dashboard',
-            'section' => 'home',
-            'operator_name' => AuthHelper::get_operator_name(),
-            'account_status' => isset($operator->account_status) ? $operator->account_status : 'pending_verification',
-            'last_updated' => isset($operator->updated_at) ? $operator->updated_at : null
-        );
-
-        // Get completion status for all sections
-        $data['section_status'] = $this->get_section_status($operator_id);
-        
-        // Calculate completion percentage based on 8 steps
-        $completed_sections = count(array_filter($data['section_status']));
-        $total_sections = count($data['section_status']);
-        $data['completion_percentage'] = $total_sections > 0 ? round(($completed_sections / $total_sections) * 100) : 0;
-        
-        $this->load->view('dashboard/header', $data);
-        $this->load->view('dashboard/sidebar', $data);
-        $this->load->view('dashboard/home', $data);
-        $this->load->view('dashboard/footer', $data);
+        redirect('operator/profile');
     }
 
     /**
@@ -92,6 +85,10 @@ class Dashboard extends CI_Controller {
         // Load existing profile if exists
         $this->load->model('OperatorProfileModel');
         $profile = $this->OperatorProfileModel->get_profile($operator_id);
+        
+        // Get operator data for business name
+        $operator = $this->OperatorModel->get_operator($operator_id);
+        $data['operator'] = $operator;
         
         if ($this->input->post()) {
             // Save profile
@@ -162,18 +159,18 @@ class Dashboard extends CI_Controller {
         $this->add_current_section($data, $operator_id, 'system_process');
 
         $this->load->model('OperatorSystemProcessModel');
-        $system = $this->OperatorSystemProcessModel->get_system_process($operator_id);
         
         if ($this->input->post()) {
             if ($this->save_system_process($operator_id)) {
                 $this->session->set_flashdata('success', 'System process information saved successfully!');
-                redirect(base_url('dashboard/system_process'));
+                redirect('operator/system_process');
             } else {
                 $data['error'] = 'Failed to save system process information.';
             }
         }
-
-        $data['system_process'] = $system;
+        
+        $system = $this->OperatorSystemProcessModel->get_system_process($operator_id);
+        $data['system'] = $system;
         
         $this->load->view('dashboard/header', $data);
         $this->load->view('dashboard/sidebar', $data);
@@ -489,7 +486,46 @@ class Dashboard extends CI_Controller {
     }
 
     /**
+     * Download responsibilities PDF
+     */
+    public function download_responsibilities() {
+        $operator_id = AuthHelper::get_operator_id();
+        $operator = $this->OperatorModel->get_operator($operator_id);
+        
+        // Set headers for PDF download
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="responsibilities_' . $operator_id . '.pdf"');
+        
+        // Creating a simple PDF content
+        $pdf_content = "%PDF-1.4\n";
+        $pdf_content .= "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n";
+        $pdf_content .= "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n";
+        $pdf_content .= "3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources 4 0 R /MediaBox [0 0 612 792] /Contents 5 0 R >>\nendobj\n";
+        $pdf_content .= "4 0 obj\n<< /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >>\nendobj\n";
+        $pdf_content .= "5 0 obj\n<< /Length 500 >>\nstream\n";
+        $pdf_content .= "BT /F1 18 Tf 50 700 Td (OPERATOR RESPONSIBILITIES) Tj ET\n";
+        $pdf_content .= "BT /F1 12 Tf 50 670 Td (Holidays.io Platform Agreement) Tj ET\n";
+        $pdf_content .= "BT /F1 10 Tf 50 640 Td (Operator: " . (isset($operator->full_name) ? $operator->full_name : 'N/A') . ") Tj ET\n";
+        $pdf_content .= "BT /F1 10 Tf 50 610 Td (Date: " . date('Y-m-d') . ") Tj ET\n";
+        $pdf_content .= "BT /F1 10 Tf 50 570 Td (Standard Terms & Conditions Apply:) Tj ET\n";
+        $pdf_content .= "BT /F1 9 Tf 50 550 Td (1. Maintain accurate service information) Tj ET\n";
+        $pdf_content .= "BT /F1 9 Tf 50 535 Td (2. Respond to bookings within 24 hours) Tj ET\n";
+        $pdf_content .= "BT /F1 9 Tf 50 520 Td (3. Provide quality service as described) Tj ET\n";
+        $pdf_content .= "BT /F1 9 Tf 50 505 Td (4. Comply with platform policies) Tj ET\n";
+        $pdf_content .= "BT /F1 9 Tf 50 490 Td (5. Handle customer complaints professionally) Tj ET\n";
+        $pdf_content .= "endstream\nendobj\n";
+        $pdf_content .= "xref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000056 00000 n \n0000000115 00000 n \n0000000214 00000 n \n0000000304 00000 n \n";
+        $pdf_content .= "trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n854\n%%EOF";
+        
+        echo $pdf_content;
+        exit;
+    }
+
+    /**
      * Status Review section (read-only)
+     */
+    /**
+     * Status Review section
      */
     public function status_review() {
         $operator_id = AuthHelper::get_operator_id();
@@ -620,11 +656,17 @@ class Dashboard extends CI_Controller {
     private function save_system_process($operator_id) {
         $this->load->model('OperatorSystemProcessModel');
         
+        // Get operator info for defaults
+        $operator = $this->OperatorModel->get_operator($operator_id);
+        $operator_name = $operator ? $operator->full_name : 'System Administrator';
+        
         $system_data = array(
             'operator_id' => $operator_id,
             'service_category' => $this->input->post('service_category'),
             'communication_preference' => $this->input->post('communication_preference'),
-            'status' => 'draft'
+            'assigned_operator_name' => $this->input->post('assigned_operator_name') ?: $operator_name,
+            'assigned_operator_role' => $this->input->post('assigned_operator_role') ?: 'Primary Operator',
+            'status' => $this->input->post('status') ?: 'draft'
         );
 
         return $this->OperatorSystemProcessModel->save_system_process($system_data);
@@ -633,15 +675,29 @@ class Dashboard extends CI_Controller {
     private function save_collaboration($operator_id) {
         $this->load->model('OperatorAgreementModel');
         
+        // Generate unique agreement_id
+        $agreement_id = 'AGR_' . $operator_id . '_' . time();
+        
         $agreement_data = array(
+            'agreement_id' => $agreement_id,
             'operator_id' => $operator_id,
             'contact_management_name' => $this->input->post('contact_management_name'),
             'contact_management_email' => $this->input->post('contact_management_email'),
+            'contact_management_phone' => $this->input->post('contact_management_phone'),
+            'contact_management_mobile' => $this->input->post('contact_management_mobile'),
             'contact_accounting_name' => $this->input->post('contact_accounting_name'),
             'contact_accounting_email' => $this->input->post('contact_accounting_email'),
+            'contact_accounting_phone' => $this->input->post('contact_accounting_phone'),
+            'contact_accounting_mobile' => $this->input->post('contact_accounting_mobile'),
             'agreement_type' => $this->input->post('agreement_type'),
+            'start_date' => $this->input->post('start_date'),
+            'end_date' => $this->input->post('end_date'),
+            'renewal_date' => $this->input->post('renewal_date'),
+            'commission_model' => $this->input->post('commission_model'),
             'commission_value' => $this->input->post('commission_value'),
-            'status' => 'Draft'
+            'marketing_contribution_percent' => $this->input->post('marketing_contribution'),
+            'responsibilities_document' => $this->input->post('responsibilities'),
+            'status' => $this->input->post('status')
         );
 
         return $this->OperatorAgreementModel->save_agreement($agreement_data);

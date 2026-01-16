@@ -20,16 +20,25 @@ class AuthModel extends CI_Model {
                 'operator_id' => $operator_id,
                 'user_type' => $data['user_type'],
                 'is_owner' => $data['is_owner'],
+                'business_legal_name' => isset($data['business_legal_name']) ? $data['business_legal_name'] : '',
                 'email' => $data['email'],
                 'phone' => $data['phone'],
                 'full_name' => $data['full_name'],
                 'password_hash' => password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]),
                 'account_status' => 'pending_verification',
+                'operator_approve_flag' => 0,
                 'registration_status' => 'in_progress',
                 'current_step' => 1,
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
             );
+
+            // If not owner, add owner information to the same record
+            if ($data['is_owner'] == 'no' && isset($data['owner_full_name'])) {
+                $insert_data['owner_full_name'] = $data['owner_full_name'];
+                $insert_data['owner_email'] = $data['owner_email'];
+                $insert_data['owner_phone'] = $data['owner_phone'];
+            }
 
             // Insert main operator record
             if ($this->db->insert('operators', $insert_data)) {
@@ -49,24 +58,6 @@ class AuthModel extends CI_Model {
                     'created_at' => date('Y-m-d H:i:s'),
                     'updated_at' => date('Y-m-d H:i:s')
                 ));
-
-                // If not owner, create owner account as well
-                if ($data['is_owner'] == 'no') {
-                    $owner_data = array(
-                        'operator_id' => $operator_id,
-                        'user_type' => $data['user_type'],
-                        'is_owner' => 'yes',
-                        'email' => $data['owner_email'],
-                        'phone' => $data['owner_phone'],
-                        'full_name' => $data['owner_full_name'],
-                        'password_hash' => password_hash($data['owner_password'], PASSWORD_BCRYPT, ['cost' => 12]),
-                        'account_status' => 'pending_verification',
-                        'registration_status' => 'in_progress',
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s')
-                    );
-                    // Note: Owner would be linked via relationship, needs additional table
-                }
 
                 return $operator_id;
             }
@@ -91,6 +82,11 @@ class AuthModel extends CI_Model {
                 
                 // Verify password
                 if (password_verify($password, $operator->password_hash)) {
+                    // Check if operator is approved
+                    if (isset($operator->operator_approve_flag) && $operator->operator_approve_flag == 0) {
+                        return 'not_approved';
+                    }
+                    
                     // Update last login (needs to be added to operators table)
                     $this->db->where('id', $operator->id);
                     $this->db->update('operators', array('updated_at' => date('Y-m-d H:i:s')));

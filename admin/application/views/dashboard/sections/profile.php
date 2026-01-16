@@ -32,9 +32,17 @@
                         <label style="font-weight: 400; color: #555; font-size: 14px;">Business Legal Name</label>
                     </div>
                     <div style="display: table-cell; width: 70%;">
-                        <input type="text" class="form-control" name="business_legal_name" 
-                               value="<?php echo isset($profile->business_legal_name) ? htmlspecialchars($profile->business_legal_name) : ''; ?>" 
-                               style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" required>
+                        <?php 
+                        $business_name = isset($operator->business_legal_name) ? $operator->business_legal_name : '';
+                        if (empty($business_name) && isset($profile->business_legal_name)) {
+                            $business_name = $profile->business_legal_name;
+                        }
+                        ?>
+                        <input type="text" class="form-control" name="business_legal_name_display" 
+                               value="<?php echo htmlspecialchars($business_name); ?>" 
+                               readonly
+                               style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #f5f5f5;">
+                        <input type="hidden" name="business_legal_name" value="<?php echo htmlspecialchars($business_name); ?>">
                     </div>
                 </div>
 

@@ -1,9 +1,3 @@
-<?php
-$header_data = isset($header_data) ? $header_data : array();
-$header_data['current_section'] = 'legal';
-$this->load->view('dashboard/header', $header_data);
-?>
-
 <div class="container-fluid dashboard-container">
     <div class="main-content">
         <div class="container-fluid p-0">
