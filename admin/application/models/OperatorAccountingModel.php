@@ -103,10 +103,11 @@ class OperatorAccountingModel extends CI_Model {
         
         if ($query->num_rows() > 0) {
             $accounting = $query->row();
+            // Check required fields that were just saved
             if (!empty($accounting->bank_account_holder_name) && 
                 !empty($accounting->bank_name) &&
                 !empty($accounting->account_number) &&
-                !empty($accounting->currency)) {
+                !empty($accounting->payment_schedule)) {
                 return TRUE;
             }
         }

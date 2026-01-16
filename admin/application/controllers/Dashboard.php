@@ -88,6 +88,11 @@ class Dashboard extends CI_Controller {
         
         // Get operator data for business name
         $operator = $this->OperatorModel->get_operator($operator_id);
+        
+        // Debug: Check what we're getting
+        error_log("Dashboard profile - operator_id: " . $operator_id);
+        error_log("Dashboard profile - operator object: " . print_r($operator, true));
+        
         $data['operator'] = $operator;
         
         if ($this->input->post()) {
@@ -712,9 +717,13 @@ class Dashboard extends CI_Controller {
             'account_number' => $this->input->post('account_number'),
             'iban' => $this->input->post('iban'),
             'swift_code' => $this->input->post('swift_code'),
+            'currency_preference' => $this->input->post('currency_preference'),
             'vat_number' => $this->input->post('vat_number'),
+            'vat_exempted' => $this->input->post('vat_exempted') ? 1 : 0,
+            'commission_type' => $this->input->post('commission_type'),
+            'commission_value' => $this->input->post('commission_value'),
             'payment_schedule' => $this->input->post('payment_schedule'),
-            'status' => 'active'
+            'status' => $this->input->post('status') ?: 'active'
         );
 
         return $this->OperatorAccountingModel->save_accounting($operator_id, $accounting_data);
@@ -738,6 +747,22 @@ class Dashboard extends CI_Controller {
             'emergency_contact_email' => $this->input->post('emergency_contact_email'),
             'opening_time' => $this->input->post('opening_time'),
             'closing_time' => $this->input->post('closing_time'),
+            // Operating hours for each day
+            'monday_open' => $this->input->post('monday_open'),
+            'monday_close' => $this->input->post('monday_close'),
+            'tuesday_open' => $this->input->post('tuesday_open'),
+            'tuesday_close' => $this->input->post('tuesday_close'),
+            'wednesday_open' => $this->input->post('wednesday_open'),
+            'wednesday_close' => $this->input->post('wednesday_close'),
+            'thursday_open' => $this->input->post('thursday_open'),
+            'thursday_close' => $this->input->post('thursday_close'),
+            'friday_open' => $this->input->post('friday_open'),
+            'friday_close' => $this->input->post('friday_close'),
+            'saturday_open' => $this->input->post('saturday_open'),
+            'saturday_close' => $this->input->post('saturday_close'),
+            'sunday_open' => $this->input->post('sunday_open'),
+            'sunday_close' => $this->input->post('sunday_close'),
+            'service_notes' => $this->input->post('service_notes'),
             'status' => 'draft'
         );
 

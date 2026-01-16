@@ -79,9 +79,19 @@ class OperatorServiceModel extends CI_Model {
         
         if ($query->num_rows() > 0) {
             $operations = $query->row();
-            if (!empty($operations->service_types) && 
-                !empty($operations->operating_days) &&
-                !empty($operations->support_contact)) {
+            // Check fields that are actually being saved
+            // At least one day's operating hours should be set
+            $has_operating_hours = !empty($operations->monday_open) || 
+                                  !empty($operations->tuesday_open) || 
+                                  !empty($operations->wednesday_open) ||
+                                  !empty($operations->thursday_open) ||
+                                  !empty($operations->friday_open) ||
+                                  !empty($operations->saturday_open) ||
+                                  !empty($operations->sunday_open);
+            
+            if (!empty($operations->service_location) && 
+                !empty($operations->emergency_contact_name) &&
+                $has_operating_hours) {
                 return TRUE;
             }
         }

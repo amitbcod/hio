@@ -36,7 +36,7 @@ class OperatorModel extends CI_Model {
      * Get operator registration by ID
      */
     public function get_operator($operator_id) {
-        $this->db->where('id', $operator_id);
+        $this->db->where('operator_id', $operator_id);
         $query = $this->db->get($this->table);
         return $query->row();
     }

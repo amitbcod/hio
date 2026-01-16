@@ -33,10 +33,19 @@
                     </div>
                     <div style="display: table-cell; width: 70%;">
                         <?php 
+                        // Debug
+                        echo "<!-- Debug: operator exists: " . (isset($operator) ? 'YES' : 'NO') . " -->";
+                        if (isset($operator)) {
+                            echo "<!-- Debug: operator data: " . print_r($operator, true) . " -->";
+                        }
+                        echo "<!-- Debug: profile exists: " . (isset($profile) ? 'YES' : 'NO') . " -->";
+                        
                         $business_name = isset($operator->business_legal_name) ? $operator->business_legal_name : '';
                         if (empty($business_name) && isset($profile->business_legal_name)) {
                             $business_name = $profile->business_legal_name;
                         }
+                        
+                        echo "<!-- Debug: business_name value: '" . $business_name . "' -->";
                         ?>
                         <input type="text" class="form-control" name="business_legal_name_display" 
                                value="<?php echo htmlspecialchars($business_name); ?>" 
