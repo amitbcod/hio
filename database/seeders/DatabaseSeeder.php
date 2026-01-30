@@ -23,6 +23,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Admin user for system
-        $this->call([\Database\Seeders\AdminUserSeeder::class]);
+       // $this->call([\Database\Seeders\AdminUserSeeder::class]);
     }
 }
