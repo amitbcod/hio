@@ -1,0 +1,42 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Dependency directories
+/vendor
+/node_modules
+
+# Build artifacts
+/public/build
+/public/hot
+/public/storage
+
+# Storage & cache
+/storage
+/bootstrap/cache
+
+# PHPUnit
+.phpunit.result.cache
+/.phpunit.cache
+
+# IDEs / Editors
+/.idea
+/.vscode
+/.fleet
+/.zed
+/.nova
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Auth / tools
+/auth.json
+
+# Homestead
+Homestead.json
+Homestead.yaml
