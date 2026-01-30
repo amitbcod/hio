@@ -10,10 +10,10 @@ class AdminUserSeeder extends Seeder
     public function run()
     {
         AdminUser::updateOrCreate([
-            'email' => 'admin@example.com'
+            'email' => 'amit29592@gmail.com'
         ],[
             'name' => 'Super Admin',
-            'password_hash' => bcrypt('AdminPass123!'),
+            'password_hash' => bcrypt('Admin@999999'),
             'role' => 'super_admin',
             'status' => 'active',
         ]);
