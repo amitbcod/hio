@@ -46,7 +46,7 @@ class ControllerVerificationTest extends TestCase
 
         $cv->acceptBy($owner);
         $cv = $cv->fresh();
-        $this->assertEquals('accepted', $cv->status);
+        $this->assertEquals('approved', $cv->status);
     }
 
     public function test_owner_can_claim_and_notifications_sent()
@@ -111,11 +111,11 @@ class ControllerVerificationTest extends TestCase
             'confirm_authority' => 'on'
         ]);
         $controllerResponse = $controller->claim($req, $cv->token);
-        // If controller returns redirect we ignore, but we expect it to process and accept the verification
+        // If controller returns redirect we ignore, but we expect it to process and approve the verification
 
-        // verification should have been accepted
+        // verification should have been approved
         $cv = $cv->fresh();
-        $this->assertEquals('accepted', $cv->status, 'Expected verification to be accepted after claim');
+        $this->assertEquals('approved', $cv->status, 'Expected verification to be approved after claim');
 
         // operator (owner) created
         $this->assertDatabaseHas('operators', ['email' => 'owner@example.com']);
@@ -190,7 +190,7 @@ class ControllerVerificationTest extends TestCase
             'token' => ControllerVerification::generateToken(),
             'business_id' => $business->id,
             'owner_email' => 'owner_already@example.com',
-            'status' => 'accepted',
+            'status' => 'approved',
             'accepted_by' => $existingOperator->id,
             'expires_at' => now()->addDays(7),
         ]);
@@ -204,7 +204,7 @@ class ControllerVerificationTest extends TestCase
         ]);
 
         $response->assertRedirect(route('operator.register.step2'));
-        $this->assertEquals('accepted', $cv->fresh()->status);
+        $this->assertEquals('approved', $cv->fresh()->status);
         $this->assertDatabaseMissing('operators', ['email' => 'owner_already@example.com']);
     }
 
@@ -240,8 +240,93 @@ class ControllerVerificationTest extends TestCase
         $response = $this->post('/operator/register/controller/verify/'.$cv->token.'/accept');
 
         $response->assertRedirect(route('operator.register.step2'));
-        $this->assertEquals('accepted', $cv->fresh()->status);
+        $this->assertEquals('approved', $cv->fresh()->status);
         $this->assertEquals($owner->id, $cv->fresh()->accepted_by);
         $this->assertEquals($cv->business_id, $owner->fresh()->business_id);
     }
+
+    public function test_verification_page_displays_requester_details()
+    {
+        $business = Business::create([
+            'business_id' => Business::generateBusinessId(),
+            'legal_name' => 'Requester Business',
+            'primary_contact_email' => 'reqview@example.com',
+            'status' => 'pending',
+        ]);
+
+        $requester = Operator::create([
+            'operator_id' => uniqid('OP'),
+            'user_type' => 'Operator',
+            'is_owner' => 'no',
+            'email' => 'reqview@example.com',
+            'full_name' => 'Requester View',
+            'password_hash' => bcrypt('Password123!'),
+            'business_id' => $business->id,
+            'account_status' => 'pending',
+        ]);
+
+        $cv = ControllerVerification::create([
+            'token' => ControllerVerification::generateToken(),
+            'business_id' => $business->id,
+            'owner_email' => 'owner_view@example.com',
+            'requester_operator_id' => $requester->operator_id,
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $response = $this->get('/operator/register/controller/verify/'.$cv->token);
+        $response->assertStatus(200);
+        $response->assertSee('Requester details');
+        $response->assertSee('Requester View');
+        $response->assertSee('reqview@example.com');
+    }
+
+    public function test_approval_page_shows_approve_button_when_owner_exists()
+    {
+        $business = Business::create([
+            'business_id' => Business::generateBusinessId(),
+            'legal_name' => 'Approval Button Test',
+            'primary_contact_email' => 'reqapprove@example.com',
+            'status' => 'pending',
+        ]);
+
+        $requester = Operator::create([
+            'operator_id' => uniqid('OP'),
+            'user_type' => 'Operator',
+            'is_owner' => 'no',
+            'email' => 'reqapprove@example.com',
+            'full_name' => 'Requester Approve',
+            'password_hash' => bcrypt('Password123!'),
+            'business_id' => $business->id,
+            'account_status' => 'pending',
+        ]);
+
+        $owner = Operator::create([
+            'operator_id' => uniqid('OP'),
+            'user_type' => 'Operator',
+            'is_owner' => 'yes',
+            'email' => 'owner_approve@example.com',
+            'full_name' => 'Owner Approve',
+            'password_hash' => bcrypt('Password123!'),
+            'business_id' => $business->id,
+            'account_status' => 'active',
+        ]);
+
+        $cv = ControllerVerification::create([
+            'token' => ControllerVerification::generateToken(),
+            'business_id' => $business->id,
+            'owner_email' => 'owner_approve@example.com',
+            'requester_operator_id' => $requester->operator_id,
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $response = $this->get('/operator/register/controller/verify/'.$cv->token);
+        $response->assertStatus(200);
+        // Check for approval UI
+        $response->assertSee('Approve Verification');
+        $response->assertSee('Account Found');
+        $response->assertSee($owner->email);
+        // Check that claim form is NOT shown
+        $response->assertDontSee('Create & Claim');
+    }
 }
+

@@ -6,6 +6,14 @@
         <div class="card-body">
             <h4>Owner verification for business: <strong>{{ $cv->business->legal_name }}</strong></h4>
 
+            @if(isset($requester) && $requester)
+                <div class="alert alert-info">
+                    <h6>Requester details</h6>
+                    <p><strong>{{ $requester->full_name }}</strong></p>
+                    <p>{{ $requester->email }}</p>
+                </div>
+            @endif
+
             @if(session('error'))
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
@@ -14,12 +22,18 @@
             @endif
 
             @if(isset($owner) && $owner)
-                <p>We found an existing account for <strong>{{ $owner->email }}</strong>.</p>
-                <p>Please <a href="{{ route('operator.login') }}">login</a> with that account and then click <em>Accept</em> below to confirm the requester.</p>
+                <div class="alert alert-info">
+                    <h6>Account Found</h6>
+                    <p>We found an existing account for <strong>{{ $owner->email }}</strong>.</p>
+                    <p>Please <a href="{{ route('operator.login') }}">login</a> with that account to approve this verification request.</p>
+                </div>
+
                 <form method="POST" action="{{ url('/operator/register/controller/verify/'.$cv->token.'/accept') }}">
                     @csrf
-                    <button class="btn btn-success">Accept</button>
-                    <a class="btn btn-secondary" href="{{ url('/') }}">Close</a>
+                    <h6>Approve Verification</h6>
+                    <p class="text-muted">By approving, you confirm that <strong>{{ $requester->full_name ?? 'the requester' }}</strong> is authorized to manage this business on your behalf.</p>
+                    <button class="btn btn-success">Approve Verification</button>
+                    <a class="btn btn-secondary" href="{{ url('/') }}">Cancel</a>
                 </form>
             @else
                 <p>No existing owner account found for <strong>{{ $cv->owner_email }}</strong>.</p>

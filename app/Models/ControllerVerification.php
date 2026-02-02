@@ -30,7 +30,7 @@ class ControllerVerification extends Model
     public function acceptBy(Operator $operator)
     {
         \Log::info('ControllerVerification::acceptBy - start', ['cv_id' => $this->id, 'operator_id' => $operator->id]);
-        $this->status = 'accepted';
+        $this->status = 'approved';
         $this->accepted_by = $operator->id;
         $this->accepted_at = now();
 
@@ -41,7 +41,7 @@ class ControllerVerification extends Model
         // ensure persistence using raw query as fallback
         try {
             $updated = \DB::table($this->getTable())->where('id', $this->id)->update([
-                'status' => 'accepted',
+                'status' => 'approved',
                 'accepted_by' => $operator->id,
                 'accepted_at' => now(),
                 'updated_at' => now(),

@@ -12,10 +12,13 @@ class ControllerVerificationRequested extends Mailable
     use Queueable, SerializesModels;
 
     public $verification;
+    public $requester;
 
     public function __construct($verification)
     {
         $this->verification = $verification;
+        // load requester if available
+        $this->requester = $verification->requester ?? null;
     }
 
     public function build()
@@ -25,6 +28,10 @@ class ControllerVerificationRequested extends Mailable
 
         return $this->subject('HIO: Owner verification requested')
                     ->view('emails.controller_verification_requested')
-                    ->with(['url' => $url, 'verification' => $this->verification]);
+                    ->with([
+                        'url' => $url,
+                        'verification' => $this->verification,
+                        'requester' => $this->requester,
+                    ]);
     }
 }
