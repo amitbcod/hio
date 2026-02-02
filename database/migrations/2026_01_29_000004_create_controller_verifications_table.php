@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('owner_email', 191);
             $table->string('owner_full_name')->nullable();
             $table->string('requester_operator_id', 50)->nullable();
-            $table->enum('status', ['pending','approved','rejected','expired'])->default('pending');
+            $table->enum('status', ['pending','accepted','rejected','expired'])->default('pending');
             $table->unsignedBigInteger('accepted_by')->nullable();
             $table->timestamp('accepted_at')->nullable();
             $table->timestamp('expires_at')->nullable();

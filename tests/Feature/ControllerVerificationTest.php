@@ -46,7 +46,7 @@ class ControllerVerificationTest extends TestCase
 
         $cv->acceptBy($owner);
         $cv = $cv->fresh();
-        $this->assertEquals('approved', $cv->status);
+        $this->assertEquals('accepted', $cv->status);
     }
 
     public function test_owner_can_claim_and_notifications_sent()
@@ -113,9 +113,9 @@ class ControllerVerificationTest extends TestCase
         $controllerResponse = $controller->claim($req, $cv->token);
         // If controller returns redirect we ignore, but we expect it to process and approve the verification
 
-        // verification should have been approved
+        // verification should have been accepted
         $cv = $cv->fresh();
-        $this->assertEquals('approved', $cv->status, 'Expected verification to be approved after claim');
+        $this->assertEquals('accepted', $cv->status, 'Expected verification to be accepted after claim');
 
         // operator (owner) created
         $this->assertDatabaseHas('operators', ['email' => 'owner@example.com']);
@@ -190,7 +190,7 @@ class ControllerVerificationTest extends TestCase
             'token' => ControllerVerification::generateToken(),
             'business_id' => $business->id,
             'owner_email' => 'owner_already@example.com',
-            'status' => 'approved',
+            'status' => 'accepted',
             'accepted_by' => $existingOperator->id,
             'expires_at' => now()->addDays(7),
         ]);
@@ -204,7 +204,7 @@ class ControllerVerificationTest extends TestCase
         ]);
 
         $response->assertRedirect(route('operator.register.step2'));
-        $this->assertEquals('approved', $cv->fresh()->status);
+        $this->assertEquals('accepted', $cv->fresh()->status);
         $this->assertDatabaseMissing('operators', ['email' => 'owner_already@example.com']);
     }
 
@@ -240,7 +240,7 @@ class ControllerVerificationTest extends TestCase
         $response = $this->post('/operator/register/controller/verify/'.$cv->token.'/accept');
 
         $response->assertRedirect(route('operator.register.step2'));
-        $this->assertEquals('approved', $cv->fresh()->status);
+        $this->assertEquals('accepted', $cv->fresh()->status);
         $this->assertEquals($owner->id, $cv->fresh()->accepted_by);
         $this->assertEquals($cv->business_id, $owner->fresh()->business_id);
     }

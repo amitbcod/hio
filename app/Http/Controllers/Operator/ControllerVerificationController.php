@@ -23,7 +23,9 @@ class ControllerVerificationController extends Controller
         // check if owner exists
         $owner = Operator::where('email', $cv->owner_email)->first();
 
-        return view('operator.registration.controller_verify', compact('cv', 'owner'));
+        $requester = $cv->requester;
+
+        return view('operator.registration.controller_verify', compact('cv', 'owner', 'requester'));
     }
 
     public function accept(Request $request, $token)
