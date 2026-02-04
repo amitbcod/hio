@@ -33,7 +33,13 @@
                 <div class="form-group mb-3">
                     <label>Service Categories</label>
                     @php
-                        $profile = \App\Models\OperatorProfile::where('operator_id', $operator->operator_id)->first();
+                        $profile = null;
+                        if (!empty($operator->business_id)) {
+                            $profile = \App\Models\OperatorProfile::where('business_id', $operator->business_id)->first();
+                        }
+                        if (!$profile) {
+                            $profile = \App\Models\OperatorProfile::where('operator_id', $operator->operator_id)->first();
+                        }
                         $serviceTypes = $profile && $profile->service_types ? (is_array($profile->service_types) ? $profile->service_types : json_decode($profile->service_types, true)) : [];
                     @endphp
                     <select class="form-control" multiple disabled>

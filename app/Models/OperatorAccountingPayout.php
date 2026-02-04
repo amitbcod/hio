@@ -11,4 +11,10 @@ class OperatorAccountingPayout extends Model
     public $timestamps = true;
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
+
+    // Relations
+    public function business()
+    {
+        return $this->belongsTo(Business::class, 'business_id');
+    }
 }

@@ -59,6 +59,10 @@
             <h2>Login to Your Account</h2>
             <form method="POST" action="{{ route('operator.login') }}">
                 @csrf
+                {{-- Carry accept_token through the login form if present (owner redirected from public verify page) --}}
+                @if(request('accept_token') || session('accept_token'))
+                    <input type="hidden" name="accept_token" value="{{ request('accept_token') ?? session('accept_token') }}">
+                @endif
                 <div class="form-group mb-3">
                     <label for="email">Email Address *</label>
                     <input type="email" name="email" class="form-control" required autofocus value="{{ old('email') }}">

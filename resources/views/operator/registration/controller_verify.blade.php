@@ -63,6 +63,17 @@
                         <input type="text" name="phone" class="form-control">
                     </div>
                     <div class="mb-3">
+                        <label>Agreement Type *</label>
+                        <select name="agreement_type" class="form-control" required>
+                            <option value="">-- Select Agreement Type --</option>
+                            <option value="Listing Only" {{ (old('agreement_type') == 'Listing Only' || ($cv->business->agreement_type ?? '') == 'Listing Only') ? 'selected' : '' }}>Listing Only</option>
+                            <option value="OTO" {{ (old('agreement_type') == 'OTO' || ($cv->business->agreement_type ?? '') == 'OTO') ? 'selected' : '' }}>OTO</option>
+                            <option value="Widget Only" {{ (old('agreement_type') == 'Widget Only' || ($cv->business->agreement_type ?? '') == 'Widget Only') ? 'selected' : '' }}>Widget Only</option>
+                            <option value="OTO + Widget" {{ (old('agreement_type') == 'OTO + Widget' || ($cv->business->agreement_type ?? '') == 'OTO + Widget') ? 'selected' : '' }}>OTO + Widget</option>
+                            <option value="Full Service" {{ (old('agreement_type') == 'Full Service' || ($cv->business->agreement_type ?? '') == 'Full Service') ? 'selected' : '' }}>Full Service</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label>Password</label>
                         <input type="password" name="password" class="form-control" required>
                     </div>

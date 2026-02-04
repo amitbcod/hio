@@ -11,4 +11,14 @@ class OperatorLegalCompliance extends Model
     public $timestamps = true;
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
+
+    // Business relation now available
+    public function business()
+    {
+        return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    protected $casts = [
+        'service_package' => 'string',
+    ];
 }

@@ -11,4 +11,15 @@ class OperatorStatusReview extends Model
     public $timestamps = true;
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
+
+    // Business relation
+    public function business()
+    {
+        return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    protected $casts = [
+        'operator_rating' => 'float',
+        'average_rating' => 'float',
+    ];
 }

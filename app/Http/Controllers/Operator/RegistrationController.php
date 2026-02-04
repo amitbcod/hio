@@ -29,20 +29,22 @@ class RegistrationController extends Controller
 {
     $operator = auth()->user();
 
-    $user = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)
-        ->where('id', $userId)
-        ->firstOrFail();
-
-    $users = \App\Models\OperatorUser::where(
-        'operator_id',
-        $operator->operator_id
-    )->get();
+    // Prefer business-scoped users when operator is linked to a business
+    if (!empty($operator->business_id)) {
+        $user = \App\Models\OperatorUser::where('id', $userId)->where('business_id', $operator->business_id)->firstOrFail();
+        $users = \App\Models\OperatorUser::where('business_id', $operator->business_id)->get();
+    } else {
+        $user = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->where('id', $userId)->firstOrFail();
+        $users = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->get();
+    }
 
     // ✅ use imported model
-    $roleAccessMappings = OperatorRoleAccessMapping::whereIn(
-        'user_id',
-        $users->pluck('id')
-    )->get();
+    // Prefer business-scoped mappings when linked
+    $query = OperatorRoleAccessMapping::whereIn('user_id', $users->pluck('id'));
+    if (!empty($operator->business_id)) {
+        $query->where('business_id', $operator->business_id);
+    }
+    $roleAccessMappings = $query->get();
 
     // ✅ group by user_id for JS modal prefill
     $roleAccessMappingsByUser = $roleAccessMappings->groupBy('user_id');
@@ -65,7 +67,12 @@ class RegistrationController extends Controller
 
     public function updateStep6User(Request $request, $userId) {
         $operator = auth()->user();
-        $user = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->where('id', $userId)->firstOrFail();
+        // Ensure user is in the same business when linked, otherwise restrict by operator
+        if (!empty($operator->business_id)) {
+            $user = \App\Models\OperatorUser::where('id', $userId)->where('business_id', $operator->business_id)->firstOrFail();
+        } else {
+            $user = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->where('id', $userId)->firstOrFail();
+        }
         $request->validate([
             'full_name' => 'required',
             'email' => 'required|email|unique:operator_users,email,' . $user->id,
@@ -88,7 +95,12 @@ class RegistrationController extends Controller
 
     public function deleteStep6User($userId) {
         $operator = auth()->user();
-        $user = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->where('id', $userId)->firstOrFail();
+        // Ensure user is in the same business when linked, otherwise restrict by operator
+        if (!empty($operator->business_id)) {
+            $user = \App\Models\OperatorUser::where('id', $userId)->where('business_id', $operator->business_id)->firstOrFail();
+        } else {
+            $user = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->where('id', $userId)->firstOrFail();
+        }
         $user->delete();
         return redirect()->route('operator.register.step6')->with('success', 'User deleted successfully!');
     }
@@ -113,7 +125,7 @@ class RegistrationController extends Controller
         }
 
         $operator = auth()->user();
-        $progress = OperatorRegistrationProgress::where('operator_id', $operator->operator_id)->first();
+        $progress = $this->getProgressForOperator($operator);
 
         if (!$progress) {
             return false; // No progress found
@@ -137,12 +149,35 @@ class RegistrationController extends Controller
 
         return $progress->{$requiredField} ? true : false;
     }
+
+    // Helper to return OperatorRegistrationProgress scoped to business when available
+    protected function getProgressForOperator($operator)
+    {
+        if (!empty($operator->business_id)) {
+            return OperatorRegistrationProgress::where('business_id', $operator->business_id)->first();
+        }
+        return OperatorRegistrationProgress::where('operator_id', $operator->operator_id)->first();
+    }
     public function step2Profile(Request $request) {
         if ($redirect = $this->ensureAuthenticated()) return $redirect;
         $operator = auth()->user();
-        $profile = \App\Models\OperatorProfile::where('operator_id', $operator->operator_id)->first();
-        $legal = \App\Models\OperatorLegalCompliance::where('operator_id', $operator->operator_id)->first();
-        $progress = \App\Models\OperatorRegistrationProgress::where('operator_id', $operator->operator_id)->first();
+        // Prefer business-scoped profile if operator is linked to a business, otherwise fall back to existing operator_id records
+        $profile = null;
+        if (!empty($operator->business_id)) {
+            $profile = \App\Models\OperatorProfile::where('business_id', $operator->business_id)->first();
+        }
+        if (!$profile) {
+            $profile = \App\Models\OperatorProfile::where('operator_id', $operator->operator_id)->first();
+        }
+
+        // Other records remain operator-scoped for now (will be migrated in subsequent steps)
+        // Prefer business-scoped legal compliance record when available
+        if (!empty($operator->business_id)) {
+            $legal = \App\Models\OperatorLegalCompliance::where('business_id', $operator->business_id)->first();
+        } else {
+            $legal = \App\Models\OperatorLegalCompliance::where('operator_id', $operator->operator_id)->first();
+        }
+        $progress = $this->getProgressForOperator($operator);
         // Autofill business legal name from operators table if profile is empty
         if (!$profile || empty($profile->business_legal_name)) {
             $businessLegalName = $operator->business_legal_name ?? '';
@@ -199,10 +234,18 @@ class RegistrationController extends Controller
             $logoPath = $request->file('company_logo')->store('logos', 'public');
             $data['company_logo'] = $logoPath;
         }
-        OperatorProfile::updateOrCreate(
-            ['operator_id' => $authUser->operator_id],
-            $data
-        );
+        // Save profile keyed by business when possible. Keep operator_id as fallback for backwards compatibility.
+        if (!empty($authUser->business_id)) {
+            OperatorProfile::updateOrCreate(
+                ['business_id' => $authUser->business_id],
+                array_merge($data, ['operator_id' => $authUser->operator_id, 'business_legal_name' => $request->business_legal_name])
+            );
+        } else {
+            OperatorProfile::updateOrCreate(
+                ['operator_id' => $authUser->operator_id],
+                $data
+            );
+        }
 
         // Create or update linked Business record
         if (!empty($authUser->business_id)) {
@@ -228,14 +271,24 @@ class RegistrationController extends Controller
             if ($operatorModel) {
                 $operatorModel->business_id = $business->id;
                 $operatorModel->save();
+                // If a profile exists keyed by operator_id, promote it to the business row
+                \App\Models\OperatorProfile::where('operator_id', $authUser->operator_id)->update(['business_id' => $business->id]);
             }
         }
 
         // Mark step as complete
-        OperatorRegistrationProgress::updateOrCreate(
-            ['operator_id' => $authUser->operator_id],
-            ['step2_profile' => 1, 'current_step' => 3]
-        );
+        // Record progress keyed by business where possible, fallback to operator_id
+        if (!empty($authUser->business_id)) {
+            OperatorRegistrationProgress::updateOrCreate(
+                ['business_id' => $authUser->business_id],
+                ['step2_profile' => 1, 'current_step' => 3, 'operator_id' => $authUser->operator_id]
+            );
+        } else {
+            OperatorRegistrationProgress::updateOrCreate(
+                ['operator_id' => $authUser->operator_id],
+                ['step2_profile' => 1, 'current_step' => 3]
+            );
+        }
 
         // Stay on step2 to allow user to fill Legal Compliance modal
         return redirect()->route('operator.register.step2')->with('success', 'Profile information saved. Please fill the Legal Compliance form below.');
@@ -268,15 +321,26 @@ class RegistrationController extends Controller
         if ($request->hasFile('signed_agreement')) {
             $data['signed_agreement'] = $request->file('signed_agreement')->store('compliance', 'public');
         }
-        $legal = OperatorLegalCompliance::updateOrCreate(
-            ['operator_id' => $operator->operator_id],
-            $data
-        );
-        // Mark step3_legal as complete so next step is enabled
-        \App\Models\OperatorRegistrationProgress::updateOrCreate(
-            ['operator_id' => $operator->operator_id],
-            ['step3_legal' => 1, 'current_step' => 4]
-        );
+        // Save legal compliance keyed to business when available; otherwise keep operator-scoped record
+        if (!empty($operator->business_id)) {
+            $legal = OperatorLegalCompliance::updateOrCreate(
+                ['business_id' => $operator->business_id],
+                array_merge($data, ['operator_id' => $operator->operator_id])
+            );
+            \App\Models\OperatorRegistrationProgress::updateOrCreate(
+                ['business_id' => $operator->business_id],
+                ['step3_legal' => 1, 'current_step' => 4, 'operator_id' => $operator->operator_id]
+            );
+        } else {
+            $legal = OperatorLegalCompliance::updateOrCreate(
+                ['operator_id' => $operator->operator_id],
+                $data
+            );
+            \App\Models\OperatorRegistrationProgress::updateOrCreate(
+                ['operator_id' => $operator->operator_id],
+                ['step3_legal' => 1, 'current_step' => 4]
+            );
+        }
         return redirect()->route('operator.register.step4')->with('success', 'Legal Compliance information saved. Proceeding to next step.');
     }
     public function step4SystemProcess(Request $request) {
@@ -284,27 +348,59 @@ class RegistrationController extends Controller
             return redirect()->route('operator.register.step2')->with('error', 'Please complete previous steps first.');
         }
         $operator = auth()->user();
-        $system = \App\Models\OperatorSystemProcess::where('operator_id', $operator->operator_id)->first();
-        $progress = \App\Models\OperatorRegistrationProgress::where('operator_id', $operator->operator_id)->first();
+        $system = null;
+        // Prefer business-scoped system process when operator is linked to a business
+        if (!empty($operator->business_id)) {
+            $system = \App\Models\OperatorSystemProcess::where('business_id', $operator->business_id)->first();
+        }
+        // Fallback: try operator_id if no business-scoped record found
+        if (!$system) {
+            $system = \App\Models\OperatorSystemProcess::where('operator_id', $operator->operator_id)->first();
+        }
+        $progress = $this->getProgressForOperator($operator);
         return view('operator.registration.step4_system_process', compact('operator', 'system', 'progress'));
     }
 
     public function saveStep4SystemProcess(Request $request) {
         // No validation for service_category needed, as it is not saved here
         $operator = auth()->user();
-        $system = \App\Models\OperatorSystemProcess::updateOrCreate(
-            ['operator_id' => $operator->operator_id],
-            [
-                'communication_preference' => $request->communication_preference ?? null,
-                'assigned_operator_name' => $request->assigned_operator_name ?? null,
-                'assigned_operator_role' => $request->assigned_operator_role ?? null,
-                'status' => $request->status ?? null,
-            ]
-        );
-        OperatorRegistrationProgress::updateOrCreate(
-            ['operator_id' => $operator->operator_id],
-            ['step4_system_process' => 1, 'current_step' => 5]
-        );
+        // Save into business scope if operator is linked to a business
+        if (!empty($operator->business_id)) {
+            $system = \App\Models\OperatorSystemProcess::updateOrCreate(
+                ['business_id' => $operator->business_id],
+                [
+                    'business_id' => $operator->business_id,
+                    'operator_id' => $operator->operator_id,
+                    'service_category' => $request->service_category ?? 'Accommodation',
+                    'communication_preference' => $request->communication_preference ?? null,
+                    'assigned_operator_name' => $request->assigned_operator_name ?? null,
+                    'assigned_operator_role' => $request->assigned_operator_role ?? null,
+                    'status' => $request->status ?? null,
+                ]
+            );
+        } else {
+            $system = \App\Models\OperatorSystemProcess::updateOrCreate(
+                ['operator_id' => $operator->operator_id],
+                [
+                    'service_category' => $request->service_category ?? 'Accommodation',
+                    'communication_preference' => $request->communication_preference ?? null,
+                    'assigned_operator_name' => $request->assigned_operator_name ?? null,
+                    'assigned_operator_role' => $request->assigned_operator_role ?? null,
+                    'status' => $request->status ?? null,
+                ]
+            );
+        }
+        if (!empty($operator->business_id)) {
+            OperatorRegistrationProgress::updateOrCreate(
+                ['business_id' => $operator->business_id],
+                ['step4_system_process' => 1, 'current_step' => 5, 'operator_id' => $operator->operator_id]
+            );
+        } else {
+            OperatorRegistrationProgress::updateOrCreate(
+                ['operator_id' => $operator->operator_id],
+                ['step4_system_process' => 1, 'current_step' => 5]
+            );
+        }
         return redirect()->route('operator.register.step5')->with('success', 'System process info saved.');
     }
     public function step5Collaboration(Request $request) {
@@ -312,9 +408,18 @@ class RegistrationController extends Controller
             return redirect()->route('operator.register.step2')->with('error', 'Please complete previous steps first.');
         }
         $operator = auth()->user();
-        $collab = OperatorCollaborationAgreement::where('operator_id', $operator->operator_id)->first();
-        $progress = \App\Models\OperatorRegistrationProgress::where('operator_id', $operator->operator_id)->first();
-        return view('operator.registration.step5_collaboration', compact('operator', 'collab', 'progress'));
+        $collab = null;
+        // Prefer collaboration agreement by business when linked
+        if (!empty($operator->business_id)) {
+            $collab = OperatorCollaborationAgreement::where('business_id', $operator->business_id)->first();
+        }
+        // Fallback: try operator_id if no business-scoped record found
+        if (!$collab) {
+            $collab = OperatorCollaborationAgreement::where('operator_id', $operator->operator_id)->first();
+        }
+        $progress = $this->getProgressForOperator($operator);
+        $business = !empty($operator->business_id) ? \App\Models\Business::find($operator->business_id) : null;
+        return view('operator.registration.step5_collaboration', compact('operator', 'collab', 'progress', 'business'));
     }
 
     public function saveStep5Collaboration(Request $request) {
@@ -363,19 +468,36 @@ class RegistrationController extends Controller
         if ($request->responsibilities_document) {
             $data['responsibilities_document'] = $request->responsibilities_document;
         }
-        OperatorCollaborationAgreement::updateOrCreate(
-            ['operator_id' => $operator->operator_id],
-            $data
-        );
 
-        // Persist agreement type on the main operators table as well
-        $operator->agreement_type = $request->agreement_type;
-        $operator->save();
+        // Save collaboration agreement keyed by business when possible; keep operator_id as fallback
+        if (!empty($operator->business_id)) {
+            OperatorCollaborationAgreement::updateOrCreate(
+                ['business_id' => $operator->business_id],
+                array_merge($data, ['operator_id' => $operator->operator_id])
+            );
+        } else {
+            OperatorCollaborationAgreement::updateOrCreate(
+                ['operator_id' => $operator->operator_id],
+                $data
+            );
+        }
 
-        OperatorRegistrationProgress::updateOrCreate(
-            ['operator_id' => $operator->operator_id],
-            ['step5_collaboration' => 1, 'current_step' => 6]
-        );
+        // Persist agreement type on the business record when linked
+        if (!empty($operator->business_id)) {
+            \App\Models\Business::where('id', $operator->business_id)->update(['agreement_type' => $request->agreement_type]);
+        }
+
+        if (!empty($operator->business_id)) {
+            OperatorRegistrationProgress::updateOrCreate(
+                ['business_id' => $operator->business_id],
+                ['step5_collaboration' => 1, 'current_step' => 6, 'operator_id' => $operator->operator_id]
+            );
+        } else {
+            OperatorRegistrationProgress::updateOrCreate(
+                ['operator_id' => $operator->operator_id],
+                ['step5_collaboration' => 1, 'current_step' => 6]
+            );
+        }
         return redirect()->route('operator.register.step6')->with('success', 'Collaboration info saved.');
     }
     /*public function step6Users(Request $request) {
@@ -399,10 +521,12 @@ class RegistrationController extends Controller
 
     $operator = auth()->user();
 
-    $users = \App\Models\OperatorUser::where(
-        'operator_id',
-        $operator->operator_id
-    )->get();
+    // Prefer business-scoped users when operator is linked to a business
+    if (!empty($operator->business_id)) {
+        $users = \App\Models\OperatorUser::where('business_id', $operator->business_id)->get();
+    } else {
+        $users = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->get();
+    }
 
     $roleAccessMappings = \App\Models\OperatorRoleAccessMapping::whereIn(
         'user_id',
@@ -412,10 +536,7 @@ class RegistrationController extends Controller
     // ✅ GROUP BY USER ID (KEY FIX)
     $roleAccessMappingsByUser = $roleAccessMappings->groupBy('user_id');
 
-    $progress = \App\Models\OperatorRegistrationProgress::where(
-        'operator_id',
-        $operator->operator_id
-    )->first();
+    $progress = $this->getProgressForOperator($operator);
 
     return view(
         'operator.registration.step6_users',
@@ -475,6 +596,10 @@ class RegistrationController extends Controller
     $user = new OperatorUser();
     $user->user_id = uniqid('OPU');
     $user->operator_id = $operator->operator_id;
+    // Associate with business when operator belongs to one
+    if (!empty($operator->business_id)) {
+        $user->business_id = $operator->business_id;
+    }
     $user->full_name = $request->full_name;
     $user->email = $request->email;
     $user->mobile = $request->mobile;
@@ -500,9 +625,16 @@ class RegistrationController extends Controller
             return redirect()->route('operator.register.step2')->with('error', 'Please complete previous steps first.');
         }
         $operator = auth()->user();
-        $accounting = \App\Models\OperatorAccountingPayout::where('beneficiary_id', $operator->operator_id)->first();
-        // Load existing payout records for this operator (for modal listing)
-        $payouts = \App\Models\OperatorPayout::where('beneficiary_id', $operator->operator_id)->orderBy('created_at', 'desc')->get();
+        // Prefer accounting payouts by business when operator is linked to a business
+        if (!empty($operator->business_id)) {
+            $accounting = \App\Models\OperatorAccountingPayout::where('business_id', $operator->business_id)->first();
+            // Load existing payout records for this business
+            $payouts = \App\Models\OperatorPayout::where('business_id', $operator->business_id)->orderBy('created_at', 'desc')->get();
+        } else {
+            $accounting = \App\Models\OperatorAccountingPayout::where('beneficiary_id', $operator->operator_id)->first();
+            // Load existing payout records for this operator (for modal listing)
+            $payouts = \App\Models\OperatorPayout::where('beneficiary_id', $operator->operator_id)->orderBy('created_at', 'desc')->get();
+        }
         return view('operator.registration.step7_accounting', compact('accounting', 'payouts'));
     }
 
@@ -550,10 +682,19 @@ class RegistrationController extends Controller
         $data['credit_limit_days'] = $request->filled('credit_limit_days') ? (int) $request->credit_limit_days : null;
         $data['credit_limit_amount'] = $request->filled('credit_limit_amount') ? $request->credit_limit_amount : null;
 
-        \App\Models\OperatorAccountingPayout::updateOrCreate(
-            ['beneficiary_id' => $operator->operator_id],
-            $data
-        );
+        // Prefer scoping accounting payouts to business when operator is linked
+        if (!empty($operator->business_id)) {
+            $data['business_id'] = $operator->business_id;
+            \App\Models\OperatorAccountingPayout::updateOrCreate(
+                ['business_id' => $operator->business_id],
+                $data
+            );
+        } else {
+            \App\Models\OperatorAccountingPayout::updateOrCreate(
+                ['beneficiary_id' => $operator->operator_id],
+                $data
+            );
+        }
         \App\Models\OperatorRegistrationProgress::updateOrCreate(
             ['operator_id' => $operator->operator_id],
             ['step7_accounting' => 1, 'current_step' => 8]
@@ -588,6 +729,10 @@ class RegistrationController extends Controller
         $payout->payout_id = \App\Models\OperatorPayout::generatePayoutId();
         $payout->beneficiary_id = $operator->operator_id;
         $payout->beneficiary = $operator->business->legal_name ?? $operator->business_legal_name ?? $operator->full_name ?? '';
+        // If operator belongs to a business, associate payout to business as well
+        if (!empty($operator->business_id)) {
+            $payout->business_id = $operator->business_id;
+        }
         $payout->period_covered = $request->period_covered;
         $payout->total_commission = $request->total_commission ?? 0;
         $payout->adjustments = $request->adjustments ?? null;
@@ -617,7 +762,15 @@ class RegistrationController extends Controller
             return redirect()->route('operator.register.step2')->with('error', 'Please complete previous steps first.');
         }
         $operator = auth()->user();
-        $serviceOps = \App\Models\OperatorServiceOperation::where('operator_id', $operator->operator_id)->first();
+        $serviceOps = null;
+        // Prefer service operations by business when linked
+        if (!empty($operator->business_id)) {
+            $serviceOps = \App\Models\OperatorServiceOperation::where('business_id', $operator->business_id)->first();
+        }
+        // Fallback: try operator_id if no business-scoped record found
+        if (!$serviceOps) {
+            $serviceOps = \App\Models\OperatorServiceOperation::where('operator_id', $operator->operator_id)->first();
+        }
         return view('operator.registration.step8_operations', compact('serviceOps'));
     }
 
@@ -645,14 +798,26 @@ class RegistrationController extends Controller
             'emergency_contact_email' => $request->emergency_contact_email,
             'status' => 'draft',
         ];
-        \App\Models\OperatorServiceOperation::updateOrCreate(
-            ['operator_id' => $operator->operator_id],
-            $data
-        );
-        \App\Models\OperatorRegistrationProgress::updateOrCreate(
-            ['operator_id' => $operator->operator_id],
-            ['step8_operations' => 1, 'current_step' => 9]
-        );
+        // Save service operations keyed to business when available; otherwise fallback to operator_id
+        if (!empty($operator->business_id)) {
+            \App\Models\OperatorServiceOperation::updateOrCreate(
+                ['business_id' => $operator->business_id],
+                array_merge($data, ['operator_id' => $operator->operator_id])
+            );
+            \App\Models\OperatorRegistrationProgress::updateOrCreate(
+                ['business_id' => $operator->business_id],
+                ['step8_operations' => 1, 'current_step' => 9, 'operator_id' => $operator->operator_id]
+            );
+        } else {
+            \App\Models\OperatorServiceOperation::updateOrCreate(
+                ['operator_id' => $operator->operator_id],
+                $data
+            );
+            \App\Models\OperatorRegistrationProgress::updateOrCreate(
+                ['operator_id' => $operator->operator_id],
+                ['step8_operations' => 1, 'current_step' => 9]
+            );
+        }
         return redirect()->route('operator.register.step9')->with('success', 'Service operations saved.');
     }
 
@@ -695,22 +860,31 @@ class RegistrationController extends Controller
 
     $permissions = $request->permissions ?? [];
 
-    OperatorRoleAccessMapping::updateOrCreate(
-        [
-            'user_id' => $request->user_id,
-            'module'  => $request->module,
-        ],
-        [
-            'role'           => $request->role,
-            'capacity_level' => $request->capacity_level,
-            'can_read'       => in_array('Read', $permissions),
-            'can_create'     => in_array('Create', $permissions),
-            'can_update'     => in_array('Update', $permissions),
-            'can_approve'    => in_array('Approve', $permissions),
-            'can_publish'    => in_array('Publish', $permissions),
-            'notes'          => $request->notes,
-        ]
-    );
+    $operator = auth()->user();
+
+    $attributes = [
+        'user_id' => $request->user_id,
+        'module'  => $request->module,
+    ];
+
+    $values = [
+        'role'           => $request->role,
+        'capacity_level' => $request->capacity_level,
+        'can_read'       => in_array('Read', $permissions),
+        'can_create'     => in_array('Create', $permissions),
+        'can_update'     => in_array('Update', $permissions),
+        'can_approve'    => in_array('Approve', $permissions),
+        'can_publish'    => in_array('Publish', $permissions),
+        'notes'          => $request->notes,
+    ];
+
+    // If the operator is linked to a business, scope the mapping to that business
+    if (!empty($operator->business_id)) {
+        $attributes['business_id'] = $operator->business_id;
+        $values['business_id'] = $operator->business_id;
+    }
+
+    OperatorRoleAccessMapping::updateOrCreate($attributes, $values);
 
     return redirect()
         ->route('operator.register.step6')
@@ -726,13 +900,99 @@ class RegistrationController extends Controller
         return redirect()->route('operator.register.step6')->with('error', 'Unauthorized action.');
     }
 
-    public function step9Review(Request $request) {
+    /*public function step9Review(Request $request) {
         if (!$this->checkStepAccess(9)) {
             return redirect()->route('operator.register.step2')->with('error', 'Please complete previous steps first.');
         }
         $operator = auth()->user();
-        $statusReview = \App\Models\OperatorStatusReview::where('operator_id', $operator->operator_id)->first();
-        $progress = \App\Models\OperatorRegistrationProgress::where('operator_id', $operator->operator_id)->first();
+        $statusReview = null;
+        // Prefer business-scoped status review when linked
+        if (!empty($operator->business_id)) {
+            $statusReview = \App\Models\OperatorStatusReview::where('business_id', $operator->business_id)->first();
+        }
+        // Fallback: try operator_id if no business-scoped record found
+        if (!$statusReview) {
+            $statusReview = \App\Models\OperatorStatusReview::where('operator_id', $operator->operator_id)->first();
+        }
+        $progress = $this->getProgressForOperator($operator);
         return view('operator.registration.step9_review', compact('statusReview', 'progress'));
+    }*/
+
+    public function step9Review(Request $request)
+    {
+        if (!$this->checkStepAccess(9)) {
+            return redirect()->route('operator.register.step2')
+                ->with('error', 'Please complete previous steps first.');
+        }
+
+        $operator = auth()->user();
+
+      
+
+        $statusReview = null;
+        if (!empty($operator->business_id)) {
+            $statusReview = \App\Models\OperatorStatusReview::where('business_id', $operator->business_id)->first();
+        }
+
+        if (!$statusReview) {
+            $statusReview = \App\Models\OperatorStatusReview::where('operator_id', $operator->operator_id)->first();
+        }
+
+        $business = null;
+        if (!empty($operator->business_id)) {
+            $business = Business::find($operator->business_id); 
+        }
+
+        $progress = $this->getProgressForOperator($operator);
+
+        return view(
+            'operator.registration.step9_review',
+            compact('statusReview', 'progress', 'business')
+        );
+    }
+
+    public function submitForApproval(Request $request)
+    {
+        $operator = auth()->user();
+        if (!$operator) {
+            return redirect()->route('operator.login');
+        }
+
+        // mark progress as submitted (prefer business-scoped progress)
+        if (!empty($operator->business_id)) {
+            $progress = \App\Models\OperatorRegistrationProgress::firstOrCreate([
+                'business_id' => $operator->business_id
+            ]);
+        } else {
+            $progress = \App\Models\OperatorRegistrationProgress::firstOrCreate([
+                'operator_id' => $operator->operator_id
+            ]);
+        }
+        $progress->step9_review = 1;
+        $progress->save();
+
+        // ensure there is a status review record (prefer business-scoped)
+        if (!empty($operator->business_id)) {
+            $statusReview = \App\Models\OperatorStatusReview::firstOrCreate([
+                'business_id' => $operator->business_id
+            ], ['operator_id' => $operator->operator_id]);
+        } else {
+            $statusReview = \App\Models\OperatorStatusReview::firstOrCreate([
+                'operator_id' => $operator->operator_id
+            ]);
+        }
+
+        // notify admins
+        try {
+            $adminEmails = \App\Models\AdminUser::where('status', 'active')->pluck('email');
+            foreach ($adminEmails as $email) {
+                \Mail::to($email)->send(new \App\Mail\AdminApprovalRequested($operator, $statusReview));
+            }
+        } catch (\Exception $e) {
+            \Log::error('RegistrationController::submitForApproval - mail error', ['err' => $e->getMessage()]);
+            return redirect()->route('operator.pending.approval')->with('error', 'Failed to notify admins.');
+        }
+
+        return redirect()->route('operator.pending.approval')->with('success', 'Submitted for approval. Admins have been notified.');
     }
 }

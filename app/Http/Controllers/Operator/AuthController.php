@@ -25,9 +25,48 @@ class AuthController extends Controller
 
         $operator = \App\Models\Operator::where('email', $request->email)->first();
         if ($operator && \Illuminate\Support\Facades\Hash::check($request->password, $operator->password_hash)) {
+            // Block login until account is active (owner must approve non-owner operators)
+            if (($operator->account_status ?? '') !== 'active') {
+                return back()->withErrors(['email' => 'Account not active. Please wait for owner approval.']);
+            }
+
             \Illuminate\Support\Facades\Auth::guard('operator')->login($operator);
+
+            // If an owner accept flow was started before login, complete it now
+            // Support accept token passed either as flashed session or as query parameter
+            $acceptToken = session()->pull('accept_token', $request->input('accept_token'));
+            if ($acceptToken) {
+                try {
+                    $token = $acceptToken;
+                    $cv = \App\Models\ControllerVerification::where('token', $token)->first();
+                    if ($cv && $cv->status === 'pending' && $operator->email === $cv->owner_email) {
+                        // complete acceptance
+                        $cv->acceptBy($operator);
+                        // ensure owner has business_id
+                        if (empty($operator->business_id)) {
+                            $operator->business_id = $cv->business_id;
+                            $operator->save();
+                        }
+                        // activate requester
+                        if ($cv->requester) {
+                            $rq = $cv->requester;
+                            $rq->account_status = 'active';
+                            $rq->save();
+                        }
+                        return redirect()->route('operator.register.step2')->with('success', 'You have accepted the request. Business is pending admin approval.');
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('AuthController::login - accept after login failed', ['err' => $e->getMessage()]);
+                }
+            }
+
             $operatorId = $operator->operator_id;
-            $progress = \App\Models\OperatorRegistrationProgress::where('operator_id', $operatorId)->first();
+            // Prefer business-scoped progress when linked
+            if (!empty($operator->business_id)) {
+                $progress = \App\Models\OperatorRegistrationProgress::where('business_id', $operator->business_id)->first();
+            } else {
+                $progress = \App\Models\OperatorRegistrationProgress::where('operator_id', $operatorId)->first();
+            }
             if ($progress) {
                 $step = $progress->current_step ?? 2;
                 switch ($step) {
@@ -74,7 +113,6 @@ class AuthController extends Controller
             'user_type' => 'required|in:Operator,MPO,Agent',
             'business_legal_name' => 'required',
             'country_of_operation' => 'required',
-            'agreement_type' => 'required|in:Listing Only,OTO,Widget Only,OTO + Widget,Full Service',
             'is_owner' => 'required|in:yes,no',
             'email' => 'required|email|unique:operator_users,email',
             'phone' => 'required',
@@ -95,9 +133,18 @@ class AuthController extends Controller
             $rules['owner_email'] = 'required|email';
             $rules['owner_phone'] = 'required';
         }
+        if ($request->is_owner === 'yes') {
+            $rules['agreement_type'] = 'required|in:Listing Only,OTO,Widget Only,OTO + Widget,Full Service';
+        }
         $request->validate($rules, [
             'password.regex' => 'Password must contain uppercase, lowercase, number, and special character.'
         ]);
+        
+        if ($request->is_owner === 'no') {
+            $verification_status = 'pending_verification';
+        }else{
+            $verification_status = 'active';
+        }
         $operatorId = uniqid('OP');
         $operator = \App\Models\Operator::create([
             'operator_id' => $operatorId,
@@ -107,8 +154,7 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'full_name' => $request->full_name,
             'business_legal_name' => $request->business_legal_name,
-            'agreement_type' => $request->agreement_type,
-            'account_status' => 'pending_verification',
+            'account_status' => $verification_status,
             'owner_full_name' => $request->is_owner === 'no' ? $request->owner_full_name : null,
             'owner_email' => $request->is_owner === 'no' ? $request->owner_email : null,
             'owner_phone' => $request->is_owner === 'no' ? $request->owner_phone : null,
@@ -122,6 +168,7 @@ class AuthController extends Controller
                 'legal_name' => $request->business_legal_name,
                 'country' => $request->country_of_operation,
                 'primary_contact_email' => $request->email,
+                'agreement_type' => $request->agreement_type,
                 'status' => 'pending',
             ]);
         } else {

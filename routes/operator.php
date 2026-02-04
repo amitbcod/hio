@@ -34,6 +34,10 @@ Route::prefix('operator')->name('operator.')->group(function () {
         // Payouts additional details (modal save)
         Route::post('register/step7-payouts', [RegistrationController::class, 'savePayoutDetails'])->name('register.step7.payouts.save');
 
+        // Owner management (only for owners)
+        Route::get('manage/operators', [\App\Http\Controllers\Operator\ManageOperatorsController::class, 'index'])->name('manage.operators.index');
+        Route::post('manage/operators/{id}/status', [\App\Http\Controllers\Operator\ManageOperatorsController::class, 'updateStatus'])->name('manage.operators.update_status');
+
         // Controller verification flows (accept/reject require auth)
         Route::post('register/controller/verify/{token}/accept', [\App\Http\Controllers\Operator\ControllerVerificationController::class, 'accept'])->name('register.controller.verify.accept');
         Route::post('register/controller/verify/{token}/reject', [\App\Http\Controllers\Operator\ControllerVerificationController::class, 'reject'])->name('register.controller.verify.reject');
@@ -43,9 +47,7 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::get('register/step9-review', [RegistrationController::class, 'step9Review'])->name('register.step9');
         Route::post('register/step9-review', [RegistrationController::class, 'saveStep9Review']);
 
-       Route::post('status-submit', function () {
-            return redirect()->route('operator.pending.approval');
-        })->name('status.submit');
+       Route::post('status-submit', [\App\Http\Controllers\Operator\RegistrationController::class, 'submitForApproval'])->name('status.submit');
 
         Route::get('pending-approval', function () {
             return view('operator.registration.pending_approval');

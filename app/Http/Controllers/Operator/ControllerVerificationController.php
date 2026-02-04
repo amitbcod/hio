@@ -37,7 +37,19 @@ class ControllerVerificationController extends Controller
 
         // require login and match owner
         $user = auth()->user();
-        if (!$user || $user->email !== $cv->owner_email) {
+        // If not logged in, store token and redirect to login so owner can login and accept in one flow
+        if (!$user) {
+            // Persist token in session and redirect directly to operator login with token as query param
+            // Flash the token so it is available on the subsequent request and can be carried through the login form
+            session(['accept_token' => $token]);
+            // Redirect to the (possibly fallback) login route URL and include the token as a query param and flashed session
+            return redirect()->to(url('/login').'?accept_token='.urlencode($token))
+                ->with('info', 'Please login with the owner account to accept this request.')
+                ->with('accept_token', $token);
+        }
+
+        // If logged in but not the owner email, reject
+        if ($user->email !== $cv->owner_email) {
             return redirect()->route('operator.login')->with('error', 'Please login with the owner account to accept this request.');
         }
 
@@ -48,6 +60,17 @@ class ControllerVerificationController extends Controller
         if (empty($user->business_id)) {
             $user->business_id = $cv->business_id;
             $user->save();
+        }
+
+        // activate the requester account so they can login after owner approval
+        try {
+            if ($cv->requester) {
+                $rq = $cv->requester;
+                $rq->account_status = 'active';
+                $rq->save();
+            }
+        } catch (\Exception $e) {
+            \Log::error('ControllerVerificationController::accept - activating requester failed', ['err' => $e->getMessage()]);
         }
 
         // notify requester (not implemented - simple flash)
@@ -74,6 +97,7 @@ class ControllerVerificationController extends Controller
         $request->validate([
             'full_name' => 'required|string|max:255',
             'password' => ['required','confirmed','min:8'],
+            'agreement_type' => 'required|in:Listing Only,OTO,Widget Only,OTO + Widget,Full Service',
         ]);
 
         \Log::info('ControllerVerificationController::claim - validated', ['owner_email' => $request->owner_email]);
@@ -99,10 +123,20 @@ class ControllerVerificationController extends Controller
             'phone' => $request->phone ?? null,
             'full_name' => $request->full_name,
             'business_legal_name' => $cv->business->legal_name ?? null,
-            'account_status' => 'pending_verification',
+            'account_status' => 'active',
             'password_hash' => bcrypt($request->password),
             'business_id' => $cv->business_id,
         ]);
+
+        // persist agreement_type on business
+        try {
+            if (!empty($request->agreement_type)) {
+                $cv->business->agreement_type = $request->agreement_type;
+                $cv->business->save();
+            }
+        } catch (\Exception $e) {
+            \Log::error('ControllerVerificationController::claim - saving business agreement_type failed', ['err' => $e->getMessage()]);
+        }
 
         \Log::info('ControllerVerificationController::claim - owner created', ['owner_id' => $owner->id ?? null, 'email' => $owner->email ?? null]);
 
@@ -114,7 +148,7 @@ class ControllerVerificationController extends Controller
         $cv_db = ControllerVerification::find($cv->id);
         \Log::info('ControllerVerificationController::claim - verification from DB', ['db_status' => $cv_db->status, 'db_accepted_by' => $cv_db->accepted_by]);
 
-        // notify requester (if exists)
+        // notify requester (if exists) and admins
         try {
             if ($cv->requester) {
                 \Mail::to($cv->requester->email)->send(new \App\Mail\OwnerClaimedToRequester($cv));

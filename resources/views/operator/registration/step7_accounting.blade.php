@@ -2,7 +2,10 @@
 
 @section('progressbar')
     @php
-        $progress = \App\Models\OperatorRegistrationProgress::where('operator_id', auth()->user()->operator_id ?? null)->first();
+        // Prefer business progress
+        $progress = !empty(auth()->user()->business_id)
+            ? \App\Models\OperatorRegistrationProgress::where('business_id', auth()->user()->business_id)->first()
+            : \App\Models\OperatorRegistrationProgress::where('operator_id', auth()->user()->operator_id ?? null)->first();
         $completionPercent = isset($progress) ? round((($progress->step2_profile ?? 0)
             + ($progress->step3_legal ?? 0)
             + ($progress->step4_system_process ?? 0)

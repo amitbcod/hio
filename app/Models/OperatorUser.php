@@ -17,4 +17,10 @@ class OperatorUser extends Authenticatable
     {
         return $this->password_hash;
     }
+
+    // Business relationship: user may be scoped to a business
+    public function business()
+    {
+        return $this->belongsTo(Business::class, 'business_id');
+    }
 }

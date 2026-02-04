@@ -95,7 +95,8 @@ class ControllerVerificationTest extends TestCase
             'owner_email' => 'owner@example.com',
             'password' => 'OwnerPass123!',
             'password_confirmation' => 'OwnerPass123!',
-            'confirm_authority' => 'on'
+            'confirm_authority' => 'on',
+            'agreement_type' => 'Listing Only',
         ]);
 
         // Redirect to operator login
@@ -108,7 +109,8 @@ class ControllerVerificationTest extends TestCase
             'owner_email' => 'owner@example.com',
             'password' => 'OwnerPass123!',
             'password_confirmation' => 'OwnerPass123!',
-            'confirm_authority' => 'on'
+            'confirm_authority' => 'on',
+            'agreement_type' => 'Listing Only',
         ]);
         $controllerResponse = $controller->claim($req, $cv->token);
         // If controller returns redirect we ignore, but we expect it to process and approve the verification
@@ -158,7 +160,8 @@ class ControllerVerificationTest extends TestCase
             'owner_email' => 'owner_exp@example.com',
             'password' => 'OwnerPass123!',
             'password_confirmation' => 'OwnerPass123!',
-            'confirm_authority' => 'on'
+            'confirm_authority' => 'on',
+            'agreement_type' => 'Listing Only',
         ]);
 
         $response->assertRedirect(route('operator.register.step2'));
@@ -200,7 +203,8 @@ class ControllerVerificationTest extends TestCase
             'owner_email' => 'owner_already@example.com',
             'password' => 'OwnerPass123!',
             'password_confirmation' => 'OwnerPass123!',
-            'confirm_authority' => 'on'
+            'confirm_authority' => 'on',
+            'agreement_type' => 'Listing Only',
         ]);
 
         $response->assertRedirect(route('operator.register.step2'));
@@ -278,6 +282,134 @@ class ControllerVerificationTest extends TestCase
         $response->assertSee('Requester details');
         $response->assertSee('Requester View');
         $response->assertSee('reqview@example.com');
+    }
+
+    public function test_requester_cannot_login_until_owner_accepts()
+    {
+        // create business + requester
+        $business = Business::create([
+            'business_id' => Business::generateBusinessId(),
+            'legal_name' => 'Login Gate Test',
+            'primary_contact_email' => 'reqlogin@example.com',
+            'status' => 'pending',
+        ]);
+
+        $requester = Operator::create([
+            'operator_id' => uniqid('OP'),
+            'user_type' => 'Operator',
+            'is_owner' => 'no',
+            'email' => 'reqlogin@example.com',
+            'full_name' => 'Requester Login',
+            'password_hash' => bcrypt('Secret123!'),
+            'business_id' => $business->id,
+            'account_status' => 'pending_verification',
+        ]);
+
+        $cv = ControllerVerification::create([
+            'token' => ControllerVerification::generateToken(),
+            'business_id' => $business->id,
+            'owner_email' => 'ownerlogin@example.com',
+            'requester_operator_id' => $requester->operator_id,
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        // Attempt to login before owner accepts
+        $response = $this->post('/operator/login', [
+            'email' => 'reqlogin@example.com',
+            'password' => 'Secret123!'
+        ]);
+
+        $response->assertSessionHasErrors(['email' => 'Account not active. Please wait for owner approval.']);
+
+        // Create owner and accept
+        $owner = Operator::create([
+            'operator_id' => uniqid('OP'),
+            'user_type' => 'Operator',
+            'is_owner' => 'yes',
+            'email' => 'ownerlogin@example.com',
+            'full_name' => 'Owner Login',
+            'password_hash' => bcrypt('OwnerPass123!'),
+            'business_id' => $business->id,
+            'account_status' => 'active',
+        ]);
+
+        $this->actingAs($owner);
+        $response = $this->post('/operator/register/controller/verify/'.$cv->token.'/accept');
+        $response->assertRedirect(route('operator.register.step2'));
+
+        // Now requester should be able to login
+        $response = $this->post('/operator/login', [
+            'email' => 'reqlogin@example.com',
+            'password' => 'Secret123!'
+        ]);
+
+        $response->assertRedirect(route('operator.register.step2'));
+    }
+
+    public function test_owner_can_login_and_accept_in_one_flow()
+    {
+        // create business + requester
+        $business = Business::create([
+            'business_id' => Business::generateBusinessId(),
+            'legal_name' => 'Login Accept Flow',
+            'primary_contact_email' => 'reqflow@example.com',
+            'status' => 'pending',
+        ]);
+
+        $requester = Operator::create([
+            'operator_id' => uniqid('OP'),
+            'user_type' => 'Operator',
+            'is_owner' => 'no',
+            'email' => 'reqflow@example.com',
+            'full_name' => 'Requester Flow',
+            'password_hash' => bcrypt('Flow123!'),
+            'business_id' => $business->id,
+            'account_status' => 'pending_verification',
+        ]);
+
+        $cv = ControllerVerification::create([
+            'token' => ControllerVerification::generateToken(),
+            'business_id' => $business->id,
+            'owner_email' => 'ownerflow@example.com',
+            'requester_operator_id' => $requester->operator_id,
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        // Create owner account but do not log in yet
+        $owner = Operator::create([
+            'operator_id' => uniqid('OP'),
+            'user_type' => 'Operator',
+            'is_owner' => 'yes',
+            'email' => 'ownerflow@example.com',
+            'full_name' => 'Owner Flow',
+            'password_hash' => bcrypt('OwnerFlow123!'),
+            'business_id' => null,
+            'account_status' => 'active',
+        ]);
+
+        // Owner clicks Accept but is not logged in -> should be redirected to login
+        $response = $this->post('/operator/register/controller/verify/'.$cv->token.'/accept');
+        // Accept action redirects to the login page (may be login fallback route)
+        $response->assertRedirect(route('login'));
+        // The operator login page should accept an accept_token query param and include it in the login form
+        $loginGet = $this->get('/operator/login?accept_token='.$cv->token);
+        $loginGet->assertStatus(200);
+        $loginGet->assertSee('accept_token');
+
+        // Simulate the browser: follow redirect to login page with token, then submit the login form which carries the token
+        $this->get(route('login', ['accept_token' => $cv->token]));
+
+        $login = $this->post('/operator/login', [
+            'email' => 'ownerflow@example.com',
+            'password' => 'OwnerFlow123!',
+            'accept_token' => $cv->token,
+        ]);
+
+        $login->assertRedirect(route('operator.register.step2'));
+
+        // verification should be accepted and requester activated
+        $this->assertEquals('accepted', $cv->fresh()->status);
+        $this->assertEquals('active', $requester->fresh()->account_status);
     }
 
     public function test_approval_page_shows_approve_button_when_owner_exists()

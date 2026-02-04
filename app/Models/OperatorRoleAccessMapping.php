@@ -19,7 +19,14 @@ class OperatorRoleAccessMapping extends Model
         'can_publish',
         'capacity_level',
         'notes',
+        'business_id',
     ];
+
+    // Relations
+    public function business()
+    {
+        return $this->belongsTo(Business::class, 'business_id');
+    }
 
     protected $casts = [
         'can_read'    => 'boolean',

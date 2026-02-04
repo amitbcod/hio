@@ -99,11 +99,14 @@
                 </div>
              
             @endif
-               <div class="text-end mt-4">
+                     
+            @if(!$business || $business->status !== 'active')
+                <div class="text-end mt-4">
                     <button type="submit" class="btn btn-success px-4">
                         Submit for Approval
                     </button>
                 </div>
+            @endif
             </form>
         </div>
     </div>

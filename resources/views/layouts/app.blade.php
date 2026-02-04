@@ -10,6 +10,20 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
         <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand" href="#">Operator Portal</a>
+            @auth
+                @if(auth()->user()->is_owner === 'yes')
+                    <div class="ms-auto">
+                        <div class="dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" id="ownerSettingsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-gear-fill"></i> Settings
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="ownerSettingsDropdown">
+                                <li><a class="dropdown-item" href="{{ route('operator.manage.operators.index') }}">Manage Operators</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                @endif
+            @endauth
             <div>
                 @auth
                     <span class="me-3">{{ auth()->user()->email }}</span>

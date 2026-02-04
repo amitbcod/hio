@@ -11,4 +11,15 @@ class OperatorCollaborationAgreement extends Model
     public $timestamps = true;
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
+
+    // Relation to business
+    public function business()
+    {
+        return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    protected $casts = [
+        'commission_value' => 'float',
+        'marketing_contribution_percent' => 'float',
+    ];
 }

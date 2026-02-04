@@ -30,7 +30,12 @@
                 7 => ['label' => 'Service Operations', 'route' => 'operator.register.step8', 'progress' => 'step8_operations'],
                 8 => ['label' => 'Status Review', 'route' => 'operator.register.step9', 'progress' => 'step9_review'],
             ];
-            $progress = isset($progress) ? $progress : (\App\Models\OperatorRegistrationProgress::where('operator_id', auth()->user()->operator_id ?? null)->first());
+            // Prefer business-scoped progress when possible
+            $progress = isset($progress) ? $progress : (
+                !empty(auth()->user()->business_id)
+                    ? \App\Models\OperatorRegistrationProgress::where('business_id', auth()->user()->business_id)->first()
+                    : \App\Models\OperatorRegistrationProgress::where('operator_id', auth()->user()->operator_id ?? null)->first()
+            );
         @endphp
         @foreach($steps as $step => $info)
             <li style="margin-bottom: 4px;">

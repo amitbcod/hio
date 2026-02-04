@@ -61,15 +61,20 @@
                 <div class="form-group mb-2">
                     <label>Agreement Type</label>
                     @php
-                        $agreementType = old('agreement_type', $operator->agreement_type ?? $collab->agreement_type ?? '');
+                        $agreementType = old('agreement_type', $business->agreement_type ?? $collab->agreement_type ?? '');
                     @endphp
                     <input type="text" class="form-control" value="{{ $agreementType }}" readonly>
-                    <input type="hidden" name="agreement_type" value="{{ $agreementType }}">
+                    <input type="hidden" id="agreement_type" name="agreement_type" value="{{ $agreementType }}">
                 </div>
                 <div class="form-group mb-2">
                     <label>Signed Agreement (PDF)</label>
                     @php
-                        $legal = \App\Models\OperatorLegalCompliance::where('operator_id', $operator->operator_id)->first();
+                        // Prefer business-scoped legal record when present
+                        if (!empty($operator->business_id)) {
+                            $legal = \App\Models\OperatorLegalCompliance::where('business_id', $operator->business_id)->first();
+                        } else {
+                            $legal = \App\Models\OperatorLegalCompliance::where('operator_id', $operator->operator_id)->first();
+                        }
                         $signedAgreementPath = $legal && $legal->signed_agreement ? $legal->signed_agreement : null;
                     @endphp
                     @if($signedAgreementPath)

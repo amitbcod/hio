@@ -92,17 +92,7 @@
                         <option value="Other" {{ old('country_of_operation') == 'Other' ? 'selected' : '' }}>Other</option>
                     </select>
                 </div>
-                <div class="form-group mb-3">
-                    <label>Agreement Type *</label>
-                    <select name="agreement_type" class="form-control" required>
-                        <option value="">-- Select Agreement Type --</option>
-                        <option value="Listing Only" {{ old('agreement_type') == 'Listing Only' ? 'selected' : '' }}>Listing Only</option>
-                        <option value="OTO" {{ old('agreement_type') == 'OTO' ? 'selected' : '' }}>OTO</option>
-                        <option value="Widget Only" {{ old('agreement_type') == 'Widget Only' ? 'selected' : '' }}>Widget Only</option>
-                        <option value="OTO + Widget" {{ old('agreement_type') == 'OTO + Widget' ? 'selected' : '' }}>OTO + Widget</option>
-                        <option value="Full Service" {{ old('agreement_type') == 'Full Service' ? 'selected' : '' }}>Full Service</option>
-                    </select>
-                </div>
+
                 <div class="form-group mb-3">
                     <label>Are you the owner of this business? *</label><br>
                     <div class="form-check form-check-inline">
@@ -114,6 +104,18 @@
                         <label class="form-check-label">No</label>
                     </div>
                     <small class="text-muted d-block mt-1">Selecting "Yes" will create a business record linked to your account. If "No", we will attempt to link you to an existing business (by name/country) or create a pending business record to be verified by the owner.</small>
+                </div>
+
+                <div id="agreement-owner-field" class="form-group mb-3" style="display: {{ old('is_owner', 'yes') == 'yes' ? 'block' : 'none' }};">
+                    <label>Agreement Type *</label>
+                    <select name="agreement_type" class="form-control" {{ old('is_owner', 'yes') == 'yes' ? 'required' : '' }}>
+                        <option value="">-- Select Agreement Type --</option>
+                        <option value="Listing Only" {{ old('agreement_type') == 'Listing Only' ? 'selected' : '' }}>Listing Only</option>
+                        <option value="OTO" {{ old('agreement_type') == 'OTO' ? 'selected' : '' }}>OTO</option>
+                        <option value="Widget Only" {{ old('agreement_type') == 'Widget Only' ? 'selected' : '' }}>Widget Only</option>
+                        <option value="OTO + Widget" {{ old('agreement_type') == 'OTO + Widget' ? 'selected' : '' }}>OTO + Widget</option>
+                        <option value="Full Service" {{ old('agreement_type') == 'Full Service' ? 'selected' : '' }}>Full Service</option>
+                    </select>
                 </div>
                 <h5 class="mt-4">Your Information</h5>
                 <div class="form-group mb-3">
@@ -210,6 +212,10 @@
 function toggleOwnerFields() {
     var isOwner = document.querySelector('input[name="is_owner"]:checked').value;
     document.getElementById('owner-fields').style.display = (isOwner === 'no') ? 'block' : 'none';
+    var agreementEl = document.getElementById('agreement-owner-field');
+    if (agreementEl) {
+        agreementEl.style.display = (isOwner === 'yes') ? 'block' : 'none';
+    }
 }
 document.addEventListener('DOMContentLoaded', function() {
     toggleOwnerFields();

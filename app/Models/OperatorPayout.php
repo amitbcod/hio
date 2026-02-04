@@ -17,4 +17,16 @@ class OperatorPayout extends Model
     {
         return 'PAYOUT-' . strtoupper(uniqid());
     }
+
+    // Relations
+    public function business()
+    {
+        return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    protected $casts = [
+        'total_commission' => 'decimal:2',
+        'processing_fee' => 'decimal:2',
+        'payout_amount' => 'decimal:2',
+    ];
 }
