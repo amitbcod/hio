@@ -368,13 +368,17 @@ class RegistrationController extends Controller
         // No validation for service_category needed, as it is not saved here
         $operator = auth()->user();
         // Save into business scope if operator is linked to a business
+        if($request->service_category){
+            $serviceCategory = implode(',', $request->service_category);
+        }
+       
         if (!empty($operator->business_id)) {
             $system = \App\Models\OperatorSystemProcess::updateOrCreate(
                 ['business_id' => $operator->business_id],
                 [
                     'business_id' => $operator->business_id,
                     'operator_id' => $operator->operator_id,
-                    'service_category' => $request->service_category ?? 'Accommodation',
+                    'service_category' => $serviceCategory ?? 'Accommodation',
                     'communication_preference' => $request->communication_preference ?? null,
                     'assigned_operator_name' => $request->assigned_operator_name ?? null,
                     'assigned_operator_role' => $request->assigned_operator_role ?? null,
