@@ -75,16 +75,7 @@
                     </div>
                 </div>
 
-                @if(($operator->is_owner ?? '') === 'yes')
-                    <form method="POST" action="{{ url('operator/register/step5-collaboration/confirm') }}" class="mt-3">
-                        @csrf
-                        <div class="form-group mb-2">
-                            <label>Confirm Agreement (type full name)</label>
-                            <input type="text" name="agreement_confirm_name" class="form-control" required placeholder="Type full name to confirm">
-                        </div>
-                        <button type="submit" class="btn btn-primary">I Agree</button>
-                    </form>
-                @endif
+
                 <div class="form-group mb-2">
                     <label>Signed Agreement (PDF)</label>
                     @php

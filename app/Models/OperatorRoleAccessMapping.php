@@ -11,7 +11,7 @@ class OperatorRoleAccessMapping extends Model
     protected $fillable = [
         'user_id',
         'role',
-        'module',
+        'module', // store module slug
         'can_read',
         'can_create',
         'can_update',

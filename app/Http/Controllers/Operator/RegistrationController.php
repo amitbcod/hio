@@ -508,79 +508,7 @@ class RegistrationController extends Controller
         return redirect()->route('operator.register.step6')->with('success', 'Collaboration info saved.');
     }
 
-    public function confirmAgreement(Request $request)
-    {
-        $operator = auth()->user();
-        if (empty($operator->business_id) || ($operator->is_owner ?? '') !== 'yes') {
-            return redirect()->route('operator.register.step5')->with('error', 'Only business owners can confirm agreements.');
-        }
 
-        $request->validate([
-            'agreement_confirm_name' => 'required|string',
-            'agreement_type' => 'required|in:Listing Only,OTO,Widget Only,OTO + Widget,Full Service',
-        ]);
-
-        $business = \App\Models\Business::find($operator->business_id);
-        if (!$business) {
-            return redirect()->route('operator.register.step5')->with('error', 'Business not found.');
-        }
-
-        // Update business agreement_type if provided
-        $business->agreement_type = $request->agreement_type;
-        $business->save();
-
-        // Create or update collaboration agreement for the business
-        $collab = OperatorCollaborationAgreement::updateOrCreate(
-            ['business_id' => $business->id],
-            [
-                'operator_id' => $operator->operator_id,
-                'agreement_type' => $request->agreement_type,
-                'contact_management_name' => $request->contact_management_name ?? ($operator->full_name ?? ''),
-                'start_date' => now()->format('Y-m-d'),
-                'end_date' => now()->addYear()->format('Y-m-d'),
-                'renewal_date' => now()->addYear()->format('Y-m-d'),
-                'commission_model' => $request->commission_model ?? 'percentage',
-                'commission_value' => $request->commission_value ?? 0,
-                'marketing_contribution_percent' => $request->marketing_contribution_percent ?? 0,
-                'status' => 'Active',
-            ]
-        );
-
-        // Generate a simple PDF containing the agreement summary and signer
-        try {
-            $pdf = new \TCPDF();
-            $pdf->AddPage();
-            $pdf->SetFont('helvetica', '', 12);
-            $content = "HIO Service Agreement\nBusiness: {$business->legal_name}\nAgreement Type: {$collab->agreement_type}\nSigned by: {$request->agreement_confirm_name}\nDate: " . now()->toDateTimeString();
-            $pdf->Write(0, $content);
-            $raw = $pdf->Output('', 'S');
-            $path = 'agreements/signed_' . $business->business_id . '_' . time() . '.pdf';
-            Storage::disk('public')->put($path, $raw);
-
-            // Save the agreement file path on the collaboration record
-            $collab->agreement_file = $path;
-            $collab->save();
-        } catch (\Exception $e) {
-            \Log::error('confirmAgreement - PDF generation failed', ['err' => $e->getMessage()]);
-        }
-
-        // send system email to primary contact and active operators
-        try {
-            if (!empty($business->primary_contact_email)) {
-                Mail::to($business->primary_contact_email)->send(new AgreementConfirmed($business, $collab));
-            }
-            $authorised = \App\Models\Operator::where('business_id', $business->id)
-                            ->where('account_status', 'active')
-                            ->get();
-            foreach ($authorised as $op) {
-                Mail::to($op->email)->send(new AgreementConfirmed($business, $collab));
-            }
-        } catch (\Exception $e) {
-            \Log::error('confirmAgreement - mail error', ['err' => $e->getMessage()]);
-        }
-
-        return redirect()->route('operator.register.step5')->with('success', 'Agreement confirmed and saved.');
-    }
     /*public function step6Users(Request $request) {
         if (!$this->checkStepAccess(6)) {
             return redirect()->route('operator.register.step2')->with('error', 'Please complete previous steps first.');
@@ -617,6 +545,27 @@ class RegistrationController extends Controller
     // ✅ GROUP BY USER ID (KEY FIX)
     $roleAccessMappingsByUser = $roleAccessMappings->groupBy('user_id');
 
+    // Fetch roles available to this operator's business (or global roles)
+    $roles = collect();
+    if (class_exists(\Spatie\Permission\Models\Role::class) && \Illuminate\Support\Facades\Schema::hasTable('roles')) {
+        if (\Illuminate\Support\Facades\Schema::hasColumn('roles', 'business_id')) {
+            $roles = \Spatie\Permission\Models\Role::where(function($q) use ($operator) {
+                $q->whereNull('business_id');
+                if (!empty($operator->business_id)) {
+                    $q->orWhere('business_id', $operator->business_id);
+                }
+            })->orderBy('name')->get();
+        } else {
+            $roles = \Spatie\Permission\Models\Role::orderBy('name')->get();
+        }
+    }
+
+    // Load dynamic modules available for this business (or global modules)
+    $modules = \App\Models\Module::orderBy('name')->get();
+
+    // group by user id for JS modal prefill
+    $roleAccessMappingsByUser = $roleAccessMappings->groupBy('user_id');
+
     $progress = $this->getProgressForOperator($operator);
 
     return view(
@@ -624,7 +573,8 @@ class RegistrationController extends Controller
         compact(
             'users',
             'progress',
-            'roleAccessMappingsByUser'
+            'roleAccessMappingsByUser',
+            'roles'
         )
     );
 }
@@ -670,8 +620,7 @@ class RegistrationController extends Controller
         'email' => 'required|email|unique:operator_users,email',
         'mobile' => 'required|string|max:20',
         'password' => 'required|string|min:8',
-        'role' => 'required|in:Admin,Head of Department,Reservation Manager,Operational Manager,Finance Manager,Marketing Manager,Support Manager,Content Manager',
-        'access_rights' => 'nullable|array',
+        'role' => 'required|string',
     ]);
 
     $user = new OperatorUser();
@@ -685,13 +634,46 @@ class RegistrationController extends Controller
     $user->email = $request->email;
     $user->mobile = $request->mobile;
     $user->password_hash = bcrypt($request->password);
+    // keep human-readable role for legacy display, but authoritative role will be assigned via Spatie
     $user->role = $request->role;
-    $user->access_rights = $request->access_rights ? json_encode($request->access_rights) : null;
     $user->status = 'Active';
     $user->account_reset_required = 1;
     $user->created_by = $operator->id;
 
     $user->save();
+
+    // Assign role via Spatie, ensuring role belongs to this business (if applicable)
+    try {
+        $roleName = $request->role;
+        $roleModel = null;
+
+        // If Spatie not available, skip role assignment but keep human-readable role value
+        if (!class_exists(\Spatie\Permission\Models\Role::class) || !\Illuminate\Support\Facades\Schema::hasTable('roles')) {
+            \Log::warning('Spatie Role model not available - role not assigned programmatically');
+        } else {
+            if (!empty($operator->business_id)) {
+                $roleModel = \Spatie\Permission\Models\Role::where('name', $roleName)
+                    ->where('business_id', $operator->business_id)
+                    ->first();
+            }
+            // fallback to global role (no business_id)
+            if (!$roleModel) {
+                $roleModel = \Spatie\Permission\Models\Role::where('name', $roleName)
+                    ->whereNull('business_id')
+                    ->first();
+            }
+            if ($roleModel) {
+                $user->assignRole($roleModel->name);
+            } else {
+                // If the role wasn't found for this business, remove the created user and report error
+                $user->delete();
+                return redirect()->back()->withErrors(['role' => 'Selected role not found for this business.'])->withInput();
+            }
+        }
+    } catch (\Exception $e) {
+        // Log and continue; role assignment failed
+        \Log::error('saveStep6Users - role assignment error', ['err' => $e->getMessage()]);
+    }
 
     // mark step as complete
     OperatorRegistrationProgress::updateOrCreate(
@@ -943,27 +925,40 @@ class RegistrationController extends Controller
 
     $operator = auth()->user();
 
+    // Only business owner can assign or change role-access mappings
+    if (empty($operator->business_id) || ($operator->is_owner ?? '') !== 'yes') {
+        return redirect()->route('operator.register.step6')->with('error', 'Only the business owner can manage role permissions.');
+    }
+
+    // Ensure the target user belongs to the same business
+    $targetUser = \App\Models\OperatorUser::find($request->user_id);
+    if (!$targetUser || ($targetUser->business_id ?? null) != $operator->business_id) {
+        return redirect()->route('operator.register.step6')->with('error', 'Target user not part of your business.');
+    }
+
+    // Validate module exists
+    $module = \App\Models\Module::where('slug', $request->module)->orWhere('name', $request->module)->first();
+    if (!$module) {
+        return redirect()->route('operator.register.step6')->with('error', 'Selected module not found.');
+    }
+
     $attributes = [
         'user_id' => $request->user_id,
-        'module'  => $request->module,
+        'module'  => $module->slug,
+        'business_id' => $operator->business_id,
     ];
 
     $values = [
         'role'           => $request->role,
         'capacity_level' => $request->capacity_level,
-        'can_read'       => in_array('Read', $permissions),
-        'can_create'     => in_array('Create', $permissions),
-        'can_update'     => in_array('Update', $permissions),
-        'can_approve'    => in_array('Approve', $permissions),
-        'can_publish'    => in_array('Publish', $permissions),
+        'can_read'       => in_array('Read', $permissions) ? 1 : 0,
+        'can_create'     => in_array('Create', $permissions) ? 1 : 0,
+        'can_update'     => in_array('Update', $permissions) ? 1 : 0,
+        'can_approve'    => in_array('Approve', $permissions) ? 1 : 0,
+        'can_publish'    => in_array('Publish', $permissions) ? 1 : 0,
         'notes'          => $request->notes,
+        'business_id'    => $operator->business_id,
     ];
-
-    // If the operator is linked to a business, scope the mapping to that business
-    if (!empty($operator->business_id)) {
-        $attributes['business_id'] = $operator->business_id;
-        $values['business_id'] = $operator->business_id;
-    }
 
     OperatorRoleAccessMapping::updateOrCreate($attributes, $values);
 
@@ -973,8 +968,13 @@ class RegistrationController extends Controller
 }
 
     public function deleteRoleAccessMapping($mappingId) {
+        $operator = auth()->user();
         $mapping = \App\Models\OperatorRoleAccessMapping::find($mappingId);
         if ($mapping) {
+            // Only owner of the business may delete mappings
+            if (empty($operator->business_id) || ($operator->is_owner ?? '') !== 'yes' || ($mapping->business_id ?? null) != $operator->business_id) {
+                return redirect()->route('operator.register.step6')->with('error', 'Unauthorized action.');
+            }
             $mapping->delete();
             return redirect()->route('operator.register.step6')->with('success', 'Role access mapping deleted successfully!');
         }

@@ -135,14 +135,19 @@
                     <label>User Role *</label>
                     <select name="role" class="form-control" required>
                         <option value="">-- Select Role --</option>
-                        <option value="Admin" {{ old('role') == 'Admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="Head of Department" {{ old('role') == 'Head of Department' ? 'selected' : '' }}>Head of Department</option>
-                        <option value="Reservation Manager" {{ old('role') == 'Reservation Manager' ? 'selected' : '' }}>Reservation Manager</option>
-                        <option value="Operational Manager" {{ old('role') == 'Operational Manager' ? 'selected' : '' }}>Operational Manager</option>
-                        <option value="Finance Manager" {{ old('role') == 'Finance Manager' ? 'selected' : '' }}>Finance Manager</option>
-                        <option value="Marketing Manager" {{ old('role') == 'Marketing Manager' ? 'selected' : '' }}>Marketing Manager</option>
-                        <option value="Support Manager" {{ old('role') == 'Support Manager' ? 'selected' : '' }}>Support Manager</option>
-                        <option value="Content Manager" {{ old('role') == 'Content Manager' ? 'selected' : '' }}>Content Manager</option>
+                        @php $rolesFallback = [
+                            'Admin','Head of Department','Reservation Manager','Operational Manager','Finance Manager','Marketing Manager','Support Manager','Content Manager'
+                        ]; @endphp
+
+                        @if(isset($roles) && $roles->count())
+                            @foreach($roles as $r)
+                                <option value="{{ $r->name }}" {{ old('role') == $r->name ? 'selected' : '' }}>{{ $r->name }}{{ $r->business_id ? ' (Business)' : '' }}</option>
+                            @endforeach
+                        @else
+                            @foreach($rolesFallback as $rf)
+                                <option value="{{ $rf }}" {{ old('role') == $rf ? 'selected' : '' }}>{{ $rf }}</option>
+                            @endforeach
+                        @endif
                     </select>
                 </div>
                 <div id="owner-fields" style="display: {{ old('is_owner', 'yes') == 'no' ? 'block' : 'none' }};">

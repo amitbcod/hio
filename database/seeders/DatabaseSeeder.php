@@ -24,5 +24,26 @@ class DatabaseSeeder extends Seeder
 
         // Admin user for system
         $this->call([\Database\Seeders\AdminUserSeeder::class]);
+
+        // Seed Modules
+        try {
+            $this->call([\Database\Seeders\ModuleSeeder::class]);
+        } catch (\Exception $e) {
+            // modules table may not exist yet; run manually after migrate
+        }
+
+        // Seed global Roles (if Spatie is installed)
+        try {
+            $this->call([\Database\Seeders\RoleSeeder::class]);
+        } catch (\Exception $e) {
+            // roles table may not exist yet; run manually after vendor:publish and migrate
+        }
+
+        // Seed permissions for modules and operations (requires Spatie package)
+        try {
+            $this->call([\Database\Seeders\PermissionsSeeder::class]);
+        } catch (\Exception $e) {
+            // permissions table may not exist yet; run manually after vendor:publish and migrate
+        }
     }
 }

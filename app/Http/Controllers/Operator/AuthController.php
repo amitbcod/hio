@@ -104,7 +104,19 @@ class AuthController extends Controller
 
     public function showRegistrationForm()
     {
-        return view('operator.auth.register');
+        // Provide available roles to the registration form when permissions are installed
+        $roles = collect();
+
+        if (class_exists(\Spatie\Permission\Models\Role::class) && \Illuminate\Support\Facades\Schema::hasTable('roles')) {
+            // If `business_id` column is present we want global roles only; otherwise return all roles
+            if (\Illuminate\Support\Facades\Schema::hasColumn('roles', 'business_id')) {
+                $roles = \Spatie\Permission\Models\Role::whereNull('business_id')->orderBy('name')->get();
+            } else {
+                $roles = \Spatie\Permission\Models\Role::orderBy('name')->get();
+            }
+        }
+
+        return view('operator.auth.register', compact('roles'));
     }
 
     public function register(Request $request)
@@ -117,6 +129,8 @@ class AuthController extends Controller
             'email' => 'required|email|unique:operator_users,email',
             'phone' => 'required',
             'full_name' => 'required',
+            // Role is optional at registration time; if provided it should be a string (we assign roles later in the onboarding flow)
+            'role' => 'nullable|string',
             'password' => [
                 'required',
                 'confirmed',

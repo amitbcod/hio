@@ -27,7 +27,12 @@
     <main>
         <div class="container-fluid">
             <div class="row">
-                @yield('content')
+                <div class="col-md-2">
+                    @include('admin._sidebar')
+                </div>
+                <div class="col-md-10">
+                    @yield('content')
+                </div>
             </div>
         </div>
     </main>

@@ -4,19 +4,13 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
-use App\Mail\AgreementConfirmed;
 
 class AgreementConfirmationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_owner_can_confirm_agreement_generates_pdf_and_sends_email()
+    public function test_owner_can_save_collaboration_and_update_business_agreement_type()
     {
-        Mail::fake();
-        Storage::fake('public');
-
         $business = \App\Models\Business::create([
             'business_id' => \App\Models\Business::generateBusinessId(),
             'legal_name' => 'Agree Co',
@@ -37,24 +31,30 @@ class AgreementConfirmationTest extends TestCase
 
         $this->actingAs($owner);
 
-        $response = $this->post('/operator/register/step5-collaboration/confirm', [
-            'agreement_confirm_name' => 'Owner Name',
-            'agreement_type' => 'Listing Only',
+        $response = $this->post('/operator/register/step5-collaboration', [
+            'agreement_type' => 'OTO',
+            'contact_management_name' => 'Manager',
+            'contact_management_email' => 'man@example.com',
+            'contact_management_phone' => '01234',
+            'start_date' => now()->format('Y-m-d'),
+            'end_date' => now()->addYear()->format('Y-m-d'),
+            'renewal_date' => now()->addMonths(11)->format('Y-m-d'),
+            'commission_model' => 'percentage',
+            'commission_value' => 10,
+            'marketing_contribution_percent' => 5,
+            'status' => 'active',
         ]);
 
-        $response->assertRedirect(route('operator.register.step5'));
+        $response->assertRedirect(route('operator.register.step6'));
+
+        $this->assertDatabaseHas('businesses', [
+            'id' => $business->id,
+            'agreement_type' => 'OTO',
+        ]);
 
         $this->assertDatabaseHas('operator_collaboration_agreements', [
             'business_id' => $business->id,
-            'agreement_type' => 'Listing Only',
+            'agreement_type' => 'OTO',
         ]);
-
-        $collab = \App\Models\OperatorCollaborationAgreement::where('business_id', $business->id)->first();
-        $this->assertNotNull($collab->agreement_file);
-        Storage::disk('public')->assertExists($collab->agreement_file);
-
-        Mail::assertSent(AgreementConfirmed::class, function ($mail) use ($business) {
-            return $mail->hasTo($business->primary_contact_email);
-        });
     }
 }

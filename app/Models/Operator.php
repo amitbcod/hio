@@ -10,6 +10,7 @@ use Illuminate\Auth\Authenticatable;
 class Operator extends Model implements AuthenticatableContract
 {
     use Authenticatable;
+
     protected $table = 'operators';
     protected $guarded = [];
     public $timestamps = true;

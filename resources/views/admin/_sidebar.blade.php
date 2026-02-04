@@ -1,0 +1,11 @@
+<div class="list-group">
+    <a href="{{ route('admin.dashboard') }}" class="list-group-item list-group-item-action {{ request()->is('admin/dashboard') ? 'active' : '' }}">Dashboard</a>
+    <a href="{{ route('admin.roles.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/roles*') ? 'active' : '' }}">Roles</a>
+    <a href="{{ route('admin.modules.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/modules*') ? 'active' : '' }}">Modules</a>
+    <a href="{{ route('admin.operators.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/operators*') ? 'active' : '' }}">Operators</a>
+    @if(Route::has('admin.businesses.index'))
+        <a href="{{ route('admin.businesses.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/businesses*') ? 'active' : '' }}">Businesses</a>
+    @else
+        <div class="list-group-item list-group-item-action text-muted">Businesses</div>
+    @endif
+</div>

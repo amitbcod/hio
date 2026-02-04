@@ -39,9 +39,14 @@
 
             {{-- Buttons --}}
             <div class="mb-3 d-flex justify-content-between">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                    Add New User
-                </button>
+                <div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        Add New User
+                    </button>
+                    @if(!empty(auth()->user()->business_id) && (auth()->user()->is_owner ?? '') === 'yes')
+                        <a href="{{ route('operator.roles.index') }}" class="btn btn-outline-secondary ms-2">Manage Roles</a>
+                    @endif
+                </div>
                 <a href="{{ url('operator/dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
             </div>
 
@@ -84,17 +89,8 @@
                                         data-email="{{ $user->email }}"
                                         data-mobile="{{ $user->mobile }}"
                                         data-role="{{ $user->role }}"
-                                        data-access='@json($user->access_rights ? json_decode($user->access_rights, true) : [])'
                                         data-bs-toggle="modal" data-bs-target="#addUserModal">
                                         Edit
-                                    </button>
-
-                                    {{-- Permissions --}}
-                                    <button type="button" class="btn btn-sm btn-info"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#roleAccessModal"
-                                        onclick="setUserForPermissions({{ $user->id }}, '{{ $user->full_name }}', '{{ $user->role }}')">
-                                        Permissions
                                     </button>
 
                                     {{-- Delete --}}
@@ -156,20 +152,14 @@
 <label>Role *</label>
 <select name="role" id="modal_role" class="form-control" required>
 <option value="">-- Select a Role --</option>
-@foreach(['Admin','Head of Department','Reservation Manager','Operational Manager','Finance Manager','Marketing Manager','Support Manager','Content Manager'] as $role)
-<option value="{{ $role }}">{{ $role }}</option>
+@foreach($roles ?? collect() as $r)
+<option value="{{ $r->name }}">{{ $r->name }}{{ $r->business_id ? ' (Business)' : '' }}</option>
 @endforeach
 </select>
 </div>
 
-<div class="form-group mb-3">
-<label>Access Rights</label><br>
-@foreach(['Account Management','Profile Management','Compliance Management','Users Management','Reservation Management','Payments & Finance','Reporting & Analytics'] as $ar)
-<div class="form-check form-check-inline">
-<input type="checkbox" class="form-check-input" name="access_rights[]" value="{{ $ar }}">
-{{ $ar }}
-</div>
-@endforeach
+<div class="alert alert-info">
+Permissions are assigned at the <strong>Role level</strong> by the business owner. To set permissions for a role, go to <a href="{{ route('operator.roles.index') }}">Manage Roles</a> and click "Manage Permissions" for the desired role.
 </div>
 
 </div>
@@ -179,124 +169,23 @@
 </div>
 </div>
 </form>
-</div>
-</div>
-
-{{-- ================= PERMISSIONS MODAL ================= --}}
-<div class="modal fade" id="roleAccessModal" tabindex="-1">
-<div class="modal-dialog modal-xl">
-<div class="modal-content">
-<form method="POST" action="{{ url('operator/register/step6-role-access') }}">
-@csrf
-<div class="modal-header">
-<h5 class="modal-title">ADVANCED SETTINGS - ROLE ACCESS MAPPING</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-</div>
-<div class="modal-body">
-
-<input type="hidden" id="user_id" name="user_id">
-
-<div class="mb-3">
-<label>User</label>
-<input type="text" id="userNameDisplay" class="form-control" readonly>
-</div>
-
-<div class="mb-3">
-<label>Role</label>
-<input type="text" id="roleDisplay" class="form-control" readonly>
-<input type="hidden" id="role" name="role">
-</div>
-
-<div class="mb-3">
-<label>Module *</label>
-<select id="moduleSelect" name="module" class="form-control" required>
-<option value="">-- Select Module --</option>
-@foreach(['Account','Profile','Compliance','Users','Reservation','Accounting','Operations','Marketing','Content','Support','Feedback'] as $m)
-<option value="{{ $m }}">{{ $m }}</option>
-@endforeach
-</select>
-</div>
-
-<input type="hidden" name="capacity_level" value="Section">
-
-<div class="mb-3">
-<label>Permissions</label>
-@foreach(['Read','Create','Update','Approve','Publish'] as $perm)
-<div class="form-check">
-<input type="checkbox" class="form-check-input perm-checkbox"
-id="perm{{ $perm }}" name="permissions[]" value="{{ $perm }}">
-<label class="form-check-label">{{ $perm }}</label>
-</div>
-@endforeach
-</div>
-
-<div class="mb-3">
-<label>Notes</label>
-<textarea id="notesField" name="notes" class="form-control"></textarea>
-</div>
-
-</div>
-<div class="modal-footer">
-<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-<button type="submit" class="btn btn-success">Save</button>
-</div>
-</form>
-</div>
 </div>
 </div>
 
 <script>
-const roleAccessData = @json($roleAccessMappingsByUser ?? []);
-let currentUserId = null;
+// Handle "Add New User" button click to reset form
+document.querySelectorAll('[data-bs-target="#addUserModal"]').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        // Only reset if it's the "Add New User" button, not an edit button
+        if (!this.classList.contains('editUserBtn')) {
+            document.getElementById('modalTitle').textContent = 'Add New User';
+            document.getElementById('userForm').reset();
+            document.getElementById('modal_user_id').value = '';
+        }
+    });
+});
 
-function setUserForPermissions(userId, userName, userRole) {
-
-    currentUserId = userId;
-
-    document.getElementById('user_id').value = userId;
-    document.getElementById('userNameDisplay').value = userName;
-    document.getElementById('role').value = userRole;
-    document.getElementById('roleDisplay').value = userRole;
-
-    // Reset all fields
-    document.getElementById('moduleSelect').value = '';
-    resetPermissions();
-
-    // Bind onchange for module select
-    document.getElementById('moduleSelect').onchange = function () {
-        loadModulePermissions(this.value);
-    };
-
-    // Optional: load first module if data exists
-    if (!roleAccessData[userId] || roleAccessData[userId].length === 0) return;
-
-    const firstModuleData = roleAccessData[userId][0];
-    document.getElementById('moduleSelect').value = firstModuleData.module;
-    loadModulePermissions(firstModuleData.module);
-}
-
-function resetPermissions() {
-    document.getElementById('notesField').value = '';
-    document.querySelectorAll('.perm-checkbox').forEach(cb => cb.checked = false);
-}
-
-function loadModulePermissions(moduleName) {
-    resetPermissions();
-
-    if (!moduleName || !roleAccessData[currentUserId]) return;
-
-    const record = roleAccessData[currentUserId].find(item => item.module === moduleName);
-    if (!record) return;
-
-    document.getElementById('notesField').value = record.notes ?? '';
-    document.getElementById('permRead').checked     = record.can_read == 1;
-    document.getElementById('permCreate').checked  = record.can_create == 1;
-    document.getElementById('permUpdate').checked  = record.can_update == 1;
-    document.getElementById('permApprove').checked = record.can_approve == 1;
-    document.getElementById('permPublish').checked = record.can_publish == 1;
-}
-
-// Edit/Add User modal scripts
+// Edit User modal scripts
 document.querySelectorAll('.editUserBtn').forEach(btn => {
     btn.addEventListener('click', function() {
         document.getElementById('modalTitle').textContent = 'Edit User';
@@ -305,19 +194,9 @@ document.querySelectorAll('.editUserBtn').forEach(btn => {
         document.getElementById('modal_email').value = this.dataset.email;
         document.getElementById('modal_mobile').value = this.dataset.mobile;
         document.getElementById('modal_role').value = this.dataset.role;
-
-        const access = JSON.parse(this.dataset.access);
-        document.querySelectorAll('input[name="access_rights[]"]').forEach(cb => {
-            cb.checked = access.includes(cb.value);
-        });
+        document.getElementById('modal_password').placeholder = 'Leave blank to keep current password';
+        document.getElementById('modal_password').value = '';
     });
-});
-
-document.querySelector('[data-bs-target="#addUserModal"]').addEventListener('click', function() {
-    document.getElementById('modalTitle').textContent = 'Add New User';
-    document.getElementById('userForm').reset();
-    document.getElementById('modal_user_id').value = '';
-    document.querySelectorAll('input[name="access_rights[]"]').forEach(cb => cb.checked = false);
 });
 </script>
 @endsection

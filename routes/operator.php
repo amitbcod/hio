@@ -22,7 +22,7 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::post('register/step4-system-process', [RegistrationController::class, 'saveStep4SystemProcess']);
         Route::get('register/step5-collaboration', [RegistrationController::class, 'step5Collaboration'])->name('register.step5');
         Route::post('register/step5-collaboration', [RegistrationController::class, 'saveStep5Collaboration']);
-        Route::post('register/step5-collaboration/confirm', [RegistrationController::class, 'confirmAgreement'])->name('register.step5.confirm');
+
         Route::get('register/step6-users', [RegistrationController::class, 'step6Users'])->name('register.step6');
         Route::post('register/step6-users', [RegistrationController::class, 'saveStep6Users']);
         Route::get('register/step6-users/{user}/edit', [RegistrationController::class, 'editStep6User'])->name('register.step6.user.edit');
@@ -38,6 +38,15 @@ Route::prefix('operator')->name('operator.')->group(function () {
         // Owner management (only for owners)
         Route::get('manage/operators', [\App\Http\Controllers\Operator\ManageOperatorsController::class, 'index'])->name('manage.operators.index');
         Route::post('manage/operators/{id}/status', [\App\Http\Controllers\Operator\ManageOperatorsController::class, 'updateStatus'])->name('manage.operators.update_status');
+
+        // Business role management (owner-only)
+        Route::get('roles', [\App\Http\Controllers\Operator\RoleController::class, 'index'])->name('roles.index');
+        Route::post('roles', [\App\Http\Controllers\Operator\RoleController::class, 'store'])->name('roles.store');
+        Route::get('roles/{role}/edit', [\App\Http\Controllers\Operator\RoleController::class, 'edit'])->name('roles.edit');
+        Route::post('roles/{role}', [\App\Http\Controllers\Operator\RoleController::class, 'update'])->name('roles.update');
+        Route::delete('roles/{role}', [\App\Http\Controllers\Operator\RoleController::class, 'destroy'])->name('roles.destroy');
+        Route::get('roles/{role}/permissions', [\App\Http\Controllers\Operator\RoleController::class, 'permissions'])->name('roles.permissions');
+        Route::post('roles/{role}/permissions', [\App\Http\Controllers\Operator\RoleController::class, 'updatePermissions'])->name('roles.permissions.update');
 
         // Controller verification flows (accept/reject require auth)
         Route::post('register/controller/verify/{token}/accept', [\App\Http\Controllers\Operator\ControllerVerificationController::class, 'accept'])->name('register.controller.verify.accept');
