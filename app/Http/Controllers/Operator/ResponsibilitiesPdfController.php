@@ -19,4 +19,15 @@ class ResponsibilitiesPdfController extends Controller
         $pdf->Output('responsibilities.pdf', 'D');
         exit;
     }
+
+    public function agreement()
+    {
+        // Generate a simple HIO Service Agreement PDF
+        $pdf = new \TCPDF();
+        $pdf->AddPage();
+        $pdf->SetFont('helvetica', '', 12);
+        $pdf->Write(0, "HIO Service Agreement\n\nThis document describes the HIO Service Agreement options and terms.\n\n- Listing Only\n- OTO\n- Widget Only\n- OTO + Widget\n- Full Service\n\nPlease contact support for full legal terms.");
+        $pdf->Output('hio_service_agreement.pdf', 'I');
+        exit;
+    }
 }

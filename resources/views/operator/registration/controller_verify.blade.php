@@ -62,16 +62,29 @@
                         <label>Phone (optional)</label>
                         <input type="text" name="phone" class="form-control">
                     </div>
+                    <div class="mb-3 d-flex align-items-start">
+                        <div style="flex: 1;">
+                            <label>Agreement Type *</label>
+                            <select id="agreement_type_select" name="agreement_type" class="form-control" required>
+                                <option value="">-- Select Agreement Type --</option>
+                                <option value="Listing Only" {{ (old('agreement_type') == 'Listing Only' || ($cv->business->agreement_type ?? '') == 'Listing Only') ? 'selected' : '' }}>Listing Only</option>
+                                <option value="OTO" {{ (old('agreement_type') == 'OTO' || ($cv->business->agreement_type ?? '') == 'OTO') ? 'selected' : '' }}>OTO</option>
+                                <option value="Widget Only" {{ (old('agreement_type') == 'Widget Only' || ($cv->business->agreement_type ?? '') == 'Widget Only') ? 'selected' : '' }}>Widget Only</option>
+                                <option value="OTO + Widget" {{ (old('agreement_type') == 'OTO + Widget' || ($cv->business->agreement_type ?? '') == 'OTO + Widget') ? 'selected' : '' }}>OTO + Widget</option>
+                                <option value="Full Service" {{ (old('agreement_type') == 'Full Service' || ($cv->business->agreement_type ?? '') == 'Full Service') ? 'selected' : '' }}>Full Service</option>
+                            </select>
+                        </div>
+                        <div style="width:260px; margin-left: 16px;">
+                            <div id="agreement-preview" style="background:#f8f9fa;border:1px solid #e9ecef;padding:12px;border-radius:6px; display:none;">
+                                <strong id="agreement-preview-title">Agreement Preview</strong>
+                                <p id="agreement-preview-desc" style="font-size:13px;margin:8px 0 0;color:#666;">Select an agreement type to view details.</p>
+                                <a id="agreement-preview-link" href="#" target="_blank" class="btn btn-outline-primary btn-sm mt-2" style="display:none;"><i class="fas fa-file-pdf"></i> Download Full Agreement (PDF)</a>
+                            </div>
+                        </div>
+                    </div>
                     <div class="mb-3">
-                        <label>Agreement Type *</label>
-                        <select name="agreement_type" class="form-control" required>
-                            <option value="">-- Select Agreement Type --</option>
-                            <option value="Listing Only" {{ (old('agreement_type') == 'Listing Only' || ($cv->business->agreement_type ?? '') == 'Listing Only') ? 'selected' : '' }}>Listing Only</option>
-                            <option value="OTO" {{ (old('agreement_type') == 'OTO' || ($cv->business->agreement_type ?? '') == 'OTO') ? 'selected' : '' }}>OTO</option>
-                            <option value="Widget Only" {{ (old('agreement_type') == 'Widget Only' || ($cv->business->agreement_type ?? '') == 'Widget Only') ? 'selected' : '' }}>Widget Only</option>
-                            <option value="OTO + Widget" {{ (old('agreement_type') == 'OTO + Widget' || ($cv->business->agreement_type ?? '') == 'OTO + Widget') ? 'selected' : '' }}>OTO + Widget</option>
-                            <option value="Full Service" {{ (old('agreement_type') == 'Full Service' || ($cv->business->agreement_type ?? '') == 'Full Service') ? 'selected' : '' }}>Full Service</option>
-                        </select>
+                        <label>Confirm Agreement (type full name)</label>
+                        <input type="text" name="agreement_confirm_name" class="form-control" required placeholder="Type full name to confirm">
                     </div>
                     <div class="mb-3">
                         <label>Password</label>
@@ -92,4 +105,42 @@
         </div>
     </div>
 </div>
+<script>
+function updateAgreementPreview() {
+    var preview = document.getElementById('agreement-preview');
+    var title = document.getElementById('agreement-preview-title');
+    var desc = document.getElementById('agreement-preview-desc');
+    var link = document.getElementById('agreement-preview-link');
+    var select = document.getElementById('agreement_type_select');
+    if (!select) return;
+    var value = select.value;
+    if (value) {
+        var map = {
+            'Listing Only': {title: 'Listing Only Agreement', desc: 'Listing Only: minimal listing service. Download the full agreement PDF for details.', file: '/agreements/listing_only.pdf'},
+            'OTO': {title: 'OTO Agreement', desc: 'OTO: On the one-off operator arrangement. Download the full agreement PDF for details.', file: '/agreements/oto.pdf'},
+            'Widget Only': {title: 'Widget Only Agreement', desc: 'Widget Only: integration for widget-only bookings. Download the full agreement PDF for details.', file: '/agreements/widget_only.pdf'},
+            'OTO + Widget': {title: 'OTO + Widget Agreement', desc: 'OTO + Widget: combined OTO and widget terms. Download the full agreement PDF for details.', file: '/agreements/oto_widget.pdf'},
+            'Full Service': {title: 'Full Service Agreement', desc: 'Full Service: comprehensive managed service agreement. Download the full agreement PDF for details.', file: '/agreements/full_service.pdf'}
+        };
+        var info = map[value] || {title: value, desc: 'Download the full agreement for details.', file: '/agreements/' + value.replace(/\s+/g,'_').toLowerCase() + '.pdf'};
+        preview.style.display = 'block';
+        title.innerText = info.title;
+        desc.innerText = info.desc;
+        link.href = info.file;
+        link.style.display = 'inline-block';
+    } else {
+        preview.style.display = 'none';
+        link.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var select = document.getElementById('agreement_type_select');
+    if (select) {
+        select.addEventListener('change', updateAgreementPreview);
+    }
+    // initialize preview (handles preselected values)
+    updateAgreementPreview();
+});
+</script>
 @endsection

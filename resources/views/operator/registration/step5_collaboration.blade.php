@@ -58,14 +58,33 @@
                     <input type="text" name="contact_accounting_mobile" class="form-control" value="{{ old('contact_accounting_mobile', $collab->contact_accounting_mobile ?? '') }}">
                 </div>
                 <h5 class="mt-4">Agreement Details</h5>
-                <div class="form-group mb-2">
-                    <label>Agreement Type</label>
-                    @php
-                        $agreementType = old('agreement_type', $business->agreement_type ?? $collab->agreement_type ?? '');
-                    @endphp
-                    <input type="text" class="form-control" value="{{ $agreementType }}" readonly>
-                    <input type="hidden" id="agreement_type" name="agreement_type" value="{{ $agreementType }}">
+                <div class="form-group mb-2 d-flex align-items-start">
+                    <div style="flex: 1;">
+                        <label>Agreement Type</label>
+                        @php
+                            $agreementType = old('agreement_type', $business->agreement_type ?? $collab->agreement_type ?? '');
+                        @endphp
+                        <input type="text" class="form-control" value="{{ $agreementType }}" readonly>
+                        <input type="hidden" id="agreement_type" name="agreement_type" value="{{ $agreementType }}">
+                    </div>
+                    <div style="width: 260px; margin-left: 16px;">
+                        <div style="background:#f8f9fa;border:1px solid #e9ecef;padding:12px;border-radius:6px;">
+                            <strong>HIO Service Agreement</strong>
+                            <p style="font-size:13px;margin:8px 0 0;color:#666;">Select the agreement type that applies to this business. <a href="{{ url('/operator/hio-agreement') }}" target="_blank">Read full agreement (PDF)</a></p>
+                        </div>
+                    </div>
                 </div>
+
+                @if(($operator->is_owner ?? '') === 'yes')
+                    <form method="POST" action="{{ url('operator/register/step5-collaboration/confirm') }}" class="mt-3">
+                        @csrf
+                        <div class="form-group mb-2">
+                            <label>Confirm Agreement (type full name)</label>
+                            <input type="text" name="agreement_confirm_name" class="form-control" required placeholder="Type full name to confirm">
+                        </div>
+                        <button type="submit" class="btn btn-primary">I Agree</button>
+                    </form>
+                @endif
                 <div class="form-group mb-2">
                     <label>Signed Agreement (PDF)</label>
                     @php

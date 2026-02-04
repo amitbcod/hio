@@ -22,6 +22,7 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::post('register/step4-system-process', [RegistrationController::class, 'saveStep4SystemProcess']);
         Route::get('register/step5-collaboration', [RegistrationController::class, 'step5Collaboration'])->name('register.step5');
         Route::post('register/step5-collaboration', [RegistrationController::class, 'saveStep5Collaboration']);
+        Route::post('register/step5-collaboration/confirm', [RegistrationController::class, 'confirmAgreement'])->name('register.step5.confirm');
         Route::get('register/step6-users', [RegistrationController::class, 'step6Users'])->name('register.step6');
         Route::post('register/step6-users', [RegistrationController::class, 'saveStep6Users']);
         Route::get('register/step6-users/{user}/edit', [RegistrationController::class, 'editStep6User'])->name('register.step6.user.edit');
@@ -57,6 +58,9 @@ Route::prefix('operator')->name('operator.')->group(function () {
     // Public owner verification routes (show and claim) — not protected by auth middleware
     Route::get('register/controller/verify/{token}', [\App\Http\Controllers\Operator\ControllerVerificationController::class, 'show'])->name('register.controller.verify');
     Route::post('register/controller/verify/{token}/claim', [\App\Http\Controllers\Operator\ControllerVerificationController::class, 'claim'])->name('register.controller.verify.claim');
+
+    // HIO Service Agreement PDF
+    Route::get('hio-agreement', [\App\Http\Controllers\Operator\ResponsibilitiesPdfController::class, 'agreement'])->name('hio.agreement');
 
     Route::get('register', [AuthController::class, 'showRegistrationForm'])->name('register');
     Route::post('register', [AuthController::class, 'register']);

@@ -34,6 +34,30 @@ class OperatorRegisterTest extends TestCase
         ]);
     }
 
+    public function test_non_owner_registration_does_not_require_agreement_type()
+    {
+        $response = $this->post('/operator/register', [
+            'user_type' => 'Operator',
+            'business_legal_name' => 'NonOwner Ltd',
+            'country_of_operation' => 'GB',
+            'is_owner' => 'no',
+            'owner_email' => 'owner@example.com',
+            'email' => 'nonowner@example.com',
+            'phone' => '+441234567899',
+            'full_name' => 'Non Owner',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'terms' => 'on',
+        ]);
+
+        $response->assertRedirect(route('operator.register.step2'));
+
+        $this->assertDatabaseHas('operators', [
+            'email' => 'nonowner@example.com',
+            'owner_email' => 'owner@example.com',
+        ]);
+    }
+
     public function test_save_step5_updates_operator_agreement_type()
     {
         // create operator and login

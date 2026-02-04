@@ -14,6 +14,9 @@ use App\Models\OperatorAccountingPayout;
 use App\Models\OperatorServiceOperation;
 use App\Models\OperatorRoleAccessMapping;
 use App\Models\Business; 
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AgreementConfirmed;
 
 class RegistrationController extends Controller
 {
@@ -499,6 +502,80 @@ class RegistrationController extends Controller
             );
         }
         return redirect()->route('operator.register.step6')->with('success', 'Collaboration info saved.');
+    }
+
+    public function confirmAgreement(Request $request)
+    {
+        $operator = auth()->user();
+        if (empty($operator->business_id) || ($operator->is_owner ?? '') !== 'yes') {
+            return redirect()->route('operator.register.step5')->with('error', 'Only business owners can confirm agreements.');
+        }
+
+        $request->validate([
+            'agreement_confirm_name' => 'required|string',
+            'agreement_type' => 'required|in:Listing Only,OTO,Widget Only,OTO + Widget,Full Service',
+        ]);
+
+        $business = \App\Models\Business::find($operator->business_id);
+        if (!$business) {
+            return redirect()->route('operator.register.step5')->with('error', 'Business not found.');
+        }
+
+        // Update business agreement_type if provided
+        $business->agreement_type = $request->agreement_type;
+        $business->save();
+
+        // Create or update collaboration agreement for the business
+        $collab = OperatorCollaborationAgreement::updateOrCreate(
+            ['business_id' => $business->id],
+            [
+                'operator_id' => $operator->operator_id,
+                'agreement_type' => $request->agreement_type,
+                'contact_management_name' => $request->contact_management_name ?? ($operator->full_name ?? ''),
+                'start_date' => now()->format('Y-m-d'),
+                'end_date' => now()->addYear()->format('Y-m-d'),
+                'renewal_date' => now()->addYear()->format('Y-m-d'),
+                'commission_model' => $request->commission_model ?? 'percentage',
+                'commission_value' => $request->commission_value ?? 0,
+                'marketing_contribution_percent' => $request->marketing_contribution_percent ?? 0,
+                'status' => 'Active',
+            ]
+        );
+
+        // Generate a simple PDF containing the agreement summary and signer
+        try {
+            $pdf = new \TCPDF();
+            $pdf->AddPage();
+            $pdf->SetFont('helvetica', '', 12);
+            $content = "HIO Service Agreement\nBusiness: {$business->legal_name}\nAgreement Type: {$collab->agreement_type}\nSigned by: {$request->agreement_confirm_name}\nDate: " . now()->toDateTimeString();
+            $pdf->Write(0, $content);
+            $raw = $pdf->Output('', 'S');
+            $path = 'agreements/signed_' . $business->business_id . '_' . time() . '.pdf';
+            Storage::disk('public')->put($path, $raw);
+
+            // Save the agreement file path on the collaboration record
+            $collab->agreement_file = $path;
+            $collab->save();
+        } catch (\Exception $e) {
+            \Log::error('confirmAgreement - PDF generation failed', ['err' => $e->getMessage()]);
+        }
+
+        // send system email to primary contact and active operators
+        try {
+            if (!empty($business->primary_contact_email)) {
+                Mail::to($business->primary_contact_email)->send(new AgreementConfirmed($business, $collab));
+            }
+            $authorised = \App\Models\Operator::where('business_id', $business->id)
+                            ->where('account_status', 'active')
+                            ->get();
+            foreach ($authorised as $op) {
+                Mail::to($op->email)->send(new AgreementConfirmed($business, $collab));
+            }
+        } catch (\Exception $e) {
+            \Log::error('confirmAgreement - mail error', ['err' => $e->getMessage()]);
+        }
+
+        return redirect()->route('operator.register.step5')->with('success', 'Agreement confirmed and saved.');
     }
     /*public function step6Users(Request $request) {
         if (!$this->checkStepAccess(6)) {

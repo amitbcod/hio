@@ -108,7 +108,7 @@
 
                 <div id="agreement-owner-field" class="form-group mb-3" style="display: {{ old('is_owner', 'yes') == 'yes' ? 'block' : 'none' }};">
                     <label>Agreement Type *</label>
-                    <select name="agreement_type" class="form-control" {{ old('is_owner', 'yes') == 'yes' ? 'required' : '' }}>
+                    <select id="agreement_type_select" name="agreement_type" class="form-control" {{ old('is_owner', 'yes') == 'yes' ? 'required' : '' }}>
                         <option value="">-- Select Agreement Type --</option>
                         <option value="Listing Only" {{ old('agreement_type') == 'Listing Only' ? 'selected' : '' }}>Listing Only</option>
                         <option value="OTO" {{ old('agreement_type') == 'OTO' ? 'selected' : '' }}>OTO</option>
@@ -194,6 +194,11 @@
             </div>
         </div>
         <div class="register-brand-section">
+            <div id="agreement-preview" style="display: none; width: 100%; max-width: 420px; background:#f8f9fa;border:1px solid #e9ecef;padding:20px;border-radius:8px;margin-bottom:20px;">
+                <strong id="agreement-preview-title">Agreement Preview</strong>
+                <p id="agreement-preview-desc" style="font-size:13px;margin:8px 0 0;color:#666;">Select an agreement type to view details.</p>
+                <a id="agreement-preview-link" href="#" target="_blank" class="btn btn-outline-primary btn-sm mt-2" style="display:none;"><i class="fas fa-file-pdf"></i> Download Full Agreement (PDF)</a>
+            </div>
             <h2>Welcome to Holidays.io</h2>
             <p>Sign Up to Access your Account</p>
             <h5>Why Register?</h5>
@@ -214,7 +219,24 @@ function toggleOwnerFields() {
     document.getElementById('owner-fields').style.display = (isOwner === 'no') ? 'block' : 'none';
     var agreementEl = document.getElementById('agreement-owner-field');
     if (agreementEl) {
+        // show/hide the agreement selector
         agreementEl.style.display = (isOwner === 'yes') ? 'block' : 'none';
+        // enable/disable and set required so hidden required inputs don't block form submission
+        var agreementSelect = agreementEl.querySelector('select[name="agreement_type"]');
+        if (agreementSelect) {
+            if (isOwner === 'yes') {
+                agreementSelect.required = true;
+                agreementSelect.disabled = false;
+            } else {
+                agreementSelect.required = false;
+                agreementSelect.disabled = true;
+            }
+        }
+    }
+
+    // If preview updater exists, refresh it (handles owner -> non-owner toggles)
+    if (typeof updateAgreementPreview === 'function') {
+        updateAgreementPreview();
     }
 }
 document.addEventListener('DOMContentLoaded', function() {
@@ -228,5 +250,44 @@ function togglePassword() {
         x.type = "password";
     }
 }
+
+function updateAgreementPreview() {
+    var isOwner = document.querySelector('input[name="is_owner"]:checked') ? document.querySelector('input[name="is_owner"]:checked').value : 'yes';
+    var preview = document.getElementById('agreement-preview');
+    var title = document.getElementById('agreement-preview-title');
+    var desc = document.getElementById('agreement-preview-desc');
+    var link = document.getElementById('agreement-preview-link');
+    var select = document.getElementById('agreement_type_select');
+    if (!select) return;
+    var value = select.value;
+    if (isOwner === 'yes' && value) {
+        var map = {
+            'Listing Only': {title: 'Listing Only Agreement', desc: 'Listing Only: minimal listing service. Download the full agreement PDF for details.', file: '/agreements/listing_only.pdf'},
+            'OTO': {title: 'OTO Agreement', desc: 'OTO: On the one-off operator arrangement. Download the full agreement PDF for details.', file: '/agreements/oto.pdf'},
+            'Widget Only': {title: 'Widget Only Agreement', desc: 'Widget Only: integration for widget-only bookings. Download the full agreement PDF for details.', file: '/agreements/widget_only.pdf'},
+            'OTO + Widget': {title: 'OTO + Widget Agreement', desc: 'OTO + Widget: combined OTO and widget terms. Download the full agreement PDF for details.', file: '/agreements/oto_widget.pdf'},
+            'Full Service': {title: 'Full Service Agreement', desc: 'Full Service: comprehensive managed service agreement. Download the full agreement PDF for details.', file: '/agreements/full_service.pdf'}
+        };
+        var info = map[value] || {title: value, desc: 'Download the full agreement for details.', file: '/agreements/' + value.replace(/\s+/g,'_').toLowerCase() + '.pdf'};
+        preview.style.display = 'block';
+        title.innerText = info.title;
+        desc.innerText = info.desc;
+        link.href = info.file;
+        link.style.display = 'inline-block';
+    } else {
+        preview.style.display = 'none';
+        link.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    toggleOwnerFields();
+    var select = document.getElementById('agreement_type_select');
+    if (select) {
+        select.addEventListener('change', updateAgreementPreview);
+    }
+    // initialize preview (handles preselected values)
+    updateAgreementPreview();
+});
 </script>
 @endsection

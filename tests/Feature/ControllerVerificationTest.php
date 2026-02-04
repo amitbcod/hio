@@ -111,6 +111,7 @@ class ControllerVerificationTest extends TestCase
             'password_confirmation' => 'OwnerPass123!',
             'confirm_authority' => 'on',
             'agreement_type' => 'Listing Only',
+            'agreement_confirm_name' => 'Owner Name',
         ]);
         $controllerResponse = $controller->claim($req, $cv->token);
         // If controller returns redirect we ignore, but we expect it to process and approve the verification
@@ -123,9 +124,16 @@ class ControllerVerificationTest extends TestCase
         $this->assertDatabaseHas('operators', ['email' => 'owner@example.com']);
         $this->assertNotNull($cv->accepted_by);
 
-        // mails sent: OwnerClaimedToRequester and AdminOwnerClaimedNotification
+        // mails sent: OwnerClaimedToRequester, AdminOwnerClaimedNotification and AgreementConfirmed
         Mail::assertSent(OwnerClaimedToRequester::class);
         Mail::assertSent(\App\Mail\AdminOwnerClaimedNotification::class);
+        Mail::assertSent(\App\Mail\AgreementConfirmed::class);
+
+        // collaboration agreement should have been created and signed PDF present
+        $collab = \App\Models\OperatorCollaborationAgreement::where('business_id', $business->id)->first();
+        $this->assertNotNull($collab);
+        $this->assertNotNull($collab->agreement_file);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($collab->agreement_file);
     }
 
     public function test_claim_with_expired_token_is_blocked()

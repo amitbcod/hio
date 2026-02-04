@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\ControllerVerification;
 use App\Models\Operator;
 use App\Models\Business;
+use App\Models\OperatorCollaborationAgreement;
 
 class ControllerVerificationController extends Controller
 {
@@ -136,6 +137,45 @@ class ControllerVerificationController extends Controller
             }
         } catch (\Exception $e) {
             \Log::error('ControllerVerificationController::claim - saving business agreement_type failed', ['err' => $e->getMessage()]);
+        }
+
+        // If agreement confirm name present, create collaboration and signed PDF and notify
+        if (!empty($request->agreement_confirm_name) && !empty($request->agreement_type)) {
+            try {
+                $collab = OperatorCollaborationAgreement::updateOrCreate(
+                    ['business_id' => $cv->business_id],
+                    [
+                        'operator_id' => $owner->operator_id,
+                        'agreement_type' => $request->agreement_type,
+                        'contact_management_name' => $request->full_name ?? $owner->full_name,
+                        'start_date' => now()->format('Y-m-d'),
+                        'end_date' => now()->addYear()->format('Y-m-d'),
+                        'renewal_date' => now()->addYear()->format('Y-m-d'),
+                        'commission_model' => 'percentage',
+                        'commission_value' => 0,
+                        'marketing_contribution_percent' => 0,
+                        'status' => 'Active',
+                    ]
+                );
+
+                $pdf = new \TCPDF();
+                $pdf->AddPage();
+                $pdf->SetFont('helvetica', '', 12);
+                $content = "HIO Service Agreement\nBusiness: {$cv->business->legal_name}\nAgreement Type: {$collab->agreement_type}\nSigned by: {$request->agreement_confirm_name}\nDate: " . now()->toDateTimeString();
+                $pdf->Write(0, $content);
+                $raw = $pdf->Output('', 'S');
+                $path = 'agreements/signed_' . $cv->business->business_id . '_' . time() . '.pdf';
+                \Illuminate\Support\Facades\Storage::disk('public')->put($path, $raw);
+                $collab->agreement_file = $path;
+                $collab->save();
+
+                // Notify primary contact and admins/operator(s)
+                if (!empty($cv->business->primary_contact_email)) {
+                    \Illuminate\Support\Facades\Mail::to($cv->business->primary_contact_email)->send(new \App\Mail\AgreementConfirmed($cv->business, $collab));
+                }
+            } catch (\Exception $e) {
+                \Log::error('ControllerVerificationController::claim - agreement confirm failed', ['err' => $e->getMessage()]);
+            }
         }
 
         \Log::info('ControllerVerificationController::claim - owner created', ['owner_id' => $owner->id ?? null, 'email' => $owner->email ?? null]);
