@@ -79,6 +79,11 @@
                                 <label>VAT Number</label>
                                 <input type="text" name="vat_number" class="form-control" value="{{ old('vat_number', $accounting?->vat_number) }}">
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Tax ID </label>
+                                <input type="text" name="tax_id" class="form-control" value="{{ old('tax_id', $accounting?->tax_id) }}">
+                                <!-- <small class="text-muted d-block">Optional: tax or VAT registration identifier.</small> -->
+                            </div>
                         </div>
                         <h5 class="mt-4">Commission, Credit & Payment Settings</h5>
                         <div class="row">

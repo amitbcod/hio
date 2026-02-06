@@ -711,6 +711,7 @@ class RegistrationController extends Controller
             'swift_code' => 'nullable',
             'currency_preference' => 'required',
             'vat_number' => 'nullable',
+            'tax_id' => 'nullable|string|max:100',
             'commission_type' => 'required',
             // commission_value removed from form per requirements
             'payment_schedule' => 'required',
@@ -730,6 +731,7 @@ class RegistrationController extends Controller
             'swift_code' => $request->swift_code,
             'currency_preference' => $request->currency_preference,
             'vat_number' => $request->has('vat_exempted') ? null : $request->vat_number,
+            'tax_id' => $request->tax_id ?? null,
             'vat_exempted' => $request->has('vat_exempted') ? 1 : 0,
             'commission_type' => $request->commission_type,
             // commission_value intentionally cleared (removed from form)
