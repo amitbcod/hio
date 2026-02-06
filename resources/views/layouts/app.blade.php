@@ -11,7 +11,7 @@
         <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand" href="#">Operator Portal</a>
             @auth
-                @if(auth()->user()->is_owner === 'yes')
+                @if((auth()->user()->is_owner ?? '') === 'yes')
                     <div class="ms-auto">
                         <div class="dropdown">
                             <a href="#" class="nav-link dropdown-toggle" id="ownerSettingsDropdown" data-bs-toggle="dropdown" aria-expanded="false">

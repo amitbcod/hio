@@ -31,14 +31,8 @@
                             <td>{{ $role->business_id ? 'Business' : 'Global' }}</td>
                             <td>{{ implode(', ', $role->permissions->pluck('name')->toArray()) }}</td>
                             <td>
-                                @if(!empty(auth()->user()->business_id) && (auth()->user()->is_owner ?? '') === 'yes' && (is_null($role->business_id) || ($role->business_id ?? null) == auth()->user()->business_id))
+                                @if(!empty(auth()->user()->business_id) && (is_null($role->business_id) || ($role->business_id ?? null) == auth()->user()->business_id))
                                     <a class="btn btn-sm btn-secondary" href="{{ route('operator.roles.permissions', $role->id) }}">Manage Permissions</a>
-                                    <a class="btn btn-sm btn-warning" href="{{ route('operator.roles.edit', $role->id) }}">Edit</a>
-                                    <form method="POST" action="{{ route('operator.roles.destroy', $role->id) }}" style="display:inline-block;" onsubmit="return confirm('Delete role?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-danger">Delete</button>
-                                    </form>
                                 @else
                                     <span class="text-muted">—</span>
                                 @endif

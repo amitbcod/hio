@@ -4,6 +4,9 @@
         {{-- DEBUG: Show progress values for troubleshooting --}}
         {{-- Debug progress removed --}}
         @php 
+            // Check if user is a Head of Department (OperatorUser logged in via operator_staff guard)
+            $isHeadOfDepartment = auth('operator_staff')->check();
+            
             // Map actual route step numbers to display step numbers
             // Since we removed step 3 (Legal Compliance), step 4+ are now displayed as step 3+
             $stepNumberMap = [
@@ -20,16 +23,25 @@
             // Convert actual $currentStep to display step number
             $displayCurrentStep = isset($stepNumberMap[$currentStep]) ? $stepNumberMap[$currentStep] : $currentStep;
             
-            $steps = [
-                1 => ['label' => 'Registration', 'route' => null, 'progress' => 'step1_password'],
-                2 => ['label' => 'Profile', 'route' => 'operator.register.step2', 'progress' => 'step2_profile'],
-                3 => ['label' => 'System Processes', 'route' => 'operator.register.step4', 'progress' => 'step4_system_process'],
-                4 => ['label' => 'Collaboration Agreement', 'route' => 'operator.register.step5', 'progress' => 'step5_collaboration'],
-                5 => ['label' => 'Users & Staff', 'route' => 'operator.register.step6', 'progress' => 'step6_users'],
-                6 => ['label' => 'Accounting & Payouts', 'route' => 'operator.register.step7', 'progress' => 'step7_accounting'],
-                7 => ['label' => 'Service Operations', 'route' => 'operator.register.step8', 'progress' => 'step8_operations'],
-                8 => ['label' => 'Status Review', 'route' => 'operator.register.step9', 'progress' => 'step9_review'],
-            ];
+            // If user is Head of Department, only show Users & Staff link
+            if ($isHeadOfDepartment) {
+                $steps = [
+                    5 => ['label' => 'Users & Staff', 'route' => 'operator.register.step6', 'progress' => 'step6_users'],
+                ];
+            } else {
+                // Show all steps for Operators
+                $steps = [
+                    1 => ['label' => 'Registration', 'route' => null, 'progress' => 'step1_password'],
+                    2 => ['label' => 'Profile', 'route' => 'operator.register.step2', 'progress' => 'step2_profile'],
+                    3 => ['label' => 'System Processes', 'route' => 'operator.register.step4', 'progress' => 'step4_system_process'],
+                    4 => ['label' => 'Collaboration Agreement', 'route' => 'operator.register.step5', 'progress' => 'step5_collaboration'],
+                    5 => ['label' => 'Users & Staff', 'route' => 'operator.register.step6', 'progress' => 'step6_users'],
+                    6 => ['label' => 'Accounting & Payouts', 'route' => 'operator.register.step7', 'progress' => 'step7_accounting'],
+                    7 => ['label' => 'Service Operations', 'route' => 'operator.register.step8', 'progress' => 'step8_operations'],
+                    8 => ['label' => 'Status Review', 'route' => 'operator.register.step9', 'progress' => 'step9_review'],
+                ];
+            }
+            
             // Prefer business-scoped progress when possible
             $progress = isset($progress) ? $progress : (
                 !empty(auth()->user()->business_id)
@@ -46,7 +58,7 @@
                     $isCompleted = $progress && $progress->{$info['progress']} ? true : false;
                     $isPreviousCompleted = true;
                     
-                    if ($step > 2) {
+                    if ($step > 2 && !$isHeadOfDepartment) {
                         // Map steps to their progress column names
                         $progressMap = [
                             2 => 'step2_profile',
@@ -60,14 +72,19 @@
                         $previousStep = $step - 1;
                         $previousStepKey = $progressMap[$previousStep] ?? null;
                         $isPreviousCompleted = $progress && $previousStepKey && $progress->{$previousStepKey} ? true : false;
+                    } elseif ($isHeadOfDepartment) {
+                        // Head of Department always has access to their only link
+                        $isPreviousCompleted = true;
                     }
                     
-                    $isAccessible = $step <= 2 || $isPreviousCompleted;
+                    $isAccessible = $step <= 2 || $isPreviousCompleted || $isHeadOfDepartment;
                 @endphp
                 @if($info['route'])
                     @if($isAccessible)
                         <a href="{{ route($info['route']) }}" style="display: flex; align-items: center; padding: 12px 24px; color: #fff; text-decoration: none; background: {{ $displayCurrentStep == $step ? '#0e7c7b' : 'transparent' }}; border-radius: 0 16px 16px 0; font-weight: {{ $displayCurrentStep == $step ? 'bold' : 'normal' }}; cursor: pointer;">
+                            @if(!$isHeadOfDepartment)
                             <span style="display: inline-block; width: 28px; height: 28px; background: #fff; color: #19b5b5; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; margin-right: 12px;">{{ $step }}</span>
+                            @endif
                             {{ $info['label'] }}
                         </a>
                     @else

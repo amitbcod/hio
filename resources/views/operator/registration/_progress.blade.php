@@ -1,3 +1,4 @@
+@if(!auth('operator_staff')->check())
 <div style="width: 400px; margin: 0 auto 24px auto;">
     <div style="font-weight: bold; margin-bottom: 4px;">Overall Completion</div>
     <div class="progress" style="height: 18px; background: #e6e6e6; border-radius: 12px;">
@@ -10,3 +11,4 @@
         </div>
     </div>
     <div style="text-align: right; font-size: 13px; color: #888; margin-top: 2px;">{{ round($displayPercent) }}% / 9</div>
+@endif

@@ -45,8 +45,8 @@ class RoleController extends Controller
     public function edit(Role $role)
     {
         $operator = auth()->user();
-        // only owner may edit roles for their business or global roles? restrict to owner's business only
-        if (empty($operator->business_id) || ($operator->is_owner ?? '') !== 'yes' || ($role->business_id ?? null) != $operator->business_id) {
+        // only operators belonging to the same business (or global roles) may edit
+        if (empty($operator->business_id) || !((is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id))) {
             return redirect()->route('operator.roles.index')->with('error', 'Unauthorized action.');
         }
 
@@ -56,7 +56,7 @@ class RoleController extends Controller
     public function update(Request $request, Role $role)
     {
         $operator = auth()->user();
-        if (empty($operator->business_id) || ($operator->is_owner ?? '') !== 'yes' || ($role->business_id ?? null) != $operator->business_id) {
+        if (empty($operator->business_id) || !((is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id))) {
             return redirect()->route('operator.roles.index')->with('error', 'Unauthorized action.');
         }
 
@@ -73,7 +73,7 @@ class RoleController extends Controller
     public function destroy(Role $role)
     {
         $operator = auth()->user();
-        if (empty($operator->business_id) || ($operator->is_owner ?? '') !== 'yes' || ($role->business_id ?? null) != $operator->business_id) {
+        if (empty($operator->business_id) || !((is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id))) {
             return redirect()->route('operator.roles.index')->with('error', 'Unauthorized action.');
         }
 
@@ -85,8 +85,8 @@ class RoleController extends Controller
     {
         $operator = auth()->user();
 
-        // Owners only, and role must belong to their business or be a global role (null business)
-        if (empty($operator->business_id) || ($operator->is_owner ?? '') !== 'yes' || !(is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id)) {
+        // Operators in the same business (or global roles) may manage permissions
+        if (empty($operator->business_id) || !(is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id)) {
             return redirect()->route('operator.roles.index')->with('error', 'Unauthorized action.');
         }
 
@@ -132,7 +132,7 @@ class RoleController extends Controller
 
         $operator = auth()->user();
 
-        if (empty($operator->business_id) || ($operator->is_owner ?? '') !== 'yes' || !(is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id)) {
+        if (empty($operator->business_id) || !(is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id)) {
             \Log::debug('unauthorized in updatePermissions', ['operator' => $operator ? $operator->id : null, 'operator_business' => $operator->business_id ?? null, 'role_business' => $role->business_id ?? null]);
             return redirect()->route('operator.roles.index')->with('error', 'Unauthorized action.');
         }
@@ -142,8 +142,8 @@ class RoleController extends Controller
         ]);
 
         $operator = auth()->user();
-        // Only owner may update role module perms (allow null role business_id for global roles)
-        if (empty($operator->business_id) || ($operator->is_owner ?? '') !== 'yes' || !(is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id)) {
+        // Only operators in the same business (or global roles) may update role module perms
+        if (empty($operator->business_id) || !(is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id)) {
             \Log::debug('unauthorized (2) in updatePermissions', ['operator' => $operator->id ?? null, 'operator_business' => $operator->business_id ?? null, 'role_business' => $role->business_id ?? null]);
             return redirect()->route('operator.roles.index')->with('error', 'Unauthorized action.');
         }

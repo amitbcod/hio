@@ -43,11 +43,13 @@
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
                         Add New User
                     </button>
-                    @if(!empty(auth()->user()->business_id) && (auth()->user()->is_owner ?? '') === 'yes')
+                    @if(!empty(auth()->user()->business_id))
                         <a href="{{ route('operator.roles.index') }}" class="btn btn-outline-secondary ms-2">Manage Roles</a>
                     @endif
                 </div>
+                @if(!auth('operator_staff')->check())
                 <a href="{{ url('operator/dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+                @endif
             </div>
 
             {{-- TEAM MEMBERS --}}
@@ -159,7 +161,7 @@
 </div>
 
 <div class="alert alert-info">
-Permissions are assigned at the <strong>Role level</strong> by the business owner. To set permissions for a role, go to <a href="{{ route('operator.roles.index') }}">Manage Roles</a> and click "Manage Permissions" for the desired role.
+Permissions are assigned at the <strong>Role level</strong>. To set permissions for a role, go to <a href="{{ route('operator.roles.index') }}">Manage Roles</a> and click "Manage Permissions" for the desired role.
 </div>
 
 </div>
@@ -173,6 +175,10 @@ Permissions are assigned at the <strong>Role level</strong> by the business owne
 </div>
 
 <script>
+// Base form action URLs
+const addAction = '{{ url('operator/register/step6-users') }}';
+const editActionBase = '{{ url('operator/register/step6-users') }}'; // we'll append /{id}/edit when editing
+
 // Handle "Add New User" button click to reset form
 document.querySelectorAll('[data-bs-target="#addUserModal"]').forEach(btn => {
     btn.addEventListener('click', function(e) {
@@ -181,6 +187,7 @@ document.querySelectorAll('[data-bs-target="#addUserModal"]').forEach(btn => {
             document.getElementById('modalTitle').textContent = 'Add New User';
             document.getElementById('userForm').reset();
             document.getElementById('modal_user_id').value = '';
+            document.getElementById('userForm').action = addAction;
         }
     });
 });
@@ -188,15 +195,27 @@ document.querySelectorAll('[data-bs-target="#addUserModal"]').forEach(btn => {
 // Edit User modal scripts
 document.querySelectorAll('.editUserBtn').forEach(btn => {
     btn.addEventListener('click', function() {
+        const id = this.dataset.id;
         document.getElementById('modalTitle').textContent = 'Edit User';
-        document.getElementById('modal_user_id').value = this.dataset.id;
+        document.getElementById('modal_user_id').value = id;
         document.getElementById('modal_full_name').value = this.dataset.full_name;
         document.getElementById('modal_email').value = this.dataset.email;
         document.getElementById('modal_mobile').value = this.dataset.mobile;
         document.getElementById('modal_role').value = this.dataset.role;
         document.getElementById('modal_password').placeholder = 'Leave blank to keep current password';
         document.getElementById('modal_password').value = '';
+        // Update form action to point to the update route for this user
+        document.getElementById('userForm').action = editActionBase + '/' + id + '/edit';
     });
 });
+
+// Ensure modal reset when closed so stale action doesn't persist
+const addUserModal = document.getElementById('addUserModal');
+if (addUserModal) {
+    addUserModal.addEventListener('hidden.bs.modal', function () {
+        document.getElementById('userForm').action = addAction;
+        document.getElementById('userForm').reset();
+    });
+}
 </script>
 @endsection

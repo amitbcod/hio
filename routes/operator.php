@@ -10,7 +10,7 @@ Route::prefix('operator')->name('operator.')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::middleware('auth:operator')->group(function () {
+    Route::middleware('auth:operator,operator_staff')->group(function () {
         Route::get('profile', [ProfileController::class, 'showProfile'])->name('profile');
         // Registration/Profile Steps
         // Step 1 (Set Password) skipped after registration

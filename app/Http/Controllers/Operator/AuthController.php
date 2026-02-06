@@ -23,6 +23,57 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
+        // Try first as OperatorUser (from operator_users table) with role "Head of Department"
+        $operatorUser = OperatorUser::where('email', $request->email)->first();
+        if ($operatorUser && \Illuminate\Support\Facades\Hash::check($request->password, $operatorUser->password_hash)) {
+            // Only allow Head of Department role to login
+            if (($operatorUser->role ?? '') !== 'Head of Department') {
+                return back()->withErrors(['email' => 'Only Head of Department role can login via this interface.']);
+            }
+
+            // Check if user's business exists (no strict status requirement)
+            if (!empty($operatorUser->business_id)) {
+                $business = Business::find($operatorUser->business_id);
+                if (!$business) {
+                    return back()->withErrors(['email' => 'Business not found. Please contact support.']);
+                }
+            } else {
+                return back()->withErrors(['email' => 'User is not linked to a business. Please contact support.']);
+            }
+
+            // Verify that the Head of Department role has at least read permission on the Users module
+            try {
+                $roleModel = \Spatie\Permission\Models\Role::where('name', 'Head of Department')
+                    ->where('business_id', $operatorUser->business_id)
+                    ->first();
+                
+                if ($roleModel && \Illuminate\Support\Facades\Schema::hasTable('role_module_permissions')) {
+                    // Find the Users module and check if role has at least read permission
+                    $usersModule = \App\Models\Module::where('slug', 'users')->orWhere('name', 'Users')->first();
+                    if ($usersModule) {
+                        $hasPermission = \App\Models\RoleModulePermission::where('role_id', $roleModel->id)
+                            ->where('module_id', $usersModule->id)
+                            ->where('can_read', true)
+                            ->exists();
+                        
+                        if (!$hasPermission) {
+                            return back()->withErrors(['email' => 'Your role does not have permission to access required modules.']);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::warning('AuthController::login - permission check failed', ['error' => $e->getMessage()]);
+                // Don't block login if permission check fails; log and continue
+            }
+
+            // Login using the operator_staff guard for OperatorUser
+            \Illuminate\Support\Facades\Auth::guard('operator_staff')->login($operatorUser);
+
+            // Redirect Head of Department users to Users & Staff page
+            return redirect()->route('operator.register.step6');
+        }
+
+        // Fall back: try to authenticate as Operator (from operators table)
         $operator = \App\Models\Operator::where('email', $request->email)->first();
         if ($operator && \Illuminate\Support\Facades\Hash::check($request->password, $operator->password_hash)) {
             // Block login until account is active (owner must approve non-owner operators)
@@ -93,12 +144,15 @@ class AuthController extends Controller
             // If no progress, start at step 2
             return redirect()->route('operator.register.step2');
         }
+
         return back()->withErrors(['email' => 'Invalid credentials.']);
     }
 
     public function logout()
     {
-        Auth::logout();
+        // Logout from both guards
+        Auth::guard('operator')->logout();
+        Auth::guard('operator_staff')->logout();
         return redirect()->route('operator.login');
     }
 
