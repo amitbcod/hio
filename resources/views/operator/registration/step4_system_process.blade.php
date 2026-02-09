@@ -42,14 +42,17 @@
                         }
                         $serviceTypes = $profile && $profile->service_types ? (is_array($profile->service_types) ? $profile->service_types : json_decode($profile->service_types, true)) : [];
                     @endphp
-                    <select class="form-control" multiple disabled>
+                    <!-- <select class="form-control" multiple disabled>
                         @foreach($serviceTypes as $type)
                             <option selected>{{ $type }}</option>
                         @endforeach
                     </select>
                     @foreach($serviceTypes as $type)
                         <input type="hidden" name="service_category[]" value="{{ $type }}">
-                    @endforeach
+                    @endforeach -->
+                    @foreach($serviceTypes as $type)
+    <span class="badge bg-primary me-1">{{ $type }}</span>
+@endforeach
                 </div>
                 <div class="form-group mb-3">
                     <label>Communication Preference</label>

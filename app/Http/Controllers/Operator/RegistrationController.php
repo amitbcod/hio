@@ -364,52 +364,92 @@ class RegistrationController extends Controller
         return view('operator.registration.step4_system_process', compact('operator', 'system', 'progress'));
     }
 
-    public function saveStep4SystemProcess(Request $request) {
-        // No validation for service_category needed, as it is not saved here
-        $operator = auth()->user();
-        // Save into business scope if operator is linked to a business
-        if($request->service_category){
-            $serviceCategory = implode(',', $request->service_category);
-        }
+    // public function saveStep4SystemProcess(Request $request) {
+    //     // No validation for service_category needed, as it is not saved here
+    //     $operator = auth()->user();
+    //     // Save into business scope if operator is linked to a business
+    //     if($request->service_category){
+    //         $serviceCategory = implode(',', $request->service_category);
+    //     }
        
-        if (!empty($operator->business_id)) {
-            $system = \App\Models\OperatorSystemProcess::updateOrCreate(
-                ['business_id' => $operator->business_id],
-                [
-                    'business_id' => $operator->business_id,
-                    'operator_id' => $operator->operator_id,
-                    'service_category' => $serviceCategory ?? 'Accommodation',
-                    'communication_preference' => $request->communication_preference ?? null,
-                    'assigned_operator_name' => $request->assigned_operator_name ?? null,
-                    'assigned_operator_role' => $request->assigned_operator_role ?? null,
-                    'status' => $request->status ?? null,
-                ]
-            );
-        } else {
-            $system = \App\Models\OperatorSystemProcess::updateOrCreate(
-                ['operator_id' => $operator->operator_id],
-                [
-                    'service_category' => $request->service_category ?? 'Accommodation',
-                    'communication_preference' => $request->communication_preference ?? null,
-                    'assigned_operator_name' => $request->assigned_operator_name ?? null,
-                    'assigned_operator_role' => $request->assigned_operator_role ?? null,
-                    'status' => $request->status ?? null,
-                ]
-            );
-        }
-        if (!empty($operator->business_id)) {
-            OperatorRegistrationProgress::updateOrCreate(
-                ['business_id' => $operator->business_id],
-                ['step4_system_process' => 1, 'current_step' => 5, 'operator_id' => $operator->operator_id]
-            );
-        } else {
-            OperatorRegistrationProgress::updateOrCreate(
-                ['operator_id' => $operator->operator_id],
-                ['step4_system_process' => 1, 'current_step' => 5]
-            );
-        }
-        return redirect()->route('operator.register.step5')->with('success', 'System process info saved.');
+    //     if (!empty($operator->business_id)) {
+    //         $system = \App\Models\OperatorSystemProcess::updateOrCreate(
+    //             ['business_id' => $operator->business_id],
+    //             [
+    //                 'business_id' => $operator->business_id,
+    //                 'operator_id' => $operator->operator_id,
+    //                 'service_category' => $serviceCategory ?? 'Accommodation',
+    //                 'communication_preference' => $request->communication_preference ?? null,
+    //                 'assigned_operator_name' => $request->assigned_operator_name ?? null,
+    //                 'assigned_operator_role' => $request->assigned_operator_role ?? null,
+    //                 'status' => $request->status ?? null,
+    //             ]
+    //         );
+    //     } else {
+    //         $system = \App\Models\OperatorSystemProcess::updateOrCreate(
+    //             ['operator_id' => $operator->operator_id],
+    //             [
+    //                 'service_category' => $request->service_category ?? 'Accommodation',
+    //                 'communication_preference' => $request->communication_preference ?? null,
+    //                 'assigned_operator_name' => $request->assigned_operator_name ?? null,
+    //                 'assigned_operator_role' => $request->assigned_operator_role ?? null,
+    //                 'status' => $request->status ?? null,
+    //             ]
+    //         );
+    //     }
+    //     if (!empty($operator->business_id)) {
+    //         OperatorRegistrationProgress::updateOrCreate(
+    //             ['business_id' => $operator->business_id],
+    //             ['step4_system_process' => 1, 'current_step' => 5, 'operator_id' => $operator->operator_id]
+    //         );
+    //     } else {
+    //         OperatorRegistrationProgress::updateOrCreate(
+    //             ['operator_id' => $operator->operator_id],
+    //             ['step4_system_process' => 1, 'current_step' => 5]
+    //         );
+    //     }
+    //     return redirect()->route('operator.register.step5')->with('success', 'System process info saved.');
+    // }
+
+
+    public function saveStep4SystemProcess(Request $request)
+    {
+        $operator = auth()->user();
+
+        // Decide scope (business or operator)
+        $match = !empty($operator->business_id)
+            ? ['business_id' => $operator->business_id]
+            : ['operator_id' => $operator->operator_id];
+
+        // Save / update system process settings
+        \App\Models\OperatorSystemProcess::updateOrCreate(
+            $match,
+            [
+                'business_id' => $operator->business_id,
+                'operator_id' => $operator->operator_id,
+                'communication_preference' => $request->communication_preference ?? null,
+                'assigned_operator_name' => $request->assigned_operator_name ?? null,
+                'assigned_operator_role' => $request->assigned_operator_role ?? null,
+                'status' => $request->status ?? null,
+            ]
+        );
+
+        // Update registration progress
+        OperatorRegistrationProgress::updateOrCreate(
+            $match,
+            [
+                'step4_system_process' => 1,
+                'current_step' => 5,
+                'operator_id' => $operator->operator_id
+            ]
+        );
+
+        return redirect()
+            ->route('operator.register.step5')
+            ->with('success', 'System process info saved.');
     }
+
+
     public function step5Collaboration(Request $request) {
         if (!$this->checkStepAccess(5)) {
             return redirect()->route('operator.register.step2')->with('error', 'Please complete previous steps first.');
