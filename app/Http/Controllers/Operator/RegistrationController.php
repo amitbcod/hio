@@ -120,6 +120,7 @@ class RegistrationController extends Controller
 
     /**
      * Check if a step is accessible based on previous steps being completed
+     * New display order: Profile, Collaboration, Users, System Processes, Accounting, Operations, Review
      */
     protected function checkStepAccess($step)
     {
@@ -135,14 +136,15 @@ class RegistrationController extends Controller
         }
 
         // Define which progress field corresponds to each step
+        // Updated for new display order
         $progressFields = [
-            3 => 'step2_profile',      // Step 3 requires step 2
-            4 => 'step3_legal',        // Step 4 requires step 3
-            5 => 'step4_system_process', // Step 5 requires step 4
-            6 => 'step5_collaboration',  // Step 6 requires step 5
-            7 => 'step6_users',        // Step 7 requires step 6
-            8 => 'step7_accounting',   // Step 8 requires step 7
-            9 => 'step8_operations',   // Step 9 requires step 8
+            2 => null,                 // Step 2 always accessible
+            5 => 'step2_profile',      // Step 5 (Collaboration) requires step 2 (Profile)
+            6 => 'step5_collaboration', // Step 6 (Users) requires step 5 (Collaboration)
+            4 => 'step6_users',        // Step 4 (System Processes) requires step 6 (Users)
+            7 => 'step4_system_process', // Step 7 (Accounting) requires step 4 (System Processes)
+            8 => 'step7_accounting',   // Step 8 (Operations) requires step 7 (Accounting)
+            9 => 'step8_operations',   // Step 9 (Review) requires step 8 (Operations)
         ];
 
         $requiredField = $progressFields[$step] ?? null;
@@ -293,8 +295,8 @@ class RegistrationController extends Controller
             );
         }
 
-        // Stay on step2 to allow user to fill Legal Compliance modal
-        return redirect()->route('operator.register.step2')->with('success', 'Profile information saved. Please fill the Legal Compliance form below.');
+        // Redirect to Collaboration Agreement (step5) - which displays as step 3
+        return redirect()->route('operator.register.step5')->with('success', 'Profile information saved. Proceeding to Collaboration Agreement.');
     }
     public function step3Legal(Request $request) {
         // This step is now handled via modal in profile step. Optionally, you can remove this method.
@@ -344,7 +346,8 @@ class RegistrationController extends Controller
                 ['step3_legal' => 1, 'current_step' => 4]
             );
         }
-        return redirect()->route('operator.register.step4')->with('success', 'Legal Compliance information saved. Proceeding to next step.');
+        // Redirect to Collaboration Agreement (step5) - which displays as step 3
+        return redirect()->route('operator.register.step5')->with('success', 'Legal Compliance information saved. Proceeding to next step.');
     }
     public function step4SystemProcess(Request $request) {
         if (!$this->checkStepAccess(4)) {
@@ -444,8 +447,9 @@ class RegistrationController extends Controller
             ]
         );
 
+        // Redirect to Accounting & Payouts (step7) after System Processes
         return redirect()
-            ->route('operator.register.step5')
+            ->route('operator.register.step7')
             ->with('success', 'System process info saved.');
     }
 
@@ -718,10 +722,11 @@ class RegistrationController extends Controller
     // mark step as complete
     OperatorRegistrationProgress::updateOrCreate(
         ['operator_id' => $operator->operator_id],
-        ['step6_users' => 1, 'current_step' => 7]
+        ['step6_users' => 1, 'current_step' => 4]
     );
 
-    return redirect()->route('operator.register.step6')->with('success', 'New user added successfully!');
+    // Redirect to System Processes (step4) which displays as step 5
+    return redirect()->route('operator.register.step4')->with('success', 'New user added successfully!');
 }
     public function step7Accounting(Request $request) {
         if (!$this->checkStepAccess(7)) {

@@ -8,16 +8,16 @@
             $isHeadOfDepartment = auth('operator_staff')->check();
             
             // Map actual route step numbers to display step numbers
-            // Since we removed step 3 (Legal Compliance), step 4+ are now displayed as step 3+
+            // Display order changed: Profile, Collaboration, Users, System Processes, Accounting, Service Ops, Review
             $stepNumberMap = [
                 1 => 1,  // Registration stays 1
                 2 => 2,  // Profile stays 2
-                4 => 3,  // System Processes (was 4, now 3)
-                5 => 4,  // Collaboration (was 5, now 4)
-                6 => 5,  // Users (was 6, now 5)
-                7 => 6,  // Accounting (was 7, now 6)
-                8 => 7,  // Service Operations (was 8, now 7)
-                9 => 8,  // Status Review (was 9, now 8)
+                5 => 3,  // Collaboration -> display 3
+                6 => 4,  // Users -> display 4
+                4 => 5,  // System Processes -> display 5
+                7 => 6,  // Accounting -> display 6
+                8 => 7,  // Service Operations -> display 7
+                9 => 8,  // Status Review -> display 8
             ];
             
             // Convert actual $currentStep to display step number
@@ -29,13 +29,13 @@
                     5 => ['label' => 'Users & Staff', 'route' => 'operator.register.step6', 'progress' => 'step6_users'],
                 ];
             } else {
-                // Show all steps for Operators
+                // Show all steps for Operators (display order changed)
                 $steps = [
                     1 => ['label' => 'Registration', 'route' => null, 'progress' => 'step1_password'],
                     2 => ['label' => 'Profile', 'route' => 'operator.register.step2', 'progress' => 'step2_profile'],
-                    3 => ['label' => 'System Processes', 'route' => 'operator.register.step4', 'progress' => 'step4_system_process'],
-                    4 => ['label' => 'Collaboration Agreement', 'route' => 'operator.register.step5', 'progress' => 'step5_collaboration'],
-                    5 => ['label' => 'Users & Staff', 'route' => 'operator.register.step6', 'progress' => 'step6_users'],
+                    3 => ['label' => 'Collaboration Agreement', 'route' => 'operator.register.step5', 'progress' => 'step5_collaboration'],
+                    4 => ['label' => 'Users & Staff', 'route' => 'operator.register.step6', 'progress' => 'step6_users'],
+                    5 => ['label' => 'System Processes', 'route' => 'operator.register.step4', 'progress' => 'step4_system_process'],
                     6 => ['label' => 'Accounting & Payouts', 'route' => 'operator.register.step7', 'progress' => 'step7_accounting'],
                     7 => ['label' => 'Service Operations', 'route' => 'operator.register.step8', 'progress' => 'step8_operations'],
                     8 => ['label' => 'Status Review', 'route' => 'operator.register.step9', 'progress' => 'step9_review'],
@@ -58,13 +58,13 @@
                     $isCompleted = $progress && $progress->{$info['progress']} ? true : false;
                     $isPreviousCompleted = true;
                     
-                    if ($step > 2 && !$isHeadOfDepartment) {
-                        // Map steps to their progress column names
+                        if ($step > 2 && !$isHeadOfDepartment) {
+                        // Map display step numbers to their progress column names (matches display order)
                         $progressMap = [
                             2 => 'step2_profile',
-                            3 => 'step4_system_process',
-                            4 => 'step5_collaboration',
-                            5 => 'step6_users',
+                            3 => 'step5_collaboration',
+                            4 => 'step6_users',
+                            5 => 'step4_system_process',
                             6 => 'step7_accounting',
                             7 => 'step8_operations',
                             8 => 'step9_review'
