@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Operator\AuthController;
 use App\Http\Controllers\Operator\ProfileController;
 use App\Http\Controllers\Operator\RegistrationController;
+use App\Http\Controllers\Operator\AccommodationController;
 
 Route::prefix('operator')->name('operator.')->group(function () {
     Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -16,7 +17,8 @@ Route::prefix('operator')->name('operator.')->group(function () {
         // Step 1 (Set Password) skipped after registration
         Route::get('register/step2-profile', [RegistrationController::class, 'step2Profile'])->name('register.step2');
         Route::post('register/step2-profile', [RegistrationController::class, 'saveStep2Profile']);
-        Route::get('register/step3-legal', [RegistrationController::class, 'step3Legal'])->name('register.step3');
+        // Step 3 (Legal Compliance) is now handled via modal in step 2 - only POST is available
+        // Route::get('register/step3-legal', [RegistrationController::class, 'step3Legal'])->name('register.step3');
         Route::post('register/step3-legal', [RegistrationController::class, 'saveStep3Legal']);
         Route::get('register/step4-system-process', [RegistrationController::class, 'step4SystemProcess'])->name('register.step4');
         Route::post('register/step4-system-process', [RegistrationController::class, 'saveStep4SystemProcess']);
@@ -58,6 +60,20 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::post('register/step9-review', [RegistrationController::class, 'saveStep9Review']);
 
        Route::post('status-submit', [\App\Http\Controllers\Operator\RegistrationController::class, 'submitForApproval'])->name('status.submit');
+
+        // Accommodation Management Routes
+        Route::get('accommodation', [AccommodationController::class, 'index'])->name('accommodation.index');
+        Route::get('accommodation/create', [AccommodationController::class, 'create'])->name('accommodation.create');
+        Route::post('accommodation', [AccommodationController::class, 'store'])->name('accommodation.store');
+        Route::get('accommodation/{id}', [AccommodationController::class, 'show'])->name('accommodation.show');
+        Route::get('accommodation/{id}/edit/step1', [AccommodationController::class, 'editStep1'])->name('accommodation.step1.edit');
+        Route::put('accommodation/{id}', [AccommodationController::class, 'update'])->name('accommodation.update');
+        Route::get('accommodation/{id}/step2-reservation', [AccommodationController::class, 'step2Reservation'])->name('accommodation.step2.show');
+        Route::post('accommodation/{id}/step2-reservation', [AccommodationController::class, 'saveStep2'])->name('accommodation.saveStep2');
+        Route::get('accommodation/{id}/step3-photos', [AccommodationController::class, 'step3Photos'])->name('accommodation.step3.show');
+        Route::post('accommodation/{id}/step3-photos', [AccommodationController::class, 'saveStep3Photos'])->name('accommodation.saveStep3');
+        Route::get('accommodation/{id}/step4-compliance', [AccommodationController::class, 'step4Compliance'])->name('accommodation.step4.show');
+        Route::post('accommodation/{id}/step4-compliance', [AccommodationController::class, 'saveStep4Compliance'])->name('accommodation.saveStep4');
 
         Route::get('pending-approval', function () {
             return view('operator.registration.pending_approval');

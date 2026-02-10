@@ -124,7 +124,8 @@ class AuthController extends Controller
                     case 2:
                         return redirect()->route('operator.register.step2');
                     case 3:
-                        return redirect()->route('operator.register.step3');
+                        // Step 3 (Legal) is now handled in step 2 modal, redirect to step 5 (Collaboration)
+                        return redirect()->route('operator.register.step5');
                     case 4:
                         return redirect()->route('operator.register.step4');
                     case 5:
