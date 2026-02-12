@@ -2,7 +2,7 @@
 @section('content')
 <style>
     body {
-        background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+        background: linear-gradient(90deg, #1b82c7 0%, #41b0aa 100%);
         min-height: 100vh;
     }
     .register-container {
@@ -42,7 +42,8 @@
         font-weight: 500;
     }
     .btn-primary {
-        background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+        /* background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%); */
+        background: #41b0aa;
         border: none;
     }
     .show-password {
@@ -57,6 +58,18 @@
         color: #888;
         margin-bottom: 8px;
     }
+    a {
+            color: #41b0aa;
+        }
+
+        a:hover {
+            color: #1b82c7;
+        }
+
+        .auth-list li{
+            background: url({{ asset('images/spiral-icon.svg') }}) no-repeat 0 center / 15px;
+            padding-left:25px
+        }
 </style>
 <div class="register-container">
     <div class="register-card">
