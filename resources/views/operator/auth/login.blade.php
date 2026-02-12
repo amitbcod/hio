@@ -93,7 +93,7 @@
             padding-left:25px
         }
     </style>
-    <div class="login-container">
+    <div class="login-container ">
         <div class="login-card">
             <div class="login-form-section">
                 <!-- <h2>Login to Your Account</h2> -->
