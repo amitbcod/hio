@@ -153,7 +153,7 @@
                             </div>
                         </div>
 
-                        <div style="display:flex;justify-content:space-between;gap:12px;">
+                        <div style="display:flex;justify-content:space-between;gap:12px;float: right;">
                             <!-- <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" class="btn" style="background:#f0f0f0;color:#333;padding:8px 12px;border-radius:4px;">← Back</a> -->
                             <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:8px 14px;border-radius:4px;">Save Room</button>
                         </div>
