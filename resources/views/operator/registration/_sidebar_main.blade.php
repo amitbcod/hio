@@ -22,7 +22,7 @@
                 <span>PROFILE SETUP (Optional)</span>
                 <span id="registrationToggleIcon" style="font-size: 16px; transition: transform 0.3s;">▼</span>
             </div>
-            <ul id="registrationStepsCollapse" style="list-style: none; padding: 0; margin: 0;">
+            <ul id="registrationStepsCollapse" class="hidden" style="list-style: none; padding: 0; margin: 0;">
                 @php 
                     $isHeadOfDepartment = auth('operator_staff')->check();
                     

@@ -86,15 +86,17 @@
         @endphp
 
         @foreach($menuItems as $section)
+            @php $secId = 'menu_section_' . $loop->index; $itemsId = 'menu_items_' . $loop->index; @endphp
             <li style="margin-bottom: 0;">
-                <div style="display: flex; align-items: center; padding: 12px 20px; color: #fff; background: transparent; border-radius: 0 16px 16px 0; font-weight: bold; cursor: default;">
-                    {{ $section['label'] }}
+                <div id="{{ $secId }}_header" style="display: flex; align-items: center; padding: 12px 20px; color: #fff; background: transparent; border-radius: 0 16px 16px 0; font-weight: bold; cursor: pointer; justify-content: space-between;" onclick="document.getElementById('{{ $itemsId }}').classList.toggle('hidden'); document.getElementById('{{ $secId }}_icon').classList.toggle('rotated');">
+                    <span>{{ $section['label'] }}</span>
+                    <span id="{{ $secId }}_icon" style="transform: rotate(0deg); transition: transform 0.2s;">▾</span>
                 </div>
                 @if(!empty($section['items']))
-                    <ul style="list-style: none; padding: 0; margin: 0; background: rgba(0,0,0,0.06);">
+                    <ul id="{{ $itemsId }}" class="hidden" style="list-style: none; padding: 0; margin: 0; background: rgba(0,0,0,0.06);">
                         @foreach($section['items'] as $item)
                             <li style="margin-bottom: 2px;">
-                                <span style="display: block; padding: 8px 36px; color: #fff; font-size: 13px; border-radius: 0; cursor: default;">{{ $item['label'] }}</span>
+                                <span style="display: block; padding: 8px 36px; color: #fff; font-size: 13px; border-radius: 0; cursor: pointer;">{{ $item['label'] }}</span>
                             </li>
                         @endforeach
                     </ul>
@@ -103,3 +105,7 @@
         @endforeach
     </ul>
 </div>
+<style>
+    .hidden { display: none !important; }
+    .rotated { transform: rotate(180deg) !important; }
+</style>
