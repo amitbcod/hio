@@ -24,4 +24,12 @@ class Operator extends Model implements AuthenticatableContract
     {
         return $this->belongsTo(Business::class, 'business_id');
     }
+
+    /**
+     * Accounting relationship: step 7 accounting/payout data
+     */
+    public function accounting()
+    {
+        return $this->hasOne(OperatorAccountingPayout::class, 'business_id', 'business_id');
+    }
 }

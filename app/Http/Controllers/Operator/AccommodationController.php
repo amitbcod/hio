@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Operator;
 use App\Http\Controllers\Controller;
 use App\Models\Accommodation;
 use App\Models\AccommodationRoom;
+use App\Models\AccommodationMedia;
+use App\Models\AccommodationRate;
 use App\Models\AccommodationCompliance;
 use App\Models\Business;
 use Illuminate\Http\Request;
@@ -643,5 +645,609 @@ class AccommodationController extends Controller
         
         return redirect()->route('operator.accommodation.show', $accommodation->id)
             ->with('success', 'Reservation and Communication details saved successfully! Next: Step 3 - Photos & Media.');
+    }
+
+    /**
+     * Show Step 5: Accounting & Transaction
+     */
+    public function step5Accounting($id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user()->load('accounting');
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        if (!$accommodation->step1_basics) {
+            return redirect()->route('operator.accommodation.step1.edit', $accommodation->id)
+                ->with('error', 'Please complete Step 1 first.');
+        }
+
+        return view('operator.accommodation.step5_accounting', compact('accommodation', 'operator'));
+    }
+
+    /**
+     * Save Step 5: Accounting & Transaction
+     */
+    public function saveStep5Accounting(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        // Validate based on VAT exempted status
+        $rules = [
+            'bank_account_holder_name' => 'required|string|max:255',
+            'bank_name' => 'required|string|max:255',
+            'account_number' => 'required|string|max:100',
+            'iban' => 'nullable|string|max:100',
+            'swift_code' => 'nullable|string|max:50',
+            'tax_type' => 'required|in:Tourism,City Tax,None',
+            'tax_collection_method' => 'required|in:Operator,MPO',
+        ];
+
+        // VAT validation: required unless exempted
+        if (!$request->has('vat_exempted')) {
+            $rules['vat_number'] = 'required|string|max:100';
+        } else {
+            $rules['vat_number'] = 'nullable|string|max:100';
+        }
+
+        // Tax charges validation: required if tax_type is not 'None'
+        if ($request->tax_type !== 'None') {
+            $rules['tax_charges_type'] = 'required|in:Per Unit,Per Person,Per Adult';
+            $rules['tax_charges_value_type'] = 'required|in:Amount,Percentage';
+            $rules['tax_charges_value'] = 'required|numeric|min:0';
+        } else {
+            $rules['tax_charges_type'] = 'nullable|in:Per Unit,Per Person,Per Adult';
+            $rules['tax_charges_value_type'] = 'nullable|in:Amount,Percentage';
+            $rules['tax_charges_value'] = 'nullable|numeric|min:0';
+        }
+
+        $request->validate($rules);
+
+        // Update accommodation
+        $accommodation->update([
+            'bank_account_holder_name' => $request->bank_account_holder_name,
+            'bank_name' => $request->bank_name,
+            'account_number' => $request->account_number,
+            'iban' => $request->iban,
+            'swift_code' => $request->swift_code,
+            'vat_number' => $request->vat_number,
+            'vat_exempted' => $request->has('vat_exempted'),
+            'tax_type' => $request->tax_type,
+            'tax_charges_type' => $request->tax_charges_type ?? null,
+            'tax_charges_value_type' => $request->tax_charges_value_type ?? null,
+            'tax_charges_value' => $request->tax_charges_value ?? null,
+            'tax_collection_method' => $request->tax_collection_method,
+            'currency_code' => $request->currency_code ?? 'MUR',
+        ]);
+
+        // Mark step complete
+        $accommodation->completeStep('step5_rates');
+
+        return redirect()->route('operator.accommodation.show', $accommodation->id)
+            ->with('success', 'Accounting & Transaction details saved successfully!');
+    }
+
+    /**
+     * Show Step 6: Policies & Rules
+     */
+    public function step6PoliciesRules($id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        if (!$accommodation->step1_basics) {
+            return redirect()->route('operator.accommodation.step1.edit', $accommodation->id)
+                ->with('error', 'Please complete Step 1 first.');
+        }
+
+        return view('operator.accommodation.step6_policies_rules', compact('accommodation', 'operator'));
+    }
+
+    /**
+     * Save Step 6: Policies & Rules
+     */
+    public function saveStep6PoliciesRules(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        // Base validation rules
+        $rules = [
+            'checkin_time' => 'nullable|date_format:H:i',
+            'checkout_time' => 'nullable|date_format:H:i',
+            'checkin_checkout_rules' => 'nullable|string|max:1000',
+            'booking_window_rules' => 'nullable|string|max:1000',
+            'amendment_policy_type' => 'nullable|in:custom,template',
+            'amendment_policy' => 'nullable|string|max:5000',
+            'amendment_policy_template_id' => 'nullable|string|max:100',
+            'cancellation_policy_type' => 'required|in:custom,template',
+            'cancellation_policy' => 'nullable|string|max:5000',
+            'cancellation_policy_template_id' => 'nullable|string|max:100',
+            'cancellation_penalties_enabled' => 'required|in:0,1',
+            'cancellation_penalty_type' => 'nullable|in:Night,Percentage,Amount',
+            'cancellation_penalty_value' => 'nullable|numeric|min:0',
+            'security_deposit_policy_type' => 'nullable|in:custom,template',
+            'security_deposit_policy' => 'nullable|string|max:5000',
+            'security_deposit_policy_template_id' => 'nullable|string|max:100',
+            'deposit_required' => 'required|in:0,1',
+            'deposit_type' => 'nullable|in:Night,Percentage,Amount',
+            'deposit_value' => 'nullable|numeric|min:0',
+            'child_max_age' => 'nullable|integer|min:0|max:18',
+            'infant_max_age' => 'nullable|integer|min:0|max:5',
+            'house_rules_type' => 'nullable|in:custom,template',
+            'house_rules' => 'nullable|string|max:5000',
+            'house_rules_template_id' => 'nullable|string|max:100',
+        ];
+
+        // Conditional validation for cancellation policy
+        if ($request->cancellation_policy_type === 'custom') {
+            $rules['cancellation_policy'] = 'required|string|max:5000';
+        } else {
+            $rules['cancellation_policy_template_id'] = 'required|string|max:100';
+        }
+
+        // Conditional validation for cancellation penalties
+        if ($request->cancellation_penalties_enabled === '1') {
+            $rules['cancellation_penalty_type'] = 'required|in:Night,Percentage,Amount';
+            $rules['cancellation_penalty_value'] = 'required|numeric|min:0';
+        }
+
+        // Conditional validation for deposit settings
+        if ($request->deposit_required === '1') {
+            $rules['deposit_type'] = 'required|in:Night,Percentage,Amount';
+            $rules['deposit_value'] = 'required|numeric|min:0';
+        }
+
+        // Amendment policy validation
+        if ($request->amendment_policy_type === 'custom') {
+            $rules['amendment_policy'] = 'required|string|max:5000';
+        }
+
+        $request->validate($rules);
+
+        // Update accommodation
+        $accommodation->update([
+            'checkin_time' => $request->checkin_time ?? null,
+            'checkout_time' => $request->checkout_time ?? null,
+            'checkin_checkout_rules' => $request->checkin_checkout_rules ?? null,
+            'booking_window_rules' => $request->booking_window_rules ?? null,
+            'amendment_policy_type' => $request->amendment_policy_type ?? 'custom',
+            'amendment_policy' => $request->amendment_policy ?? null,
+            'amendment_policy_template_id' => $request->amendment_policy_template_id ?? null,
+            'cancellation_policy_type' => $request->cancellation_policy_type,
+            'cancellation_policy' => $request->cancellation_policy ?? null,
+            'cancellation_policy_template_id' => $request->cancellation_policy_template_id ?? null,
+            'cancellation_penalties_enabled' => $request->cancellation_penalties_enabled,
+            'cancellation_penalty_type' => $request->cancellation_penalty_type ?? null,
+            'cancellation_penalty_value' => $request->cancellation_penalty_value ?? null,
+            'security_deposit_policy_type' => $request->security_deposit_policy_type ?? 'custom',
+            'security_deposit_policy' => $request->security_deposit_policy ?? null,
+            'security_deposit_policy_template_id' => $request->security_deposit_policy_template_id ?? null,
+            'deposit_required' => $request->deposit_required,
+            'deposit_type' => $request->deposit_type ?? null,
+            'deposit_value' => $request->deposit_value ?? null,
+            'child_max_age' => $request->child_max_age ?? null,
+            'infant_max_age' => $request->infant_max_age ?? null,
+            'house_rules_type' => $request->house_rules_type ?? 'custom',
+            'house_rules' => $request->house_rules ?? null,
+            'house_rules_template_id' => $request->house_rules_template_id ?? null,
+        ]);
+
+        // Mark step complete
+        $accommodation->completeStep('step6_policies');
+
+        return redirect()->route('operator.accommodation.show', $accommodation->id)
+            ->with('success', 'Policies & Rules details saved successfully!');
+    }
+
+    /**
+     * Show Step 7: Rooms & Units
+     */
+    public function step7RoomsUnits($id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        if (!$accommodation->step1_basics) {
+            return redirect()->route('operator.accommodation.step1.edit', $accommodation->id)
+                ->with('error', 'Please complete Step 1 first.');
+        }
+
+        $rooms = AccommodationRoom::where('accommodation_id', $accommodation->id)->get();
+
+        // Load media for selection
+        $accommodation->load('media');
+
+        return view('operator.accommodation.step7_rooms_units', compact('accommodation', 'operator', 'rooms'));
+    }
+
+    /**
+     * Save/Create a room
+     */
+    public function saveRoom(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $rules = [
+            'room_name' => 'required|string|max:255',
+            'room_type' => 'required|string',
+            'size_sqm' => 'nullable|numeric|min:0|max:9999.99',
+            'view' => 'nullable|string|max:50',
+            'smoking' => 'nullable|in:Smoking,Non-smoking',
+            'short_description' => 'required|string|max:250',
+            'full_description' => 'nullable|string|max:1000',
+            'amenities' => 'required|array|min:1',
+            'amenities.*' => 'string',
+            'accessibility' => 'nullable|array',
+            'accessibility.*' => 'string',
+            'occupancy_adults' => 'required|integer|min:1',
+            'occupancy_children' => 'required|integer|min:0',
+            'occupancy_infant' => 'nullable|integer|min:0',
+            'images' => 'required|array|min:1',
+            'images.*' => 'integer',
+        ];
+
+        $data = $request->validate($rules);
+
+        // Create unique room_id
+        $roomId = 'R' . strtoupper(uniqid());
+
+        $room = AccommodationRoom::create([
+            'room_id' => $roomId,
+            'accommodation_id' => $accommodation->id,
+            'room_name' => $data['room_name'],
+            'room_type' => $data['room_type'],
+            'room_description' => $data['full_description'] ?? null,
+            'short_description' => $data['short_description'] ?? null,
+            'size_sqm' => $data['size_sqm'] ?? null,
+            'view' => $data['view'] ?? null,
+            'smoking' => $data['smoking'] ?? null,
+            'capacity' => max(1, intval($data['occupancy_adults'])),
+            'children_capacity' => intval($data['occupancy_children'] ?? 0),
+            'infant_capacity' => $data['occupancy_infant'] ?? null,
+            'quantity' => 1,
+            'is_accessible' => !empty($data['accessibility']),
+            'accessibility' => !empty($data['accessibility']) ? json_encode($data['accessibility']) : null,
+            'amenities' => json_encode($data['amenities']),
+        ]);
+
+        // Attach images: set selected media items' room_id to this room
+        if (!empty($data['images'])) {
+            AccommodationMedia::whereIn('id', $data['images'])->update(['room_id' => $room->id]);
+        }
+
+        // Mark step complete
+        $accommodation->completeStep('step4_rooms');
+
+        return redirect()->route('operator.accommodation.step7.show', $accommodation->id)
+            ->with('success', 'Room added successfully!');
+    }
+
+    /**
+     * Edit room form
+     */
+    public function editRoom($id, AccommodationRoom $room)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $rooms = AccommodationRoom::where('accommodation_id', $accommodation->id)->get();
+        $accommodation->load('media');
+        return view('operator.accommodation.step7_rooms_units', compact('accommodation', 'operator', 'room', 'rooms'));
+    }
+
+    /**
+     * Update room
+     */
+    public function updateRoom(Request $request, $id, AccommodationRoom $room)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $rules = [
+            'room_name' => 'required|string|max:255',
+            'room_type' => 'required|string',
+            'size_sqm' => 'nullable|numeric|min:0|max:9999.99',
+            'view' => 'nullable|string|max:50',
+            'smoking' => 'nullable|in:Smoking,Non-smoking',
+            'short_description' => 'required|string|max:250',
+            'full_description' => 'nullable|string|max:1000',
+            'amenities' => 'required|array|min:1',
+            'amenities.*' => 'string',
+            'accessibility' => 'nullable|array',
+            'accessibility.*' => 'string',
+            'occupancy_adults' => 'required|integer|min:1',
+            'occupancy_children' => 'required|integer|min:0',
+            'occupancy_infant' => 'nullable|integer|min:0',
+            'images' => 'required|array|min:1',
+            'images.*' => 'integer',
+        ];
+
+        $data = $request->validate($rules);
+
+        $room->update([
+            'room_name' => $data['room_name'],
+            'room_type' => $data['room_type'],
+            'room_description' => $data['full_description'] ?? null,
+            'short_description' => $data['short_description'] ?? null,
+            'size_sqm' => $data['size_sqm'] ?? null,
+            'view' => $data['view'] ?? null,
+            'smoking' => $data['smoking'] ?? null,
+            'capacity' => max(1, intval($data['occupancy_adults'])),
+            'children_capacity' => intval($data['occupancy_children'] ?? 0),
+            'infant_capacity' => $data['occupancy_infant'] ?? null,
+            'is_accessible' => !empty($data['accessibility']),
+            'accessibility' => !empty($data['accessibility']) ? json_encode($data['accessibility']) : null,
+            'amenities' => json_encode($data['amenities']),
+        ]);
+
+        // Re-assign images: clear previous assignments and attach new
+        AccommodationMedia::where('room_id', $room->id)->update(['room_id' => null]);
+        if (!empty($data['images'])) {
+            AccommodationMedia::whereIn('id', $data['images'])->update(['room_id' => $room->id]);
+        }
+
+        return redirect()->route('operator.accommodation.step7.show', $accommodation->id)
+            ->with('success', 'Room updated successfully!');
+    }
+
+    /**
+     * Delete room
+     */
+    public function deleteRoom($id, AccommodationRoom $room)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $room->delete();
+
+        return redirect()->route('operator.accommodation.step7.show', $accommodation->id)
+            ->with('success', 'Room deleted successfully!');
+    }
+
+    /**
+     * Show Step 8: Rate Plans
+     */
+    public function step8RatePlans($id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        if (!$accommodation->step1_basics) {
+            return redirect()->route('operator.accommodation.step1.edit', $accommodation->id)
+                ->with('error', 'Please complete Step 1 first.');
+        }
+
+        // Load rooms
+        $rooms = AccommodationRoom::where('accommodation_id', $accommodation->id)->get();
+
+        // Load all business-level rate plans (not tied to specific rooms)
+        $businessPlans = AccommodationRate::where('accommodation_id', $accommodation->id)
+            ->where('is_rate_plan', true)
+            ->get();
+
+        return view('operator.accommodation.step8_rate_plans', compact('accommodation', 'operator', 'rooms', 'businessPlans'));
+    }
+
+    /**
+     * Save/Create a rate plan
+     */
+    public function saveRatePlan(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $rules = [
+            'room_id' => 'nullable|exists:accommodation_rooms,id',
+            'rate_name' => 'required|string|max:255',
+            'meal_plan' => 'required|in:Room Only,Breakfast,Half Board,Full Board,All Inclusive',
+            'pricing_setting' => 'required|in:Per Person/Night,Per Room/Night,Per Property/Night',
+            'inclusions' => 'nullable|array',
+            'inclusions.*' => 'string',
+        ];
+
+        $data = $request->validate($rules);
+
+        // Create unique rate ID
+        $rateId = 'RATE' . strtoupper(uniqid());
+
+        AccommodationRate::create([
+            'rate_id' => $rateId,
+            'accommodation_id' => $accommodation->id,
+            'room_id' => $data['room_id'] ?? null,
+            'rate_name' => $data['rate_name'],
+            'meal_plan' => $data['meal_plan'],
+            'pricing_setting' => $data['pricing_setting'],
+            'inclusions' => !empty($data['inclusions']) ? json_encode($data['inclusions']) : null,
+            'is_rate_plan' => true,
+            'base_rate' => 0,
+            'final_rate' => 0,
+            'valid_from' => now()->toDateString(),
+            'valid_to' => now()->addYear()->toDateString(),
+            'rate_type' => 'Standard',
+        ]);
+
+        // Mark step complete
+        $accommodation->completeStep('step8_rates');
+
+        return redirect()->route('operator.accommodation.step8.show', $accommodation->id)
+            ->with('success', 'Rate Plan added successfully!');
+    }
+
+    /**
+     * Edit rate plan form
+     */
+    public function editRatePlan($id, AccommodationRate $plan)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $rooms = AccommodationRoom::where('accommodation_id', $accommodation->id)->get();
+
+        return view('operator.accommodation.step8_rate_plans', compact('accommodation', 'operator', 'rooms', 'plan'));
+    }
+
+    /**
+     * Update rate plan
+     */
+    public function updateRatePlan(Request $request, $id, AccommodationRate $plan)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $rules = [
+            'room_id' => 'required|exists:accommodation_rooms,id',
+            'rate_name' => 'required|string|max:255',
+            'meal_plan' => 'required|in:Room Only,Breakfast,Half Board,Full Board,All Inclusive',
+            'pricing_setting' => 'required|in:Per Person/Night,Per Room/Night,Per Property/Night',
+            'inclusions' => 'nullable|array',
+            'inclusions.*' => 'string',
+        ];
+
+        $data = $request->validate($rules);
+
+        $plan->update([
+            'room_id' => $data['room_id'],
+            'rate_name' => $data['rate_name'],
+            'meal_plan' => $data['meal_plan'],
+            'pricing_setting' => $data['pricing_setting'],
+            'inclusions' => !empty($data['inclusions']) ? json_encode($data['inclusions']) : null,
+        ]);
+
+        return redirect()->route('operator.accommodation.step8.show', $accommodation->id)
+            ->with('success', 'Rate Plan updated successfully!');
+    }
+
+    /**
+     * Delete rate plan
+     */
+    public function deleteRatePlan($id, AccommodationRate $plan)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $plan->delete();
+
+        return redirect()->route('operator.accommodation.step8.show', $accommodation->id)
+            ->with('success', 'Rate Plan deleted successfully!');
+    }
+
+    /**
+     * Assign a plan to a room
+     */
+    public function assignPlanToRoom(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $data = $request->validate([
+            'room_id' => 'required|exists:accommodation_rooms,id',
+            'plan_id' => 'required|exists:accommodation_rates,id',
+        ]);
+
+        $room = AccommodationRoom::findOrFail($data['room_id']);
+        $plan = AccommodationRate::findOrFail($data['plan_id']);
+
+        // Verify room belongs to this accommodation
+        if ($room->accommodation_id !== $accommodation->id) {
+            return response()->json(['success' => false, 'message' => 'Room does not belong to this accommodation'], 403);
+        }
+
+        // Remove any existing plan from this room
+        $room->rates()->where('is_rate_plan', true)->delete();
+
+        // Create a new rate entry linking the plan to the room
+        AccommodationRate::create([
+            'rate_id' => 'RATE' . strtoupper(uniqid()),
+            'accommodation_id' => $accommodation->id,
+            'room_id' => $room->id,
+            'rate_name' => $plan->rate_name,
+            'meal_plan' => $plan->meal_plan,
+            'pricing_setting' => $plan->pricing_setting,
+            'inclusions' => $plan->inclusions,
+            'is_rate_plan' => true,
+            'base_rate' => $plan->base_rate ?? 0,
+            'final_rate' => $plan->final_rate ?? 0,
+            'valid_from' => $plan->valid_from ?? now()->toDateString(),
+            'valid_to' => $plan->valid_to ?? now()->addYear()->toDateString(),
+            'rate_type' => $plan->rate_type ?? 'Standard',
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Plan assigned to room successfully']);
     }
 }

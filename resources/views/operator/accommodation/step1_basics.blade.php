@@ -225,9 +225,13 @@
                         {{-- Buttons --}}
                         <hr style="margin: 32px 0;">
                         <div style="display: flex; justify-content: space-between; gap: 12px;">
-                            <a href="{{ route('operator.accommodation.index') }}" class="btn" style="background: #f0f0f0; color: #333; border: none; padding: 10px 20px; border-radius: 4px;">
-                                Cancel
-                            </a>
+                            @if(isset($accommodation->id) )
+                            <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:16px;">
+                                <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" class="btn" style="background:#f0f0f0;color:#333;padding:8px 12px;border-radius:4px;">← Back</a>
+                            </div>
+                            @else
+                             <a href="{{ route('operator.accommodation.index') }}" class="btn" style="background: #f0f0f0; color: #333; padding: 8px 12px; border-radius: 4px;">← Back</a> 
+                            @endif 
                             <button type="submit" class="btn" style="background: #19b5b5; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
                                 Save and Continue
                             </button>

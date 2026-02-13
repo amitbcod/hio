@@ -74,6 +74,23 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::post('accommodation/{id}/step3-photos', [AccommodationController::class, 'saveStep3Photos'])->name('accommodation.saveStep3');
         Route::get('accommodation/{id}/step4-compliance', [AccommodationController::class, 'step4Compliance'])->name('accommodation.step4.show');
         Route::post('accommodation/{id}/step4-compliance', [AccommodationController::class, 'saveStep4Compliance'])->name('accommodation.saveStep4');
+        Route::get('accommodation/{id}/step5-accounting', [AccommodationController::class, 'step5Accounting'])->name('accommodation.step5.show');
+        Route::post('accommodation/{id}/step5-accounting', [AccommodationController::class, 'saveStep5Accounting'])->name('accommodation.saveStep5');
+        Route::get('accommodation/{id}/step6-policies-rules', [AccommodationController::class, 'step6PoliciesRules'])->name('accommodation.step6.show');
+        Route::post('accommodation/{id}/step6-policies-rules', [AccommodationController::class, 'saveStep6PoliciesRules'])->name('accommodation.saveStep6');
+        // Step 7: Rooms & Units
+        Route::get('accommodation/{id}/step7-rooms', [AccommodationController::class, 'step7RoomsUnits'])->name('accommodation.step7.show');
+        Route::post('accommodation/{id}/step7-rooms', [AccommodationController::class, 'saveRoom'])->name('accommodation.saveStep7');
+        Route::get('accommodation/{id}/step7-rooms/{room}/edit', [AccommodationController::class, 'editRoom'])->name('accommodation.step7.room.edit');
+        Route::post('accommodation/{id}/step7-rooms/{room}/edit', [AccommodationController::class, 'updateRoom'])->name('accommodation.step7.room.update');
+        Route::post('accommodation/{id}/step7-rooms/{room}/delete', [AccommodationController::class, 'deleteRoom'])->name('accommodation.step7.room.delete');
+        // Step 8: Rate Plans
+        Route::get('accommodation/{id}/step8-rate-plans', [AccommodationController::class, 'step8RatePlans'])->name('accommodation.step8.show');
+        Route::post('accommodation/{id}/step8-rate-plans', [AccommodationController::class, 'saveRatePlan'])->name('accommodation.saveStep8');
+        Route::get('accommodation/{id}/step8-rate-plans/{plan}/edit', [AccommodationController::class, 'editRatePlan'])->name('accommodation.step8.plan.edit');
+        Route::post('accommodation/{id}/step8-rate-plans/{plan}/edit', [AccommodationController::class, 'updateRatePlan'])->name('accommodation.step8.plan.update');
+        Route::post('accommodation/{id}/step8-rate-plans/{plan}/delete', [AccommodationController::class, 'deleteRatePlan'])->name('accommodation.step8.plan.delete');
+        Route::post('accommodation/{id}/step8-assign-plan', [AccommodationController::class, 'assignPlanToRoom'])->name('accommodation.step8.assignPlan');
 
         Route::get('pending-approval', function () {
             return view('operator.registration.pending_approval');

@@ -185,14 +185,19 @@ class Accommodation extends Model
      */
     public function completeStep($stepName)
     {
-        $this->{$stepName} = 1;
+        // Update the specific step column
+        $updateData = [$stepName => 1];
         
         // Auto-transition status
-        if ($this->status === self::STATUS_DRAFT && $this->{$stepName} === 1) {
-            $this->status = self::STATUS_IN_SETUP;
+        if ($this->status === self::STATUS_DRAFT) {
+            $updateData['status'] = self::STATUS_IN_SETUP;
         }
         
-        $this->save();
+        // Use update method for direct database update
+        $this->update($updateData);
+        
+        // Refresh the model to reflect changes
+        $this->refresh();
     }
     
     /**
