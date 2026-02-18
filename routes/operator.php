@@ -88,9 +88,28 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::get('accommodation/{id}/step8-rate-plans', [AccommodationController::class, 'step8RatePlans'])->name('accommodation.step8.show');
         Route::post('accommodation/{id}/step8-rate-plans', [AccommodationController::class, 'saveRatePlan'])->name('accommodation.saveStep8');
         Route::get('accommodation/{id}/step8-rate-plans/{plan}/edit', [AccommodationController::class, 'editRatePlan'])->name('accommodation.step8.plan.edit');
-        Route::post('accommodation/{id}/step8-rate-plans/{plan}/edit', [AccommodationController::class, 'updateRatePlan'])->name('accommodation.step8.plan.update');
+        Route::put('accommodation/{id}/step8-rate-plans/{plan}/edit', [AccommodationController::class, 'updateRatePlan'])->name('accommodation.step8.plan.update');
         Route::post('accommodation/{id}/step8-rate-plans/{plan}/delete', [AccommodationController::class, 'deleteRatePlan'])->name('accommodation.step8.plan.delete');
-        Route::post('accommodation/{id}/step8-assign-plan', [AccommodationController::class, 'assignPlanToRoom'])->name('accommodation.step8.assignPlan');
+        Route::post('accommodation/{id}/step8-assign-plans', [AccommodationController::class, 'assignPlansToRoom'])->name('accommodation.step8.assignPlans')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+        Route::post('accommodation/{id}/step8-remove-plan', [AccommodationController::class, 'removePlanFromRoom'])->name('accommodation.step8.removePlan')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+        // Step 9: Season and Pricing
+        Route::get('accommodation/{id}/step9-season-pricing', [AccommodationController::class, 'step9SeasonPricing'])->name('accommodation.step9.show');
+        Route::post('accommodation/{id}/step9-season-pricing', [AccommodationController::class, 'saveSeasonPricing'])->name('accommodation.saveStep9');
+        Route::post('accommodation/{id}/step9-set-default-price', [AccommodationController::class, 'setDefaultPrice'])->name('accommodation.step9.setDefaultPrice');
+        Route::post('accommodation/{id}/step9-add-season', [AccommodationController::class, 'addSeasonalEntry'])->name('accommodation.step9.addSeason');
+        Route::post('accommodation/{id}/step9-delete-season/{entryId}', [AccommodationController::class, 'deleteSeasonalEntry'])->name('accommodation.step9.deleteSeason');
+        Route::post('accommodation/{id}/step9-update-season/{entryId}', [AccommodationController::class, 'updateSeasonalEntry'])->name('accommodation.step9.updateSeason');
+        Route::get('accommodation/{id}/step9-season-pricing/{pricing}/edit', [AccommodationController::class, 'editSeasonPricing'])->name('accommodation.step9.pricing.edit');
+        Route::post('accommodation/{id}/step9-season-pricing/{pricing}/edit', [AccommodationController::class, 'updateSeasonPricing'])->name('accommodation.step9.pricing.update');
+        Route::post('accommodation/{id}/step9-season-pricing/{pricing}/delete', [AccommodationController::class, 'deleteSeasonPricing'])->name('accommodation.step9.pricing.delete');
+
+        // Save accommodation fees
+        Route::post('accommodation/{id}/fees', [AccommodationController::class, 'saveFees'])->name('accommodation.fees.save');
+        Route::get('accommodation/{id}/fees', [AccommodationController::class, 'getFees'])->name('accommodation.fees.get');
+
+        // Additional fees routes (preferred name)
+        Route::post('accommodation/{id}/additional-fees', [AccommodationController::class, 'saveFees'])->name('accommodation.additional_fees.save');
+        Route::get('accommodation/{id}/additional-fees', [AccommodationController::class, 'getFees'])->name('accommodation.additional_fees.get');
 
         Route::get('pending-approval', function () {
             return view('operator.registration.pending_approval');

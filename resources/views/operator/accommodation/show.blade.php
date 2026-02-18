@@ -239,6 +239,28 @@
                                         @endif
                                     </div>
                                 </div>
+
+                                {{-- Step 9: Season and Pricing --}}
+                                <div class="col-md-6 mb-4">
+                                    <div style="border: 2px solid {{ $accommodation->step9_pricing ? '#28a745' : '#e0e0e0' }}; border-radius: 8px; padding: 16px; background: {{ $accommodation->step9_pricing ? '#f1f8f7' : '#fafafa' }};">
+                                        <div style="display: flex; align-items: start; gap: 12px;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: {{ $accommodation->step9_pricing ? '#28a745' : '#ddd' }}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                                                {{ $accommodation->step9_pricing ? '✓' : '9' }}
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <h6 style="font-weight: 600; margin-bottom: 4px;">Step 9: Season and Pricing</h6>
+                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Set seasonal pricing for different periods</p>
+                                            </div>
+                                        </div>
+                                        @if($accommodation->step1_basics && $accommodation->step4_rooms && $accommodation->step8_rates)
+                                            <div style="margin-top: 12px;">
+                                                <a href="{{ route('operator.accommodation.step9.show', $accommodation->id) }}" class="btn" style="display: inline-block; background: #19b5b5; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; text-decoration: none;">
+                                                    {{ $accommodation->step9_pricing ? 'Edit' : 'Set Pricing' }}
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
                                     </div>
                                 </div>
                             </div>

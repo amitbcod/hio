@@ -1068,15 +1068,33 @@ class AccommodationController extends Controller
                 ->with('error', 'Please complete Step 1 first.');
         }
 
-        // Load rooms
+        // Load rooms with their plans
         $rooms = AccommodationRoom::where('accommodation_id', $accommodation->id)->get();
 
         // Load all business-level rate plans (not tied to specific rooms)
         $businessPlans = AccommodationRate::where('accommodation_id', $accommodation->id)
             ->where('is_rate_plan', true)
+            ->whereNull('room_id')
             ->get();
 
-        return view('operator.accommodation.step8_rate_plans', compact('accommodation', 'operator', 'rooms', 'businessPlans'));
+        // Prepare room plans data for JavaScript (include plan details, not just IDs)
+        $roomPlansData = [];
+        foreach ($rooms as $room) {
+            $assignedPlans = $room->rates()->where('is_rate_plan', true)->get();
+            $roomPlansData[] = [
+                'roomId' => $room->id,
+                'plans' => $assignedPlans->map(function($p) {
+                    return [
+                        'id' => $p->id,
+                        'rate_name' => $p->rate_name,
+                        'meal_plan' => $p->meal_plan,
+                        'pricing_setting' => $p->pricing_setting,
+                    ];
+                })->toArray()
+            ];
+        }
+
+        return view('operator.accommodation.step8_rate_plans', compact('accommodation', 'operator', 'rooms', 'businessPlans', 'roomPlansData'));
     }
 
     /**
@@ -1093,7 +1111,6 @@ class AccommodationController extends Controller
         }
 
         $rules = [
-            'room_id' => 'nullable|exists:accommodation_rooms,id',
             'rate_name' => 'required|string|max:255',
             'meal_plan' => 'required|in:Room Only,Breakfast,Half Board,Full Board,All Inclusive',
             'pricing_setting' => 'required|in:Per Person/Night,Per Room/Night,Per Property/Night',
@@ -1109,7 +1126,6 @@ class AccommodationController extends Controller
         AccommodationRate::create([
             'rate_id' => $rateId,
             'accommodation_id' => $accommodation->id,
-            'room_id' => $data['room_id'] ?? null,
             'rate_name' => $data['rate_name'],
             'meal_plan' => $data['meal_plan'],
             'pricing_setting' => $data['pricing_setting'],
@@ -1161,7 +1177,6 @@ class AccommodationController extends Controller
         }
 
         $rules = [
-            'room_id' => 'required|exists:accommodation_rooms,id',
             'rate_name' => 'required|string|max:255',
             'meal_plan' => 'required|in:Room Only,Breakfast,Half Board,Full Board,All Inclusive',
             'pricing_setting' => 'required|in:Per Person/Night,Per Room/Night,Per Property/Night',
@@ -1172,7 +1187,6 @@ class AccommodationController extends Controller
         $data = $request->validate($rules);
 
         $plan->update([
-            'room_id' => $data['room_id'],
             'rate_name' => $data['rate_name'],
             'meal_plan' => $data['meal_plan'],
             'pricing_setting' => $data['pricing_setting'],
@@ -1205,7 +1219,139 @@ class AccommodationController extends Controller
     /**
      * Assign a plan to a room
      */
-    public function assignPlanToRoom(Request $request, $id)
+    public function assignPlansToRoom(Request $request, $id)
+    {
+        try {
+            \Log::info('assignPlansToRoom called', ['id' => $id, 'request' => $request->all()]);
+            
+            $accommodation = Accommodation::findOrFail($id);
+            \Log::info('Accommodation found', ['accommodation_id' => $accommodation->id]);
+            
+            $operator = auth()->user();
+            \Log::info('Operator found', ['operator_id' => $operator->id ?? null]);
+
+            if ($accommodation->operator_id !== $operator->id && 
+                $accommodation->business_id !== $operator->business_id) {
+                \Log::info('Unauthorized access');
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            \Log::info('Validation starting');
+            $data = $request->validate([
+                'room_id' => 'required|exists:accommodation_rooms,id',
+                'plan_ids' => 'required|array|min:1',
+                'plan_ids.*' => [
+                    'required',
+                    'exists:accommodation_rates,id',
+                    function ($attribute, $value, $fail) use ($accommodation) {
+                        \Log::info('Validating plan', ['plan_id' => $value, 'accommodation_id' => $accommodation->id]);
+                        $plan = AccommodationRate::find($value);
+                        \Log::info('Plan query result', ['plan' => $plan ? $plan->toArray() : null]);
+                        if (!$plan) {
+                            \Log::info('Plan not found');
+                            $fail('Invalid plan selected.');
+                            return;
+                        }
+                        if ($plan->accommodation_id !== $accommodation->id) {
+                            \Log::info('Plan accommodation mismatch', ['plan_accommodation' => $plan->accommodation_id, 'expected' => $accommodation->id]);
+                            $fail('Invalid plan selected.');
+                            return;
+                        }
+                        if (!$plan->is_rate_plan) {
+                            \Log::info('Plan is not rate plan', ['is_rate_plan' => $plan->is_rate_plan]);
+                            $fail('Invalid plan selected.');
+                            return;
+                        }
+                        if ($plan->room_id !== null) {
+                            \Log::info('Plan has room_id', ['room_id' => $plan->room_id]);
+                            $fail('Invalid plan selected.');
+                            return;
+                        }
+                        \Log::info('Plan validation passed', ['plan_id' => $value]);
+                    },
+                ],
+            ]);
+            \Log::info('Validation passed', ['data' => $data]);
+
+            $room = AccommodationRoom::findOrFail($data['room_id']);
+            \Log::info('Room found', ['room_id' => $room->id]);
+
+            // Verify room belongs to this accommodation
+            if ($room->accommodation_id !== $accommodation->id) {
+                \Log::info('Room does not belong to accommodation');
+                return response()->json(['success' => false, 'message' => 'Room does not belong to this accommodation'], 403);
+            }
+
+            // Get current plans for this room
+            $currentPlanIds = $room->rates()->where('is_rate_plan', true)->pluck('id')->toArray();
+            \Log::info('Current plans', ['currentPlanIds' => $currentPlanIds]);
+
+            // Plans to add (not already assigned)
+            $plansToAdd = array_diff($data['plan_ids'], $currentPlanIds);
+            \Log::info('Plans to add', ['plansToAdd' => $plansToAdd]);
+
+            // Plans to remove (assigned but not in new selection)
+            $plansToRemove = array_diff($currentPlanIds, $data['plan_ids']);
+            \Log::info('Plans to remove', ['plansToRemove' => $plansToRemove]);
+
+            // Remove plans that are no longer selected
+            if (!empty($plansToRemove)) {
+                $room->rates()->whereIn('id', $plansToRemove)->delete();
+                \Log::info('Plans removed', ['removed' => $plansToRemove]);
+            }
+
+            // Add new plans
+            foreach ($plansToAdd as $planId) {
+                try {
+                    $plan = AccommodationRate::findOrFail($planId);
+                    \Log::info('Plan found', ['plan_id' => $plan->id, 'plan_name' => $plan->rate_name]);
+
+                    // Verify plan belongs to this accommodation and is a global rate plan
+                    if ($plan->accommodation_id !== $accommodation->id || !$plan->is_rate_plan || $plan->room_id !== null) {
+                        \Log::info('Plan validation failed', ['plan_id' => $plan->id]);
+                        continue; // Skip invalid plans
+                    }
+
+                    $newRateData = [
+                        'rate_id' => 'RATE' . strtoupper(uniqid()),
+                        'accommodation_id' => $accommodation->id,
+                        'room_id' => $room->id,
+                        'rate_name' => $plan->rate_name,
+                        'meal_plan' => $plan->meal_plan,
+                        'pricing_setting' => $plan->pricing_setting,
+                        'inclusions' => $plan->inclusions,
+                        'is_rate_plan' => true,
+                        'base_rate' => $plan->base_rate ?? 0,
+                        'final_rate' => $plan->final_rate ?? 0,
+                        'valid_from' => $plan->valid_from ?? now()->toDateString(),
+                        'valid_to' => $plan->valid_to ?? now()->addYear()->toDateString(),
+                        'rate_type' => $plan->rate_type ?? 'Standard',
+                        'currency' => $plan->currency ?? 'MUR',
+                        'min_nights' => $plan->min_nights ?? 1,
+                        'max_nights' => $plan->max_nights,
+                        'is_active' => $plan->is_active ?? true,
+                    ];
+                    
+                    \Log::info('Creating new rate', ['data' => $newRateData]);
+                    
+                    $newRate = AccommodationRate::create($newRateData);
+                    \Log::info('Rate created successfully', ['new_rate_id' => $newRate->id]);
+                    
+                } catch (\Exception $e) {
+                    \Log::error('Error creating accommodation rate', ['error' => $e->getMessage(), 'planId' => $planId, 'trace' => $e->getTraceAsString()]);
+                    return response()->json(['success' => false, 'message' => 'Error assigning plan: ' . $e->getMessage()], 500);
+                }
+            }
+
+            \Log::info('All plans processed successfully');
+            return response()->json(['success' => true, 'message' => 'Plans assigned to room successfully']);
+        } catch (\Exception $e) {
+            \Log::error('assignPlansToRoom error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Server error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function removePlanFromRoom(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
         $operator = auth()->user();
@@ -1228,26 +1374,617 @@ class AccommodationController extends Controller
             return response()->json(['success' => false, 'message' => 'Room does not belong to this accommodation'], 403);
         }
 
-        // Remove any existing plan from this room
-        $room->rates()->where('is_rate_plan', true)->delete();
+        // Verify plan belongs to this room
+        if ($plan->room_id !== $room->id) {
+            return response()->json(['success' => false, 'message' => 'Plan does not belong to this room'], 403);
+        }
 
-        // Create a new rate entry linking the plan to the room
+        // Delete the plan assignment
+        $plan->delete();
+
+        return response()->json(['success' => true, 'message' => 'Plan removed from room successfully']);
+    }
+
+    /**
+     * Show Step 9: Season and Pricing
+     */
+    public function step9SeasonPricing($id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        if (!$accommodation->step1_basics) {
+            return redirect()->route('operator.accommodation.step1.edit', $accommodation->id)
+                ->with('error', 'Please complete Step 1 first.');
+        }
+
+        // Load rooms with their assigned plans
+        $rooms = AccommodationRoom::where('accommodation_id', $accommodation->id)->with('rates')->get();
+
+        // Build list of all room + plan combinations
+        $roomPlanCombinations = [];
+        foreach ($rooms as $room) {
+            $assignedPlans = $room->rates()->where('is_rate_plan', true)->get();
+            foreach ($assignedPlans as $plan) {
+                // Check if default pricing exists for this room+plan combination
+                $defaultPricing = AccommodationRate::where('accommodation_id', $accommodation->id)
+                    ->where('room_id', $room->id)
+                    ->where('rate_name', $plan->rate_name)
+                    ->where('meal_plan', $plan->meal_plan)
+                    ->where('pricing_setting', $plan->pricing_setting)
+                    ->where('is_default', true)
+                    ->first();
+
+                $roomPlanCombinations[] = [
+                    'room' => $room,
+                    'plan' => $plan,
+                    'has_default' => $defaultPricing ? true : false,
+                    'default_pricing' => $defaultPricing,
+                ];
+            }
+        }
+
+        // Load all seasonal pricing for this accommodation
+        $seasonalPricing = AccommodationRate::where('accommodation_id', $accommodation->id)
+            ->where('is_rate_plan', false) // Seasonal pricing entries
+            ->whereNotNull('room_id')
+            ->with(['room'])
+            ->orderBy('valid_from')
+            ->get();
+
+        return view('operator.accommodation.step9_season_pricing', compact('accommodation', 'operator', 'rooms', 'roomPlanCombinations', 'seasonalPricing'));
+    }
+
+    /**
+     * Save seasonal pricing
+     */
+    public function saveSeasonPricing(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $request->validate([
+            'room_id' => 'required|exists:accommodation_rooms,id',
+            'rate_plan_id' => 'required|exists:accommodation_rates,id',
+            'adult_rate' => 'required|numeric|min:0',
+            'extra_adult_rate' => 'required|numeric|min:0',
+            'extra_bed' => 'nullable|numeric|min:0',
+            'children_rate' => 'required|numeric|min:0',
+            'infant_rate' => 'required|numeric|min:0',
+            'valid_from' => 'required|date',
+            'valid_to' => 'required|date|after:valid_from',
+        ]);
+
+        $room = AccommodationRoom::findOrFail($request->room_id);
+        $ratePlan = AccommodationRate::findOrFail($request->rate_plan_id);
+
+        // Verify room belongs to accommodation
+        if ($room->accommodation_id !== $accommodation->id) {
+            return redirect()->back()->with('error', 'Invalid room selected.');
+        }
+
+        // Verify rate plan belongs to accommodation and is a rate plan
+        if ($ratePlan->accommodation_id !== $accommodation->id || !$ratePlan->is_rate_plan) {
+            return redirect()->back()->with('error', 'Invalid rate plan selected.');
+        }
+
+        // Verify room has this plan assigned
+        $assignedPlan = $room->rates()->where('id', $ratePlan->id)->where('is_rate_plan', true)->first();
+        if (!$assignedPlan) {
+            return redirect()->back()->with('error', 'This plan is not assigned to this room.');
+        }
+
+        // Check for overlapping dates
+        $overlapping = AccommodationRate::where('accommodation_id', $accommodation->id)
+            ->where('room_id', $room->id)
+            ->where('rate_name', $ratePlan->rate_name) // Same plan
+            ->where('meal_plan', $ratePlan->meal_plan)
+            ->where('pricing_setting', $ratePlan->pricing_setting)
+            ->where('is_rate_plan', false)
+            ->where(function($query) use ($request) {
+                $query->whereBetween('valid_from', [$request->valid_from, $request->valid_to])
+                      ->orWhereBetween('valid_to', [$request->valid_from, $request->valid_to])
+                      ->orWhere(function($q) use ($request) {
+                          $q->where('valid_from', '<=', $request->valid_from)
+                            ->where('valid_to', '>=', $request->valid_to);
+                      });
+            })
+            ->exists();
+
+        if ($overlapping) {
+            return redirect()->back()->with('error', 'Pricing dates overlap with existing pricing for this plan.');
+        }
+
+        // Create seasonal pricing entry
         AccommodationRate::create([
             'rate_id' => 'RATE' . strtoupper(uniqid()),
             'accommodation_id' => $accommodation->id,
             'room_id' => $room->id,
-            'rate_name' => $plan->rate_name,
-            'meal_plan' => $plan->meal_plan,
-            'pricing_setting' => $plan->pricing_setting,
-            'inclusions' => $plan->inclusions,
-            'is_rate_plan' => true,
-            'base_rate' => $plan->base_rate ?? 0,
-            'final_rate' => $plan->final_rate ?? 0,
-            'valid_from' => $plan->valid_from ?? now()->toDateString(),
-            'valid_to' => $plan->valid_to ?? now()->addYear()->toDateString(),
-            'rate_type' => $plan->rate_type ?? 'Standard',
+            'rate_name' => $ratePlan->rate_name,
+            'meal_plan' => $ratePlan->meal_plan,
+            'pricing_setting' => $ratePlan->pricing_setting,
+            'inclusions' => $ratePlan->inclusions,
+            'is_rate_plan' => false, // This is seasonal pricing, not a plan definition
+            'base_rate' => $request->adult_rate,
+            'final_rate' => $request->adult_rate,
+            'extra_adult_rate' => $request->extra_adult_rate,
+            'extra_bed_rate' => $request->extra_bed,
+            'children_rate' => $request->children_rate,
+            'infant_rate' => $request->infant_rate,
+            'valid_from' => $request->valid_from,
+            'valid_to' => $request->valid_to,
+            'rate_type' => 'Seasonal',
+            'currency' => $ratePlan->currency ?? 'MUR',
+            'is_active' => true,
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Plan assigned to room successfully']);
+        // Mark step 9 as complete
+        $accommodation->completeStep('step9_pricing');
+
+        return redirect()->route('operator.accommodation.step9.show', $accommodation->id)
+            ->with('success', 'Seasonal pricing added successfully!');
+    }
+
+    /**
+     * Save accommodation fees (cleaning, resort, early/late) to DB
+     */
+    public function saveFees(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $data = $request->validate([
+            'cleaning_fee' => 'nullable|numeric|min:0',
+            'resort_fee' => 'nullable|numeric|min:0',
+            'early_checkin_type' => 'nullable|in:percent,fixed',
+            'early_checkin_value' => 'nullable|numeric|min:0',
+            'late_checkout_type' => 'nullable|in:percent,fixed',
+            'late_checkout_value' => 'nullable|numeric|min:0',
+        ]);
+
+        // Save or update property-level fees (room_id left null)
+        try {
+            \App\Models\AccommodationFee::updateOrCreate(
+                ['accommodation_id' => $accommodation->id, 'room_id' => null],
+                array_merge($data, ['accommodation_id' => $accommodation->id, 'room_id' => null])
+            );
+
+            return response()->json(['success' => true, 'message' => 'Saved']);
+        } catch (\Exception $e) {
+            \Log::error('saveFees error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Failed to save fees'], 500);
+        }
+    }
+
+    /**
+     * Return saved fees for an accommodation (property-level)
+     */
+    public function getFees(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $fees = \App\Models\AccommodationFee::where('accommodation_id', $accommodation->id)
+            ->whereNull('room_id')
+            ->first();
+
+        return response()->json(['success' => true, 'data' => $fees]);
+    }
+
+    /**
+     * Set default pricing for a room + plan combination
+     */
+    public function setDefaultPrice(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $request->validate([
+                'room_id' => 'required|exists:accommodation_rooms,id',
+                'plan_id' => 'required|exists:accommodation_rates,id',
+                'adult_rate' => 'required|numeric|min:0',
+                'extra_adult_rate' => 'required|numeric|min:0',
+                'extra_bed_rate' => 'nullable|numeric|min:0',
+                'children_rate' => 'required|numeric|min:0',
+                'infant_rate' => 'required|numeric|min:0',
+            ]);
+
+            $room = AccommodationRoom::findOrFail($request->room_id);
+            $plan = AccommodationRate::findOrFail($request->plan_id);
+
+            // Verify room belongs to accommodation
+            if ($room->accommodation_id !== $accommodation->id) {
+                return response()->json(['success' => false, 'message' => 'Invalid room selected.'], 400);
+            }
+
+            // Verify plan belongs to accommodation and is a rate plan
+            if ($plan->accommodation_id !== $accommodation->id || !$plan->is_rate_plan) {
+                return response()->json(['success' => false, 'message' => 'Invalid plan selected.'], 400);
+            }
+
+            // Verify room has this plan assigned
+            $assignedPlan = $room->rates()->where('id', $plan->id)->where('is_rate_plan', true)->first();
+            if (!$assignedPlan) {
+                return response()->json(['success' => false, 'message' => 'This plan is not assigned to this room.'], 400);
+            }
+
+            // Remove any existing default pricing for this room+plan combination
+            AccommodationRate::where('accommodation_id', $accommodation->id)
+                ->where('room_id', $room->id)
+                ->where('rate_name', $plan->rate_name)
+                ->where('meal_plan', $plan->meal_plan)
+                ->where('pricing_setting', $plan->pricing_setting)
+                ->where('is_default', true)
+                ->delete();
+
+            // Create default pricing entry
+            AccommodationRate::create([
+                'rate_id' => 'RATE' . strtoupper(uniqid()),
+                'accommodation_id' => $accommodation->id,
+                'room_id' => $room->id,
+                'rate_name' => $plan->rate_name,
+                'meal_plan' => $plan->meal_plan,
+                'pricing_setting' => $plan->pricing_setting,
+                'inclusions' => $plan->inclusions,
+                'is_rate_plan' => false, // This is pricing, not a plan definition
+                'is_default' => true,
+                'base_rate' => $request->adult_rate,
+                'final_rate' => $request->adult_rate,
+                'extra_adult_rate' => $request->extra_adult_rate,
+                'extra_bed_rate' => $request->extra_bed_rate ?? 0,
+                'children_rate' => $request->children_rate,
+                'infant_rate' => $request->infant_rate,
+                'valid_from' => now()->toDateString(),
+                'valid_to' => now()->addYears(10)->toDateString(),
+                'rate_type' => 'Standard',
+                'currency' => 'MUR',
+                'is_active' => true,
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Default price set successfully!']);
+        } catch (\Exception $e) {
+            \Log::error('setDefaultPrice error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Edit seasonal pricing
+     */
+    public function editSeasonPricing($id, $pricingId)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $pricing = AccommodationRate::findOrFail($pricingId);
+
+        if ($pricing->accommodation_id !== $accommodation->id || $pricing->is_rate_plan) {
+            abort(403);
+        }
+
+        $rooms = AccommodationRoom::where('accommodation_id', $accommodation->id)->get();
+
+        return view('operator.accommodation.step9_season_pricing_edit', compact('accommodation', 'operator', 'pricing', 'rooms'));
+    }
+
+    /**
+     * Update seasonal pricing
+     */
+    public function updateSeasonPricing(Request $request, $id, $pricingId)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $pricing = AccommodationRate::findOrFail($pricingId);
+
+        if ($pricing->accommodation_id !== $accommodation->id || $pricing->is_rate_plan) {
+            abort(403);
+        }
+
+        $request->validate([
+            'adult_rate' => 'required|numeric|min:0',
+            'extra_adult_rate' => 'required|numeric|min:0',
+            'extra_bed' => 'nullable|numeric|min:0',
+            'children_rate' => 'required|numeric|min:0',
+            'infant_rate' => 'required|numeric|min:0',
+            'valid_from' => 'required|date',
+            'valid_to' => 'required|date|after:valid_from',
+        ]);
+
+        // Check for overlapping dates (excluding current pricing)
+        $overlapping = AccommodationRate::where('accommodation_id', $accommodation->id)
+            ->where('room_id', $pricing->room_id)
+            ->where('rate_name', $pricing->rate_name)
+            ->where('is_rate_plan', false)
+            ->where('id', '!=', $pricingId)
+            ->where(function($query) use ($request) {
+                $query->whereBetween('valid_from', [$request->valid_from, $request->valid_to])
+                      ->orWhereBetween('valid_to', [$request->valid_from, $request->valid_to])
+                      ->orWhere(function($q) use ($request) {
+                          $q->where('valid_from', '<=', $request->valid_from)
+                            ->where('valid_to', '>=', $request->valid_to);
+                      });
+            })
+            ->exists();
+
+        if ($overlapping) {
+            return redirect()->back()->with('error', 'Pricing dates overlap with existing pricing for this plan.');
+        }
+
+        $pricing->update([
+            'base_rate' => $request->adult_rate,
+            'final_rate' => $request->adult_rate,
+            'extra_adult_rate' => $request->extra_adult_rate,
+            'extra_bed_rate' => $request->extra_bed,
+            'children_rate' => $request->children_rate,
+            'infant_rate' => $request->infant_rate,
+            'valid_from' => $request->valid_from,
+            'valid_to' => $request->valid_to,
+        ]);
+
+        return redirect()->route('operator.accommodation.step9.show', $accommodation->id)
+            ->with('success', 'Seasonal pricing updated successfully!');
+    }
+
+    /**
+     * Delete seasonal pricing
+     */
+    public function deleteSeasonPricing(Request $request, $id, $pricingId)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $pricing = AccommodationRate::findOrFail($pricingId);
+
+        if ($pricing->accommodation_id !== $accommodation->id || $pricing->is_rate_plan) {
+            abort(403);
+        }
+
+        $pricing->delete();
+
+        return redirect()->route('operator.accommodation.step9.show', $accommodation->id)
+            ->with('success', 'Seasonal pricing deleted successfully!');
+    }
+
+    /**
+     * Add seasonal pricing entry
+     */
+    public function addSeasonalEntry(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $request->validate([
+                'room_id' => 'required|exists:accommodation_rooms,id',
+                'plan_id' => 'required|exists:accommodation_rates,id',
+                'valid_from' => 'required|date',
+                'valid_to' => 'required|date|after:valid_from',
+                'adult_rate' => 'required|numeric|min:0',
+                'extra_adult_rate' => 'required|numeric|min:0',
+                'extra_bed_rate' => 'nullable|numeric|min:0',
+                'children_rate' => 'required|numeric|min:0',
+                'infant_rate' => 'required|numeric|min:0',
+            ]);
+
+            $room = AccommodationRoom::findOrFail($request->room_id);
+            $plan = AccommodationRate::findOrFail($request->plan_id);
+
+            // Verify room belongs to accommodation
+            if ($room->accommodation_id !== $accommodation->id) {
+                return response()->json(['success' => false, 'message' => 'Invalid room selected.'], 400);
+            }
+
+            // Verify plan belongs to accommodation and is a rate plan
+            if ($plan->accommodation_id !== $accommodation->id || !$plan->is_rate_plan) {
+                return response()->json(['success' => false, 'message' => 'Invalid plan selected.'], 400);
+            }
+
+            // Verify room has this plan assigned
+            $assignedPlan = $room->rates()->where('id', $plan->id)->where('is_rate_plan', true)->first();
+            if (!$assignedPlan) {
+                return response()->json(['success' => false, 'message' => 'This plan is not assigned to this room.'], 400);
+            }
+
+            // Check for overlapping dates
+            $overlapping = AccommodationRate::where('accommodation_id', $accommodation->id)
+                ->where('room_id', $room->id)
+                ->where('rate_name', $plan->rate_name)
+                ->where('meal_plan', $plan->meal_plan)
+                ->where('pricing_setting', $plan->pricing_setting)
+                ->where('is_rate_plan', false)
+                ->where('is_default', false)
+                ->where(function($query) use ($request) {
+                    $query->whereBetween('valid_from', [$request->valid_from, $request->valid_to])
+                          ->orWhereBetween('valid_to', [$request->valid_from, $request->valid_to])
+                          ->orWhere(function($q) use ($request) {
+                              $q->where('valid_from', '<=', $request->valid_from)
+                                ->where('valid_to', '>=', $request->valid_to);
+                          });
+                })
+                ->exists();
+
+            if ($overlapping) {
+                return response()->json(['success' => false, 'message' => 'Pricing dates overlap with existing seasonal pricing for this plan.'], 400);
+            }
+
+            // Create seasonal pricing entry
+            AccommodationRate::create([
+                'rate_id' => 'RATE' . strtoupper(uniqid()),
+                'accommodation_id' => $accommodation->id,
+                'room_id' => $room->id,
+                'rate_name' => $plan->rate_name,
+                'meal_plan' => $plan->meal_plan,
+                'pricing_setting' => $plan->pricing_setting,
+                'inclusions' => $plan->inclusions,
+                'is_rate_plan' => false,
+                'is_default' => false,
+                'base_rate' => $request->adult_rate,
+                'final_rate' => $request->adult_rate,
+                'extra_adult_rate' => $request->extra_adult_rate,
+                'extra_bed_rate' => $request->extra_bed_rate ?? 0,
+                'children_rate' => $request->children_rate,
+                'infant_rate' => $request->infant_rate,
+                'valid_from' => $request->valid_from,
+                'valid_to' => $request->valid_to,
+                'rate_type' => 'Seasonal',
+                'currency' => 'MUR',
+                'is_active' => true,
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Seasonal pricing entry added successfully!']);
+        } catch (\Exception $e) {
+            \Log::error('addSeasonalEntry error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Delete seasonal pricing entry
+     */
+    public function deleteSeasonalEntry(Request $request, $id, $entryId)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $entry = AccommodationRate::findOrFail($entryId);
+
+            // Verify entry belongs to accommodation and is not a rate plan or default pricing
+            if ($entry->accommodation_id !== $accommodation->id || $entry->is_rate_plan || $entry->is_default) {
+                return response()->json(['success' => false, 'message' => 'Invalid entry.'], 400);
+            }
+
+            $entry->delete();
+
+            return response()->json(['success' => true, 'message' => 'Seasonal pricing entry deleted successfully!']);
+        } catch (\Exception $e) {
+            \Log::error('deleteSeasonalEntry error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update seasonal pricing entry
+     */
+    public function updateSeasonalEntry(Request $request, $id, $entryId)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $request->validate([
+                'valid_from' => 'required|date',
+                'valid_to' => 'required|date|after:valid_from',
+                'adult_rate' => 'required|numeric|min:0',
+                'extra_adult_rate' => 'required|numeric|min:0',
+                'extra_bed_rate' => 'nullable|numeric|min:0',
+                'children_rate' => 'required|numeric|min:0',
+                'infant_rate' => 'required|numeric|min:0',
+            ]);
+
+            $entry = AccommodationRate::findOrFail($entryId);
+
+            // Verify entry belongs to accommodation and is not a rate plan or default pricing
+            if ($entry->accommodation_id !== $accommodation->id || $entry->is_rate_plan || $entry->is_default) {
+                return response()->json(['success' => false, 'message' => 'Invalid entry.'], 400);
+            }
+
+            // Check for overlapping dates with other seasonal entries (excluding current entry)
+            $overlapping = AccommodationRate::where('accommodation_id', $accommodation->id)
+                ->where('room_id', $entry->room_id)
+                ->where('rate_name', $entry->rate_name)
+                ->where('meal_plan', $entry->meal_plan)
+                ->where('pricing_setting', $entry->pricing_setting)
+                ->where('is_rate_plan', false)
+                ->where('is_default', false)
+                ->where('id', '!=', $entryId)
+                ->where(function($query) use ($request) {
+                    $query->whereBetween('valid_from', [$request->valid_from, $request->valid_to])
+                          ->orWhereBetween('valid_to', [$request->valid_from, $request->valid_to])
+                          ->orWhere(function($q) use ($request) {
+                              $q->where('valid_from', '<=', $request->valid_from)
+                                ->where('valid_to', '>=', $request->valid_to);
+                          });
+                })
+                ->exists();
+
+            if ($overlapping) {
+                return response()->json(['success' => false, 'message' => 'Pricing dates overlap with existing seasonal pricing for this plan.'], 400);
+            }
+
+            // Update seasonal pricing entry
+            $entry->update([
+                'base_rate' => $request->adult_rate,
+                'final_rate' => $request->adult_rate,
+                'extra_adult_rate' => $request->extra_adult_rate,
+                'extra_bed_rate' => $request->extra_bed_rate ?? 0,
+                'children_rate' => $request->children_rate,
+                'infant_rate' => $request->infant_rate,
+                'valid_from' => $request->valid_from,
+                'valid_to' => $request->valid_to,
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Seasonal pricing entry updated successfully!']);
+        } catch (\Exception $e) {
+            \Log::error('updateSeasonalEntry error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }
