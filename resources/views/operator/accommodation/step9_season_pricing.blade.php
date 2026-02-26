@@ -2,9 +2,10 @@
 
 @section('content')
     <div class="container mt-5">
+        @php $currentStep = 9; @endphp
         <div class="row">
             <div class="col-md-3">
-                @include('operator.registration._sidebar_main')
+                @include('operator.accommodation._steps_sidebar')
             </div>
             <div class="col-md-9">
                 <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);margin-bottom:16px;">
@@ -644,4 +645,11 @@
         
     </script>
     <script src="{{ asset('tools/fees_popup.js') }}"></script>
+    
+    <!-- Back Button -->
+    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e0e0e0;">
+        <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" style="color: #2196f3; text-decoration: none; font-size: 13px; font-weight: 500;">
+            ← Back to Accommodation Overview
+        </a>
+    </div>
 @endsection

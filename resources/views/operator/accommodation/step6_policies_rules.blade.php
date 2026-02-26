@@ -2,9 +2,10 @@
 
 @section('content')
     <div class="container mt-5">
+        @php $currentStep = 6; @endphp
         <div class="row">
             <div class="col-md-3">
-                @include('operator.registration._sidebar_main')
+                @include('operator.accommodation._steps_sidebar')
             </div>
             <div class="col-md-9">
                 <div style="background:#fff;border-radius:16px;padding:32px;box-shadow:0 2px 16px rgba(0,0,0,0.07);">
@@ -420,5 +421,17 @@
     });
     </script>
     @endpush
+
+    <!-- Back Button -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const backButton = document.createElement('div');
+        backButton.style.marginTop = '24px';
+        backButton.style.paddingTop = '24px';
+        backButton.style.borderTop = '1px solid #e0e0e0';
+        backButton.innerHTML = '<a href="{{ route('operator.accommodation.show', $accommodation->id) }}" style="color: #2196f3; text-decoration: none; font-size: 13px; font-weight: 500;">← Back to Accommodation Overview</a>';
+        document.querySelector('form').parentElement.appendChild(backButton);
+    });
+    </script>
 
 @endsection

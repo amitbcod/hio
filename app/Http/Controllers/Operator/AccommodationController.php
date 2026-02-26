@@ -8,6 +8,7 @@ use App\Models\AccommodationRoom;
 use App\Models\AccommodationMedia;
 use App\Models\AccommodationRate;
 use App\Models\AccommodationCompliance;
+use App\Models\AccommodationPromotion;
 use App\Models\Business;
 use Illuminate\Http\Request;
 
@@ -1987,4 +1988,611 @@ class AccommodationController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
-}
+
+    /**
+     * Show Step 10: Inventory & Allotment Management
+     */
+    public function step10InventoryAllotment($id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        if (!$accommodation->step1_basics) {
+            return redirect()->route('operator.accommodation.step1.edit', $accommodation->id)
+                ->with('error', 'Please complete Step 1 first.');
+        }
+
+        // Load rooms
+        $rooms = AccommodationRoom::where('accommodation_id', $accommodation->id)->get();
+
+        // Load inventory allotments for this accommodation
+        $inventoryAllotments = \App\Models\AccommodationInventory::where('accommodation_id', $accommodation->id)
+            ->with('room')
+            ->orderBy('date', 'desc')
+            ->paginate(20);
+
+        return view('operator.accommodation.step10_inventory_allotment', compact('accommodation', 'operator', 'rooms', 'inventoryAllotments'));
+    }
+
+    /**
+     * Save inventory allotment for a room
+     */
+    public function saveInventoryAllotment(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        // Normalize checkbox values: convert to true/false, handle unchecked fields
+        $checkboxFields = ['sell_and_report', 'stop_sell', 'block_arrivals'];
+        foreach ($checkboxFields as $field) {
+            if ($request->has($field)) {
+                // If field exists, convert to boolean (true if any truthy value)
+                $request->merge([$field => filter_var($request->input($field), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true]);
+            } else {
+                // If field doesn't exist (unchecked), set to false
+                $request->merge([$field => false]);
+            }
+        }
+
+        $data = $request->validate([
+            'room_id' => 'required|exists:accommodation_rooms,id',
+            'sellable_units' => 'required|integer|min:0',
+            'sold_units' => 'required|integer|min:0',
+            'minimum_nights' => 'nullable|integer|min:0',
+            'days_before_release' => 'nullable|integer|min:0',
+            'sell_and_report' => 'required|boolean',
+            'stop_sell' => 'required|boolean',
+            'blackout_dates' => 'nullable|string',
+            'block_arrivals' => 'required|boolean',
+            'block_days' => 'nullable|integer|min:1',
+            'instant_on_request' => 'required|in:Instant,On Request',
+        ]);
+
+        try {
+            $data['accommodation_id'] = $accommodation->id;
+            $data['date'] = now()->toDateString(); // Auto-set date to today
+            $data['available_units'] = $data['sellable_units'] - $data['sold_units'];
+
+            // Handle blackout dates - convert comma-separated string to JSON array
+            if (isset($data['blackout_dates']) && !empty($data['blackout_dates'])) {
+                $data['blackout_dates'] = explode(',', $data['blackout_dates']);
+            } else {
+                unset($data['blackout_dates']);  // Remove if empty so DB default is used
+            }
+
+            // Remove empty fields so database defaults are used
+            $fieldsToClean = ['minimum_nights', 'days_before_release', 'block_days'];
+            foreach ($fieldsToClean as $field) {
+                if (!isset($data[$field]) || empty($data[$field])) {
+                    unset($data[$field]);
+                }
+            }
+
+            // Create or update inventory record (by accommodation, room, and date)
+            $inventory = \App\Models\AccommodationInventory::updateOrCreate(
+                [
+                    'accommodation_id' => $accommodation->id,
+                    'room_id' => $data['room_id'] ?? null,
+                    'date' => $data['date']
+                ],
+                $data
+            );
+
+            // Mark step 10 as complete
+            $accommodation->completeStep('step10_inventory_allotment');
+
+            \Log::info('Inventory allotment saved', ['inventory_id' => $inventory->id, 'accommodation_id' => $accommodation->id]);
+
+            return redirect()->route('operator.accommodation.step10.show', $accommodation->id)
+                ->with('success', 'Inventory allotment saved successfully for ' . now()->format('F d, Y') . '!');
+        } catch (\Exception $e) {
+            \Log::error('saveInventoryAllotment error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'accommodation_id' => $id]);
+            return redirect()->route('operator.accommodation.step10.show', $accommodation->id)
+                ->with('error', 'Failed to save inventory: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete inventory allotment
+     */
+    public function deleteInventoryAllotment(Request $request, $id, $inventoryId)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $inventory = \App\Models\AccommodationInventory::findOrFail($inventoryId);
+
+            if ($inventory->accommodation_id !== $accommodation->id) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            $inventory->delete();
+
+            return response()->json(['success' => true, 'message' => 'Inventory allotment deleted successfully!']);
+        } catch (\Exception $e) {
+            \Log::error('deleteInventoryAllotment error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Failed to delete'], 500);
+        }
+    }
+
+    public function getInventoryAllotment(Request $request, $id, $inventoryId)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $inventory = \App\Models\AccommodationInventory::findOrFail($inventoryId);
+
+            if ($inventory->accommodation_id !== $accommodation->id) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            // Format data for JSON response
+            $data = [
+                'id' => $inventory->id,
+                'accommodation_id' => $inventory->accommodation_id,
+                'room_id' => $inventory->room_id,
+                'date' => $inventory->date->format('Y-m-d'),
+                'sellable_units' => (int)$inventory->sellable_units,
+                'sold_units' => (int)$inventory->sold_units,
+                'available_units' => (int)$inventory->available_units,
+                'minimum_nights' => $inventory->minimum_nights ? (int)$inventory->minimum_nights : '',
+                'days_before_release' => $inventory->days_before_release ? (int)$inventory->days_before_release : '',
+                'sell_and_report' => (bool)$inventory->sell_and_report,
+                'stop_sell' => (bool)$inventory->stop_sell,
+                'blackout_dates' => $inventory->blackout_dates ?? [],
+                'block_arrivals' => (bool)$inventory->block_arrivals,
+                'block_days' => $inventory->block_days ? (int)$inventory->block_days : '',
+                'instant_on_request' => $inventory->instant_on_request
+            ];
+
+            return response()->json(['success' => true, 'data' => $data]);
+        } catch (\Exception $e) {
+            \Log::error('getInventoryAllotment error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Failed to retrieve: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function showInventoryAllotment(Request $request, $id, $inventoryId)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        try {
+            $inventory = \App\Models\AccommodationInventory::findOrFail($inventoryId);
+
+            if ($inventory->accommodation_id !== $accommodation->id) {
+                abort(403);
+            }
+
+            return view('operator.accommodation.step10_inventory_detail', [
+                'accommodation' => $accommodation,
+                'inventory' => $inventory
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('showInventoryAllotment error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return redirect()->route('operator.accommodation.step10.show', $id)
+                ->with('error', 'Failed to retrieve inventory allotment');
+        }
+    }
+
+    /**
+     * Step 11: Promotions & Offers
+     */
+    public function step11Promotions($id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        try {
+            // log context for debugging
+            \Log::info('step11Promotions start', ['accommodation_id' => $accommodation->id, 'operator_id' => $operator->id]);
+
+            // Get related data
+            $rooms = AccommodationRoom::where('accommodation_id', $accommodation->id)->get();
+            // Load all Standard rate plans (both global and room-specific).
+            // Do not dedupe here — room-specific copies should be visible when a room is selected.
+            $ratePlans = AccommodationRate::where('accommodation_id', $accommodation->id)
+                ->where('rate_type', 'Standard')
+                ->where('is_rate_plan', true)
+                ->get();
+
+            // Also load business-level (global) plans for the "Assign Plans" modal (room_id = null)
+            $businessPlansForAssign = AccommodationRate::where('accommodation_id', $accommodation->id)
+                ->whereNull('room_id')
+                ->where('is_rate_plan', true)
+                ->where('rate_type', 'Standard')
+                ->get();
+
+            \Log::info('step11Promotions data counts', ['rooms' => $rooms->count(), 'ratePlans' => $ratePlans->count(), 'businessPlans' => $businessPlansForAssign->count()]);
+            $promotions = AccommodationPromotion::where('accommodation_id', $accommodation->id)
+                ->with(['room', 'ratePlan'])
+                ->paginate(10);
+
+            // Prepare room plans data for JavaScript (include plan details, not just IDs)
+            $roomPlansData = [];
+            foreach ($rooms as $room) {
+                $assignedPlans = $room->rates()->where('is_rate_plan', true)->get();
+                $roomPlansData[] = [
+                    'roomId' => $room->id,
+                    'plans' => $assignedPlans->map(function($p) {
+                        return [
+                            'id' => $p->id,
+                            'rate_name' => $p->rate_name,
+                            'meal_plan' => $p->meal_plan,
+                            'pricing_setting' => $p->pricing_setting,
+                        ];
+                    })->toArray()
+                ];
+            }
+
+            return view('operator.accommodation.step11_promotions', [
+                'accommodation' => $accommodation,
+                'rooms' => $rooms,
+                'ratePlans' => $ratePlans,
+                'promotions' => $promotions,
+                'roomPlansData' => $roomPlansData,
+                'ratePlans' => $ratePlans,
+                'businessPlansForAssign' => $businessPlansForAssign,
+            ]);
+        } catch (\Exception $e) {
+            // Log full exception for debugging
+            \Log::error('step11Promotions error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'accommodation_id' => $id]);
+
+            // Fall back to rendering the page with an inline error message so the user sees what failed
+            $rooms = collect();
+            $ratePlans = collect();
+            $promotions = collect();
+
+            return view('operator.accommodation.step11_promotions', [
+                'accommodation' => $accommodation,
+                'rooms' => $rooms,
+                'ratePlans' => $ratePlans,
+                'promotions' => $promotions,
+            ])->with('error', 'Failed to load promotions: ' . $e->getMessage());
+        }
+    }
+
+    public function savePromotion(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        // Ensure checkbox fields are boolean when absent
+        if (!$request->has('non_refundable')) {
+            $request->merge(['non_refundable' => false]);
+        } else {
+            $request->merge(['non_refundable' => filter_var($request->input('non_refundable'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true]);
+        }
+
+        // Defensive: remove any incoming promotion_id from the raw request to avoid accidental insertion
+        if ($request->request->has('promotion_id')) {
+            $request->request->remove('promotion_id');
+        }
+
+        $data = $request->validate([
+            'promotion_id' => 'nullable|exists:accommodation_promotions,id',
+            'room_id' => 'required|exists:accommodation_rooms,id',
+            'rate_plan_id' => 'required|exists:accommodation_rates,id',
+            'campaign_name' => 'nullable|string|max:255',
+            'campaign_description' => 'nullable|string|max:250',
+            'promotion_type' => 'nullable|in:Early-bird,Last-minute,Stay X Pay Y,Seasonal',
+            'discount_type' => 'nullable|in:Amount/Night,Percentage',
+            'discount_value' => 'nullable|numeric|min:0',
+            'promo_valid_from' => 'nullable|date',
+            'promo_valid_to' => 'nullable|date|after_or_equal:promo_valid_from',
+            'non_refundable' => 'boolean',
+        ]);
+
+        try {
+            $data['accommodation_id'] = $accommodation->id;
+
+            // Default approval status to Pending Approval for operator-created/updated promotions
+            $data['approval_status'] = 'Pending Approval';
+
+            if (!empty($data['promotion_id'])) {
+                // Update existing promotion
+                $promotion = AccommodationPromotion::findOrFail($data['promotion_id']);
+                if ($promotion->accommodation_id !== $accommodation->id) {
+                    abort(403);
+                }
+
+                // Update fields
+                $promotion->room_id = $data['room_id'];
+                $promotion->rate_plan_id = $data['rate_plan_id'];
+                $promotion->campaign_name = $data['campaign_name'] ?? null;
+                $promotion->campaign_description = $data['campaign_description'] ?? null;
+                $promotion->promotion_type = $data['promotion_type'] ?? null;
+                $promotion->discount_type = $data['discount_type'] ?? null;
+                $promotion->discount_value = $data['discount_value'] ?? null;
+                $promotion->promo_valid_from = $data['promo_valid_from'] ?? null;
+                $promotion->promo_valid_to = $data['promo_valid_to'] ?? null;
+                $promotion->non_refundable = $data['non_refundable'];
+                $promotion->approval_status = $data['approval_status'];
+                $promotion->save();
+            } else {
+                // Ensure we don't accidentally try to insert a 'promotion_id' column
+                if (array_key_exists('promotion_id', $data)) {
+                    unset($data['promotion_id']);
+                }
+
+                // Build explicit payload to avoid inserting unexpected keys (like promotion_id)
+                $createData = [
+                    'room_id' => $data['room_id'],
+                    'rate_plan_id' => $data['rate_plan_id'],
+                    'campaign_name' => $data['campaign_name'] ?? null,
+                    'campaign_description' => $data['campaign_description'] ?? null,
+                    'promotion_type' => $data['promotion_type'] ?? null,
+                    'discount_type' => $data['discount_type'] ?? null,
+                    'discount_value' => $data['discount_value'] ?? null,
+                    'promo_valid_from' => $data['promo_valid_from'] ?? null,
+                    'promo_valid_to' => $data['promo_valid_to'] ?? null,
+                    'non_refundable' => $data['non_refundable'] ?? false,
+                    'accommodation_id' => $data['accommodation_id'],
+                    'approval_status' => $data['approval_status'],
+                ];
+
+
+                \Log::info('savePromotion create payload', $createData);
+
+                // Create new promotion (set attributes explicitly to avoid surprises)
+                $promotion = new AccommodationPromotion();
+                foreach ($createData as $k => $v) {
+                    $promotion->$k = $v;
+                }
+                $promotion->save();
+
+                // Mark step 11 as complete
+                $accommodation->completeStep('step11_promotions_offers');
+            }
+
+            \Log::info('Promotion saved', ['promotion_id' => $promotion->id, 'accommodation_id' => $accommodation->id]);
+
+            return redirect()->route('operator.accommodation.step11.show', $accommodation->id)
+                ->with('success', 'Promotion saved successfully!');
+        } catch (\Exception $e) {
+            \Log::error('savePromotion error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return redirect()->route('operator.accommodation.step11.show', $accommodation->id)
+                ->with('error', 'Failed to save promotion: ' . $e->getMessage());
+        }
+    }
+
+    public function getPromotion(Request $request, $id, $promotionId)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $promotion = AccommodationPromotion::findOrFail($promotionId);
+
+            if ($promotion->accommodation_id !== $accommodation->id) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            $data = [
+                'id' => $promotion->id,
+                'accommodation_id' => $promotion->accommodation_id,
+                'room_id' => $promotion->room_id,
+                'rate_plan_id' => $promotion->rate_plan_id,
+                'campaign_name' => $promotion->campaign_name,
+                'campaign_description' => $promotion->campaign_description,
+                'promotion_type' => $promotion->promotion_type,
+                'discount_type' => $promotion->discount_type,
+                'discount_value' => $promotion->discount_value,
+                'promo_valid_from' => $promotion->promo_valid_from ? $promotion->promo_valid_from->format('Y-m-d') : '',
+                'promo_valid_to' => $promotion->promo_valid_to ? $promotion->promo_valid_to->format('Y-m-d') : '',
+                'non_refundable' => (bool)$promotion->non_refundable,
+                'approval_status' => $promotion->approval_status,
+            ];
+
+            return response()->json(['success' => true, 'data' => $data]);
+        } catch (\Exception $e) {
+            \Log::error('getPromotion error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Failed to retrieve: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function deletePromotion(Request $request, $id, $promotionId)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $promotion = AccommodationPromotion::findOrFail($promotionId);
+
+            if ($promotion->accommodation_id !== $accommodation->id) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            $promotion->delete();
+
+            return response()->json(['success' => true, 'message' => 'Promotion deleted successfully!']);
+        } catch (\Exception $e) {
+            \Log::error('deletePromotion error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Failed to delete'], 500);
+        }
+    }
+
+    // Step 12: SEO & Social
+    public function step12Seo(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        return view('operator.accommodation.step12_seo', [
+            'accommodation' => $accommodation,
+        ]);
+    }
+
+    public function saveStep12Seo(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'seo_title' => 'nullable|string|max:255',
+            'seo_description' => 'nullable|string|max:255',
+            'keywords_tags' => 'nullable|string',
+            'og_title' => 'nullable|string|max:255',
+            'og_description' => 'nullable|string|max:255',
+            'og_image' => 'nullable|image|max:5120',
+        ]);
+
+        try {
+            $accommodation->seo_title = $data['seo_title'] ?? null;
+            $accommodation->seo_description = $data['seo_description'] ?? null;
+            $accommodation->keywords_tags = $data['keywords_tags'] ?? null;
+            $accommodation->og_title = $data['og_title'] ?? null;
+            $accommodation->og_description = $data['og_description'] ?? null;
+
+            if ($request->hasFile('og_image')) {
+                $path = $request->file('og_image')->store('accommodations/og', 'public');
+                $accommodation->og_image = $path;
+            }
+
+            // Mark step 12 as complete
+            $accommodation->completeStep('step12_review');
+
+            $accommodation->save();
+
+            return redirect()->route('operator.accommodation.step12.show', $accommodation->id)
+                ->with('success', 'SEO & Social settings saved.');
+        } catch (\Exception $e) {
+            \Log::error('saveStep12Seo error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'accommodation_id' => $id]);
+            return redirect()->route('operator.accommodation.step12.show', $accommodation->id)
+                ->with('error', 'Failed to save: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show Step 13: Publish
+     */
+    public function step13Publish($id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        // Check ownership
+        if ($accommodation->operator_id !== $operator->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Check if Step 12 is complete
+        if (!$accommodation->step12_review) {
+            return redirect()->route('operator.accommodation.step12.show', $accommodation->id)
+                ->with('error', 'Please complete Step 12: SEO & Review first.');
+        }
+
+        return view('operator.accommodation.step13_publish', compact('accommodation'));
+    }
+
+    /**
+     * Submit for Approval
+     */
+    public function submitForApproval(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        // Check ownership
+        if ($accommodation->operator_id !== $operator->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Verify all steps are complete
+        $requiredSteps = [
+            'step1_basics' => 'Step 1: Basics',
+            'step2_legal' => 'Step 2: Reservation & Communication',
+            'step3_media' => 'Step 3: Photos & Media',
+            'step7_compliance' => 'Step 4: Compliance & Legal',
+            'step5_rates' => 'Step 5: Accounting & Transaction',
+            'step6_policies' => 'Step 6: Policies & Rules',
+            'step4_rooms' => 'Step 7: Rooms & Units',
+            'step8_rates' => 'Step 8: Rate Plans',
+            'step9_pricing' => 'Step 9: Season and Pricing',
+            'step10_inventory_allotment' => 'Step 10: Inventory & Allotment',
+            'step11_promotions_offers' => 'Step 11: Promotions & Offers',
+            'step12_review' => 'Step 12: SEO & Social'
+        ];
+
+        $incompleteSteps = [];
+        foreach ($requiredSteps as $field => $label) {
+            if (!$accommodation->$field) {
+                $incompleteSteps[] = $label;
+            }
+        }
+
+        if (!empty($incompleteSteps)) {
+            return back()->with('error', 'Please complete all steps before submitting for approval. Incomplete: ' . implode(', ', $incompleteSteps));
+        }
+
+        try {
+            $accommodation->update([
+                'approval_status' => 'Pending',
+                'submitted_for_approval_at' => now(),
+                'step13_publish' => 1
+            ]);
+
+            // TODO: Send notification to admin
+            // Mail::to(config('mail.admin_email'))->send(new AccommodationApprovalRequested($accommodation));
+
+            return back()->with('success', 'Accommodation submitted for approval successfully! You will be notified once it is reviewed.');
+        } catch (\Exception $e) {
+            \Log::error('Submit for approval error', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Failed to submit for approval: ' . $e->getMessage());
+        }
+    }}

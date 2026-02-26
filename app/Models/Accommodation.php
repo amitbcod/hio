@@ -26,6 +26,10 @@ class Accommodation extends Model
     protected $guarded = [];
     public $timestamps = true;
     
+    protected $casts = [
+        'submitted_for_approval_at' => 'datetime',
+    ];
+    
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
     const DELETED_AT = 'deleted_at';

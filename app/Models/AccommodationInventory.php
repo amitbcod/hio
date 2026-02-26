@@ -13,6 +13,11 @@ class AccommodationInventory extends Model
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
     
+    protected $casts = [
+        'date' => 'date',
+        'blackout_dates' => 'json',
+    ];
+    
     public function accommodation()
     {
         return $this->belongsTo(Accommodation::class, 'accommodation_id');
