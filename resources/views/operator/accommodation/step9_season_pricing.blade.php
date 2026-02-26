@@ -131,6 +131,17 @@
                                                                                 data-children-rate="{{ $entry->children_rate }}"
                                                                                 data-infant-rate="{{ $entry->infant_rate }}"
                                                                                 style="padding:4px 8px;background:#ff9800;border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:11px;">Edit</button>
+                                                                            <button type="button"
+                                                                                class="btn-duplicate-seasonal"
+                                                                                data-form-id="form_{{ $combo['room']->id }}_{{ $combo['plan']->id }}"
+                                                                                data-valid-from="{{ $entry->valid_from }}"
+                                                                                data-valid-to="{{ $entry->valid_to }}"
+                                                                                data-adult-rate="{{ $entry->base_rate }}"
+                                                                                data-extra-adult-rate="{{ $entry->extra_adult_rate }}"
+                                                                                data-extra-bed-rate="{{ $entry->extra_bed_rate ?? 0 }}"
+                                                                                data-children-rate="{{ $entry->children_rate }}"
+                                                                                data-infant-rate="{{ $entry->infant_rate }}"
+                                                                                style="padding:4px 8px;background:#17a2b8;border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:11px;">Duplicate</button>
                                                                             <button type="button" onclick="deleteSeasonalEntry({{ $entry->id }})" style="padding:4px 8px;background:#dc3545;border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:11px;">Delete</button>
                                                                         </div>
                                                                     </div>
@@ -161,26 +172,26 @@
                                                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
                                                             <div>
                                                                 <label style="font-weight:600;font-size:11px;">Adult Rate (MUR) *</label>
-                                                                <input type="number" name="adult_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;">
+                                                                <input type="number" name="adult_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;" value="{{ $combo['default_pricing']->base_rate }}">
                                                             </div>
                                                             <div>
                                                                 <label style="font-weight:600;font-size:11px;">Extra Adult Rate (MUR) *</label>
-                                                                <input type="number" name="extra_adult_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;">
+                                                                <input type="number" name="extra_adult_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;" value="{{ $combo['default_pricing']->extra_adult_rate }}">
                                                             </div>
                                                         </div>
                                                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
                                                             <div>
                                                                 <label style="font-weight:600;font-size:11px;">Extra Bed Rate (MUR)</label>
-                                                                <input type="number" name="extra_bed_rate" class="form-control" step="0.01" min="0" style="font-size:12px;">
+                                                                <input type="number" name="extra_bed_rate" class="form-control" step="0.01" min="0" style="font-size:12px;" value="{{ $combo['default_pricing']->extra_bed_rate ?? 0 }}">
                                                             </div>
                                                             <div>
                                                                 <label style="font-weight:600;font-size:11px;">Children Rate (MUR) *</label>
-                                                                <input type="number" name="children_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;">
+                                                                <input type="number" name="children_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;" value="{{ $combo['default_pricing']->children_rate }}">
                                                             </div>
                                                         </div>
                                                         <div style="margin-bottom:8px;">
                                                             <label style="font-weight:600;font-size:11px;">Infant Rate (MUR) *</label>
-                                                            <input type="number" name="infant_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;">
+                                                            <input type="number" name="infant_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;" value="{{ $combo['default_pricing']->infant_rate }}">
                                                         </div>
                                                         <button type="submit" style="padding:6px 12px;background:#28a745;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;">Add Seasonal Entry</button>
                                                     </form>
@@ -514,6 +525,13 @@
             });
         });
 
+        // Handle Duplicate Seasonal Entry buttons
+        document.querySelectorAll('.btn-duplicate-seasonal').forEach(btn => {
+            btn.addEventListener('click', function() {
+                duplicateSeasonalEntry(this);
+            });
+        });
+
         // Collapsible Seasonal Entries Toggle
         function toggleSeasonalEntries(sectionId) {
             const section = document.getElementById(sectionId);
@@ -525,6 +543,30 @@
                 section.style.display = 'none';
                 toggle.textContent = '▼';
             }
+        }
+
+        function duplicateSeasonalEntry(btn) {
+            const formId = btn.dataset.formId;
+            const form = document.getElementById(formId);
+            if (!form) {
+                return;
+            }
+
+            form.querySelector('input[name="valid_from"]').value = btn.dataset.validFrom || '';
+            form.querySelector('input[name="valid_to"]').value = btn.dataset.validTo || '';
+            form.querySelector('input[name="adult_rate"]').value = btn.dataset.adultRate || '';
+            form.querySelector('input[name="extra_adult_rate"]').value = btn.dataset.extraAdultRate || '';
+            form.querySelector('input[name="extra_bed_rate"]').value = btn.dataset.extraBedRate || '';
+            form.querySelector('input[name="children_rate"]').value = btn.dataset.childrenRate || '';
+            form.querySelector('input[name="infant_rate"]').value = btn.dataset.infantRate || '';
+
+            form.style.display = 'block';
+            const toggle = document.getElementById(formId + '_toggle');
+            if (toggle) {
+                toggle.textContent = '▲';
+            }
+
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         // Collapsible Add Seasonal Form Toggle
