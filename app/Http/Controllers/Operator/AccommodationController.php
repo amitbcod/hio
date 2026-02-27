@@ -72,8 +72,9 @@ class AccommodationController extends Controller
         if ($redirect = $this->checkPreconditions()) return $redirect;
         
         $operator = auth()->user();
+        $accommodation = null;
         
-        return view('operator.accommodation.step1_basics', compact('operator'));
+        return view('operator.accommodation.step1_basics', compact('operator', 'accommodation'));
     }
     
     /**

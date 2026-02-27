@@ -240,11 +240,13 @@
                     </form>
 
                     <!-- Back Button -->
-                    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e0e0e0;">
-                        <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" style="color: #2196f3; text-decoration: none; font-size: 13px; font-weight: 500;">
-                            ← Back to Accommodation Overview
-                        </a>
-                    </div>
+                    @if($accommodation)
+                        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e0e0e0;">
+                            <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" style="color: #2196f3; text-decoration: none; font-size: 13px; font-weight: 500;">
+                                ← Back to Accommodation Overview
+                            </a>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

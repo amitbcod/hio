@@ -22,7 +22,7 @@
         @endphp
         @foreach($steps as $stepNum => $stepData)
             @php
-                $isComplete = $accommodation->{$stepData['field']} ?? false;
+                $isComplete = $accommodation ? ($accommodation->{$stepData['field']} ?? false) : false;
                 $isActive = ($currentStep === $stepNum);
                 // Generate correct route name
                 if ($stepNum == 1) {
@@ -31,10 +31,17 @@
                     $routeName = 'operator.accommodation.step' . $stepNum . '.show';
                 }
             @endphp
-            <a href="{{ route($routeName, $accommodation->id) }}" style="padding:10px 12px;background:{{ $isActive ? '#e3f2fd' : ($isComplete ? '#e8f5e9' : '#f5f5f5') }};border-left:4px solid {{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#ccc') }};border-radius:4px;text-decoration:none;font-size:13px;color:{{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#666') }};font-weight:{{ $isActive ? '600' : '500' }};display:flex;justify-content:space-between;align-items:center;">
-                <span>Step {{ $stepNum }}: {{ $stepData['name'] }}</span>
-                <span style="font-size:12px;">{{ $isComplete ? '✓' : $stepNum }}</span>
-            </a>
+            @if($accommodation)
+                <a href="{{ route($routeName, $accommodation->id) }}" style="padding:10px 12px;background:{{ $isActive ? '#e3f2fd' : ($isComplete ? '#e8f5e9' : '#f5f5f5') }};border-left:4px solid {{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#ccc') }};border-radius:4px;text-decoration:none;font-size:13px;color:{{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#666') }};font-weight:{{ $isActive ? '600' : '500' }};display:flex;justify-content:space-between;align-items:center;">
+                    <span>Step {{ $stepNum }}: {{ $stepData['name'] }}</span>
+                    <span style="font-size:12px;">{{ $isComplete ? '✓' : $stepNum }}</span>
+                </a>
+            @else
+                <div style="padding:10px 12px;background:#f5f5f5;border-left:4px solid #ccc;border-radius:4px;font-size:13px;color:#999;font-weight:500;display:flex;justify-content:space-between;align-items:center;">
+                    <span>Step {{ $stepNum }}: {{ $stepData['name'] }}</span>
+                    <span style="font-size:12px;">{{ $stepNum }}</span>
+                </div>
+            @endif
         @endforeach
     </div>
 </div>
