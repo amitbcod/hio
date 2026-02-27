@@ -9,7 +9,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('activities', function (Blueprint $table) {
-            $table->string('bank_detail')->nullable()->after('step4_legal_compliance');
+            $table->string('bank_detail')->nullable();
             $table->string('vat_number')->nullable()->after('bank_detail');
             $table->boolean('vat_exempted')->default(false)->after('vat_number');
             $table->string('agreement_name')->nullable()->after('vat_exempted');
