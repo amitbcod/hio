@@ -33,7 +33,7 @@ return new class extends Migration
         if (!Schema::hasColumn('accommodations', 'approved_by')) {
             $table->foreignId('approved_by')
                   ->nullable()
-                  ->constrained('admins')
+                  ->constrained('admin_users')
                   ->nullOnDelete();
         }
 
