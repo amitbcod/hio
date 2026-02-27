@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::table('activities', function (Blueprint $table) {
             if (!Schema::hasColumn('activities', 'step10_allotment')) {
-                $table->boolean('step10_allotment')->default(0)->after('step9_rates');
+                //$table->boolean('step10_allotment')->default(0)->after('step9_rates');
+                $table->boolean('step10_allotment')->default(false);
             }
         });
     }
