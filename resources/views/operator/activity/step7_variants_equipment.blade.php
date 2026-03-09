@@ -65,6 +65,9 @@
                             <p style="margin:4px 0;font-size:12px;color:#666;">
                                 <strong>Capacity:</strong> {{ $v->max_pax }} pax (Min: {{ $v->min_participants }}, Max: {{ $v->max_participants }})
                             </p>
+                            <p style="margin:4px 0;font-size:12px;color:#19b5b5;font-weight:600;">
+                                <strong>Allotment:</strong> {{ $v->allotment ?? 0 }} seats/equipment
+                            </p>
                             @if($v->amenities && count($v->amenities) > 0)
                             <p style="margin:4px 0;font-size:12px;color:#666;">
                                 <strong>Amenities:</strong> {{ implode(', ', $v->amenities) }}
@@ -228,6 +231,22 @@
                         </div>
 
                         <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label style="font-weight:600;">Allotment (Sellable Seats/Equipment) <span class="text-danger">*</span></label>
+                                <input type="number" 
+                                       name="allotment" 
+                                       class="form-control @error('allotment') is-invalid @enderror" 
+                                       value="{{ old('allotment', $variant->allotment ?? '') }}" 
+                                       min="0" 
+                                       required>
+                                <small style="color:#666;display:block;margin-top:4px;">Number of sellable seats/equipment - used in Step 10 for allotment management</small>
+                                @error('allotment')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
                             <div class="col-md-6">
                                 <label style="font-weight:600;">Amenities</label>
                                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -358,6 +377,19 @@
                                        class="form-control" 
                                        placeholder="e.g., 3"
                                        required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label style="font-weight:600;">Allotment (Sellable Seats/Equipment) <span class="text-danger">*</span></label>
+                                <input type="number" 
+                                       name="allotment" 
+                                       class="form-control" 
+                                       placeholder="e.g., 10"
+                                       min="0" 
+                                       required>
+                                <small style="color:#666;display:block;margin-top:4px;">Number of sellable seats/equipment - used in Step 10 for allotment management</small>
                             </div>
                         </div>
 

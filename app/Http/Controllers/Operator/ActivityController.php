@@ -870,6 +870,7 @@ class ActivityController extends Controller
                 'max_pax' => 'required|integer|min:1',
                 'min_participants' => 'required|integer|min:1',
                 'max_participants' => 'required|integer|min:1',
+                'allotment' => 'required|integer|min:0',
                 'amenities' => 'nullable|array',
                 'safety_equipment' => 'nullable|array',
                 'private_exclusive' => 'required|in:Yes,No',
@@ -886,6 +887,7 @@ class ActivityController extends Controller
             $variant->max_pax = $request->input('max_pax');
             $variant->min_participants = $request->input('min_participants');
             $variant->max_participants = $request->input('max_participants');
+            $variant->allotment = $request->input('allotment');
             $variant->amenities = $request->input('amenities', []);
             $variant->safety_equipment = $request->input('safety_equipment', []);
             $variant->private_exclusive = $request->input('private_exclusive');
@@ -976,6 +978,7 @@ class ActivityController extends Controller
                 'max_pax' => 'required|integer|min:1',
                 'min_participants' => 'required|integer|min:1',
                 'max_participants' => 'required|integer|min:1',
+                'allotment' => 'required|integer|min:0',
                 'amenities' => 'nullable|array',
                 'safety_equipment' => 'nullable|array',
                 'private_exclusive' => 'required|in:Yes,No',
@@ -988,6 +991,7 @@ class ActivityController extends Controller
             $variant->max_pax = $request->input('max_pax');
             $variant->min_participants = $request->input('min_participants');
             $variant->max_participants = $request->input('max_participants');
+            $variant->allotment = $request->input('allotment');
             $variant->amenities = $request->input('amenities', []);
             $variant->safety_equipment = $request->input('safety_equipment', []);
             $variant->private_exclusive = $request->input('private_exclusive');

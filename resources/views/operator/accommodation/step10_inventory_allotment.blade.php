@@ -47,10 +47,14 @@
                             <div class="row mb-3">
                                 <div class="col-md-12">
                                     <label style="font-weight:600;">Room/Unit *</label>
-                                    <select name="room_id" class="form-control" required>
+                                    <select name="room_id" id="room_id_select" class="form-control" required>
                                         <option value="">-- Select a Room --</option>
                                         @foreach($rooms as $room)
-                                            <option value="{{ $room->id }}">{{ $room->room_name }} ({{ $room->room_type }})</option>
+                                            <option value="{{ $room->id }}" 
+                                                data-allotment="{{ $room->allotment ?? 0 }}" 
+                                                data-capacity="{{ $room->max_capacity ?? 0 }}">
+                                                {{ $room->room_name }} ({{ $room->room_type }}) - Allotment: {{ $room->allotment ?? 0 }}
+                                            </option>
                                         @endforeach
                                     </select>
                                     <small style="color:#666;display:block;margin-top:4px;">Select a specific room for this allotment</small>
@@ -62,13 +66,13 @@
                                 <h6 style="margin-top:0;font-weight:600;margin-bottom:12px;">Inventory Numbers</h6>
                                 <div class="row mb-3">
                                     <div class="col-md-4">
-                                        <label style="font-weight:600;">Sellable Units *</label>
-                                        <input type="number" name="sellable_units" class="form-control" min="0" required value="0">
-                                        <small style="color:#666;">Total number of rooms/units available</small>
+                                        <label style="font-weight:600;">Sellable Units (Allotment) *</label>
+                                        <input type="number" name="sellable_units" id="sellable_units_input" class="form-control" min="0" required value="0">
+                                        <small style="color:#666;">From room setup - editable here</small>
                                     </div>
                                     <div class="col-md-4">
                                         <label style="font-weight:600;">Sold/Confirmed Bookings *</label>
-                                        <input type="number" name="sold_units" class="form-control" min="0" required value="0">
+                                        <input type="number" name="sold_units" id="sold_units_input" class="form-control" min="0" required value="0">
                                         <small style="color:#666;">Number of rooms already sold</small>
                                     </div>
                                     <div class="col-md-4">
@@ -476,6 +480,19 @@
                 calendar.render();
             }
         }
+
+        // Auto-populate sellable units from room allotment when room is selected
+        document.getElementById('room_id_select').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const allotment = selectedOption.getAttribute('data-allotment');
+            const capacity = selectedOption.getAttribute('data-capacity');
+            
+            if (allotment) {
+                document.getElementById('sellable_units_input').value = allotment;
+                // Recalculate available units
+                calculateAvailable();
+            }
+        });
 
         // Auto-calculate available units
         document.querySelector('input[name="sellable_units"]').addEventListener('change', calculateAvailable);

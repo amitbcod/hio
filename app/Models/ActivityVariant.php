@@ -23,6 +23,7 @@ class ActivityVariant extends Model
         'max_pax',
         'min_participants',
         'max_participants',
+        'allotment',
         'private_exclusive',
         'equipment_image',
     ];

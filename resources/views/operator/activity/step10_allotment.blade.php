@@ -166,7 +166,9 @@
                                 <select name="variant_id" id="variantId" class="form-control" required style="font-size:13px;">
                                     <option value="">Select Variant</option>
                                     @foreach($variants as $variant)
-                                        <option value="{{ $variant->variant_id }}">{{ $variant->variant_name }}</option>
+                                        <option value="{{ $variant->variant_id }}" data-allotment="{{ $variant->allotment ?? 0 }}">
+                                            {{ $variant->variant_name }} - Allotment: {{ $variant->allotment ?? 0 }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -208,6 +210,7 @@
                             <div class="col-md-4 mb-3">
                                 <label style="font-weight:600;font-size:13px;">Allotment *</label>
                                 <input type="number" name="allotment" id="allotmentValue" class="form-control" min="0" required style="font-size:13px;">
+                                <small style="color:#666;font-size:12px;">From variant setup - editable here</small>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label style="font-weight:600;font-size:13px;">Calendar *</label>
@@ -376,6 +379,16 @@
             document.getElementById('allotmentStrategy').addEventListener('change', toggleSlotTimes);
             document.getElementById('calendarEnabled').addEventListener('change', toggleCalendarRange);
 
+            // Auto-populate allotment from variant selection
+            document.getElementById('variantId').addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const allotment = selectedOption.getAttribute('data-allotment');
+                
+                if (allotment) {
+                    document.getElementById('allotmentValue').value = allotment;
+                }
+            });
+
             @if(old('allotment_strategy') || old('participant_equipment_id'))
                 openAllotmentForm();
             @elseif(old('start_date') || old('end_date'))
@@ -418,11 +431,18 @@
                 document.getElementById('variantId').value = data.variantId;
                 document.getElementById('participantEquipmentId').value = data.participantEquipmentId;
                 document.getElementById('allotmentStrategy').value = data.allotmentStrategy;
-                document.getElementById('allotmentValue').value = data.allotment;
                 document.getElementById('calendarEnabled').value = data.calendarEnabled || 'No';
                 document.getElementById('calendarStart').value = data.calendarStart || '';
                 document.getElementById('calendarEnd').value = data.calendarEnd || '';
                 document.getElementById('seasonValue').value = data.season || '';
+
+                // Get variant's current allotment from the dropdown option
+                const variantSelect = document.getElementById('variantId');
+                const selectedOption = variantSelect.options[variantSelect.selectedIndex];
+                const variantAllotment = selectedOption.getAttribute('data-allotment');
+                
+                // Use variant's current allotment, not the old allotment record value
+                document.getElementById('allotmentValue').value = variantAllotment || data.allotment;
 
                 const slotTimes = data.slotTimes ? JSON.parse(data.slotTimes).map(String) : [];
                 const slotSelect = document.getElementById('slotTimes');
