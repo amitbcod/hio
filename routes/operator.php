@@ -110,6 +110,7 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::post('accommodation/{id}/step10-inventory-allotment/{inventoryId}/delete', [AccommodationController::class, 'deleteInventoryAllotment'])->name('accommodation.step10.delete');
         Route::get('accommodation/{id}/step10-inventory-allotment/{inventoryId}/get', [AccommodationController::class, 'getInventoryAllotment'])->name('accommodation.step10.get');
         Route::get('accommodation/{id}/step10-inventory-allotment/{inventoryId}/show', [AccommodationController::class, 'showInventoryAllotment'])->name('accommodation.step10.show_detail');
+        Route::get('accommodation/{id}/booking-report', [AccommodationController::class, 'bookingReport'])->name('accommodation.booking-report');
 
         // Step 11: Promotions & Offers
         Route::get('accommodation/{id}/step11-promotions', [AccommodationController::class, 'step11Promotions'])->name('accommodation.step11.show');

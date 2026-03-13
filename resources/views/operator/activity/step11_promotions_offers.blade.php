@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+    <!-- Quill WYSIWYG Editor -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+
     <div class="container mt-5">
         <div class="row">
             <!-- Sidebar -->
@@ -143,26 +147,30 @@
                         <!-- Campaign Description -->
                         <div class="mb-3">
                             <label style="font-weight:600;font-size:13px;">Campaign Description <span style="color:#666;font-weight:normal;font-size:12px;">(max 250 chars)</span></label>
-                            <textarea name="campaign_description" id="campaignDescription" class="form-control" maxlength="250" style="font-size:13px;height:60px;" placeholder="Brief description of the campaign..."></textarea>
+                            <textarea name="campaign_description" id="campaignDescription" maxlength="250" style="display:none;"></textarea>
+                            <div id="campaignDescriptionEditor" style="height:120px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                             <small style="color:#666;">Character count: <span id="descCharCount">0</span>/250</small>
                         </div>
 
                         <!-- Specifications -->
                         <div class="mb-3">
                             <label style="font-weight:600;font-size:13px;">Specifications / Itinerary *</label>
-                            <textarea name="specifications" id="specifications" class="form-control" required style="font-size:13px;height:100px;" placeholder="Describe what's included, package details, special features..."></textarea>
+                            <textarea name="specifications" id="specifications" required style="display:none;"></textarea>
+                            <div id="specificationsEditor" style="height:170px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                         </div>
 
                         <!-- Inclusions -->
                         <div class="mb-3">
                             <label style="font-weight:600;font-size:13px;">Inclusions <span style="color:#666;font-weight:normal;font-size:12px;">(What's included)</span></label>
-                            <textarea name="inclusions" class="form-control" style="font-size:13px;height:60px;" placeholder="E.g., - Equipment rental&#10;- Professional guide&#10;- Lunch&#10;- Photos"></textarea>
+                            <textarea name="inclusions" id="inclusions" style="display:none;"></textarea>
+                            <div id="inclusionsEditor" style="height:120px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                         </div>
 
                         <!-- Exclusions -->
                         <div class="mb-3">
                             <label style="font-weight:600;font-size:13px;">Exclusions <span style="color:#666;font-weight:normal;font-size:12px;">(What's NOT included)</span></label>
-                            <textarea name="exclusions" class="form-control" style="font-size:13px;height:60px;" placeholder="E.g., - Hotel pickup&#10;- Travel insurance&#10;- Alcoholic beverages"></textarea>
+                            <textarea name="exclusions" id="exclusions" style="display:none;"></textarea>
+                            <div id="exclusionsEditor" style="height:120px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                         </div>
 
                         <div class="row mb-3">
@@ -237,7 +245,121 @@
     </div>
 
     <script>
+        const promotionEditors = {};
+
+        function getEditorTextLength(editor) {
+            if (!editor) {
+                return 0;
+            }
+            return editor.getText().replace(/\n$/, '').length;
+        }
+
+        function syncEditorToTextarea(textareaId) {
+            const textarea = document.getElementById(textareaId);
+            const editor = promotionEditors[textareaId];
+            if (textarea && editor) {
+                textarea.value = editor.root.innerHTML;
+            }
+        }
+
+        function setEditorContent(textareaId, value) {
+            const textarea = document.getElementById(textareaId);
+            const editor = promotionEditors[textareaId];
+            const content = value || '';
+
+            if (textarea) {
+                textarea.value = content;
+            }
+            if (editor) {
+                editor.root.innerHTML = content;
+            }
+        }
+
+        function clearAllEditors() {
+            setEditorContent('campaignDescription', '');
+            setEditorContent('specifications', '');
+            setEditorContent('inclusions', '');
+            setEditorContent('exclusions', '');
+            document.getElementById('descCharCount').textContent = '0';
+        }
+
+        function updateCampaignDescriptionCount() {
+            const countElement = document.getElementById('descCharCount');
+            const editor = promotionEditors.campaignDescription;
+            if (!countElement || !editor) {
+                return;
+            }
+            countElement.textContent = String(getEditorTextLength(editor));
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            const editorConfigs = [
+                {
+                    textareaId: 'campaignDescription',
+                    editorId: 'campaignDescriptionEditor',
+                    placeholder: 'Brief description of the campaign...',
+                    maxLength: 250
+                },
+                {
+                    textareaId: 'specifications',
+                    editorId: 'specificationsEditor',
+                    placeholder: "Describe what's included, package details, special features..."
+                },
+                {
+                    textareaId: 'inclusions',
+                    editorId: 'inclusionsEditor',
+                    placeholder: 'E.g., - Equipment rental\n- Professional guide\n- Lunch\n- Photos'
+                },
+                {
+                    textareaId: 'exclusions',
+                    editorId: 'exclusionsEditor',
+                    placeholder: 'E.g., - Hotel pickup\n- Travel insurance\n- Alcoholic beverages'
+                }
+            ];
+
+            editorConfigs.forEach(function(config) {
+                const textarea = document.getElementById(config.textareaId);
+                const editorDiv = document.getElementById(config.editorId);
+
+                if (!textarea || !editorDiv) {
+                    return;
+                }
+
+                const editor = new Quill('#' + config.editorId, {
+                    theme: 'snow',
+                    placeholder: config.placeholder,
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            ['link'],
+                            ['clean']
+                        ]
+                    }
+                });
+
+                if (textarea.value) {
+                    editor.root.innerHTML = textarea.value;
+                }
+
+                editor.on('text-change', function() {
+                    if (config.maxLength) {
+                        const textLength = getEditorTextLength(editor);
+                        if (textLength > config.maxLength) {
+                            editor.deleteText(config.maxLength, editor.getLength());
+                        }
+                    }
+
+                    syncEditorToTextarea(config.textareaId);
+
+                    if (config.textareaId === 'campaignDescription') {
+                        updateCampaignDescriptionCount();
+                    }
+                });
+
+                promotionEditors[config.textareaId] = editor;
+            });
+
             document.querySelectorAll('.promotion-edit').forEach(button => {
                 button.addEventListener('click', function() {
                     openPromotionForm(this.dataset);
@@ -248,9 +370,17 @@
                 document.getElementById('discountUnit').textContent = this.value === 'Percentage' ? '%' : '$';
             });
 
-            document.getElementById('campaignDescription').addEventListener('input', function() {
-                document.getElementById('descCharCount').textContent = this.value.length;
-            });
+            const form = document.getElementById('promotionForm');
+            if (form) {
+                form.addEventListener('submit', function() {
+                    syncEditorToTextarea('campaignDescription');
+                    syncEditorToTextarea('specifications');
+                    syncEditorToTextarea('inclusions');
+                    syncEditorToTextarea('exclusions');
+                });
+            }
+
+            updateCampaignDescriptionCount();
 
             @if(old('campaign_name') || old('discount_type'))
                 openPromotionForm();
@@ -260,6 +390,7 @@
         function openPromotionForm(data = null) {
             const form = document.getElementById('promotionForm');
             form.reset();
+            clearAllEditors();
 
             const isEdit = data && data.promotionId;
             document.getElementById('promotionFormMethod').value = isEdit ? 'PUT' : 'POST';
@@ -276,8 +407,11 @@
                 });
 
                 document.getElementById('campaignName').value = data.campaignName || '';
-                document.getElementById('campaignDescription').value = data.campaignDescription || '';
-                document.getElementById('specifications').value = data.specifications || '';
+                setEditorContent('campaignDescription', data.campaignDescription || '');
+                setEditorContent('specifications', data.specifications || '');
+                setEditorContent('inclusions', data.inclusions || '');
+                setEditorContent('exclusions', data.exclusions || '');
+
                 document.getElementById('discountType').value = data.discountType || '';
                 document.getElementById('discountUnit').textContent = data.discountType === 'Percentage' ? '%' : '$';
                 document.getElementById('discountValue').value = data.discountValue || '';
@@ -286,13 +420,7 @@
                 document.getElementById('nonRefundable').value = data.nonRefundable || '';
                 document.getElementById('approvalStatus').value = data.approvalStatus || '';
 
-                // Set inclusions and exclusions if they exist
-                const inclusionsField = form.querySelector('textarea[name="inclusions"]');
-                const exclusionsField = form.querySelector('textarea[name="exclusions"]');
-                if (data.inclusions) inclusionsField.value = data.inclusions;
-                if (data.exclusions) exclusionsField.value = data.exclusions;
-
-                document.getElementById('descCharCount').textContent = (data.campaignDescription || '').length;
+                updateCampaignDescriptionCount();
             }
 
             document.getElementById('promotionFormContainer').style.display = 'block';
@@ -302,8 +430,8 @@
         function closePromotionForm() {
             document.getElementById('promotionFormContainer').style.display = 'none';
             document.getElementById('promotionForm').reset();
+            clearAllEditors();
             document.getElementById('discountUnit').textContent = '%';
-            document.getElementById('descCharCount').textContent = '0';
         }
     </script>
 

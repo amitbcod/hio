@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+    <!-- Quill WYSIWYG Editor -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+    
     <div class="container mt-5">
         @php $currentStep = 11; @endphp
         <div class="row">
@@ -95,8 +99,9 @@
                                 <div class="row mb-3">
                                     <div class="col-md-12">
                                         <label style="font-weight:600;">Campaign Description</label>
-                                        <textarea name="campaign_description" class="form-control" rows="3" max-length="250" placeholder="Detailed offer description (max 250 characters)"></textarea>
-                                        <small style="color:#666;">Optional; Max 250 characters</small>
+                                        <textarea name="campaign_description" id="campaign_description" style="display:none;"></textarea>
+                                        <div id="campaign_description_editor" style="height:150px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                                        <small style="color:#666;display:block;margin-top:4px;">Optional; Detailed offer description with formatting</small>
                                     </div>
                                 </div>
                             </div>
@@ -291,6 +296,45 @@
     </div>
 
     <script>
+        // Initialize Quill editor for Campaign Description
+        let campaignDescEditor;
+        document.addEventListener('DOMContentLoaded', function() {
+            campaignDescEditor = new Quill('#campaign_description_editor', {
+                theme: 'snow',
+                placeholder: 'Enter detailed campaign description with formatting...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{'header': [1, 2, 3, false]}],
+                        [{'list': 'ordered'}, {'list': 'bullet'}],
+                        ['link'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            // Set initial content from textarea
+            var campaignTextarea = document.getElementById('campaign_description');
+            if(campaignTextarea.value){
+                campaignDescEditor.root.innerHTML = campaignTextarea.value;
+            }
+
+            // Sync editor with hidden textarea
+            function syncCampaignDesc(){
+                campaignTextarea.value = campaignDescEditor.root.innerHTML;
+            }
+
+            campaignDescEditor.on('text-change', syncCampaignDesc);
+
+            // Sync on form submit
+            var form = document.getElementById('promotionForm');
+            if(form){
+                form.addEventListener('submit', function(){
+                    syncCampaignDesc();
+                });
+            }
+        });
+
         // Use business-level plans (room_id = null) for the Assign Plans modal,
         // so operators assign from global plans (these will be copied to the room).
         const allPlans = @json($businessPlansForAssign ?? []);
@@ -426,6 +470,12 @@
                 section.style.display = 'none';
                 btn.textContent = '+ Add New Promotion';
                 document.getElementById('promotionForm').reset();
+                document.getElementById('promotion_id').value = '';
+                // Clear Quill editor
+                if(campaignDescEditor) {
+                    campaignDescEditor.setText('');
+                }
+                document.querySelector('#promotionForm button[type="submit"]').textContent = 'Save Promotion';
             }
         }
 
@@ -465,7 +515,11 @@
                     filterRatePlans(data.data.room_id);
                     document.querySelector('select[name="rate_plan_id"]').value = data.data.rate_plan_id;
                     document.querySelector('input[name="campaign_name"]').value = data.data.campaign_name || '';
-                    document.querySelector('textarea[name="campaign_description"]').value = data.data.campaign_description || '';
+                    
+                    // Set campaign description in Quill editor
+                    if(campaignDescEditor && data.data.campaign_description){
+                        campaignDescEditor.root.innerHTML = data.data.campaign_description;
+                    }
                     document.querySelector('select[name="promotion_type"]').value = data.data.promotion_type || '';
                     document.querySelector('select[name="discount_type"]').value = data.data.discount_type || '';
                     document.querySelector('input[name="discount_value"]').value = data.data.discount_value || '';
@@ -565,6 +619,26 @@
                 }
             @endif
         });
+
+        // Reset form function to also clear Quill editor
+        function toggleAddPromotion() {
+            const addSection = document.getElementById('addPromotionSection');
+            const toggleBtn = document.getElementById('toggleAddPromotion');
+            
+            if (addSection.style.display === 'none' || !addSection.style.display) {
+                addSection.style.display = 'block';
+                toggleBtn.textContent = '- Hide Form';
+            } else {
+                addSection.style.display = 'none';
+                toggleBtn.textContent = '+ Add New Promotion';
+                document.getElementById('promotionForm').reset();
+                document.getElementById('promotion_id').value = '';
+                if(campaignDescEditor) {
+                    campaignDescEditor.setText('');
+                }
+                document.querySelector('#promotionForm button[type="submit"]').textContent = 'Save Promotion';
+            }
+        }
     </script>
     
     <!-- Back Button -->

@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+    <!-- Quill WYSIWYG Editor -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+    
     <div class="container mt-5">
         @php $currentStep = 7; @endphp
         <div class="row">
@@ -11,7 +15,7 @@
                 <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);margin-bottom:16px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <h2 style="font-weight:700;margin:0;">Step 7: Rooms & Units</h2>
-                        <a href="#addRoom" class="btn" id="addRoomBtn" style="background:#19b5b5;color:#fff;padding:8px 12px;border-radius:4px;text-decoration:none;">Add Rooms</a>
+                        <a href="{{ route('operator.accommodation.step7.show', $accommodation->id) }}#addRoom" class="btn" id="addRoomBtn" style="background:#19b5b5;color:#fff;padding:8px 12px;border-radius:4px;text-decoration:none;">Add Rooms</a>
                     </div>
                 </div>
 
@@ -94,14 +98,17 @@
                         <div class="row">
                             <div class="col-md-12 mb-3">
                                 <label style="font-weight:600;">Short Description *</label>
-                                <input type="text" name="short_description" class="form-control" maxlength="250" required value="{{ old('short_description', $room->short_description ?? '') }}">
+                                <textarea name="short_description" id="short_description" style="display:none;" required>{{ old('short_description', $room->short_description ?? '') }}</textarea>
+                                <div id="short_description_editor" style="height:100px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                                <small style="color:#666;display:block;margin-top:4px;">Character limit: <span id="short_char_count">0</span> / 250</small>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-12 mb-3">
                                 <label style="font-weight:600;">Full Description</label>
-                                <textarea name="full_description" class="form-control" rows="4">{{ old('full_description', $room->room_description ?? '') }}</textarea>
+                                <textarea name="full_description" id="full_description" style="display:none;">{{ old('full_description', $room->room_description ?? '') }}</textarea>
+                                <div id="full_description_editor" style="height:150px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                             </div>
                         </div>
 
@@ -181,11 +188,89 @@
                     </div>
                 <script>
                     (function(){
+                        // Initialize Quill editors
+                        var shortDescEditor = new Quill('#short_description_editor', {
+                            theme: 'snow',
+                            placeholder: 'Enter a brief description (max 250 characters)...',
+                            modules: {
+                                toolbar: [
+                                    ['bold', 'italic', 'underline'],
+                                    [{'list': 'ordered'}, {'list': 'bullet'}],
+                                    ['clean']
+                                ]
+                            }
+                        });
+
+                        var fullDescEditor = new Quill('#full_description_editor', {
+                            theme: 'snow',
+                            placeholder: 'Enter detailed description...',
+                            modules: {
+                                toolbar: [
+                                    ['bold', 'italic', 'underline', 'strike'],
+                                    [{'header': [1, 2, 3, false]}],
+                                    [{'list': 'ordered'}, {'list': 'bullet'}],
+                                    ['link'],
+                                    ['clean']
+                                ]
+                            }
+                        });
+
+                        // Set initial content from textarea
+                        var shortTextarea = document.getElementById('short_description');
+                        var fullTextarea = document.getElementById('full_description');
+                        
+                        if(shortTextarea.value){
+                            shortDescEditor.root.innerHTML = shortTextarea.value;
+                        }
+                        if(fullTextarea.value){
+                            fullDescEditor.root.innerHTML = fullTextarea.value;
+                        }
+
+                        // Sync editors with hidden textarea
+                        function syncShortDesc(){
+                            var html = shortDescEditor.root.innerHTML;
+                            shortTextarea.value = html;
+                            
+                            // Update character count
+                            var text = shortDescEditor.getText().trim();
+                            var charCount = text.length;
+                            document.getElementById('short_char_count').textContent = charCount;
+                            
+                            // Show warning if exceeds limit
+                            var charCountEl = document.getElementById('short_char_count');
+                            if(charCount > 250){
+                                charCountEl.style.color = '#ff0000';
+                                charCountEl.style.fontWeight = 'bold';
+                            } else {
+                                charCountEl.style.color = '#666';
+                                charCountEl.style.fontWeight = 'normal';
+                            }
+                        }
+
+                        function syncFullDesc(){
+                            fullTextarea.value = fullDescEditor.root.innerHTML;
+                        }
+
+                        shortDescEditor.on('text-change', syncShortDesc);
+                        fullDescEditor.on('text-change', syncFullDesc);
+
+                        // Sync on form submit
+                        var form = document.querySelector('form');
+                        if(form){
+                            form.addEventListener('submit', function(){
+                                syncShortDesc();
+                                syncFullDesc();
+                            });
+                        }
+
+                        // Initialize character count
+                        syncShortDesc();
+
                         var addBtn = document.getElementById('addRoomBtn');
                         var formSection = document.getElementById('roomFormSection');
                         var firstInput = formSection ? formSection.querySelector('input[name="room_name"]') : null;
 
-                        if(addBtn && formSection){
+                        if(addBtn && formSection && !{{ isset($room) ? 'true' : 'false' }}){
                             addBtn.addEventListener('click', function(e){
                                 e.preventDefault();
                                 // toggle visibility: show and focus
@@ -196,6 +281,14 @@
                                 // scroll into view
                                 formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                             });
+                        }
+
+                        // If hash is #addRoom and form is hidden, show it
+                        if(window.location.hash === '#addRoom' && formSection && formSection.style.display === 'none'){
+                            formSection.style.display = '';
+                            setTimeout(function(){
+                                formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }, 200);
                         }
 
                         // Auto-populate allotment from capacity

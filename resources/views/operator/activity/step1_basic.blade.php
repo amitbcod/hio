@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+    <!-- Quill WYSIWYG Editor -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+
     <div class="container mt-5">
         @php $currentStep = 1; @endphp
         <div class="row">
@@ -153,7 +157,8 @@
                             <div class="row mb-3">
                                 <div class="col-md-12">
                                     <label style="font-weight:600;">Meeting Point Details * (min 10 chars)</label>
-                                    <textarea name="meeting_point_details" id="meeting_point_details" class="form-control" rows="3" required>{{ old('meeting_point_details', $activity->meeting_point_details) }}</textarea>
+                                    <textarea name="meeting_point_details" id="meeting_point_details" style="display:none;" required>{{ old('meeting_point_details', $activity->meeting_point_details) }}</textarea>
+                                    <div id="meeting_point_details_editor" style="height:140px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                                     <div id="error_meeting_point_details" style="display:none;color:#c62828;font-size:12px;margin-top:4px;padding:6px;background:#ffebee;border-radius:4px;"></div>
                                 </div>
                             </div>
@@ -166,24 +171,27 @@
                             <div class="row mb-3">
                                 <div class="col-md-12">
                                     <label style="font-weight:600;">Overview * (min 20 chars)</label>
-                                    <textarea name="overview" id="overview" class="form-control" rows="4" required>{{ old('overview', $activity->overview) }}</textarea>
+                                    <textarea name="overview" id="overview" style="display:none;" required>{{ old('overview', $activity->overview) }}</textarea>
+                                    <div id="overview_editor" style="height:170px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                                     <div id="error_overview" style="display:none;color:#c62828;font-size:12px;margin-top:4px;padding:6px;background:#ffebee;border-radius:4px;"></div>
                                 </div>
                             </div>
 
                             <div class="row mb-3">
-                                <div class="col-md-12"> (min 20 chars)</label>
-                                    <textarea name="whats_included" id="whats_included" class="form-control" rows="4" required>{{ old('whats_included', $activity->whats_included) }}</textarea>
-                                    <div id="error_whats_included" style="display:none;color:#c62828;font-size:12px;margin-top:4px;padding:6px;background:#ffebee;border-radius:4px;"></div
-                                    <textarea name="whats_included" class="form-control" rows="4" required>{{ old('whats_included', $activity->whats_included) }}</textarea>
+                                <div class="col-md-12">
+                                    <label style="font-weight:600;">What are included in the activity? * (min 20 chars)</label>
+                                    <textarea name="whats_included" id="whats_included" style="display:none;" required>{{ old('whats_included', $activity->whats_included) }}</textarea>
+                                    <div id="whats_included_editor" style="height:170px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                                    <div id="error_whats_included" style="display:none;color:#c62828;font-size:12px;margin-top:4px;padding:6px;background:#ffebee;border-radius:4px;"></div>
                                 </div>
                             </div>
 
                             <div class="row mb-3">
-                                <div class="col-md-12"> (min 20 chars)</label>
-                                    <textarea name="itinerary" id="itinerary" class="form-control" rows="4" required>{{ old('itinerary', $activity->itinerary) }}</textarea>
-                                    <div id="error_itinerary" style="display:none;color:#c62828;font-size:12px;margin-top:4px;padding:6px;background:#ffebee;border-radius:4px;"></div
-                                    <textarea name="itinerary" class="form-control" rows="4" required>{{ old('itinerary', $activity->itinerary) }}</textarea>
+                                <div class="col-md-12">
+                                    <label style="font-weight:600;">Itinerary * (min 20 chars)</label>
+                                    <textarea name="itinerary" id="itinerary" style="display:none;" required>{{ old('itinerary', $activity->itinerary) }}</textarea>
+                                    <div id="itinerary_editor" style="height:170px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                                    <div id="error_itinerary" style="display:none;color:#c62828;font-size:12px;margin-top:4px;padding:6px;background:#ffebee;border-radius:4px;"></div>
                                 </div>
                             </div>
 
@@ -264,7 +272,6 @@
         </div>
 
     <script>
-        // Client-side validation for minimum character requirements
         document.addEventListener('DOMContentLoaded', function() {
             const validationRules = {
                 'meeting_point_details': { min: 10, label: 'Meeting point details' },
@@ -273,38 +280,100 @@
                 'itinerary': { min: 20, label: 'Itinerary' }
             };
 
-            // Add blur event listeners to each field
-            Object.keys(validationRules).forEach(fieldName => {
+            const fieldConfigs = {
+                'meeting_point_details': { placeholder: 'Enter meeting point details...' },
+                'overview': { placeholder: 'Enter activity overview...' },
+                'whats_included': { placeholder: 'Enter what is included in the activity...' },
+                'itinerary': { placeholder: 'Enter itinerary details...' }
+            };
+
+            const editors = {};
+
+            function getFieldTextLength(fieldName) {
+                if (editors[fieldName]) {
+                    return editors[fieldName].getText().trim().length;
+                }
                 const field = document.getElementById(fieldName);
+                return field ? field.value.trim().length : 0;
+            }
+
+            function syncEditorToTextarea(fieldName) {
+                const field = document.getElementById(fieldName);
+                if (field && editors[fieldName]) {
+                    field.value = editors[fieldName].root.innerHTML;
+                }
+            }
+
+            function validateField(fieldName) {
                 const errorDiv = document.getElementById('error_' + fieldName);
                 const rule = validationRules[fieldName];
+                const length = getFieldTextLength(fieldName);
+                const editorContainer = editors[fieldName] ? editors[fieldName].container : null;
 
-                if (field && errorDiv) {
-                    field.addEventListener('blur', function() {
-                        const value = this.value.trim();
-                        const length = value.length;
-
-                        if (length > 0 && length < rule.min) {
-                            errorDiv.textContent = '❌ The ' + rule.label + ' field must be at least ' + rule.min + ' characters. (Current: ' + length + ' chars)';
-                            errorDiv.style.display = 'block';
-                            field.style.borderColor = '#ef5350';
-                        } else {
-                            errorDiv.style.display = 'none';
-                            field.style.borderColor = '';
-                        }
-                    });
-
-                    // Also validate on input to clear error when fixed
-                    field.addEventListener('input', function() {
-                        const value = this.value.trim();
-                        const length = value.length;
-
-                        if (length >= rule.min || length === 0) {
-                            errorDiv.style.display = 'none';
-                            field.style.borderColor = '';
-                        }
-                    });
+                if (!errorDiv || !rule) {
+                    return true;
                 }
+
+                if (length > 0 && length < rule.min) {
+                    errorDiv.textContent = '❌ The ' + rule.label + ' field must be at least ' + rule.min + ' characters. (Current: ' + length + ' chars)';
+                    errorDiv.style.display = 'block';
+                    if (editorContainer) {
+                        editorContainer.style.borderColor = '#ef5350';
+                    }
+                    return false;
+                }
+
+                errorDiv.style.display = 'none';
+                if (editorContainer) {
+                    editorContainer.style.borderColor = '';
+                }
+                return true;
+            }
+
+            Object.keys(fieldConfigs).forEach(fieldName => {
+                const editorElement = document.getElementById(fieldName + '_editor');
+                const textarea = document.getElementById(fieldName);
+
+                if (!editorElement || !textarea) {
+                    return;
+                }
+
+                editors[fieldName] = new Quill('#' + fieldName + '_editor', {
+                    theme: 'snow',
+                    placeholder: fieldConfigs[fieldName].placeholder,
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            ['link'],
+                            ['clean']
+                        ]
+                    }
+                });
+
+                if (textarea.value) {
+                    editors[fieldName].root.innerHTML = textarea.value;
+                }
+
+                editors[fieldName].on('text-change', function() {
+                    syncEditorToTextarea(fieldName);
+                    const length = getFieldTextLength(fieldName);
+                    const rule = validationRules[fieldName];
+                    if (rule && (length >= rule.min || length === 0)) {
+                        const errorDiv = document.getElementById('error_' + fieldName);
+                        if (errorDiv) {
+                            errorDiv.style.display = 'none';
+                        }
+                        editors[fieldName].container.style.borderColor = '';
+                    }
+                });
+
+                editors[fieldName].on('selection-change', function(range, oldRange) {
+                    if (!range && oldRange) {
+                        syncEditorToTextarea(fieldName);
+                        validateField(fieldName);
+                    }
+                });
             });
 
             // Validate on form submit
@@ -314,20 +383,10 @@
                     let hasError = false;
 
                     Object.keys(validationRules).forEach(fieldName => {
-                        const field = document.getElementById(fieldName);
-                        const errorDiv = document.getElementById('error_' + fieldName);
-                        const rule = validationRules[fieldName];
-
-                        if (field && errorDiv) {
-                            const value = field.value.trim();
-                            const length = value.length;
-
-                            if (length > 0 && length < rule.min) {
-                                errorDiv.textContent = '❌ The ' + rule.label + ' field must be at least ' + rule.min + ' characters. (Current: ' + length + ' chars)';
-                                errorDiv.style.display = 'block';
-                                field.style.borderColor = '#ef5350';
-                                hasError = true;
-                            }
+                        syncEditorToTextarea(fieldName);
+                        const isValid = validateField(fieldName);
+                        if (!isValid) {
+                            hasError = true;
                         }
                     });
 

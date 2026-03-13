@@ -274,6 +274,7 @@
                 {{-- Navigation --}}
                 <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:16px;">
                     <a href="{{ route('operator.accommodation.step9.show', $accommodation->id) }}" class="btn" style="background:#f0f0f0;color:#333;padding:8px 12px;border-radius:4px;">← Back to Step 9</a>
+                    <a href="{{ route('operator.accommodation.booking-report', $accommodation->id) }}" class="btn" style="background:#19b5b5;color:#fff;padding:8px 12px;border-radius:4px;">Booking Report</a>
                     <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" class="btn" style="background:#f0f0f0;color:#333;padding:8px 12px;border-radius:4px;">Back to Property</a>
                 </div>
             </div>

@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+    <!-- Quill WYSIWYG Editor -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+    
     <div class="container mt-5">
         @php $currentStep = 12; @endphp
         <div class="row">
@@ -34,8 +38,10 @@
                         </div>
 
                         <div style="margin-bottom:16px;">
-                            <label style="font-weight:600;">SEO Description (≤160 chars)</label>
-                            <textarea name="seo_description" class="form-control" rows="3" maxlength="160">{{ old('seo_description', $accommodation->seo_description) }}</textarea>
+                            <label style="font-weight:600;">SEO Description</label>
+                            <textarea name="seo_description" id="seo_description" style="display:none;">{{ old('seo_description', $accommodation->seo_description) }}</textarea>
+                            <div id="seo_description_editor" style="height:120px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                            <small style="color:#666;display:block;margin-top:4px;">Optimized description for search engines with formatting support</small>
                         </div>
 
                         <div style="margin-bottom:16px;">
@@ -51,8 +57,10 @@
                         </div>
 
                         <div style="margin-bottom:16px;">
-                            <label style="font-weight:600;">OpenGraph Description (≤200 chars)</label>
-                            <textarea name="og_description" class="form-control" rows="3" maxlength="200">{{ old('og_description', $accommodation->og_description) }}</textarea>
+                            <label style="font-weight:600;">OpenGraph Description</label>
+                            <textarea name="og_description" id="og_description" style="display:none;">{{ old('og_description', $accommodation->og_description) }}</textarea>
+                            <div id="og_description_editor" style="height:120px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                            <small style="color:#666;display:block;margin-top:4px;">Description for social media sharing with formatting support</small>
                         </div>
 
                         <div style="margin-bottom:16px;">
@@ -77,4 +85,69 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Initialize Quill editors
+        document.addEventListener('DOMContentLoaded', function() {
+            // SEO Description Editor
+            var seoDescEditor = new Quill('#seo_description_editor', {
+                theme: 'snow',
+                placeholder: 'Enter SEO-optimized description...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{'list': 'ordered'}, {'list': 'bullet'}],
+                        ['link'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            // OpenGraph Description Editor
+            var ogDescEditor = new Quill('#og_description_editor', {
+                theme: 'snow',
+                placeholder: 'Enter description for social media sharing...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{'list': 'ordered'}, {'list': 'bullet'}],
+                        ['link'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            // Set initial content from textareas
+            var seoTextarea = document.getElementById('seo_description');
+            var ogTextarea = document.getElementById('og_description');
+            
+            if(seoTextarea.value){
+                seoDescEditor.root.innerHTML = seoTextarea.value;
+            }
+            if(ogTextarea.value){
+                ogDescEditor.root.innerHTML = ogTextarea.value;
+            }
+
+            // Sync editors with hidden textareas
+            function syncSeoDesc(){
+                seoTextarea.value = seoDescEditor.root.innerHTML;
+            }
+
+            function syncOgDesc(){
+                ogTextarea.value = ogDescEditor.root.innerHTML;
+            }
+
+            seoDescEditor.on('text-change', syncSeoDesc);
+            ogDescEditor.on('text-change', syncOgDesc);
+
+            // Sync on form submit
+            var form = document.querySelector('form');
+            if(form){
+                form.addEventListener('submit', function(){
+                    syncSeoDesc();
+                    syncOgDesc();
+                });
+            }
+        });
+    </script>
 @endsection

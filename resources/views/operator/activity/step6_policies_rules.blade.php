@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+    <!-- Quill WYSIWYG Editor -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+
 <div class="container-fluid" style="padding:24px;">
     @php $currentStep = 6; @endphp
     <div class="row">
@@ -69,12 +73,10 @@
 
                         <div class="mb-3">
                             <label style="font-weight:600;">No-Show Policy</label>
-                            <textarea name="no_show_policy" 
-                                      class="form-control @error('no_show_policy') is-invalid @enderror" 
-                                      rows="3" 
-                                      placeholder="Describe charges if participant does not arrive">{{ old('no_show_policy', $policy->no_show_policy ?? '') }}</textarea>
+                            <textarea name="no_show_policy" id="no_show_policy" style="display:none;">{{ old('no_show_policy', $policy->no_show_policy ?? '') }}</textarea>
+                            <div id="no_show_policy_editor" style="height:130px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                             @error('no_show_policy')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -91,13 +93,10 @@
                                 </div>
                             </div>
                             <div id="amendment_custom_field">
-                                <textarea name="amendment_policy" 
-                                          id="amendment_policy"
-                                          class="form-control @error('amendment_policy') is-invalid @enderror" 
-                                          rows="3" 
-                                          placeholder="Date/participant change rules">{{ old('amendment_policy', $policy->amendment_policy ?? '') }}</textarea>
+                                <textarea name="amendment_policy" id="amendment_policy" style="display:none;">{{ old('amendment_policy', $policy->amendment_policy ?? '') }}</textarea>
+                                <div id="amendment_policy_editor" style="height:130px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                                 @error('amendment_policy')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div id="amendment_template_field" style="display:none;">
@@ -123,14 +122,10 @@
                                 </div>
                             </div>
                             <div id="cancellation_custom_field">
-                                <textarea name="cancellation_policy" 
-                                          id="cancellation_policy"
-                                          class="form-control @error('cancellation_policy') is-invalid @enderror" 
-                                          rows="4" 
-                                          placeholder="Cancellation policy text" 
-                                          required>{{ old('cancellation_policy', $policy->cancellation_policy ?? '') }}</textarea>
+                                <textarea name="cancellation_policy" id="cancellation_policy" style="display:none;">{{ old('cancellation_policy', $policy->cancellation_policy ?? '') }}</textarea>
+                                <div id="cancellation_policy_editor" style="height:160px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                                 @error('cancellation_policy')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div id="cancellation_template_field" style="display:none;">
@@ -239,13 +234,10 @@
 
                         <div class="mb-3">
                             <label style="font-weight:600;">Safety Requirements <span class="text-danger">*</span></label>
-                            <textarea name="safety_requirements" 
-                                      class="form-control @error('safety_requirements') is-invalid @enderror" 
-                                      rows="4" 
-                                      placeholder="Describe mandatory safety briefings, gear, and equipment requirements" 
-                                      required>{{ old('safety_requirements', $policy->safety_requirements ?? '') }}</textarea>
+                            <textarea name="safety_requirements" id="safety_requirements" style="display:none;">{{ old('safety_requirements', $policy->safety_requirements ?? '') }}</textarea>
+                            <div id="safety_requirements_editor" style="height:160px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                             @error('safety_requirements')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
                             @enderror
                             <small style="color:#666;display:block;margin-top:4px;">Essential for activities with physical risk</small>
                         </div>
@@ -307,18 +299,70 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ── Quill editor setup ──────────────────────────────────────────────────
+    const quillFields = [
+        { id: 'no_show_policy',       placeholder: 'Describe charges if participant does not arrive...' },
+        { id: 'amendment_policy',     placeholder: 'Date/participant change rules...' },
+        { id: 'cancellation_policy',  placeholder: 'Cancellation policy text...' },
+        { id: 'safety_requirements',  placeholder: 'Describe mandatory safety briefings, gear, and equipment requirements...' }
+    ];
+
+    const quillInstances = {};
+
+    quillFields.forEach(function(cfg) {
+        const textarea  = document.getElementById(cfg.id);
+        const editorDiv = document.getElementById(cfg.id + '_editor');
+        if (!textarea || !editorDiv) return;
+
+        const q = new Quill('#' + cfg.id + '_editor', {
+            theme: 'snow',
+            placeholder: cfg.placeholder,
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['link'],
+                    ['clean']
+                ]
+            }
+        });
+
+        if (textarea.value) {
+            q.root.innerHTML = textarea.value;
+        }
+
+        q.on('text-change', function() {
+            textarea.value = q.root.innerHTML;
+        });
+
+        quillInstances[cfg.id] = q;
+    });
+
+    // Sync all editors to textareas before submit
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            quillFields.forEach(function(cfg) {
+                const textarea = document.getElementById(cfg.id);
+                const q = quillInstances[cfg.id];
+                if (textarea && q) {
+                    textarea.value = q.root.innerHTML;
+                }
+            });
+        });
+    }
+    // ───────────────────────────────────────────────────────────────────────
+
     // Amendment Policy - Toggle between custom and template
     const amendmentCustomRadio = document.getElementById('amendment_custom');
     const amendmentTemplateRadio = document.getElementById('amendment_template');
     const amendmentCustomField = document.getElementById('amendment_custom_field');
     const amendmentTemplateField = document.getElementById('amendment_template_field');
-    const amendmentPolicyTextarea = document.getElementById('amendment_policy');
 
     function updateAmendmentFields() {
         if (amendmentTemplateRadio.checked) {
             amendmentCustomField.style.display = 'none';
             amendmentTemplateField.style.display = 'block';
-            amendmentPolicyTextarea.removeAttribute('required');
         } else {
             amendmentCustomField.style.display = 'block';
             amendmentTemplateField.style.display = 'none';
@@ -334,17 +378,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancellationTemplateRadio = document.getElementById('cancellation_template');
     const cancellationCustomField = document.getElementById('cancellation_custom_field');
     const cancellationTemplateField = document.getElementById('cancellation_template_field');
-    const cancellationPolicyTextarea = document.getElementById('cancellation_policy');
 
     function updateCancellationFields() {
         if (cancellationTemplateRadio.checked) {
             cancellationCustomField.style.display = 'none';
             cancellationTemplateField.style.display = 'block';
-            cancellationPolicyTextarea.removeAttribute('required');
         } else {
             cancellationCustomField.style.display = 'block';
             cancellationTemplateField.style.display = 'none';
-            cancellationPolicyTextarea.setAttribute('required', 'required');
         }
     }
 

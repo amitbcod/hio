@@ -45,5 +45,12 @@ class DatabaseSeeder extends Seeder
         } catch (\Exception $e) {
             // permissions table may not exist yet; run manually after vendor:publish and migrate
         }
+
+        // Seed accommodation booking report demo data
+        try {
+            $this->call([\Database\Seeders\AccommodationBookingReportSeeder::class]);
+        } catch (\Exception $e) {
+            // booking tables may not exist yet; run manually after migrate
+        }
     }
 }

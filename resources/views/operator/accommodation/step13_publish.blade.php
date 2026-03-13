@@ -7,6 +7,7 @@
             <!-- Sidebar -->
             <div class="col-md-3">
                 @include('operator.accommodation._steps_sidebar')
+            </div>
 
             <!-- Main Content -->
             <div class="col-md-9">

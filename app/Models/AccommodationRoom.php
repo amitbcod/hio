@@ -40,4 +40,9 @@ class AccommodationRoom extends Model
     {
         return $this->hasMany(AccommodationRate::class, 'room_id');
     }
+
+    public function bookings()
+    {
+        return $this->hasMany(AccommodationBooking::class, 'room_id');
+    }
 }

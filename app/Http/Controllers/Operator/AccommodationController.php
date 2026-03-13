@@ -9,8 +9,11 @@ use App\Models\AccommodationMedia;
 use App\Models\AccommodationRate;
 use App\Models\AccommodationCompliance;
 use App\Models\AccommodationPromotion;
+use App\Models\AccommodationInventory;
+use App\Models\AccommodationBooking;
 use App\Models\Business;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class AccommodationController extends Controller
 {
@@ -118,7 +121,16 @@ class AccommodationController extends Controller
             'country' => 'required|string|max:100',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
-            'short_description' => 'nullable|string|max:250',
+            'short_description' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) {
+                    $plainText = trim(preg_replace('/\s+/', ' ', strip_tags((string) $value)));
+                    if (mb_strlen($plainText) > 250) {
+                        $fail('The short description may not be greater than 250 characters.');
+                    }
+                },
+            ],
             'property_description' => 'nullable|string',
             'legal_holder_name' => 'nullable|string|max:255',
             'legal_holder_id_type' => 'nullable|string|max:50',
@@ -227,7 +239,16 @@ class AccommodationController extends Controller
             'country' => 'required|string|max:100',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
-            'short_description' => 'nullable|string|max:250',
+            'short_description' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) {
+                    $plainText = trim(preg_replace('/\s+/', ' ', strip_tags((string) $value)));
+                    if (mb_strlen($plainText) > 250) {
+                        $fail('The short description may not be greater than 250 characters.');
+                    }
+                },
+            ],
             'property_description' => 'nullable|string',
             'legal_holder_name' => 'nullable|string|max:255',
             'legal_holder_id_type' => 'nullable|string|max:50',
@@ -772,23 +793,51 @@ class AccommodationController extends Controller
             abort(403);
         }
 
+        $plainTextMax = function (int $max) {
+            return function ($attribute, $value, $fail) use ($max) {
+                if ($value === null || $value === '') {
+                    return;
+                }
+
+                $plainText = trim(preg_replace('/\s+/', ' ', strip_tags((string) $value)));
+                if (mb_strlen($plainText) > $max) {
+                    $fail('The ' . str_replace('_', ' ', $attribute) . ' may not be greater than ' . $max . ' characters.');
+                }
+            };
+        };
+
+        $plainTextRequiredMax = function (int $max) {
+            return function ($attribute, $value, $fail) use ($max) {
+                $plainText = trim(preg_replace('/\s+/', ' ', strip_tags((string) $value)));
+
+                if ($plainText === '') {
+                    $fail('The ' . str_replace('_', ' ', $attribute) . ' field is required.');
+                    return;
+                }
+
+                if (mb_strlen($plainText) > $max) {
+                    $fail('The ' . str_replace('_', ' ', $attribute) . ' may not be greater than ' . $max . ' characters.');
+                }
+            };
+        };
+
         // Base validation rules
         $rules = [
             'checkin_time' => 'nullable|date_format:H:i',
             'checkout_time' => 'nullable|date_format:H:i',
-            'checkin_checkout_rules' => 'nullable|string|max:1000',
-            'booking_window_rules' => 'nullable|string|max:1000',
+            'checkin_checkout_rules' => ['nullable', 'string', $plainTextMax(1000)],
+            'booking_window_rules' => ['nullable', 'string', $plainTextMax(1000)],
             'amendment_policy_type' => 'nullable|in:custom,template',
-            'amendment_policy' => 'nullable|string|max:5000',
+            'amendment_policy' => ['nullable', 'string', $plainTextMax(5000)],
             'amendment_policy_template_id' => 'nullable|string|max:100',
             'cancellation_policy_type' => 'required|in:custom,template',
-            'cancellation_policy' => 'nullable|string|max:5000',
+            'cancellation_policy' => ['nullable', 'string', $plainTextMax(5000)],
             'cancellation_policy_template_id' => 'nullable|string|max:100',
             'cancellation_penalties_enabled' => 'required|in:0,1',
             'cancellation_penalty_type' => 'nullable|in:Night,Percentage,Amount',
             'cancellation_penalty_value' => 'nullable|numeric|min:0',
             'security_deposit_policy_type' => 'nullable|in:custom,template',
-            'security_deposit_policy' => 'nullable|string|max:5000',
+            'security_deposit_policy' => ['nullable', 'string', $plainTextMax(5000)],
             'security_deposit_policy_template_id' => 'nullable|string|max:100',
             'deposit_required' => 'required|in:0,1',
             'deposit_type' => 'nullable|in:Night,Percentage,Amount',
@@ -796,13 +845,13 @@ class AccommodationController extends Controller
             'child_max_age' => 'nullable|integer|min:0|max:18',
             'infant_max_age' => 'nullable|integer|min:0|max:5',
             'house_rules_type' => 'nullable|in:custom,template',
-            'house_rules' => 'nullable|string|max:5000',
+            'house_rules' => ['nullable', 'string', $plainTextMax(5000)],
             'house_rules_template_id' => 'nullable|string|max:100',
         ];
 
         // Conditional validation for cancellation policy
         if ($request->cancellation_policy_type === 'custom') {
-            $rules['cancellation_policy'] = 'required|string|max:5000';
+            $rules['cancellation_policy'] = ['required', 'string', $plainTextRequiredMax(5000)];
         } else {
             $rules['cancellation_policy_template_id'] = 'required|string|max:100';
         }
@@ -821,7 +870,7 @@ class AccommodationController extends Controller
 
         // Amendment policy validation
         if ($request->amendment_policy_type === 'custom') {
-            $rules['amendment_policy'] = 'required|string|max:5000';
+            $rules['amendment_policy'] = ['required', 'string', $plainTextRequiredMax(5000)];
         }
 
         $request->validate($rules);
@@ -900,14 +949,40 @@ class AccommodationController extends Controller
             abort(403);
         }
 
+        // Custom validation closure for HTML content with plain-text length limit
+        $plainTextRequiredMax = function (int $max) {
+            return function ($attribute, $value, $fail) use ($max) {
+                if (empty($value)) {
+                    $fail("The {$attribute} field is required.");
+                    return;
+                }
+                $plainText = trim(preg_replace('/\s+/', ' ', strip_tags((string) $value)));
+                if (mb_strlen($plainText) > $max) {
+                    $fail("The {$attribute} may not be greater than {$max} characters.");
+                }
+            };
+        };
+
+        $plainTextMax = function (int $max) {
+            return function ($attribute, $value, $fail) use ($max) {
+                if (empty($value)) {
+                    return;
+                }
+                $plainText = trim(preg_replace('/\s+/', ' ', strip_tags((string) $value)));
+                if (mb_strlen($plainText) > $max) {
+                    $fail("The {$attribute} may not be greater than {$max} characters.");
+                }
+            };
+        };
+
         $rules = [
             'room_name' => 'required|string|max:255',
             'room_type' => 'required|string',
             'size_sqm' => 'nullable|numeric|min:0|max:9999.99',
             'view' => 'nullable|string|max:50',
             'smoking' => 'nullable|in:Smoking,Non-smoking',
-            'short_description' => 'required|string|max:250',
-            'full_description' => 'nullable|string|max:1000',
+            'short_description' => ['required', 'string', $plainTextRequiredMax(250)],
+            'full_description' => ['nullable', 'string', $plainTextMax(1000)],
             'amenities' => 'required|array|min:1',
             'amenities.*' => 'string',
             'accessibility' => 'nullable|array',
@@ -990,14 +1065,40 @@ class AccommodationController extends Controller
             abort(403);
         }
 
+        // Custom validation closure for HTML content with plain-text length limit
+        $plainTextRequiredMax = function (int $max) {
+            return function ($attribute, $value, $fail) use ($max) {
+                if (empty($value)) {
+                    $fail("The {$attribute} field is required.");
+                    return;
+                }
+                $plainText = trim(preg_replace('/\s+/', ' ', strip_tags((string) $value)));
+                if (mb_strlen($plainText) > $max) {
+                    $fail("The {$attribute} may not be greater than {$max} characters.");
+                }
+            };
+        };
+
+        $plainTextMax = function (int $max) {
+            return function ($attribute, $value, $fail) use ($max) {
+                if (empty($value)) {
+                    return;
+                }
+                $plainText = trim(preg_replace('/\s+/', ' ', strip_tags((string) $value)));
+                if (mb_strlen($plainText) > $max) {
+                    $fail("The {$attribute} may not be greater than {$max} characters.");
+                }
+            };
+        };
+
         $rules = [
             'room_name' => 'required|string|max:255',
             'room_type' => 'required|string',
             'size_sqm' => 'nullable|numeric|min:0|max:9999.99',
             'view' => 'nullable|string|max:50',
             'smoking' => 'nullable|in:Smoking,Non-smoking',
-            'short_description' => 'required|string|max:250',
-            'full_description' => 'nullable|string|max:1000',
+            'short_description' => ['required', 'string', $plainTextRequiredMax(250)],
+            'full_description' => ['nullable', 'string', $plainTextMax(1000)],
             'amenities' => 'required|array|min:1',
             'amenities.*' => 'string',
             'accessibility' => 'nullable|array',
@@ -2209,6 +2310,242 @@ class AccommodationController extends Controller
             return redirect()->route('operator.accommodation.step10.show', $id)
                 ->with('error', 'Failed to retrieve inventory allotment');
         }
+    }
+
+    /**
+     * Accommodation Booking Report (Month/Day wise)
+     */
+    public function bookingReport(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id &&
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $selectedMonth = $request->query('month');
+        if (!is_string($selectedMonth) || !preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $selectedMonth)) {
+            $selectedMonth = now()->format('Y-m');
+        }
+
+        $monthStart = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
+        $monthEnd = $monthStart->copy()->endOfMonth();
+
+        $rooms = AccommodationRoom::where('accommodation_id', $accommodation->id)
+            ->get(['id', 'room_name', 'room_type', 'allotment', 'quantity']);
+
+        $propertyWideKey = '__property_wide';
+        $roomIdToTypeKey = [];
+        $roomTypeMeta = [];
+
+        foreach ($rooms as $room) {
+            $typeLabel = trim((string) ($room->room_type ?? ''));
+            if ($typeLabel === '') {
+                $typeLabel = 'Other';
+            }
+
+            $typeKey = strtolower($typeLabel);
+            $roomIdToTypeKey[(int) $room->id] = $typeKey;
+
+            if (!isset($roomTypeMeta[$typeKey])) {
+                $roomTypeMeta[$typeKey] = [
+                    'label' => $typeLabel,
+                    'base_sellable_units' => 0,
+                ];
+            }
+
+            $baseUnits = !is_null($room->allotment)
+                ? (int) $room->allotment
+                : (int) ($room->quantity ?? 0);
+
+            $roomTypeMeta[$typeKey]['base_sellable_units'] += max($baseUnits, 0);
+        }
+
+        $inventoryRows = AccommodationInventory::where('accommodation_id', $accommodation->id)
+            ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->get(['room_id', 'date', 'sellable_units', 'sold_units', 'available_units', 'stop_sell', 'is_blocked']);
+
+        $inventoryByTypeDate = [];
+        foreach ($inventoryRows as $row) {
+            $dayKey = Carbon::parse($row->date)->toDateString();
+
+            $typeKey = $row->room_id && isset($roomIdToTypeKey[(int) $row->room_id])
+                ? $roomIdToTypeKey[(int) $row->room_id]
+                : $propertyWideKey;
+
+            if (!isset($inventoryByTypeDate[$typeKey])) {
+                $inventoryByTypeDate[$typeKey] = [];
+            }
+
+            if (!isset($inventoryByTypeDate[$typeKey][$dayKey])) {
+                $inventoryByTypeDate[$typeKey][$dayKey] = [
+                    'sellable_units' => 0,
+                    'sold_units' => 0,
+                    'available_units' => 0,
+                    'stop_sell' => false,
+                    'is_blocked' => false,
+                ];
+            }
+
+            $inventoryByTypeDate[$typeKey][$dayKey]['sellable_units'] += (int) ($row->sellable_units ?? 0);
+            $inventoryByTypeDate[$typeKey][$dayKey]['sold_units'] += (int) ($row->sold_units ?? 0);
+            $inventoryByTypeDate[$typeKey][$dayKey]['available_units'] += (int) ($row->available_units ?? 0);
+            $inventoryByTypeDate[$typeKey][$dayKey]['stop_sell'] =
+                $inventoryByTypeDate[$typeKey][$dayKey]['stop_sell'] || (bool) $row->stop_sell;
+            $inventoryByTypeDate[$typeKey][$dayKey]['is_blocked'] =
+                $inventoryByTypeDate[$typeKey][$dayKey]['is_blocked'] || (bool) $row->is_blocked;
+        }
+
+        $bookingRows = AccommodationBooking::where('accommodation_id', $accommodation->id)
+            ->whereDate('check_in_date', '<=', $monthEnd->toDateString())
+            ->whereDate('check_out_date', '>=', $monthStart->toDateString())
+            ->whereIn('booking_status', ['Pending', 'Confirmed'])
+            ->get(['room_id', 'check_in_date', 'check_out_date', 'rooms_booked', 'booking_status']);
+
+        $bookingsByTypeDate = [];
+        foreach ($bookingRows as $booking) {
+            $startDate = Carbon::parse($booking->check_in_date);
+            $endDate = Carbon::parse($booking->check_out_date)->subDay();
+
+            if ($endDate->lt($startDate)) {
+                continue;
+            }
+
+            $typeKey = $booking->room_id && isset($roomIdToTypeKey[(int) $booking->room_id])
+                ? $roomIdToTypeKey[(int) $booking->room_id]
+                : $propertyWideKey;
+
+            if (!isset($bookingsByTypeDate[$typeKey])) {
+                $bookingsByTypeDate[$typeKey] = [];
+            }
+
+            $cursor = $startDate->copy();
+            while ($cursor->lte($endDate)) {
+                if ($cursor->gte($monthStart) && $cursor->lte($monthEnd)) {
+                    $dayKey = $cursor->toDateString();
+
+                    if (!isset($bookingsByTypeDate[$typeKey][$dayKey])) {
+                        $bookingsByTypeDate[$typeKey][$dayKey] = [
+                            'confirmed_units' => 0,
+                            'pending_units' => 0,
+                        ];
+                    }
+
+                    $roomsBooked = max(1, (int) ($booking->rooms_booked ?? 1));
+                    if ($booking->booking_status === 'Confirmed') {
+                        $bookingsByTypeDate[$typeKey][$dayKey]['confirmed_units'] += $roomsBooked;
+                    } else {
+                        $bookingsByTypeDate[$typeKey][$dayKey]['pending_units'] += $roomsBooked;
+                    }
+                }
+
+                $cursor->addDay();
+            }
+        }
+
+        $days = [];
+        $cursor = $monthStart->copy();
+        while ($cursor->lte($monthEnd)) {
+            $days[] = [
+                'date' => $cursor->toDateString(),
+                'day' => (int) $cursor->format('j'),
+                'is_today' => $cursor->isToday(),
+            ];
+
+            $cursor->addDay();
+        }
+
+        if (empty($roomTypeMeta)
+            || isset($inventoryByTypeDate[$propertyWideKey])
+            || isset($bookingsByTypeDate[$propertyWideKey])) {
+            if (!isset($roomTypeMeta[$propertyWideKey])) {
+                $roomTypeMeta[$propertyWideKey] = [
+                    'label' => 'Property-wide',
+                    'base_sellable_units' => 0,
+                ];
+            }
+        }
+
+        $roomTypeKeys = array_keys($roomTypeMeta);
+        usort($roomTypeKeys, function ($leftKey, $rightKey) use ($roomTypeMeta, $propertyWideKey) {
+            if ($leftKey === $propertyWideKey && $rightKey !== $propertyWideKey) {
+                return 1;
+            }
+            if ($rightKey === $propertyWideKey && $leftKey !== $propertyWideKey) {
+                return -1;
+            }
+            return strcasecmp($roomTypeMeta[$leftKey]['label'], $roomTypeMeta[$rightKey]['label']);
+        });
+
+        $roomTypeMatrix = [];
+        foreach ($roomTypeKeys as $typeKey) {
+            $baseSellableUnits = (int) ($roomTypeMeta[$typeKey]['base_sellable_units'] ?? 0);
+            $dayCells = [];
+
+            foreach ($days as $day) {
+                $dayKey = $day['date'];
+
+                $inventory = $inventoryByTypeDate[$typeKey][$dayKey] ?? [
+                    'sellable_units' => $baseSellableUnits,
+                    'sold_units' => 0,
+                    'available_units' => $baseSellableUnits,
+                    'stop_sell' => false,
+                    'is_blocked' => false,
+                ];
+
+                $bookingStats = $bookingsByTypeDate[$typeKey][$dayKey] ?? [
+                    'confirmed_units' => 0,
+                    'pending_units' => 0,
+                ];
+
+                $sellableUnits = max((int) $inventory['sellable_units'], 0);
+                $bookedByBookings = (int) $bookingStats['confirmed_units'] + (int) $bookingStats['pending_units'];
+                $usedUnits = max((int) $inventory['sold_units'], $bookedByBookings);
+                $availableUnits = max($sellableUnits - $usedUnits, 0);
+                $isBlocked = (bool) $inventory['stop_sell'] || (bool) $inventory['is_blocked'];
+
+                if ($isBlocked) {
+                    $statusKey = 'blocked';
+                } elseif ($sellableUnits <= 0) {
+                    $statusKey = 'no_inventory';
+                } elseif ($availableUnits <= 0) {
+                    $statusKey = 'full';
+                } elseif ($usedUnits > 0) {
+                    $statusKey = 'partial';
+                } else {
+                    $statusKey = 'available';
+                }
+
+                $dayCells[] = [
+                    'date' => $dayKey,
+                    'day' => (int) $day['day'],
+                    'is_today' => (bool) $day['is_today'],
+                    'status_key' => $statusKey,
+                    'sellable_units' => $sellableUnits,
+                    'used_units' => $usedUnits,
+                    'available_units' => $availableUnits,
+                    'confirmed_units' => (int) $bookingStats['confirmed_units'],
+                    'pending_units' => (int) $bookingStats['pending_units'],
+                ];
+            }
+
+            $roomTypeMatrix[] = [
+                'key' => $typeKey,
+                'label' => $roomTypeMeta[$typeKey]['label'],
+                'days' => $dayCells,
+            ];
+        }
+
+        return view('operator.accommodation.booking_report', [
+            'accommodation' => $accommodation,
+            'selectedMonth' => $selectedMonth,
+            'monthStart' => $monthStart,
+            'monthEnd' => $monthEnd,
+            'days' => $days,
+            'roomTypeMatrix' => $roomTypeMatrix,
+        ]);
     }
 
     /**

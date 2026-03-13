@@ -98,6 +98,11 @@ class Accommodation extends Model
     {
         return $this->hasMany(AccommodationMedia::class, 'accommodation_id');
     }
+
+    public function bookings()
+    {
+        return $this->hasMany(AccommodationBooking::class, 'accommodation_id');
+    }
     
     /**
      * Generate unique accommodation ID

@@ -44,11 +44,12 @@
                                 </div>
                             </div>
 
-                            <div class="row mb-3">
+                            <div class="row mb-3 policy-wysiwyg-row">
                                 <div class="col-md-12">
                                     <label style="font-weight:600;">Check-in / Check-out Rules</label>
-                                    <textarea name="checkin_checkout_rules" id="checkin_checkout_rules" class="form-control" rows="3" placeholder="e.g., Early check-in available from 10am (€15), Late check-out available until 6pm (€20)">{{ old('checkin_checkout_rules', $accommodation->checkin_checkout_rules ?? '') }}</textarea>
-                                    <small style="color:#666;display:block;margin-top:4px;">Describe any early check-in, late check-out, or other rules</small>
+                                    <textarea name="checkin_checkout_rules" id="checkin_checkout_rules" class="form-control" rows="3" placeholder="e.g., Early check-in available from 10am (€15), Late check-out available until 6pm (€20)" style="display:none;">{{ old('checkin_checkout_rules', $accommodation->checkin_checkout_rules ?? '') }}</textarea>
+                                    <div id="checkin_checkout_rules_editor" class="wysiwyg-editor"></div>
+                                    <small class="policy-helper-note" style="color:#666;display:block;margin-top:4px;">Describe any early check-in, late check-out, or other rules</small>
                                 </div>
                             </div>
                         </div>
@@ -57,11 +58,12 @@
                         <div style="border-top:1px solid #eee;padding-top:20px;margin-bottom:24px;">
                             <h5 style="font-weight:600;margin-bottom:12px;">Booking Window</h5>
 
-                            <div class="row mb-3">
+                            <div class="row mb-3 policy-wysiwyg-row">
                                 <div class="col-md-12">
                                     <label style="font-weight:600;">Booking Window Rules</label>
-                                    <textarea name="booking_window_rules" id="booking_window_rules" class="form-control" rows="3" placeholder="e.g., Minimum 3 days in advance, Maximum 12 months in advance">{{ old('booking_window_rules', $accommodation->booking_window_rules ?? '') }}</textarea>
-                                    <small style="color:#666;display:block;margin-top:4px;">Specify minimum/maximum advance booking requirements</small>
+                                    <textarea name="booking_window_rules" id="booking_window_rules" class="form-control" rows="3" placeholder="e.g., Minimum 3 days in advance, Maximum 12 months in advance" style="display:none;">{{ old('booking_window_rules', $accommodation->booking_window_rules ?? '') }}</textarea>
+                                    <div id="booking_window_rules_editor" class="wysiwyg-editor"></div>
+                                    <small class="policy-helper-note" style="color:#666;display:block;margin-top:4px;">Specify minimum/maximum advance booking requirements</small>
                                 </div>
                             </div>
                         </div>
@@ -81,7 +83,8 @@
 
                             <div id="amendment_custom_field" class="row mb-3">
                                 <div class="col-md-12">
-                                    <textarea name="amendment_policy" id="amendment_policy" class="form-control" rows="4" placeholder="Describe guest change, date modification rules, and any associated charges">{{ old('amendment_policy', $accommodation->amendment_policy ?? '') }}</textarea>
+                                    <textarea name="amendment_policy" id="amendment_policy" class="form-control" rows="4" placeholder="Describe guest change, date modification rules, and any associated charges" style="display:none;">{{ old('amendment_policy', $accommodation->amendment_policy ?? '') }}</textarea>
+                                    <div id="amendment_policy_editor" class="wysiwyg-editor"></div>
                                 </div>
                             </div>
 
@@ -113,7 +116,8 @@
 
                             <div id="cancellation_custom_field" class="row mb-3">
                                 <div class="col-md-12">
-                                    <textarea name="cancellation_policy" id="cancellation_policy" class="form-control" rows="4" placeholder="Describe your cancellation policy in detail" required>{{ old('cancellation_policy', $accommodation->cancellation_policy ?? '') }}</textarea>
+                                    <textarea name="cancellation_policy" id="cancellation_policy" class="form-control" rows="4" placeholder="Describe your cancellation policy in detail" required style="display:none;">{{ old('cancellation_policy', $accommodation->cancellation_policy ?? '') }}</textarea>
+                                    <div id="cancellation_policy_editor" class="wysiwyg-editor"></div>
                                 </div>
                             </div>
 
@@ -180,7 +184,8 @@
 
                             <div id="deposit_custom_field" class="row mb-3">
                                 <div class="col-md-12">
-                                    <textarea name="security_deposit_policy" id="security_deposit_policy" class="form-control" rows="3" placeholder="Describe deposit coverage, refund conditions, and damage assessment rules">{{ old('security_deposit_policy', $accommodation->security_deposit_policy ?? '') }}</textarea>
+                                    <textarea name="security_deposit_policy" id="security_deposit_policy" class="form-control" rows="3" placeholder="Describe deposit coverage, refund conditions, and damage assessment rules" style="display:none;">{{ old('security_deposit_policy', $accommodation->security_deposit_policy ?? '') }}</textarea>
+                                    <div id="security_deposit_policy_editor" class="wysiwyg-editor"></div>
                                 </div>
                             </div>
 
@@ -265,7 +270,8 @@
 
                             <div id="house_rules_custom_field" class="row mb-3">
                                 <div class="col-md-12">
-                                    <textarea name="house_rules" id="house_rules" class="form-control" rows="4" placeholder="e.g., No smoking, No pets, Quiet hours 10pm-8am, Maximum guests allowed: X">{{ old('house_rules', $accommodation->house_rules ?? '') }}</textarea>
+                                    <textarea name="house_rules" id="house_rules" class="form-control" rows="4" placeholder="e.g., No smoking, No pets, Quiet hours 10pm-8am, Maximum guests allowed: X" style="display:none;">{{ old('house_rules', $accommodation->house_rules ?? '') }}</textarea>
+                                    <div id="house_rules_editor" class="wysiwyg-editor"></div>
                                 </div>
                             </div>
 
@@ -294,9 +300,102 @@
         </div>
     </div>
 
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+    <style>
+        .wysiwyg-editor {
+            background: #fff;
+            border-radius: 6px;
+        }
+        .policy-wysiwyg-row {
+            margin-bottom: 1.5rem !important;
+        }
+        .policy-helper-note {
+            clear: both;
+            margin-top: 8px !important;
+            margin-bottom: 2px;
+            position: relative;
+            z-index: 1;
+        }
+        .ql-toolbar.ql-snow {
+            clear: both;
+        }
+        .wysiwyg-editor.ql-container {
+            min-height: 110px;
+            height: auto;
+            margin-bottom: 8px;
+        }
+        .wysiwyg-editor .ql-editor {
+            min-height: 110px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+
     @push('scripts')
     <script>
     document.addEventListener('DOMContentLoaded', function(){
+        const form = document.querySelector('form');
+        const quillSyncHandlers = [];
+
+        function initWysiwyg(textareaId, editorId, placeholder) {
+            const textarea = document.getElementById(textareaId);
+            const editorContainer = document.getElementById(editorId);
+
+            if (!textarea || !editorContainer) {
+                return;
+            }
+
+            if (typeof Quill === 'undefined') {
+                textarea.style.display = 'block';
+                return;
+            }
+
+            const quill = new Quill('#' + editorId, {
+                theme: 'snow',
+                placeholder: placeholder,
+                modules: {
+                    toolbar: [
+                        [{ header: [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        ['link', 'blockquote'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            if (textarea.value) {
+                if (/<[a-z][\s\S]*>/i.test(textarea.value)) {
+                    quill.clipboard.dangerouslyPasteHTML(textarea.value);
+                } else {
+                    quill.setText(textarea.value);
+                }
+            }
+
+            const sync = function () {
+                const html = quill.root.innerHTML;
+                textarea.value = html === '<p><br></p>' ? '' : html;
+            };
+
+            quill.on('text-change', sync);
+            sync();
+            quillSyncHandlers.push(sync);
+        }
+
+        initWysiwyg('checkin_checkout_rules', 'checkin_checkout_rules_editor', 'Describe check-in / check-out rules...');
+        initWysiwyg('booking_window_rules', 'booking_window_rules_editor', 'Describe booking window rules...');
+        initWysiwyg('amendment_policy', 'amendment_policy_editor', 'Write amendment policy...');
+        initWysiwyg('cancellation_policy', 'cancellation_policy_editor', 'Write cancellation policy...');
+        initWysiwyg('security_deposit_policy', 'security_deposit_policy_editor', 'Write security deposit policy...');
+        initWysiwyg('house_rules', 'house_rules_editor', 'Write house rules...');
+
+        if (form) {
+            form.addEventListener('submit', function () {
+                quillSyncHandlers.forEach(function (sync) {
+                    sync();
+                });
+            });
+        }
+
         // Amendment Policy - Toggle between custom and template
         const amendmentCustomRadio = document.getElementById('amendment_custom');
         const amendmentTemplateRadio = document.getElementById('amendment_template');

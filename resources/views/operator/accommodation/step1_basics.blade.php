@@ -91,9 +91,8 @@
                         {{-- Description --}}
                         <div class="mb-4">
                             <label style="font-weight: 600; margin-bottom: 8px; display: block;">Short Description</label>
-                            <textarea name="short_description" class="form-control" rows="2" 
-                                placeholder="Brief description (max 250 characters)"
-                                maxlength="250">{{ old('short_description', $accommodation->short_description ?? '') }}</textarea>
+                            <textarea name="short_description" id="short_description" style="display:none;">{{ old('short_description', $accommodation->short_description ?? '') }}</textarea>
+                            <div id="short_description_editor" style="background:#fff;"></div>
                             <small style="color: #999;">Character countdown: <span id="charCount">250</span></small>
                             @error('short_description')
                                 <small style="color: #dc3545;">{{ $message }}</small>
@@ -103,9 +102,9 @@
                         {{-- Full Description --}}
                         <div class="mb-4">
                             <label style="font-weight: 600; margin-bottom: 8px; display: block;">Full Description</label>
-                            <textarea name="property_description" class="form-control" rows="4"
-                                placeholder="Detailed description of your property...">{{ old('property_description', $accommodation->property_description ?? '') }}</textarea>
-                            <small style="color: #999;">Make this a popup with editor bar</small>
+                            <textarea name="property_description" id="property_description" style="display:none;">{{ old('property_description', $accommodation->property_description ?? '') }}</textarea>
+                            <div id="property_description_editor" style="background:#fff;"></div>
+                            <small style="color: #999;">Use the editor toolbar to format your content.</small>
                             @error('property_description')
                                 <small style="color: #dc3545;">{{ $message }}</small>
                             @enderror
@@ -252,11 +251,94 @@
         </div>
     </div>
 
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+    <style>
+        #short_description_editor .ql-editor {
+            min-height: 90px;
+        }
+        #property_description_editor .ql-editor {
+            min-height: 150px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
     <script>
-        // Character countdown
-        document.querySelector('[name="short_description"]').addEventListener('input', function() {
-            const remaining = 250 - this.value.length;
-            document.getElementById('charCount').textContent = remaining;
-        });
+        (function () {
+            const shortInput = document.getElementById('short_description');
+            const fullInput = document.getElementById('property_description');
+            const charCount = document.getElementById('charCount');
+            const form = document.querySelector('form');
+
+            const shortQuill = new Quill('#short_description_editor', {
+                theme: 'snow',
+                placeholder: 'Brief description (max 250 characters)',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ list: 'bullet' }],
+                        ['clean']
+                    ]
+                }
+            });
+
+            const fullQuill = new Quill('#property_description_editor', {
+                theme: 'snow',
+                placeholder: 'Detailed description of your property...',
+                modules: {
+                    toolbar: [
+                        [{ header: [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        ['link', 'blockquote'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            function getShortText() {
+                return (shortQuill.getText() || '').replace(/\n$/, '');
+            }
+
+            function syncShortDescription() {
+                let text = getShortText();
+
+                if (text.length > 250) {
+                    shortQuill.deleteText(250, text.length);
+                    text = getShortText();
+                }
+
+                const html = shortQuill.root.innerHTML;
+                shortInput.value = html === '<p><br></p>' ? '' : html;
+                const remaining = 250 - text.length;
+                charCount.textContent = remaining;
+            }
+
+            function syncFullDescription() {
+                const html = fullQuill.root.innerHTML;
+                fullInput.value = html === '<p><br></p>' ? '' : html;
+            }
+
+            if (shortInput.value) {
+                if (/<[a-z][\s\S]*>/i.test(shortInput.value)) {
+                    shortQuill.clipboard.dangerouslyPasteHTML(shortInput.value);
+                } else {
+                    shortQuill.setText(shortInput.value);
+                }
+            }
+
+            if (fullInput.value) {
+                fullQuill.clipboard.dangerouslyPasteHTML(fullInput.value);
+            }
+
+            shortQuill.on('text-change', syncShortDescription);
+            fullQuill.on('text-change', syncFullDescription);
+
+            form.addEventListener('submit', function () {
+                syncShortDescription();
+                syncFullDescription();
+            });
+
+            syncShortDescription();
+            syncFullDescription();
+        })();
     </script>
 @endsection

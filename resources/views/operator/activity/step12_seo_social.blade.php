@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+    <!-- Quill WYSIWYG Editor -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+
     <div class="container mt-5">
         <div class="row">
             <!-- Sidebar -->
@@ -60,7 +64,8 @@
                                     <span id="shortDescWarning" style="color:#f44336;display:none;">⚠ Minimum 150 characters required</span>
                                 </span>
                             </label>
-                            <textarea name="short_description" id="shortDescInput" class="form-control" required minlength="150" maxlength="250" style="font-size:13px;height:80px;border:2px solid #ddd;" placeholder="Brief, compelling summary of the activity...">{{ old('short_description', $seoSocial->short_description ?? '') }}</textarea>
+                            <textarea name="short_description" id="shortDescInput" required minlength="150" maxlength="250" style="display:none;">{{ old('short_description', $seoSocial->short_description ?? '') }}</textarea>
+                            <div id="shortDescEditor" style="height:90px;background:#fff;border-radius:4px;"></div>
                             <small style="color:#666;">Used in search results and overview pages</small>
                         </div>
 
@@ -73,7 +78,8 @@
                                     <span id="fullDescWarning" style="color:#f44336;display:none;">⚠ Minimum 250 characters required</span>
                                 </span>
                             </label>
-                            <textarea name="full_description" id="fullDescInput" class="form-control" required minlength="250" style="font-size:13px;height:150px;border:2px solid #ddd;" placeholder="Detailed description of the activity, experience, and what travelers can expect...">{{ old('full_description', $seoSocial->full_description ?? '') }}</textarea>
+                            <textarea name="full_description" id="fullDescInput" required minlength="250" style="display:none;">{{ old('full_description', $seoSocial->full_description ?? '') }}</textarea>
+                            <div id="fullDescEditor" style="height:160px;background:#fff;border-radius:4px;"></div>
                             <small style="color:#666;">Comprehensive description for the activity details page</small>
                         </div>
 
@@ -82,7 +88,8 @@
                             <label style="font-weight:600;font-size:13px;display:block;margin-bottom:8px;">
                                 Highlights (Up to 8 key points, one per line)
                             </label>
-                            <textarea name="highlights" class="form-control" style="font-size:13px;height:100px;" placeholder="• Professional guide&#10;• Small group experience&#10;• Equipment included">{{ old('highlights', $seoSocial->highlights ?? '') }}</textarea>
+                            <textarea name="highlights" id="highlightsInput" style="display:none;">{{ old('highlights', $seoSocial->highlights ?? '') }}</textarea>
+                            <div id="highlightsEditor" style="height:110px;background:#fff;border-radius:4px;"></div>
                             <small style="color:#666;">Key selling points separated by line breaks</small>
                         </div>
 
@@ -107,7 +114,8 @@
                                     SEO Description (≤160 chars)
                                     <span style="color:#666;font-weight:normal;">(<span id="seoDescCount">{{ strlen(old('seo_description', $seoSocial->seo_description ?? '')) }}</span>/160)</span>
                                 </label>
-                                <textarea name="seo_description" class="form-control" maxlength="160" style="font-size:13px;height:60px;" placeholder="Meta description for search results">{{ old('seo_description', $seoSocial->seo_description ?? '') }}</textarea>
+                                <textarea name="seo_description" id="seoDescInput" maxlength="160" style="display:none;">{{ old('seo_description', $seoSocial->seo_description ?? '') }}</textarea>
+                                <div id="seoDescEditor" style="height:80px;background:#fff;border-radius:4px;"></div>
                                 <small style="color:#666;">Description shown below title in search</small>
                             </div>
                         </div>
@@ -154,7 +162,8 @@
                                     OG Description (≤200 chars)
                                     <span style="color:#666;font-weight:normal;">(<span id="ogDescCount">{{ strlen(old('og_description', $seoSocial->og_description ?? '')) }}</span>/200)</span>
                                 </label>
-                                <textarea name="og_description" class="form-control" maxlength="200" style="font-size:13px;height:60px;" placeholder="Description when shared on social platforms">{{ old('og_description', $seoSocial->og_description ?? '') }}</textarea>
+                                <textarea name="og_description" id="ogDescInput" maxlength="200" style="display:none;">{{ old('og_description', $seoSocial->og_description ?? '') }}</textarea>
+                                <div id="ogDescEditor" style="height:80px;background:#fff;border-radius:4px;"></div>
                                 <small style="color:#666;">Description shown when link is shared</small>
                             </div>
                         </div>
@@ -191,97 +200,36 @@
 
     <script>
         let keywordsList = {!! json_encode($keywords) !!};
+        const quillEditors = {};
 
-        // Form submission handler
-        const form = document.querySelector('form');
-        const submitBtn = document.getElementById('submitBtn');
-        
-        form.addEventListener('submit', function(e) {
-            const shortDesc = document.getElementById('shortDescInput').value;
-            const fullDesc = document.getElementById('fullDescInput').value;
-            
-            if (shortDesc.length < 150) {
-                e.preventDefault();
-                alert('Short Description must be at least 150 characters. Current: ' + shortDesc.length);
-                document.getElementById('shortDescInput').focus();
-                document.getElementById('shortDescInput').style.borderColor = '#f44336';
-                return false;
+        function getEditorContainer(editorKey) {
+            const editor = quillEditors[editorKey];
+            return editor ? editor.container : null;
+        }
+
+        function setEditorBorder(editorKey, color) {
+            const container = getEditorContainer(editorKey);
+            if (container) {
+                container.style.borderColor = color;
             }
-            
-            if (fullDesc.length < 250) {
-                e.preventDefault();
-                alert('Full Description must be at least 250 characters. Current: ' + fullDesc.length);
-                document.getElementById('fullDescInput').focus();
-                document.getElementById('fullDescInput').style.borderColor = '#f44336';
-                return false;
+        }
+
+        function getEditorTextLength(editorKey) {
+            const editor = quillEditors[editorKey];
+            if (!editor) {
+                return 0;
             }
-            
-            console.log('Form submitting...');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Saving...';
-        });
+            return editor.getText().replace(/\n$/, '').length;
+        }
 
-        // Character counters with validation
-        const shortDescInput = document.getElementById('shortDescInput');
-        const fullDescInput = document.getElementById('fullDescInput');
-        
-        shortDescInput.addEventListener('input', function() {
-            const count = this.value.length;
-            const counter = document.getElementById('shortDescCount');
-            const warning = document.getElementById('shortDescWarning');
-            
-            counter.textContent = count;
-            
-            if (count < 150) {
-                counter.style.color = '#f44336';
-                warning.style.display = 'inline';
-                this.style.borderColor = '#f44336';
-            } else {
-                counter.style.color = '#28a745';
-                warning.style.display = 'none';
-                this.style.borderColor = '#28a745';
+        function syncEditorToTextarea(editorKey, textareaId) {
+            const editor = quillEditors[editorKey];
+            const textarea = document.getElementById(textareaId);
+            if (editor && textarea) {
+                textarea.value = editor.root.innerHTML;
             }
-        });
-        
-        fullDescInput.addEventListener('input', function() {
-            const count = this.value.length;
-            const counter = document.getElementById('fullDescCount');
-            const warning = document.getElementById('fullDescWarning');
-            
-            counter.textContent = count;
-            
-            if (count < 250) {
-                counter.style.color = '#f44336';
-                warning.style.display = 'inline';
-                this.style.borderColor = '#f44336';
-            } else {
-                counter.style.color = '#28a745';
-                warning.style.display = 'none';
-                this.style.borderColor = '#28a745';
-            }
-        });
-        
-        // Trigger initial validation
-        shortDescInput.dispatchEvent(new Event('input'));
-        fullDescInput.dispatchEvent(new Event('input'));
+        }
 
-        document.querySelector('input[name="seo_title"]').addEventListener('input', function() {
-            document.getElementById('seoTitleCount').textContent = this.value.length;
-        });
-
-        document.querySelector('textarea[name="seo_description"]').addEventListener('input', function() {
-            document.getElementById('seoDescCount').textContent = this.value.length;
-        });
-
-        document.querySelector('input[name="og_title"]').addEventListener('input', function() {
-            document.getElementById('ogTitleCount').textContent = this.value.length;
-        });
-
-        document.querySelector('textarea[name="og_description"]').addEventListener('input', function() {
-            document.getElementById('ogDescCount').textContent = this.value.length;
-        });
-
-        // Keywords management
         function updateKeywordsList() {
             const list = document.getElementById('keywordsList');
             list.innerHTML = keywordsList.map(keyword => `
@@ -290,10 +238,9 @@
                     <button type="button" onclick="removeKeyword(this)" style="background:none;border:none;color:#2196f3;cursor:pointer;font-weight:bold;">×</button>
                 </span>
             `).join('');
-            
-            // Update hidden inputs
+
             const hiddenContainer = document.getElementById('keywordsHiddenInputs');
-            hiddenContainer.innerHTML = keywordsList.map(keyword => 
+            hiddenContainer.innerHTML = keywordsList.map(keyword =>
                 `<input type="hidden" name="keywords_tags[]" value="${keyword}">`
             ).join('');
         }
@@ -304,29 +251,225 @@
             updateKeywordsList();
         }
 
-        document.getElementById('keywordsInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.key === ',') {
-                e.preventDefault();
-                const keyword = this.value.trim().replace(/,+$/, '').trim();
-                if (keyword && keyword.length > 0 && !keywordsList.includes(keyword)) {
-                    keywordsList.push(keyword);
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const submitBtn = document.getElementById('submitBtn');
+
+            const editorConfigs = [
+                {
+                    key: 'shortDesc',
+                    editorId: 'shortDescEditor',
+                    textareaId: 'shortDescInput',
+                    placeholder: 'Brief, compelling summary of the activity...',
+                    minLength: 150,
+                    maxLength: 250,
+                    height: '90px',
+                    borderWidth: '2px'
+                },
+                {
+                    key: 'fullDesc',
+                    editorId: 'fullDescEditor',
+                    textareaId: 'fullDescInput',
+                    placeholder: 'Detailed description of the activity, experience, and what travelers can expect...',
+                    minLength: 250,
+                    height: '160px',
+                    borderWidth: '2px'
+                },
+                {
+                    key: 'highlights',
+                    editorId: 'highlightsEditor',
+                    textareaId: 'highlightsInput',
+                    placeholder: '• Professional guide\n• Small group experience\n• Equipment included',
+                    height: '110px'
+                },
+                {
+                    key: 'seoDesc',
+                    editorId: 'seoDescEditor',
+                    textareaId: 'seoDescInput',
+                    placeholder: 'Meta description for search results',
+                    maxLength: 160,
+                    height: '80px'
+                },
+                {
+                    key: 'ogDesc',
+                    editorId: 'ogDescEditor',
+                    textareaId: 'ogDescInput',
+                    placeholder: 'Description when shared on social platforms',
+                    maxLength: 200,
+                    height: '80px'
+                }
+            ];
+
+            editorConfigs.forEach(function(cfg) {
+                const textarea = document.getElementById(cfg.textareaId);
+                const editorDiv = document.getElementById(cfg.editorId);
+                if (!textarea || !editorDiv) {
+                    return;
+                }
+
+                const editor = new Quill('#' + cfg.editorId, {
+                    theme: 'snow',
+                    placeholder: cfg.placeholder,
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            ['link'],
+                            ['clean']
+                        ]
+                    }
+                });
+
+                quillEditors[cfg.key] = editor;
+
+                if (textarea.value) {
+                    editor.root.innerHTML = textarea.value;
+                }
+
+                const qlContainer = getEditorContainer(cfg.key);
+                if (qlContainer) {
+                    qlContainer.style.height = cfg.height;
+                    if (cfg.borderWidth) {
+                        qlContainer.style.borderWidth = cfg.borderWidth;
+                    }
+                }
+
+                editor.on('text-change', function() {
+                    if (cfg.maxLength) {
+                        const length = getEditorTextLength(cfg.key);
+                        if (length > cfg.maxLength) {
+                            editor.deleteText(cfg.maxLength, editor.getLength());
+                        }
+                    }
+
+                    syncEditorToTextarea(cfg.key, cfg.textareaId);
+
+                    if (cfg.key === 'shortDesc') {
+                        updateShortDescState();
+                    }
+                    if (cfg.key === 'fullDesc') {
+                        updateFullDescState();
+                    }
+                    if (cfg.key === 'seoDesc') {
+                        document.getElementById('seoDescCount').textContent = getEditorTextLength('seoDesc');
+                    }
+                    if (cfg.key === 'ogDesc') {
+                        document.getElementById('ogDescCount').textContent = getEditorTextLength('ogDesc');
+                    }
+                });
+
+                syncEditorToTextarea(cfg.key, cfg.textareaId);
+            });
+
+            function updateShortDescState() {
+                const count = getEditorTextLength('shortDesc');
+                const counter = document.getElementById('shortDescCount');
+                const warning = document.getElementById('shortDescWarning');
+
+                counter.textContent = count;
+
+                if (count < 150) {
+                    counter.style.color = '#f44336';
+                    warning.style.display = 'inline';
+                    setEditorBorder('shortDesc', '#f44336');
+                    return false;
+                }
+
+                counter.style.color = '#28a745';
+                warning.style.display = 'none';
+                setEditorBorder('shortDesc', '#28a745');
+                return true;
+            }
+
+            function updateFullDescState() {
+                const count = getEditorTextLength('fullDesc');
+                const counter = document.getElementById('fullDescCount');
+                const warning = document.getElementById('fullDescWarning');
+
+                counter.textContent = count;
+
+                if (count < 250) {
+                    counter.style.color = '#f44336';
+                    warning.style.display = 'inline';
+                    setEditorBorder('fullDesc', '#f44336');
+                    return false;
+                }
+
+                counter.style.color = '#28a745';
+                warning.style.display = 'none';
+                setEditorBorder('fullDesc', '#28a745');
+                return true;
+            }
+
+            updateShortDescState();
+            updateFullDescState();
+            document.getElementById('seoDescCount').textContent = getEditorTextLength('seoDesc');
+            document.getElementById('ogDescCount').textContent = getEditorTextLength('ogDesc');
+
+            form.addEventListener('submit', function(e) {
+                syncEditorToTextarea('shortDesc', 'shortDescInput');
+                syncEditorToTextarea('fullDesc', 'fullDescInput');
+                syncEditorToTextarea('highlights', 'highlightsInput');
+                syncEditorToTextarea('seoDesc', 'seoDescInput');
+                syncEditorToTextarea('ogDesc', 'ogDescInput');
+
+                const shortValid = updateShortDescState();
+                const fullValid = updateFullDescState();
+
+                if (!shortValid) {
+                    e.preventDefault();
+                    alert('Short Description must be at least 150 characters. Current: ' + getEditorTextLength('shortDesc'));
+                    if (quillEditors.shortDesc) {
+                        quillEditors.shortDesc.focus();
+                    }
+                    return false;
+                }
+
+                if (!fullValid) {
+                    e.preventDefault();
+                    alert('Full Description must be at least 250 characters. Current: ' + getEditorTextLength('fullDesc'));
+                    if (quillEditors.fullDesc) {
+                        quillEditors.fullDesc.focus();
+                    }
+                    return false;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saving...';
+            });
+
+            document.querySelector('input[name="seo_title"]').addEventListener('input', function() {
+                document.getElementById('seoTitleCount').textContent = this.value.length;
+            });
+
+            document.querySelector('input[name="og_title"]').addEventListener('input', function() {
+                document.getElementById('ogTitleCount').textContent = this.value.length;
+            });
+
+            document.getElementById('keywordsInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    const keyword = this.value.trim().replace(/,+$/, '').trim();
+                    if (keyword && keyword.length > 0 && !keywordsList.includes(keyword)) {
+                        keywordsList.push(keyword);
+                        updateKeywordsList();
+                        this.value = '';
+                    }
+                }
+            });
+
+            document.getElementById('keywordsInput').addEventListener('blur', function() {
+                const keywords = this.value.split(',').map(k => k.trim()).filter(k => k.length > 0);
+                keywords.forEach(keyword => {
+                    if (!keywordsList.includes(keyword)) {
+                        keywordsList.push(keyword);
+                    }
+                });
+                if (keywords.length > 0) {
                     updateKeywordsList();
                     this.value = '';
                 }
-            }
-        });
-
-        document.getElementById('keywordsInput').addEventListener('blur', function() {
-            const keywords = this.value.split(',').map(k => k.trim()).filter(k => k.length > 0);
-            keywords.forEach(keyword => {
-                if (!keywordsList.includes(keyword)) {
-                    keywordsList.push(keyword);
-                }
             });
-            if (keywords.length > 0) {
-                updateKeywordsList();
-                this.value = '';
-            }
         });
     </script>
 
