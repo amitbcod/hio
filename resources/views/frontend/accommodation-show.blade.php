@@ -39,10 +39,6 @@
                         <div>{{ $accommodation['location'] }}</div>
                     </div>
                     <div class="side-item">
-                        <span>Status</span>
-                        <div>{{ $accommodation['status'] }}</div>
-                    </div>
-                    <div class="side-item">
                         <span>Gallery Items</span>
                         <div>{{ count($accommodation['gallery']) }}</div>
                     </div>

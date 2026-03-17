@@ -32,6 +32,72 @@
         @endif
     </section>
 
+    <section class="main-search home-main-search" style="background-color: #E9E6E0;">
+        <div class="wrap">
+            <form method="GET"
+                action="{{ route('frontend.category.list') }}"
+                class="category-search-form category-search-form--detailed"
+                id="home-category-search-form"
+                data-search-options='@json($searchOptions)'>
+                <div class="category-search-cell category-search-cell--what">
+                    <h5><span>01</span> What?</h5>
+                    <div class="category-radio-group">
+                        <label class="category-radio-item">
+                            <input type="radio" name="category" value="accommodation" {{ $selectedCategory === 'accommodation' ? 'checked' : '' }}>
+                            <span>Accommodation</span>
+                        </label>
+                        <label class="category-radio-item">
+                            <input type="radio" name="category" value="tours" {{ $selectedCategory === 'tours' ? 'checked' : '' }}>
+                            <span>Tours - Activity</span>
+                        </label>
+                        <label class="category-radio-item">
+                            <input type="radio" name="category" value="transport" {{ $selectedCategory === 'transport' ? 'checked' : '' }}>
+                            <span>Transport</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="category-search-cell">
+                    <h5><span>02</span> Region/Area ?</h5>
+                    <select name="region" class="category-search-select" data-search-region data-selected="{{ $filters['region'] }}">
+                        <option value="">Please select</option>
+                        @foreach($searchOptions[$selectedCategory]['regions'] ?? [] as $region)
+                            <option value="{{ $region }}" {{ $filters['region'] === $region ? 'selected' : '' }}>{{ $region }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="category-search-cell">
+                    <h5><span>03</span> Check-in and Check-Out</h5>
+                    <div class="category-search-dates">
+                        <input type="date" name="check_in" class="category-search-input" value="{{ $filters['check_in'] }}">
+                        <input type="date" name="check_out" class="category-search-input" value="{{ $filters['check_out'] }}">
+                    </div>
+                </div>
+
+                <div class="category-search-cell category-search-cell--type">
+                    <h5><span>04</span> <span data-type-label>Type</span></h5>
+                    <div class="category-search-stack">
+                        <select name="type" class="category-search-select" data-search-type data-selected="{{ $filters['type'] }}">
+                            <option value="">Any</option>
+                            @foreach($searchOptions[$selectedCategory]['types'] ?? [] as $type)
+                                <option value="{{ $type }}" {{ $filters['type'] === $type ? 'selected' : '' }}>{{ $type }}</option>
+                            @endforeach
+                        </select>
+                        <div class="category-search-field-group">
+                            <label for="home-name-search">Name Search</label>
+                            <input id="home-name-search" type="text" name="name" class="category-search-input" placeholder="Optional" value="{{ $filters['name'] }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="category-search-submit">
+                    <button type="submit" class="btn-primary">Proceed to results</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
     <section class="quick-search">
         <div class="wrap quick-search-grid">
             <div class="quick-tile">
@@ -151,7 +217,6 @@
                                         <h3><a href="{{ $accommodation['url'] }}">{{ $accommodation['title'] }}</a></h3>
                                         <p>{{ $accommodation['excerpt'] }}</p>
                                         <div class="listing-footer">
-                                            <strong>{{ $accommodation['status'] ?: 'Active listing' }}</strong>
                                             <a href="{{ $accommodation['url'] }}">View details</a>
                                         </div>
                                     </div>
@@ -177,7 +242,6 @@
                                         <h3><a href="{{ $accommodation['url'] }}">{{ $accommodation['title'] }}</a></h3>
                                         <p>{{ $accommodation['excerpt'] }}</p>
                                         <div class="listing-footer">
-                                            <strong>{{ $accommodation['status'] ?: 'Operator listing' }}</strong>
                                             <a href="{{ $accommodation['url'] }}">View details</a>
                                         </div>
                                     </div>

@@ -1,4 +1,73 @@
 document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-search-options]').forEach(function (form) {
+        let searchOptions = {};
+
+        try {
+            searchOptions = JSON.parse(form.getAttribute('data-search-options') || '{}');
+        } catch (error) {
+            searchOptions = {};
+        }
+
+        const categoryInputs = form.querySelectorAll('input[name="category"]');
+        const regionSelect = form.querySelector('[data-search-region]');
+        const typeSelect = form.querySelector('[data-search-type]');
+
+        function populateSelect(select, items, placeholder, selectedValue) {
+            if (!select) {
+                return;
+            }
+
+            const currentValue = selectedValue !== undefined ? selectedValue : select.value;
+            select.innerHTML = '';
+
+            const placeholderOption = document.createElement('option');
+            placeholderOption.value = '';
+            placeholderOption.textContent = placeholder;
+            select.appendChild(placeholderOption);
+
+            items.forEach(function (item) {
+                const option = document.createElement('option');
+                option.value = item;
+                option.textContent = item;
+                select.appendChild(option);
+            });
+
+            const hasMatch = Array.from(select.options).some(function (option) {
+                return option.value === currentValue;
+            });
+
+            select.value = hasMatch ? currentValue : '';
+        }
+
+        function updateSearchOptions(keepCurrentValues) {
+            const activeCategory = form.querySelector('input[name="category"]:checked');
+            const category = activeCategory ? activeCategory.value : 'accommodation';
+            const optionSet = searchOptions[category] || { regions: [], types: [] };
+
+            populateSelect(
+                regionSelect,
+                optionSet.regions || [],
+                'Please select',
+                keepCurrentValues ? regionSelect.value : regionSelect.getAttribute('data-selected') || ''
+            );
+
+            populateSelect(
+                typeSelect,
+                optionSet.types || [],
+                'Any',
+                keepCurrentValues ? typeSelect.value : typeSelect.getAttribute('data-selected') || ''
+            );
+        }
+
+        categoryInputs.forEach(function (input) {
+            input.addEventListener('change', function () {
+                updateSearchOptions(true);
+            });
+        });
+
+        updateSearchOptions(false);
+    });
+
     const tabButtons = document.querySelectorAll('[data-tab-target]');
     const tabPanels = document.querySelectorAll('[data-tab-panel]');
 
