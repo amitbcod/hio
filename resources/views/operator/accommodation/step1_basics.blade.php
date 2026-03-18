@@ -2,9 +2,10 @@
 
 @section('content')
     <div class="container mt-5">
+        @php $currentStep = 1; @endphp
         <div class="row">
             <div class="col-md-3">
-                @include('operator.registration._sidebar_main')
+                @include('operator.accommodation._steps_sidebar')
             </div>
             <div class="col-md-9">
                 <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px;">
@@ -90,9 +91,8 @@
                         {{-- Description --}}
                         <div class="mb-4">
                             <label style="font-weight: 600; margin-bottom: 8px; display: block;">Short Description</label>
-                            <textarea name="short_description" class="form-control" rows="2" 
-                                placeholder="Brief description (max 250 characters)"
-                                maxlength="250">{{ old('short_description', $accommodation->short_description ?? '') }}</textarea>
+                            <textarea name="short_description" id="short_description" style="display:none;">{{ old('short_description', $accommodation->short_description ?? '') }}</textarea>
+                            <div id="short_description_editor" style="background:#fff;"></div>
                             <small style="color: #999;">Character countdown: <span id="charCount">250</span></small>
                             @error('short_description')
                                 <small style="color: #dc3545;">{{ $message }}</small>
@@ -102,9 +102,9 @@
                         {{-- Full Description --}}
                         <div class="mb-4">
                             <label style="font-weight: 600; margin-bottom: 8px; display: block;">Full Description</label>
-                            <textarea name="property_description" class="form-control" rows="4"
-                                placeholder="Detailed description of your property...">{{ old('property_description', $accommodation->property_description ?? '') }}</textarea>
-                            <small style="color: #999;">Make this a popup with editor bar</small>
+                            <textarea name="property_description" id="property_description" style="display:none;">{{ old('property_description', $accommodation->property_description ?? '') }}</textarea>
+                            <div id="property_description_editor" style="background:#fff;"></div>
+                            <small style="color: #999;">Use the editor toolbar to format your content.</small>
                             @error('property_description')
                                 <small style="color: #dc3545;">{{ $message }}</small>
                             @enderror
@@ -225,24 +225,120 @@
                         {{-- Buttons --}}
                         <hr style="margin: 32px 0;">
                         <div style="display: flex; justify-content: space-between; gap: 12px;">
-                            <a href="{{ route('operator.accommodation.index') }}" class="btn" style="background: #f0f0f0; color: #333; border: none; padding: 10px 20px; border-radius: 4px;">
-                                Cancel
-                            </a>
+                            @if(isset($accommodation->id) )
+                            <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:16px;">
+                                <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" class="btn" style="background:#f0f0f0;color:#333;padding:8px 12px;border-radius:4px;">← Back</a>
+                            </div>
+                            @else
+                             <a href="{{ route('operator.accommodation.index') }}" class="btn" style="background: #f0f0f0; color: #333; padding: 8px 12px; border-radius: 4px;">← Back</a> 
+                            @endif 
                             <button type="submit" class="btn" style="background: #19b5b5; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
                                 Save and Continue
                             </button>
                         </div>
                     </form>
+
+                    <!-- Back Button -->
+                    @if($accommodation)
+                        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e0e0e0;">
+                            <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" style="color: #2196f3; text-decoration: none; font-size: 13px; font-weight: 500;">
+                                ← Back to Accommodation Overview
+                            </a>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
 
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+    <style>
+        #short_description_editor .ql-editor {
+            min-height: 90px;
+        }
+        #property_description_editor .ql-editor {
+            min-height: 150px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
     <script>
-        // Character countdown
-        document.querySelector('[name="short_description"]').addEventListener('input', function() {
-            const remaining = 250 - this.value.length;
-            document.getElementById('charCount').textContent = remaining;
-        });
+        (function () {
+            const shortInput = document.getElementById('short_description');
+            const fullInput = document.getElementById('property_description');
+            const charCount = document.getElementById('charCount');
+            const form = document.querySelector('form');
+
+            const shortQuill = new Quill('#short_description_editor', {
+                theme: 'snow',
+                placeholder: 'Brief description (max 250 characters)',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ list: 'bullet' }],
+                        ['clean']
+                    ]
+                }
+            });
+
+            const fullQuill = new Quill('#property_description_editor', {
+                theme: 'snow',
+                placeholder: 'Detailed description of your property...',
+                modules: {
+                    toolbar: [
+                        [{ header: [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        ['link', 'blockquote'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            function getShortText() {
+                return (shortQuill.getText() || '').replace(/\n$/, '');
+            }
+
+            function syncShortDescription() {
+                let text = getShortText();
+
+                if (text.length > 250) {
+                    shortQuill.deleteText(250, text.length);
+                    text = getShortText();
+                }
+
+                const html = shortQuill.root.innerHTML;
+                shortInput.value = html === '<p><br></p>' ? '' : html;
+                const remaining = 250 - text.length;
+                charCount.textContent = remaining;
+            }
+
+            function syncFullDescription() {
+                const html = fullQuill.root.innerHTML;
+                fullInput.value = html === '<p><br></p>' ? '' : html;
+            }
+
+            if (shortInput.value) {
+                if (/<[a-z][\s\S]*>/i.test(shortInput.value)) {
+                    shortQuill.clipboard.dangerouslyPasteHTML(shortInput.value);
+                } else {
+                    shortQuill.setText(shortInput.value);
+                }
+            }
+
+            if (fullInput.value) {
+                fullQuill.clipboard.dangerouslyPasteHTML(fullInput.value);
+            }
+
+            shortQuill.on('text-change', syncShortDescription);
+            fullQuill.on('text-change', syncFullDescription);
+
+            form.addEventListener('submit', function () {
+                syncShortDescription();
+                syncFullDescription();
+            });
+
+            syncShortDescription();
+            syncFullDescription();
+        })();
     </script>
 @endsection

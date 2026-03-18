@@ -26,6 +26,10 @@ class Accommodation extends Model
     protected $guarded = [];
     public $timestamps = true;
     
+    protected $casts = [
+        'submitted_for_approval_at' => 'datetime',
+    ];
+    
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
     const DELETED_AT = 'deleted_at';
@@ -93,6 +97,11 @@ class Accommodation extends Model
     public function media()
     {
         return $this->hasMany(AccommodationMedia::class, 'accommodation_id');
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(AccommodationBooking::class, 'accommodation_id');
     }
     
     /**
@@ -185,14 +194,19 @@ class Accommodation extends Model
      */
     public function completeStep($stepName)
     {
-        $this->{$stepName} = 1;
+        // Update the specific step column
+        $updateData = [$stepName => 1];
         
         // Auto-transition status
-        if ($this->status === self::STATUS_DRAFT && $this->{$stepName} === 1) {
-            $this->status = self::STATUS_IN_SETUP;
+        if ($this->status === self::STATUS_DRAFT) {
+            $updateData['status'] = self::STATUS_IN_SETUP;
         }
         
-        $this->save();
+        // Use update method for direct database update
+        $this->update($updateData);
+        
+        // Refresh the model to reflect changes
+        $this->refresh();
     }
     
     /**

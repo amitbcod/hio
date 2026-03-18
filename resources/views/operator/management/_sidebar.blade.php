@@ -8,6 +8,16 @@
         </a>
     </div>
 
+    {{-- Activity Management Section --}}
+    <div style="padding: 20px 16px; margin-top: 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2);">ACTIVITY MANAGEMENT</div>
+    
+    {{-- Add New Activity Button --}}
+    <div style="padding: 12px 16px; margin-bottom: 12px;">
+        <a href="{{ route('operator.activity.create') }}" style="display: block; background: rgba(255,255,255,0.2); color: #fff; padding: 10px 12px; border-radius: 4px; text-align: center; text-decoration: none; font-weight: 600; font-size: 12px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.3s;">
+            + ADD NEW ACTIVITY
+        </a>
+    </div>
+
     <ul style="list-style: none; padding: 0; margin: 0;">
         @php
             $menuItems = [
@@ -86,15 +96,17 @@
         @endphp
 
         @foreach($menuItems as $section)
+            @php $secId = 'menu_section_' . $loop->index; $itemsId = 'menu_items_' . $loop->index; @endphp
             <li style="margin-bottom: 0;">
-                <div style="display: flex; align-items: center; padding: 12px 20px; color: #fff; background: transparent; border-radius: 0 16px 16px 0; font-weight: bold; cursor: default;">
-                    {{ $section['label'] }}
+                <div id="{{ $secId }}_header" style="display: flex; align-items: center; padding: 12px 20px; color: #fff; background: transparent; border-radius: 0 16px 16px 0; font-weight: bold; cursor: pointer; justify-content: space-between;" onclick="document.getElementById('{{ $itemsId }}').classList.toggle('hidden'); document.getElementById('{{ $secId }}_icon').classList.toggle('rotated');">
+                    <span>{{ $section['label'] }}</span>
+                    <span id="{{ $secId }}_icon" style="transform: rotate(0deg); transition: transform 0.2s;">▾</span>
                 </div>
                 @if(!empty($section['items']))
-                    <ul style="list-style: none; padding: 0; margin: 0; background: rgba(0,0,0,0.06);">
+                    <ul id="{{ $itemsId }}" class="hidden" style="list-style: none; padding: 0; margin: 0; background: rgba(0,0,0,0.06);">
                         @foreach($section['items'] as $item)
                             <li style="margin-bottom: 2px;">
-                                <span style="display: block; padding: 8px 36px; color: #fff; font-size: 13px; border-radius: 0; cursor: default;">{{ $item['label'] }}</span>
+                                <span style="display: block; padding: 8px 36px; color: #fff; font-size: 13px; border-radius: 0; cursor: pointer;">{{ $item['label'] }}</span>
                             </li>
                         @endforeach
                     </ul>
@@ -103,3 +115,7 @@
         @endforeach
     </ul>
 </div>
+<style>
+    .hidden { display: none !important; }
+    .rotated { transform: rotate(180deg) !important; }
+</style>

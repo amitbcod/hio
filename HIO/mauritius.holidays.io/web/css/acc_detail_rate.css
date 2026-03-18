@@ -1,0 +1,150 @@
+.accm-rate-tbl, .accm-rate-tbl .col-left, .accm-rate-tbl .room-cnt+.room-cnt, .accm-rate-tbl .col-right {
+	border-color: #d8d8d9;
+}
+
+.accm-rate-tbl {
+    border-width: 1px;
+    border-style: solid;
+    font-size: 13px;
+}
+
+.accm-rate-tbl .title {
+    background-color: #d8d8d9;
+}
+
+.accm-rate-tbl .title {
+    font-weight: 700;
+    padding: 10px 0;
+}
+
+.accm-rate-tbl .col-left {
+    width: 80%;
+}
+
+.accm-rate-tbl .col-left, .accm-rate-tbl .col-right, .accm-rate-tbl .co11, .accm-rate-tbl .co12 {
+    float: left;
+}
+
+.accm-rate-tbl .co11, .accm-rate-tbl .co12 {
+    padding: 0px 15px;
+}
+
+.accm-rate-tbl .co11 {
+    width: 75%;
+}
+
+.accm-rate-tbl .col-left, .accm-rate-tbl .col-right, .accm-rate-tbl .co11, .accm-rate-tbl .co12 {
+    float: left;
+}
+
+.accm-rate-tbl .co12 {
+    width: 25%;
+}
+
+.accm-rate-tbl .title .co12 {
+    text-align: center;
+}
+
+.accm-rate-tbl .col-right {
+    text-align: center;
+}
+
+.accm-rate-tbl .col-right {
+    width: 20%;
+}
+
+.clearfix:after {
+	clear:both;
+}
+
+.clearfix:after {
+	content: " ";
+    display: table;
+}
+
+.clearfix:before {
+	content: " ";
+    display: table;
+}
+
+.accm-rate-tbl .rooms-body .room-cnt .quantity {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    text-align: right;
+    padding: 15px 15px 0;
+}
+.span-green{
+    color: green;
+    font-weight: 600;
+}
+.span-red{
+    color: #ff0f0f;
+    font-weight: 600;
+}
+.accm-rate-tbl span{
+    width: 48%;
+    margin: 3% 2%;
+}
+.clearfix {
+    position: relative;
+}
+
+.accm-rate-tbl .rooms-body .col-right {
+    padding: 15px;
+}
+.accm-rate-tbl .rooms-body .col-left {
+    border-right-width: 1px;
+    border-right-style: solid;
+}
+.accm-rate-tbl, .accm-rate-tbl .col-left, .accm-rate-tbl .room-cnt+.room-cnt, .accm-rate-tbl .col-right {
+    border-color: #d8d8d9;
+}
+
+.accm-rate-tbl .rooms-body .room-cnt+.room-cnt {
+    /* border-top-width: 1px;*/
+    border-top-style: solid;
+}
+.accm-rate-tbl, .accm-rate-tbl .col-left, .accm-rate-tbl .room-cnt+.room-cnt, .accm-rate-tbl .col-right {
+    border-color: #d8d8d9;
+}
+div#rooms-body {
+    background: #f5f3f3;
+}
+.room-details{
+	padding-top:30px;
+}
+
+ul.room-amenities.clearfix li {
+    display: inline-block;
+}
+.room-aminities{
+	padding:0 15px 15px;
+}
+ul.room-amenities.clearfix li i {
+    padding-right: 10px;
+}
+.room-name {
+    font-weight: bold;
+}
+p.semi-b {
+    font-weight: bold;
+}
+.room-info {
+    padding-top: 15px;
+}
+nav ul > li, footer ul > li, .widget, aside ul > li, .gallery li {
+    /* padding-top: 28px !important; */
+}
+.refine-search-results dt {
+    border-bottom: 1px solid #ccc;
+    width: 100%;
+    font-weight: 700;
+    padding: 3px;
+    margin: 0 0 10px;
+    cursor: pointer;
+    color: #aba1a1;
+    position: relative;
+    background: #FFF;
+}

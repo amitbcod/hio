@@ -19,10 +19,10 @@
         {{-- Registration Steps as Collapsible Section --}}
         <div style="background: #f5f5f5; color: #333; border-top: 2px solid #ddd; margin-top: 0; padding: 12px 0;">
             <div style="padding: 12px 24px; font-weight: bold; letter-spacing: 1px; font-size: 14px; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between;" onclick="document.getElementById('registrationStepsCollapse').classList.toggle('hidden');">
-                <span>PROFILE SETUP (Optional)</span>
+                <span>PROFILE SETUP</span>
                 <span id="registrationToggleIcon" style="font-size: 16px; transition: transform 0.3s;">▼</span>
             </div>
-            <ul id="registrationStepsCollapse" style="list-style: none; padding: 0; margin: 0;">
+            <ul id="registrationStepsCollapse" class="hidden" style="list-style: none; padding: 0; margin: 0;">
                 @php 
                     $isHeadOfDepartment = auth('operator_staff')->check();
                     

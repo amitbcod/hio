@@ -152,35 +152,201 @@
                                     </div>
                                 </div>
 
-                                {{-- Step 5: Rooms & Units --}}
-                                <div class="col-md-6 mb-4">
-                                    <div style="border: 2px solid {{ $accommodation->step4_rooms ? '#28a745' : '#e0e0e0' }}; border-radius: 8px; padding: 16px; background: {{ $accommodation->step4_rooms ? '#f1f8f7' : '#fafafa' }};">
-                                        <div style="display: flex; align-items: start; gap: 12px;">
-                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: {{ $accommodation->step4_rooms ? '#28a745' : '#ddd' }}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
-                                                {{ $accommodation->step4_rooms ? '✓' : '5' }}
-                                            </div>
-                                            <div style="flex: 1;">
-                                                <h6 style="font-weight: 600; margin-bottom: 4px;">Step 5: Rooms & Units</h6>
-                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Define room types, capacities, amenities</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Step 6: Pricing & Rates --}}
+                                {{-- Step 5: Accounting & Transaction --}}
                                 <div class="col-md-6 mb-4">
                                     <div style="border: 2px solid {{ $accommodation->step5_rates ? '#28a745' : '#e0e0e0' }}; border-radius: 8px; padding: 16px; background: {{ $accommodation->step5_rates ? '#f1f8f7' : '#fafafa' }};">
                                         <div style="display: flex; align-items: start; gap: 12px;">
                                             <div style="width: 32px; height: 32px; border-radius: 50%; background: {{ $accommodation->step5_rates ? '#28a745' : '#ddd' }}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
-                                                {{ $accommodation->step5_rates ? '✓' : '6' }}
+                                                {{ $accommodation->step5_rates ? '✓' : '5' }}
                                             </div>
                                             <div style="flex: 1;">
-                                                <h6 style="font-weight: 600; margin-bottom: 4px;">Step 6: Pricing & Rates</h6>
-                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Set base rates, seasonal pricing, taxes</p>
+                                                <h6 style="font-weight: 600; margin-bottom: 4px;">Step 5: Accounting & Transaction</h6>
+                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Bank details, VAT, taxes, commission and currency settings</p>
                                             </div>
                                         </div>
+                                        @if($accommodation->step1_basics)
+                                            <div style="margin-top: 12px;">
+                                                <a href="{{ route('operator.accommodation.step5.show', $accommodation->id) }}" class="btn" style="display: inline-block; background: #19b5b5; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; text-decoration: none;">
+                                                    {{ $accommodation->step5_rates ? 'Edit' : 'Complete Step' }}
+                                                </a>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
+
+                                {{-- Step 6: Policies & Rules --}}
+                                <div class="col-md-6 mb-4">
+                                    <div style="border: 2px solid {{ $accommodation->step6_policies ? '#28a745' : '#e0e0e0' }}; border-radius: 8px; padding: 16px; background: {{ $accommodation->step6_policies ? '#f1f8f7' : '#fafafa' }};">
+                                        <div style="display: flex; align-items: start; gap: 12px;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: {{ $accommodation->step6_policies ? '#28a745' : '#ddd' }}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                                                {{ $accommodation->step6_policies ? '✓' : '6' }}
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <h6 style="font-weight: 600; margin-bottom: 4px;">Step 6: Policies & Rules</h6>
+                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Check-in/out, cancellation, deposits, house rules</p>
+                                            </div>
+                                        </div>
+                                        @if($accommodation->step1_basics)
+                                            <div style="margin-top: 12px;">
+                                                <a href="{{ route('operator.accommodation.step6.show', $accommodation->id) }}" class="btn" style="display: inline-block; background: #19b5b5; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; text-decoration: none;">
+                                                    {{ $accommodation->step6_policies ? 'Edit' : 'Complete Step' }}
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Step 7: Rooms & Units --}}
+                                <div class="col-md-6 mb-4">
+                                    <div style="border: 2px solid {{ $accommodation->step4_rooms ? '#28a745' : '#e0e0e0' }}; border-radius: 8px; padding: 16px; background: {{ $accommodation->step4_rooms ? '#f1f8f7' : '#fafafa' }};">
+                                        <div style="display: flex; align-items: start; gap: 12px;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: {{ $accommodation->step4_rooms ? '#28a745' : '#ddd' }}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                                                {{ $accommodation->step4_rooms ? '✓' : '7' }}
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <h6 style="font-weight: 600; margin-bottom: 4px;">Step 7: Rooms & Units</h6>
+                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Define room types, capacities, amenities</p>
+                                            </div>
+                                        </div>
+                                        @if($accommodation->step1_basics)
+                                            <div style="margin-top: 12px;">
+                                                <a href="{{ route('operator.accommodation.step7.show', $accommodation->id) }}" class="btn" style="display: inline-block; background: #19b5b5; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; text-decoration: none;">
+                                                    {{ $accommodation->step4_rooms ? 'Edit' : 'Complete Step' }}
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Step 8: Rate Plans --}}
+                                <div class="col-md-6 mb-4">
+                                    <div style="border: 2px solid {{ $accommodation->step8_rates ? '#28a745' : '#e0e0e0' }}; border-radius: 8px; padding: 16px; background: {{ $accommodation->step8_rates ? '#f1f8f7' : '#fafafa' }};">
+                                        <div style="display: flex; align-items: start; gap: 12px;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: {{ $accommodation->step8_rates ? '#28a745' : '#ddd' }}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                                                {{ $accommodation->step8_rates ? '✓' : '8' }}
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <h6 style="font-weight: 600; margin-bottom: 4px;">Step 8: Rate Plans</h6>
+                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Define meal plans, pricing per room/person</p>
+                                            </div>
+                                        </div>
+                                        @if($accommodation->step1_basics && $accommodation->step4_rooms)
+                                            <div style="margin-top: 12px;">
+                                                <a href="{{ route('operator.accommodation.step8.show', $accommodation->id) }}" class="btn" style="display: inline-block; background: #19b5b5; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; text-decoration: none;">
+                                                    {{ $accommodation->step8_rates ? 'Edit' : 'Set Plans' }}
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Step 9: Season and Pricing --}}
+                                <div class="col-md-6 mb-4">
+                                    <div style="border: 2px solid {{ $accommodation->step9_pricing ? '#28a745' : '#e0e0e0' }}; border-radius: 8px; padding: 16px; background: {{ $accommodation->step9_pricing ? '#f1f8f7' : '#fafafa' }};">
+                                        <div style="display: flex; align-items: start; gap: 12px;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: {{ $accommodation->step9_pricing ? '#28a745' : '#ddd' }}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                                                {{ $accommodation->step9_pricing ? '✓' : '9' }}
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <h6 style="font-weight: 600; margin-bottom: 4px;">Step 9: Season and Pricing</h6>
+                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Set seasonal pricing for different periods</p>
+                                            </div>
+                                        </div>
+                                        @if($accommodation->step1_basics && $accommodation->step4_rooms && $accommodation->step8_rates)
+                                            <div style="margin-top: 12px;">
+                                                <a href="{{ route('operator.accommodation.step9.show', $accommodation->id) }}" class="btn" style="display: inline-block; background: #19b5b5; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; text-decoration: none;">
+                                                    {{ $accommodation->step9_pricing ? 'Edit' : 'Set Pricing' }}
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Step 10: Inventory & Allotment --}}
+                                <div class="col-md-6 mb-4">
+                                    <div style="border: 2px solid {{ $accommodation->step10_inventory_allotment ? '#28a745' : '#e0e0e0' }}; border-radius: 8px; padding: 16px; background: {{ $accommodation->step10_inventory_allotment ? '#f1f8f7' : '#fafafa' }};">
+                                        <div style="display: flex; align-items: start; gap: 12px;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: {{ $accommodation->step10_inventory_allotment ? '#28a745' : '#ddd' }}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                                                {{ $accommodation->step10_inventory_allotment ? '✓' : '10' }}
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <h6 style="font-weight: 600; margin-bottom: 4px;">Step 10: Inventory & Allotment</h6>
+                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Manage room availability and booking restrictions</p>
+                                            </div>
+                                        </div>
+                                        @if($accommodation->step1_basics && $accommodation->step4_rooms && $accommodation->step9_pricing)
+                                            <div style="margin-top: 12px;">
+                                                <a href="{{ route('operator.accommodation.step10.show', $accommodation->id) }}" class="btn" style="display: inline-block; background: #19b5b5; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; text-decoration: none;">
+                                                    {{ $accommodation->step10_inventory_allotment ? 'Edit' : 'Manage Inventory' }}
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Step 11: Promotions & Offers --}}
+                                <div class="col-md-6 mb-4">
+                                    <div style="border: 2px solid {{ $accommodation->step11_promotions_offers ? '#28a745' : '#e0e0e0' }}; border-radius: 8px; padding: 16px; background: {{ $accommodation->step11_promotions_offers ? '#f1f8f7' : '#fafafa' }};">
+                                        <div style="display: flex; align-items: start; gap: 12px;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: {{ $accommodation->step11_promotions_offers ? '#28a745' : '#ddd' }}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                                                {{ $accommodation->step11_promotions_offers ? '✓' : '11' }}
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <h6 style="font-weight: 600; margin-bottom: 4px;">Step 11: Promotions & Offers</h6>
+                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Create and manage special promotions</p>
+                                            </div>
+                                        </div>
+                                        @if($accommodation->step1_basics && $accommodation->step4_rooms && $accommodation->step9_pricing)
+                                            <div style="margin-top: 12px;">
+                                                <a href="{{ route('operator.accommodation.step11.show', $accommodation->id) }}" class="btn" style="display: inline-block; background: #19b5b5; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; text-decoration: none;">
+                                                    {{ $accommodation->step11_promotions_offers ? 'Edit' : 'Add Promotions' }}
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Step 12: SEO & Social --}}
+                                <div class="col-md-6 mb-4">
+                                    <div style="border: 2px solid {{ $accommodation->step12_review ? '#28a745' : '#e0e0e0' }}; border-radius: 8px; padding: 16px; background: {{ $accommodation->step12_review ? '#f1f8f7' : '#fafafa' }};">
+                                        <div style="display: flex; align-items: start; gap: 12px;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: {{ $accommodation->step12_review ? '#28a745' : '#ddd' }}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                                                {{ $accommodation->step12_review ? '✓' : '12' }}
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <h6 style="font-weight: 600; margin-bottom: 4px;">Step 12: SEO & Social</h6>
+                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Meta tags, keywords and OpenGraph for social sharing</p>
+                                            </div>
+                                        </div>
+                                        @if($accommodation->step1_basics)
+                                            <div style="margin-top: 12px;">
+                                                <a href="{{ route('operator.accommodation.step12.show', $accommodation->id) }}" class="btn" style="display: inline-block; background: #19b5b5; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; text-decoration: none;">
+                                                    {{ $accommodation->step12_review ? 'Edit' : 'Configure SEO' }}
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Step 13: Publish --}}
+                                <div class="col-md-6 mb-4">
+                                    <div style="border: 2px solid {{ $accommodation->step13_publish ? '#28a745' : '#e0e0e0' }}; border-radius: 8px; padding: 16px; background: {{ $accommodation->step13_publish ? '#f1f8f7' : '#fafafa' }};">
+                                        <div style="display: flex; align-items: start; gap: 12px;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: {{ $accommodation->step13_publish ? '#28a745' : '#ddd' }}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                                                {{ $accommodation->step13_publish ? '✓' : '13' }}
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <h6 style="font-weight: 600; margin-bottom: 4px;">Step 13: Review & Publish</h6>
+                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Review and submit for approval</p>
+                                            </div>
+                                        </div>
+                                        @if($accommodation->step1_basics)
+                                            <div style="margin-top: 12px;">
+                                                <a href="{{ route('operator.accommodation.step13.show', $accommodation->id) }}" class="btn" style="display: inline-block; background: #28a745; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; text-decoration: none;">
+                                                    {{ $accommodation->step13_publish ? 'View Status' : 'Review & Submit' }}
+                                                </a>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

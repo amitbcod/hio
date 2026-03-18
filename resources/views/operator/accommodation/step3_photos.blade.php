@@ -2,9 +2,10 @@
 
 @section('content')
     <div class="container mt-5">
+        @php $currentStep = 3; @endphp
         <div class="row">
             <div class="col-md-3">
-                @include('operator.registration._sidebar_main')
+                @include('operator.accommodation._steps_sidebar')
             </div>
             <div class="col-md-9">
                 <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px;">
