@@ -14,6 +14,13 @@
             'type' => $filters['type'],
             'name' => $filters['name'],
         ], fn ($value) => $value !== null && $value !== '');
+
+        $detailQuery = array_filter([
+            'check_in' => $filters['check_in'],
+            'check_out' => $filters['check_out'],
+            'adults' => (int) request()->query('adults', 2),
+            'children' => (int) request()->query('children', 0),
+        ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
     <section class="page-hero">
@@ -157,8 +164,14 @@
                         @foreach($results as $item)
                             @php
                                 $metaLabel = $item['property_type'] ?? $item['meta'] ?? $item['kind'] ?? $categoryTitle;
-                                $itemUrl = $item['url'] ?? '#';
+                                $baseUrl = $item['url'] ?? '#';
+                                $itemUrl = $baseUrl;
+                                if (!empty($detailQuery) && $baseUrl !== '#') {
+                                    $itemUrl .= (str_contains($baseUrl, '?') ? '&' : '?') . http_build_query($detailQuery);
+                                }
                                 $startingRate = $item['starting_rate'] ?? null;
+                                $isActivityListing = ($item['kind'] ?? null) === 'Activity' || $category === 'tours';
+                                $priceUnit = $isActivityListing ? '/ person' : '/ room';
                                 $secondaryLabel = $item['booking_confirmation_type'] ?? null;
                             @endphp
                             <article class="category-result-card">
@@ -175,7 +188,7 @@
                                             <strong>{{ $secondaryLabel }}</strong>
                                         @endif
                                         @if($startingRate !== null)
-                                            <span class="listing-price">From Rs {{ number_format((float) $startingRate, 0) }}</span>
+                                            <span class="listing-price">From Rs {{ number_format((float) $startingRate, 0) }} {{ $priceUnit }}</span>
                                         @endif
                                         <a href="{{ $itemUrl }}">View details</a>
                                     </div>
