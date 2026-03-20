@@ -425,11 +425,16 @@ class BookingController extends Controller
 
     private function calcAccommodationFees(Accommodation $accommodation, ?int $roomId, int $nights): float
     {
-        $fee = AccommodationFee::where('accommodation_id', $accommodation->id)
-            ->when($roomId, fn($q) => $q->where(function($q2) use ($roomId) {
-                $q2->whereNull('room_id')->orWhere('room_id', $roomId);
-            }))
-            ->first();
+        try {
+            $fee = AccommodationFee::where('accommodation_id', $accommodation->id)
+                ->when($roomId, fn($q) => $q->where(function($q2) use ($roomId) {
+                    $q2->whereNull('room_id')->orWhere('room_id', $roomId);
+                }))
+                ->first();
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Table may not exist on this environment yet; treat as no fees.
+            return 0.0;
+        }
 
         if (!$fee) {
             return 0.0;
