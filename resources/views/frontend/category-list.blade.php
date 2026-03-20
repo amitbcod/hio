@@ -184,7 +184,7 @@
                                     <div class="category-result-footer">
                                         <span class="chip">{{ $metaLabel }}</span>
                                         @if($startingRate !== null)
-                                            <span class="listing-price">From Rs {{ number_format((float) $startingRate, 0) }} {{ $priceUnit }}</span>
+                                            <span class="listing-price">From MUR {{ number_format((float) $startingRate, 0) }} {{ $priceUnit }}</span>
                                         @endif
                                         <a href="{{ $itemUrl }}">View details</a>
                                     </div>
