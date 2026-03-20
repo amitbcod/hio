@@ -22,14 +22,14 @@
             </div>
             <div class="top-links">
                 @if(auth('traveler')->check())
-                    <a href="{{ route('traveler.profile') }}">My Profile</a>
+                    <!-- <a href="{{ route('traveler.profile') }}">My Profile</a>
                     <form method="POST" action="{{ route('traveler.logout') }}" class="top-inline-form">
                         @csrf
                         <button type="submit" class="top-link-button">Traveller Logout</button>
-                    </form>
+                    </form> -->
                 @else
-                    <a href="{{ route('traveler.login') }}">Traveller Login</a>
-                    <a href="{{ route('traveler.register') }}">Traveller Register</a>
+                    <!-- <a href="{{ route('traveler.login') }}">Traveller Login</a>
+                    <a href="{{ route('traveler.register') }}">Traveller Register</a> -->
                 @endif
                 <a href="{{ route('operator.login') }}">Operator Login</a>
                 <a href="{{ route('operator.register') }}">Operator Register</a>
