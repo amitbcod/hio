@@ -28,6 +28,8 @@ class Accommodation extends Model
     
     protected $casts = [
         'submitted_for_approval_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'published_at' => 'datetime',
     ];
     
     const CREATED_AT = 'created_at';

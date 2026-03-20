@@ -172,7 +172,6 @@
                                 $startingRate = $item['starting_rate'] ?? null;
                                 $isActivityListing = ($item['kind'] ?? null) === 'Activity' || $category === 'tours';
                                 $priceUnit = $isActivityListing ? '/ person' : '/ room';
-                                $secondaryLabel = $item['booking_confirmation_type'] ?? null;
                             @endphp
                             <article class="category-result-card">
                                 <a href="{{ $itemUrl }}" class="category-result-media">
@@ -184,11 +183,8 @@
                                     <p>{{ $item['excerpt'] }}</p>
                                     <div class="category-result-footer">
                                         <span class="chip">{{ $metaLabel }}</span>
-                                        @if($secondaryLabel)
-                                            <strong>{{ $secondaryLabel }}</strong>
-                                        @endif
                                         @if($startingRate !== null)
-                                            <span class="listing-price">From Rs {{ number_format((float) $startingRate, 0) }} {{ $priceUnit }}</span>
+                                            <span class="listing-price">From MUR {{ number_format((float) $startingRate, 0) }} {{ $priceUnit }}</span>
                                         @endif
                                         <a href="{{ $itemUrl }}">View details</a>
                                     </div>

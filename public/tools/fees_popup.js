@@ -5,6 +5,11 @@
 
     const accommodationIdMatch = window.location.pathname.match(/accommodation\/(\d+)/);
     const accommodationId = accommodationIdMatch ? accommodationIdMatch[1] : '0';
+    const feesConfig = window.hioFeesPopupConfig || {};
+    const saveFeesUrl = (feesConfig.saveUrlTemplate || ('/operator/accommodation/' + accommodationId + '/additional-fees'))
+        .replace('__ACCOMMODATION_ID__', encodeURIComponent(accommodationId));
+    const getFeesUrl = (feesConfig.getUrlTemplate || ('/operator/accommodation/' + accommodationId + '/additional-fees'))
+        .replace('__ACCOMMODATION_ID__', encodeURIComponent(accommodationId));
 
     const style = document.createElement('style');
     style.textContent = `
@@ -73,6 +78,21 @@
         setTimeout(()=> el.style.display='none', 3000);
     }
 
+    async function readResponsePayload(res) {
+        const contentType = res.headers.get('content-type') || '';
+
+        if (contentType.includes('application/json')) {
+            return res.json();
+        }
+
+        const text = await res.text();
+
+        return {
+            success: false,
+            message: text && text.trim() !== '' ? text : 'Request failed'
+        };
+    }
+
     // Panel visibility is controlled by the page's Advanced Settings button
 
     document.getElementById('fees_cancel').addEventListener('click', ()=>{
@@ -111,13 +131,13 @@
                 const headers = {'Content-Type':'application/json'};
                 if(tokenMeta) headers['X-CSRF-TOKEN'] = tokenMeta.getAttribute('content');
 
-                const res = await fetch('/operator/accommodation/' + accommodationId + '/additional-fees', {
+                const res = await fetch(saveFeesUrl, {
                     method: 'POST',
                     headers: headers,
                     body: JSON.stringify(payload),
                     credentials: 'same-origin'
                 });
-                const data = await res.json();
+                const data = await readResponsePayload(res);
                 if(res.ok && data.success){
                     try{ localStorage.setItem(getKey(), JSON.stringify(payload)); }catch(e){}
                     showMessage('Saved', true);
@@ -154,9 +174,9 @@
     // auto-load existing property-level fees: prefer server, fallback to localStorage
     (async function prefill(){
             try{
-            const res = await fetch('/operator/accommodation/' + accommodationId + '/additional-fees', {credentials: 'same-origin'});
+                const res = await fetch(getFeesUrl, {credentials: 'same-origin'});
             if(res.ok){
-                const json = await res.json();
+                const json = await readResponsePayload(res);
                 if(json.success && json.data){
                     const o = json.data;
                     if(o.cleaning_fee !== null) document.getElementById('fees_cleaning').value = o.cleaning_fee;

@@ -68,6 +68,24 @@ img {
     color: #4b5563;
 }
 
+.top-inline-form {
+    margin: 0;
+}
+
+.top-link-button {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: #4b5563;
+    font: inherit;
+    cursor: pointer;
+}
+
+.top-links a:hover,
+.top-link-button:hover {
+    color: var(--brand-dark);
+}
+
 .site-header {
     position: sticky;
     top: 0;

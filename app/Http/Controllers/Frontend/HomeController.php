@@ -28,7 +28,7 @@ class HomeController extends Controller
             ->get()
             ->map(fn (Activity $activity) => $this->mapActivity($activity));
 
-        $accommodations = Accommodation::with(['media' => function ($query) {
+        $accommodations = $this->approvedAccommodationQuery()->with(['media' => function ($query) {
                 $query->orderBy('order')->orderBy('id');
             }])
             ->whereNotNull('property_name')
@@ -117,7 +117,7 @@ class HomeController extends Controller
         $sidebarSelections = $this->collectSidebarFilters($request, $category);
         $searchOptions = $this->buildSearchOptions();
 
-        $accommodations = Accommodation::with([
+        $accommodations = $this->approvedAccommodationQuery()->with([
                 'media' => function ($query) {
                     $query->orderBy('order')->orderBy('id');
                 },
@@ -224,6 +224,7 @@ class HomeController extends Controller
     public function showAccommodation(Request $request, Accommodation $accommodation)
     {
         abort_if(blank($accommodation->property_name), 404);
+        abort_if(!$this->isAccommodationApprovedForFrontend($accommodation), 404);
 
         $bookingContext = $this->buildDetailBookingContext($request);
         $stayEnd = Carbon::parse($bookingContext['check_out'])->subDay()->toDateString();
@@ -621,7 +622,7 @@ class HomeController extends Controller
 
     private function buildSimilarAccommodations(Accommodation $accommodation): array
     {
-        $query = Accommodation::with([
+        $query = $this->approvedAccommodationQuery()->with([
             'media' => function ($q) {
                 $q->orderBy('order')->orderBy('id');
             },
@@ -667,7 +668,7 @@ class HomeController extends Controller
             return $items->all();
         }
 
-        return Accommodation::with([
+        return $this->approvedAccommodationQuery()->with([
                 'media' => function ($q) {
                     $q->orderBy('order')->orderBy('id');
                 },
@@ -971,6 +972,15 @@ class HomeController extends Controller
         $checkIn = Carbon::parse($bookingContext['check_in'])->startOfDay();
         $checkOut = Carbon::parse($bookingContext['check_out'])->startOfDay();
         $days = $this->buildStayDateKeys($checkIn, $checkOut);
+        $activeRooms = $rooms->filter(function ($room) {
+            $status = trim((string) ($room->status ?? ''));
+
+            return $status === '' || strcasecmp($status, 'Active') === 0;
+        });
+        $allowGlobalFallback = $activeRooms->count() <= 1;
+        $globalRates = $rates->filter(function ($rate) {
+            return empty($rate->room_id);
+        });
 
         $inventoryByRoomDate = [];
         foreach ($inventoryRows as $row) {
@@ -1019,7 +1029,8 @@ class HomeController extends Controller
         $results = [];
 
         foreach ($rooms as $room) {
-            if (!blank($room->status) && $room->status !== 'Active') {
+            $roomStatus = trim((string) ($room->status ?? ''));
+            if ($roomStatus !== '' && strcasecmp($roomStatus, 'Active') !== 0) {
                 continue;
             }
 
@@ -1027,30 +1038,55 @@ class HomeController extends Controller
                 return (int) ($rate->room_id ?? 0) === (int) $room->id;
             });
 
-            if ($roomRates->isEmpty()) {
-                $roomRates = $rates->filter(function ($rate) {
-                    return empty($rate->room_id);
-                });
-            }
+            $candidateRates = $roomRates->isNotEmpty() ? $roomRates : $globalRates;
 
-            $selectedRate = $roomRates
+            $selectedRateData = $candidateRates
                 ->filter(fn ($rate) => $this->rateOverlapsStay($rate, $checkIn, $checkOut))
-                ->sortBy(function ($rate) use ($bookingContext) {
-                    $value = $this->calculateAccommodationNightlyTotal(
+                ->map(function ($rate) use ($bookingContext) {
+                    $nightly = $this->calculateAccommodationNightlyTotal(
                         $rate,
                         (int) $bookingContext['adults'],
                         (int) $bookingContext['children']
                     );
 
-                    return $value !== null ? $value : PHP_INT_MAX;
+                    return [
+                        'rate' => $rate,
+                        'nightly' => $nightly,
+                    ];
                 })
+                ->filter(fn (array $item) => $item['nightly'] !== null)
+                ->sortBy('nightly')
                 ->first();
 
-            $nightlyPrice = $this->calculateAccommodationNightlyTotal(
-                $selectedRate,
-                (int) $bookingContext['adults'],
-                (int) $bookingContext['children']
-            );
+            if (!$selectedRateData && $roomRates->isNotEmpty() && $globalRates->isNotEmpty()) {
+                $selectedRateData = $globalRates
+                    ->filter(fn ($rate) => $this->rateOverlapsStay($rate, $checkIn, $checkOut))
+                    ->map(function ($rate) use ($bookingContext) {
+                        $nightly = $this->calculateAccommodationNightlyTotal(
+                            $rate,
+                            (int) $bookingContext['adults'],
+                            (int) $bookingContext['children']
+                        );
+
+                        return [
+                            'rate' => $rate,
+                            'nightly' => $nightly,
+                        ];
+                    })
+                    ->filter(fn (array $item) => $item['nightly'] !== null)
+                    ->sortBy('nightly')
+                    ->first();
+            }
+
+            $selectedRate = $selectedRateData['rate'] ?? null;
+            $nightlyPrice = $selectedRateData['nightly'] ?? null;
+
+            if ($nightlyPrice === null) {
+                $roomBasePrice = $room->base_price !== null ? (float) $room->base_price : null;
+                if ($roomBasePrice !== null && $roomBasePrice > 0) {
+                    $nightlyPrice = round($roomBasePrice, 2);
+                }
+            }
 
             $baseUnits = !is_null($room->allotment)
                 ? (int) $room->allotment
@@ -1061,11 +1097,24 @@ class HomeController extends Controller
 
             foreach ($days as $dayKey) {
                 $inventory = $inventoryByRoomDate[(int) $room->id][$dayKey]
-                    ?? $inventoryByRoomDate[0][$dayKey]
-                    ?? null;
+                    ?? ($allowGlobalFallback ? ($inventoryByRoomDate[0][$dayKey] ?? null) : null);
 
-                $bookedUnits = (int) ($bookingsByRoomDate[(int) $room->id][$dayKey] ?? 0)
-                    + (int) ($bookingsByRoomDate[0][$dayKey] ?? 0);
+                if ($inventory) {
+                    $hasExplicitInventory = $inventory['is_blocked']
+                        || $inventory['sellable_units'] > 0
+                        || $inventory['sold_units'] > 0
+                        || $inventory['available_units'] > 0;
+
+                    if (!$hasExplicitInventory) {
+                        $inventory = null;
+                    }
+                }
+
+                $bookedUnits = (int) ($bookingsByRoomDate[(int) $room->id][$dayKey] ?? 0);
+
+                if ($allowGlobalFallback) {
+                    $bookedUnits += (int) ($bookingsByRoomDate[0][$dayKey] ?? 0);
+                }
 
                 if ($inventory) {
                     $sellableUnits = $inventory['sellable_units'] > 0
@@ -1331,7 +1380,7 @@ class HomeController extends Controller
 
     private function buildSearchOptions(): array
     {
-        $accommodationRegions = Accommodation::query()
+        $accommodationRegions = $this->approvedAccommodationQuery()
             ->whereNotNull('property_name')
             ->pluck('region')
             ->map(fn ($value) => trim((string) $value))
@@ -1341,7 +1390,7 @@ class HomeController extends Controller
             ->values()
             ->all();
 
-        $accommodationTypes = Accommodation::query()
+        $accommodationTypes = $this->approvedAccommodationQuery()
             ->whereNotNull('property_name')
             ->pluck('property_type')
             ->map(fn ($value) => trim((string) $value))
@@ -1616,5 +1665,18 @@ class HomeController extends Controller
         }
 
         return 'Top End';
+    }
+
+    private function approvedAccommodationQuery()
+    {
+        return Accommodation::query()
+            ->where('approval_status', 'Approved')
+            ->where('status', Accommodation::STATUS_ACTIVE);
+    }
+
+    private function isAccommodationApprovedForFrontend(Accommodation $accommodation): bool
+    {
+        return (string) $accommodation->approval_status === 'Approved'
+            && (string) $accommodation->status === Accommodation::STATUS_ACTIVE;
     }
 }

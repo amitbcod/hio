@@ -130,7 +130,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label>Emergency Phone *</label>
-                                <input type="text" name="emergency_contact_phone" class="form-control" required value="{{ old('emergency_contact_phone', $serviceOps?->emergency_contact_phone) }}">
+                                <input type="text" name="emergency_contact_phone" class="form-control" required maxlength="20" pattern="[0-9+\-\s()]{6,20}" title="Use only digits, +, -, spaces, and parentheses (6-20 chars)." value="{{ old('emergency_contact_phone', $serviceOps?->emergency_contact_phone) }}">
                             </div>
                             <div class="col-md-4">
                                 <label>Emergency Email *</label>

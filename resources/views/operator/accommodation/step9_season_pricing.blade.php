@@ -316,6 +316,9 @@
     </div>
 
     <script>
+        const updateSeasonUrlTemplate = @json(route('operator.accommodation.step9.updateSeason', ['id' => $accommodation->id, 'entryId' => '__ENTRY_ID__']));
+        const deleteSeasonUrlTemplate = @json(route('operator.accommodation.step9.deleteSeason', ['id' => $accommodation->id, 'entryId' => '__ENTRY_ID__']));
+
         function openSetDefaultPriceModal(btn) {
             const roomId = btn.dataset.roomId;
             const planId = btn.dataset.planId;
@@ -457,7 +460,7 @@
 
             const formData = new FormData(this);
 
-            fetch('/operator/accommodation/{{ $accommodation->id }}/step9-update-season/' + entryId, {
+            fetch(updateSeasonUrlTemplate.replace('__ENTRY_ID__', encodeURIComponent(entryId)), {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -632,7 +635,7 @@
                 return;
             }
 
-            fetch('/operator/accommodation/{{ $accommodation->id }}/step9-delete-season/' + entryId, {
+            fetch(deleteSeasonUrlTemplate.replace('__ENTRY_ID__', encodeURIComponent(entryId)), {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -686,7 +689,13 @@
         });
         
     </script>
-    <script src="{{ asset('tools/fees_popup.js') }}"></script>
+    <script>
+        window.hioFeesPopupConfig = {
+            saveUrlTemplate: @json(route('operator.accommodation.additional_fees.save', ['id' => '__ACCOMMODATION_ID__'])),
+            getUrlTemplate: @json(route('operator.accommodation.additional_fees.get', ['id' => '__ACCOMMODATION_ID__']))
+        };
+    </script>
+    <script src="{{ asset('tools/fees_popup.js') }}?v={{ @filemtime(public_path('tools/fees_popup.js')) ?: time() }}"></script>
     
     <!-- Back Button -->
     <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e0e0e0;">

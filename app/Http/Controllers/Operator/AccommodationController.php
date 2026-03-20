@@ -1514,6 +1514,8 @@ class AccommodationController extends Controller
                 ->with('error', 'Please complete Step 1 first.');
         }
 
+        $this->syncStep9PricingStatus($accommodation);
+
         // Load rooms with their assigned plans
         $rooms = AccommodationRoom::where('accommodation_id', $accommodation->id)->with('rates')->get();
 
@@ -1549,6 +1551,27 @@ class AccommodationController extends Controller
             ->get();
 
         return view('operator.accommodation.step9_season_pricing', compact('accommodation', 'operator', 'rooms', 'roomPlanCombinations', 'seasonalPricing'));
+    }
+
+    private function syncStep9PricingStatus(Accommodation $accommodation): void
+    {
+        if ((int) ($accommodation->step9_pricing ?? 0) === 1) {
+            return;
+        }
+
+        $hasPricingConfigured = AccommodationRate::where('accommodation_id', $accommodation->id)
+            ->where('is_rate_plan', false)
+            ->whereNotNull('room_id')
+            ->where(function ($query) {
+                $query->where('base_rate', '>', 0)
+                    ->orWhere('final_rate', '>', 0);
+            })
+            ->exists();
+
+        if ($hasPricingConfigured) {
+            $accommodation->completeStep('step9_pricing');
+            $accommodation->refresh();
+        }
     }
 
     /**
@@ -1778,6 +1801,8 @@ class AccommodationController extends Controller
                 'is_active' => true,
             ]);
 
+            $this->syncStep9PricingStatus($accommodation);
+
             return response()->json(['success' => true, 'message' => 'Default price set successfully!']);
         } catch (\Exception $e) {
             \Log::error('setDefaultPrice error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
@@ -1989,6 +2014,8 @@ class AccommodationController extends Controller
                 'is_active' => true,
             ]);
 
+            $this->syncStep9PricingStatus($accommodation);
+
             return response()->json(['success' => true, 'message' => 'Seasonal pricing entry added successfully!']);
         } catch (\Exception $e) {
             \Log::error('addSeasonalEntry error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
@@ -2091,6 +2118,8 @@ class AccommodationController extends Controller
                 'valid_from' => $request->valid_from,
                 'valid_to' => $request->valid_to,
             ]);
+
+            $this->syncStep9PricingStatus($accommodation);
 
             return response()->json(['success' => true, 'message' => 'Seasonal pricing entry updated successfully!']);
         } catch (\Exception $e) {
@@ -2899,6 +2928,9 @@ class AccommodationController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $this->syncStep9PricingStatus($accommodation);
+        $accommodation->refresh();
+
         // Verify all steps are complete
         $requiredSteps = [
             'step1_basics' => 'Step 1: Basics',
@@ -2929,7 +2961,14 @@ class AccommodationController extends Controller
         try {
             $accommodation->update([
                 'approval_status' => 'Pending',
+                'status' => Accommodation::STATUS_PENDING_APPROVAL,
                 'submitted_for_approval_at' => now(),
+                'approved_by' => null,
+                'approved_at' => null,
+                'approval_notes' => null,
+                'is_published' => false,
+                'published_at' => null,
+                'is_visible_to_travellers' => false,
                 'step13_publish' => 1
             ]);
 
