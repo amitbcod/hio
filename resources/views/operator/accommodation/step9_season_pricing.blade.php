@@ -689,7 +689,13 @@
         });
         
     </script>
-    <script src="{{ asset('tools/fees_popup.js') }}"></script>
+    <script>
+        window.hioFeesPopupConfig = {
+            saveUrlTemplate: @json(route('operator.accommodation.additional_fees.save', ['id' => '__ACCOMMODATION_ID__'])),
+            getUrlTemplate: @json(route('operator.accommodation.additional_fees.get', ['id' => '__ACCOMMODATION_ID__']))
+        };
+    </script>
+    <script src="{{ asset('tools/fees_popup.js') }}?v={{ @filemtime(public_path('tools/fees_popup.js')) ?: time() }}"></script>
     
     <!-- Back Button -->
     <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e0e0e0;">
