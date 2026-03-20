@@ -5,6 +5,7 @@ use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\BookingController;
 use Illuminate\Support\Facades\Route;
 require base_path('routes/operator.php');
+require base_path('routes/traveler.php');
 require base_path('routes/login_fallback.php');
 // Admin routes
 require base_path('routes/admin.php');

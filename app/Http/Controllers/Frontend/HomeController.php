@@ -971,6 +971,9 @@ class HomeController extends Controller
         $checkIn = Carbon::parse($bookingContext['check_in'])->startOfDay();
         $checkOut = Carbon::parse($bookingContext['check_out'])->startOfDay();
         $days = $this->buildStayDateKeys($checkIn, $checkOut);
+        $globalRates = $rates->filter(function ($rate) {
+            return empty($rate->room_id);
+        });
 
         $inventoryByRoomDate = [];
         foreach ($inventoryRows as $row) {
@@ -1027,30 +1030,55 @@ class HomeController extends Controller
                 return (int) ($rate->room_id ?? 0) === (int) $room->id;
             });
 
-            if ($roomRates->isEmpty()) {
-                $roomRates = $rates->filter(function ($rate) {
-                    return empty($rate->room_id);
-                });
-            }
+            $candidateRates = $roomRates->isNotEmpty() ? $roomRates : $globalRates;
 
-            $selectedRate = $roomRates
+            $selectedRateData = $candidateRates
                 ->filter(fn ($rate) => $this->rateOverlapsStay($rate, $checkIn, $checkOut))
-                ->sortBy(function ($rate) use ($bookingContext) {
-                    $value = $this->calculateAccommodationNightlyTotal(
+                ->map(function ($rate) use ($bookingContext) {
+                    $nightly = $this->calculateAccommodationNightlyTotal(
                         $rate,
                         (int) $bookingContext['adults'],
                         (int) $bookingContext['children']
                     );
 
-                    return $value !== null ? $value : PHP_INT_MAX;
+                    return [
+                        'rate' => $rate,
+                        'nightly' => $nightly,
+                    ];
                 })
+                ->filter(fn (array $item) => $item['nightly'] !== null)
+                ->sortBy('nightly')
                 ->first();
 
-            $nightlyPrice = $this->calculateAccommodationNightlyTotal(
-                $selectedRate,
-                (int) $bookingContext['adults'],
-                (int) $bookingContext['children']
-            );
+            if (!$selectedRateData && $roomRates->isNotEmpty() && $globalRates->isNotEmpty()) {
+                $selectedRateData = $globalRates
+                    ->filter(fn ($rate) => $this->rateOverlapsStay($rate, $checkIn, $checkOut))
+                    ->map(function ($rate) use ($bookingContext) {
+                        $nightly = $this->calculateAccommodationNightlyTotal(
+                            $rate,
+                            (int) $bookingContext['adults'],
+                            (int) $bookingContext['children']
+                        );
+
+                        return [
+                            'rate' => $rate,
+                            'nightly' => $nightly,
+                        ];
+                    })
+                    ->filter(fn (array $item) => $item['nightly'] !== null)
+                    ->sortBy('nightly')
+                    ->first();
+            }
+
+            $selectedRate = $selectedRateData['rate'] ?? null;
+            $nightlyPrice = $selectedRateData['nightly'] ?? null;
+
+            if ($nightlyPrice === null) {
+                $roomBasePrice = $room->base_price !== null ? (float) $room->base_price : null;
+                if ($roomBasePrice !== null && $roomBasePrice > 0) {
+                    $nightlyPrice = round($roomBasePrice, 2);
+                }
+            }
 
             $baseUnits = !is_null($room->allotment)
                 ? (int) $room->allotment
