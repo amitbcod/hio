@@ -971,6 +971,12 @@ class HomeController extends Controller
         $checkIn = Carbon::parse($bookingContext['check_in'])->startOfDay();
         $checkOut = Carbon::parse($bookingContext['check_out'])->startOfDay();
         $days = $this->buildStayDateKeys($checkIn, $checkOut);
+        $activeRooms = $rooms->filter(function ($room) {
+            $status = trim((string) ($room->status ?? ''));
+
+            return $status === '' || strcasecmp($status, 'Active') === 0;
+        });
+        $allowGlobalFallback = $activeRooms->count() <= 1;
         $globalRates = $rates->filter(function ($rate) {
             return empty($rate->room_id);
         });
@@ -1022,7 +1028,8 @@ class HomeController extends Controller
         $results = [];
 
         foreach ($rooms as $room) {
-            if (!blank($room->status) && $room->status !== 'Active') {
+            $roomStatus = trim((string) ($room->status ?? ''));
+            if ($roomStatus !== '' && strcasecmp($roomStatus, 'Active') !== 0) {
                 continue;
             }
 
@@ -1089,11 +1096,24 @@ class HomeController extends Controller
 
             foreach ($days as $dayKey) {
                 $inventory = $inventoryByRoomDate[(int) $room->id][$dayKey]
-                    ?? $inventoryByRoomDate[0][$dayKey]
-                    ?? null;
+                    ?? ($allowGlobalFallback ? ($inventoryByRoomDate[0][$dayKey] ?? null) : null);
 
-                $bookedUnits = (int) ($bookingsByRoomDate[(int) $room->id][$dayKey] ?? 0)
-                    + (int) ($bookingsByRoomDate[0][$dayKey] ?? 0);
+                if ($inventory) {
+                    $hasExplicitInventory = $inventory['is_blocked']
+                        || $inventory['sellable_units'] > 0
+                        || $inventory['sold_units'] > 0
+                        || $inventory['available_units'] > 0;
+
+                    if (!$hasExplicitInventory) {
+                        $inventory = null;
+                    }
+                }
+
+                $bookedUnits = (int) ($bookingsByRoomDate[(int) $room->id][$dayKey] ?? 0);
+
+                if ($allowGlobalFallback) {
+                    $bookedUnits += (int) ($bookingsByRoomDate[0][$dayKey] ?? 0);
+                }
 
                 if ($inventory) {
                     $sellableUnits = $inventory['sellable_units'] > 0
