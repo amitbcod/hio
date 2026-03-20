@@ -888,10 +888,16 @@ class RegistrationController extends Controller
         $operator = auth()->user();
         $request->validate([
             'service_location' => 'required',
-            'emergency_contact_name' => 'required',
-            'emergency_contact_phone' => 'required',
+            'emergency_contact_name' => 'required|string|max:255',
+            'emergency_contact_phone' => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s()]{6,20}$/'],
             'emergency_contact_email' => 'required|email',
+        ], [
+            'emergency_contact_phone.max' => 'Emergency phone must be at most 20 characters.',
+            'emergency_contact_phone.regex' => 'Emergency phone format is invalid. Use only digits, +, -, spaces, and parentheses.',
         ]);
+
+        $emergencyContactPhone = trim((string) $request->emergency_contact_phone);
+
         $data = [
             'operator_id' => $operator->operator_id,
             'service_location' => $request->service_location,
@@ -904,7 +910,7 @@ class RegistrationController extends Controller
             'pickup_dropoff_free' => $request->has('pickup_dropoff_free') ? 1 : 0,
             'service_notes' => $request->service_notes,
             'emergency_contact_name' => $request->emergency_contact_name,
-            'emergency_contact_phone' => $request->emergency_contact_phone,
+            'emergency_contact_phone' => $emergencyContactPhone,
             'emergency_contact_email' => $request->emergency_contact_email,
             'status' => 'draft',
         ];
