@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Business;
+use App\Models\Accommodation;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BusinessApproved;
 
@@ -22,7 +23,19 @@ class DashboardController extends Controller
     {
         if (!session('admin_id')) return redirect()->route('admin.login');
         $businesses = Business::where('status', 'pending')->orderBy('created_at', 'desc')->get();
-        return view('admin.dashboard.index', compact('businesses'));
+
+        $pendingAccommodations = Accommodation::with(['operator', 'business'])
+            ->where(function ($query) {
+                $query->where('approval_status', 'Pending')
+                    ->orWhere(function ($fallbackQuery) {
+                        $fallbackQuery->whereNull('approval_status')
+                            ->where('status', Accommodation::STATUS_PENDING_APPROVAL);
+                    });
+            })
+            ->orderByRaw('COALESCE(submitted_for_approval_at, created_at) DESC')
+            ->get();
+
+        return view('admin.dashboard.index', compact('businesses', 'pendingAccommodations'));
     }
 
     public function approveBusiness(Request $request, Business $business)
@@ -56,5 +69,55 @@ class DashboardController extends Controller
         $business->status = 'suspended';
         $business->save();
         return redirect()->route('admin.dashboard')->with('success', 'Business rejected/suspended.');
+    }
+
+    public function approveAccommodation(Request $request, Accommodation $accommodation)
+    {
+        if (!session('admin_id')) return redirect()->route('admin.login');
+
+        $data = $request->validate([
+            'approval_notes' => 'nullable|string|max:2000',
+        ]);
+
+        $adminId = (int) session('admin_id');
+
+        $accommodation->update([
+            'approval_status' => 'Approved',
+            'status' => Accommodation::STATUS_ACTIVE,
+            'approved_at' => now(),
+            'approved_by' => $adminId > 0 ? $adminId : null,
+            'approval_notes' => $data['approval_notes'] ?? null,
+            'is_published' => true,
+            'published_at' => now(),
+            'is_visible_to_travellers' => true,
+            'step13_publish' => 1,
+        ]);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Accommodation approved and now visible on frontend.');
+    }
+
+    public function rejectAccommodation(Request $request, Accommodation $accommodation)
+    {
+        if (!session('admin_id')) return redirect()->route('admin.login');
+
+        $data = $request->validate([
+            'approval_notes' => 'nullable|string|max:2000',
+        ]);
+
+        $adminId = (int) session('admin_id');
+
+        $accommodation->update([
+            'approval_status' => 'Rejected',
+            'status' => Accommodation::STATUS_IN_SETUP,
+            'approved_at' => null,
+            'approved_by' => $adminId > 0 ? $adminId : null,
+            'approval_notes' => $data['approval_notes'] ?? null,
+            'is_published' => false,
+            'published_at' => null,
+            'is_visible_to_travellers' => false,
+            'step13_publish' => 1,
+        ]);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Accommodation rejected. Operator can update and resubmit.');
     }
 }

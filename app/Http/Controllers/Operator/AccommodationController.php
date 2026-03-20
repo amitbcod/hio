@@ -2929,7 +2929,14 @@ class AccommodationController extends Controller
         try {
             $accommodation->update([
                 'approval_status' => 'Pending',
+                'status' => Accommodation::STATUS_PENDING_APPROVAL,
                 'submitted_for_approval_at' => now(),
+                'approved_by' => null,
+                'approved_at' => null,
+                'approval_notes' => null,
+                'is_published' => false,
+                'published_at' => null,
+                'is_visible_to_travellers' => false,
                 'step13_publish' => 1
             ]);
 

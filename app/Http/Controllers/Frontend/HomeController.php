@@ -28,7 +28,7 @@ class HomeController extends Controller
             ->get()
             ->map(fn (Activity $activity) => $this->mapActivity($activity));
 
-        $accommodations = Accommodation::with(['media' => function ($query) {
+        $accommodations = $this->approvedAccommodationQuery()->with(['media' => function ($query) {
                 $query->orderBy('order')->orderBy('id');
             }])
             ->whereNotNull('property_name')
@@ -117,7 +117,7 @@ class HomeController extends Controller
         $sidebarSelections = $this->collectSidebarFilters($request, $category);
         $searchOptions = $this->buildSearchOptions();
 
-        $accommodations = Accommodation::with([
+        $accommodations = $this->approvedAccommodationQuery()->with([
                 'media' => function ($query) {
                     $query->orderBy('order')->orderBy('id');
                 },
@@ -224,6 +224,7 @@ class HomeController extends Controller
     public function showAccommodation(Request $request, Accommodation $accommodation)
     {
         abort_if(blank($accommodation->property_name), 404);
+        abort_if(!$this->isAccommodationApprovedForFrontend($accommodation), 404);
 
         $bookingContext = $this->buildDetailBookingContext($request);
         $stayEnd = Carbon::parse($bookingContext['check_out'])->subDay()->toDateString();
@@ -621,7 +622,7 @@ class HomeController extends Controller
 
     private function buildSimilarAccommodations(Accommodation $accommodation): array
     {
-        $query = Accommodation::with([
+        $query = $this->approvedAccommodationQuery()->with([
             'media' => function ($q) {
                 $q->orderBy('order')->orderBy('id');
             },
@@ -667,7 +668,7 @@ class HomeController extends Controller
             return $items->all();
         }
 
-        return Accommodation::with([
+        return $this->approvedAccommodationQuery()->with([
                 'media' => function ($q) {
                     $q->orderBy('order')->orderBy('id');
                 },
@@ -1379,7 +1380,7 @@ class HomeController extends Controller
 
     private function buildSearchOptions(): array
     {
-        $accommodationRegions = Accommodation::query()
+        $accommodationRegions = $this->approvedAccommodationQuery()
             ->whereNotNull('property_name')
             ->pluck('region')
             ->map(fn ($value) => trim((string) $value))
@@ -1389,7 +1390,7 @@ class HomeController extends Controller
             ->values()
             ->all();
 
-        $accommodationTypes = Accommodation::query()
+        $accommodationTypes = $this->approvedAccommodationQuery()
             ->whereNotNull('property_name')
             ->pluck('property_type')
             ->map(fn ($value) => trim((string) $value))
@@ -1664,5 +1665,18 @@ class HomeController extends Controller
         }
 
         return 'Top End';
+    }
+
+    private function approvedAccommodationQuery()
+    {
+        return Accommodation::query()
+            ->where('approval_status', 'Approved')
+            ->where('status', Accommodation::STATUS_ACTIVE);
+    }
+
+    private function isAccommodationApprovedForFrontend(Accommodation $accommodation): bool
+    {
+        return (string) $accommodation->approval_status === 'Approved'
+            && (string) $accommodation->status === Accommodation::STATUS_ACTIVE;
     }
 }

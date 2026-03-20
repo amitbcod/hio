@@ -13,7 +13,7 @@
                 7 => ['name' => 'Rooms', 'field' => 'step4_rooms'],
                 8 => ['name' => 'Rate Plans', 'field' => 'step8_rates'],
                 9 => ['name' => 'Pricing', 'field' => 'step9_pricing'],
-                10 => ['name' => 'Inventory', 'field' => 'step10_inventory_allotment'],
+                10 => ['name' => 'Allotment', 'field' => 'step10_inventory_allotment'],
                 11 => ['name' => 'Promotions', 'field' => 'step11_promotions_offers'],
                 12 => ['name' => 'SEO & Social', 'field' => 'step12_review'],
                 13 => ['name' => 'Publish', 'field' => 'step13_publish'],
