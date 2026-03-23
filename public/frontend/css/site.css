@@ -9,6 +9,7 @@
     --gold: #d7a64a;
     --danger: #d9534f;
     --shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    --blue: #008dd7;
 }
 
 * {
@@ -491,7 +492,7 @@ img {
 .quick-tile {
     background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(0, 0, 0, 0.06);
-    border-radius: 24px;
+    border-radius: 10px;
     padding: 24px;
     box-shadow: var(--shadow);
 }
@@ -540,7 +541,7 @@ img {
 
 .stat-pill {
     background: #fff;
-    border-radius: 18px;
+    border-radius: 10px;
     padding: 14px 18px;
     min-width: 160px;
     border: 1px solid var(--line);
@@ -560,7 +561,7 @@ img {
 
 .tabs-shell {
     background: #fff;
-    border-radius: 28px;
+    border-radius: 10px;
     padding: 28px;
     box-shadow: var(--shadow);
     border: 1px solid rgba(0, 0, 0, 0.05);
@@ -718,7 +719,7 @@ img {
 .category-results {
     background: #fff;
     border: 1px solid var(--line);
-    border-radius: 24px;
+    border-radius: 10px;
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
 }
 
@@ -771,6 +772,7 @@ img {
 .filter-actions .btn-primary {
     width: 100%;
     justify-content: center;
+    border:0;
 }
 
 .filter-clear-link {
@@ -851,7 +853,7 @@ img {
 
 .category-result-footer .chip {
     background: rgba(65, 175, 170, 0.14);
-    color: var(--brand-dark);
+    color: var(--blue);
     padding: 6px 12px;
     border-radius: 999px;
     font-size: 12px;
@@ -914,7 +916,7 @@ img {
     text-align: center;
     color: var(--muted);
     border: 1px dashed #d4cbbf;
-    border-radius: 20px;
+    border-radius: 10px;
     background: #faf8f4;
 }
 
@@ -927,7 +929,7 @@ img {
 
 .highlight-card {
     background: #fff;
-    border-radius: 28px;
+    border-radius: 10px;
     overflow: hidden;
     box-shadow: var(--shadow);
 }
@@ -935,7 +937,7 @@ img {
 .highlight-copy {
     background: linear-gradient(135deg, rgba(65, 175, 170, 0.08), rgba(215, 166, 74, 0.08));
     border: 1px solid rgba(65, 175, 170, 0.14);
-    border-radius: 28px;
+    border-radius: 10px;
     padding: 32px;
 }
 
@@ -1134,6 +1136,8 @@ img {
     font-size: 13px;
 }
 
+
+
 @media (max-width: 1080px) {
 
     .quick-search-grid,
@@ -1257,9 +1261,8 @@ img {
     background: transparent;
     border: 0;
     margin: 0 auto;
+    padding-top: 30px;
 }
-
-
 
 .quick-search {
     margin-top: 42px;
@@ -1366,6 +1369,7 @@ input.category-search-input {
     justify-content: left;
     padding: 0px 10px;
     margin-top: 20px;
+   display: none;
 }
 
 .page-category-search .category-radio-item .main-icon {
@@ -1410,6 +1414,12 @@ input.category-search-input {
     background: #0095DA; 
 }
 
+.page-main-search .category-input-group {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
 
 
 

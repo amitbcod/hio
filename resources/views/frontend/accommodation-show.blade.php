@@ -628,7 +628,7 @@
             border-radius: 999px;
             background: rgba(65, 175, 170, 0.12);
             border: 1px solid rgba(65, 175, 170, 0.24);
-            color: var(--brand-dark);
+            color: #008dd7;
             padding: 5px 10px;
             font-size: 12px;
             font-weight: 700;
