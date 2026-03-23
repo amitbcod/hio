@@ -54,7 +54,7 @@
                             <label class="category-radio-item">
                                 <input type="radio" name="category" value="transport" {{ $selectedCategory === 'transport' ? 'checked' : '' }}>
                                 <div class="main-icon transport"><img src="images/transport.svg"></div>
-                                <span>Transport</span>
+                                <span>Transport</span> 
                             </label>
                         </div>
                     </div>
