@@ -1,6 +1,6 @@
 :root {
-    --brand: #fcae15;
-    --brand-dark: #fcae15;
+    --brand: #ffa900;
+    --brand-dark: #ffa900;
     --ink: #1f2933;
     --muted: #6b7280;
     --paper: #f7f3ed;
@@ -441,8 +441,8 @@ img {
 
 .category-search-select:focus,
 .category-search-input:focus {
-    border-color: rgba(65, 175, 170, 0.75);
-    box-shadow: 0 0 0 3px rgba(65, 175, 170, 0.12);
+    border-color: transparent;
+    box-shadow: none;
 }
 
 .category-search-dates {
@@ -1282,7 +1282,7 @@ img {
     grid-column: 1 / -1;
     background: #fff;
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 10px; 
 }
 
 .category-input-group-inner {
@@ -1302,11 +1302,11 @@ img {
 }
 
 .category-search-submit .btn-primary {
-    background-color: #FCAE15;
+    background-color: var(--brand);
     border-radius: 0 10px 10px 0;
     border: 0;
     font-size: 20px;
-    color: #181818;
+    color: #ffffff;
     min-width: auto;
     cursor: pointer;
 }
