@@ -1,6 +1,6 @@
 :root {
-    --brand: #ffa900;
-    --brand-dark: #ffa900;
+    --brand: #ff8a00;
+    --brand-dark: #ff8a00;
     --ink: #1f2933;
     --muted: #6b7280;
     /* --paper: #f7f3ed; */
@@ -44,8 +44,8 @@ img {
 }
 
 .top-bar {
-    background: #d5d5d5;
-    border-bottom: 1px solid #ddd6cd;
+    background: #f3f3f3;
+    border-bottom: 1px solid #f3f3f3;
     font-size: 13px;
 }
 
@@ -579,7 +579,7 @@ img {
 .tab-button {
     border: 0;
     cursor: pointer;
-    border-radius: 999px;
+    border-radius: 10px;
     padding: 12px 18px;
     font-size: 13px;
     font-weight: 800;
@@ -1449,8 +1449,14 @@ input.category-search-input {
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
 }
 
+.quick-search-grid .quick-tile {
+    display: flex;
+    flex-direction: column;
+}
 
-
+.quick-search-grid .quick-tile a {
+    margin-top: auto;
+}
 
 
 
