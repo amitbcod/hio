@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="col-md-4 offset-md-4">
-    <h3 class="mt-5">Admin Login</h3>
+<div class="col-md-4 offset-md-5 form-section">
+    <h3 class="mt-0">Admin Login</h3>
     <form method="POST" action="{{ route('admin.login') }}">
         @csrf
         <div class="mb-3">
