@@ -3,7 +3,8 @@
     --brand-dark: #ffa900;
     --ink: #1f2933;
     --muted: #6b7280;
-    --paper: #f7f3ed;
+    /* --paper: #f7f3ed; */
+    --paper: #ffffff;
     --card: #ffffff;
     --line: #e5dfd6;
     --gold: #d7a64a;
@@ -101,7 +102,7 @@ img {
     justify-content: space-between;
     align-items: center;
     gap: 20px;
-    padding: 18px 0;
+    padding: 14px 0;
 }
 
 .brand {
@@ -112,7 +113,7 @@ img {
 
 .brand img {
     width: auto;
-    height: 58px;
+    height: 65px;
     object-fit: contain;
 }
 
@@ -126,7 +127,7 @@ img {
 
 .brand strong {
     display: block;
-    font-family: 'Roboto Slab', Georgia, serif;
+    /* font-family: 'Roboto Slab', Georgia, serif; */
     font-size: 24px;
     line-height: 1.1;
 }
@@ -266,7 +267,7 @@ img {
 }
 
 .hero h1 {
-    font-family: 'Roboto Slab', Georgia, serif;
+    /* font-family: 'Roboto Slab', Georgia, serif; */
     font-size: clamp(36px, 5vw, 60px);
     line-height: 1.08;
     margin: 0 0 18px;
@@ -364,7 +365,7 @@ img {
 .category-search-block h5 {
     margin: 0 0 10px;
     font-size: 22px;
-    font-family: 'Roboto Slab', Georgia, serif;
+    /* font-family: 'Roboto Slab', Georgia, serif; */
 }
 
 /* .category-search-cell h5 {
@@ -520,7 +521,7 @@ img {
 
 .section-header h2,
 .section-header h1 {
-    font-family: 'Roboto Slab', Georgia, serif;
+    /* font-family: 'Roboto Slab', Georgia, serif; */
     font-size: clamp(28px, 4vw, 42px);
     margin: 0 0 10px;
 }
@@ -731,7 +732,7 @@ img {
 
 .category-filters h3 {
     margin: 0 0 14px;
-    font-family: 'Roboto Slab', Georgia, serif;
+    /* font-family: 'Roboto Slab', Georgia, serif; */
     font-size: 24px;
 }
 
@@ -831,7 +832,7 @@ img {
 
 .category-result-body h3 {
     margin: 0 0 8px;
-    font-family: 'Roboto Slab', Georgia, serif;
+    /* font-family: 'Roboto Slab', Georgia, serif; */
     font-size: 26px;
 }
 
@@ -943,7 +944,7 @@ img {
 
 .highlight-copy h3 {
     margin: 0 0 16px;
-    font-family: 'Roboto Slab', Georgia, serif;
+    /* font-family: 'Roboto Slab', Georgia, serif; */
     font-size: 32px;
 }
 
@@ -997,7 +998,7 @@ img {
 }
 
 .page-hero h1 {
-    font-family: 'Roboto Slab', Georgia, serif;
+    /* font-family: 'Roboto Slab', Georgia, serif; */
     font-size: clamp(34px, 5vw, 56px);
     margin: 0 0 14px;
 }
@@ -1030,7 +1031,7 @@ img {
 
 .detail-card h2 {
     margin: 0 0 18px;
-    font-family: 'Roboto Slab', Georgia, serif;
+    /* font-family: 'Roboto Slab', Georgia, serif; */
     font-size: 28px;
 }
 
@@ -1107,7 +1108,7 @@ img {
 .site-footer h4 {
     margin: 0 0 14px;
     font-size: 18px;
-    font-family: 'Roboto Slab', Georgia, serif;
+    /* font-family: 'Roboto Slab', Georgia, serif; */
     color: #fff;
 }
 
@@ -1362,7 +1363,7 @@ input.category-search-input {
     display: flex;
     gap: 5px;
     flex-wrap: wrap;
-    margin-bottom: 0;
+    margin-bottom: 0; 
 }
 
 .category-search-cell.category-search-cell--what.page-category-search {
