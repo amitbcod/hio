@@ -43,18 +43,24 @@
                         <div class="category-radio-group">
                             <label class="category-radio-item">
                                 <input type="radio" name="category" value="accommodation" {{ $selectedCategory === 'accommodation' ? 'checked' : '' }}>
-                                <div class="main-icon accommodation"><img src="images/accommodation.svg"></div>
-                                <span>Accommodation</span>
+                                <div class="cat-radio-tab">
+                                    <div class="main-icon accommodation"><img src="images/accommodation.svg"></div>
+                                    <span>Accommodation</span>
+                                </div>
                             </label>
                             <label class="category-radio-item">
                                 <input type="radio" name="category" value="tours" {{ $selectedCategory === 'tours' ? 'checked' : '' }}>
-                                <div class="main-icon activity"><img src="images/activity.svg"></div>
-                                <span>Tours - Activity</span>
+                                <div class="cat-radio-tab">
+                                    <div class="main-icon activity"><img src="images/activity.svg"></div>
+                                    <span>Tours - Activity</span>
+                                </div>
                             </label>
                             <label class="category-radio-item">
                                 <input type="radio" name="category" value="transport" {{ $selectedCategory === 'transport' ? 'checked' : '' }}>
-                                <div class="main-icon transport"><img src="images/transport.svg"></div>
-                                <span>Transport</span> 
+                                <div class="cat-radio-tab">
+                                    <div class="main-icon transport"><img src="images/transport.svg"></div>
+                                    <span>Transport</span>
+                                </div>
                             </label>
                         </div>
                     </div>
