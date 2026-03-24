@@ -11,6 +11,7 @@
     --danger: #d9534f;
     --shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
     --blue: #008dd7;
+    --blue-dark: #0051a8;
 }
 
 * {
@@ -190,8 +191,8 @@ img {
 }
 
 .btn-secondary {
-    background: #fff;
-    color: var(--ink);
+    background: var(--blue-dark);
+    color: var(--paper);
 }
 
 .btn-outline {
