@@ -36,7 +36,7 @@
  }
 
  .col-md-2.list-section {
-     background: #fffffe;
+     background: #c6ac50;
      height: 100vh;
      margin: 0 !important;
      padding: 0;
@@ -57,7 +57,8 @@
 
  .list-group-item.active {
      background: #cabb85;
-     border: none;
+    border: none;
+    border-top: 1px solid #fff;
  }
 
  .list-group a {
