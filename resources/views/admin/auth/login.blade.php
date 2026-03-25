@@ -6,9 +6,13 @@
     background: linear-gradient(16deg, #fdda65 0%, #4aaee2 100%);
     min-height: 100vh;
 }
+
+.col-md-2.list-section {
+    display: none !important;
+}
 </style>
 <div class="col-md-4 offset-md-5 form-section">
-    <h3 class="mt-0">Admin Login</h3>
+    <h3 class="mt-0 text-center">Admin Login</h3>
     <form method="POST" action="{{ route('admin.login') }}">
         @csrf
         <div class="mb-3">
