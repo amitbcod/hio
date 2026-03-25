@@ -6,8 +6,6 @@
     <title>Admin Portal</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
      <link rel="stylesheet" href="{{ asset('frontend/css/admin-style.css') }}">
-
-    
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-light mb-0">

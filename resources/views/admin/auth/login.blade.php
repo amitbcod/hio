@@ -1,6 +1,12 @@
 @extends('layouts.admin')
 
 @section('content')
+<style>
+    .main-setion {
+    background: linear-gradient(16deg, #fdda65 0%, #4aaee2 100%);
+    min-height: 100vh;
+}
+</style>
 <div class="col-md-4 offset-md-5 form-section">
     <h3 class="mt-0">Admin Login</h3>
     <form method="POST" action="{{ route('admin.login') }}">
