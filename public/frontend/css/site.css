@@ -1463,7 +1463,7 @@ input.category-search-input {
 div#addGuestModal {
     position: fixed;
     z-index: 999;
-    width: 400px;
+    width: 600px;
     top: 0;
     left: 50%;
     margin: 0 auto;
@@ -1472,7 +1472,7 @@ div#addGuestModal {
     padding: 20px;
     overflow-y: hidden;
     overflow-x: hidden;
-    height: auto;
+    height: auto; 
 }
 
 div#modalOverlay {
@@ -1505,10 +1505,21 @@ button#addGuestBtn {
 }
 
 .guest-modal-body {
-    overflow: scroll;
+    overflow-y: scroll;
     height: 480px;
 }
 
+.guest-modal-header h2 {
+    margin-top: 0;
+}
+
+form#addGuestForm .form-grid, form#addGuestForm.form-group {
+    margin-bottom: 14px;
+}
+
+button#cancelModalBtn {
+    background: #797979;
+}
 
 
 @media (max-width:767px) {
