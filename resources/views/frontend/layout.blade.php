@@ -88,7 +88,7 @@
             </div>
             <div class="site-footer-bottom">
                 <span>© {{ now()->year }} Holidays.io</span>
-                <span>Dynamic public frontend powered by Laravel</span>
+                <!-- <span>Dynamic public frontend powered by Laravel</span> -->
             </div>
         </div>
     </footer>
