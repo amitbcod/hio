@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container mt-5">
+    <div class="container mt-0">
         <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-3 net-section">
                 @include('operator.registration._sidebar_main')
             </div>
-            <div class="col-md-9">
-                <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px;">
+            <div class="col-md-9 my-pro">
+                <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 40px;margin-top: 40px;">
                     
                     {{-- Header --}}
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">

@@ -1,0 +1,9 @@
+ .col-md-3.net-section {
+     padding: 0;
+ }
+
+ @media(max-width:768px) {
+     .col-md-3.net-section>div {
+         width: 95% !important;
+     }
+ }

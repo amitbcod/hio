@@ -42,10 +42,10 @@
         <div class="wrap site-header-inner">
             <a href="{{ url('/') }}" class="brand">
                 <img src="{{ asset('images/holidays-io-logo.png') }}" alt="Holidays.io logo">
-                <div>
+                <!-- <div>
                     <small>Your local connection</small>
                     <strong>Holidays<span>.io</span></strong>
-                </div>
+                </div> -->
             </a>
 
             <nav class="main-nav">
