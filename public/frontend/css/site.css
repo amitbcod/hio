@@ -1558,6 +1558,10 @@ button#cancelModalBtn {
     background: #797979;
 }
 
+.primary-guest-section .form-grid {
+    margin-bottom: 16px;
+}
+
 
 @media (max-width:767px) {
     .category-input-group-inner {
