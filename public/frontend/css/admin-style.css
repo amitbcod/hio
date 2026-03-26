@@ -18,7 +18,7 @@
      background: #41b0aa;
      font-weight: 600 !important;
      border: none;
-     width: 100px;
+     width: 100%;
  }
 
 
@@ -57,8 +57,8 @@
 
  .list-group-item.active {
      background: #cabb85;
-    border: none;
-    border-top: 1px solid #fff;
+     border: none;
+     border-top: 1px solid #fff;
  }
 
  .list-group a {
@@ -113,6 +113,25 @@
      padding: 40px;
  }
 
+ a.btn.btn-primary {
+     background: #41b0aa;
+     border: none;
+ }
+
+ a.btn.btn-primary:active {
+     background-color: #c6ac50;
+ }
+
+ a.btn.btn-sm.btn-secondary {
+     background: lightgray;
+     color: #000;
+ }
+
+ .login-full-section {
+     padding: 40px;
+ }
+
+
  @media(max-width:768px) {
 
      .col-md-2.show-section {
@@ -123,5 +142,9 @@
      .table td {
          font-size: 12px;
          padding: 6px;
+     }
+
+     a.btn.btn-sm.btn-secondary {
+         margin-bottom: 4px;
      }
  }
