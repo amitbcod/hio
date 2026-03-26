@@ -10,8 +10,13 @@ use App\Models\AccommodationPromotion;
 use App\Models\Activity;
 use App\Models\ActivityBooking;
 use App\Models\ActivityPromotion;
+use App\Models\BookingGuest;
+use App\Models\SavedGuest;
+use App\Models\TravelerCart;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class BookingController extends Controller
 {
@@ -23,7 +28,7 @@ class BookingController extends Controller
     {
         $type = $request->input('type'); // 'accommodation' | 'activity'
 
-        $cart = session()->get('booking_cart', []);
+        $cart = $this->resolveCart();
 
         if ($type === 'accommodation') {
             $item = $this->buildAccommodationCartItem($request);
@@ -34,7 +39,7 @@ class BookingController extends Controller
         }
 
         $cart[$item['cart_key']] = $item;
-        session()->put('booking_cart', $cart);
+        $this->storeCart($cart);
 
         return redirect()->route('frontend.booking.cart')
             ->with('success', 'Item added to your booking cart!');
@@ -209,7 +214,7 @@ class BookingController extends Controller
 
     public function viewCart()
     {
-        $cart = session()->get('booking_cart', []);
+        $cart = $this->resolveCart();
 
         $summary = $this->buildCartSummary($cart);
 
@@ -223,14 +228,10 @@ class BookingController extends Controller
     public function removeFromCart(Request $request)
     {
         $cartKey = $request->input('cart_key');
-        $cart    = session()->get('booking_cart', []);
+        $cart    = $this->resolveCart();
 
         unset($cart[$cartKey]);
-        session()->put('booking_cart', $cart);
-
-        if (empty($cart)) {
-            session()->forget('booking_cart');
-        }
+        $this->storeCart($cart);
 
         return back()->with('success', 'Item removed from cart.');
     }
@@ -241,7 +242,7 @@ class BookingController extends Controller
 
     public function checkout()
     {
-        $cart = session()->get('booking_cart', []);
+        $cart = $this->resolveCart();
 
         if (empty($cart)) {
             return redirect()->route('frontend.home')->with('error', 'Your cart is empty.');
@@ -249,7 +250,47 @@ class BookingController extends Controller
 
         $summary = $this->buildCartSummary($cart);
 
-        return view('frontend.checkout', compact('cart', 'summary'));
+        $totalGuests = 0;
+        foreach ($cart as $item) {
+            $totalGuests += $item['adults'] + $item['children'];
+        }
+
+        $traveler = Auth::guard('traveler')->user();
+        $travelerProfile = $traveler?->profile;
+
+        $savedGuests = $traveler ? SavedGuest::where('user_id', $traveler->id)->get() : collect();
+
+        $guestDefaults = [
+            'guest_name' => old('guest_name') ?: ($traveler?->full_name ?: ($travelerProfile ? trim($travelerProfile->first_name . ' ' . ($travelerProfile->middle_name ?? '') . ' ' . $travelerProfile->last_name) : null)),
+            'guest_email' => old('guest_email') ?: ($traveler?->email ?? null),
+            'guest_phone' => old('guest_phone') ?: ($traveler?->mobile_phone ?? null),
+        ];
+
+        $countries = $this->countries();
+
+        return view('frontend.checkout', compact('cart', 'summary', 'guestDefaults', 'traveler', 'countries', 'totalGuests', 'savedGuests'));
+    }
+
+    private function countries(): array
+    {
+        return [
+            'Australia',
+            'Canada',
+            'China',
+            'France',
+            'Germany',
+            'India',
+            'Italy',
+            'Kenya',
+            'Madagascar',
+            'Mauritius',
+            'Reunion',
+            'Singapore',
+            'South Africa',
+            'United Arab Emirates',
+            'United Kingdom',
+            'United States',
+        ];
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -258,18 +299,32 @@ class BookingController extends Controller
 
     public function placeOrder(Request $request)
     {
-        $request->validate([
-            'guest_name'  => 'required|string|max:150',
-            'guest_email' => 'nullable|email|max:150',
-            'guest_phone' => 'nullable|string|max:30',
-        ]);
-
-        $cart = session()->get('booking_cart', []);
+        $cart = $this->resolveCart();
         if (empty($cart)) {
             return redirect()->route('frontend.home')->with('error', 'Your cart is empty.');
         }
 
-        $guestName  = $request->input('guest_name');
+        $totalGuests = 0;
+        foreach ($cart as $item) {
+            $totalGuests += $item['adults'] + $item['children'];
+        }
+
+        $request->validate([
+            'guests' => 'required|array|min:1',
+            'guests.*.relation' => 'required|in:self,spouse,child,friend,colleague,other',
+            'guests.*.first_name' => 'required|string|max:100',
+            'guests.*.middle_name' => 'nullable|string|max:100',
+            'guests.*.last_name' => 'required|string|max:100',
+            'guests.*.dob' => 'required|date|before:today',
+            'guests.*.gender' => 'nullable|in:male,female,non_binary,other',
+            'guests.*.nationality' => 'required|string|max:100',
+            'guests.*.passport_number' => 'nullable|string|max:100',
+            'guests.*.notes' => 'nullable|string|max:1000',
+            'guest_email' => 'nullable|email|max:150',
+            'guest_phone' => 'nullable|string|max:30',
+        ]);
+
+        $guests = $request->input('guests');
         $guestEmail = $request->input('guest_email');
         $guestPhone = $request->input('guest_phone');
         $special    = $request->input('special_requests', '');
@@ -281,12 +336,26 @@ class BookingController extends Controller
         foreach ($cart as $item) {
             $ref = $this->generateBookingRef($item['type']);
 
+            $travelerAccountId = Auth::guard('traveler')->id() ?? null;
+            $primaryGuest = $guests[0] ?? null;
+            $guestName = trim(($primaryGuest['first_name'] ?? '') . ' ' . ($primaryGuest['middle_name'] ?? '') . ' ' . ($primaryGuest['last_name'] ?? ''));
+
             if ($item['type'] === 'accommodation') {
-                AccommodationBooking::create([
+                $booking = AccommodationBooking::create([
                     'booking_reference' => $ref,
                     'accommodation_id'  => $item['accommodation_id'],
                     'room_id'           => $item['room_id'] ?? null,
                     'guest_name'        => $guestName,
+                    'traveler_account_id' => $travelerAccountId,
+                    'traveler_relation' => $primaryGuest['relation'] ?? null,
+                    'traveler_first_name' => $primaryGuest['first_name'] ?? null,
+                    'traveler_middle_name' => $primaryGuest['middle_name'] ?? null,
+                    'traveler_last_name' => $primaryGuest['last_name'] ?? null,
+                    'traveler_dob' => $primaryGuest['dob'] ?? null,
+                    'traveler_gender' => $primaryGuest['gender'] ?? null,
+                    'traveler_nationality' => $primaryGuest['nationality'] ?? null,
+                    'traveler_passport_number' => $primaryGuest['passport_number'] ?? null,
+                    'traveler_notes' => $primaryGuest['notes'] ?? null,
                     'guest_email'       => $guestEmail,
                     'check_in_date'     => $item['check_in'],
                     'check_out_date'    => $item['check_out'],
@@ -298,13 +367,41 @@ class BookingController extends Controller
                     'source_channel'    => 'Direct',
                     'booked_at'         => now(),
                 ]);
+
+                // Store all guests
+                foreach ($guests as $index => $guest) {
+                    BookingGuest::create([
+                        'booking_id' => $booking->id,
+                        'booking_type' => 'accommodation',
+                        'guest_number' => $index + 1,
+                        'relation' => $guest['relation'],
+                        'first_name' => $guest['first_name'],
+                        'middle_name' => $guest['middle_name'],
+                        'last_name' => $guest['last_name'],
+                        'dob' => $guest['dob'],
+                        'gender' => $guest['gender'],
+                        'nationality' => $guest['nationality'],
+                        'passport_number' => $guest['passport_number'],
+                        'notes' => $guest['notes'],
+                    ]);
+                }
             } elseif ($item['type'] === 'activity') {
-                ActivityBooking::create([
+                $booking = ActivityBooking::create([
                     'booking_reference' => $ref,
                     'activity_id'       => $item['activity_id'],
                     'variant_id'        => $item['variant_id'] ?? null,
                     'variant_name'      => $item['variant_name'] ?? null,
                     'guest_name'        => $guestName,
+                    'traveler_account_id' => $travelerAccountId,
+                    'traveler_relation' => $primaryGuest['relation'] ?? null,
+                    'traveler_first_name' => $primaryGuest['first_name'] ?? null,
+                    'traveler_middle_name' => $primaryGuest['middle_name'] ?? null,
+                    'traveler_last_name' => $primaryGuest['last_name'] ?? null,
+                    'traveler_dob' => $primaryGuest['dob'] ?? null,
+                    'traveler_gender' => $primaryGuest['gender'] ?? null,
+                    'traveler_nationality' => $primaryGuest['nationality'] ?? null,
+                    'traveler_passport_number' => $primaryGuest['passport_number'] ?? null,
+                    'traveler_notes' => $primaryGuest['notes'] ?? null,
                     'guest_email'       => $guestEmail,
                     'guest_phone'       => $guestPhone,
                     'activity_date'     => $item['check_in'],
@@ -318,12 +415,30 @@ class BookingController extends Controller
                     'special_requests'  => $special,
                     'booked_at'         => now(),
                 ]);
+
+                // Store all guests
+                foreach ($guests as $index => $guest) {
+                    BookingGuest::create([
+                        'booking_id' => $booking->id,
+                        'booking_type' => 'activity',
+                        'guest_number' => $index + 1,
+                        'relation' => $guest['relation'],
+                        'first_name' => $guest['first_name'],
+                        'middle_name' => $guest['middle_name'],
+                        'last_name' => $guest['last_name'],
+                        'dob' => $guest['dob'],
+                        'gender' => $guest['gender'],
+                        'nationality' => $guest['nationality'],
+                        'passport_number' => $guest['passport_number'],
+                        'notes' => $guest['notes'],
+                    ]);
+                }
             }
 
             $bookingRefs[] = $ref;
         }
 
-        session()->forget('booking_cart');
+        $this->storeCart([]);
 
         // Primary booking ref for confirmation page
         $primaryRef = $bookingRefs[0] ?? 'UNKNOWN';
@@ -492,5 +607,127 @@ class BookingController extends Controller
     {
         $prefix = $type === 'accommodation' ? 'ACC' : 'ACT';
         return $prefix . '-' . strtoupper(substr(uniqid(), -8)) . '-' . now()->format('Ymd');
+    }
+
+    private function resolveCart(): array
+    {
+        $cart = session()->get('booking_cart', []);
+
+        if (!empty($cart)) {
+            return $cart;
+        }
+
+        $travelerId = $this->travelerAccountId();
+        if (!$travelerId) {
+            return [];
+        }
+
+        $storedCart = TravelerCart::where('traveler_account_id', $travelerId)->first();
+        $items = is_array($storedCart?->items) ? $storedCart->items : [];
+
+        if (!empty($items)) {
+            session()->put('booking_cart', $items);
+        }
+
+        return $items;
+    }
+
+    private function storeCart(array $cart): void
+    {
+        if (empty($cart)) {
+            session()->forget('booking_cart');
+        } else {
+            session()->put('booking_cart', $cart);
+        }
+
+        $travelerId = $this->travelerAccountId();
+        if (!$travelerId) {
+            return;
+        }
+
+        TravelerCart::updateOrCreate(
+            ['traveler_account_id' => $travelerId],
+            ['items' => empty($cart) ? null : $cart]
+        );
+    }
+
+    private function travelerAccountId(): ?int
+    {
+        $traveler = Auth::guard('traveler')->user();
+
+        return $traveler ? (int) $traveler->id : null;
+    }
+
+    public function saveGuest(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:150',
+            'middle_name' => 'nullable|string|max:150',
+            'last_name' => 'required|string|max:150',
+            'dob' => 'required|date|before:today',
+            'gender' => 'nullable|in:male,female,non_binary,other',
+            'nationality' => 'required|string|max:100',
+            'passport_number' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'error' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $traveler = Auth::guard('traveler')->user();
+        if (!$traveler) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $guest = SavedGuest::updateOrCreate(
+            [
+                'user_id' => $traveler->id,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'dob' => $request->dob,
+            ],
+            [
+                'middle_name' => $request->middle_name,
+                'gender' => $request->gender,
+                'nationality' => $request->nationality,
+                'passport_number' => $request->passport_number,
+                'notes' => $request->notes,
+            ]
+        );
+
+        return response()->json(['success' => true, 'guest' => $guest]);
+    }
+
+    public function removeGuest(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'guest_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'error' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $traveler = Auth::guard('traveler')->user();
+        if (!$traveler) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $guest = SavedGuest::where('id', $request->guest_id)->where('user_id', $traveler->id)->first();
+        if ($guest) {
+            $guest->delete();
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['error' => 'Guest not found'], 404);
     }
 }

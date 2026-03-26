@@ -24,7 +24,11 @@ class TravelerAccount extends Authenticatable
         'terms_accepted_at' => 'datetime',
         'privacy_accepted_at' => 'datetime',
         'last_login_at' => 'datetime',
+        'password_reset_requested_at' => 'datetime',
         'marketing_opt_in' => 'boolean',
+        '2fa_enabled' => 'boolean',
+        'account_suspended' => 'boolean',
+        'communication_preference' => 'array',
     ];
 
     public function getAuthPassword()

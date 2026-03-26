@@ -14,6 +14,10 @@ class Authenticate extends Middleware
      */
     protected function redirectTo($request)
     {
+        if ($request->is('traveler/*') || $request->is('booking/*')) {
+            return route('traveler.login');
+        }
+
         // Redirect to operator login if the URL starts with /operator
         if ($request->is('operator/*')) {
             return route('operator.login');

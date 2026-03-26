@@ -16,6 +16,10 @@ Route::prefix('traveler')->name('traveler.')->group(function () {
     Route::middleware('auth:traveler')->group(function () {
         Route::get('/profile', [TravelerProfileController::class, 'showProfile'])->name('profile');
         Route::post('/profile', [TravelerProfileController::class, 'updateProfile'])->name('profile.update');
+        Route::get('/settings', [TravelerProfileController::class, 'showSettings'])->name('settings');
+        Route::post('/settings', [TravelerProfileController::class, 'updateSettings'])->name('settings.update');
+        Route::post('/settings/reset-password', [TravelerProfileController::class, 'requestPasswordReset'])->name('settings.reset-password');
+        Route::post('/settings/toggle-suspension', [TravelerProfileController::class, 'toggleAccountSuspension'])->name('settings.toggle-suspension');
         Route::post('/logout', [TravelerAuthController::class, 'logout'])->name('logout');
     });
 });

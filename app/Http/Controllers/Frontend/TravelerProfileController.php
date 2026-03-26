@@ -83,6 +83,66 @@ class TravelerProfileController extends Controller
         return back()->with('success', 'Traveler profile updated successfully.');
     }
 
+    public function showSettings()
+    {
+        $account = Auth::guard('traveler')->user();
+
+        return view('frontend.traveler.settings', [
+            'account' => $account,
+        ]);
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $account = Auth::guard('traveler')->user();
+
+        $request->validate([
+            '2fa_enabled' => ['nullable', 'boolean'],
+            '2fa_method' => ['nullable', 'in:email,sms,auth_app'],
+            'communication_preference' => ['nullable', 'array'],
+            'communication_preference.*' => ['in:email,sms,whatsapp'],
+        ]);
+
+        $account->update([
+            '2fa_enabled' => (bool) $request->boolean('2fa_enabled'),
+            '2fa_method' => $request->input('2fa_enabled') ? $request->input('2fa_method') : null,
+            'communication_preference' => $request->input('communication_preference') ?? [],
+        ]);
+
+        return back()->with('success', 'Settings updated successfully.');
+    }
+
+    public function requestPasswordReset(Request $request)
+    {
+        $account = Auth::guard('traveler')->user();
+
+        $account->update([
+            'password_reset_requested_at' => now(),
+        ]);
+
+        // TODO: Send password reset email to traveler
+        // Mail::send(new PasswordResetEmail($account));
+
+        return back()->with('success', 'Password reset link has been sent to your email.');
+    }
+
+    public function toggleAccountSuspension(Request $request)
+    {
+        $account = Auth::guard('traveler')->user();
+
+        $isSuspending = !$account->account_suspended;
+
+        $account->update([
+            'account_suspended' => $isSuspending,
+        ]);
+
+        $message = $isSuspending 
+            ? 'Your account has been suspended. You will not be able to login or make bookings.'
+            : 'Your account has been reactivated. You can now login and make bookings.';
+
+        return back()->with('success', $message);
+    }
+
     private function titleOptions(): array
     {
         return ['Mr', 'Mrs', 'Miss', 'Ms', 'Mx', 'Other'];

@@ -20,4 +20,6 @@ Route::get('/booking/cart',         [BookingController::class, 'viewCart'])->nam
 Route::post('/booking/cart/remove', [BookingController::class, 'removeFromCart'])->name('frontend.booking.cart.remove');
 Route::get('/booking/checkout',     [BookingController::class, 'checkout'])->name('frontend.booking.checkout');
 Route::post('/booking/place-order', [BookingController::class, 'placeOrder'])->name('frontend.booking.place-order');
+Route::post('/booking/save-guest', [BookingController::class, 'saveGuest'])->name('frontend.booking.save-guest');
+Route::post('/booking/remove-guest', [BookingController::class, 'removeGuest'])->name('frontend.booking.remove-guest');
 Route::get('/booking/confirmation/{ref}', [BookingController::class, 'confirmation'])->name('frontend.booking.confirmation');

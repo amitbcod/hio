@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\TravelerAccount;
+use App\Models\TravelerCart;
 use App\Models\TravelerProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -75,6 +76,7 @@ class TravelerAuthController extends Controller
 
         Auth::guard('traveler')->login($account);
         $request->session()->regenerate();
+        $this->syncCartAfterAuthentication($account->id, $request);
 
         return redirect()->route('traveler.profile')
             ->with('success', 'Traveler account created successfully. Please complete your profile.');
@@ -107,17 +109,36 @@ class TravelerAuthController extends Controller
                 ->withInput($request->only('email'));
         }
 
+        $traveler = Auth::guard('traveler')->user();
+
+        // Check if account is suspended
+        if ($traveler->account_suspended) {
+            Auth::guard('traveler')->logout();
+            $request->session()->invalidate();
+
+            return back()
+                ->withErrors(['email' => 'Your account has been suspended. Please contact support to reactivate it.'])
+                ->withInput($request->only('email'));
+        }
+
         $request->session()->regenerate();
 
-        $traveler = Auth::guard('traveler')->user();
         $traveler->last_login_at = now();
         $traveler->save();
+
+        $this->syncCartAfterAuthentication($traveler->id, $request);
 
         return redirect()->intended(route('traveler.profile'));
     }
 
     public function logout(Request $request)
     {
+        $traveler = Auth::guard('traveler')->user();
+
+        if ($traveler) {
+            $this->persistSessionCartForTraveler((int) $traveler->id, $request);
+        }
+
         Auth::guard('traveler')->logout();
 
         $request->session()->invalidate();
@@ -182,5 +203,39 @@ class TravelerAuthController extends Controller
             'United Kingdom',
             'United States',
         ];
+    }
+
+    private function syncCartAfterAuthentication(int $travelerId, Request $request): void
+    {
+        $sessionCart = $request->session()->get('booking_cart', []);
+
+        $storedCartRecord = TravelerCart::where('traveler_account_id', $travelerId)->first();
+        $storedCart = is_array($storedCartRecord?->items) ? $storedCartRecord->items : [];
+
+        $merged = $storedCart;
+        foreach ($sessionCart as $cartKey => $item) {
+            $merged[$cartKey] = $item;
+        }
+
+        if (empty($merged)) {
+            $request->session()->forget('booking_cart');
+        } else {
+            $request->session()->put('booking_cart', $merged);
+        }
+
+        TravelerCart::updateOrCreate(
+            ['traveler_account_id' => $travelerId],
+            ['items' => empty($merged) ? null : $merged]
+        );
+    }
+
+    private function persistSessionCartForTraveler(int $travelerId, Request $request): void
+    {
+        $sessionCart = $request->session()->get('booking_cart', []);
+
+        TravelerCart::updateOrCreate(
+            ['traveler_account_id' => $travelerId],
+            ['items' => empty($sessionCart) ? null : $sessionCart]
+        );
     }
 }

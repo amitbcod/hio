@@ -41,17 +41,6 @@
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="verification_status">Verification Status</label>
-                        <select id="verification_status" disabled>
-                            <option>Unverified</option>
-                            <option>Email</option>
-                            <option>Phone</option>
-                            <option>Both</option>
-                        </select>
-                        <small>Set by system after email/phone verification.</small>
-                    </div>
-
-                    <div class="traveler-form-group">
                         <label for="email">Email *</label>
                         <input id="email" type="email" name="email" value="{{ old('email') }}" required>
                     </div>
