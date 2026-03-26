@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="@yield('meta_description', 'Dynamic Holidays.io homepage powered by live accommodation and activity data.')">
     <title>@yield('title', 'Holidays.io')</title>
 
@@ -22,14 +23,14 @@
             </div>
             <div class="top-links">
                 @if(auth('traveler')->check())
-                    <!-- <a href="{{ route('traveler.profile') }}">My Profile</a>
+                    <a href="{{ route('traveler.profile') }}">My Profile</a>
                     <form method="POST" action="{{ route('traveler.logout') }}" class="top-inline-form">
                         @csrf
                         <button type="submit" class="top-link-button">Traveller Logout</button>
-                    </form> -->
+                    </form> 
                 @else
-                    <!-- <a href="{{ route('traveler.login') }}">Traveller Login</a>
-                    <a href="{{ route('traveler.register') }}">Traveller Register</a> -->
+                 <a href="{{ route('traveler.login') }}">Traveller Login</a>
+                    <a href="{{ route('traveler.register') }}">Traveller Register</a> 
                 @endif
                 <a href="{{ route('operator.login') }}">Operator Login</a>
                 <a href="{{ route('operator.register') }}">Operator Register</a>
@@ -52,6 +53,7 @@
                 <a href="{{ url('/#accommodations-section') }}">Accommodation</a>
                 <a href="{{ url('/#activities-section') }}">Activities</a>
                 <a href="{{ url('/#discover-mauritius') }}">Discover Mauritius</a>
+                <a href="{{ route('frontend.booking.cart') }}"><i class="fa-solid fa-cart-shopping"></i> Cart</a>
             </nav>
         </div>
     </header>

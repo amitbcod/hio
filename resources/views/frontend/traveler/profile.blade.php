@@ -12,6 +12,16 @@
                     <p>Complete and maintain your customer profile details.</p>
                 </div>
 
+                <!-- Submenu Navigation -->
+                <div class="traveler-submenu">
+                    <a href="{{ route('traveler.profile') }}" class="traveler-submenu-link is-active">
+                        <i class="fa-solid fa-user"></i> Profile
+                    </a>
+                    <a href="{{ route('traveler.settings') }}" class="traveler-submenu-link">
+                        <i class="fa-solid fa-gear"></i> Settings
+                    </a>
+                </div>
+
                 @if(session('success'))
                     <div class="traveler-alert traveler-alert--success">{{ session('success') }}</div>
                 @endif
@@ -29,26 +39,7 @@
                 <form method="POST" action="{{ route('traveler.profile.update') }}" class="traveler-profile-grid">
                     @csrf
 
-                    <div class="traveler-form-group">
-                        <label>Account ID</label>
-                        <input type="text" value="{{ $account->id }}" readonly>
-                    </div>
-
-                    <div class="traveler-form-group">
-                        <label>PrivilegeTraveller ID</label>
-                        <input type="text" value="{{ $account->traveler_id }}" readonly>
-                    </div>
-
-                    <div class="traveler-form-group">
-                        <label for="gender">Gender / Title</label>
-                        <select id="gender" name="gender">
-                            <option value="">Select</option>
-                            @foreach($titleOptions as $title)
-                                <option value="{{ $title }}" {{ old('gender', $profile->gender) === $title ? 'selected' : '' }}>{{ $title }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
+                    
                     <div class="traveler-form-group">
                         <label for="first_name">First Name *</label>
                         <input id="first_name" type="text" name="first_name" value="{{ old('first_name', $profile->first_name) }}" required>
@@ -63,6 +54,17 @@
                         <label for="last_name">Last Name *</label>
                         <input id="last_name" type="text" name="last_name" value="{{ old('last_name', $profile->last_name) }}" required>
                     </div>
+
+                    <div class="traveler-form-group">
+                        <label for="gender">Gender / Title</label>
+                        <select id="gender" name="gender">
+                            <option value="">Select</option>
+                            @foreach($titleOptions as $title)
+                                <option value="{{ $title }}" {{ old('gender', $profile->gender) === $title ? 'selected' : '' }}>{{ $title }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
 
                     <div class="traveler-form-group">
                         <label for="date_of_birth">Date of Birth *</label>
@@ -129,10 +131,10 @@
                         </select>
                     </div>
 
-                    <div class="traveler-form-group">
+                    <!-- <div class="traveler-form-group">
                         <label>Verification Status</label>
                         <input type="text" value="{{ $account->verification_status }}" readonly>
-                    </div>
+                    </div> -->
 
                     <div class="traveler-form-group traveler-form-group--full traveler-form-actions">
                         <button type="submit" class="btn-primary">Save Profile</button>
@@ -167,6 +169,38 @@
             margin: 10px 0 0;
             color: var(--muted);
             line-height: 1.8;
+        }
+
+        /* Submenu Navigation */
+        .traveler-submenu {
+            display: flex;
+            gap: 8px;
+            margin-top: 24px;
+            border-bottom: 2px solid var(--line);
+            padding-bottom: 0;
+        }
+
+        .traveler-submenu-link {
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--muted);
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 200ms ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .traveler-submenu-link:hover {
+            color: #0f6cb6;
+        }
+
+        .traveler-submenu-link.is-active {
+            color: #0f6cb6;
+            border-bottom-color: #0f6cb6;
         }
 
         .traveler-alert {
