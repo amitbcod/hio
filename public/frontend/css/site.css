@@ -198,9 +198,13 @@ img {
 
 .btn-primary:hover {
     background: #ed8000;
-    color:var(--white);
+    color: var(--white);
 }
 
+.category-result-footer a:hover {
+    background: #ed8000;
+    color: var(--white);
+}
 
 .btn-secondary {
     background: var(--blue-dark);
@@ -747,7 +751,7 @@ img {
     padding: 22px;
     position: sticky;
     top: 90px;
-    background: #f3f3f3;
+    background: #fbfbfb;
 }
 
 .category-filters h3 {
@@ -1591,6 +1595,9 @@ button#cancelModalBtn {
     margin-bottom: 16px;
 }
 
+.traveler-login-card, .traveler-auth-card {
+    border-radius: 10px !important;
+}
 
 @media (max-width:767px) {
     .category-input-group-inner {
@@ -1598,7 +1605,6 @@ button#cancelModalBtn {
     }
 
     .category-search-submit .btn-primary {
-
         border-radius: 10px;
     }
 
