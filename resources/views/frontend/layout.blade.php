@@ -18,8 +18,8 @@
     <div class="top-bar">
         <div class="wrap top-bar-inner">
             <div class="top-meta">
-                <span><i class="fa-solid fa-phone"></i> +230 5251 11 53</span>
-                <span><i class="fa-solid fa-globe"></i> Live operator-powered listings</span>
+                <span><i class="fa-solid fa-phone"></i> +230 52 51 11 53</span>
+                <span><i class="fa-solid fa-globe"></i> Your Local Connection - Mauritius</span>
             </div>
             <div class="top-links">
                 @if(auth('traveler')->check())
@@ -32,8 +32,8 @@
                  <a href="{{ route('traveler.login') }}">Traveller Login</a>
                     <a href="{{ route('traveler.register') }}">Traveller Register</a> 
                 @endif
-                <a href="{{ route('operator.login') }}">Operator Login</a>
-                <a href="{{ route('operator.register') }}">Operator Register</a>
+                <!-- <a href="{{ route('operator.login') }}">Operator Login</a>
+                <a href="{{ route('operator.register') }}">Operator Register</a> -->
             </div>
         </div>
     </div>
@@ -64,11 +64,11 @@
         <div class="wrap">
             <div class="site-footer-grid">
                 <div>
-                    <h4>Holidays.io Frontend</h4>
-                    <p>
+                    <h4>Holidays.io /h4>
+                    <!-- <p>
                         This homepage now reads live activity and accommodation content entered by operators,
                         while keeping your operator and admin panels unchanged.
-                    </p>
+                    </p> -->
                 </div>
                 <div>
                     <h4>Browse</h4>
@@ -79,11 +79,20 @@
                     </ul>
                 </div>
                 <div>
-                    <h4>Back Office</h4>
+                           @if(auth('traveler')->check())
+                    <h4>Traveler</h4>
                     <ul>
-                        <li><a href="{{ route('operator.login') }}">Operator Login</a></li>
-                        <li><a href="{{ route('operator.register') }}">Operator Register</a></li>
+                         @if(auth('traveler')->check())
+                    
+                        @else
+                        <li>
+                        <a href="{{ route('traveler.login') }}">Traveller Login</a></li>
+                        <li>
+                            <a href="{{ route('traveler.register') }}">Traveller Register</a> </li>
+                        @endif
+                        
                     </ul>
+                     @endif
                 </div>
             </div>
             <div class="site-footer-bottom">

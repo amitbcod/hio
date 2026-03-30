@@ -96,28 +96,40 @@
                                 </div>
                             </div>
 
-                            <div class="category-search-cell category-search-cell--type">
-                                <!-- <h5><span data-type-label>Type</span></h5> -->
-                                <h5>Type</h5>
-                                <div class="category-search-stack">
-                                    <select name="type" class="category-search-select" data-search-type
-                                        data-selected="{{ $filters['type'] }}">
-                                        <option value="">Any</option>
-                                        @foreach($searchOptions[$selectedCategory]['types'] ?? [] as $type)
-                                            <option value="{{ $type }}" {{ $filters['type'] === $type ? 'selected' : '' }}>
-                                                {{ $type }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <div class="category-search-field-group">
-                                        <!-- <label for="home-name-search">Name Search</label> -->
-                                        <input id="home-name-search" type="text" name="name" class="category-search-input"
-                                            placeholder="Optional" value="{{ $filters['name'] }}">
+                            <div class="category-search-cell category-search-cell--guests">
+                            <h5>Guest & Rooms</h5>
+                            <div class="guest-rooms-summary">
+                                <span id="guest-rooms-summary-text">{{ (int) request()->query('adults',2) }} Adults &middot; {{ (int) request()->query('children',0) }} Child &middot; {{ (int) request()->query('rooms',1) }} Rooms</span>
+                            </div>
+                            <div class="guest-rooms-selector">
+                                <div class="guest-rooms-row">
+                                    <label for="adults-field">Adults (17+ yr)</label>
+                                    <div class="guest-rooms-counter">
+                                        <button type="button" class="count-btn decrement" data-target="adults">−</button>
+                                        <input id="adults-field" type="text" name="adults" value="{{ request()->query('adults', 2) }}" readonly>
+                                        <button type="button" class="count-btn increment" data-target="adults">+</button>
+                                    </div>
+                                </div>
+                                <div class="guest-rooms-row">
+                                    <label for="children-field">Children (0-17 yr)</label>
+                                    <div class="guest-rooms-counter">
+                                        <button type="button" class="count-btn decrement" data-target="children">−</button>
+                                        <input id="children-field" type="text" name="children" value="{{ request()->query('children', 0) }}" readonly>
+                                        <button type="button" class="count-btn increment" data-target="children">+</button>
+                                    </div>
+                                </div>
+                                <div class="guest-rooms-row">
+                                    <label for="rooms-field">Rooms (Max 20)</label>
+                                    <div class="guest-rooms-counter">
+                                        <button type="button" class="count-btn decrement" data-target="rooms">−</button>
+                                        <input id="rooms-field" type="text" name="rooms" value="{{ request()->query('rooms', 1) }}" readonly>
+                                        <button type="button" class="count-btn increment" data-target="rooms">+</button>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="category-search-submit">
+                        <div class="category-search-submit">
                                 <button type="submit" class="btn-primary">Proceed to results</button>
                             </div>
                         </div>
@@ -147,18 +159,18 @@
                 <p>Explore hotel and resort stays using the same public-facing homepage design.</p>
                 <a href="#discover-mauritius" class="btn-primary">See hotels</a>
             </div>
-            <div class="quick-tile">
+            <!-- <div class="quick-tile">
                 <strong>Operator Data Live</strong>
                 <p>This frontend now reads your accommodation and activity data directly from the existing system.</p>
                 <a href="{{ route('operator.login') }}" class="btn-secondary">Operator login</a>
-            </div>
+            </div> -->
         </div>
     </section>
 
     <section class="page-section">
         <div class="wrap split-highlight">
             <div class="highlight-copy">
-                <h3>Your Holidays in Mauritius</h3>
+                <h3>Mauritius Holiday Destination</h3>
                 <p>
                     Mauritius is more than just a destination — it is now a dynamic homepage connected to your real operator
                     entries.
@@ -304,4 +316,59 @@
             </div>
         </div>
     </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const findInput = (key) => document.querySelector(`[name='${key}']`);
+            const summary = document.getElementById('guest-rooms-summary-text');
+            const guestCell = document.querySelector('.category-search-cell--guests');
+
+            const updateSummary = function () {
+                const adults = parseInt(findInput('adults')?.value || 0, 10);
+                const children = parseInt(findInput('children')?.value || 0, 10);
+                const rooms = parseInt(findInput('rooms')?.value || 0, 10);
+                if (summary) {
+                    summary.textContent = `${adults} Adults · ${children} Child${children === 1 ? '' : 'ren'} · ${rooms} Room${rooms === 1 ? '' : 's'}`;
+                }
+            };
+
+            if (guestCell && summary) {
+                summary.addEventListener('click', function () {
+                    guestCell.classList.toggle('is-open');
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!guestCell.contains(event.target)) {
+                        guestCell.classList.remove('is-open');
+                    }
+                });
+            }
+
+            document.querySelectorAll('.guest-rooms-selector .count-btn').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const target = button.getAttribute('data-target');
+                    const input = findInput(target);
+                    if (!input) return;
+
+                    let value = parseInt(input.value, 10) || 0;
+                    if (button.classList.contains('increment')) {
+                        value += 1;
+                    } else if (button.classList.contains('decrement')) {
+                        value -= 1;
+                    }
+
+                    if (target === 'adults' || target === 'rooms') {
+                        value = Math.max(1, value);
+                    } else {
+                        value = Math.max(0, value);
+                    }
+
+                    input.value = value;
+                    updateSummary();
+                });
+            });
+
+            updateSummary();
+        });
+    </script>
 @endsection

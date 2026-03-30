@@ -491,6 +491,86 @@ img {
     font-weight: 600;
 }
 
+.guest-rooms-summary {
+    margin-bottom: 10px;
+    background: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0B2C71;
+    border: 1px solid #dbe6f6;
+}
+
+.guest-rooms-selector {
+    display: none;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid #dbe6f6;
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.category-search-cell--guests.is-open .guest-rooms-selector {
+    display: grid;
+}
+
+.guest-rooms-summary {
+    cursor: pointer;
+    border: 1px solid #dbe6f6;
+    padding: 10px;
+    border-radius: 10px;
+    background: #fff;
+    margin-bottom: 8px;
+}
+
+.guest-rooms-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.guest-rooms-row label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1b2d55;
+}
+
+.guest-rooms-counter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.guest-rooms-counter input {
+    width: 48px;
+    text-align: center;
+    border: 1px solid #c5d0e8;
+    border-radius: 6px;
+    font-size: 15px;
+    padding: 8px 0;
+    background: #eef4ff;
+    color: #0f2a57;
+}
+
+.count-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid #c5d0e8;
+    background: #ffffff;
+    color: #0f2a57;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.count-btn:hover {
+    border-color: #7d9ece;
+    background: #f0f6ff;
+}
+
 .category-search-submit {
     /* grid-column: 1 / -1; */
     display: flex;
@@ -833,6 +913,7 @@ img {
 }
 
 .category-result-card {
+    position: relative;
     display: grid;
     grid-template-columns: 260px 1fr;
     gap: 0;
@@ -840,6 +921,41 @@ img {
     border-radius: 10px;
     overflow: hidden;
     background: #fff;
+}
+
+.category-result-availability-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.category-result-availability-badge .availability-count {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ff7f00;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
+}
+
+.category-result-availability-badge .availability-label {
+    color: #222;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .category-result-media {

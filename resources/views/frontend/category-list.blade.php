@@ -13,13 +13,17 @@
             'check_out' => $filters['check_out'],
             'type' => $filters['type'],
             'name' => $filters['name'],
+            'adults' => $filters['adults'] ?? null,
+            'children' => $filters['children'] ?? null,
+            'rooms' => $filters['rooms'] ?? null,
         ], fn ($value) => $value !== null && $value !== '');
 
         $detailQuery = array_filter([
             'check_in' => $filters['check_in'],
             'check_out' => $filters['check_out'],
-            'adults' => (int) request()->query('adults', 2),
-            'children' => (int) request()->query('children', 0),
+            'adults' => $filters['adults'] ?? (int) request()->query('adults', 2),
+            'children' => $filters['children'] ?? (int) request()->query('children', 0),
+            'rooms' => $filters['rooms'] ?? (int) request()->query('rooms', 1),
         ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
@@ -100,19 +104,35 @@
                             </div>
                         </div>
 
-                        <div class="category-search-cell category-search-cell--type">
-                            <!-- <h5><span data-type-label>Type</span></h5> -->
-                            <h5>Type</h5>
-                            <div class="category-search-stack">
-                                <select name="type" class="category-search-select" data-search-type data-selected="{{ $filters['type'] }}">
-                                    <option value="">Any</option>
-                                    @foreach($searchOptions[$category]['types'] ?? [] as $type)
-                                        <option value="{{ $type }}" {{ $filters['type'] === $type ? 'selected' : '' }}>{{ $type }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="category-search-field-group">
-                                    <!-- <label for="category-name-search">Name Search</label> -->
-                                    <input id="category-name-search" type="text" name="name" class="category-search-input" placeholder="Optional" value="{{ $filters['name'] }}">
+                        <div class="category-search-cell category-search-cell--guests">
+                            <h5>Guest & Rooms</h5>
+                            <div class="guest-rooms-summary">
+                                <span id="guest-rooms-summary-text">{{ (int) $filters['adults'] }} Adults · {{ (int) $filters['children'] }} Child{{ (int) $filters['children'] === 1 ? '' : 'ren' }} · {{ (int) $filters['rooms'] }} Room{{ (int) $filters['rooms'] === 1 ? '' : 's' }}</span>
+                            </div>
+                            <div class="guest-rooms-selector">
+                                <div class="guest-rooms-row">
+                                    <label for="category-adults-field">Adults (17+ yr)</label>
+                                    <div class="guest-rooms-counter">
+                                        <button type="button" class="count-btn decrement" data-target="adults">−</button>
+                                        <input id="category-adults-field" type="text" name="adults" value="{{ (int) $filters['adults'] }}" readonly>
+                                        <button type="button" class="count-btn increment" data-target="adults">+</button>
+                                    </div>
+                                </div>
+                                <div class="guest-rooms-row">
+                                    <label for="category-children-field">Children (0-17 yr)</label>
+                                    <div class="guest-rooms-counter">
+                                        <button type="button" class="count-btn decrement" data-target="children">−</button>
+                                        <input id="category-children-field" type="text" name="children" value="{{ (int) $filters['children'] }}" readonly>
+                                        <button type="button" class="count-btn increment" data-target="children">+</button>
+                                    </div>
+                                </div>
+                                <div class="guest-rooms-row">
+                                    <label for="category-rooms-field">Rooms (Max 20)</label>
+                                    <div class="guest-rooms-counter">
+                                        <button type="button" class="count-btn decrement" data-target="rooms">−</button>
+                                        <input id="category-rooms-field" type="text" name="rooms" value="{{ (int) $filters['rooms'] }}" readonly>
+                                        <button type="button" class="count-btn increment" data-target="rooms">+</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -196,6 +216,12 @@
                                 $priceUnit = $isActivityListing ? '/ person' : '/ room';
                             @endphp
                             <article class="category-result-card">
+                                @if(isset($item['available_rooms_count']) && $item['available_rooms_count'] !== null)
+                                    <div class="category-result-availability-badge">
+                                        <div class="availability-count">{{ $item['available_rooms_count'] }}</div>
+                                        <div class="availability-label">available</div>
+                                    </div>
+                                @endif
                                 <a href="{{ $itemUrl }}" class="category-result-media">
                                     <img src="{{ $item['image'] }}" alt="{{ $item['title'] }}">
                                 </a>
@@ -205,6 +231,9 @@
                                     <p>{{ $item['excerpt'] }}</p>
                                     <div class="category-result-footer">
                                         <span class="chip">{{ $metaLabel }}</span>
+                                        @if(isset($item['available_rooms_count']) && $item['available_rooms_count'] !== null)
+                                            <!-- <span class="listing-availability">{{ $item['available_rooms_count'] }} rooms available</span> -->
+                                        @endif
                                         @if($startingRate !== null)
                                             <span class="listing-price">From MUR {{ number_format((float) $startingRate, 0) }} {{ $priceUnit }}</span>
                                         @endif
@@ -248,4 +277,59 @@
             </div>
         </div>
     </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const findInput = (key) => document.querySelector(`[name='${key}']`);
+            const summary = document.getElementById('guest-rooms-summary-text');
+            const guestCell = document.querySelector('.category-search-cell--guests');
+
+            const updateSummary = function () {
+                const adults = parseInt(findInput('adults')?.value || 0, 10);
+                const children = parseInt(findInput('children')?.value || 0, 10);
+                const rooms = parseInt(findInput('rooms')?.value || 0, 10);
+                if (summary) {
+                    summary.textContent = `${adults} Adults · ${children} Child${children === 1 ? '' : 'ren'} · ${rooms} Room${rooms === 1 ? '' : 's'}`;
+                }
+            };
+
+            if (guestCell && summary) {
+                summary.addEventListener('click', function () {
+                    guestCell.classList.toggle('is-open');
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!guestCell.contains(event.target)) {
+                        guestCell.classList.remove('is-open');
+                    }
+                });
+            }
+
+            document.querySelectorAll('.guest-rooms-selector .count-btn').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const target = button.getAttribute('data-target');
+                    const input = findInput(target);
+                    if (!input) return;
+
+                    let value = parseInt(input.value, 10) || 0;
+                    if (button.classList.contains('increment')) {
+                        value += 1;
+                    } else if (button.classList.contains('decrement')) {
+                        value -= 1;
+                    }
+
+                    if (target === 'adults' || target === 'rooms') {
+                        value = Math.max(1, value);
+                    } else {
+                        value = Math.max(0, value);
+                    }
+
+                    input.value = value;
+                    updateSummary();
+                });
+            });
+
+            updateSummary();
+        });
+    </script>
 @endsection

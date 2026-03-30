@@ -133,12 +133,40 @@ class HomeController extends Controller
                 'rooms' => function ($query) {
                     $query->orderBy('room_name')->orderBy('id');
                 },
+                'inventory' => function ($query) use ($filters) {
+                    if (!empty($filters['check_in']) && !empty($filters['check_out'])) {
+                        $query->whereBetween('date', [$filters['check_in'], \Carbon\Carbon::parse($filters['check_out'])->subDay()->format('Y-m-d')]);
+                    }
+                },
+                'bookings' => function ($query) use ($filters) {
+                    if (!empty($filters['check_in']) && !empty($filters['check_out'])) {
+                        $query->where('booking_status', 'Confirmed')
+                            ->where(function ($bookingQuery) use ($filters) {
+                                $bookingQuery->where(function ($q) use ($filters) {
+                                    $q->where('check_in_date', '<=', $filters['check_out'])
+                                      ->where('check_out_date', '>', $filters['check_in']);
+                                });
+                            });
+                    }
+                },
             ])
             ->whereNotNull('property_name')
             ->latest('updated_at')
             ->take(120)
             ->get()
-            ->map(fn (Accommodation $accommodation) => $this->mapAccommodation($accommodation))
+            ->map(function (Accommodation $accommodation) use ($filters) {
+                $mapped = $this->mapAccommodation($accommodation);
+                
+                // Calculate available rooms for selected dates
+                if (!empty($filters['check_in']) && !empty($filters['check_out'])) {
+                    $availableRooms = $this->calculateAvailableRooms($accommodation, $filters['check_in'], $filters['check_out']);
+                    $mapped['available_rooms_count'] = $availableRooms;
+                } else {
+                    $mapped['available_rooms_count'] = null; // No dates selected
+                }
+                
+                return $mapped;
+            })
             ->values();
 
         $activities = Activity::with([
@@ -1375,6 +1403,9 @@ class HomeController extends Controller
             'check_out' => (string) $request->query('check_out', now()->addDays(2)->format('Y-m-d')),
             'type' => trim((string) $request->query('type', '')),
             'name' => trim((string) $request->query('name', '')),
+            'adults' => max(1, (int) $request->query('adults', 2)),
+            'children' => max(0, (int) $request->query('children', 0)),
+            'rooms' => max(1, (int) $request->query('rooms', 1)),
         ];
     }
 
@@ -1678,5 +1709,56 @@ class HomeController extends Controller
     {
         return (string) $accommodation->approval_status === 'Approved'
             && (string) $accommodation->status === Accommodation::STATUS_ACTIVE;
+    }
+
+    private function calculateAvailableRooms(Accommodation $accommodation, string $checkIn, string $checkOut): ?int
+    {
+        $rooms = collect($accommodation->rooms ?? []);
+        if ($rooms->isEmpty()) {
+            return null;
+        }
+
+        $checkInDate = \Carbon\Carbon::parse($checkIn);
+        $checkOutDate = \Carbon\Carbon::parse($checkOut);
+        $stayDates = [];
+
+        // Generate all dates in the stay period
+        for ($date = $checkInDate->copy(); $date->lt($checkOutDate); $date->addDay()) {
+            $stayDates[] = $date->format('Y-m-d');
+        }
+
+        $totalAvailable = 0;
+
+        foreach ($rooms as $room) {
+            $roomQuantity = $room->allotment ?? $room->quantity ?? 0;
+            if ($roomQuantity <= 0) {
+                continue;
+            }
+
+            // Check inventory for each date
+            $availableForRoom = $roomQuantity;
+
+            foreach ($stayDates as $date) {
+                $inventory = $accommodation->inventory->firstWhere('date', $date);
+                if ($inventory) {
+                    $availableForRoom = min($availableForRoom, $inventory->available_rooms ?? $roomQuantity);
+                }
+
+                // Check for conflicting bookings
+                $conflictingBookings = $accommodation->bookings->filter(function ($booking) use ($date, $room) {
+                    return $booking->room_id == $room->id &&
+                           $booking->booking_status === 'Confirmed' &&
+                           $booking->check_in_date <= $date &&
+                           $booking->check_out_date > $date;
+                });
+
+                $bookedRooms = $conflictingBookings->sum('rooms_booked');
+                $availableForRoom = max(0, $availableForRoom - $bookedRooms);
+            }
+
+            $totalAvailable += $availableForRoom;
+        }
+
+        return $totalAvailable > 0 ? $totalAvailable : 0;
     }
 }
