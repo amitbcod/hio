@@ -130,7 +130,7 @@
                         </div>
 
                         <div class="category-search-submit">
-                                <button type="submit" class="btn-primary">Proceed to results</button>
+                                <button type="submit" class="btn-primary">Proceed</button>
                             </div>
                         </div>
                     </div>
