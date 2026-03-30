@@ -374,7 +374,7 @@
                                 <div class="form-grid">
                                     <div class="form-group">
                                         <label for="guests_0_dob">Date of Birth <span class="req">*</span></label>
-                                        <input type="date" id="guests_0_dob" name="guests[0][dob]" value="{{ old('guests.0.dob') }}" required class="form-input">
+                                        <input type="date" id="guests_0_dob" name="guests[0][dob]" value="{{ old('guests.0.dob', $guestDefaults['dob'] ?? '') }}" required class="form-input">
                                     </div>
 
                                     <div class="form-group">
@@ -1265,6 +1265,28 @@
         loadGuestsFromForm();
         if (additionalGuests.length > 0) {
             renderGuestsList();
+        }
+
+        // Auto-fill DOB when "Self" is selected
+        const relationSelect = document.getElementById('guests_0_relation');
+        const dobInput = document.getElementById('guests_0_dob');
+        const travelerDOB = '{{ $guestDefaults["dob"] ?? "" }}';
+
+        if (relationSelect && dobInput && travelerDOB) {
+            // Function to handle DOB auto-fill
+            function handleSelfSelection() {
+                if (relationSelect.value === 'self') {
+                    dobInput.value = travelerDOB;
+                } else {
+                    dobInput.value = '';
+                }
+            }
+
+            // Listen for changes
+            relationSelect.addEventListener('change', handleSelfSelection);
+
+            // Run on page load in case 'self' is already selected
+            handleSelfSelection();
         }
     });
 </script>

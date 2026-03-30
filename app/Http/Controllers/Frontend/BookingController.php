@@ -264,15 +264,18 @@ class BookingController extends Controller
 
         $savedGuests = $traveler ? SavedGuest::where('user_id', $traveler->id)->get() : collect();
 
+        $travelerDOB = $travelerProfile?->date_of_birth ? $travelerProfile->date_of_birth->format('Y-m-d') : null;
+
         $guestDefaults = [
             'guest_name' => old('guest_name') ?: ($traveler?->full_name ?: ($travelerProfile ? trim($travelerProfile->first_name . ' ' . ($travelerProfile->middle_name ?? '') . ' ' . $travelerProfile->last_name) : null)),
             'guest_email' => old('guest_email') ?: ($traveler?->email ?? null),
             'guest_phone' => old('guest_phone') ?: ($traveler?->mobile_phone ?? null),
+            'dob' => $travelerDOB,
         ];
 
         $countries = $this->countries();
 
-        return view('frontend.checkout', compact('cart', 'summary', 'guestDefaults', 'traveler', 'countries', 'totalGuests', 'savedGuests'));
+        return view('frontend.checkout', compact('cart', 'summary', 'guestDefaults', 'traveler', 'travelerProfile', 'countries', 'totalGuests', 'savedGuests'));
     }
 
     private function countries(): array

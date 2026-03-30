@@ -204,7 +204,7 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
         <div class="wrap">
             <div class="section-header">
                 <div>
-                    <h2>Discover Mauritius</h2>
+                    <h2>Your Holiday in Mauritius</h2>
                     <p>
                         The homepage tabs below use live data entered by operators for activities and accommodation.
                         Services, transport, and wedding tabs are kept ready for later frontend expansion.
