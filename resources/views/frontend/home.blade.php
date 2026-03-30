@@ -171,13 +171,13 @@
         <div class="wrap split-highlight">
             <div class="highlight-copy">
                 <h3>Mauritius Holiday Destination</h3>
-                <p>
-                    Mauritius is more than just a destination — it is now a dynamic homepage connected to your real operator
-                    entries.
-                    Accommodation and activity content below is loaded from your existing database so the public frontend
-                    starts feeling alive
-                    without changing any operator or admin workflow.
-                </p>
+              <p>
+Discover the beauty of a tropical paradise known for its stunning beaches, 
+vibrant culture, and year-round pleasant climate. Whether you're a visitor or a local resident</br> 
+    Mauritius offers perfect experiences from relaxation to adventure.</br> 
+    The island is safe and tourist-friendly, with modern infrastructure and welcoming communities. </br> 
+Basic healthcare facilities and pharmacies are easily accessible across the country. Enjoy your holiday with peace of mind by following simple safety practices and staying protected under the tropical sun.
+</p>
                 <div class="stats-bar">
                     <div class="stat-pill">
                         <strong>{{ $stats['activities'] }}</strong>

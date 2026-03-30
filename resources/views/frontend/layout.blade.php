@@ -64,7 +64,7 @@
         <div class="wrap">
             <div class="site-footer-grid">
                 <div>
-                    <h4>Holidays.io /h4>
+                    <h4>Holidays.io </h4>
                     <!-- <p>
                         This homepage now reads live activity and accommodation content entered by operators,
                         while keeping your operator and admin panels unchanged.

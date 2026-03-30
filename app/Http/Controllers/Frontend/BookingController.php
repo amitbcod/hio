@@ -242,6 +242,10 @@ class BookingController extends Controller
 
     public function checkout()
     {
+        if (!Auth::guard('traveler')->check()) {
+            return redirect()->route('traveler.login')->with('error', 'Please log in as a traveler to continue to checkout.');
+        }
+
         $cart = $this->resolveCart();
 
         if (empty($cart)) {
