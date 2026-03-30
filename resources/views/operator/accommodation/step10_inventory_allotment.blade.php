@@ -9,7 +9,7 @@
             </div>
             <div class="col-md-9">
                 <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);margin-bottom:16px;">
-                    <h2 style="font-weight:700;margin:0;">Step 10: Inventory & Allotment Management</h2>
+                    <h2 style="font-weight:700;margin:0;">Step 10: Allotment Management</h2>
                 </div>
 
                 {{-- Success/Error Messages --}}
@@ -37,7 +37,7 @@
                 {{-- Add New Inventory Allotment --}}
                 <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.04);margin-bottom:20px;">
                     <h4 style="margin-top:0;margin-bottom:16px;">
-                        <a href="#" id="toggleAddAllotment" style="text-decoration:none;color:inherit;">+ Add New Inventory Allotment</a>
+                        <a href="#" id="toggleAddAllotment" style="text-decoration:none;color:inherit;">+ Add New Allotment</a>
                     </h4>
                     
                     <div id="addAllotmentSection" style="display:none;">
@@ -185,7 +185,7 @@
                             {{-- Submit Button --}}
                             <div style="display:flex;gap:12px;">
                                 <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;cursor:pointer;font-size:14px;">
-                                    Save Inventory Allotment
+                                    Save Allotment
                                 </button>
                                 <button type="button" class="btn" style="background:#f0f0f0;color:#333;padding:10px 20px;border-radius:4px;border:none;cursor:pointer;font-size:14px;" onclick="toggleAddAllotment()">
                                     Cancel
@@ -198,7 +198,7 @@
                 {{-- Inventory Allotments Listing --}}
                 @if($inventoryAllotments->count() > 0)
                 <div style="background:#f9f9f9;border-radius:16px;padding:20px;margin-bottom:20px;">
-                    <h5 style="margin-top:0;margin-bottom:16px;font-weight:600;">Inventory Allotments</h5>
+                    <h5 style="margin-top:0;margin-bottom:16px;font-weight:600;"> Allotments</h5>
                     <div style="overflow-x:auto;">
                         <table style="width:100%;border-collapse:collapse;font-size:13px;">
                             <thead>
@@ -267,7 +267,7 @@
                 </div>
                 @else
                 <div style="background:#fff3cd;padding:16px;border-radius:8px;color:#856404;margin-bottom:20px;">
-                    No inventory allotments added yet. Create one to manage room availability and booking policies.
+                    No allotments added yet. Create one to manage room availability and booking policies.
                 </div>
                 @endif
 
@@ -470,10 +470,10 @@
             
             if (isHidden) {
                 section.style.display = 'block';
-                document.getElementById('toggleAddAllotment').textContent = '- Add New Inventory Allotment';
+                document.getElementById('toggleAddAllotment').textContent = '- Add New Allotment';
             } else {
                 section.style.display = 'none';
-                document.getElementById('toggleAddAllotment').textContent = '+ Add New Inventory Allotment';
+                document.getElementById('toggleAddAllotment').textContent = '+ Add New Allotment';
                 // Reset form when closing
                 document.getElementById('inventoryAllotmentForm').reset();
                 document.querySelector('select[name="instant_on_request"]').value = 'Instant';
@@ -611,8 +611,8 @@
                     
                     // Scroll to form and open it
                     document.getElementById('addAllotmentSection').style.display = 'block';
-                    document.getElementById('toggleAddAllotment').textContent = '✎ Edit Inventory Allotment';
-                    document.querySelector('#inventoryAllotmentForm button[type="submit"]').textContent = 'Update Inventory Allotment';
+                    document.getElementById('toggleAddAllotment').textContent = '✎ Edit Allotment';
+                    document.querySelector('#inventoryAllotmentForm button[type="submit"]').textContent = 'Update Allotment';
                     document.getElementById('inventoryAllotmentForm').scrollIntoView({ behavior: 'smooth' });
                 } else {
                     alert('Error: ' + (data.message || 'Failed to load allotment'));
@@ -626,7 +626,7 @@
 
         // Delete allotment
         function deleteAllotment(inventoryId) {
-            if (!confirm('Delete this inventory allotment?')) return;
+            if (!confirm('Delete this allotment?')) return;
 
             fetch('{{ route("operator.accommodation.step10.delete", [$accommodation->id, "INVENTORY_ID"]) }}'.replace('INVENTORY_ID', inventoryId), {
                 method: 'POST',
