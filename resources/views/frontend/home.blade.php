@@ -115,7 +115,7 @@
                                     <div class="guest-rooms-counter">
                                         <button type="button" class="count-btn decrement" data-target="children">−</button>
                                         <input id="children-field" type="text" name="children" value="{{ request()->query('children', 0) }}" readonly>
-                                        <button type="button" class="count-btn increment" data-target="children">+</button>
+                                        <button type="button" class="count-btn increment" data-target="children">+</button> 
                                     </div>
                                 </div>
                                 <div class="guest-rooms-row">
