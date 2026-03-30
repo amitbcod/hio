@@ -103,7 +103,7 @@
                             </div>
                             <div class="guest-rooms-selector">
                                 <div class="guest-rooms-row">
-                                    <label for="adults-field">Adults (17+ yr)</label>
+                                    <label for="adults-field">Adults <span>(17+ yr)</span></label>
                                     <div class="guest-rooms-counter">
                                         <button type="button" class="count-btn decrement" data-target="adults">−</button>
                                         <input id="adults-field" type="text" name="adults" value="{{ request()->query('adults', 2) }}" readonly>
@@ -111,7 +111,7 @@
                                     </div>
                                 </div>
                                 <div class="guest-rooms-row">
-                                    <label for="children-field">Children (0-17 yr)</label>
+                                    <label for="children-field">Children <span>(0-17 yr)</span></label>
                                     <div class="guest-rooms-counter">
                                         <button type="button" class="count-btn decrement" data-target="children">−</button>
                                         <input id="children-field" type="text" name="children" value="{{ request()->query('children', 0) }}" readonly>
@@ -119,7 +119,7 @@
                                     </div>
                                 </div>
                                 <div class="guest-rooms-row">
-                                    <label for="rooms-field">Rooms (Max 20)</label>
+                                    <label for="rooms-field">Rooms <span>(Max 20)</span></label>
                                     <div class="guest-rooms-counter">
                                         <button type="button" class="count-btn decrement" data-target="rooms">−</button>
                                         <input id="rooms-field" type="text" name="rooms" value="{{ request()->query('rooms', 1) }}" readonly>

@@ -1771,7 +1771,7 @@ button#cancelModalBtn {
 .traveler-form-section .traveler-status-badge i {
     width: 13px;
     height: 11px;
-}  
+}   
 
 @media (max-width:767px) {
     .category-input-group-inner {

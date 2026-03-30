@@ -111,7 +111,7 @@
                             </div>
                             <div class="guest-rooms-selector">
                                 <div class="guest-rooms-row">
-                                    <label for="category-adults-field">Adults (17+ yr)</label>
+                                    <label for="category-adults-field">Adults <span>(17+ yr)</span></label>
                                     <div class="guest-rooms-counter">
                                         <button type="button" class="count-btn decrement" data-target="adults">−</button>
                                         <input id="category-adults-field" type="text" name="adults" value="{{ (int) $filters['adults'] }}" readonly>
@@ -119,7 +119,7 @@
                                     </div>
                                 </div>
                                 <div class="guest-rooms-row">
-                                    <label for="category-children-field">Children (0-17 yr)</label>
+                                    <label for="category-children-field">Children <span>(0-17 yr)</span></label>
                                     <div class="guest-rooms-counter">
                                         <button type="button" class="count-btn decrement" data-target="children">−</button>
                                         <input id="category-children-field" type="text" name="children" value="{{ (int) $filters['children'] }}" readonly>
@@ -127,7 +127,7 @@
                                     </div>
                                 </div>
                                 <div class="guest-rooms-row">
-                                    <label for="category-rooms-field">Rooms (Max 20)</label>
+                                    <label for="category-rooms-field">Rooms <span>(Max 20)</span></label>
                                     <div class="guest-rooms-counter">
                                         <button type="button" class="count-btn decrement" data-target="rooms">−</button>
                                         <input id="category-rooms-field" type="text" name="rooms" value="{{ (int) $filters['rooms'] }}" readonly>
