@@ -15,9 +15,14 @@
                             <h2 style="font-weight: bold; margin-bottom: 8px;">My Properties</h2>
                             <p style="color: #666; margin-bottom: 0;">Manage and set up your properties</p>
                         </div>
-                        <a href="{{ route('operator.accommodation.create') }}" class="btn" style="background: #19b5b5; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
-                            + Add New Property
-                        </a>
+                        <div style="display: flex; gap: 12px;">
+                            <a href="{{ route('operator.accommodation.bookings') }}" class="btn" style="background: #17a2b8; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
+                                📅 View Bookings
+                            </a>
+                            <a href="{{ route('operator.accommodation.create') }}" class="btn" style="background: #19b5b5; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
+                                + Add New Property
+                            </a>
+                        </div>
                     </div>
 
                     {{-- Alerts --}}

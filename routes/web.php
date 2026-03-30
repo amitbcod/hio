@@ -3,6 +3,7 @@
 
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\BookingController;
+use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 require base_path('routes/operator.php');
 require base_path('routes/traveler.php');
@@ -13,6 +14,9 @@ Route::get('/', [HomeController::class, 'index'])->name('frontend.home');
 Route::get('/category-list', [HomeController::class, 'categoryList'])->name('frontend.category.list');
 Route::get('/activities/{activity}', [HomeController::class, 'showActivity'])->name('frontend.activities.show');
 Route::get('/accommodations/{accommodation}', [HomeController::class, 'showAccommodation'])->name('frontend.accommodations.show');
+
+// Test route
+Route::get('/test', [TestController::class, 'test']);
 
 // ── Booking / Cart ────────────────────────────────────────────────────────────
 Route::post('/booking/cart/add',    [BookingController::class, 'addToCart'])->name('frontend.booking.cart.add');

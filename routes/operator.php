@@ -64,6 +64,8 @@ Route::prefix('operator')->name('operator.')->group(function () {
 
         // Accommodation Management Routes
         Route::get('accommodation', [AccommodationController::class, 'index'])->name('accommodation.index');
+        Route::get('accommodation/bookings', [AccommodationController::class, 'bookingList'])->name('accommodation.bookings');
+        Route::get('accommodation/bookings/{booking}', [AccommodationController::class, 'bookingDetails'])->name('accommodation.booking.details');
         Route::get('accommodation/create', [AccommodationController::class, 'create'])->name('accommodation.create');
         Route::post('accommodation', [AccommodationController::class, 'store'])->name('accommodation.store');
         Route::get('accommodation/{id}', [AccommodationController::class, 'show'])->name('accommodation.show');

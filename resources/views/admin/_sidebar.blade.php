@@ -8,4 +8,5 @@
     @else
         <div class="list-group-item list-group-item-action text-muted">Businesses</div>
     @endif
+    <a href="{{ route('admin.accommodation.bookings') }}" class="list-group-item list-group-item-action {{ request()->is('admin/accommodation/bookings*') ? 'active' : '' }}">Bookings</a>
 </div>

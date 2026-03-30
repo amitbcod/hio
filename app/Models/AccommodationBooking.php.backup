@@ -16,7 +16,6 @@ class AccommodationBooking extends Model
     protected $casts = [
         'check_in_date' => 'date',
         'check_out_date' => 'date',
-        'traveler_dob' => 'date',
         'booked_at' => 'datetime',
     ];
 

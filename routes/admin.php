@@ -35,4 +35,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('operators/{operator}/edit', [\App\Http\Controllers\Admin\OperatorController::class, 'edit'])->name('operators.edit');
     Route::post('operators/{operator}', [\App\Http\Controllers\Admin\OperatorController::class, 'update'])->name('operators.update');
     Route::delete('operators/{operator}', [\App\Http\Controllers\Admin\OperatorController::class, 'destroy'])->name('operators.destroy');
+
+    // Admin accommodation booking management (superadmin)
+    Route::get('accommodation/bookings', [\App\Http\Controllers\Admin\AccommodationBookingController::class, 'index'])->name('accommodation.bookings');
+    Route::get('accommodation/bookings/{booking}', [\App\Http\Controllers\Admin\AccommodationBookingController::class, 'show'])->name('accommodation.booking.details');
 });

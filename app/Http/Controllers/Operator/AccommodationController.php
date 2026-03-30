@@ -2980,4 +2980,51 @@ class AccommodationController extends Controller
             \Log::error('Submit for approval error', ['error' => $e->getMessage()]);
             return back()->with('error', 'Failed to submit for approval: ' . $e->getMessage());
         }
-    }}
+    }
+
+    /**
+     * Show booking listing for operator's accommodations
+     */
+    public function bookingList(Request $request)
+    {
+        if ($redirect = $this->checkPreconditions()) return $redirect;
+        
+        $operator = auth()->user();
+        
+        // Get all accommodations for this operator
+        $accommodationIds = Accommodation::where('operator_id', $operator->id)
+            ->orWhere('business_id', $operator->business_id)
+            ->pluck('id');
+        
+        // Get bookings for these accommodations
+        $bookings = AccommodationBooking::whereIn('accommodation_id', $accommodationIds)
+            ->with(['accommodation', 'room'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+        
+        return view('operator.accommodation.booking_list', compact('bookings'));
+    }
+
+    /**
+     * Show booking details for a specific booking
+     */
+    public function bookingDetails($bookingId)
+    {
+        if ($redirect = $this->checkPreconditions()) return $redirect;
+        
+        $operator = auth()->user();
+        
+        // Get all accommodations for this operator
+        $accommodationIds = Accommodation::where('operator_id', $operator->id)
+            ->orWhere('business_id', $operator->business_id)
+            ->pluck('id');
+        
+        // Get the booking with relationships
+        $booking = AccommodationBooking::whereIn('accommodation_id', $accommodationIds)
+            ->where('id', $bookingId)
+            ->with(['accommodation', 'room', 'guests'])
+            ->firstOrFail();
+        
+        return view('operator.accommodation.booking_details', compact('booking'));
+    }
+}

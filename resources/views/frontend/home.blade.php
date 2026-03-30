@@ -84,7 +84,7 @@
                                 <h5>Check-In</h5>
                                 <div class="category-search-dates">
                                     <input type="date" name="check_in" class="category-search-input"
-                                        value="{{ $filters['check_in'] }}">
+                                        value="{{ $filters['check_in'] }}" min="{{ date('Y-m-d') }}">
                                 </div>
                             </div>
 
@@ -92,7 +92,7 @@
                                 <h5>Check-Out</h5>
                                 <div class="category-search-dates">
                                     <input type="date" name="check_out" class="category-search-input"
-                                        value="{{ $filters['check_out'] }}">
+                                        value="{{ $filters['check_out'] }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}">
                                 </div>
                             </div>
 

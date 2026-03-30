@@ -20,4 +20,8 @@ class BookingGuest extends Model
         'passport_number',
         'notes',
     ];
+
+    protected $casts = [
+        'dob' => 'date',
+    ];
 }
