@@ -9,6 +9,9 @@
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-light mb-0">
+            <button class="hamburger" onclick="toggleSidebar()">
+  <i class="fa-solid fa-bars"></i>
+</button>
         <div class="container d-flex justify-content-between align-items-center">
             <!-- <a class="navbar-brand" href="#">Admin Portal</a> -->
             <a class="navbar-brand" href="#"><img src="https://hio.whuso.in/public/images/holidays-io-logo.png"

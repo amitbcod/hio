@@ -588,9 +588,10 @@ img {
 }
 
 .quick-search-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    /* display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)); */
     gap: 18px;
+    display: flex;
 }
 
 .quick-tile {
@@ -1606,6 +1607,7 @@ input.category-search-input {
 .quick-search-grid .quick-tile {
     display: flex;
     flex-direction: column;
+    flex: 1;
 }
 
 .quick-search-grid .quick-tile a {
