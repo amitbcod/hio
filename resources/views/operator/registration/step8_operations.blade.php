@@ -20,10 +20,10 @@
 
 @section('content')
     @php $currentStep = 8; @endphp
-    <div class="col-md-3">
+    <div class="col-md-3 net-section">
         @include('operator.registration._sidebar', ['currentStep' => $currentStep, 'progress' => $progress ?? null])
     </div>
-    <div class="col-md-9 d-flex align-items-center justify-content-center" style="min-height: 90vh;">
+    <div class="col-md-6 d-flex align-items-center justify-content-center" style="min-height: 90vh; margin-top: 30px;">
         <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px 32px 24px 32px; width: 100%; max-width: 900px;">
             <h2 style="font-weight: bold; margin-bottom: 24px;">SERVICE OPERATIONS</h2>
             @if(session('success'))

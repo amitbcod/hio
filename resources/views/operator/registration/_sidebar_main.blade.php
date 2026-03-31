@@ -1,4 +1,4 @@
-<div style="background: #19b5b5; min-height: 100vh; width: 240px; padding: 0; color: #fff; border-radius: 0 16px 16px 0; overflow-y: auto;">
+<div>
     @php
         $operator = auth()->user();
         $business = null;

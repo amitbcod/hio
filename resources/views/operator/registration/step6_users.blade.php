@@ -20,12 +20,12 @@
 
 <div class="row">
     {{-- Sidebar --}}
-    <div class="col-md-3 mb-3 mb-md-0">
+    <div class="col-md-3 mb-3 mb-md-0 net-section">
         @include('operator.registration._sidebar', ['currentStep' => $currentStep, 'progress' => $progress ?? null])
     </div>
 
     {{-- Main Content --}}
-    <div class="col-md-9 d-flex align-items-start justify-content-center" style="min-height:90vh;">
+    <div class="col-md-6 d-flex align-items-start justify-content-center" style="min-height:90vh; margin-top: 40px;">
         <div style="background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);padding:32px;width:100%;max-width:900px;">
 
             <h2 class="mb-4 fw-bold">USERS & STAFF MANAGEMENT</h2>
