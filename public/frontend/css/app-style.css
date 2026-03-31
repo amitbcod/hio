@@ -251,6 +251,23 @@ select.form-control {
 button.btn.btn-success {
     margin-top: 10px;
 }
+#sidebar,
+.col-md-3.net-section {
+    background: #4c938d !important;
+}
+
+/* REMOVE ALL INNER BACKGROUNDS */
+#sidebar div,
+#sidebar ul,
+#sidebar li {
+    background: transparent !important;
+}
+
+.net-section > div {
+    background-color: transparent !important;
+}
+
+
 
 @media(max-width:768px) {
 
