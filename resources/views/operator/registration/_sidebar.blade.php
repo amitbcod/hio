@@ -96,8 +96,8 @@
             </li>
         @endforeach
     </ul>
-    <div style="style="min-height: 100vh; width: 240px; padding: 0; color: #fff; border-radius: 0 16px 16px 0; overflow-y: auto;">
-    <div style="padding: 20px 16px; font-weight: bold; letter-spacing: 1px; font-size: 18px;">PROPERTY MANAGEMENT</div>
+    <div style="min-height: 100vh; width: 240px; padding: 0; color: #fff; border-radius: 0 16px 16px 0; overflow-y: auto;">
+    <div style="padding: 20px 16px; font-weight: bold; letter-spacing: 1px; font-size: 18px; color: #fff;">PROPERTY MANAGEMENT</div>
     
     {{-- Add New Property Button --}}
     <div style="padding: 12px 16px; margin-bottom: 12px;">
@@ -107,10 +107,10 @@
     </div>
 
     {{-- Activity Management Section --}}
-    <div style="padding: 20px 16px; margin-top: 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2);">ACTIVITY MANAGEMENT</div>
+    <div style="padding: 20px 16px; margin-top: 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2); color: #fff;">ACTIVITY MANAGEMENT</div>
     
     {{-- Add New Activity Button --}}
-    <div class="button-section" style="list-style: none; padding: 0; margin: 0;">
+    <div class="button-section" style="padding: 12px 16px; margin-bottom: 12px;">
         <a href="{{ route('operator.activity.create') }}" style="display: block; background: rgba(255,255,255,0.2); color: #fff; padding: 10px 12px; border-radius: 4px; text-align: center; text-decoration: none; font-weight: 600; font-size: 12px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.3s;">
             + ADD NEW ACTIVITY
         </a>

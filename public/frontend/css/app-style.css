@@ -6,12 +6,15 @@
     padding-bottom: 30px;
 }
 
-
 .navbar {
     position: fixed;
     top: 0;
     width: 100%;
     z-index: 1000;
+}
+ 
+main {
+    margin-top: 93px;
 }
 
 .col-md-3.net-section {
@@ -47,7 +50,7 @@ select.form-control {
 }
 
 .media-fixed {
-    margin-top: 120px;
+    margin-top: 36px;
     padding: 50px;
     box-shadow: 0 30px 60px rgb(0 0 0 / 17%);
     width: 100%;
@@ -78,8 +81,7 @@ select.form-control {
     flex-direction: column;
     box-shadow: 0 30px 60px rgb(145 119 119 / 40%);
     transition: transform .2s;
-    position: sticky;
-    top: 92px;
+   
 }
 
 .box .percent {
@@ -241,6 +243,14 @@ select.form-control {
 }
 
 
+.col-md-3.align-items-center.justify-content-center {
+    position: absolute;
+    right: 0;
+    top: 35px;
+}
+button.btn.btn-success {
+    margin-top: 10px;
+}
 
 @media(max-width:768px) {
 
@@ -255,7 +265,7 @@ select.form-control {
 
     .media-fixed {
         padding: 40px !important;
-       margin-top: 140px;
+        margin-top: 40px;
     }
 
     .col-md-3.net-section {
@@ -291,8 +301,10 @@ select.form-control {
     background: none;
     border: none;
   }
-
-
+.col-md-3.align-items-center.justify-content-center {
+    position: inherit;
+    min-height: 0 !IMPORTANT;
+}
 }
 
 
