@@ -1,19 +1,7 @@
 
 @extends('layouts.app')
 
-@section('progressbar')
-    @php
-        $completionPercent = isset($progress) ? round((($progress->step2_profile ?? 0)
-            + ($progress->step3_legal ?? 0)
-            + ($progress->step4_system_process ?? 0)
-            + ($progress->step5_collaboration ?? 0)
-            + ($progress->step6_users ?? 0)
-            + ($progress->step7_accounting ?? 0)
-            + ($progress->step8_operations ?? 0)
-            + ($progress->step9_review ?? 0)) / 8 * 100) : 0;
-    @endphp
-    @include('operator.registration._progress', ['completionPercent' => $completionPercent])
-@endsection
+
 
 @section('content')
     @php $currentStep = 2; @endphp
@@ -106,6 +94,21 @@
             </form>
         </div>
     </div>
+
+    @section('progressbar')
+    @php
+        $completionPercent = isset($progress) ? round((($progress->step2_profile ?? 0)
+            + ($progress->step3_legal ?? 0)
+            + ($progress->step4_system_process ?? 0)
+            + ($progress->step5_collaboration ?? 0)
+            + ($progress->step6_users ?? 0)
+            + ($progress->step7_accounting ?? 0)
+            + ($progress->step8_operations ?? 0)
+            + ($progress->step9_review ?? 0)) / 8 * 100) : 0;
+    @endphp
+    @include('operator.registration._progress', ['completionPercent' => $completionPercent])
+@endsection
+ 
 
     @include('operator.registration.step2_profile_legal_modal', ['legal' => $legal ?? null])
 
