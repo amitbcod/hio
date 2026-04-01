@@ -256,18 +256,44 @@ button.btn.btn-success {
     background: #4c938d !important;
 }
 
-/* REMOVE ALL INNER BACKGROUNDS */
 #sidebar div,
 #sidebar ul,
 #sidebar li {
     background: transparent !important;
 }
-
 .net-section > div {
     background-color: transparent !important;
 }
+div.col-md-3.net-section > div[style] {
+    background: #4c938d !important;
+}
 
+.net-section li > div >span:last-child:after {
+    content: "";
+    position: absolute;
+    right: 0;
+    left: 0;
+    top: 50%;
+    margin-top: -5px;
+    height: 6px;
+    width: 6px;
+    display: block;
+    border-style: solid;
+    border-width: 0 2px 2px 0;
+    border-color: #fff0 var(--darkgray-color) var(--darkgray-color) #fff0;
+    transform: rotate(45deg);
+    transition: border .3s;
+}
+.net-section li > div >span:last-child {
+    font-size: 0;
+}
 
+div#menu_section_0_header span#menu_section_0_icon, div#menu_section_2_header span#menu_section_2_icon, div#menu_section_3_header span#menu_section_3_icon, div#menu_section_4_header span#menu_section_4_icon {
+    opacity: 0;
+}
+body .col-md-3.net-section div[style] {
+    background: transparent !important;
+}
 
 @media(max-width:768px) {
 
