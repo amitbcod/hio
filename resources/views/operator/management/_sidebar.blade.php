@@ -1,16 +1,16 @@
 <div>
     
 <div class="dropdownToggle" 
-     style="padding: 20px 16px; font-weight: bold; letter-spacing: 1px; font-size: 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-    PROPERTY MANAGEMENT
+     style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+   Property Management
     <span class="dropdownArrow" style="transition: transform 0.3s;">▼</span>
 </div>
 
 <ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: none;">
-    <li class="add-section" style="padding: 12px 16px;">
+    <li class="add-section" style="padding: 8px 36px;">
         <a href="{{ route('operator.accommodation.create') }}"
-           style="display: block; background: rgba(255,255,255,0.2); color: #fff; padding: 10px 12px; border-radius: 4px; text-align: center; text-decoration: none; font-weight: 600; font-size: 12px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.3s;">
-            + ADD NEW PROPERTY
+           style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
+          + Add New Property
         </a>
     </li>
 </ul>
@@ -20,16 +20,16 @@
     {{-- Activity Management Section --}}
 
   <div class="dropdownToggle" 
-     style="padding: 20px 16px; margin-top: 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-    ACTIVITY MANAGEMENT
+     style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+   Activity Management
     <span class="dropdownArrow" style="transition: transform 0.3s;">▼</span>
 </div>
 
 <ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: none;">
-    <li class="add-section" style="padding: 12px 16px;">
+    <li class="add-section" style="padding: 8px 36px;">
         <a href="{{ route('operator.activity.create') }}"
-           style="display: block; background: rgba(255,255,255,0.2); color: #fff; padding: 10px 12px; border-radius: 4px; text-align: center; text-decoration: none; font-weight: 600; font-size: 12px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.3s;">
-            + ADD NEW ACTIVITY
+           style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
+           + Add New Activity
         </a>
     </li>
 </ul>
