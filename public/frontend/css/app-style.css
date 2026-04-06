@@ -343,6 +343,48 @@ span.dropdownArrow {
     font-size: 0;
 }
 
+button.btn.btn-primary {
+    border: 1px solid #bd9e32;
+    background: #bd9e32;
+}
+a.btn.btn-secondary {
+    background: #4c938d;
+    border: 1px solid #4c938d;
+}
+.team-member-new {
+    overflow: scroll;
+}
+
+.add-section button.btn.btn-primary {
+    margin-bottom: 10px;
+}
+
+.editUserBtn {
+    font-size: 0; 
+    position: relative;
+}
+
+.editUserBtn::before {
+    content: "\270E"; 
+    font-size: 14px;
+    color: #000;
+}
+.btn-danger {
+    font-size: 0; 
+    position: relative;
+}
+
+.btn-danger::before {
+    content: "\1F5D1"; 
+    font-size: 14px;
+    color: #fff;
+}
+.back-section a.btn.btn-secondary {
+    padding: 10px 20px !important;
+   
+}
+
+
 @media (min-width: 1200px) {
     .navbar .container {
         max-width: 1300px;
@@ -419,5 +461,25 @@ span.dropdownArrow {
     display: inline-block !important;
 }
 
+.add-section a.btn.btn-outline-secondary {
+    margin-left: 0 !important;
+        margin-bottom: 10px;
+}
+.back-section {
+    display: inline-block !important;
+
+}
+.back-section button.btn.btn-success {
+    font-size: 14px;
 }
 
+.back-section a.btn.btn-secondary {
+    font-size: 14px;
+   
+}
+button.btn.btn-section {
+    padding: 14px 20px !important;
+}
+
+
+}

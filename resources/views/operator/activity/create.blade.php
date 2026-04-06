@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container mt-5">
+    <div class="container">
         <div class="row">
-            <div class="col-md-3">
+            <div id="sidebar" class="col-md-3 net-section">
                 @include('operator.registration._sidebar_main')
             </div>
             <div class="col-md-9">
@@ -13,7 +13,7 @@
                 </div>
                 @endif
 
-                <div style="background:#fff;border-radius:16px;padding:40px;box-shadow:0 2px 16px rgba(0,0,0,0.07);text-align:center;">
+                <div style="background:#fff;border-radius:16px;padding:40px;box-shadow:0 2px 16px rgba(0,0,0,0.07);text-align:center; margin-top:40px;">
                     <div style="font-size:64px;margin-bottom:24px;">✨</div>
                     <h2 style="font-weight:700;margin:0 0 12px 0;">Create New Activity</h2>
                     <p style="color:#666;margin:0 0 32px 0;font-size:16px;">
@@ -27,7 +27,7 @@
                             <p style="color:#999;font-size:13px;margin:0 0 12px 0;">You'll provide detailed information in the next step. Let's get started!</p>
                         </div>
 
-                        <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:14px 32px;border-radius:4px;border:none;cursor:pointer;font-size:16px;font-weight:600;">
+                        <button type="submit" class="btn btn-section" style="background: #4c938d;color:#fff;padding:14px 32px;border-radius:4px;border:none;cursor:pointer;font-size:16px;font-weight:600;">
                             Create Activity & Start Setup
                         </button>
 
@@ -40,7 +40,7 @@
                 </div>
 
                 {{-- Info Cards --}}
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:32px;">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:32px; margin-bottom:30px;">
                     <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.04);border-left:4px solid #19b5b5;">
                         <h5 style="margin:0 0 8px 0;font-weight:600;">Step 1: Basic Information</h5>
                         <p style="margin:0;color:#666;font-size:14px;">Provide service type, activity name, categories, location details, and comprehensive descriptions.</p>
@@ -60,3 +60,32 @@
         </div>
     </div>
 @endsection
+
+<script>
+      function toggleMenu(element) {
+         let submenu = element.nextElementSibling;
+
+         element.classList.toggle("active");
+         submenu.classList.toggle("hidden");
+      }
+   </script>
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+   </script>
+
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+
+      document.addEventListener("click", function (e) {
+         let sidebar = document.getElementById("sidebar");
+         let hamburger = document.querySelector(".hamburger");
+
+         if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+            sidebar.classList.remove("active");
+         }
+      });
+   </script>
