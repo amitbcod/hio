@@ -253,9 +253,9 @@ select.form-control {
     right: 0;
     top: 35px;
 }
-button.btn.btn-success {
+/* button.btn.btn-success {
     margin-top: 10px;
-}
+} */
 #sidebar,
 .col-md-3.net-section {
     background: #4c938d !important;
@@ -351,9 +351,7 @@ a.btn.btn-secondary {
     background: #4c938d;
     border: 1px solid #4c938d;
 }
-.team-member-new {
-    overflow: scroll;
-}
+
 
 .add-section button.btn.btn-primary {
     margin-bottom: 10px;
@@ -384,6 +382,27 @@ a.btn.btn-secondary {
    
 }
 
+.add-button-section button.btn.btn-primary {
+    background: #c4a745;
+    border: 1px solid #c4a745;
+}
+
+button.btn.btn-sm.btn-warning.editUserBtn {
+    background: no-repeat;
+    border: none;
+}
+
+button.btn.btn-sm.btn-danger {
+    background: no-repeat;
+    border: none;
+}
+
+.review-section {
+    margin-top: 30px;
+     margin-bottom: 30px;
+}
+
+
 
 @media (min-width: 1200px) {
     .navbar .container {
@@ -399,9 +418,9 @@ a.btn.btn-secondary {
         width: 100%;
     }
 
-    button.btn.btn-success {
+    /* button.btn.btn-success {
         margin-top: 10px;
-    }
+    } */
 
     .media-fixed {
         padding: 40px !important;
@@ -480,6 +499,14 @@ a.btn.btn-secondary {
 button.btn.btn-section {
     padding: 14px 20px !important;
 }
-
+.add-button-section {
+    display: inline-block !important;
+}
+.add-button-section button.btn.btn-secondary {
+    margin-bottom: 10px;
+}
+.team-member-new {
+    overflow: scroll;
+}
 
 }
