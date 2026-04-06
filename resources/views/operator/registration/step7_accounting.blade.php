@@ -24,7 +24,7 @@
         @include('operator.registration._sidebar', ['currentStep' => $currentStep, 'progress' => $progress ?? null])
     </div>
     <div class="col-md-6 d-flex align-items-center justify-content-center" style="min-height: 90vh;">
-        <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px 32px 24px 32px; width: 100%; max-width: 700px;">
+        <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px 32px 24px 32px; width: 100%; max-width: 700px; margin-top:30px;">
             <h2 style="font-weight: bold; margin-bottom: 24px;">ACCOUNTING & PAYOUTS</h2>
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
@@ -134,7 +134,7 @@
                             </div>
                         </div>
                         <!-- Additional details button (opens modal) -->
-                        <div class="d-flex justify-content-between mb-3">
+                        <div class="add-button-section d-flex justify-content-between mb-3">
                             <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#payoutModal">Additional Details</button>
                             <button type="submit" class="btn btn-primary">Save Accounting Details</button>
                         </div>

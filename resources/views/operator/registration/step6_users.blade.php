@@ -26,7 +26,7 @@
 
     {{-- Main Content --}}
     <div class="col-md-6 d-flex align-items-start justify-content-center" style="min-height:90vh; margin-top: 40px;">
-        <div style="background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);padding:32px;width:100%;max-width:900px;">
+        <div class="team-member-new">
 
             <h2 class="mb-4 fw-bold">USERS & STAFF MANAGEMENT</h2>
 
@@ -38,8 +38,8 @@
             @endif
 
             {{-- Buttons --}}
-            <div class="mb-3 d-flex justify-content-between">
-                <div>
+            <div class="back-section mb-3 d-flex justify-content-between">
+                <div class="add-section">
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
                         Add New User
                     </button>
