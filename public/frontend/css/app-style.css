@@ -344,17 +344,21 @@ span.dropdownArrow {
     font-size: 0;
 }
 
-button.btn.btn-primary {
+/* button.btn.btn-primary {
+    border: 1px solid #bd9e32;
+    background: #bd9e32;
+} */
+
+.add-section button.btn.btn-primary {
     border: 1px solid #bd9e32;
     background: #bd9e32;
 }
-a.btn.btn-secondary {
+
+.back-section a.btn.btn-secondary
+{
     background: #4c938d;
     border: 1px solid #4c938d;
 }
-
-
-
 
 .editUserBtn {
     font-size: 0; 
