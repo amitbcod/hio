@@ -26,6 +26,7 @@ main {
 button.btn.btn-info {
     background: #19b5b5;
     color: #fff;
+        margin-bottom: 10px;
 }
 
 .progress-section {
@@ -353,9 +354,7 @@ a.btn.btn-secondary {
 }
 
 
-.add-section button.btn.btn-primary {
-    margin-bottom: 10px;
-}
+
 
 .editUserBtn {
     font-size: 0; 
@@ -507,6 +506,9 @@ button.btn.btn-section {
 }
 .team-member-new {
     overflow: scroll;
+}
+.add-section button.btn.btn-primary {
+    margin-bottom: 10px;
 }
 
 }
