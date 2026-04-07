@@ -88,9 +88,13 @@
             color: #1b82c7;
         }
 
-        .auth-list li{
+        .auth-list li {
             background: url({{ asset('images/spiral-icon.svg') }}) no-repeat 0 center / 15px;
-            padding-left:25px
+            padding-left: 25px
+        }
+
+        .dropdown {
+            display: none;
         }
     </style>
     <div class="login-container ">
