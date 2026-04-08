@@ -20,6 +20,9 @@
                     <a href="{{ route('traveler.settings') }}" class="traveler-submenu-link">
                         <i class="fa-solid fa-gear"></i> Settings
                     </a>
+                    <a href="{{ route('traveler.trips') }}" class="traveler-submenu-link">
+                        <i class="fa-solid fa-plane"></i> My Trips
+                    </a>
                 </div>
 
                 @if(session('success'))

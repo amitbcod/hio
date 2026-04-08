@@ -3,6 +3,7 @@
     <a href="{{ route('admin.roles.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/roles*') ? 'active' : '' }}">Roles</a>
     <a href="{{ route('admin.modules.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/modules*') ? 'active' : '' }}">Modules</a>
     <a href="{{ route('admin.operators.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/operators*') ? 'active' : '' }}">Operators</a>
+    <a href="{{ route('admin.travellers.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/travellers*') ? 'active' : '' }}">Travellers</a>
     @if(Route::has('admin.businesses.index'))
         <a href="{{ route('admin.businesses.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/businesses*') ? 'active' : '' }}">Businesses</a>
     @else

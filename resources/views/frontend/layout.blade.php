@@ -53,7 +53,7 @@
                 <a href="{{ url('/#accommodations-section') }}">Accommodation</a>
                 <a href="{{ url('/#activities-section') }}">Activities</a>
                 <a href="{{ url('/#discover-mauritius') }}">Discover Mauritius</a>
-                <a href="{{ route('frontend.booking.cart') }}"><i class="fa-solid fa-cart-shopping"></i> Cart</a>
+                <a href="{{ route('frontend.booking.checkout') }}"><i class="fa-solid fa-check-to-slot"></i> Checkout</a>
             </nav>
         </div>
     </header>

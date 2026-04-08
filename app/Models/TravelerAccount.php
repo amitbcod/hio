@@ -40,4 +40,9 @@ class TravelerAccount extends Authenticatable
     {
         return $this->hasOne(TravelerProfile::class, 'traveler_account_id');
     }
+
+    public function trips()
+    {
+        return $this->hasMany(Trip::class, 'traveler_account_id');
+    }
 }

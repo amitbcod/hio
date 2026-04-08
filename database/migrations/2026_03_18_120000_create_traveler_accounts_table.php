@@ -24,6 +24,7 @@ return new class extends Migration
             $table->timestamp('privacy_accepted_at')->nullable();
             $table->string('privacy_version', 30)->nullable();
             $table->boolean('marketing_opt_in')->default(false);
+            $table->boolean('account_suspended')->default(false);
             $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
             $table->timestamps();

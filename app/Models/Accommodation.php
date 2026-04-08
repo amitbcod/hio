@@ -105,6 +105,11 @@ class Accommodation extends Model
     {
         return $this->hasMany(AccommodationBooking::class, 'accommodation_id');
     }
+
+    public function trip()
+    {
+        return $this->belongsTo(Trip::class, 'trip_id');
+    }
     
     /**
      * Generate unique accommodation ID

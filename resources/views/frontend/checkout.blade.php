@@ -282,8 +282,6 @@
                 <div class="breadcrumbs">
                     <a href="{{ url('/') }}">Home</a>
                     <span>/</span>
-                    <a href="{{ route('frontend.booking.cart') }}">Cart</a>
-                    <span>/</span>
                     <span>Checkout</span>
                 </div>
                 <h1>Complete Your Booking</h1>
@@ -590,8 +588,8 @@
                             Secure booking · No advance payment
                         </p>
 
-                        <a href="{{ route('frontend.booking.cart') }}" class="back-to-cart">
-                            <i class="fa-solid fa-arrow-left"></i> Back to Cart
+                        <a href="{{ url('/') }}" class="back-to-cart">
+                            <i class="fa-solid fa-arrow-left"></i> Back to search
                         </a>
                     </div>
                 </aside>

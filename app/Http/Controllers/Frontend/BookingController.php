@@ -13,6 +13,12 @@ use App\Models\ActivityPromotion;
 use App\Models\BookingGuest;
 use App\Models\SavedGuest;
 use App\Models\TravelerCart;
+use App\Models\Trip;
+use App\Models\Booking;
+use App\Models\BookingLineItem;
+use App\Models\Traveller;
+use App\Models\BliTravellerAllocation;
+use App\Services\TripService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +36,11 @@ class BookingController extends Controller
 
         $cart = $this->resolveCart();
 
+        if (!empty($cart)) {
+            return redirect()->route('frontend.booking.cart')
+                ->with('error', 'Only one booking is allowed in a single order. Please complete the current booking first.');
+        }
+
         if ($type === 'accommodation') {
             $item = $this->buildAccommodationCartItem($request);
         } elseif ($type === 'activity') {
@@ -42,7 +53,7 @@ class BookingController extends Controller
         $this->storeCart($cart);
 
         return redirect()->route('frontend.booking.cart')
-            ->with('success', 'Item added to your booking cart!');
+            ->with('success', 'Item added. Please proceed to checkout.');
     }
 
     private function buildAccommodationCartItem(Request $request): array
@@ -216,6 +227,11 @@ class BookingController extends Controller
     {
         $cart = $this->resolveCart();
 
+        if (empty($cart)) {
+            return redirect()->route('frontend.home')
+                ->with('error', 'No booking in progress. Please search and select a property first.');
+        }
+
         $summary = $this->buildCartSummary($cart);
 
         return view('frontend.cart-review', compact('cart', 'summary'));
@@ -249,7 +265,11 @@ class BookingController extends Controller
         $cart = $this->resolveCart();
 
         if (empty($cart)) {
-            return redirect()->route('frontend.home')->with('error', 'Your cart is empty.');
+            return redirect()->route('frontend.home')->with('error', 'Your booking is empty.');
+        }
+
+        if (count($cart) > 1) {
+            return redirect()->route('frontend.home')->with('error', 'Only one booking can be checked out at a time.');
         }
 
         $summary = $this->buildCartSummary($cart);
@@ -308,7 +328,11 @@ class BookingController extends Controller
     {
         $cart = $this->resolveCart();
         if (empty($cart)) {
-            return redirect()->route('frontend.home')->with('error', 'Your cart is empty.');
+            return redirect()->route('frontend.home')->with('error', 'Your booking is empty.');
+        }
+
+        if (count($cart) > 1) {
+            return redirect()->route('frontend.home')->with('error', 'Only one booking can be placed per order. Please complete or clear existing booking first.');
         }
 
         $totalGuests = 0;
@@ -339,6 +363,32 @@ class BookingController extends Controller
         // Use the first item's currency / grand total
         $summary = $this->buildCartSummary($cart);
         $bookingRefs = [];
+
+        // Get or create Trip ID
+        $travelerAccount = Auth::guard('traveler')->user();
+        $tripData = [];
+
+        foreach ($cart as $item) {
+            if ($item['type'] === 'accommodation') {
+                $tripData['start_date'] = $item['check_in'];
+                $tripData['end_date'] = $item['check_out'];
+            } elseif ($item['type'] === 'activity') {
+                $tripData['start_date'] = $item['check_in'];
+            }
+            $tripData['title'] = $tripData['title'] ?? ucfirst($item['type']) . ' Trip';
+        }
+
+        // Create or get Trip ID - check for explicit trip selection first
+        $tripId = null;
+        if ($travelerAccount) {
+            $explicitTripId = session('add_to_trip_id');
+            if ($explicitTripId) {
+                $tripId = $explicitTripId;
+                session()->forget('add_to_trip_id');
+            } else {
+                $tripId = TripService::getOrCreateTripId($travelerAccount, $tripData);
+            }
+        }
 
         foreach ($cart as $item) {
             $ref = $this->generateBookingRef($item['type']);
@@ -373,7 +423,57 @@ class BookingController extends Controller
                     'currency'          => $item['currency'],
                     'source_channel'    => 'Direct',
                     'booked_at'         => now(),
+                    'trip_id'           => $tripId,
                 ]);
+
+                // Create Trip party members if Trip exists
+                if ($tripId) {
+                    $trip = Trip::find($tripId);
+                    foreach ($guests as $guest) {
+                        $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                        Traveller::firstOrCreate(
+                            ['trip_id' => $tripId, 'name' => $fullName],
+                            [
+                                'email' => $guestEmail,
+                                'phone' => $guestPhone,
+                                'date_of_birth' => $guest['dob'] ?? null,
+                                'relationship' => $guest['relation'] ?? 'guest',
+                            ]
+                        );
+                    }
+
+                    // Create Booking record
+                    $tripBooking = Booking::create([
+                        'trip_id' => $tripId,
+                        'operator_id' => null,
+                        'total_amount' => $item['net_amount'],
+                        'status' => 'pending',
+                    ]);
+
+                    // Create BookingLineItem
+                    $bli = BookingLineItem::create([
+                        'booking_id' => $tripBooking->id,
+                        'service_type' => 'accommodation',
+                        'service_id' => $item['accommodation_id'],
+                        'quantity' => 1,
+                        'price' => $item['net_amount'],
+                        'start_date' => $item['check_in'],
+                        'end_date' => $item['check_out'],
+                        'status' => 'active',
+                    ]);
+
+                    // Link guests to BLI
+                    foreach ($guests as $guest) {
+                        $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                        $traveller = Traveller::where('trip_id', $tripId)->where('name', $fullName)->first();
+                        if ($traveller) {
+                            BliTravellerAllocation::create([
+                                'bli_id' => $bli->id,
+                                'traveller_id' => $traveller->id,
+                            ]);
+                        }
+                    }
+                }
 
                 // Store all guests
                 foreach ($guests as $index => $guest) {
@@ -421,7 +521,55 @@ class BookingController extends Controller
                     'source_channel'    => 'Direct',
                     'special_requests'  => $special,
                     'booked_at'         => now(),
+                    'trip_id'           => $tripId,
                 ]);
+
+                // Create Trip party members if Trip exists
+                if ($tripId) {
+                    foreach ($guests as $guest) {
+                        $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                        Traveller::firstOrCreate(
+                            ['trip_id' => $tripId, 'name' => $fullName],
+                            [
+                                'email' => $guestEmail,
+                                'phone' => $guestPhone,
+                                'date_of_birth' => $guest['dob'] ?? null,
+                                'relationship' => $guest['relation'] ?? 'guest',
+                            ]
+                        );
+                    }
+
+                    // Create Booking record
+                    $tripBooking = Booking::create([
+                        'trip_id' => $tripId,
+                        'operator_id' => null,
+                        'total_amount' => $item['net_amount'],
+                        'status' => 'pending',
+                    ]);
+
+                    // Create BookingLineItem
+                    $bli = BookingLineItem::create([
+                        'booking_id' => $tripBooking->id,
+                        'service_type' => 'activity',
+                        'service_id' => $item['activity_id'],
+                        'quantity' => $item['adults'] + $item['children'],
+                        'price' => $item['net_amount'],
+                        'start_date' => $item['check_in'],
+                        'status' => 'active',
+                    ]);
+
+                    // Link guests to BLI
+                    foreach ($guests as $guest) {
+                        $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                        $traveller = Traveller::where('trip_id', $tripId)->where('name', $fullName)->first();
+                        if ($traveller) {
+                            BliTravellerAllocation::create([
+                                'bli_id' => $bli->id,
+                                'traveller_id' => $traveller->id,
+                            ]);
+                        }
+                    }
+                }
 
                 // Store all guests
                 foreach ($guests as $index => $guest) {

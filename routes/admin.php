@@ -36,6 +36,21 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('operators/{operator}', [\App\Http\Controllers\Admin\OperatorController::class, 'update'])->name('operators.update');
     Route::delete('operators/{operator}', [\App\Http\Controllers\Admin\OperatorController::class, 'destroy'])->name('operators.destroy');
 
+    // Admin travellers management
+    Route::get('travellers', [\App\Http\Controllers\Admin\TravelerController::class, 'index'])->name('travellers.index');
+    Route::get('travellers/{traveler}/edit', [\App\Http\Controllers\Admin\TravelerController::class, 'edit'])->name('travellers.edit');
+    Route::post('travellers/{traveler}', [\App\Http\Controllers\Admin\TravelerController::class, 'update'])->name('travellers.update');
+    Route::post('travellers/{traveler}/suspend', [\App\Http\Controllers\Admin\TravelerController::class, 'suspend'])->name('travellers.suspend');
+    Route::post('travellers/{traveler}/create-booking', [\App\Http\Controllers\Admin\TravelerController::class, 'createBooking'])->name('travellers.create-booking');
+
+    // Admin trips management
+    Route::get('trips', [\App\Http\Controllers\Admin\TripController::class, 'index'])->name('trips.index');
+    Route::get('trips/create', [\App\Http\Controllers\Admin\TripController::class, 'create'])->name('trips.create');
+    Route::post('trips', [\App\Http\Controllers\Admin\TripController::class, 'store'])->name('trips.store');
+    Route::get('trips/{trip}', [\App\Http\Controllers\Admin\TripController::class, 'show'])->name('trips.show');
+    Route::get('trips/{trip}/edit', [\App\Http\Controllers\Admin\TripController::class, 'edit'])->name('trips.edit');
+    Route::post('trips/{trip}', [\App\Http\Controllers\Admin\TripController::class, 'update'])->name('trips.update');
+
     // Admin accommodation booking management (superadmin)
     Route::get('accommodation/bookings', [\App\Http\Controllers\Admin\AccommodationBookingController::class, 'index'])->name('accommodation.bookings');
     Route::get('accommodation/bookings/{booking}', [\App\Http\Controllers\Admin\AccommodationBookingController::class, 'show'])->name('accommodation.booking.details');

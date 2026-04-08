@@ -20,6 +20,12 @@ Route::prefix('traveler')->name('traveler.')->group(function () {
         Route::post('/settings', [TravelerProfileController::class, 'updateSettings'])->name('settings.update');
         Route::post('/settings/reset-password', [TravelerProfileController::class, 'requestPasswordReset'])->name('settings.reset-password');
         Route::post('/settings/toggle-suspension', [TravelerProfileController::class, 'toggleAccountSuspension'])->name('settings.toggle-suspension');
+
+        // Trips
+        Route::get('/trips', [\App\Http\Controllers\Frontend\TripController::class, 'index'])->name('trips');
+        Route::get('/trips/{trip}', [\App\Http\Controllers\Frontend\TripController::class, 'show'])->name('trip.detail');
+        Route::post('/trips/{trip}/add-service', [\App\Http\Controllers\Frontend\TripManagementController::class, 'confirmAddService'])->name('trip.add-service');
+
         Route::post('/logout', [TravelerAuthController::class, 'logout'])->name('logout');
     });
 });
