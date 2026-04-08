@@ -16,11 +16,11 @@
 
 @section('content')
     @php $currentStep = 9; @endphp
-    <div class="col-md-3">
+    <div id="sidebar" class="col-md-3 net-section">
         @include('operator.registration._sidebar', ['currentStep' => $currentStep, 'progress' => $progress ?? null])
     </div>
-    <div class="col-md-9 d-flex align-items-center justify-content-center" style="min-height: 90vh;">
-        <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px 32px 24px 32px; width: 100%; max-width: 900px;">
+    <div class="col-md-6 d-flex justify-content-center" style="min-height: 90vh;">
+        <div class="review-section" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px 32px 24px 32px; width: 100%; max-width: 900px;">
             <h2 style="font-weight: bold; margin-bottom: 24px;">STATUS REVIEW</h2>
             <div class="alert alert-info">Please review all your information before submitting.</div>
             <form method="POST" action="{{ route('operator.status.submit') }}">
@@ -111,3 +111,32 @@
         </div>
     </div>
 @endsection
+
+<script>
+      function toggleMenu(element) {
+         let submenu = element.nextElementSibling;
+
+         element.classList.toggle("active");
+         submenu.classList.toggle("hidden");
+      }
+   </script>
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+   </script>
+
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+
+      document.addEventListener("click", function (e) {
+         let sidebar = document.getElementById("sidebar");
+         let hamburger = document.querySelector(".hamburger");
+
+         if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+            sidebar.classList.remove("active");
+         }
+      });
+   </script>

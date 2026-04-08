@@ -374,7 +374,7 @@ img {
 }
 
 .category-search-cell {
-    padding: 12px 17px;
+    padding: 12px 17px 5px;
     /* min-height: 130px; */
     /* min-width: 200px; */
 }
@@ -588,9 +588,10 @@ img {
 }
 
 .quick-search-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    /* display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)); */
     gap: 18px;
+    display: flex;
 }
 
 .quick-tile {
@@ -928,16 +929,18 @@ img {
     top: 12px;
     right: 12px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
     gap: 4px;
     z-index: 5;
     pointer-events: none;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .category-result-availability-badge .availability-count {
-    width: 42px;
+    /* width: 42px;
     height: 42px;
     border-radius: 50%;
     display: flex;
@@ -947,15 +950,16 @@ img {
     color: #fff;
     font-size: 1rem;
     font-weight: 700;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.24); */
 }
 
 .category-result-availability-badge .availability-label {
-    color: #222;
+    /* color: #222;
     font-size: 0.72rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.04em; */
+    text-transform: capitalize;
 }
 
 .category-result-media {
@@ -1603,6 +1607,7 @@ input.category-search-input {
 .quick-search-grid .quick-tile {
     display: flex;
     flex-direction: column;
+    flex: 1;
 }
 
 .quick-search-grid .quick-tile a {
@@ -1714,6 +1719,64 @@ button#cancelModalBtn {
 .traveler-login-card, .traveler-auth-card {
     border-radius: 10px !important;
 }
+
+.category-search-cell .guest-rooms-summary {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    font-weight: bold;
+    color: #181818;
+    font-size: 17px;
+}
+
+.category-search-cell--guests.is-open .guest-rooms-selector {
+    position: absolute;
+    border-radius: 0 0 5px 5px;
+    border: 0;
+    margin-top: 5px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.category-search-cell .guest-rooms-row label span {
+    font-weight: 400;
+    font-size: 13px;
+}
+.category-search-cell .guest-rooms-row label {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1b2d55;
+    width: 130px;
+}
+
+.category-search-cell .guest-rooms-counter input {
+    width: 45px;
+    text-align: center;
+    border: 1px solid #f0f0f0;
+    border-radius: 6px;
+    font-size: 15px;
+    padding: 6px 0;
+    background: #f0f0f0;
+    color: #181818;
+    font-weight: 600;
+}
+
+.category-search-cell .count-btn {
+    border: 1px solid #c5d0e8;
+    background: #ffffff;
+    color: #9f9e9e;
+    font-weight: 400;
+    line-height: 1;
+    font-size: 20px;
+}
+
+.traveler-form-section.traveler-form-section--danger {
+    margin: 28px 0;
+}
+
+.traveler-form-section .traveler-status-badge i {
+    width: 13px;
+    height: 11px;
+}   
 
 @media (max-width:767px) {
     .category-input-group-inner {

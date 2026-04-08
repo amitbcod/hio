@@ -20,13 +20,13 @@
 
 <div class="row">
     {{-- Sidebar --}}
-    <div class="col-md-3 mb-3 mb-md-0">
+    <div id="sidebar" class="col-md-3 mb-3 mb-md-0 net-section">
         @include('operator.registration._sidebar', ['currentStep' => $currentStep, 'progress' => $progress ?? null])
     </div>
 
     {{-- Main Content --}}
-    <div class="col-md-9 d-flex align-items-start justify-content-center" style="min-height:90vh;">
-        <div style="background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);padding:32px;width:100%;max-width:900px;">
+    <div class="col-md-6 d-flex align-items-start justify-content-center" style="min-height:90vh; margin-top: 40px;">
+        <div class="team-member-new">
 
             <h2 class="mb-4 fw-bold">USERS & STAFF MANAGEMENT</h2>
 
@@ -38,8 +38,8 @@
             @endif
 
             {{-- Buttons --}}
-            <div class="mb-3 d-flex justify-content-between">
-                <div>
+            <div class="back-section mb-3 d-flex justify-content-between">
+                <div class="add-section">
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
                         Add New User
                     </button>
@@ -218,4 +218,32 @@ if (addUserModal) {
     });
 }
 </script>
+<script>
+      function toggleMenu(element) {
+         let submenu = element.nextElementSibling;
+
+         element.classList.toggle("active");
+         submenu.classList.toggle("hidden");
+      }
+   </script>
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+   </script>
+
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+
+      document.addEventListener("click", function (e) {
+         let sidebar = document.getElementById("sidebar");
+         let hamburger = document.querySelector(".hamburger");
+
+         if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+            sidebar.classList.remove("active");
+         }
+      });
+   </script>
 @endsection

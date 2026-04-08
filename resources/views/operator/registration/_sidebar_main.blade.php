@@ -1,4 +1,4 @@
-<div style="background: #19b5b5; min-height: 100vh; width: 240px; padding: 0; color: #fff; border-radius: 0 16px 16px 0; overflow-y: auto;">
+<div>
     @php
         $operator = auth()->user();
         $business = null;
@@ -17,8 +17,8 @@
         @include('operator.management._sidebar')
 
         {{-- Registration Steps as Collapsible Section --}}
-        <div style="background: #f5f5f5; color: #333; border-top: 2px solid #ddd; margin-top: 0; padding: 12px 0;">
-            <div style="padding: 12px 24px; font-weight: bold; letter-spacing: 1px; font-size: 14px; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between;" onclick="document.getElementById('registrationStepsCollapse').classList.toggle('hidden');">
+        <div style="background: #4c938d;color: #ffffff;margin-top: 0;padding: 12px 0;">
+            <div style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 14px; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between;" onclick="document.getElementById('registrationStepsCollapse').classList.toggle('hidden');">
                 <span>PROFILE SETUP</span>
                 <span id="registrationToggleIcon" style="font-size: 16px; transition: transform 0.3s;">▼</span>
             </div>
@@ -89,7 +89,7 @@
                         @endphp
                         @if($info['route'])
                             @if($isAccessible)
-                                <a href="{{ route($info['route']) }}" style="display: flex; align-items: center; padding: 8px 24px; color: #333; text-decoration: none; background: transparent; border-radius: 0; font-weight: normal; cursor: pointer; font-size: 12px;">
+                                <a href="{{ route($info['route']) }}" style="display: flex; align-items: center; padding: 8px 24px; color: #ffffff; text-decoration: none; background: transparent; border-radius: 0; font-weight: normal; cursor: pointer; font-size: 12px;">
                                     @if(!$isHeadOfDepartment)
                                     <span style="display: inline-block; width: 22px; height: 22px; background: #19b5b5; color: #fff; border-radius: 50%; text-align: center; line-height: 22px; font-weight: bold; margin-right: 8px; font-size: 11px;">{{ $step }}</span>
                                     @endif
@@ -102,7 +102,7 @@
                                 </span>
                             @endif
                         @else
-                            <span style="display: flex; align-items: center; padding: 8px 24px; color: #333; background: transparent; border-radius: 0; font-weight: bold; font-size: 12px;">
+                            <span style="display: flex; align-items: center; padding: 8px 24px; color: #ffffff; background: transparent; border-radius: 0; font-weight: bold; font-size: 12px;">
                                 <span style="display: inline-block; width: 22px; height: 22px; background: #19b5b5; color: #fff; border-radius: 50%; text-align: center; line-height: 22px; font-weight: bold; margin-right: 8px; font-size: 11px;">{{ $step }}</span>
                                 {{ $info['label'] }}
                             </span>

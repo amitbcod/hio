@@ -3,19 +3,19 @@
 @section('content')
     <div class="container mt-0">
         <div class="row">
-            <div class="col-md-3 net-section">
+            <div id="sidebar" class="col-md-3 net-section">
                 @include('operator.registration._sidebar_main')
             </div>
             <div class="col-md-9 my-pro">
                 <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 40px;margin-top: 40px;">
                     
                     {{-- Header --}}
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+                    <div class="properties-section" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
                         <div>
                             <h2 style="font-weight: bold; margin-bottom: 8px;">My Properties</h2>
                             <p style="color: #666; margin-bottom: 0;">Manage and set up your properties</p>
                         </div>
-                        <div style="display: flex; gap: 12px;">
+                        <div class="book-section" style="display: flex; gap: 12px;">
                             <a href="{{ route('operator.accommodation.bookings') }}" class="btn" style="background: #17a2b8; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
                                 📅 View Bookings
                             </a>
@@ -134,3 +134,31 @@
         </div>
     </div>
 @endsection
+<script>
+      function toggleMenu(element) {
+         let submenu = element.nextElementSibling;
+
+         element.classList.toggle("active");
+         submenu.classList.toggle("hidden");
+      }
+   </script>
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+   </script>
+
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+
+      document.addEventListener("click", function (e) {
+         let sidebar = document.getElementById("sidebar");
+         let hamburger = document.querySelector(".hamburger");
+
+         if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+            sidebar.classList.remove("active");
+         }
+      });
+   </script>

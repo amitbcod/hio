@@ -1,28 +1,16 @@
 
 @extends('layouts.app')
 
-@section('progressbar')
-    @php
-        $completionPercent = isset($progress) ? round((($progress->step2_profile ?? 0)
-            + ($progress->step3_legal ?? 0)
-            + ($progress->step4_system_process ?? 0)
-            + ($progress->step5_collaboration ?? 0)
-            + ($progress->step6_users ?? 0)
-            + ($progress->step7_accounting ?? 0)
-            + ($progress->step8_operations ?? 0)
-            + ($progress->step9_review ?? 0)) / 8 * 100) : 0;
-    @endphp
-    @include('operator.registration._progress', ['completionPercent' => $completionPercent])
-@endsection
+
 
 @section('content')
     @php $currentStep = 2; @endphp
-    <div class="col-md-3">
+<div id="sidebar" class="col-md-3 net-section">
         @include('operator.registration._sidebar', ['currentStep' => $currentStep, 'progress' => $progress ?? null])
     </div>
-    <div class="col-md-9 d-flex align-items-center justify-content-center" style="min-height: 90vh;">
-        <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px 32px 24px 32px; width: 100%; max-width: 700px;">
-            <h2 style="font-weight: bold; margin-bottom: 24px;">PROFILE</h2>
+    <div class="col-md-6 align-items-center justify-content-center" style="min-height: 90vh;">
+        <div class="media-fixed">
+            <h2 style="font-weight: normal; margin-bottom: 24px;">PROFILE</h2>
             @if(isset($business) && $business)
                 <div class="alert alert-info">Business: <strong>{{ $business->legal_name }}</strong> — ID: <code>{{ $business->business_id }}</code> (Status: {{ $business->status }})</div>
             @endif
@@ -107,6 +95,21 @@
         </div>
     </div>
 
+    @section('progressbar')
+    @php
+        $completionPercent = isset($progress) ? round((($progress->step2_profile ?? 0)
+            + ($progress->step3_legal ?? 0)
+            + ($progress->step4_system_process ?? 0)
+            + ($progress->step5_collaboration ?? 0)
+            + ($progress->step6_users ?? 0)
+            + ($progress->step7_accounting ?? 0)
+            + ($progress->step8_operations ?? 0)
+            + ($progress->step9_review ?? 0)) / 8 * 100) : 0;
+    @endphp
+    @include('operator.registration._progress', ['completionPercent' => $completionPercent])
+@endsection
+ 
+
     @include('operator.registration.step2_profile_legal_modal', ['legal' => $legal ?? null])
 
     @push('scripts')
@@ -116,5 +119,44 @@
         $(this).find('input:visible:enabled:first').focus();
     });
     </script>
+
+<script>
+      function toggleMenu(element) {
+         let submenu = element.nextElementSibling;
+         let arrow = element.querySelector(".arrow-icon i");
+
+         submenu.classList.toggle("hidden");
+         arrow.classList.toggle("rotate");
+      }
+   </script>
+   <script>
+      function toggleMenu(element) {
+         let submenu = element.nextElementSibling;
+
+         element.classList.toggle("active");
+         submenu.classList.toggle("hidden");
+      }
+   </script>
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+   </script>
+
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+
+      document.addEventListener("click", function (e) {
+         let sidebar = document.getElementById("sidebar");
+         let hamburger = document.querySelector(".hamburger");
+
+         if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+            sidebar.classList.remove("active");
+         }
+      });
+   </script>
+
     @endpush
 @endsection

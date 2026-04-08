@@ -181,7 +181,7 @@
         .traveler-profile-card {
             background: var(--card);
             border: 1px solid var(--line);
-            border-radius: 22px;
+            border-radius: 10px;
             box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
             padding: 28px;
         }
@@ -189,7 +189,7 @@
         .traveler-profile-head h1 {
             margin: 0;
             font-size: 34px;
-            font-family: 'Roboto Slab', Georgia, serif;
+            /* font-family: 'Roboto Slab', Georgia, serif; */
         }
 
         .traveler-profile-head p {
@@ -474,14 +474,14 @@
             text-decoration: none;
         }
 
-        .btn-primary {
+        /* .btn-primary {
             background: #0f6cb6;
             color: white;
         }
 
         .btn-primary:hover {
             background: #0a5a9e;
-        }
+        } */
 
         .btn-secondary {
             background: #e5e7eb;
@@ -509,7 +509,7 @@
 
         @media (max-width: 860px) {
             .traveler-profile-card {
-                padding: 22px;
+                padding: 10px;
             }
 
             .traveler-profile-head h1 {
