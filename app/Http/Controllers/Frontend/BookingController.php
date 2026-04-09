@@ -391,7 +391,8 @@ class BookingController extends Controller
         }
 
         foreach ($cart as $item) {
-            $ref = $this->generateBookingRef($item['type']);
+            $dateForRef = $item['check_in'] ?? now()->format('Y-m-d');
+            $ref = $this->generateBookingRef($item['type'], $tripId, $dateForRef);
 
             $travelerAccountId = Auth::guard('traveler')->id() ?? null;
             $primaryGuest = $guests[0] ?? null;
@@ -758,10 +759,35 @@ class BookingController extends Controller
         return round(min($discountValue, $totalPrice), 2);
     }
 
-    private function generateBookingRef(string $type): string
+    private function generateBookingRef(string $type, ?int $tripId = null, ?string $date = null): string
     {
         $prefix = $type === 'accommodation' ? 'ACC' : 'ACT';
-        return $prefix . '-' . strtoupper(substr(uniqid(), -8)) . '-' . now()->format('Ymd');
+        $datePart = $date ? Carbon::parse($date)->format('Ymd') : now()->format('Ymd');
+
+        if ($tripId) {
+            // Count existing bookings for this trip
+            $existingCount = AccommodationBooking::where('trip_id', $tripId)->count() +
+                           ActivityBooking::where('trip_id', $tripId)->count();
+
+            $sequenceNumber = $existingCount + 1;
+            $tripTag = '100' . $tripId;
+
+            $baseRef = sprintf('%s-%s-%s-%d', $prefix, $tripTag, $datePart, $sequenceNumber);
+
+            // Ensure uniqueness (though sequence should make it unique)
+            $candidate = $baseRef;
+            $suffix = 1;
+            while (
+                ($type === 'accommodation' && AccommodationBooking::where('booking_reference', $candidate)->exists()) ||
+                ($type === 'activity' && ActivityBooking::where('booking_reference', $candidate)->exists())
+            ) {
+                $candidate = sprintf('%s-%02d', $baseRef, $suffix++);
+            }
+
+            return $candidate;
+        }
+
+        return $prefix . '-' . strtoupper(substr(uniqid(), -8)) . '-' . $datePart;
     }
 
     private function resolveCart(): array

@@ -71,7 +71,7 @@
                                 <h5>Region/Area ?</h5>
                                 <select name="region" class="category-search-select" data-search-region
                                     data-selected="{{ $filters['region'] }}">
-                                    <option value="">Please select</option>
+                                    <option value="all" {{ $filters['region'] === 'all' || $filters['region'] === '' ? 'selected' : '' }}>All</option>
                                     @foreach($searchOptions[$selectedCategory]['regions'] ?? [] as $region)
                                         <option value="{{ $region }}" {{ $filters['region'] === $region ? 'selected' : '' }}>
                                             {{ $region }}

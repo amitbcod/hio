@@ -20,4 +20,9 @@ class ActivityBooking extends Model
     {
         return $this->belongsTo(Activity::class, 'activity_id');
     }
+
+    public function guests()
+    {
+        return $this->hasMany(BookingGuest::class, 'booking_id')->where('booking_type', 'activity');
+    }
 }

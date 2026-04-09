@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const regionSelect = form.querySelector('[data-search-region]');
         const typeSelect = form.querySelector('[data-search-type]');
 
-        function populateSelect(select, items, placeholder, selectedValue) {
+        function populateSelect(select, items, placeholder, selectedValue, placeholderValue = '') {
             if (!select) {
                 return;
             }
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
             select.innerHTML = '';
 
             const placeholderOption = document.createElement('option');
-            placeholderOption.value = '';
+            placeholderOption.value = placeholderValue;
             placeholderOption.textContent = placeholder;
             select.appendChild(placeholderOption);
 
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return option.value === currentValue;
             });
 
-            select.value = hasMatch ? currentValue : '';
+            select.value = hasMatch ? currentValue : placeholderValue;
         }
 
         function updateSearchOptions(keepCurrentValues) {
@@ -47,8 +47,9 @@ document.addEventListener('DOMContentLoaded', function () {
             populateSelect(
                 regionSelect,
                 optionSet.regions || [],
-                'Please select',
-                keepCurrentValues ? regionSelect.value : regionSelect.getAttribute('data-selected') || ''
+                'All',
+                keepCurrentValues ? regionSelect.value : regionSelect.getAttribute('data-selected') || 'all',
+                'all'
             );
 
             populateSelect(

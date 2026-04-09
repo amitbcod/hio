@@ -1469,7 +1469,7 @@ class HomeController extends Controller
 
     private function applySearchFilters($items, string $category, array $filters)
     {
-        if ($filters['region'] !== '') {
+        if ($filters['region'] !== '' && Str::lower($filters['region']) !== 'all') {
             $region = Str::lower($filters['region']);
             $items = $items->filter(function (array $item) use ($region) {
                 return Str::contains(Str::lower((string) ($item['location'] ?? '')), $region);

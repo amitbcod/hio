@@ -11,8 +11,8 @@
         <div class="trip-detail-header-section" style="margin-bottom: 40px;">
             <a href="{{ route('traveler.trips') }}" class="btn btn-secondary-outline">&larr; Back to Trips</a>
             <div style="margin-top: 20px;">
-                <h1 style="margin: 10px 0; font-size: 2.5rem;">{{ $trip->title }}</h1>
-                <p style="color: #666; font-size: 1rem; margin: 5px 0; padding: 12px 16px; background: #fff3e0; border-left: 4px solid #ff9500; display: inline-block; border-radius: 4px;">Trip ID: <strong>#{{ $trip->id }}</strong></p>
+                <h1 style="margin: 10px 0; font-size: 2.5rem;">Trip ID: <strong>#100{{ $trip->id }}</h1>
+                <!-- <p style="color: #666; font-size: 1rem; margin: 5px 0; padding: 12px 16px; background: #fff3e0; border-left: 4px solid #ff9500; display: inline-block; border-radius: 4px;">Trip ID: <strong>#{{ $trip->id }}</strong></p> -->
             </div>
         </div>
 
@@ -42,26 +42,6 @@
             </div>
         </div>
 
-        <!-- Travel Party Section -->
-        <div class="travel-party-section" style="margin-bottom: 40px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px;">
-            <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">Travel Party</h3>
-            @if($trip->travellers->count())
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
-                    @foreach($trip->travellers as $traveller)
-                    <div class="party-member-card" style="background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
-                        <p style="font-weight: 600; margin: 0 0 8px 0; color: #333;">{{ $traveller->name }}</p>
-                        <span class="badge" style="display: inline-block; padding: 4px 10px; background: #ff9500; color: white; border-radius: 4px; font-size: 0.85rem;">{{ ucfirst($traveller->relationship) }}</span>
-                        @if($traveller->email)
-                            <p style="font-size: 0.9rem; color: #666; margin-top: 8px; word-break: break-all;">{{ $traveller->email }}</p>
-                        @endif
-                    </div>
-                    @endforeach
-                </div>
-            @else
-                <p style="color: #999;">No party members added yet.</p>
-            @endif
-        </div>
-
         <!-- Accommodation Bookings Section -->
         @if($accommodationBookings->count() > 0)
         <div class="bookings-section" style="margin-bottom: 40px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px;">
@@ -85,7 +65,7 @@
                         <tr style="border-bottom: 1px solid #e0e0e0; transition: background 0.2s;">
                             <td style="padding: 12px; font-weight: 600; color: #ff9500;">{{ $booking->booking_reference }}</td>
                             <td style="padding: 12px;">
-                                {{ $booking->accommodation ? $booking->accommodation->accomodation_name : 'N/A' }}
+                                {{ $booking->accommodation ? $booking->accommodation->property_name : 'N/A' }}
                             </td>
                             <td style="padding: 12px;">
                                 {{ $booking->room ? $booking->room->room_name : 'N/A' }}
@@ -97,9 +77,19 @@
                                 {{ $booking->check_out_date->format('d M Y') }}
                             </td>
                             <td style="padding: 12px; text-align: center;">
-                                {{ $booking->adults }} Adult{{ $booking->adults !== 1 ? 's' : '' }}
-                                @if($booking->children)
-                                    , {{ $booking->children }} Child{{ $booking->children !== 1 ? 'ren' : '' }}
+                                @php
+                                    $guestNames = $booking->guests->map(function ($guest) {
+                                        return trim(($guest->first_name ?? '') . ' ' . ($guest->middle_name ?? '') . ' ' . ($guest->last_name ?? ''));
+                                    })->filter()->unique()->values();
+                                @endphp
+                                @if($guestNames->isNotEmpty())
+                                    {{ $guestNames->count() }} Guest{{ $guestNames->count() !== 1 ? 's' : '' }}
+                                    <div style="margin-top: 6px; color: #555; font-size: 0.9rem; line-height: 1.4;">{{ $guestNames->join(', ') }}</div>
+                                @else
+                                    {{ $booking->adults }} Adult{{ $booking->adults !== 1 ? 's' : '' }}
+                                    @if($booking->children)
+                                        , {{ $booking->children }} Child{{ $booking->children !== 1 ? 'ren' : '' }}
+                                    @endif
                                 @endif
                             </td>
                             <td style="padding: 12px; text-align: right; font-weight: 600;">
@@ -149,9 +139,19 @@
                                 {{ $booking->activity_date->format('d M Y') }}
                             </td>
                             <td style="padding: 12px; text-align: center;">
-                                {{ $booking->adults }} Adult{{ $booking->adults !== 1 ? 's' : '' }}
-                                @if($booking->children)
-                                    , {{ $booking->children }} Child{{ $booking->children !== 1 ? 'ren' : '' }}
+                                @php
+                                    $participantNames = $booking->guests->map(function ($guest) {
+                                        return trim(($guest->first_name ?? '') . ' ' . ($guest->middle_name ?? '') . ' ' . ($guest->last_name ?? ''));
+                                    })->filter()->unique()->values();
+                                @endphp
+                                @if($participantNames->isNotEmpty())
+                                    {{ $participantNames->count() }} Participant{{ $participantNames->count() !== 1 ? 's' : '' }}
+                                    <div style="margin-top: 6px; color: #555; font-size: 0.9rem; line-height: 1.4;">{{ $participantNames->join(', ') }}</div>
+                                @else
+                                    {{ $booking->adults }} Adult{{ $booking->adults !== 1 ? 's' : '' }}
+                                    @if($booking->children)
+                                        , {{ $booking->children }} Child{{ $booking->children !== 1 ? 'ren' : '' }}
+                                    @endif
                                 @endif
                             </td>
                             <td style="padding: 12px; text-align: right; font-weight: 600;">

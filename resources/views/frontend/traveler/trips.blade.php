@@ -51,7 +51,7 @@
                                 <tr>
                                     <td>
                                         <div class="trip-name-cell">
-                                            <strong>Trip #{{ $trip->id }}</strong>
+                                            <strong>Trip #100{{ $trip->id }}</strong>
                                             <span>Trip</span>
                                         </div>
                                     </td>

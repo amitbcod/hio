@@ -30,7 +30,7 @@ class TripController extends Controller
             ->get();
         
         $activityBookings = \App\Models\ActivityBooking::where('trip_id', $trip->id)
-            ->with('activity')
+            ->with(['activity', 'guests'])
             ->orderBy('activity_date', 'asc')
             ->get();
         
