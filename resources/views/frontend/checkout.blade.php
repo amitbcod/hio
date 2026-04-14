@@ -130,6 +130,57 @@
     font-size: 12px;
 }
 
+.item-saved-guests-panel {
+    border: 1px solid #e8e8ef;
+    background: #f9fbff;
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.item-saved-guests-title {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #333;
+}
+
+.item-saved-guests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.saved-guest-checkbox {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid #dfe4ed;
+    background: #fff;
+    cursor: pointer;
+    width: 100%;
+}
+
+.saved-guest-checkbox input {
+    flex-shrink: 0;
+}
+
+.saved-guest-checkbox .saved-guest-info {
+    width: 100%;
+}
+
+.saved-guest-checkbox .saved-guest-name,
+.saved-guest-checkbox .saved-guest-details {
+    display: block;
+    width: 100%;
+}
+
+.saved-guest-checkbox .saved-guest-details {
+    margin-top: 4px;
+    color: #555;
+}
+
 .btn-add-to-booking:hover {
     background: #218838;
 }
@@ -305,10 +356,14 @@
                             </div>
                         @endif
 
-                        <div class="form-card">
-                            <h2 class="form-section-title">
-                                <span class="step-num">1</span> Guest Details
-                            </h2>
+                        <div class="form-card accordion-card">
+                            <button type="button" class="accordion-header" aria-expanded="true">
+                                <h2 class="form-section-title">
+                                    <span class="step-num">1</span> Guest Details
+                                </h2>
+                                <span class="accordion-toggle">−</span>
+                            </button>
+                            <div class="accordion-panel">
 
                             {{-- Primary Guest --}}
                             <div class="primary-guest-section">
@@ -330,7 +385,8 @@
                                 <div class="form-grid">
                                     <div class="form-group">
                                         <label for="guests_0_relation">Relationship <span class="req">*</span></label>
-                                        <select id="guests_0_relation" name="guests[0][relation]" required class="form-input">
+                                        <select id="guests_0_relation" name="guests[0][relation]" class="form-input">
+                                            <option value="">Choose relation</option>
                                             <option value="self" {{ old('guests.0.relation') === 'self' ? 'selected' : '' }}>Self</option>
                                             <option value="spouse" {{ old('guests.0.relation') === 'spouse' ? 'selected' : '' }}>Spouse</option>
                                             <option value="child" {{ old('guests.0.relation') === 'child' ? 'selected' : '' }}>Child</option>
@@ -355,7 +411,7 @@
                                 <div class="form-grid">
                                     <div class="form-group">
                                         <label for="guests_0_first_name">First Name <span class="req">*</span></label>
-                                        <input type="text" id="guests_0_first_name" name="guests[0][first_name]" value="{{ old('guests.0.first_name', $traveler?->profile->first_name ?? '') }}" required class="form-input">
+                                        <input type="text" id="guests_0_first_name" name="guests[0][first_name]" value="{{ old('guests.0.first_name', $traveler?->profile->first_name ?? '') }}" class="form-input">
                                     </div>
 
                                     <div class="form-group">
@@ -365,19 +421,19 @@
 
                                     <div class="form-group">
                                         <label for="guests_0_last_name">Last Name <span class="req">*</span></label>
-                                        <input type="text" id="guests_0_last_name" name="guests[0][last_name]" value="{{ old('guests.0.last_name', $traveler?->profile->last_name ?? '') }}" required class="form-input">
+                                        <input type="text" id="guests_0_last_name" name="guests[0][last_name]" value="{{ old('guests.0.last_name', $traveler?->profile->last_name ?? '') }}" class="form-input">
                                     </div>
                                 </div>
 
                                 <div class="form-grid">
                                     <div class="form-group">
                                         <label for="guests_0_dob">Date of Birth <span class="req">*</span></label>
-                                        <input type="date" id="guests_0_dob" name="guests[0][dob]" value="{{ old('guests.0.dob', $guestDefaults['dob'] ?? '') }}" required class="form-input">
+                                        <input type="date" id="guests_0_dob" name="guests[0][dob]" value="{{ old('guests.0.dob', $guestDefaults['dob'] ?? '') }}" class="form-input">
                                     </div>
 
                                     <div class="form-group">
                                         <label for="guests_0_nationality">Nationality <span class="req">*</span></label>
-                                        <select id="guests_0_nationality" name="guests[0][nationality]" required class="form-input">
+                                        <select id="guests_0_nationality" name="guests[0][nationality]" class="form-input">
                                             <option value="">Select nationality</option>
                                             @foreach($countries as $country)
                                                 <option value="{{ $country }}" {{ old('guests.0.nationality', $traveler?->profile->country ?? '') === $country ? 'selected' : '' }}>{{ $country }}</option>
@@ -397,49 +453,6 @@
                                 </div>
                             </div>
 
-                            {{-- Saved Guests --}}
-                            <div class="saved-guests-section" style="margin-top: 30px;">
-                                <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 15px;">Your Saved Guests</h3>
-                                <div class="saved-guests-list">
-                                    @forelse($savedGuests as $guest)
-                                    <div class="saved-guest-item" data-guest-id="{{ $guest->id }}">
-                                        <div class="saved-guest-info">
-                                            <span class="saved-guest-name">{{ $guest->first_name }} {{ $guest->last_name }}</span>
-                                            <span class="saved-guest-details">{{ $guest->nationality }} - {{ \Carbon\Carbon::parse($guest->dob)->age }} years</span>
-                                        </div>
-                                        <div class="saved-guest-actions">
-                                            <button type="button" class="btn-add-to-booking" data-guest='@json($guest)'>
-                                                <i class="fa-solid fa-plus"></i> Add to Booking
-                                            </button>
-                                            <button type="button" class="btn-remove-saved" data-guest-id="{{ $guest->id }}">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    @empty
-                                    <div class="saved-guest-empty" style="padding: 12px; border: 1px dashed #ccc; border-radius: 6px; color: #666;">
-                                        No saved guests yet. Add one through the "Add Guest" button above.
-                                    </div>
-                                    @endforelse
-                                </div>
-                            </div>
-
-                            {{-- Additional Guests List --}}
-                            <div class="additional-guests-section" style="margin-top: 30px;">
-                                <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 15px;">Additional Guests</h3>
-                                
-                                <div id="guestsList" class="guests-list">
-                                    {{-- Dynamically populated by JS --}}
-                                </div>
-
-                                <button type="button" id="addGuestBtn" class="btn-add-guest">
-                                    <i class="fa-solid fa-plus"></i> Add Guest
-                                </button>
-                            </div>
-
-                            {{-- Hidden inputs to store additional guests --}}
-                            <input type="hidden" id="additionalGuestsData" name="additional_guests_json" value="">
-
                             <div class="form-grid" style="margin-top: 20px;">
                                 <div class="form-group">
                                     <label for="guest_email">Email Address</label>
@@ -456,7 +469,7 @@
 
                         <div class="form-card">
                             <h2 class="form-section-title">
-                                <span class="step-num">2</span> Special Requests
+                                <span class="step-num">3</span> Special Requests
                             </h2>
                             <div class="form-group form-group--full">
                                 <label for="special_requests">Special Requests (Optional)</label>
@@ -468,7 +481,7 @@
 
                         <div class="form-card">
                             <h2 class="form-section-title">
-                                <span class="step-num">3</span> Payment Method
+                                <span class="step-num">4</span> Payment Method
                             </h2>
                             <div class="payment-option selected">
                                 <div class="payment-option-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
@@ -484,44 +497,71 @@
                         </div>
 
                         {{-- Items review mini list --}}
-                        <div class="form-card">
-                            <h2 class="form-section-title">
-                                <span class="step-num">4</span> Your Items
-                            </h2>
-                            <div class="mini-items">
-                                @foreach($cart as $item)
-                                    <div class="mini-item">
-                                        <div class="mini-item-img">
-                                            @if(!empty($item['image']))
-                                                <img src="{{ $item['image'] }}" alt="{{ $item['title'] }}">
-                                            @else
-                                                <div class="mini-item-placeholder">
-                                                    <i class="fa-solid {{ $item['type'] === 'accommodation' ? 'fa-hotel' : 'fa-person-hiking' }}"></i>
-                                                </div>
-                                            @endif
-                                        </div>
-                                        <div class="mini-item-info">
-                                            <strong>{{ $item['title'] }}</strong>
-                                            <span>
-                                                {{ $item['check_in_display'] }}
-                                                @if($item['check_in'] !== $item['check_out'])
-                                                    → {{ $item['check_out_display'] }}
+                        <div class="form-card accordion-card">
+                            <button type="button" class="accordion-header" aria-expanded="true">
+                                <h2 class="form-section-title">
+                                    <span class="step-num">5</span> Your Items
+                                </h2>
+                                <span class="accordion-toggle">−</span>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="item-accordion">
+                                @foreach($cart as $key => $item)
+                                    <div class="item-panel open">
+                                        <button type="button" class="item-panel-header">
+                                            <div class="item-panel-title">
+                                                <strong>{{ $item['title'] }}</strong>
+                                                <span class="item-panel-meta">
+                                                    {{ $item['check_in_display'] }}
+                                                    @if($item['check_in'] !== $item['check_out'])
+                                                        → {{ $item['check_out_display'] }}
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            <span class="accordion-toggle">−</span>
+                                        </button>
+                                        <div class="item-panel-content">
+                                            <div class="item-panel-summary">
+                                                <span><i class="fa-solid fa-user"></i> {{ $item['adults'] }} adult{{ $item['adults'] != 1 ? 's' : '' }}</span>
+                                                <span><i class="fa-solid fa-child"></i> {{ $item['children'] }} child{{ $item['children'] != 1 ? 'ren' : '' }}</span>
+                                                @if($item['type'] === 'accommodation')
+                                                    <span><i class="fa-solid fa-bed"></i> {{ $item['room_name'] }} · {{ $item['nights'] }} night{{ $item['nights'] != 1 ? 's' : '' }}</span>
+                                                @else
+                                                    <span><i class="fa-solid fa-person-hiking"></i> {{ $item['variant_name'] ?: 'Standard' }}</span>
                                                 @endif
-                                            </span>
-                                            @if($item['type'] === 'accommodation')
-                                                <span>{{ $item['room_name'] }} · {{ $item['nights'] }} night{{ $item['nights'] != 1 ? 's' : '' }}</span>
-                                            @else
-                                                <span>{{ $item['variant_name'] ?: 'Standard' }}</span>
-                                            @endif
-                                        </div>
-                                        <div class="mini-item-price">
-                                            {{ $item['currency'] }} {{ number_format($item['net_amount'], 2) }}
+                                                <span><i class="fa-solid fa-money-bill-wave"></i> {{ $item['currency'] }} {{ number_format($item['net_amount'], 2) }}</span>
+                                            </div>
+                                            <div class="item-panel-actions">
+                                                <button type="button" class="btn toggle-guest-form" data-item="{{ $key }}">
+                                                    <i class="fa-solid fa-plus"></i> Add {{ $item['type'] === 'accommodation' ? 'Guest' : 'Participant' }} Details
+                                                </button>
+                                            </div>
+                                            <div class="item-guest-form" id="guest-form-{{ $key }}" style="display: none; margin-top: 15px;">
+                                                <h4 style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">{{ $item['type'] === 'accommodation' ? 'Guest' : 'Participant' }} Details for {{ $item['title'] }}</h4>
+                                                <div class="item-saved-guests-panel" id="item-saved-guests-panel-{{ $key }}" style="margin-bottom: 14px;">
+                                                    <p class="item-saved-guests-title">Select saved guest details or add a new guest</p>
+                                                    <div class="item-saved-guests-list" id="item-saved-guests-list-{{ $key }}"></div>
+                                                    <button type="button" class="btn btn-secondary btn-apply-saved-guests" data-item="{{ $key }}" style="margin-top: 10px;">
+                                                        <i class="fa-solid fa-check"></i> Add selected saved guests
+                                                    </button>
+                                                </div>
+                                                <div class="item-guests-list" id="item-guests-{{ $key }}">
+                                                    {{-- Guests will be added here --}}
+                                                </div>
+                                                <button type="button" class="btn-add-item-guest" data-item="{{ $key }}" style="margin-top: 10px;">
+                                                    <i class="fa-solid fa-plus"></i> Add New {{ $item['type'] === 'accommodation' ? 'Guest' : 'Participant' }}
+                                                </button>
+                                            </div>
+                                            <p style="margin-top: 12px; font-size: 13px; color: #555;">
+                                                Add {{ $item['type'] === 'accommodation' ? 'guest names' : 'participant details' }} for this item. This is optional; you can complete details later from your trip summary.
+                                            </p>
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
                         </div>
 
+                        <input type="hidden" id="additionalGuestsData" name="additional_guests_json" value="">
                     </form>
 
                 </div>
@@ -713,12 +753,167 @@
     background: #fff;
     border: 1px solid #e8e8ef;
     border-radius: 16px;
-    padding: 24px;
     margin-bottom: 18px;
     box-shadow: 0 2px 8px rgba(0,0,0,.04);
 }
 
-.form-section-title {
+.accordion-card {
+    overflow: hidden;
+}
+
+.accordion-header {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.accordion-header:hover {
+    background: #f8f8ff;
+}
+
+.accordion-header h2 {
+    margin: 0;
+}
+
+.accordion-toggle {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #1a1a2e;
+    color: #fff;
+    font-size: 18px;
+}
+
+.accordion-panel {
+    padding: 0 24px 24px;
+    display: block;
+}
+
+.accordion-card.collapsed .accordion-panel {
+    display: none;
+}
+
+.item-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.item-panel {
+    border: 1px solid #e8e8ef;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fbfbfd;
+}
+
+.item-panel-header {
+    width: 100%;
+    background: #fff;
+    border: none;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.item-panel-header:hover {
+    background: #f5f7ff;
+}
+
+.item-panel-content {
+    padding: 18px;
+    display: none;
+    background: #fbfbfd;
+}
+
+.item-panel.open .item-panel-content {
+    display: block;
+}
+
+.item-panel-title {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    text-align: left;
+}
+
+.item-panel-title strong {
+    font-size: 14px;
+    color: #1a1a2e;
+}
+
+.item-panel-meta {
+    font-size: 12px;
+    color: #666;
+}
+
+.item-panel-summary {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 14px 0 0;
+    font-size: 13px;
+    color: #555;
+}
+
+.item-panel-summary span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e8e8ef;
+}
+
+.item-panel-actions {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.item-panel-actions button {
+    border: 1px solid #1a1a2e;
+    background: #fff;
+    color: #1a1a2e;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+}
+
+.item-panel-actions button:hover {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+.form-card .form-group,
+.form-card .form-grid,
+.form-card .saved-guests-section,
+.form-card .additional-guests-section {
+    margin-bottom: 0;
+}
+
+.form-card .form-group {
+    margin-bottom: 16px;
+}
+
+.form-card .form-grid {
+    padding-top: 12px;
+}
+
+.form-card .form-section-title {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -922,20 +1117,57 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Define route URLs
+        const saveGuestUrl = '{{ route("frontend.booking.save-guest") }}';
+        const removeGuestUrl = '{{ route("frontend.booking.remove-guest") }}';
+        @php
+            $savedGuestsArray = $savedGuests->map(function ($guest) {
+                return [
+                    'id' => $guest->id,
+                    'relation' => $guest->relation ?? 'other',
+                    'gender' => $guest->gender,
+                    'first_name' => $guest->first_name,
+                    'middle_name' => $guest->middle_name,
+                    'last_name' => $guest->last_name,
+                    'dob' => $guest->dob,
+                    'nationality' => $guest->nationality,
+                    'passport_number' => $guest->passport_number,
+                    'notes' => $guest->notes,
+                ];
+            })->all();
+        @endphp
+        const savedGuestsData = @json($savedGuestsArray);
+        @php
+            $selfGuest = null;
+            if ($traveler) {
+                $selfGuest = [
+                    'id' => 'self',
+                    'relation' => 'self',
+                    'gender' => $traveler->profile->gender ?? 'other',
+                    'first_name' => $traveler->profile->first_name ?? '',
+                    'middle_name' => $traveler->profile->middle_name ?? '',
+                    'last_name' => $traveler->profile->last_name ?? '',
+                    'dob' => $traveler->profile->dob ?? $guestDefaults['dob'] ?? '',
+                    'nationality' => $traveler->profile->nationality ?? '',
+                    'passport_number' => $traveler->profile->passport_number ?? '',
+                    'notes' => '',
+                ];
+            }
+        @endphp
+        const selfGuest = @json($selfGuest);
+        const itemKeys = [@foreach($cart as $key => $item) '{{ $key }}', @endforeach];
         const totalGuests = {{ $totalGuests }};
-        const addGuestBtn = document.getElementById('addGuestBtn');
         const closeModalBtn = document.getElementById('closeModalBtn');
         const cancelModalBtn = document.getElementById('cancelModalBtn');
         const saveGuestBtn = document.getElementById('saveGuestBtn');
         const addGuestModal = document.getElementById('addGuestModal');
         const modalOverlay = document.getElementById('modalOverlay');
         const addGuestForm = document.getElementById('addGuestForm');
-        const guestsList = document.getElementById('guestsList');
         const additionalGuestsData = document.getElementById('additionalGuestsData');
         const checkoutForm = document.getElementById('checkoutForm');
 
-        let additionalGuests = [];
-        let editingIndex = null;
+        let additionalGuests = {}; // { itemKey: [] }
+        let currentItem = null; // For per item modal
 
         // Load saved guests from localStorage or URL old data
         function loadGuestsFromForm() {
@@ -944,9 +1176,17 @@
                 try {
                     additionalGuests = JSON.parse(savedData);
                 } catch (e) {
-                    additionalGuests = [];
+                    additionalGuests = {};
                 }
+            } else {
+                additionalGuests = {};
             }
+            // Ensure all cart items have arrays
+            @foreach($cart as $key => $item)
+                if (!additionalGuests['{{ $key }}']) {
+                    additionalGuests['{{ $key }}'] = [];
+                }
+            @endforeach
         }
 
         // Save guests to hidden input
@@ -954,10 +1194,143 @@
             additionalGuestsData.value = JSON.stringify(additionalGuests);
         }
 
-        // Render guests list
-        function renderGuestsList() {
-            guestsList.innerHTML = '';
-            additionalGuests.forEach((guest, index) => {
+        function renderSavedGuestsForItem(itemKey) {
+            const container = document.getElementById('item-saved-guests-list-' + itemKey);
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (selfGuest) {
+                const exists = savedGuestsData.some(guest =>
+                    guest.first_name === selfGuest.first_name &&
+                    guest.last_name === selfGuest.last_name &&
+                    guest.dob === selfGuest.dob &&
+                    guest.nationality === selfGuest.nationality
+                );
+                if (!exists && selfGuest.first_name && selfGuest.last_name) {
+                    savedGuestsData.unshift(selfGuest);
+                }
+            }
+
+            if (!savedGuestsData || savedGuestsData.length === 0) {
+                container.innerHTML = '<div class="form-hint">No saved guest profiles available.</div>';
+                return;
+            }
+
+            const selectedGuests = additionalGuests[itemKey] || [];
+
+            savedGuestsData.forEach((guest, index) => {
+                const item = document.createElement('label');
+                item.className = 'saved-guest-checkbox';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'saved-guest-checkbox-input';
+                checkbox.dataset.index = index;
+                checkbox.dataset.id = guest.id ?? '';
+                checkbox.dataset.relation = guest.relation || 'other';
+                checkbox.dataset.firstName = guest.first_name || '';
+                checkbox.dataset.middleName = guest.middle_name || '';
+                checkbox.dataset.lastName = guest.last_name || '';
+                checkbox.dataset.dob = guest.dob || '';
+                checkbox.dataset.gender = guest.gender || '';
+                checkbox.dataset.nationality = guest.nationality || '';
+                checkbox.dataset.passport = guest.passport_number || '';
+                checkbox.dataset.notes = guest.notes || '';
+
+                const isSelected = selectedGuests.some(selected => {
+                    if (checkbox.dataset.id && selected.id) {
+                        return checkbox.dataset.id === selected.id;
+                    }
+                    return (
+                        selected.first_name === checkbox.dataset.firstName &&
+                        selected.last_name === checkbox.dataset.lastName &&
+                        selected.dob === checkbox.dataset.dob &&
+                        selected.nationality === checkbox.dataset.nationality
+                    );
+                });
+                checkbox.checked = isSelected;
+
+                const info = document.createElement('div');
+                info.className = 'saved-guest-info';
+
+                const name = document.createElement('div');
+                name.className = 'saved-guest-name';
+                name.textContent = `${guest.first_name || ''} ${guest.last_name || ''}`.trim();
+
+                const formattedDob = guest.dob ? (new Date(guest.dob).toLocaleDateString('en-GB') || guest.dob) : 'No DOB';
+                const details = document.createElement('div');
+                details.className = 'saved-guest-details';
+                details.textContent = `${guest.nationality || 'Unknown'} · ${formattedDob}`;
+
+                info.appendChild(name);
+                info.appendChild(details);
+                item.appendChild(checkbox);
+                item.appendChild(info);
+                container.appendChild(item);
+            });
+        }
+
+        function addSavedGuestsToItem(itemKey) {
+            const container = document.getElementById('item-saved-guests-list-' + itemKey);
+            if (!container) return;
+            const checked = Array.from(container.querySelectorAll('input.saved-guest-checkbox-input:checked'));
+            if (!checked.length) {
+                alert('Please select at least one saved guest to add.');
+                return;
+            }
+            if (!additionalGuests[itemKey]) {
+                additionalGuests[itemKey] = [];
+            }
+            checked.forEach(input => {
+                const guest = {
+                    id: input.dataset.id || null,
+                    relation: input.dataset.relation || 'other',
+                    gender: input.dataset.gender,
+                    first_name: input.dataset.firstName,
+                    middle_name: input.dataset.middleName,
+                    last_name: input.dataset.lastName,
+                    dob: input.dataset.dob,
+                    nationality: input.dataset.nationality,
+                    passport_number: input.dataset.passport,
+                    notes: input.dataset.notes,
+                    below_12: (() => {
+                        if (!input.dataset.dob) return false;
+                        const dob = new Date(input.dataset.dob);
+                        const today = new Date();
+                        let age = today.getFullYear() - dob.getFullYear();
+                        const monthDiff = today.getMonth() - dob.getMonth();
+                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                            age--;
+                        }
+                        return age < 12;
+                    })(),
+                };
+
+                const alreadyAdded = additionalGuests[itemKey].some(existing => {
+                    if (guest.id && existing.id) {
+                        return guest.id === existing.id;
+                    }
+                    return (
+                        existing.first_name === guest.first_name &&
+                        existing.last_name === guest.last_name &&
+                        existing.dob === guest.dob &&
+                        existing.nationality === guest.nationality
+                    );
+                });
+                if (!alreadyAdded) {
+                    additionalGuests[itemKey].push(guest);
+                }
+            });
+            renderItemGuestsList(itemKey, document.getElementById('item-guests-' + itemKey));
+            saveGuestsToForm();
+            renderSavedGuestsForItem(itemKey);
+        }
+
+        // Render guests list for a specific item
+        function renderItemGuestsList(itemKey, container) {
+            container.innerHTML = '';
+            const guests = additionalGuests[itemKey] || [];
+            guests.forEach((guest, index) => {
                 const guestName = `${guest.first_name} ${guest.last_name}`;
                 const ageLabel = guest.below_12 ? ' (Below 12 years)' : '';
                 const guestItem = document.createElement('div');
@@ -968,39 +1341,42 @@
                         <span class="guest-item-age">${guest.relation}${ageLabel}</span>
                     </div>
                     <div class="guest-item-actions">
-                        <button type="button" class="btn-edit-guest" data-index="${index}">
+                        <button type="button" class="btn-edit-guest" data-item="${itemKey}" data-index="${index}">
                             <i class="fa-solid fa-pencil"></i>
                         </button>
-                        <button type="button" class="btn-remove-guest" data-index="${index}">
+                        <button type="button" class="btn-remove-guest" data-item="${itemKey}" data-index="${index}">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
                 `;
-                guestsList.appendChild(guestItem);
+                container.appendChild(guestItem);
             });
 
             // Attach event listeners using delegation
-            document.querySelectorAll('.btn-edit-guest').forEach(btn => {
+            container.querySelectorAll('.btn-edit-guest').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
+                    const item = this.dataset.item;
                     const index = parseInt(this.dataset.index);
-                    editGuest(index);
+                    editItemGuest(item, index);
                 });
             });
 
-            document.querySelectorAll('.btn-remove-guest').forEach(btn => {
+            container.querySelectorAll('.btn-remove-guest').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
+                    const item = this.dataset.item;
                     const index = parseInt(this.dataset.index);
-                    removeGuest(index);
+                    removeItemGuest(item, index);
                 });
             });
 
             saveGuestsToForm();
         }
 
-        // Open modal
-        function openModal() {
+        // Open modal for global or item
+        function openModal(itemKey = null) {
+            currentItem = itemKey;
             addGuestModal.classList.add('show');
             modalOverlay.classList.add('show');
             addGuestModal.style.display = 'flex';
@@ -1040,7 +1416,7 @@
             };
 
             // Save to server
-            fetch('{{ route("frontend.booking.save-guest") }}', {
+            fetch(saveGuestUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1069,48 +1445,45 @@
                     throw new Error(data.error || 'Unknown error');
                 }
 
-                // Add the guest to the saved guests list in DOM
-                const savedGuestsList = document.querySelector('.saved-guests-list');
-                if (savedGuestsList) {
-                    const guestItem = document.createElement('div');
-                    guestItem.className = 'saved-guest-item';
-                    guestItem.setAttribute('data-guest-id', data.guest.id);
-                    guestItem.innerHTML = `
-                        <div class="saved-guest-info">
-                            <span class="saved-guest-name">${guestData.first_name} ${guestData.last_name}</span>
-                            <span class="saved-guest-details">${guestData.nationality} - ${new Date().getFullYear() - new Date(guestData.dob).getFullYear()} years</span>
-                        </div>
-                        <div class="saved-guest-actions">
-                            <button type="button" class="btn-add-to-booking" data-guest='${JSON.stringify(data.guest).replace(/'/g, "&apos;")}'>
-                                <i class="fa-solid fa-plus"></i> Add to Booking
-                            </button>
-                            <button type="button" class="btn-remove-saved" data-guest-id="${data.guest.id}">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                    savedGuestsList.appendChild(guestItem);
-                    const section = document.querySelector('.saved-guests-section');
-                    if (section) section.style.display = 'block';
-                }
+                // Add the new guest to the saved guests data array
+                savedGuestsData.push({
+                    id: data.guest.id,
+                    relation: data.guest.relation || 'other',
+                    gender: data.guest.gender,
+                    first_name: data.guest.first_name,
+                    middle_name: data.guest.middle_name,
+                    last_name: data.guest.last_name,
+                    dob: data.guest.dob,
+                    nationality: data.guest.nationality,
+                    passport_number: data.guest.passport_number,
+                    notes: data.guest.notes,
+                });
+                itemKeys.forEach(key => renderSavedGuestsForItem(key));
             }).catch(error => {
                 console.error('Error saving guest:', error);
                 alert('Failed to save guest: ' + (error.message || 'Please try again.'));
             });
 
-            if (editingIndex !== null) {
-                additionalGuests[editingIndex] = guestData;
-            } else {
-                additionalGuests.push(guestData);
+            if (editingIndex !== null && currentItem) {
+                additionalGuests[currentItem][editingIndex] = guestData;
+            } else if (currentItem) {
+                if (!additionalGuests[currentItem]) {
+                    additionalGuests[currentItem] = [];
+                }
+                additionalGuests[currentItem].push(guestData);
             }
 
-            renderGuestsList();
+            if (currentItem) {
+                renderItemGuestsList(currentItem, document.getElementById('item-guests-' + currentItem));
+            }
             closeModal();
         }
 
         // Edit guest
-        function editGuest(index) {
-            const guest = additionalGuests[index];
+        function editItemGuest(itemKey, index) {
+            currentItem = itemKey;
+            editingIndex = index;
+            const guest = additionalGuests[itemKey][index];
             document.getElementById('modal_relation').value = guest.relation;
             document.getElementById('modal_gender').value = guest.gender;
             document.getElementById('modal_first_name').value = guest.first_name;
@@ -1121,14 +1494,13 @@
             document.getElementById('modal_passport_number').value = guest.passport_number;
             document.getElementById('modal_notes').value = guest.notes;
             document.getElementById('modal_below_12').checked = guest.below_12;
-            editingIndex = index;
-            openModal();
+            openModal(itemKey);
         }
 
         // Remove guest
-        function removeGuest(index) {
-            additionalGuests.splice(index, 1);
-            renderGuestsList();
+        function removeItemGuest(itemKey, index) {
+            additionalGuests[itemKey].splice(index, 1);
+            renderItemGuestsList(itemKey, document.getElementById('item-guests-' + itemKey));
         }
 
         // Form submission - inject all guests as array
@@ -1138,17 +1510,18 @@
                 const guestsContainer = document.createElement('div');
                 guestsContainer.style.display = 'none';
 
-                // Add additional guests to form
-                additionalGuests.forEach((guest, index) => {
-                    const guestIndex = index + 1; // +1 because first guest starts at 0
-                    Object.keys(guest).forEach(key => {
-                        if (key !== 'below_12') { // Don't submit below_12 to backend
-                            const input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = `guests[${guestIndex}][${key}]`;
-                            input.value = guest[key];
-                            guestsContainer.appendChild(input);
-                        }
+                // Add per item guests
+                Object.keys(additionalGuests).forEach(itemKey => {
+                    additionalGuests[itemKey].forEach((guest, index) => {
+                        Object.keys(guest).forEach(key => {
+                            if (key !== 'below_12') {
+                                const input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = `guests[${itemKey}][${index}][${key}]`;
+                                input.value = guest[key];
+                                guestsContainer.appendChild(input);
+                            }
+                        });
                     });
                 });
 
@@ -1157,12 +1530,6 @@
         }
 
         // Event listeners
-        if (addGuestBtn) {
-            addGuestBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                openModal();
-            });
-        }
         if (closeModalBtn) {
             closeModalBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -1187,41 +1554,12 @@
 
         // Event listeners for saved guests
         document.addEventListener('click', function(e) {
-            if (e.target.closest('.btn-add-to-booking')) {
-                e.preventDefault();
-                const btn = e.target.closest('.btn-add-to-booking');
-                const guestData = JSON.parse(btn.dataset.guest);
-                // Calculate age
-                const dob = new Date(guestData.dob);
-                const today = new Date();
-                let age = today.getFullYear() - dob.getFullYear();
-                const monthDiff = today.getMonth() - dob.getMonth();
-                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-                    age--;
-                }
-                // Convert to the format used in additionalGuests
-                const bookingGuest = {
-                    relation: 'other', // default
-                    gender: guestData.gender,
-                    first_name: guestData.first_name,
-                    middle_name: guestData.middle_name,
-                    last_name: guestData.last_name,
-                    dob: guestData.dob,
-                    nationality: guestData.nationality,
-                    passport_number: guestData.passport_number,
-                    notes: guestData.notes,
-                    below_12: age < 12
-                };
-                additionalGuests.push(bookingGuest);
-                renderGuestsList();
-            }
-
             if (e.target.closest('.btn-remove-saved')) {
                 e.preventDefault();
                 const btn = e.target.closest('.btn-remove-saved');
                 const guestId = btn.dataset.guestId;
                 if (confirm('Are you sure you want to remove this saved guest?')) {
-                    fetch('{{ route("frontend.booking.remove-guest") }}', {
+                    fetch(removeGuestUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1261,9 +1599,10 @@
 
         // Initialize
         loadGuestsFromForm();
-        if (additionalGuests.length > 0) {
-            renderGuestsList();
-        }
+        @foreach($cart as $key => $item)
+        renderItemGuestsList('{{ $key }}', document.getElementById('item-guests-{{ $key }}'));
+        renderSavedGuestsForItem('{{ $key }}');
+        @endforeach
 
         // Auto-fill DOB when "Self" is selected
         const relationSelect = document.getElementById('guests_0_relation');
@@ -1286,6 +1625,63 @@
             // Run on page load in case 'self' is already selected
             handleSelfSelection();
         }
+
+        // Accordion toggles for checkout sections
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const card = this.closest('.accordion-card');
+                if (!card) return;
+                const expanded = card.classList.toggle('collapsed');
+                this.setAttribute('aria-expanded', String(!expanded));
+                const toggle = this.querySelector('.accordion-toggle');
+                if (toggle) {
+                    toggle.textContent = expanded ? '+' : '−';
+                }
+            });
+        });
+
+        document.querySelectorAll('.item-panel-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const panel = this.closest('.item-panel');
+                if (!panel) return;
+                panel.classList.toggle('open');
+                const toggle = this.querySelector('.accordion-toggle');
+                if (toggle) {
+                    toggle.textContent = panel.classList.contains('open') ? '−' : '+';
+                }
+            });
+        });
+
+        // Toggle guest form per item
+        document.querySelectorAll('.toggle-guest-form').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const item = this.dataset.item;
+                const form = document.getElementById('guest-form-' + item);
+                if (!form) return;
+                const isVisible = form.style.display !== 'none';
+                form.style.display = isVisible ? 'none' : 'block';
+                if (!isVisible) {
+                    renderSavedGuestsForItem(item);
+                }
+            });
+        });
+
+        // Add guest per item
+        document.querySelectorAll('.btn-add-item-guest').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const item = this.dataset.item;
+                openModal(item);
+            });
+        });
+
+        // Add saved guests to item
+        document.querySelectorAll('.btn-apply-saved-guests').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const item = this.dataset.item;
+                addSavedGuestsToItem(item);
+            });
+        });
+
     });
 </script>
 @endpush

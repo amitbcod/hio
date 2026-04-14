@@ -78,19 +78,12 @@
                             </td>
                             <td style="padding: 12px; text-align: center;">
                                 @php
-                                    $guestNames = $booking->guests->map(function ($guest) {
-                                        return trim(($guest->first_name ?? '') . ' ' . ($guest->middle_name ?? '') . ' ' . ($guest->last_name ?? ''));
-                                    })->filter()->unique()->values();
+                                    $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
+                                    $addedCount = $booking->guests->count();
                                 @endphp
-                                @if($guestNames->isNotEmpty())
-                                    {{ $guestNames->count() }} Guest{{ $guestNames->count() !== 1 ? 's' : '' }}
-                                    <div style="margin-top: 6px; color: #555; font-size: 0.9rem; line-height: 1.4;">{{ $guestNames->join(', ') }}</div>
-                                @else
-                                    {{ $booking->adults }} Adult{{ $booking->adults !== 1 ? 's' : '' }}
-                                    @if($booking->children)
-                                        , {{ $booking->children }} Child{{ $booking->children !== 1 ? 'ren' : '' }}
-                                    @endif
-                                @endif
+                                <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
+                                <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
+                                <a href="{{ route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
                             </td>
                             <td style="padding: 12px; text-align: right; font-weight: 600;">
                                 {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
@@ -140,19 +133,12 @@
                             </td>
                             <td style="padding: 12px; text-align: center;">
                                 @php
-                                    $participantNames = $booking->guests->map(function ($guest) {
-                                        return trim(($guest->first_name ?? '') . ' ' . ($guest->middle_name ?? '') . ' ' . ($guest->last_name ?? ''));
-                                    })->filter()->unique()->values();
+                                    $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
+                                    $addedCount = $booking->guests->count();
                                 @endphp
-                                @if($participantNames->isNotEmpty())
-                                    {{ $participantNames->count() }} Participant{{ $participantNames->count() !== 1 ? 's' : '' }}
-                                    <div style="margin-top: 6px; color: #555; font-size: 0.9rem; line-height: 1.4;">{{ $participantNames->join(', ') }}</div>
-                                @else
-                                    {{ $booking->adults }} Adult{{ $booking->adults !== 1 ? 's' : '' }}
-                                    @if($booking->children)
-                                        , {{ $booking->children }} Child{{ $booking->children !== 1 ? 'ren' : '' }}
-                                    @endif
-                                @endif
+                                <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
+                                <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
+                                <a href="{{ route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;">Manage</a>
                             </td>
                             <td style="padding: 12px; text-align: right; font-weight: 600;">
                                 {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}

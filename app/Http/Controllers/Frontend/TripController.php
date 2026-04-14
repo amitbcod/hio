@@ -49,4 +49,104 @@ class TripController extends Controller
         
         return view('frontend.traveler.trip-detail', compact('trip', 'accommodationBookings', 'activityBookings', 'tripStartDate', 'tripEndDate'));
     }
+
+    public function manageGuests(Trip $trip, $bookingId)
+    {
+        $traveler = auth('traveler')->user();
+        if ($trip->traveler_account_id !== $traveler->id) {
+            abort(403);
+        }
+
+        // Find the booking
+        $booking = \App\Models\AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->with('guests')->first();
+        if (!$booking) {
+            $booking = \App\Models\ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->with('guests')->first();
+        }
+        if (!$booking) {
+            abort(404);
+        }
+
+        $savedGuests = $traveler->guests ?? collect();
+
+        // If no guests added yet, populate from saved guests based on adults/children
+        if ($booking->guests->isEmpty()) {
+            $guests = [];
+            $savedGuestsArray = $savedGuests->toArray();
+            $index = 0;
+            for ($i = 0; $i < $booking->adults; $i++) {
+                if (isset($savedGuestsArray[$index])) {
+                    $guests[] = $savedGuestsArray[$index];
+                    $index++;
+                }
+            }
+            for ($i = 0; $i < $booking->children; $i++) {
+                if (isset($savedGuestsArray[$index])) {
+                    $guests[] = $savedGuestsArray[$index];
+                    $index++;
+                }
+            }
+            $booking->guests = collect($guests);
+        }
+
+        $countries = [
+            'Australia',
+            'Canada',
+            'China',
+            'France',
+            'Germany',
+            'India',
+            'Italy',
+            'Kenya',
+            'Madagascar',
+            'Mauritius',
+            'Reunion',
+            'Singapore',
+            'South Africa',
+            'United Arab Emirates',
+            'United Kingdom',
+            'United States',
+        ];
+
+        return view('frontend.traveler.manage-guests', compact('trip', 'booking', 'savedGuests', 'countries'));
+    }
+
+    public function updateGuests(Request $request, Trip $trip, $bookingId)
+    {
+        $traveler = auth('traveler')->user();
+        if ($trip->traveler_account_id !== $traveler->id) {
+            abort(403);
+        }
+
+        // Find the booking
+        $booking = \App\Models\AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->first();
+        if (!$booking) {
+            $booking = \App\Models\ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->first();
+        }
+        if (!$booking) {
+            abort(404);
+        }
+
+        // Validate and update guests
+        $request->validate([
+            'guests' => 'array',
+            'guests.*.first_name' => 'required|string|max:255',
+            'guests.*.last_name' => 'required|string|max:255',
+            'guests.*.dob' => 'required|date',
+            'guests.*.gender' => 'nullable|string',
+            'guests.*.nationality' => 'required|string',
+            'guests.*.passport_number' => 'nullable|string',
+            'guests.*.notes' => 'nullable|string',
+        ]);
+
+        // Delete existing guests
+        $booking->guests()->delete();
+
+        // Add new guests with explicit guest_number ordering
+        foreach ($request->guests as $index => $guestData) {
+            $guestData['guest_number'] = $index + 1;
+            $booking->guests()->create($guestData);
+        }
+
+        return redirect()->route('traveler.trip.detail', $trip)->with('success', 'Guests updated successfully.');
+    }
 }

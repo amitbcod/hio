@@ -36,11 +36,6 @@ class BookingController extends Controller
 
         $cart = $this->resolveCart();
 
-        if (!empty($cart)) {
-            return redirect()->route('frontend.booking.cart')
-                ->with('error', 'Only one booking is allowed in a single order. Please complete the current booking first.');
-        }
-
         if ($type === 'accommodation') {
             $item = $this->buildAccommodationCartItem($request);
         } elseif ($type === 'activity') {
@@ -268,10 +263,6 @@ class BookingController extends Controller
             return redirect()->route('frontend.home')->with('error', 'Your booking is empty.');
         }
 
-        if (count($cart) > 1) {
-            return redirect()->route('frontend.home')->with('error', 'Only one booking can be checked out at a time.');
-        }
-
         $summary = $this->buildCartSummary($cart);
 
         $totalGuests = 0;
@@ -331,31 +322,57 @@ class BookingController extends Controller
             return redirect()->route('frontend.home')->with('error', 'Your booking is empty.');
         }
 
-        if (count($cart) > 1) {
-            return redirect()->route('frontend.home')->with('error', 'Only one booking can be placed per order. Please complete or clear existing booking first.');
-        }
-
         $totalGuests = 0;
         foreach ($cart as $item) {
             $totalGuests += $item['adults'] + $item['children'];
         }
 
-        $request->validate([
-            'guests' => 'required|array|min:1',
-            'guests.*.relation' => 'required|in:self,spouse,child,friend,colleague,other',
-            'guests.*.first_name' => 'required|string|max:100',
-            'guests.*.middle_name' => 'nullable|string|max:100',
-            'guests.*.last_name' => 'required|string|max:100',
-            'guests.*.dob' => 'required|date|before:today',
-            'guests.*.gender' => 'nullable|in:male,female,non_binary,other',
-            'guests.*.nationality' => 'required|string|max:100',
-            'guests.*.passport_number' => 'nullable|string|max:100',
-            'guests.*.notes' => 'nullable|string|max:1000',
-            'guest_email' => 'nullable|email|max:150',
-            'guest_phone' => 'nullable|string|max:30',
-        ]);
+        $guestsInput = $request->input('guests', []);
 
-        $guests = $request->input('guests');
+        $primaryGuests = isset($guestsInput[0]) ? [$guestsInput[0]] : [];
+        $primaryGuests = collect($primaryGuests)
+            ->filter(function ($guest) {
+                return is_array($guest) && (
+                    !empty(trim($guest['first_name'] ?? '')) ||
+                    !empty(trim($guest['last_name'] ?? '')) ||
+                    !empty(trim($guest['dob'] ?? ''))
+                );
+            })
+            ->values()
+            ->all();
+
+        // Extract global additional guests (indices 1,2,3...)
+        $globalAdditionalGuests = [];
+        $i = 1;
+        while (isset($guestsInput[$i])) {
+            $globalAdditionalGuests[] = $guestsInput[$i];
+            $i++;
+        }
+        $globalAdditionalGuests = collect($globalAdditionalGuests)
+            ->filter(function ($guest) {
+                return is_array($guest) && (
+                    !empty(trim($guest['first_name'] ?? '')) ||
+                    !empty(trim($guest['last_name'] ?? '')) ||
+                    !empty(trim($guest['dob'] ?? ''))
+                );
+            })
+            ->values()
+            ->all();
+
+        if (!empty($primaryGuests)) {
+            Validator::make(['guests' => $primaryGuests], [
+                'guests' => 'array',
+                'guests.*.relation' => 'required|in:self,spouse,child,friend,colleague,other',
+                'guests.*.first_name' => 'required|string|max:100',
+                'guests.*.middle_name' => 'nullable|string|max:100',
+                'guests.*.last_name' => 'required|string|max:100',
+                'guests.*.dob' => 'required|date|before:today',
+                'guests.*.gender' => 'nullable|in:male,female,non_binary,other',
+                'guests.*.nationality' => 'required|string|max:100',
+                'guests.*.passport_number' => 'nullable|string|max:100',
+                'guests.*.notes' => 'nullable|string|max:1000',
+            ])->validate();
+        }
         $guestEmail = $request->input('guest_email');
         $guestPhone = $request->input('guest_phone');
         $special    = $request->input('special_requests', '');
@@ -395,8 +412,32 @@ class BookingController extends Controller
             $ref = $this->generateBookingRef($item['type'], $tripId, $dateForRef);
 
             $travelerAccountId = Auth::guard('traveler')->id() ?? null;
-            $primaryGuest = $guests[0] ?? null;
-            $guestName = trim(($primaryGuest['first_name'] ?? '') . ' ' . ($primaryGuest['middle_name'] ?? '') . ' ' . ($primaryGuest['last_name'] ?? ''));
+            $primaryGuest = $primaryGuests[0] ?? [];
+
+            $itemGuests = isset($guestsInput[$item['cart_key']]) ? collect($guestsInput[$item['cart_key']])
+                ->filter(function ($guest) {
+                    return is_array($guest) && (
+                        !empty(trim($guest['first_name'] ?? '')) ||
+                        !empty(trim($guest['last_name'] ?? '')) ||
+                        !empty(trim($guest['dob'] ?? ''))
+                    );
+                })
+                ->values()
+                ->all() : [];
+
+            if (empty($primaryGuest['first_name']) && $travelerAccount) {
+                $primaryGuest['relation'] = $primaryGuest['relation'] ?? 'self';
+                $primaryGuest['first_name'] = $travelerAccount->first_name ?? $travelerAccount->full_name ?? null;
+                $primaryGuest['middle_name'] = $primaryGuest['middle_name'] ?? $travelerAccount->middle_name ?? null;
+                $primaryGuest['last_name'] = $primaryGuest['last_name'] ?? $travelerAccount->last_name ?? null;
+                $primaryGuest['dob'] = $primaryGuest['dob'] ?? optional($travelerAccount->profile)->date_of_birth?->format('Y-m-d');
+                $primaryGuest['gender'] = $primaryGuest['gender'] ?? null;
+                $primaryGuest['nationality'] = $primaryGuest['nationality'] ?? optional($travelerAccount->profile)->country ?? null;
+                $primaryGuest['passport_number'] = $primaryGuest['passport_number'] ?? null;
+                $primaryGuest['notes'] = $primaryGuest['notes'] ?? null;
+            }
+
+            $guestName = trim(($primaryGuest['first_name'] ?? '') . ' ' . ($primaryGuest['middle_name'] ?? '') . ' ' . ($primaryGuest['last_name'] ?? '')) ?: ($travelerAccount->full_name ?? $travelerAccount->email ?? 'Guest');
 
             if ($item['type'] === 'accommodation') {
                 $booking = AccommodationBooking::create([
@@ -429,8 +470,20 @@ class BookingController extends Controller
 
                 // Create Trip party members if Trip exists
                 if ($tripId) {
-                    $trip = Trip::find($tripId);
-                    foreach ($guests as $guest) {
+                    foreach ($itemGuests as $guest) {
+                        $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                        Traveller::firstOrCreate(
+                            ['trip_id' => $tripId, 'name' => $fullName],
+                            [
+                                'email' => $guestEmail,
+                                'phone' => $guestPhone,
+                                'date_of_birth' => $guest['dob'] ?? null,
+                                'relationship' => $guest['relation'] ?? 'guest',
+                            ]
+                        );
+                    }
+                    // Add global additional guests to trip
+                    foreach ($globalAdditionalGuests as $guest) {
                         $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
                         Traveller::firstOrCreate(
                             ['trip_id' => $tripId, 'name' => $fullName],
@@ -464,7 +517,18 @@ class BookingController extends Controller
                     ]);
 
                     // Link guests to BLI
-                    foreach ($guests as $guest) {
+                    foreach ($itemGuests as $guest) {
+                        $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                        $traveller = Traveller::where('trip_id', $tripId)->where('name', $fullName)->first();
+                        if ($traveller) {
+                            BliTravellerAllocation::create([
+                                'bli_id' => $bli->id,
+                                'traveller_id' => $traveller->id,
+                            ]);
+                        }
+                    }
+                    // Link global additional guests to BLI
+                    foreach ($globalAdditionalGuests as $guest) {
                         $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
                         $traveller = Traveller::where('trip_id', $tripId)->where('name', $fullName)->first();
                         if ($traveller) {
@@ -477,7 +541,7 @@ class BookingController extends Controller
                 }
 
                 // Store all guests
-                foreach ($guests as $index => $guest) {
+                foreach ($itemGuests as $index => $guest) {
                     BookingGuest::create([
                         'booking_id' => $booking->id,
                         'booking_type' => 'accommodation',
@@ -527,7 +591,20 @@ class BookingController extends Controller
 
                 // Create Trip party members if Trip exists
                 if ($tripId) {
-                    foreach ($guests as $guest) {
+                    foreach ($itemGuests as $guest) {
+                        $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                        Traveller::firstOrCreate(
+                            ['trip_id' => $tripId, 'name' => $fullName],
+                            [
+                                'email' => $guestEmail,
+                                'phone' => $guestPhone,
+                                'date_of_birth' => $guest['dob'] ?? null,
+                                'relationship' => $guest['relation'] ?? 'guest',
+                            ]
+                        );
+                    }
+                    // Add global additional guests to trip
+                    foreach ($globalAdditionalGuests as $guest) {
                         $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
                         Traveller::firstOrCreate(
                             ['trip_id' => $tripId, 'name' => $fullName],
@@ -560,7 +637,18 @@ class BookingController extends Controller
                     ]);
 
                     // Link guests to BLI
-                    foreach ($guests as $guest) {
+                    foreach ($itemGuests as $guest) {
+                        $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                        $traveller = Traveller::where('trip_id', $tripId)->where('name', $fullName)->first();
+                        if ($traveller) {
+                            BliTravellerAllocation::create([
+                                'bli_id' => $bli->id,
+                                'traveller_id' => $traveller->id,
+                            ]);
+                        }
+                    }
+                    // Link global additional guests to BLI
+                    foreach ($globalAdditionalGuests as $guest) {
                         $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
                         $traveller = Traveller::where('trip_id', $tripId)->where('name', $fullName)->first();
                         if ($traveller) {
@@ -573,7 +661,7 @@ class BookingController extends Controller
                 }
 
                 // Store all guests
-                foreach ($guests as $index => $guest) {
+                foreach ($itemGuests as $index => $guest) {
                     BookingGuest::create([
                         'booking_id' => $booking->id,
                         'booking_type' => 'activity',
