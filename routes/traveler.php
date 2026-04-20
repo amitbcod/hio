@@ -26,6 +26,7 @@ Route::prefix('traveler')->name('traveler.')->group(function () {
         Route::get('/trips/{trip}', [\App\Http\Controllers\Frontend\TripController::class, 'show'])->name('trip.detail');
         Route::get('/trips/{trip}/booking/{booking}/manage-guests', [\App\Http\Controllers\Frontend\TripController::class, 'manageGuests'])->name('trip.booking.manage-guests');
         Route::post('/trips/{trip}/booking/{booking}/manage-guests', [\App\Http\Controllers\Frontend\TripController::class, 'updateGuests'])->name('trip.booking.update-guests');
+        Route::get('/trips/{trip}/booking/{booking}/download-voucher/{guest?}', [\App\Http\Controllers\Frontend\TripController::class, 'downloadVoucher'])->name('trip.booking.download-voucher');
         Route::post('/trips/{trip}/add-service', [\App\Http\Controllers\Frontend\TripManagementController::class, 'confirmAddService'])->name('trip.add-service');
 
         Route::post('/logout', [TravelerAuthController::class, 'logout'])->name('logout');

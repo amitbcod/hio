@@ -359,6 +359,39 @@ class BookingController extends Controller
             ->values()
             ->all();
 
+        $allAdditionalGuests = [];
+        foreach ($cart as $item) {
+            $itemGuestsForValidation = isset($guestsInput[$item['cart_key']]) ? collect($guestsInput[$item['cart_key']])
+                ->filter(function ($guest) {
+                    return is_array($guest) && (
+                        !empty(trim($guest['first_name'] ?? '')) ||
+                        !empty(trim($guest['last_name'] ?? '')) ||
+                        !empty(trim($guest['dob'] ?? ''))
+                    );
+                })
+                ->values()
+                ->all() : [];
+
+            $allAdditionalGuests = array_merge($allAdditionalGuests, $itemGuestsForValidation);
+        }
+
+        $allAdditionalGuests = array_merge($allAdditionalGuests, $globalAdditionalGuests);
+
+        if (!empty($allAdditionalGuests)) {
+            Validator::make(['guests' => $allAdditionalGuests], [
+                'guests' => 'array',
+                'guests.*.relation' => 'required|in:self,spouse,child,friend,colleague,other',
+                'guests.*.first_name' => 'required|string|max:100',
+                'guests.*.middle_name' => 'nullable|string|max:100',
+                'guests.*.last_name' => 'required|string|max:100',
+                'guests.*.dob' => 'required|date|before:today',
+                'guests.*.gender' => 'nullable|in:male,female,non_binary,other,Mr,Mrs,Miss,Ms,Mx,Other',
+                'guests.*.nationality' => 'required|string|max:100',
+                'guests.*.passport_number' => 'nullable|string|max:100',
+                'guests.*.notes' => 'nullable|string|max:1000',
+            ])->validate();
+        }
+
         if (!empty($primaryGuests)) {
             Validator::make(['guests' => $primaryGuests], [
                 'guests' => 'array',
@@ -367,7 +400,7 @@ class BookingController extends Controller
                 'guests.*.middle_name' => 'nullable|string|max:100',
                 'guests.*.last_name' => 'required|string|max:100',
                 'guests.*.dob' => 'required|date|before:today',
-                'guests.*.gender' => 'nullable|in:male,female,non_binary,other',
+                'guests.*.gender' => 'nullable|in:male,female,non_binary,other,Mr,Mrs,Miss,Ms,Mx,Other',
                 'guests.*.nationality' => 'required|string|max:100',
                 'guests.*.passport_number' => 'nullable|string|max:100',
                 'guests.*.notes' => 'nullable|string|max:1000',
@@ -431,7 +464,7 @@ class BookingController extends Controller
                 $primaryGuest['middle_name'] = $primaryGuest['middle_name'] ?? $travelerAccount->middle_name ?? null;
                 $primaryGuest['last_name'] = $primaryGuest['last_name'] ?? $travelerAccount->last_name ?? null;
                 $primaryGuest['dob'] = $primaryGuest['dob'] ?? optional($travelerAccount->profile)->date_of_birth?->format('Y-m-d');
-                $primaryGuest['gender'] = $primaryGuest['gender'] ?? null;
+                $primaryGuest['gender'] = $this->normalizeGender($primaryGuest['gender'] ?? null);
                 $primaryGuest['nationality'] = $primaryGuest['nationality'] ?? optional($travelerAccount->profile)->country ?? null;
                 $primaryGuest['passport_number'] = $primaryGuest['passport_number'] ?? null;
                 $primaryGuest['notes'] = $primaryGuest['notes'] ?? null;
@@ -551,7 +584,7 @@ class BookingController extends Controller
                         'middle_name' => $guest['middle_name'],
                         'last_name' => $guest['last_name'],
                         'dob' => $guest['dob'],
-                        'gender' => $guest['gender'],
+                        'gender' => $this->normalizeGender($guest['gender'] ?? null),
                         'nationality' => $guest['nationality'],
                         'passport_number' => $guest['passport_number'],
                         'notes' => $guest['notes'],
@@ -671,7 +704,7 @@ class BookingController extends Controller
                         'middle_name' => $guest['middle_name'],
                         'last_name' => $guest['last_name'],
                         'dob' => $guest['dob'],
-                        'gender' => $guest['gender'],
+                        'gender' => $this->normalizeGender($guest['gender'] ?? null),
                         'nationality' => $guest['nationality'],
                         'passport_number' => $guest['passport_number'],
                         'notes' => $guest['notes'],
@@ -920,6 +953,29 @@ class BookingController extends Controller
         );
     }
 
+    private function normalizeGender(?string $gender): ?string
+    {
+        if (empty($gender)) {
+            return null;
+        }
+
+        $normalized = strtolower(trim($gender));
+        $map = [
+            'mr' => 'male',
+            'mrs' => 'female',
+            'miss' => 'female',
+            'ms' => 'female',
+            'mx' => 'non_binary',
+            'other' => 'other',
+        ];
+
+        if (isset($map[$normalized])) {
+            return $map[$normalized];
+        }
+
+        return in_array($normalized, ['male', 'female', 'non_binary', 'other'], true) ? $normalized : null;
+    }
+
     private function travelerAccountId(): ?int
     {
         $traveler = Auth::guard('traveler')->user();
@@ -929,11 +985,17 @@ class BookingController extends Controller
 
     public function saveGuest(Request $request)
     {
+        $input = $request->all();
+        if (isset($input['gender']) && $input['gender'] === '') {
+            $input['gender'] = null;
+        }
+        $request->merge($input);
+
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:150',
             'middle_name' => 'nullable|string|max:150',
             'last_name' => 'required|string|max:150',
-            'dob' => 'required|date|before:today',
+            'dob' => 'required|date|before_or_equal:today',
             'gender' => 'nullable|in:male,female,non_binary,other',
             'nationality' => 'required|string|max:100',
             'passport_number' => 'nullable|string|max:100',

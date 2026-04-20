@@ -58,6 +58,7 @@
                             <th style="padding: 12px; text-align: center; font-weight: 600;">Guests</th>
                             <th style="padding: 12px; text-align: right; font-weight: 600;">Amount</th>
                             <th style="padding: 12px; text-align: center; font-weight: 600;">Status</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -83,7 +84,7 @@
                                 @endphp
                                 <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
                                 <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
-                                <a href="{{ route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
+                                
                             </td>
                             <td style="padding: 12px; text-align: right; font-weight: 600;">
                                 {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
@@ -92,6 +93,9 @@
                                 <span style="display: inline-block; padding: 4px 10px; background: {{ $booking->booking_status === 'Confirmed' ? '#e8f5e9' : ($booking->booking_status === 'Pending' ? '#fff3e0' : '#ffebee') }}; color: {{ $booking->booking_status === 'Confirmed' ? '#2e7d32' : ($booking->booking_status === 'Pending' ? '#e65100' : '#c62828') }}; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
                                     {{ $booking->booking_status }}
                                 </span>
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                <a href="{{ route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
                             </td>
                         </tr>
                         @endforeach
@@ -116,6 +120,7 @@
                             <th style="padding: 12px; text-align: center; font-weight: 600;">Participants</th>
                             <th style="padding: 12px; text-align: right; font-weight: 600;">Amount</th>
                             <th style="padding: 12px; text-align: center; font-weight: 600;">Status</th>
+                             <th style="padding: 12px; text-align: center; font-weight: 600;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -138,7 +143,7 @@
                                 @endphp
                                 <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
                                 <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
-                                <a href="{{ route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;">Manage</a>
+                               
                             </td>
                             <td style="padding: 12px; text-align: right; font-weight: 600;">
                                 {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
@@ -148,7 +153,10 @@
                                     {{ $booking->booking_status }}
                                 </span>
                             </td>
-                        </tr>
+                            <td style="padding: 12px; text-align: center;">
+                             <a href="{{ route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
+                            </td>
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>

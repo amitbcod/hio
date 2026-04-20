@@ -1137,6 +1137,29 @@
             })->all();
         @endphp
         const savedGuestsData = @json($savedGuestsArray);
+
+        function normalizeBookingGender(value) {
+            if (!value) {
+                return null;
+            }
+
+            const map = {
+                mr: 'male',
+                mrs: 'female',
+                miss: 'female',
+                ms: 'female',
+                mx: 'non_binary',
+                other: 'other',
+            };
+
+            const normalized = value.toString().trim().toLowerCase();
+            if (map[normalized]) {
+                return map[normalized];
+            }
+
+            return ['male', 'female', 'non_binary', 'other'].includes(normalized) ? normalized : null;
+        }
+
         @php
             $selfGuest = null;
             if ($traveler) {
@@ -1155,6 +1178,9 @@
             }
         @endphp
         const selfGuest = @json($selfGuest);
+        if (selfGuest) {
+            selfGuest.gender = normalizeBookingGender(selfGuest.gender);
+        }
         const itemKeys = [@foreach($cart as $key => $item) '{{ $key }}', @endforeach];
         const totalGuests = {{ $totalGuests }};
         const closeModalBtn = document.getElementById('closeModalBtn');
