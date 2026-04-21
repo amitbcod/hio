@@ -13,6 +13,10 @@
     --blue: #008dd7;
     --blue-dark: #0051a8;
     --white: #ffffff;
+    --blue-darker: #0f2034;
+    --white: #ffffff;
+    --brand-color:#b08a09;
+    --darker:#333333;
 }
 
 * {
@@ -26,8 +30,8 @@ html {
 body {
     margin: 0;
     font-family: 'Open Sans', Arial, sans-serif;
-    color: var(--ink);
-    background: #b490160d;
+    color: var(--darker);
+    background: #ffffff;
 }
 
 a {
@@ -50,8 +54,8 @@ img {
 }
 
 .top-bar {
-    background: #f3f3f3;
-    border-bottom: 1px solid #f3f3f3;
+    background: var(--blue-darker);
+    border-bottom: 0;
     font-size: 13px;
 }
 
@@ -73,7 +77,7 @@ img {
 
 .top-links a,
 .top-meta span {
-    color: #4b5563;
+    color: var(--white);
 }
 
 .top-inline-form {
@@ -84,7 +88,7 @@ img {
     border: 0;
     padding: 0;
     background: transparent;
-    color: #4b5563;
+    color: var(--white);
     font: inherit;
     cursor: pointer;
 }
@@ -152,7 +156,7 @@ img {
 
 .main-nav a {
     font-weight: 600;
-    color: #334155;
+    color: var(--darker);
     padding: 10px 14px;
     border-radius: 999px;
     transition: 0.2s ease;
@@ -161,7 +165,7 @@ img {
 .main-nav a:hover,
 .main-nav a.is-active {
     /* background: rgba(65, 175, 170, 0.12); */
-    color: var(--brand-dark);
+    color: var(--brand-color);
 }
 
 .btn-primary,
@@ -623,11 +627,21 @@ img {
     margin-bottom: 28px;
 }
 
-.section-header h2,
 .section-header h1 {
     /* font-family: 'Roboto Slab', Georgia, serif; */
-    font-size: clamp(28px, 4vw, 42px);
-    margin: 0 0 10px;
+    font-size: clamp(28px, 4vw, 32px);
+    margin: 0px 0 5px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--blue-darker);
+}
+
+.section-header h2 {
+    font-size: clamp(20px, 3vw, 25px);
+    margin: 0px 0 5px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--blue-darker);
 }
 
 .section-header p {
@@ -1147,6 +1161,14 @@ img {
     font-size: 13px;
     margin-bottom: 16px;
     color: rgba(255, 255, 255, 0.82);
+}
+
+.breadcrumbs a {
+    color:var(--blue-dark);
+}
+
+.breadcrumbs span {
+    color:var(--blue-dark);
 }
 
 .page-hero h1 {

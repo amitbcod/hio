@@ -747,7 +747,8 @@
 .checkout-section { padding-top: 32px; }
 
 .checkout-page-header { margin-bottom: 28px; }
-.checkout-page-header h1 { font-size: 26px; font-weight: 800; color: #1a1a2e; margin: 6px 0 4px; }
+.checkout-page-header h1 { font-size: 32px; font-weight: 700; color: 
+var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
 .checkout-subtitle { color: #666; font-size: 14px; margin: 0; }
 
 .checkout-layout {
@@ -761,7 +762,7 @@
 .form-card {
     background: #fff;
     border: 1px solid #e8e8ef;
-    border-radius: 16px;
+    border-radius: 10px;
     margin-bottom: 18px;
     box-shadow: 0 2px 8px rgba(0,0,0,.04);
 }
