@@ -558,12 +558,11 @@
                                         </div>
                                     </div>
                                 @endforeach
+                                </div>
                             </div>
+                            <input type="hidden" id="additionalGuestsData" name="additional_guests_json" value="">
                         </div>
-
-                        <input type="hidden" id="additionalGuestsData" name="additional_guests_json" value="">
                     </form>
-
                 </div>
 
                 {{-- ════════ RIGHT — Summary Sidebar ════════ --}}
@@ -920,7 +919,7 @@
     font-size: 16px;
     font-weight: 700;
     color: #1a1a2e;
-    margin: 0 0 18px;
+    margin: 0 0 0;
 }
 .step-num {
     display: inline-flex;
