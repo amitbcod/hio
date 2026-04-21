@@ -14,6 +14,7 @@ class ActivityBooking extends Model
         'activity_date' => 'date',
         'booked_at'     => 'datetime',
         'total_amount'  => 'float',
+        'participant_time_slots' => 'array',
     ];
 
     public function activity()

@@ -68,7 +68,7 @@ class TripController extends Controller
         }
 
         if ($booking instanceof \App\Models\ActivityBooking) {
-            $booking->load(['activity.operator', 'activity.operationsStaffing']);
+            $booking->load(['activity.operator', 'activity.operationsStaffing', 'activity.schedulingTimeSlots']);
         }
 
         $savedGuests = SavedGuest::where('user_id', $traveler->id)->get();
@@ -86,26 +86,6 @@ class TripController extends Controller
         $selfGuest->id = 'self';
         $selfGuest->relation = 'self';
         $savedGuests->prepend($selfGuest);
-
-        // If no guests added yet, populate from saved guests based on adults/children
-        if ($booking->guests->isEmpty()) {
-            $guests = [];
-            $savedGuestsArray = $savedGuests->toArray();
-            $index = 0;
-            for ($i = 0; $i < $booking->adults; $i++) {
-                if (isset($savedGuestsArray[$index])) {
-                    $guests[] = (object) $savedGuestsArray[$index];
-                    $index++;
-                }
-            }
-            for ($i = 0; $i < $booking->children; $i++) {
-                if (isset($savedGuestsArray[$index])) {
-                    $guests[] = (object) $savedGuestsArray[$index];
-                    $index++;
-                }
-            }
-            $booking->guests = collect($guests);
-        }
 
         $countries = [
             'Australia',
@@ -126,7 +106,12 @@ class TripController extends Controller
             'United States',
         ];
 
-        return view('frontend.traveler.manage-guests', compact('trip', 'booking', 'savedGuests', 'countries'));
+        $activityTimeSlots = [];
+        if ($booking instanceof \App\Models\ActivityBooking && $booking->activity) {
+            $activityTimeSlots = $booking->activity->schedulingTimeSlots ?? collect();
+        }
+
+        return view('frontend.traveler.manage-guests', compact('trip', 'booking', 'savedGuests', 'countries', 'activityTimeSlots'));
     }
 
     public function downloadVoucher(Trip $trip, $bookingId, $guestId = null)
@@ -145,7 +130,7 @@ class TripController extends Controller
         if (!$booking) {
             $booking = \App\Models\ActivityBooking::where('id', $bookingId)
                 ->where('trip_id', $trip->id)
-                ->with(['activity.operator', 'activity.operationsStaffing', 'guests'])
+                ->with(['activity.operator', 'activity.operationsStaffing', 'activity.schedulingTimeSlots', 'guests'])
                 ->first();
         }
 
@@ -300,8 +285,36 @@ class TripController extends Controller
         }
 
         $guestsForVoucher = $voucherGuest ? [$voucherGuest] : $booking->guests->all();
+        
+        // For activity bookings, check if time slots are required and present
+        if ($isActivity && !$voucherGuest) {
+            $participantTimeSlots = $booking->participant_time_slots ?? [];
+            $missingTimeSlots = [];
+            foreach ($guestsForVoucher as $index => $guest) {
+                if (empty($participantTimeSlots[$guest->guest_number ?? ($index + 1)])) {
+                    $missingTimeSlots[] = trim($guest->first_name . ' ' . ($guest->last_name ?? ''));
+                }
+            }
+            if (!empty($missingTimeSlots)) {
+                return redirect()->back()->with('error', 'Time slots must be selected for all participants before downloading the voucher. Missing time slots for: ' . implode(', ', $missingTimeSlots));
+            }
+        }
+        
+        // Get activity time slot info for booking details
+        $activityTimeSlotDisplay = '-';
+        if ($isActivity && !empty($guestsForVoucher)) {
+            $firstGuest = $guestsForVoucher[0];
+            if (isset($booking->participant_time_slots[$firstGuest->guest_number ?? 1])) {
+                $timeSlotId = $booking->participant_time_slots[$firstGuest->guest_number ?? 1];
+                $timeSlot = $booking->activity->schedulingTimeSlots->where('timeslot_id', $timeSlotId)->first();
+                if ($timeSlot) {
+                    $activityTimeSlotDisplay = e($timeSlot->start_time . ' - ' . $timeSlot->end_time);
+                }
+            }
+        }
+        
         $guestRows = '';
-        foreach ($guestsForVoucher as $guest) {
+        foreach ($guestsForVoucher as $index => $guest) {
             $guestRows .= '<tr>' .
                 '<td>' . e(trim($guest->first_name . ' ' . ($guest->last_name ?? ''))) . '</td>' .
                 '<td>' . e($guest->nationality ?? '-') . '</td>' .
@@ -310,18 +323,22 @@ class TripController extends Controller
         }
 
         $html = '<h1 style="font-size:18px;">' . e($isActivity ? 'Activity' : 'Accommodation') . ' Voucher</h1>' .
-            '<p><strong>Booking Reference:</strong> ' . e($booking->booking_reference) . '</p>' .
-            '<p><strong>Trip:</strong> ' . e($trip->trip_name) . '</p>' .
-            '<p><strong>' . e($isActivity ? 'Activity' : 'Accommodation') . ':</strong> ' . e($serviceName) . '</p>' .
-            '<p><strong>Date:</strong> ' . e($voucherDate) . '</p>' .
-            '<p><strong>' . e($variantName) . '</strong></p>' .
-            '<p>' . ($duration ? e($duration) : '') . '</p>' .
+            '<h2 style="font-size:14px; margin-top:12px; margin-bottom:12px;">Booking Details</h2>' .
+            '<table border="1" cellpadding="8" cellspacing="0" width="100%" style="border-collapse:collapse;">' .
+            '<tr style="background-color:#f0f0f0;"><td width="30%" style="font-weight:bold;">Booking Reference:</td><td>' . e($booking->booking_reference) . '</td></tr>' .
+            '<tr><td style="font-weight:bold;">Trip:</td><td>' . e($trip->id ? '100'.$trip->id : 'N/A') . '</td></tr>' .
+            '<tr style="background-color:#f0f0f0;"><td style="font-weight:bold;">' . e($isActivity ? 'Activity' : 'Accommodation') . ':</td><td>' . e($serviceName) . '</td></tr>' .
+            '<tr><td style="font-weight:bold;">Date:</td><td>' . e($voucherDate) . '</td></tr>' .
+            '<tr style="background-color:#f0f0f0;"><td style="font-weight:bold;">Variant:</td><td>' . e($variantName) . '</td></tr>' .
+            '<tr><td style="font-weight:bold;">Duration:</td><td>' . ($duration ? e($duration) : 'N/A') . '</td></tr>' .
+            ($isActivity ? '<tr style="background-color:#f0f0f0;"><td style="font-weight:bold;">Activity Time Slot:</td><td>' . $activityTimeSlotDisplay . '</td></tr>' : '') .
+            '</table>' .
             '<h2 style="font-size:16px; margin-top:18px;">' . e($isActivity ? 'Activity' : 'Accommodation') . ' Details</h2>' .
             '<p>' . $overview . '</p>' .
             '<p><strong>' . e($isActivity ? 'Meeting Point' : 'Check-in/out Details') . ':</strong><br>' . $meetingPoint . '</p>' .
             '<h2 style="font-size:16px; margin-top:18px;">Participant Details</h2>' .
             '<table border="1" cellpadding="6" cellspacing="0" width="100%" style="border-collapse:collapse;">' .
-            '<thead><tr><th>Name</th><th>Nationality</th><th>Date of Birth</th></tr></thead>' .
+            '<thead><tr style="background-color:#f5f5f5;"><th>Name</th><th>Nationality</th><th>Date of Birth</th></tr></thead>' .
             '<tbody>' . $guestRows . '</tbody></table>' .
             '<h2 style="font-size:16px; margin-top:18px;">Contacts</h2>' .
             '<p><strong>Reservation Contact</strong><br>' . (count($reservationContact) ? implode('<br>', array_map('e', $reservationContact)) : 'Not available') . '</p>' .
@@ -368,10 +385,16 @@ class TripController extends Controller
             'guests.*.nationality' => 'required|string',
             'guests.*.passport_number' => 'nullable|string',
             'guests.*.notes' => 'nullable|string',
+            'guests.*.time_slot' => ($booking instanceof \App\Models\ActivityBooking ? 'required|string' : 'nullable|string'),
         ]);
 
         // Delete existing guests
         $booking->guests()->delete();
+
+        $guestInput = $request->input('guests', []);
+        if (!is_array($guestInput)) {
+            $guestInput = [];
+        }
 
         // Gender mapping from various formats to enum values
         $genderMapping = [
@@ -385,11 +408,20 @@ class TripController extends Controller
         ];
 
         // Add new guests with explicit guest_number ordering
-        foreach (array_values($request->guests) as $index => $guestData) {
+        foreach (array_values($guestInput) as $index => $guestData) {
             $guestData['guest_number'] = $index + 1;
             $guestData['gender'] = $genderMapping[$guestData['gender']] ?? $guestData['gender'];
             $guestData['booking_type'] = $booking instanceof \App\Models\AccommodationBooking ? 'accommodation' : 'activity';
             $booking->guests()->create($guestData);
+        }
+
+        // For activity bookings, update the participant_time_slots in the booking
+        if ($booking instanceof \App\Models\ActivityBooking) {
+            $participantTimeSlots = [];
+            foreach (array_values($guestInput) as $index => $guestData) {
+                $participantTimeSlots[$index + 1] = $guestData['time_slot'] ?? '';
+            }
+            $booking->update(['participant_time_slots' => $participantTimeSlots]);
         }
 
         return redirect()->route('traveler.trip.detail', $trip)->with('success', 'Guests updated successfully.');

@@ -284,9 +284,30 @@ class BookingController extends Controller
             'dob' => $travelerDOB,
         ];
 
+        // Load time slots for activities in cart
+        $activityTimeSlots = [];
+        foreach ($cart as $item) {
+            if ($item['type'] === 'activity' && !empty($item['activity_id'])) {
+                $activity = Activity::with('schedulingTimeSlots')->find($item['activity_id']);
+                if ($activity) {
+                    $slots = $activity->schedulingTimeSlots
+                        ->map(fn($slot) => [
+                            'id' => $slot->timeslot_id,
+                            'start_time' => $slot->start_time,
+                            'end_time' => $slot->end_time,
+                            'duration' => $slot->duration,
+                            'display' => $slot->start_time . ' - ' . $slot->end_time . ' (' . $slot->duration . ')',
+                        ])
+                        ->values()
+                        ->toArray();
+                    $activityTimeSlots[$item['activity_id']] = $slots;
+                }
+            }
+        }
+
         $countries = $this->countries();
 
-        return view('frontend.checkout', compact('cart', 'summary', 'guestDefaults', 'traveler', 'travelerProfile', 'countries', 'totalGuests', 'savedGuests'));
+        return view('frontend.checkout', compact('cart', 'summary', 'guestDefaults', 'traveler', 'travelerProfile', 'countries', 'totalGuests', 'savedGuests', 'activityTimeSlots'));
     }
 
     private function countries(): array
@@ -328,6 +349,15 @@ class BookingController extends Controller
         }
 
         $guestsInput = $request->input('guests', []);
+
+        // Parse participant time slots JSON
+        $participantTimeSlotsJson = $request->input('participant_time_slots_json', '{}');
+        $participantTimeSlots = [];
+        try {
+            $participantTimeSlots = json_decode($participantTimeSlotsJson, true) ?? [];
+        } catch (\Exception $e) {
+            $participantTimeSlots = [];
+        }
 
         $primaryGuests = isset($guestsInput[0]) ? [$guestsInput[0]] : [];
         $primaryGuests = collect($primaryGuests)
@@ -591,6 +621,12 @@ class BookingController extends Controller
                     ]);
                 }
             } elseif ($item['type'] === 'activity') {
+                // Build participant time slots for this activity booking
+                $itemTimeSlotsMap = [];
+                if (isset($participantTimeSlots[$item['cart_key']])) {
+                    $itemTimeSlotsMap = $participantTimeSlots[$item['cart_key']];
+                }
+
                 $booking = ActivityBooking::create([
                     'booking_reference' => $ref,
                     'activity_id'       => $item['activity_id'],
@@ -618,6 +654,7 @@ class BookingController extends Controller
                     'payment_method'    => 'COD',
                     'source_channel'    => 'Direct',
                     'special_requests'  => $special,
+                    'participant_time_slots' => !empty($itemTimeSlotsMap) ? $itemTimeSlotsMap : null,
                     'booked_at'         => now(),
                     'trip_id'           => $tripId,
                 ]);

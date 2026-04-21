@@ -143,7 +143,12 @@
                                 @endphp
                                 <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
                                 <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
-                               
+                                @if($booking->participant_time_slots)
+                                    @php
+                                        $timeSlotsCount = count(array_filter($booking->participant_time_slots));
+                                    @endphp
+                                    <div style="font-size: 0.8rem; color: #666;">Time slots: {{ $timeSlotsCount }}/{{ $addedCount }}</div>
+                                @endif
                             </td>
                             <td style="padding: 12px; text-align: right; font-weight: 600;">
                                 {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}

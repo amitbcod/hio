@@ -14,8 +14,8 @@
 
 .guest-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     padding: 12px;
     border: 1px solid #ddd;
     border-radius: 6px;
@@ -25,6 +25,7 @@
 
 .guest-item-info {
     display: flex;
+    justify-content: space-between;
     gap: 10px;
     align-items: center;
 }
@@ -39,8 +40,26 @@
     color: #666;
 }
 
+.guest-item-timeslot {
+    margin-top: 10px;
+    width: 100%;
+}
+
+.guest-item-timeslot label {
+    display: block;
+    font-size: 12px;
+    color: #444;
+    margin-bottom: 6px;
+}
+
+.guest-item-timeslot .form-input {
+    width: 100%;
+    max-width: 100%;
+}
+
 .guest-item-actions {
     display: flex;
+    justify-content: flex-end;
     gap: 10px;
 }
 
@@ -718,6 +737,15 @@
                             <textarea id="modal_notes" name="notes" class="form-input" rows="2"></textarea>
                         </div>
 
+                        <!-- Time Slot Selection for Activities -->
+                        <div class="form-group" id="modal_timeslot_group" style="display: none;">
+                            <label for="modal_time_slot">Activity Time Slot</label>
+                            <select id="modal_time_slot" name="time_slot" class="form-input">
+                                <option value="">Select a time slot</option>
+                            </select>
+                            <p class="form-hint">Choose your preferred time for this activity.</p>
+                        </div>
+
                         <div class="form-group">
                             <label style="display: flex; align-items: center; gap: 10px;">
                                 <input type="checkbox" id="modal_below_12" name="below_12">
@@ -1137,6 +1165,8 @@
             })->all();
         @endphp
         const savedGuestsData = @json($savedGuestsArray);
+        const activityTimeSlots = @json($activityTimeSlots ?? []);
+        const cartItems = @json($cart);
 
         function normalizeBookingGender(value) {
             if (!value) {
@@ -1319,6 +1349,7 @@
                     nationality: input.dataset.nationality,
                     passport_number: input.dataset.passport,
                     notes: input.dataset.notes,
+                    time_slot: null,
                     below_12: (() => {
                         if (!input.dataset.dob) return false;
                         const dob = new Date(input.dataset.dob);
@@ -1356,16 +1387,46 @@
         function renderItemGuestsList(itemKey, container) {
             container.innerHTML = '';
             const guests = additionalGuests[itemKey] || [];
+            const item = cartItems[itemKey];
+            
             guests.forEach((guest, index) => {
                 const guestName = `${guest.first_name} ${guest.last_name}`;
                 const ageLabel = guest.below_12 ? ' (Below 12 years)' : '';
                 const guestItem = document.createElement('div');
                 guestItem.className = 'guest-item';
+
+                let timeslotInfo = '';
+                let timeslotControls = '';
+                if (item && item.type === 'activity' && item.activity_id && activityTimeSlots[item.activity_id]) {
+                    const slotOptions = activityTimeSlots[item.activity_id].map(slot => {
+                        const selected = slot.id == guest.time_slot ? 'selected' : '';
+                        return `<option value="${slot.id}" ${selected}>${slot.display}</option>`;
+                    }).join('');
+
+                    timeslotControls = `
+                        <div class="guest-item-timeslot">
+                            <label for="guest_time_slot_${itemKey}_${index}">Time Slot</label>
+                            <select id="guest_time_slot_${itemKey}_${index}" class="form-input guest-time-slot-select" data-item="${itemKey}" data-index="${index}">
+                                <option value="">Select a time slot</option>
+                                ${slotOptions}
+                            </select>
+                        </div>
+                    `;
+
+                    if (guest.time_slot) {
+                        const slot = activityTimeSlots[item.activity_id].find(s => s.id == guest.time_slot);
+                        if (slot) {
+                            timeslotInfo = ` • ${slot.display}`;
+                        }
+                    }
+                }
+
                 guestItem.innerHTML = `
                     <div class="guest-item-info">
                         <span class="guest-item-name">${guestName}</span>
-                        <span class="guest-item-age">${guest.relation}${ageLabel}</span>
+                        <span class="guest-item-age">${guest.relation}${ageLabel}${timeslotInfo}</span>
                     </div>
+                    ${timeslotControls}
                     <div class="guest-item-actions">
                         <button type="button" class="btn-edit-guest" data-item="${itemKey}" data-index="${index}">
                             <i class="fa-solid fa-pencil"></i>
@@ -1376,6 +1437,19 @@
                     </div>
                 `;
                 container.appendChild(guestItem);
+
+                const select = guestItem.querySelector('.guest-time-slot-select');
+                if (select) {
+                    select.addEventListener('change', function () {
+                        const itemKey = this.dataset.item;
+                        const guestIndex = parseInt(this.dataset.index);
+                        if (additionalGuests[itemKey] && additionalGuests[itemKey][guestIndex]) {
+                            additionalGuests[itemKey][guestIndex].time_slot = this.value || null;
+                            saveGuestsToForm();
+                            renderItemGuestsList(itemKey, container);
+                        }
+                    });
+                }
             });
 
             // Attach event listeners using delegation
@@ -1409,6 +1483,32 @@
             modalOverlay.style.display = 'block';
             addGuestForm.reset();
             editingIndex = null;
+
+            // Show/hide time slot field based on item type
+            const timeslotGroup = document.getElementById('modal_timeslot_group');
+            const timeslotSelect = document.getElementById('modal_time_slot');
+            
+            if (itemKey && cartItems[itemKey]) {
+                const item = cartItems[itemKey];
+                if (item.type === 'activity' && item.activity_id && activityTimeSlots[item.activity_id]) {
+                    // Show time slot field and populate options
+                    timeslotGroup.style.display = 'block';
+                    timeslotSelect.innerHTML = '<option value="">Select a time slot</option>';
+                    
+                    activityTimeSlots[item.activity_id].forEach(slot => {
+                        const option = document.createElement('option');
+                        option.value = slot.id;
+                        option.textContent = slot.display;
+                        timeslotSelect.appendChild(option);
+                    });
+                } else {
+                    // Hide time slot field for accommodations or items without slots
+                    timeslotGroup.style.display = 'none';
+                    timeslotSelect.value = '';
+                }
+            } else {
+                timeslotGroup.style.display = 'none';
+            }
         }
 
         // Close modal
@@ -1438,7 +1538,8 @@
                 nationality: document.getElementById('modal_nationality').value,
                 passport_number: document.getElementById('modal_passport_number').value,
                 notes: document.getElementById('modal_notes').value,
-                below_12: document.getElementById('modal_below_12').checked
+                below_12: document.getElementById('modal_below_12').checked,
+                time_slot: document.getElementById('modal_time_slot').value || null
             };
 
             // Save to server
@@ -1520,6 +1621,7 @@
             document.getElementById('modal_passport_number').value = guest.passport_number;
             document.getElementById('modal_notes').value = guest.notes;
             document.getElementById('modal_below_12').checked = guest.below_12;
+            document.getElementById('modal_time_slot').value = guest.time_slot || '';
             openModal(itemKey);
         }
 
@@ -1536,11 +1638,13 @@
                 const guestsContainer = document.createElement('div');
                 guestsContainer.style.display = 'none';
 
+                const timeSlotsByItem = {};
+
                 // Add per item guests
                 Object.keys(additionalGuests).forEach(itemKey => {
                     additionalGuests[itemKey].forEach((guest, index) => {
                         Object.keys(guest).forEach(key => {
-                            if (key !== 'below_12') {
+                            if (key !== 'below_12' && key !== 'time_slot') {
                                 const input = document.createElement('input');
                                 input.type = 'hidden';
                                 input.name = `guests[${itemKey}][${index}][${key}]`;
@@ -1548,10 +1652,27 @@
                                 guestsContainer.appendChild(input);
                             }
                         });
+                        
+                        // Collect time slots separately for activities
+                        if (guest.time_slot) {
+                            if (!timeSlotsByItem[itemKey]) {
+                                timeSlotsByItem[itemKey] = {};
+                            }
+                            timeSlotsByItem[itemKey][index] = guest.time_slot;
+                        }
                     });
                 });
 
                 this.appendChild(guestsContainer);
+
+                // Add time slots as JSON
+                if (Object.keys(timeSlotsByItem).length > 0) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'participant_time_slots_json';
+                    input.value = JSON.stringify(timeSlotsByItem);
+                    this.appendChild(input);
+                }
             });
         }
 

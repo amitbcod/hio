@@ -11,19 +11,23 @@
             'region' => $filters['region'],
             'check_in' => $filters['check_in'],
             'check_out' => $filters['check_out'],
+            'activity_date' => $filters['activity_date'],
             'type' => $filters['type'],
             'name' => $filters['name'],
             'adults' => $filters['adults'] ?? null,
             'children' => $filters['children'] ?? null,
             'rooms' => $filters['rooms'] ?? null,
+            'participants' => $filters['participants'] ?? null,
         ], fn ($value) => $value !== null && $value !== '');
 
         $detailQuery = array_filter([
             'check_in' => $filters['check_in'],
             'check_out' => $filters['check_out'],
+            'activity_date' => $filters['activity_date'],
             'adults' => $filters['adults'] ?? (int) request()->query('adults', 2),
             'children' => $filters['children'] ?? (int) request()->query('children', 0),
             'rooms' => $filters['rooms'] ?? (int) request()->query('rooms', 1),
+            'participants' => $filters['participants'] ?? (int) request()->query('participants', 1),
         ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
@@ -90,21 +94,31 @@
                             </select>
                         </div>
 
-                        <div class="category-search-cell">
+                        <!-- Accommodation/Transport: Check-In and Check-Out -->
+                        <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-in" style="display: none;">
                             <h5>Check-In</h5>
                             <div class="category-search-dates">
                                 <input type="date" name="check_in" class="category-search-input" value="{{ $filters['check_in'] }}">
                             </div>
                         </div>
 
-                        <div class="category-search-cell">
+                        <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-out" style="display: none;">
                             <h5>Check-Out</h5>
                             <div class="category-search-dates">
                                 <input type="date" name="check_out" class="category-search-input" value="{{ $filters['check_out'] }}">
                             </div>
                         </div>
 
-                        <div class="category-search-cell category-search-cell--guests">
+                        <!-- Tours/Activity: Activity Date -->
+                        <div class="category-search-cell category-search-cell--tours category-search-cell--activity-date" style="display: none;">
+                            <h5>Select Date</h5>
+                            <div class="category-search-dates">
+                                <input type="date" name="activity_date" class="category-search-input" value="{{ $filters['activity_date'] }}">
+                            </div>
+                        </div>
+
+                        <!-- Accommodation/Transport: Guest & Rooms -->
+                        <div class="category-search-cell category-search-cell--accommodation category-search-cell--guests" style="display: none;">
                             <h5>Guest & Rooms</h5>
                             <div class="guest-rooms-summary">
                                 <span id="guest-rooms-summary-text">{{ (int) $filters['adults'] }} Adults · {{ (int) $filters['children'] }} Child{{ (int) $filters['children'] === 1 ? '' : 'ren' }} · {{ (int) $filters['rooms'] }} Room{{ (int) $filters['rooms'] === 1 ? '' : 's' }}</span>
@@ -137,6 +151,24 @@
                             </div>
                         </div>
 
+                        <!-- Tours/Activity: Participant Count -->
+                        <div class="category-search-cell category-search-cell--tours category-search-cell--participants" style="display: none;">
+                            <h5>Select Participant</h5>
+                            <div class="participant-summary">
+                                <span id="participant-summary-text">{{ (int) $filters['participants'] }} Participant{{ (int) $filters['participants'] !== 1 ? 's' : '' }}</span>
+                            </div>
+                            <div class="participant-selector">
+                                <div class="participant-row">
+                                    <label for="category-participants-field">Number of Participants</label>
+                                    <div class="participant-counter">
+                                        <button type="button" class="count-btn decrement" data-target="participants">−</button>
+                                        <input id="category-participants-field" type="text" name="participants" value="{{ (int) $filters['participants'] }}" readonly>
+                                        <button type="button" class="count-btn increment" data-target="participants">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="category-search-submit">
                             <button type="submit" class="btn-primary">Proceed</button>
                         </div>
@@ -160,8 +192,13 @@
                         <input type="hidden" name="region" value="{{ $filters['region'] }}">
                         <input type="hidden" name="check_in" value="{{ $filters['check_in'] }}">
                         <input type="hidden" name="check_out" value="{{ $filters['check_out'] }}">
+                        <input type="hidden" name="activity_date" value="{{ $filters['activity_date'] }}">
                         <input type="hidden" name="type" value="{{ $filters['type'] }}">
                         <input type="hidden" name="name" value="{{ $filters['name'] }}">
+                        <input type="hidden" name="adults" value="{{ $filters['adults'] ?? 2 }}">
+                        <input type="hidden" name="children" value="{{ $filters['children'] ?? 0 }}">
+                        <input type="hidden" name="rooms" value="{{ $filters['rooms'] ?? 1 }}">
+                        <input type="hidden" name="participants" value="{{ $filters['participants'] ?? 1 }}">>
 
                         @foreach($sidebarDefinitions as $definition)
                             @php
@@ -281,20 +318,62 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const findInput = (key) => document.querySelector(`[name='${key}']`);
-            const summary = document.getElementById('guest-rooms-summary-text');
+            const guestSummary = document.getElementById('guest-rooms-summary-text');
+            const participantSummary = document.getElementById('participant-summary-text');
             const guestCell = document.querySelector('.category-search-cell--guests');
+            const participantCell = document.querySelector('.category-search-cell--participants');
+            const accommodationCheckInCell = document.querySelector('.category-search-cell--check-in');
+            const accommodationCheckOutCell = document.querySelector('.category-search-cell--check-out');
+            const toursActivityDateCell = document.querySelector('.category-search-cell--activity-date');
+            const categoryRadios = document.querySelectorAll('input[name="category"]');
 
-            const updateSummary = function () {
+            // Update guest rooms summary text
+            const updateGuestSummary = function () {
                 const adults = parseInt(findInput('adults')?.value || 0, 10);
                 const children = parseInt(findInput('children')?.value || 0, 10);
                 const rooms = parseInt(findInput('rooms')?.value || 0, 10);
-                if (summary) {
-                    summary.textContent = `${adults} Adults · ${children} Child${children === 1 ? '' : 'ren'} · ${rooms} Room${rooms === 1 ? '' : 's'}`;
+                if (guestSummary) {
+                    guestSummary.textContent = `${adults} Adults · ${children} Child${children === 1 ? '' : 'ren'} · ${rooms} Room${rooms === 1 ? '' : 's'}`;
                 }
             };
 
-            if (guestCell && summary) {
-                summary.addEventListener('click', function () {
+            // Update participant summary text
+            const updateParticipantSummary = function () {
+                const participants = parseInt(findInput('participants')?.value || 1, 10);
+                if (participantSummary) {
+                    participantSummary.textContent = `${participants} Participant${participants !== 1 ? 's' : ''}`;
+                }
+            };
+
+            // Show/hide fields based on selected category
+            const updateCategoryFields = function () {
+                const selectedCategory = document.querySelector('input[name="category"]:checked')?.value;
+
+                if (selectedCategory === 'tours') {
+                    // Show tours fields, hide accommodation fields
+                    accommodationCheckInCell.style.display = 'none';
+                    accommodationCheckOutCell.style.display = 'none';
+                    guestCell.style.display = 'none';
+                    toursActivityDateCell.style.display = 'block';
+                    participantCell.style.display = 'block';
+                } else {
+                    // Show accommodation fields (default for accommodation and transport)
+                    accommodationCheckInCell.style.display = 'block';
+                    accommodationCheckOutCell.style.display = 'block';
+                    guestCell.style.display = 'block';
+                    toursActivityDateCell.style.display = 'none';
+                    participantCell.style.display = 'none';
+                }
+            };
+
+            // Attach change event to category radios
+            categoryRadios.forEach(function (radio) {
+                radio.addEventListener('change', updateCategoryFields);
+            });
+
+            // Handle guest cell expand/collapse
+            if (guestCell && guestSummary) {
+                guestSummary.addEventListener('click', function () {
                     guestCell.classList.toggle('is-open');
                 });
 
@@ -305,6 +384,20 @@
                 });
             }
 
+            // Handle participant cell expand/collapse
+            if (participantCell && participantSummary) {
+                participantSummary.addEventListener('click', function () {
+                    participantCell.classList.toggle('is-open');
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!participantCell.contains(event.target)) {
+                        participantCell.classList.remove('is-open');
+                    }
+                });
+            }
+
+            // Handle guest/room counter buttons
             document.querySelectorAll('.guest-rooms-selector .count-btn').forEach(function (button) {
                 button.addEventListener('click', function () {
                     const target = button.getAttribute('data-target');
@@ -325,11 +418,34 @@
                     }
 
                     input.value = value;
-                    updateSummary();
+                    updateGuestSummary();
                 });
             });
 
-            updateSummary();
+            // Handle participant counter buttons
+            document.querySelectorAll('.participant-selector .count-btn').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const target = button.getAttribute('data-target');
+                    const input = findInput(target);
+                    if (!input) return;
+
+                    let value = parseInt(input.value, 10) || 1;
+                    if (button.classList.contains('increment')) {
+                        value += 1;
+                    } else if (button.classList.contains('decrement')) {
+                        value -= 1;
+                    }
+
+                    value = Math.max(1, value);
+                    input.value = value;
+                    updateParticipantSummary();
+                });
+            });
+
+            // Initialize display on page load
+            updateCategoryFields();
+            updateGuestSummary();
+            updateParticipantSummary();
         });
     </script>
 @endsection

@@ -1401,11 +1401,13 @@ class HomeController extends Controller
             'region' => trim((string) $request->query('region', '')),
             'check_in' => (string) $request->query('check_in', now()->format('Y-m-d')),
             'check_out' => (string) $request->query('check_out', now()->addDays(2)->format('Y-m-d')),
+            'activity_date' => (string) $request->query('activity_date', now()->format('Y-m-d')),
             'type' => trim((string) $request->query('type', '')),
             'name' => trim((string) $request->query('name', '')),
             'adults' => max(1, (int) $request->query('adults', 2)),
             'children' => max(0, (int) $request->query('children', 0)),
             'rooms' => max(1, (int) $request->query('rooms', 1)),
+            'participants' => max(1, (int) $request->query('participants', 1)),
         ];
     }
 
