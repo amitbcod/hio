@@ -6,12 +6,9 @@
 @section('content')
     @php
         $booking = $activity['booking'] ?? [
-            'check_in' => now()->toDateString(),
-            'check_out' => now()->addDays(2)->toDateString(),
-            'check_in_display' => now()->format('d-m-Y'),
-            'check_out_display' => now()->addDays(2)->format('d-m-Y'),
-            'adults' => 2,
-            'children' => 0,
+            'activity_date' => now()->toDateString(),
+            'activity_date_display' => now()->format('d-m-Y'),
+            'participants' => 1,
         ];
         $availableRooms = $activity['available_rooms'] ?? [];
     @endphp
@@ -39,24 +36,14 @@
                 <form method="GET" action="{{ route('frontend.activities.show', $activity['id']) }}" class="booking-form">
                     <div class="side-list">
                         <div class="side-item">
-                            <span>Check-in date</span>
-                            <strong>{{ $booking['check_in_display'] }}</strong>
-                            <input type="date" name="check_in" value="{{ $booking['check_in'] }}" class="booking-input">
+                            <span>Select Date</span>
+                            <strong>{{ $booking['activity_date_display'] }}</strong>
+                            <input type="date" name="activity_date" value="{{ $booking['activity_date'] }}" class="booking-input" min="{{ date('Y-m-d') }}">
                         </div>
                         <div class="side-item">
-                            <span>Check-out date</span>
-                            <strong>{{ $booking['check_out_display'] }}</strong>
-                            <input type="date" name="check_out" value="{{ $booking['check_out'] }}" class="booking-input">
-                        </div>
-                        <div class="side-item">
-                            <span>Adults</span>
-                            <strong>{{ $booking['adults'] }}</strong>
-                            <input type="number" name="adults" min="1" value="{{ $booking['adults'] }}" class="booking-input">
-                        </div>
-                        <div class="side-item">
-                            <span>Children</span>
-                            <strong>{{ $booking['children'] }}</strong>
-                            <input type="number" name="children" min="0" value="{{ $booking['children'] }}" class="booking-input">
+                            <span>Participants</span>
+                            <strong>{{ $booking['participants'] }}</strong>
+                            <input type="number" name="participants" min="1" value="{{ $booking['participants'] }}" class="booking-input">
                         </div>
                         <div class="side-item">
                             <button type="submit" class="btn-primary booking-btn">Check Rates</button>
@@ -110,9 +97,8 @@
                                                         <input type="hidden" name="variant_name" value="{{ $room['room_name'] }}">
                                                         <input type="hidden" name="title" value="{{ $activity['title'] }}">
                                                         <input type="hidden" name="image" value="{{ $activity['image'] }}">
-                                                        <input type="hidden" name="check_in" value="{{ $booking['check_in'] }}">
-                                                        <input type="hidden" name="adults" value="{{ $booking['adults'] }}">
-                                                        <input type="hidden" name="children" value="{{ $booking['children'] }}">
+                                                        <input type="hidden" name="activity_date" value="{{ $booking['activity_date'] }}">
+                                                        <input type="hidden" name="participants" value="{{ $booking['participants'] }}">
                                                         <input type="hidden" name="total_price" value="{{ $room['total_price'] }}">
                                                         <input type="hidden" name="currency" value="{{ $room['currency'] }}">
                                                         <button type="submit" class="btn-book-now">Book Now</button>

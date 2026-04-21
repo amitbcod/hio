@@ -226,21 +226,20 @@ class HomeController extends Controller
     {
         abort_if(blank($activity->activity_name), 404);
 
-        $bookingContext = $this->buildDetailBookingContext($request);
-        $stayEnd = Carbon::parse($bookingContext['check_out'])->subDay()->toDateString();
+        $bookingContext = $this->buildActivityBookingContext($request);
 
         return view('frontend.activity-show', [
             'activity' => $this->mapActivity($activity->load([
                 'seoSocial',
                 'policy',
                 'variants',
-                'allotments' => function ($query) use ($bookingContext, $stayEnd) {
-                    $query->whereBetween('inventory_date', [$bookingContext['check_in'], $stayEnd]);
+                'allotments' => function ($query) use ($bookingContext) {
+                    $query->where('inventory_date', $bookingContext['activity_date']);
                 },
-                'rates' => function ($query) use ($bookingContext, $stayEnd) {
+                'rates' => function ($query) use ($bookingContext) {
                     $query
-                        ->whereDate('valid_from', '<=', $stayEnd)
-                        ->whereDate('valid_to', '>=', $bookingContext['check_in'])
+                        ->whereDate('valid_from', '<=', $bookingContext['activity_date'])
+                        ->whereDate('valid_to', '>=', $bookingContext['activity_date'])
                         ->orderBy('adult_rate')
                         ->orderBy('equipment_rate')
                         ->orderBy('private_exclusive_rate');
@@ -919,6 +918,22 @@ class HomeController extends Controller
         ];
     }
 
+    private function buildActivityBookingContext(Request $request): array
+    {
+        $activityDate = $this->parseDateInput(
+            (string) $request->query('activity_date', now()->format('Y-m-d')),
+            now()
+        );
+
+        $participants = max(1, (int) $request->query('participants', 1));
+
+        return [
+            'activity_date' => $activityDate->toDateString(),
+            'activity_date_display' => $activityDate->format('d-m-Y'),
+            'participants' => $participants,
+        ];
+    }
+
     private function parseDateInput(string $value, Carbon $fallback): Carbon
     {
         $normalized = trim($value);
@@ -1240,9 +1255,9 @@ class HomeController extends Controller
 
     private function buildActivityAvailability($variants, $rates, $allotments, array $bookingContext): array
     {
-        $checkIn = Carbon::parse($bookingContext['check_in'])->startOfDay();
-        $checkOut = Carbon::parse($bookingContext['check_out'])->startOfDay();
-        $days = $this->buildStayDateKeys($checkIn, $checkOut);
+        // For activities, we use a single activity_date instead of check_in/check_out range
+        $activityDate = Carbon::parse($bookingContext['activity_date'] ?? now()->toDateString())->startOfDay();
+        $days = [$activityDate->toDateString()]; // Single date for activities
 
         $variantItems = $variants;
         if ($variantItems->isEmpty()) {
@@ -1304,13 +1319,11 @@ class HomeController extends Controller
                 ->filter(function ($rate) use ($variantId) {
                     return (int) ($rate->variant_id ?? 0) === $variantId;
                 })
-                ->filter(fn ($rate) => $this->rateOverlapsStay($rate, $checkIn, $checkOut))
+                ->filter(fn ($rate) => $this->rateOverlapsActivityDate($rate, $activityDate))
                 ->sortBy(function ($rate) use ($bookingContext) {
                     $value = $this->calculateActivityRateTotal(
                         $rate,
-                        (int) $bookingContext['adults'],
-                        (int) $bookingContext['children'],
-                        (int) $bookingContext['nights']
+                        (int) $bookingContext['participants']
                     );
 
                     return $value !== null ? $value : PHP_INT_MAX;
@@ -1319,9 +1332,7 @@ class HomeController extends Controller
 
             $totalPrice = $this->calculateActivityRateTotal(
                 $selectedRate,
-                (int) $bookingContext['adults'],
-                (int) $bookingContext['children'],
-                (int) $bookingContext['nights']
+                (int) $bookingContext['participants']
             );
 
             $results[] = [
@@ -1345,16 +1356,33 @@ class HomeController extends Controller
         return $results;
     }
 
-    private function calculateActivityRateTotal($rate, int $adults, int $children, int $nights): ?float
+    private function rateOverlapsActivityDate($rate, Carbon $activityDate): bool
+    {
+        if (!$rate) {
+            return false;
+        }
+
+        $validFrom = $rate->valid_from ? Carbon::parse($rate->valid_from)->startOfDay() : null;
+        $validTo = $rate->valid_to ? Carbon::parse($rate->valid_to)->endOfDay() : null;
+
+        if ($validFrom && $activityDate->lt($validFrom)) {
+            return false;
+        }
+
+        if ($validTo && $activityDate->gt($validTo)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function calculateActivityRateTotal($rate, int $participants): ?float
     {
         if (!$rate) {
             return null;
         }
 
-        $adults = max(1, $adults);
-        $children = max(0, $children);
-        $nights = max(1, $nights);
-        $participants = max(1, $adults + $children);
+        $participants = max(1, $participants);
 
         $rateSpecificity = (string) ($rate->rate_specificity ?? 'Per Person');
 
@@ -1365,12 +1393,11 @@ class HomeController extends Controller
                 : null;
         } else {
             $adultRate = $rate->adult_rate !== null ? (float) $rate->adult_rate : null;
-            $childRate = $rate->children_rate !== null
-                ? (float) $rate->children_rate
-                : (float) ($rate->teen_rate ?? 0);
 
+            // For activities, we treat all participants as adults
+            // This is a simplified approach - you may need to adjust based on your business logic
             $base = $adultRate !== null && $adultRate > 0
-                ? ($adultRate * $adults) + ($childRate * $children)
+                ? $adultRate * $participants
                 : null;
         }
 
@@ -1383,7 +1410,7 @@ class HomeController extends Controller
             return null;
         }
 
-        return round($base * $nights, 2);
+        return round($base, 2);
     }
 
     private function normalizeCategory(?string $category): string
