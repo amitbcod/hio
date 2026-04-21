@@ -798,7 +798,7 @@
     border-radius: 50%;
     /* background: #1a1a2e; */
     color: var(--blue-dark);
-    font-size: 18px;
+    font-size: 28px;
 }
 
 .accordion-panel {
@@ -1114,6 +1114,35 @@
     font-weight: 600;
 }
 .back-to-cart:hover { color: #1a1a2e; }
+
+button.btn-add-item-guest {
+    border: 1px solid #1a1a2e;
+    background: #fff;
+    color: #1a1a2e;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+}
+
+button.btn-add-item-guest:hover {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+label.saved-guest-checkbox {
+    display: flex;
+    align-items: self-start;
+    gap: 10px;
+        margin-bottom: 10px;
+}
+
+.saved-guest-info .saved-guest-name {
+    font-weight: 600;
+}
+.saved-guest-info .saved-guest-details {
+    font-size: 14px;
+}
 
 @media (max-width: 860px) {
     .checkout-layout { grid-template-columns: 1fr; }
