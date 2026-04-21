@@ -364,105 +364,105 @@
                                 <span class="accordion-toggle">−</span>
                             </button>
                             <div class="accordion-panel">
+                                {{-- Primary Guest --}}
+                                <div class="primary-guest-section">
+                                    @if(auth('traveler')->check())
+                                        <div class="form-group" style="margin-bottom: 20px;">
+                                            <label style="display: flex; gap: 20px;">
+                                                <span>
+                                                    <input type="radio" name="guest_type" value="myself" checked>
+                                                    <strong>Myself</strong>
+                                                </span>
+                                                <span>
+                                                    <input type="radio" name="guest_type" value="someone_else">
+                                                    <strong>Someone Else</strong>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    @endif
 
-                            {{-- Primary Guest --}}
-                            <div class="primary-guest-section">
-                                @if(auth('traveler')->check())
-                                    <div class="form-group" style="margin-bottom: 20px;">
-                                        <label style="display: flex; gap: 20px;">
-                                            <span>
-                                                <input type="radio" name="guest_type" value="myself" checked>
-                                                <strong>Myself</strong>
-                                            </span>
-                                            <span>
-                                                <input type="radio" name="guest_type" value="someone_else">
-                                                <strong>Someone Else</strong>
-                                            </span>
-                                        </label>
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label for="guests_0_relation">Relationship <span class="req">*</span></label>
+                                            <select id="guests_0_relation" name="guests[0][relation]" class="form-input">
+                                                <option value="">Choose relation</option>
+                                                <option value="self" {{ old('guests.0.relation') === 'self' ? 'selected' : '' }}>Self</option>
+                                                <option value="spouse" {{ old('guests.0.relation') === 'spouse' ? 'selected' : '' }}>Spouse</option>
+                                                <option value="child" {{ old('guests.0.relation') === 'child' ? 'selected' : '' }}>Child</option>
+                                                <option value="friend" {{ old('guests.0.relation') === 'friend' ? 'selected' : '' }}>Friend</option>
+                                                <option value="colleague" {{ old('guests.0.relation') === 'colleague' ? 'selected' : '' }}>Colleague</option>
+                                                <option value="other" {{ old('guests.0.relation') === 'other' ? 'selected' : '' }}>Other</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="guests_0_gender">Gender</label>
+                                            <select id="guests_0_gender" name="guests[0][gender]" class="form-input">
+                                                <option value="">Select</option>
+                                                <option value="male" {{ old('guests.0.gender') === 'male' ? 'selected' : '' }}>Male</option>
+                                                <option value="female" {{ old('guests.0.gender') === 'female' ? 'selected' : '' }}>Female</option>
+                                                <option value="non_binary" {{ old('guests.0.gender') === 'non_binary' ? 'selected' : '' }}>Non-binary</option>
+                                                <option value="other" {{ old('guests.0.gender') === 'other' ? 'selected' : '' }}>Other</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                @endif
 
-                                <div class="form-grid">
-                                    <div class="form-group">
-                                        <label for="guests_0_relation">Relationship <span class="req">*</span></label>
-                                        <select id="guests_0_relation" name="guests[0][relation]" class="form-input">
-                                            <option value="">Choose relation</option>
-                                            <option value="self" {{ old('guests.0.relation') === 'self' ? 'selected' : '' }}>Self</option>
-                                            <option value="spouse" {{ old('guests.0.relation') === 'spouse' ? 'selected' : '' }}>Spouse</option>
-                                            <option value="child" {{ old('guests.0.relation') === 'child' ? 'selected' : '' }}>Child</option>
-                                            <option value="friend" {{ old('guests.0.relation') === 'friend' ? 'selected' : '' }}>Friend</option>
-                                            <option value="colleague" {{ old('guests.0.relation') === 'colleague' ? 'selected' : '' }}>Colleague</option>
-                                            <option value="other" {{ old('guests.0.relation') === 'other' ? 'selected' : '' }}>Other</option>
-                                        </select>
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label for="guests_0_first_name">First Name <span class="req">*</span></label>
+                                            <input type="text" id="guests_0_first_name" name="guests[0][first_name]" value="{{ old('guests.0.first_name', $traveler?->profile->first_name ?? '') }}" class="form-input">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="guests_0_middle_name">Middle Name</label>
+                                            <input type="text" id="guests_0_middle_name" name="guests[0][middle_name]" value="{{ old('guests.0.middle_name', $traveler?->profile->middle_name ?? '') }}" class="form-input">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="guests_0_last_name">Last Name <span class="req">*</span></label>
+                                            <input type="text" id="guests_0_last_name" name="guests[0][last_name]" value="{{ old('guests.0.last_name', $traveler?->profile->last_name ?? '') }}" class="form-input">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label for="guests_0_dob">Date of Birth <span class="req">*</span></label>
+                                            <input type="date" id="guests_0_dob" name="guests[0][dob]" value="{{ old('guests.0.dob', $guestDefaults['dob'] ?? '') }}" class="form-input">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="guests_0_nationality">Nationality <span class="req">*</span></label>
+                                            <select id="guests_0_nationality" name="guests[0][nationality]" class="form-input">
+                                                <option value="">Select nationality</option>
+                                                @foreach($countries as $country)
+                                                    <option value="{{ $country }}" {{ old('guests.0.nationality', $traveler?->profile->country ?? '') === $country ? 'selected' : '' }}>{{ $country }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="guests_0_passport_number">Passport No.</label>
+                                            <input type="text" id="guests_0_passport_number" name="guests[0][passport_number]" value="{{ old('guests.0.passport_number') }}" class="form-input">
+                                        </div>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="guests_0_gender">Gender</label>
-                                        <select id="guests_0_gender" name="guests[0][gender]" class="form-input">
-                                            <option value="">Select</option>
-                                            <option value="male" {{ old('guests.0.gender') === 'male' ? 'selected' : '' }}>Male</option>
-                                            <option value="female" {{ old('guests.0.gender') === 'female' ? 'selected' : '' }}>Female</option>
-                                            <option value="non_binary" {{ old('guests.0.gender') === 'non_binary' ? 'selected' : '' }}>Non-binary</option>
-                                            <option value="other" {{ old('guests.0.gender') === 'other' ? 'selected' : '' }}>Other</option>
-                                        </select>
+                                        <label for="guests_0_notes">Notes</label>
+                                        <textarea id="guests_0_notes" name="guests[0][notes]" class="form-input" rows="2">{{ old('guests.0.notes') }}</textarea>
                                     </div>
                                 </div>
 
-                                <div class="form-grid">
+                                <div class="form-grid" style="margin-top: 20px;">
                                     <div class="form-group">
-                                        <label for="guests_0_first_name">First Name <span class="req">*</span></label>
-                                        <input type="text" id="guests_0_first_name" name="guests[0][first_name]" value="{{ old('guests.0.first_name', $traveler?->profile->first_name ?? '') }}" class="form-input">
+                                        <label for="guest_email">Email Address</label>
+                                        <input type="email" id="guest_email" name="guest_email" value="{{ old('guest_email', $guestDefaults['guest_email'] ?? '') }}" placeholder="you@example.com" class="form-input">
+                                        <p class="form-hint">Booking confirmation will be sent here.</p>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="guests_0_middle_name">Middle Name</label>
-                                        <input type="text" id="guests_0_middle_name" name="guests[0][middle_name]" value="{{ old('guests.0.middle_name', $traveler?->profile->middle_name ?? '') }}" class="form-input">
+                                        <label for="guest_phone">Phone Number</label>
+                                        <input type="tel" id="guest_phone" name="guest_phone" value="{{ old('guest_phone', $guestDefaults['guest_phone'] ?? '') }}" placeholder="+230 5xxx xxxx" class="form-input">
                                     </div>
-
-                                    <div class="form-group">
-                                        <label for="guests_0_last_name">Last Name <span class="req">*</span></label>
-                                        <input type="text" id="guests_0_last_name" name="guests[0][last_name]" value="{{ old('guests.0.last_name', $traveler?->profile->last_name ?? '') }}" class="form-input">
-                                    </div>
-                                </div>
-
-                                <div class="form-grid">
-                                    <div class="form-group">
-                                        <label for="guests_0_dob">Date of Birth <span class="req">*</span></label>
-                                        <input type="date" id="guests_0_dob" name="guests[0][dob]" value="{{ old('guests.0.dob', $guestDefaults['dob'] ?? '') }}" class="form-input">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="guests_0_nationality">Nationality <span class="req">*</span></label>
-                                        <select id="guests_0_nationality" name="guests[0][nationality]" class="form-input">
-                                            <option value="">Select nationality</option>
-                                            @foreach($countries as $country)
-                                                <option value="{{ $country }}" {{ old('guests.0.nationality', $traveler?->profile->country ?? '') === $country ? 'selected' : '' }}>{{ $country }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="guests_0_passport_number">Passport No.</label>
-                                        <input type="text" id="guests_0_passport_number" name="guests[0][passport_number]" value="{{ old('guests.0.passport_number') }}" class="form-input">
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="guests_0_notes">Notes</label>
-                                    <textarea id="guests_0_notes" name="guests[0][notes]" class="form-input" rows="2">{{ old('guests.0.notes') }}</textarea>
-                                </div>
-                            </div>
-
-                            <div class="form-grid" style="margin-top: 20px;">
-                                <div class="form-group">
-                                    <label for="guest_email">Email Address</label>
-                                    <input type="email" id="guest_email" name="guest_email" value="{{ old('guest_email', $guestDefaults['guest_email'] ?? '') }}" placeholder="you@example.com" class="form-input">
-                                    <p class="form-hint">Booking confirmation will be sent here.</p>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="guest_phone">Phone Number</label>
-                                    <input type="tel" id="guest_phone" name="guest_phone" value="{{ old('guest_phone', $guestDefaults['guest_phone'] ?? '') }}" placeholder="+230 5xxx xxxx" class="form-input">
                                 </div>
                             </div>
                         </div>
