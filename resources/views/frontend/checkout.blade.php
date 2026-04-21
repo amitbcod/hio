@@ -1143,7 +1143,7 @@ label.saved-guest-checkbox {
 .saved-guest-info .saved-guest-details {
     font-size: 14px;
 }
-
+ 
 @media (max-width: 860px) {
     .checkout-layout { grid-template-columns: 1fr; }
     .checkout-summary { position: static; }
