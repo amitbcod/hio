@@ -383,143 +383,153 @@
                                 <span class="accordion-toggle">−</span>
                             </button>
                             <div class="accordion-panel">
+                                {{-- Primary Guest --}}
+                                <div class="primary-guest-section">
+                                    @if(auth('traveler')->check())
+                                        <div class="form-group" style="margin-bottom: 20px;">
+                                            <label style="display: flex; gap: 20px;">
+                                                <span>
+                                                    <input type="radio" name="guest_type" value="myself" checked>
+                                                    <strong>Myself</strong>
+                                                </span>
+                                                <span>
+                                                    <input type="radio" name="guest_type" value="someone_else">
+                                                    <strong>Someone Else</strong>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    @endif
 
-                            {{-- Primary Guest --}}
-                            <div class="primary-guest-section">
-                                @if(auth('traveler')->check())
-                                    <div class="form-group" style="margin-bottom: 20px;">
-                                        <label style="display: flex; gap: 20px;">
-                                            <span>
-                                                <input type="radio" name="guest_type" value="myself" checked>
-                                                <strong>Myself</strong>
-                                            </span>
-                                            <span>
-                                                <input type="radio" name="guest_type" value="someone_else">
-                                                <strong>Someone Else</strong>
-                                            </span>
-                                        </label>
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label for="guests_0_relation">Relationship <span class="req">*</span></label>
+                                            <select id="guests_0_relation" name="guests[0][relation]" class="form-input">
+                                                <option value="">Choose relation</option>
+                                                <option value="self" {{ old('guests.0.relation') === 'self' ? 'selected' : '' }}>Self</option>
+                                                <option value="spouse" {{ old('guests.0.relation') === 'spouse' ? 'selected' : '' }}>Spouse</option>
+                                                <option value="child" {{ old('guests.0.relation') === 'child' ? 'selected' : '' }}>Child</option>
+                                                <option value="friend" {{ old('guests.0.relation') === 'friend' ? 'selected' : '' }}>Friend</option>
+                                                <option value="colleague" {{ old('guests.0.relation') === 'colleague' ? 'selected' : '' }}>Colleague</option>
+                                                <option value="other" {{ old('guests.0.relation') === 'other' ? 'selected' : '' }}>Other</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="guests_0_gender">Gender</label>
+                                            <select id="guests_0_gender" name="guests[0][gender]" class="form-input">
+                                                <option value="">Select</option>
+                                                <option value="male" {{ old('guests.0.gender') === 'male' ? 'selected' : '' }}>Male</option>
+                                                <option value="female" {{ old('guests.0.gender') === 'female' ? 'selected' : '' }}>Female</option>
+                                                <option value="non_binary" {{ old('guests.0.gender') === 'non_binary' ? 'selected' : '' }}>Non-binary</option>
+                                                <option value="other" {{ old('guests.0.gender') === 'other' ? 'selected' : '' }}>Other</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                @endif
 
-                                <div class="form-grid">
-                                    <div class="form-group">
-                                        <label for="guests_0_relation">Relationship <span class="req">*</span></label>
-                                        <select id="guests_0_relation" name="guests[0][relation]" class="form-input">
-                                            <option value="">Choose relation</option>
-                                            <option value="self" {{ old('guests.0.relation') === 'self' ? 'selected' : '' }}>Self</option>
-                                            <option value="spouse" {{ old('guests.0.relation') === 'spouse' ? 'selected' : '' }}>Spouse</option>
-                                            <option value="child" {{ old('guests.0.relation') === 'child' ? 'selected' : '' }}>Child</option>
-                                            <option value="friend" {{ old('guests.0.relation') === 'friend' ? 'selected' : '' }}>Friend</option>
-                                            <option value="colleague" {{ old('guests.0.relation') === 'colleague' ? 'selected' : '' }}>Colleague</option>
-                                            <option value="other" {{ old('guests.0.relation') === 'other' ? 'selected' : '' }}>Other</option>
-                                        </select>
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label for="guests_0_first_name">First Name <span class="req">*</span></label>
+                                            <input type="text" id="guests_0_first_name" name="guests[0][first_name]" value="{{ old('guests.0.first_name', $traveler?->profile->first_name ?? '') }}" class="form-input">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="guests_0_middle_name">Middle Name</label>
+                                            <input type="text" id="guests_0_middle_name" name="guests[0][middle_name]" value="{{ old('guests.0.middle_name', $traveler?->profile->middle_name ?? '') }}" class="form-input">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="guests_0_last_name">Last Name <span class="req">*</span></label>
+                                            <input type="text" id="guests_0_last_name" name="guests[0][last_name]" value="{{ old('guests.0.last_name', $traveler?->profile->last_name ?? '') }}" class="form-input">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label for="guests_0_dob">Date of Birth <span class="req">*</span></label>
+                                            <input type="date" id="guests_0_dob" name="guests[0][dob]" value="{{ old('guests.0.dob', $guestDefaults['dob'] ?? '') }}" class="form-input">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="guests_0_nationality">Nationality <span class="req">*</span></label>
+                                            <select id="guests_0_nationality" name="guests[0][nationality]" class="form-input">
+                                                <option value="">Select nationality</option>
+                                                @foreach($countries as $country)
+                                                    <option value="{{ $country }}" {{ old('guests.0.nationality', $traveler?->profile->country ?? '') === $country ? 'selected' : '' }}>{{ $country }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="guests_0_passport_number">Passport No.</label>
+                                            <input type="text" id="guests_0_passport_number" name="guests[0][passport_number]" value="{{ old('guests.0.passport_number') }}" class="form-input">
+                                        </div>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="guests_0_gender">Gender</label>
-                                        <select id="guests_0_gender" name="guests[0][gender]" class="form-input">
-                                            <option value="">Select</option>
-                                            <option value="male" {{ old('guests.0.gender') === 'male' ? 'selected' : '' }}>Male</option>
-                                            <option value="female" {{ old('guests.0.gender') === 'female' ? 'selected' : '' }}>Female</option>
-                                            <option value="non_binary" {{ old('guests.0.gender') === 'non_binary' ? 'selected' : '' }}>Non-binary</option>
-                                            <option value="other" {{ old('guests.0.gender') === 'other' ? 'selected' : '' }}>Other</option>
-                                        </select>
+                                        <label for="guests_0_notes">Notes</label>
+                                        <textarea id="guests_0_notes" name="guests[0][notes]" class="form-input" rows="2">{{ old('guests.0.notes') }}</textarea>
                                     </div>
                                 </div>
 
-                                <div class="form-grid">
+                                <div class="form-grid" style="margin-top: 20px;">
                                     <div class="form-group">
-                                        <label for="guests_0_first_name">First Name <span class="req">*</span></label>
-                                        <input type="text" id="guests_0_first_name" name="guests[0][first_name]" value="{{ old('guests.0.first_name', $traveler?->profile->first_name ?? '') }}" class="form-input">
+                                        <label for="guest_email">Email Address</label>
+                                        <input type="email" id="guest_email" name="guest_email" value="{{ old('guest_email', $guestDefaults['guest_email'] ?? '') }}" placeholder="you@example.com" class="form-input">
+                                        <p class="form-hint">Booking confirmation will be sent here.</p>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="guests_0_middle_name">Middle Name</label>
-                                        <input type="text" id="guests_0_middle_name" name="guests[0][middle_name]" value="{{ old('guests.0.middle_name', $traveler?->profile->middle_name ?? '') }}" class="form-input">
+                                        <label for="guest_phone">Phone Number</label>
+                                        <input type="tel" id="guest_phone" name="guest_phone" value="{{ old('guest_phone', $guestDefaults['guest_phone'] ?? '') }}" placeholder="+230 5xxx xxxx" class="form-input">
                                     </div>
-
-                                    <div class="form-group">
-                                        <label for="guests_0_last_name">Last Name <span class="req">*</span></label>
-                                        <input type="text" id="guests_0_last_name" name="guests[0][last_name]" value="{{ old('guests.0.last_name', $traveler?->profile->last_name ?? '') }}" class="form-input">
-                                    </div>
-                                </div>
-
-                                <div class="form-grid">
-                                    <div class="form-group">
-                                        <label for="guests_0_dob">Date of Birth <span class="req">*</span></label>
-                                        <input type="date" id="guests_0_dob" name="guests[0][dob]" value="{{ old('guests.0.dob', $guestDefaults['dob'] ?? '') }}" class="form-input">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="guests_0_nationality">Nationality <span class="req">*</span></label>
-                                        <select id="guests_0_nationality" name="guests[0][nationality]" class="form-input">
-                                            <option value="">Select nationality</option>
-                                            @foreach($countries as $country)
-                                                <option value="{{ $country }}" {{ old('guests.0.nationality', $traveler?->profile->country ?? '') === $country ? 'selected' : '' }}>{{ $country }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="guests_0_passport_number">Passport No.</label>
-                                        <input type="text" id="guests_0_passport_number" name="guests[0][passport_number]" value="{{ old('guests.0.passport_number') }}" class="form-input">
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="guests_0_notes">Notes</label>
-                                    <textarea id="guests_0_notes" name="guests[0][notes]" class="form-input" rows="2">{{ old('guests.0.notes') }}</textarea>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="form-grid" style="margin-top: 20px;">
-                                <div class="form-group">
-                                    <label for="guest_email">Email Address</label>
-                                    <input type="email" id="guest_email" name="guest_email" value="{{ old('guest_email', $guestDefaults['guest_email'] ?? '') }}" placeholder="you@example.com" class="form-input">
-                                    <p class="form-hint">Booking confirmation will be sent here.</p>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="guest_phone">Phone Number</label>
-                                    <input type="tel" id="guest_phone" name="guest_phone" value="{{ old('guest_phone', $guestDefaults['guest_phone'] ?? '') }}" placeholder="+230 5xxx xxxx" class="form-input">
+                        <div class="form-card accordion-card">
+                            <button type="button" class="accordion-header" aria-expanded="true">
+                                <h2 class="form-section-title">
+                                    <span class="step-num">2</span> Special Requests
+                                </h2>
+                                <span class="accordion-toggle">−</span>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="form-group form-group--full">
+                                    <label for="special_requests">Special Requests (Optional)</label>
+                                    <textarea id="special_requests" name="special_requests"
+                                            rows="3" placeholder="Any special requirements, diet preferences, accessibility needs…"
+                                            class="form-input form-textarea">{{ old('special_requests') }}</textarea>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="form-card">
-                            <h2 class="form-section-title">
-                                <span class="step-num">3</span> Special Requests
-                            </h2>
-                            <div class="form-group form-group--full">
-                                <label for="special_requests">Special Requests (Optional)</label>
-                                <textarea id="special_requests" name="special_requests"
-                                          rows="3" placeholder="Any special requirements, diet preferences, accessibility needs…"
-                                          class="form-input form-textarea">{{ old('special_requests') }}</textarea>
-                            </div>
-                        </div>
-
-                        <div class="form-card">
-                            <h2 class="form-section-title">
-                                <span class="step-num">4</span> Payment Method
-                            </h2>
-                            <div class="payment-option selected">
-                                <div class="payment-option-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
-                                <div>
-                                    <strong>Cash on Delivery</strong>
-                                    <p>Pay when you check in. No advance payment required.</p>
+                        <div class="form-card accordion-card">
+                            <button type="button" class="accordion-header" aria-expanded="true">
+                                <h2 class="form-section-title">
+                                    <span class="step-num">3</span> Payment Method
+                                </h2>
+                                <span class="accordion-toggle">−</span>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="payment-option selected">
+                                    <div class="payment-option-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+                                    <div>
+                                        <strong>Cash on Delivery</strong>
+                                        <p>Pay when you check in. No advance payment required.</p>
+                                    </div>
+                                    <i class="fa-solid fa-circle-check payment-tick"></i>
                                 </div>
-                                <i class="fa-solid fa-circle-check payment-tick"></i>
+                                <p class="form-hint" style="margin-top:10px;">
+                                    Payment gateway integration coming soon. Currently COD only.
+                                </p>
                             </div>
-                            <p class="form-hint" style="margin-top:10px;">
-                                Payment gateway integration coming soon. Currently COD only.
-                            </p>
                         </div>
 
                         {{-- Items review mini list --}}
                         <div class="form-card accordion-card">
                             <button type="button" class="accordion-header" aria-expanded="true">
                                 <h2 class="form-section-title">
-                                    <span class="step-num">5</span> Your Items
+                                    <span class="step-num">4</span> Your Items
                                 </h2>
                                 <span class="accordion-toggle">−</span>
                             </button>
@@ -577,12 +587,11 @@
                                         </div>
                                     </div>
                                 @endforeach
+                                </div>
                             </div>
+                            <input type="hidden" id="additionalGuestsData" name="additional_guests_json" value="">
                         </div>
-
-                        <input type="hidden" id="additionalGuestsData" name="additional_guests_json" value="">
                     </form>
-
                 </div>
 
                 {{-- ════════ RIGHT — Summary Sidebar ════════ --}}
@@ -766,7 +775,8 @@
 .checkout-section { padding-top: 32px; }
 
 .checkout-page-header { margin-bottom: 28px; }
-.checkout-page-header h1 { font-size: 26px; font-weight: 800; color: #1a1a2e; margin: 6px 0 4px; }
+.checkout-page-header h1 { font-size: 32px; font-weight: 700; color: 
+var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
 .checkout-subtitle { color: #666; font-size: 14px; margin: 0; }
 
 .checkout-layout {
@@ -779,8 +789,8 @@
 /* Form Cards */
 .form-card {
     background: #fff;
-    border: 1px solid #e8e8ef;
-    border-radius: 16px;
+    border: 1px solid #e1e1e1;
+    border-radius: 10px;
     margin-bottom: 18px;
     box-shadow: 0 2px 8px rgba(0,0,0,.04);
 }
@@ -815,14 +825,15 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: #1a1a2e;
-    color: #fff;
-    font-size: 18px;
+    /* background: #1a1a2e; */
+    color: var(--blue-dark);
+    font-size: 28px;
 }
 
 .accordion-panel {
-    padding: 0 24px 24px;
+        padding: 24px;
     display: block;
+    border-top: 1px solid #ededed;
 }
 
 .accordion-card.collapsed .accordion-panel {
@@ -946,16 +957,16 @@
     align-items: center;
     gap: 10px;
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 600;
     color: #1a1a2e;
-    margin: 0 0 18px;
+    margin: 0 0 0;
 }
 .step-num {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 26px; height: 26px;
-    background: #1a1a2e;
+    background: var(--brand-color);
     color: #fff;
     border-radius: 50%;
     font-size: 13px;
@@ -985,10 +996,11 @@
     border-radius: 10px;
     font-size: 14px;
     font-family: inherit;
-    color: #1a1a2e;
+    color: var(--darker);
     outline: none;
     transition: border-color .2s;
     box-sizing: border-box;
+    background: #f2f1f6;
 }
 
 .traveler-checkbox-row {
@@ -1018,7 +1030,7 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    border: 2px solid #1a1a2e;
+    border: 2px solid #1a7f37;
     border-radius: 12px;
     padding: 14px 16px;
     background: #f8f8ff;
@@ -1075,21 +1087,21 @@
 .form-errors li { font-size: 13px; color: #c53030; margin-bottom: 4px; }
 
 /* Summary Sidebar (reuse cart-review styles, add here) */
-.checkout-summary { position: sticky; top: 24px; }
+.checkout-summary { position: sticky; top: 120px; }
 .summary-card {
-    background: #fff;
-    border: 1px solid #e8e8ef;
-    border-radius: 20px;
-    padding: 28px 24px;
+    background: var(--grey-light);
+    border: 0px solid #e8e8ef;
+    border-radius: 10px;
+    padding: 24px 24px;
     box-shadow: 0 4px 16px rgba(0,0,0,.06);
 }
-.summary-heading { font-size: 18px; font-weight: 800; color: #1a1a2e; margin: 0 0 18px; }
+.summary-heading { font-size: 18px; font-weight: 700; color: #1a1a2e; margin: 0 0 18px; }
 .summary-divider { height: 1px; background: #eee; margin: 16px 0; }
 .fare-rows { display: flex; flex-direction: column; gap: 10px; }
-.fare-row { display: flex; justify-content: space-between; font-size: 14px; color: #444; }
-.fare-row span:first-child { display: flex; align-items: center; gap: 5px; }
+.fare-row { display: flex; justify-content: space-between; font-size: 14px; color: #333; font-weight: 600;}
+.fare-row span:first-child { display: flex; align-items: center; gap: 5px; font-weight: 500;}
 .fare-row--discount { color: #1a7f37; font-weight: 600; }
-.fare-row--total { font-size: 16px; font-weight: 800; color: #1a1a2e; margin-top: 4px; }
+.fare-row--total { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-top: 4px; }
 
 .btn-checkout {
     display: flex;
@@ -1133,6 +1145,35 @@
 }
 .back-to-cart:hover { color: #1a1a2e; }
 
+button.btn-add-item-guest {
+    border: 1px solid #1a1a2e;
+    background: #fff;
+    color: #1a1a2e;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+}
+
+button.btn-add-item-guest:hover {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+label.saved-guest-checkbox {
+    display: flex;
+    align-items: self-start;
+    gap: 10px;
+        margin-bottom: 10px;
+}
+
+.saved-guest-info .saved-guest-name {
+    font-weight: 600;
+}
+.saved-guest-info .saved-guest-details {
+    font-size: 14px;
+}
+ 
 @media (max-width: 860px) {
     .checkout-layout { grid-template-columns: 1fr; }
     .checkout-summary { position: static; }
