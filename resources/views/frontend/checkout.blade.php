@@ -467,40 +467,50 @@
                             </div>
                         </div>
 
-                        <div class="form-card">
-                            <h2 class="form-section-title">
-                                <span class="step-num">3</span> Special Requests
-                            </h2>
-                            <div class="form-group form-group--full">
-                                <label for="special_requests">Special Requests (Optional)</label>
-                                <textarea id="special_requests" name="special_requests"
-                                          rows="3" placeholder="Any special requirements, diet preferences, accessibility needs…"
-                                          class="form-input form-textarea">{{ old('special_requests') }}</textarea>
+                        <div class="form-card accordion-card">
+                            <button type="button" class="accordion-header" aria-expanded="true">
+                                <h2 class="form-section-title">
+                                    <span class="step-num">2</span> Special Requests
+                                </h2>
+                                <span class="accordion-toggle">−</span>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="form-group form-group--full">
+                                    <label for="special_requests">Special Requests (Optional)</label>
+                                    <textarea id="special_requests" name="special_requests"
+                                            rows="3" placeholder="Any special requirements, diet preferences, accessibility needs…"
+                                            class="form-input form-textarea">{{ old('special_requests') }}</textarea>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="form-card">
-                            <h2 class="form-section-title">
-                                <span class="step-num">4</span> Payment Method
-                            </h2>
-                            <div class="payment-option selected">
-                                <div class="payment-option-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
-                                <div>
-                                    <strong>Cash on Delivery</strong>
-                                    <p>Pay when you check in. No advance payment required.</p>
+                        <div class="form-card accordion-card">
+                            <button type="button" class="accordion-header" aria-expanded="true">
+                                <h2 class="form-section-title">
+                                    <span class="step-num">3</span> Payment Method
+                                </h2>
+                                <span class="accordion-toggle">−</span>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="payment-option selected">
+                                    <div class="payment-option-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+                                    <div>
+                                        <strong>Cash on Delivery</strong>
+                                        <p>Pay when you check in. No advance payment required.</p>
+                                    </div>
+                                    <i class="fa-solid fa-circle-check payment-tick"></i>
                                 </div>
-                                <i class="fa-solid fa-circle-check payment-tick"></i>
+                                <p class="form-hint" style="margin-top:10px;">
+                                    Payment gateway integration coming soon. Currently COD only.
+                                </p>
                             </div>
-                            <p class="form-hint" style="margin-top:10px;">
-                                Payment gateway integration coming soon. Currently COD only.
-                            </p>
                         </div>
 
                         {{-- Items review mini list --}}
                         <div class="form-card accordion-card">
                             <button type="button" class="accordion-header" aria-expanded="true">
                                 <h2 class="form-section-title">
-                                    <span class="step-num">5</span> Your Items
+                                    <span class="step-num">4</span> Your Items
                                 </h2>
                                 <span class="accordion-toggle">−</span>
                             </button>
@@ -786,14 +796,15 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: #1a1a2e;
-    color: #fff;
+    /* background: #1a1a2e; */
+    color: var(--blue-dark);
     font-size: 18px;
 }
 
 .accordion-panel {
-    padding: 0 24px 24px;
+        padding: 24px;
     display: block;
+    border-top: 1px solid #ededed;
 }
 
 .accordion-card.collapsed .accordion-panel {
@@ -1046,12 +1057,12 @@
 .form-errors li { font-size: 13px; color: #c53030; margin-bottom: 4px; }
 
 /* Summary Sidebar (reuse cart-review styles, add here) */
-.checkout-summary { position: sticky; top: 24px; }
+.checkout-summary { position: sticky; top: 120px; }
 .summary-card {
     background: #fff;
     border: 1px solid #e8e8ef;
-    border-radius: 20px;
-    padding: 28px 24px;
+    border-radius: 10px;
+    padding: 24px 24px;
     box-shadow: 0 4px 16px rgba(0,0,0,.06);
 }
 .summary-heading { font-size: 18px; font-weight: 800; color: #1a1a2e; margin: 0 0 18px; }
