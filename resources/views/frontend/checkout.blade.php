@@ -929,7 +929,7 @@ var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
     align-items: center;
     gap: 10px;
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 600;
     color: #1a1a2e;
     margin: 0 0 0;
 }
@@ -938,7 +938,7 @@ var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
     align-items: center;
     justify-content: center;
     width: 26px; height: 26px;
-    background: #1a1a2e;
+    background: var(--brand-color);
     color: #fff;
     border-radius: 50%;
     font-size: 13px;
@@ -1067,13 +1067,13 @@ var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
     padding: 24px 24px;
     box-shadow: 0 4px 16px rgba(0,0,0,.06);
 }
-.summary-heading { font-size: 18px; font-weight: 800; color: #1a1a2e; margin: 0 0 18px; }
+.summary-heading { font-size: 18px; font-weight: 700; color: #1a1a2e; margin: 0 0 18px; }
 .summary-divider { height: 1px; background: #eee; margin: 16px 0; }
 .fare-rows { display: flex; flex-direction: column; gap: 10px; }
-.fare-row { display: flex; justify-content: space-between; font-size: 14px; color: #444; }
-.fare-row span:first-child { display: flex; align-items: center; gap: 5px; }
+.fare-row { display: flex; justify-content: space-between; font-size: 14px; color: #333; font-weight: 600;}
+.fare-row span:first-child { display: flex; align-items: center; gap: 5px; font-weight: 500;}
 .fare-row--discount { color: #1a7f37; font-weight: 600; }
-.fare-row--total { font-size: 16px; font-weight: 800; color: #1a1a2e; margin-top: 4px; }
+.fare-row--total { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-top: 4px; }
 
 .btn-checkout {
     display: flex;

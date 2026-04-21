@@ -65,6 +65,10 @@ img {
     background: #f2f1f6;
 }
 
+strong {
+    font-weight: 700;
+}
+
 .wrap {
     width: min(1200px, calc(100% - 32px));
     margin: 0 auto;
