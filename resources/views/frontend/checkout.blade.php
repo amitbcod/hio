@@ -761,7 +761,7 @@ var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
 /* Form Cards */
 .form-card {
     background: #fff;
-    border: 1px solid #e8e8ef;
+    border: 1px solid #e1e1e1;
     border-radius: 10px;
     margin-bottom: 18px;
     box-shadow: 0 2px 8px rgba(0,0,0,.04);
@@ -968,10 +968,11 @@ var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
     border-radius: 10px;
     font-size: 14px;
     font-family: inherit;
-    color: #1a1a2e;
+    color: var(--darker);
     outline: none;
     transition: border-color .2s;
     box-sizing: border-box;
+    background: #f2f1f6;
 }
 
 .traveler-checkbox-row {
@@ -1001,7 +1002,7 @@ var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
     display: flex;
     align-items: center;
     gap: 14px;
-    border: 2px solid #1a1a2e;
+    border: 2px solid #1a7f37;
     border-radius: 12px;
     padding: 14px 16px;
     background: #f8f8ff;
@@ -1060,8 +1061,8 @@ var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
 /* Summary Sidebar (reuse cart-review styles, add here) */
 .checkout-summary { position: sticky; top: 120px; }
 .summary-card {
-    background: #fff;
-    border: 1px solid #e8e8ef;
+    background: var(--grey-light);
+    border: 0px solid #e8e8ef;
     border-radius: 10px;
     padding: 24px 24px;
     box-shadow: 0 4px 16px rgba(0,0,0,.06);

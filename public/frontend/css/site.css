@@ -9,14 +9,17 @@
     --line: #e5dfd6;
     --gold: #d7a64a;
     --danger: #d9534f;
-    --shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    --shadow: 0 12px 32px rgba(59, 13, 13, 0.08);
     --blue: #008dd7;
     --blue-dark: #0051a8;
     --white: #ffffff;
     --blue-darker: #0f2034;
     --white: #ffffff;
     --brand-color:#b08a09;
+    --brand-color-dark:#f3bf0e;
     --darker:#333333;
+    --grey-light: #f2f1f6;
+    --border-color:#e1e1e1;
 }
 
 * {
@@ -46,6 +49,20 @@ a:hover {
 img {
     max-width: 100%;
     display: block;
+}
+
+.form-input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #ddd;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--darker);
+    outline: none;
+    transition: border-color .2s;
+    box-sizing: border-box;
+    background: #f2f1f6;
 }
 
 .wrap {
@@ -95,7 +112,7 @@ img {
 
 .top-links a:hover,
 .top-link-button:hover {
-    color: var(--brand-dark);
+    color:var(--brand-color-dark);
 }
 
 .site-header {
