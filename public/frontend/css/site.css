@@ -402,6 +402,7 @@ strong {
     padding: 12px 17px 5px;
     /* min-height: 130px; */
     /* min-width: 200px; */
+    flex:1;
 }
 
 .category-search-cell+.category-search-cell,
@@ -617,6 +618,7 @@ strong {
     grid-template-columns: repeat(4, minmax(0, 1fr)); */
     gap: 18px;
     display: flex;
+    flex-flow: wrap;
 }
 
 .quick-tile {
@@ -867,7 +869,7 @@ strong {
     padding: 22px;
     position: sticky;
     top: 90px;
-    background: #fbfbfb;
+    background: var(--grey-light);
 }
 
 .category-filters h3 {
@@ -1494,7 +1496,7 @@ strong {
 }
 
 .category-input-group-inner {
-    background-color: #F0F0F0;
+    background-color: var(--grey-light);
     border-radius: 10px;
 }
 
@@ -1571,12 +1573,12 @@ label.category-radio-item>input:checked+.cat-radio-tab:after {
 }
 
 select.category-search-select {
-    width: 170px;
+    width: 100%;
     margin-left: -4px;
 }
 
 input.category-search-input {
-    width: 140px;
+    width: 100%;
 }
 
 .hero-overlay {
@@ -1811,6 +1813,190 @@ button#cancelModalBtn {
     line-height: 1;
     font-size: 20px;
 }
+
+.category-search-cell--accommodation.category-search-cell--guests {
+    flex-basis: 10%;
+}
+
+.guest-rooms-summary span#guest-rooms-summary-text {
+    width: 100%;
+    display: block;
+}
+
+/********************************************/
+
+.category-search-cell .participant-summary {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    font-weight: bold;
+    color: #181818;
+    font-size: 17px;
+}
+
+.category-search-cell--participants.is-open .participant-selector {
+    position: absolute;
+    border-radius: 0 0 5px 5px;
+    border: 0;
+    margin-top: 5px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.category-search-cell .participant-row label span {
+    font-weight: 400;
+    font-size: 13px;
+}
+.category-search-cell .participant-row label {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1b2d55;
+    width: auto;
+    flex: 1;
+    margin-right: 10px;
+}
+
+.category-search-cell .participant-counter input {
+    width: 45px;
+    text-align: center;
+    border: 1px solid #f0f0f0;
+    border-radius: 6px;
+    font-size: 15px;
+    padding: 6px 0;
+    background: #f0f0f0;
+    color: #181818;
+    font-weight: 600;
+}
+
+.category-search-cell .count-btn {
+    border: 1px solid #c5d0e8;
+    background: #ffffff;
+    color: #9f9e9e;
+    font-weight: 400;
+    line-height: 1;
+    font-size: 20px;
+}
+
+.category-search-cell .participant-summary {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    font-weight: bold;
+    color: #181818;
+    font-size: 17px;
+}
+
+.category-search-cell--participants.is-open .participant-selector {
+    position: absolute;
+    border-radius: 0 0 5px 5px;
+    border: 0;
+    margin-top: 5px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.category-search-cell .participant-row label span {
+    font-weight: 400;
+    font-size: 13px;
+}
+
+.category-search-cell .participant-counter input {
+    width: 45px;
+    text-align: center;
+    border: 1px solid #f0f0f0;
+    border-radius: 6px;
+    font-size: 15px;
+    padding: 6px 0;
+    background: #f0f0f0;
+    color: #181818;
+    font-weight: 600;
+}
+
+.category-search-cell .count-btn {
+    border: 1px solid #c5d0e8;
+    background: #ffffff;
+    color: #9f9e9e;
+    font-weight: 400;
+    line-height: 1;
+    font-size: 20px;
+}
+
+
+
+
+
+.participant-summary {
+    margin-bottom: 10px;
+    background: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0B2C71;
+    border: 1px solid #dbe6f6;
+}
+
+.participant-selector {
+    display: none;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid #dbe6f6;
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.category-search-cell--participants.is-open .participant-selector {
+    display: grid;
+}
+
+.participant-summary {
+    cursor: pointer;
+    border: 1px solid #dbe6f6;
+    padding: 10px;
+    border-radius: 10px;
+    background: #fff;
+    margin-bottom: 8px;
+}
+
+.participant-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.participant-row label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1b2d55;
+}
+
+.participant-counter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.participant-counter input {
+    width: 48px;
+    text-align: center;
+    border: 1px solid #c5d0e8;
+    border-radius: 6px;
+    font-size: 15px;
+    padding: 8px 0;
+    background: #eef4ff;
+    color: #0f2a57;
+}
+
+.category-search-cell--participants {
+    flex-basis: 10%;;
+}
+
+.category-search-cell .participant-summary > span {
+    width: 100%;
+    display: block;
+}
+
+
+/**********************************/
 
 .traveler-form-section.traveler-form-section--danger {
     margin: 28px 0;
