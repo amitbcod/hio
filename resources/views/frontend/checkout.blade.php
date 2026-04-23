@@ -1296,18 +1296,6 @@ label.saved-guest-checkbox {
             if (!container) return;
             container.innerHTML = '';
 
-            if (selfGuest) {
-                const exists = savedGuestsData.some(guest =>
-                    guest.first_name === selfGuest.first_name &&
-                    guest.last_name === selfGuest.last_name &&
-                    guest.dob === selfGuest.dob &&
-                    guest.nationality === selfGuest.nationality
-                );
-                if (!exists && selfGuest.first_name && selfGuest.last_name) {
-                    savedGuestsData.unshift(selfGuest);
-                }
-            }
-
             if (!savedGuestsData || savedGuestsData.length === 0) {
                 container.innerHTML = '<div class="form-hint">No saved guest profiles available.</div>';
                 return;
@@ -1353,6 +1341,9 @@ label.saved-guest-checkbox {
                 const name = document.createElement('div');
                 name.className = 'saved-guest-name';
                 name.textContent = `${guest.first_name || ''} ${guest.last_name || ''}`.trim();
+                if (guest.id === 'self' || guest.relation === 'self') {
+                    name.textContent += ' (You)';
+                }
 
                 const formattedDob = guest.dob ? (new Date(guest.dob).toLocaleDateString('en-GB') || guest.dob) : 'No DOB';
                 const details = document.createElement('div');
@@ -1478,19 +1469,6 @@ label.saved-guest-checkbox {
                     </div>
                 `;
                 container.appendChild(guestItem);
-
-                const select = guestItem.querySelector('.guest-time-slot-select');
-                if (select) {
-                    select.addEventListener('change', function () {
-                        const itemKey = this.dataset.item;
-                        const guestIndex = parseInt(this.dataset.index);
-                        if (additionalGuests[itemKey] && additionalGuests[itemKey][guestIndex]) {
-                            additionalGuests[itemKey][guestIndex].time_slot = this.value || null;
-                            saveGuestsToForm();
-                            renderItemGuestsList(itemKey, container);
-                        }
-                    });
-                }
             });
 
             // Attach event listeners using delegation
@@ -1680,26 +1658,45 @@ label.saved-guest-checkbox {
                 guestsContainer.style.display = 'none';
 
                 const timeSlotsByItem = {};
+                
+                // Get primary guest data from form
+                const primaryGuestData = {
+                    relation: document.getElementById('guests_0_relation')?.value || 'self',
+                    gender: document.getElementById('guests_0_gender')?.value || '',
+                    first_name: document.getElementById('guests_0_first_name')?.value || '',
+                    middle_name: document.getElementById('guests_0_middle_name')?.value || '',
+                    last_name: document.getElementById('guests_0_last_name')?.value || '',
+                    dob: document.getElementById('guests_0_dob')?.value || '',
+                    nationality: document.getElementById('guests_0_nationality')?.value || '',
+                    passport_number: document.getElementById('guests_0_passport_number')?.value || '',
+                    notes: document.getElementById('guests_0_notes')?.value || '',
+                };
 
                 // Add per item guests
                 Object.keys(additionalGuests).forEach(itemKey => {
+                    const item = cartItems[itemKey];
+                    let itemGuestIndex = 0;
+                    
+                    // Add additional guests for this item
                     additionalGuests[itemKey].forEach((guest, index) => {
-                        Object.keys(guest).forEach(key => {
-                            if (key !== 'below_12' && key !== 'time_slot') {
-                                const input = document.createElement('input');
-                                input.type = 'hidden';
-                                input.name = `guests[${itemKey}][${index}][${key}]`;
-                                input.value = guest[key];
-                                guestsContainer.appendChild(input);
-                            }
-                        });
-                        
-                        // Collect time slots separately for activities
-                        if (guest.time_slot) {
+                        if (typeof guest === 'object' && guest !== null) {
+                            const guestIndex = itemGuestIndex + index + 1;
+                            
+                            Object.keys(guest).forEach(key => {
+                                if (key !== 'below_12' && key !== 'time_slot' && key !== '_primary_guest_time_slot') {
+                                    const input = document.createElement('input');
+                                    input.type = 'hidden';
+                                    input.name = `guests[${itemKey}][${guestIndex}][${key}]`;
+                                    input.value = guest[key];
+                                    guestsContainer.appendChild(input);
+                                }
+                            });
+                            
+                            // Collect time slots separately for activities (include ALL guests)
                             if (!timeSlotsByItem[itemKey]) {
                                 timeSlotsByItem[itemKey] = {};
                             }
-                            timeSlotsByItem[itemKey][index] = guest.time_slot;
+                            timeSlotsByItem[itemKey][guestIndex] = guest.time_slot || '';
                         }
                     });
                 });
@@ -1868,6 +1865,23 @@ label.saved-guest-checkbox {
                 const item = this.dataset.item;
                 addSavedGuestsToItem(item);
             });
+        });
+
+        // Global event delegation for timeslot changes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('guest-time-slot-select')) {
+                const itemKey = e.target.dataset.item;
+                const guestIndex = parseInt(e.target.dataset.index);
+                
+                if (additionalGuests[itemKey] && additionalGuests[itemKey][guestIndex]) {
+                    additionalGuests[itemKey][guestIndex].time_slot = e.target.value || null;
+                    saveGuestsToForm();
+                    const container = document.getElementById('item-guests-' + itemKey);
+                    if (container) {
+                        renderItemGuestsList(itemKey, container);
+                    }
+                }
+            }
         });
 
     });

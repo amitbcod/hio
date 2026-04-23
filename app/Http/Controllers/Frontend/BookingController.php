@@ -277,6 +277,39 @@ class BookingController extends Controller
 
         $travelerDOB = $travelerProfile?->date_of_birth ? $travelerProfile->date_of_birth->format('Y-m-d') : null;
 
+        if ($traveler) {
+            $selfFirstName = $travelerProfile?->first_name ?: null;
+            $selfLastName = $travelerProfile?->last_name ?: null;
+
+            if (!$selfFirstName && $traveler?->full_name) {
+                $nameParts = preg_split('/\s+/', trim($traveler->full_name), 2);
+                $selfFirstName = $nameParts[0] ?? null;
+                $selfLastName = $nameParts[1] ?? null;
+            }
+
+            $selfExists = $savedGuests->contains(function ($guest) use ($selfFirstName, $selfLastName, $travelerDOB) {
+                return trim((string) $guest->first_name) === trim((string) $selfFirstName)
+                    && trim((string) $guest->last_name) === trim((string) $selfLastName)
+                    && optional($guest->dob)?->format('Y-m-d') === $travelerDOB;
+            });
+
+            if (!$selfExists) {
+                $selfGuest = new SavedGuest();
+                $selfGuest->id = 'self';
+                $selfGuest->relation = 'self';
+                $selfGuest->gender = $travelerProfile?->gender;
+                $selfGuest->first_name = $selfFirstName;
+                $selfGuest->middle_name = $travelerProfile?->middle_name;
+                $selfGuest->last_name = $selfLastName;
+                $selfGuest->dob = $travelerDOB;
+                $selfGuest->nationality = $travelerProfile?->nationality;
+                $selfGuest->passport_number = $travelerProfile?->passport_number;
+                $selfGuest->notes = 'This is your traveler profile.';
+
+                $savedGuests->prepend($selfGuest);
+            }
+        }
+
         $guestDefaults = [
             'guest_name' => old('guest_name') ?: ($traveler?->full_name ?: ($travelerProfile ? trim($travelerProfile->first_name . ' ' . ($travelerProfile->middle_name ?? '') . ' ' . $travelerProfile->last_name) : null)),
             'guest_email' => old('guest_email') ?: ($traveler?->email ?? null),
@@ -645,7 +678,7 @@ class BookingController extends Controller
                     'traveler_notes' => $primaryGuest['notes'] ?? null,
                     'guest_email'       => $guestEmail,
                     'guest_phone'       => $guestPhone,
-                    'activity_date'     => $item['check_in'],
+                    'activity_date'     => $item['check_in'] ?? now()->toDateString(),
                     'adults'            => $item['adults'],
                     'children'          => $item['children'],
                     'booking_status'    => 'Pending',
