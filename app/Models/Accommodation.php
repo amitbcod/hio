@@ -30,6 +30,8 @@ class Accommodation extends Model
         'submitted_for_approval_at' => 'datetime',
         'approved_at' => 'datetime',
         'published_at' => 'datetime',
+        'tourism_permit_expiration' => 'date',
+        'insurance_expiration' => 'date',
     ];
     
     const CREATED_AT = 'created_at';
@@ -179,10 +181,10 @@ class Accommodation extends Model
             'step5_rates',
             'step6_policies',
             'step7_compliance',
-            'step8_communication',
-            'step9_availability',
-            'step10_banking',
-            'step11_agents',
+            'step8_rates',
+            'step9_pricing',
+            'step10_inventory_allotment',
+            'step11_promotions_offers',
             'step12_review',
         ];
         

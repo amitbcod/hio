@@ -1,0 +1,17 @@
+$acc = \App\Models\Accommodation::find(1);
+echo "Accommodation ID: " . $acc->id . "\n";
+echo "Property: " . $acc->property_name . "\n";
+echo "Completion: " . $acc->getCompletionPercentage() . "%\n\n";
+echo "Step Status:\n";
+echo "step1_basics: " . $acc->step1_basics . "\n";
+echo "step2_legal: " . $acc->step2_legal . "\n";
+echo "step3_media: " . $acc->step3_media . "\n";
+echo "step4_rooms: " . $acc->step4_rooms . "\n";
+echo "step5_rates: " . $acc->step5_rates . "\n";
+echo "step6_policies: " . $acc->step6_policies . "\n";
+echo "step7_compliance: " . $acc->step7_compliance . "\n";
+echo "step8_communication: " . ($acc->step8_communication ?? 'NULL') . "\n";
+echo "step9_availability: " . ($acc->step9_availability ?? 'NULL') . "\n";
+echo "step10_banking: " . ($acc->step10_banking ?? 'NULL') . "\n";
+echo "step11_agents: " . ($acc->step11_agents ?? 'NULL') . "\n";
+echo "step12_review: " . $acc->step12_review . "\n";

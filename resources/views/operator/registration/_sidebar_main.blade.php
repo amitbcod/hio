@@ -220,4 +220,3 @@
         </ul>
     @endif
 </div>
-php artisan migrate  # Run migrations
