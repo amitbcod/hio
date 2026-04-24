@@ -408,8 +408,26 @@ button.btn.btn-sm.btn-danger {
 .media-fixed h2 {
     font-weight: bold !important;
 }
+
+   .step-3-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+ 
+.step-3-form .col-md-6.mb-4 {
+    width: 100%;
+}
+ 
+.step-3-form .col-md-6.mb-4 {
+    width: 100%;
+    border: 1px solid #efecec;
+    padding: 20px;
+ 
+}
+ 
 .form-card input[type="file"] {
-  /* width: 100%; */
+  width: 100%;
   border: 1px solid #ccc;
   background: #f5f6fa;
   padding: 0px;
@@ -417,7 +435,7 @@ button.btn.btn-sm.btn-danger {
   font-size: 14px;
   cursor: pointer;
 }
-
+ 
 /* Style the button part */
 .form-card input[type="file"]::file-selector-button {
   background: #e4e4ec;
@@ -428,12 +446,11 @@ button.btn.btn-sm.btn-danger {
   cursor: pointer;
   font-weight: 500;
 }
-
+ 
 /* Hover effect */
 .form-card input[type="file"]::file-selector-button:hover {
   background: #d6d6df;
-}
-
+} 
 
 
 @media (min-width: 1200px) {

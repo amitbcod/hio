@@ -24,23 +24,23 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('operator.accommodation.saveStep3', $accommodation->id) }}" enctype="multipart/form-data" class="form-card">
+                    <form method="POST" action="{{ route('operator.accommodation.saveStep3', $accommodation->id) }}" enctype="multipart/form-data">
                         @csrf
-
-                        <div class="mb-4">
+ <div class="step-3-form form-card">
+                        <div class="col-md-6 mb-4">
                             <label style="font-weight: 600; display:block; margin-bottom:8px;">Hero / Banner Image (Primary)</label>
                             <input type="file" name="hero_image" accept="image/*" required>
                             <small style="color:#999; display:block; margin-top:6px;">Mandatory. Will be reviewed before publishing.</small>
                         </div>
 
-                        <div class="mb-4">
+                        <div class="col-md-6 mb-4">
                             <label style="font-weight: 600; display:block; margin-bottom:8px;">Gallery Images (min 6)</label>
                             <input type="file" name="gallery[]" accept="image/*" multiple required>
                             <small style="color:#999; display:block; margin-top:6px;">Please upload at least 6 images for the property gallery.</small>
                         </div>
 
                         @if($rooms && $rooms->count())
-                            <div class="mb-4">
+                            <div class="col-md-6 mb-4">
                                 <h5 style="font-weight:600;">Room Category Images</h5>
                                 <p style="color:#666;">Upload at least one image per room category.</p>
                                 @foreach($rooms as $room)
@@ -52,17 +52,18 @@
                             </div>
                         @endif
 
-                        <div class="mb-4">
+                        <div class="col-md-6 mb-4">
                             <label style="font-weight: 600; display:block; margin-bottom:8px;">Logo (Optional)</label>
                             <input type="file" name="logo" accept="image/*">
                             <small style="color:#999; display:block; margin-top:6px;">Optional. Recommended size: 300x300px.</small>
                         </div>
 
-                        <div class="mb-4">
+                        <div class="col-md-6 mb-4">
                             <label style="font-weight: 600; display:block; margin-bottom:8px;">Video (Optional)</label>
                             <input type="file" name="video_file" accept="video/*">
                             <small style="color:#999; display:block; margin-top:6px;">Optional. Upload a short promo video. Will be reviewed before publishing.</small>
                         </div>
+</div>
 
                         <div style="display:flex; justify-content:flex-end; gap:8px;">
                             <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" class="btn" style="background:#f0f0f0; color:#333; padding:8px 14px; border-radius:4px;">← Back</a>
