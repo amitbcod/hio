@@ -51,11 +51,12 @@
                             @php
                                 $isAccom = $item['type'] === 'accommodation';
                                 $nights  = (int) ($item['nights'] ?? 1);
+                                $rooms   = (int) ($item['rooms'] ?? 1);
                                 $label   = $isAccom
-                                    ? ($nights . ' Night' . ($nights !== 1 ? 's' : '') . ' · ' . $item['room_name'])
+                                    ? ($rooms . ' Room' . ($rooms !== 1 ? 's' : '') . ' · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '') . ' · ' . $item['room_name'])
                                     : ('Activity · ' . ($item['variant_name'] ?: 'Standard'));
                                 $subLabel = $isAccom
-                                    ? ($item['adults'] . ' Adults' . ($item['children'] > 0 ? ', ' . $item['children'] . ' Children' : '') . ' · 1× ' . $item['room_name'])
+                                    ? ($item['adults'] . ' Adults' . ($item['children'] > 0 ? ', ' . $item['children'] . ' Children' : '') . ' · ' . $rooms . '× ' . $item['room_name'])
                                     : ($item['adults'] . ' Adults' . ($item['children'] > 0 ? ', ' . $item['children'] . ' Children' : ''));
                             @endphp
 
@@ -166,8 +167,9 @@
                                 @foreach($cart as $item)
                                     @php
                                         $nights = (int) ($item['nights'] ?? 1);
+                                        $rooms  = (int) ($item['rooms'] ?? 1);
                                         $label  = $item['type'] === 'accommodation'
-                                            ? '1 Room · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '')
+                                            ? $rooms . ' Room' . ($rooms !== 1 ? 's' : '') . ' · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '')
                                             : 'Activity: ' . ($item['variant_name'] ?: $item['title']);
                                     @endphp
                                     <div class="fare-row">

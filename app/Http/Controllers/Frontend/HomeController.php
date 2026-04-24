@@ -1523,6 +1523,17 @@ class HomeController extends Controller
             });
         }
 
+        if ($category === 'accommodation' && $filters['rooms'] > 1) {
+            $requestedRooms = $filters['rooms'];
+            $items = $items->filter(function (array $item) use ($requestedRooms) {
+                $availableRooms = isset($item['available_rooms_count']) ? (int) $item['available_rooms_count'] : null;
+                if ($availableRooms === null) {
+                    return true; // no date-based availability information available
+                }
+                return $availableRooms >= $requestedRooms;
+            });
+        }
+
         return $items->values();
     }
 

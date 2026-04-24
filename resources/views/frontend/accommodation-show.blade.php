@@ -208,6 +208,7 @@
                                             <input type="hidden" name="nights" value="{{ $nights }}">
                                             <input type="hidden" name="adults" value="{{ $booking['adults'] }}">
                                             <input type="hidden" name="children" value="{{ $booking['children'] }}">
+                                            <input type="hidden" name="rooms" value="{{ request()->query('rooms', 1) }}">
                                             <input type="hidden" name="nightly_price" value="{{ $room['nightly_price'] ?? $room['total_price'] }}">
                                             <input type="hidden" name="total_price" value="{{ $room['total_price'] }}">
                                             <input type="hidden" name="currency" value="{{ $room['currency'] }}">

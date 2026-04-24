@@ -63,6 +63,7 @@ class BookingController extends Controller
         $totalPrice      = (float) $request->input('total_price', 0);
         $currency        = $request->input('currency', 'USD');
         $roomName        = $request->input('room_name', 'Standard Room');
+        $rooms           = max(1, (int) $request->input('rooms', 1));
         $nights          = max(1, (int) $request->input('nights', 1));
         $image           = $request->input('image', '');
         $title           = $request->input('title', '');
@@ -129,6 +130,7 @@ class BookingController extends Controller
             'tax_amount'       => $taxAmount,
             'fee_amount'       => $feeAmount,
             'net_amount'       => $netAmount,
+            'rooms'            => $rooms,
             'promotion_id'     => $promotionId,
             'is_non_refundable'=> $isNonRefundable,
         ];
@@ -139,7 +141,8 @@ class BookingController extends Controller
         $activityId  = (int) $request->input('activity_id');
         $variantId   = $request->input('variant_id') ? (int) $request->input('variant_id') : null;
         $variantName = $request->input('variant_name', '');
-        $checkIn     = $request->input('check_in');   // activity date
+        $checkIn     = $request->input('check_in') ?: $request->input('activity_date');   // activity date
+        $checkOut    = $request->input('check_out') ?: $checkIn;
         $adults      = max(1, (int) $request->input('adults', 2));
         $children    = max(0, (int) $request->input('children', 0));
         $totalPrice  = (float) $request->input('total_price', 0);
@@ -276,6 +279,39 @@ class BookingController extends Controller
         $savedGuests = $traveler ? SavedGuest::where('user_id', $traveler->id)->get() : collect();
 
         $travelerDOB = $travelerProfile?->date_of_birth ? $travelerProfile->date_of_birth->format('Y-m-d') : null;
+
+        if ($traveler) {
+            $selfFirstName = $travelerProfile?->first_name ?: null;
+            $selfLastName = $travelerProfile?->last_name ?: null;
+
+            if (!$selfFirstName && $traveler?->full_name) {
+                $nameParts = preg_split('/\s+/', trim($traveler->full_name), 2);
+                $selfFirstName = $nameParts[0] ?? null;
+                $selfLastName = $nameParts[1] ?? null;
+            }
+
+            $selfExists = $savedGuests->contains(function ($guest) use ($selfFirstName, $selfLastName, $travelerDOB) {
+                return trim((string) $guest->first_name) === trim((string) $selfFirstName)
+                    && trim((string) $guest->last_name) === trim((string) $selfLastName)
+                    && optional($guest->dob)?->format('Y-m-d') === $travelerDOB;
+            });
+
+            if (!$selfExists) {
+                $selfGuest = new SavedGuest();
+                $selfGuest->id = 'self';
+                $selfGuest->relation = 'self';
+                $selfGuest->gender = $travelerProfile?->gender;
+                $selfGuest->first_name = $selfFirstName;
+                $selfGuest->middle_name = $travelerProfile?->middle_name;
+                $selfGuest->last_name = $selfLastName;
+                $selfGuest->dob = $travelerDOB;
+                $selfGuest->nationality = $travelerProfile?->nationality;
+                $selfGuest->passport_number = $travelerProfile?->passport_number;
+                $selfGuest->notes = 'This is your traveler profile.';
+
+                $savedGuests->prepend($selfGuest);
+            }
+        }
 
         $guestDefaults = [
             'guest_name' => old('guest_name') ?: ($traveler?->full_name ?: ($travelerProfile ? trim($travelerProfile->first_name . ' ' . ($travelerProfile->middle_name ?? '') . ' ' . $travelerProfile->last_name) : null)),
@@ -645,7 +681,7 @@ class BookingController extends Controller
                     'traveler_notes' => $primaryGuest['notes'] ?? null,
                     'guest_email'       => $guestEmail,
                     'guest_phone'       => $guestPhone,
-                    'activity_date'     => $item['check_in'],
+                    'activity_date'     => $item['check_in'] ?? now()->toDateString(),
                     'adults'            => $item['adults'],
                     'children'          => $item['children'],
                     'booking_status'    => 'Pending',
@@ -696,13 +732,15 @@ class BookingController extends Controller
                     ]);
 
                     // Create BookingLineItem
+                    $bliStartDate = $item['check_in'] ?? $item['activity_date'] ?? null;
                     $bli = BookingLineItem::create([
                         'booking_id' => $tripBooking->id,
                         'service_type' => 'activity',
                         'service_id' => $item['activity_id'],
                         'quantity' => $item['adults'] + $item['children'],
                         'price' => $item['net_amount'],
-                        'start_date' => $item['check_in'],
+                        'start_date' => $bliStartDate,
+                        'end_date' => $bliStartDate,
                         'status' => 'active',
                     ]);
 
