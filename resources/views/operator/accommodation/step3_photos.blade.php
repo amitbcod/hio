@@ -24,7 +24,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('operator.accommodation.saveStep3', $accommodation->id) }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('operator.accommodation.saveStep3', $accommodation->id) }}" enctype="multipart/form-data" class="form-card">
                         @csrf
 
                         <div class="mb-4">
