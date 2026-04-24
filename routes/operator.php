@@ -75,6 +75,7 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::post('accommodation/{id}/step2-reservation', [AccommodationController::class, 'saveStep2'])->name('accommodation.saveStep2');
         Route::get('accommodation/{id}/step3-photos', [AccommodationController::class, 'step3Photos'])->name('accommodation.step3.show');
         Route::post('accommodation/{id}/step3-photos', [AccommodationController::class, 'saveStep3Photos'])->name('accommodation.saveStep3');
+        Route::post('accommodation/{id}/media/{mediaId}/delete', [AccommodationController::class, 'deleteMedia'])->name('accommodation.media.delete');
         Route::get('accommodation/{id}/step4-compliance', [AccommodationController::class, 'step4Compliance'])->name('accommodation.step4.show');
         Route::post('accommodation/{id}/step4-compliance', [AccommodationController::class, 'saveStep4Compliance'])->name('accommodation.saveStep4');
         Route::get('accommodation/{id}/step5-accounting', [AccommodationController::class, 'step5Accounting'])->name('accommodation.step5.show');

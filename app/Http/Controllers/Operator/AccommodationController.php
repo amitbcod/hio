@@ -336,8 +336,9 @@ class AccommodationController extends Controller
         }
 
         $rooms = $accommodation->rooms()->get();
+        $media = $accommodation->media()->orderBy('created_at', 'desc')->get();
 
-        return view('operator.accommodation.step3_photos', compact('accommodation', 'operator', 'rooms'));
+        return view('operator.accommodation.step3_photos', compact('accommodation', 'operator', 'rooms', 'media'));
     }
 
     /**
@@ -353,29 +354,37 @@ class AccommodationController extends Controller
             abort(403);
         }
 
+        $heroMedia = $accommodation->media()->where('media_type', 'hero')->first();
+        $existingGalleryCount = $accommodation->media()->where('media_type', 'gallery')->count();
+        $existingRoomMedia = $accommodation->media()->where('media_type', 'room')->get()->groupBy('room_id');
+
         // Basic validation
         $request->validate([
-            'hero_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
-            'gallery.*' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'hero_image' => $heroMedia ? 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120' : 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'gallery.*' => 'sometimes|image|mimes:jpg,jpeg,png,webp|max:5120',
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:5120',
             'video_file' => 'nullable|mimetypes:video/mp4,video/quicktime,video/x-msvideo|max:102400',
         ]);
 
-        // Gallery min count
+        // Gallery min count including existing images
         $galleryFiles = $request->file('gallery', []);
-        if (count($galleryFiles) < 6) {
-            return redirect()->back()->withErrors(['gallery' => 'Please upload at least 6 gallery images.'])->withInput();
+        if (!is_array($galleryFiles)) {
+            $galleryFiles = [];
         }
 
-        // Validate room galleries: if rooms exist, ensure at least one file per room
+        if ($existingGalleryCount + count($galleryFiles) < 6) {
+            return redirect()->back()->withErrors(['gallery' => 'Please upload at least 6 gallery images in total.'])->withInput();
+        }
+
+        // Validate room galleries: optional, accept whatever is provided
+        // Room images are optional and can be added/updated at any time
         $rooms = $accommodation->rooms()->get();
         foreach ($rooms as $room) {
             $files = $request->file('room_gallery.' . $room->id, []);
-            if (is_array($files) && count($files) > 0) {
-                // ok
-            } else {
-                return redirect()->back()->withErrors(['room_gallery' => "Please add at least one image for room: {$room->name}"])->withInput();
+            if (!is_array($files)) {
+                $files = [];
             }
+            // Just process the files without requiring a minimum - let user add room images as needed
         }
 
         // Handle uploads
@@ -465,6 +474,36 @@ class AccommodationController extends Controller
     }
 
     /**
+     * Delete media item
+     */
+    public function deleteMedia($id, $mediaId)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            abort(403);
+        }
+
+        $media = AccommodationMedia::where('id', $mediaId)
+            ->where('accommodation_id', $accommodation->id)
+            ->firstOrFail();
+
+        // Delete file from storage
+        $storagePath = storage_path('app/public/' . $media->path);
+        if (file_exists($storagePath)) {
+            unlink($storagePath);
+        }
+
+        // Delete media record
+        $media->delete();
+
+        return redirect()->route('operator.accommodation.step3.show', $accommodation->id)
+            ->with('success', 'Media deleted successfully!');
+    }
+
+    /**
      * Show Step 4: Compliance & Legal
      */
     public function step4Compliance($id)
@@ -487,7 +526,13 @@ class AccommodationController extends Controller
                 ->with('error', 'Please complete Step 2 first.');
         }
 
-        return view('operator.accommodation.step4_compliance', compact('accommodation', 'operator'));
+        // Get compliance documents
+        $complianceDocs = $accommodation->media()
+            ->whereIn('media_type', ['compliance_permit', 'compliance_insurance', 'compliance_fire', 'compliance_health', 'compliance_other'])
+            ->get()
+            ->groupBy('media_type');
+
+        return view('operator.accommodation.step4_compliance', compact('accommodation', 'operator', 'complianceDocs'));
     }
 
     /**

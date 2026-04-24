@@ -227,7 +227,7 @@
                                             </div>
                                             <div style="flex: 1;">
                                                 <h6 style="font-weight: 600; margin-bottom: 4px;">Step 8: Rate Plans</h6>
-                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Define meal plans, pricing per room/person</p>
+                                                <p style="margin-bottom: 0; font-size: 12px; color: #666;">Define meal plans and pricing</p>
                                             </div>
                                         </div>
                                         @if($accommodation->step1_basics && $accommodation->step4_rooms)
@@ -382,9 +382,9 @@
                                 ← Back to Properties
                             </a>
                             @if($accommodation->getCompletionPercentage() < 100)
-                                <button type="button" class="btn" style="background: #19b5b5; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; font-weight: 600;">
+                                <!-- <button type="button" class="btn" style="background: #19b5b5; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; font-weight: 600;">
                                     Continue Setup
-                                </button>
+                                </button> -->
                             @else
                                 <button type="button" class="btn" style="background: #28a745; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; font-weight: 600;">
                                     ✓ Ready to Publish

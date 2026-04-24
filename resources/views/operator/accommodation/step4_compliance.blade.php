@@ -78,29 +78,99 @@
 
                                 <div class="mb-3">
                                     <label style="font-weight:600;">Tourism Accommodation Permit (file)</label>
-                                    <input type="file" name="tourism_permit_file" accept="application/pdf,image/*">
-                                    <small style="color:#666;display:block">Optional except when MPO has property admin agreement.</small>
+                                    <div style="display:flex;align-items:flex-start;gap:12px;">
+                                        <div style="flex:1;">
+                                            <input type="file" name="tourism_permit_file" accept="application/pdf,image/*">
+                                            <small style="color:#666;display:block;margin-top:4px;">Optional except when MPO has property admin agreement.</small>
+                                        </div>
+                                        @if(isset($complianceDocs['compliance_permit']) && $complianceDocs['compliance_permit']->count() > 0)
+                                            <div style="padding-top:8px;">
+                                                @foreach($complianceDocs['compliance_permit'] as $doc)
+                                                    <a href="{{ asset('storage/' . $doc->path) }}" target="_blank" style="color:#19b5b5;text-decoration:none;font-weight:600;display:flex;align-items:center;gap:6px;">
+                                                        <span style="font-size:18px;">📄</span>{{ $doc->original_name }}
+                                                    </a>
+                                                    <small style="color:#999;display:block;">Uploaded: {{ $doc->created_at->format('M d, Y') }}</small>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
                                     <label style="font-weight:600;">Public Liability Insurance (file)</label>
-                                    <input type="file" name="insurance_file" accept="application/pdf,image/*">
-                                    <small style="color:#666;display:block">Optional except when MPO has property admin agreement.</small>
+                                    <div style="display:flex;align-items:flex-start;gap:12px;">
+                                        <div style="flex:1;">
+                                            <input type="file" name="insurance_file" accept="application/pdf,image/*">
+                                            <small style="color:#666;display:block;margin-top:4px;">Optional except when MPO has property admin agreement.</small>
+                                        </div>
+                                        @if(isset($complianceDocs['compliance_insurance']) && $complianceDocs['compliance_insurance']->count() > 0)
+                                            <div style="padding-top:8px;">
+                                                @foreach($complianceDocs['compliance_insurance'] as $doc)
+                                                    <a href="{{ asset('storage/' . $doc->path) }}" target="_blank" style="color:#19b5b5;text-decoration:none;font-weight:600;display:flex;align-items:center;gap:6px;">
+                                                        <span style="font-size:18px;">📄</span>{{ $doc->original_name }}
+                                                    </a>
+                                                    <small style="color:#999;display:block;">Uploaded: {{ $doc->created_at->format('M d, Y') }}</small>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
                                     <label style="font-weight:600;">Fire Safety Certificate</label>
-                                    <input type="file" name="fire_safety_file" accept="application/pdf,image/*">
+                                    <div style="display:flex;align-items:flex-start;gap:12px;">
+                                        <div style="flex:1;">
+                                            <input type="file" name="fire_safety_file" accept="application/pdf,image/*">
+                                        </div>
+                                        @if(isset($complianceDocs['compliance_fire']) && $complianceDocs['compliance_fire']->count() > 0)
+                                            <div style="padding-top:8px;">
+                                                @foreach($complianceDocs['compliance_fire'] as $doc)
+                                                    <a href="{{ asset('storage/' . $doc->path) }}" target="_blank" style="color:#19b5b5;text-decoration:none;font-weight:600;display:flex;align-items:center;gap:6px;">
+                                                        <span style="font-size:18px;">📄</span>{{ $doc->original_name }}
+                                                    </a>
+                                                    <small style="color:#999;display:block;">Uploaded: {{ $doc->created_at->format('M d, Y') }}</small>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
                                     <label style="font-weight:600;">Health and Sanitation Certificate</label>
-                                    <input type="file" name="health_file" accept="application/pdf,image/*">
+                                    <div style="display:flex;align-items:flex-start;gap:12px;">
+                                        <div style="flex:1;">
+                                            <input type="file" name="health_file" accept="application/pdf,image/*">
+                                        </div>
+                                        @if(isset($complianceDocs['compliance_health']) && $complianceDocs['compliance_health']->count() > 0)
+                                            <div style="padding-top:8px;">
+                                                @foreach($complianceDocs['compliance_health'] as $doc)
+                                                    <a href="{{ asset('storage/' . $doc->path) }}" target="_blank" style="color:#19b5b5;text-decoration:none;font-weight:600;display:flex;align-items:center;gap:6px;">
+                                                        <span style="font-size:18px;">📄</span>{{ $doc->original_name }}
+                                                    </a>
+                                                    <small style="color:#999;display:block;">Uploaded: {{ $doc->created_at->format('M d, Y') }}</small>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
                                     <label style="font-weight:600;">Other Compliance Documents</label>
-                                    <input type="file" name="other_docs[]" accept="application/pdf,image/*" multiple>
+                                    <div style="display:flex;align-items:flex-start;gap:12px;">
+                                        <div style="flex:1;">
+                                            <input type="file" name="other_docs[]" accept="application/pdf,image/*" multiple>
+                                        </div>
+                                        @if(isset($complianceDocs['compliance_other']) && $complianceDocs['compliance_other']->count() > 0)
+                                            <div style="padding-top:8px;">
+                                                @foreach($complianceDocs['compliance_other'] as $doc)
+                                                    <a href="{{ asset('storage/' . $doc->path) }}" target="_blank" style="color:#19b5b5;text-decoration:none;font-weight:600;display:flex;align-items:center;gap:6px;">
+                                                        <span style="font-size:18px;">📄</span>{{ $doc->original_name }}
+                                                    </a>
+                                                    <small style="color:#999;display:block;">Uploaded: {{ $doc->created_at->format('M d, Y') }}</small>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
