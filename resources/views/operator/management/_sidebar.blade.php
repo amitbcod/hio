@@ -13,6 +13,12 @@
           + Add New Property
         </a>
     </li>
+    <li style="padding: 8px 36px;">
+        <a href="{{ route('operator.accommodation.bookings') }}"
+           style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
+           Accommodation Bookings
+        </a>
+    </li>
 </ul>
 
 
@@ -30,6 +36,12 @@
         <a href="{{ route('operator.activity.create') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
            + Add New Activity
+        </a>
+    </li>
+    <li style="padding: 8px 36px;">
+        <a href="{{ route('operator.activity.bookings') }}"
+           style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
+           Activity Bookings
         </a>
     </li>
 </ul>

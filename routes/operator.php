@@ -133,6 +133,11 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::get('activity', [ActivityController::class, 'index'])->name('activity.index');
         Route::get('activity/create', [ActivityController::class, 'create'])->name('activity.create');
         Route::post('activity', [ActivityController::class, 'store'])->name('activity.store');
+
+        // Activity Bookings
+        Route::get('activity/bookings', [ActivityController::class, 'bookingList'])->name('activity.bookings');
+        Route::get('activity/bookings/{booking}', [ActivityController::class, 'bookingDetails'])->name('activity.booking.details');
+
         Route::get('activity/{id}', [ActivityController::class, 'show'])->name('activity.show');
         
         // Activity Step 1: Basic Information

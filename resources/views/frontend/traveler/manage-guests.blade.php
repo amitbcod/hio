@@ -365,7 +365,7 @@
                 
                 <div class="form-group" style="margin-top: 15px;">
                     <label for="modal_time_slot">Activity Time Slot <span class="req">*</span></label>
-                    <select id="modal_time_slot" name="time_slot" class="form-input">
+                    <select id="modal_time_slot" name="time_slot" class="form-input" required>
                         <option value="">Select time slot</option>
                         @foreach($activityTimeSlots as $slot)
                             <option value="{{ $slot->timeslot_id }}">{{ $slot->start_time }} - {{ $slot->end_time }}</option>

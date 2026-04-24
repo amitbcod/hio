@@ -2441,4 +2441,44 @@ class ActivityController extends Controller
             return back()->with('error', 'Failed to submit for approval: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Show booking listing for operator's activities
+     */
+    public function bookingList(Request $request)
+    {
+        $operator = auth()->user();
+
+        // Get all activities for this operator
+        $activityIds = \App\Models\Activity::where('operator_id', $operator->id)
+            ->pluck('id');
+
+        // Get bookings for these activities
+        $bookings = \App\Models\ActivityBooking::whereIn('activity_id', $activityIds)
+            ->with(['activity', 'guests'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('operator.activity.booking_list', compact('bookings'));
+    }
+
+    /**
+     * Show booking details for a specific booking
+     */
+    public function bookingDetails($bookingId)
+    {
+        $operator = auth()->user();
+
+        // Get all activities for this operator
+        $activityIds = \App\Models\Activity::where('operator_id', $operator->id)
+            ->pluck('id');
+
+        // Get the booking with relationships
+        $booking = \App\Models\ActivityBooking::whereIn('activity_id', $activityIds)
+            ->where('id', $bookingId)
+            ->with(['activity', 'guests'])
+            ->firstOrFail();
+
+        return view('operator.activity.booking_details', compact('booking'));
+    }
 }
