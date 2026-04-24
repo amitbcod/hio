@@ -2085,12 +2085,6 @@ label.saved-guest-checkbox {
 
 
 
-
-
-
-
-
-
 @media (max-width:767px) {
     .category-input-group-inner {
         flex-direction: column;
@@ -2106,7 +2100,7 @@ label.saved-guest-checkbox {
         padding: 0;
         box-sizing: border-box;
         border: 5px solid #fff;
-    }
+    } 
 
     .home-main-search {
         border: 0;
