@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\SavedGuest;
 use App\Models\Trip;
+use App\Models\ActivityBooking;
+use App\Models\AccommodationBooking;
 use Illuminate\Http\Request;
 
 class TripController extends Controller
@@ -12,7 +14,54 @@ class TripController extends Controller
     public function index()
     {
         $traveler = auth('traveler')->user();
-        $trips = Trip::where('traveler_account_id', $traveler->id)->with('bookings.lineItems')->orderBy('created_at', 'desc')->get();
+        $trips = Trip::where('traveler_account_id', $traveler->id)
+            ->with('bookings.lineItems')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $tripIds = $trips->pluck('id')->all();
+        $activityBookings = ActivityBooking::whereIn('trip_id', $tripIds)
+            ->get(['trip_id', 'activity_date'])
+            ->groupBy('trip_id');
+        $accommodationBookings = AccommodationBooking::whereIn('trip_id', $tripIds)
+            ->get(['trip_id', 'check_in_date', 'check_out_date'])
+            ->groupBy('trip_id');
+
+        foreach ($trips as $trip) {
+            $allDates = [];
+
+            foreach ($trip->bookings as $booking) {
+                foreach ($booking->lineItems as $lineItem) {
+                    if ($lineItem->start_date) {
+                        $allDates[] = $lineItem->start_date;
+                    }
+                    if ($lineItem->end_date) {
+                        $allDates[] = $lineItem->end_date;
+                    }
+                }
+            }
+
+            foreach ($activityBookings->get($trip->id, []) as $activityBooking) {
+                if ($activityBooking->activity_date) {
+                    $allDates[] = $activityBooking->activity_date;
+                }
+            }
+
+            foreach ($accommodationBookings->get($trip->id, []) as $accommodationBooking) {
+                if ($accommodationBooking->check_in_date) {
+                    $allDates[] = $accommodationBooking->check_in_date;
+                }
+                if ($accommodationBooking->check_out_date) {
+                    $allDates[] = $accommodationBooking->check_out_date;
+                }
+            }
+
+            if (!empty($allDates)) {
+                $trip->start_date = $trip->start_date ?: min($allDates);
+                $trip->end_date = $trip->end_date ?: max($allDates);
+            }
+        }
+
         return view('frontend.traveler.trips', compact('trips'));
     }
 

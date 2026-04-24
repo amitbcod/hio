@@ -250,9 +250,9 @@
                             @endif
                         </div>
                         <div class="guest-item-actions" style="display: flex; gap: 10px; align-items: center;">
-                            <button type="button" class="btn-edit-guest" data-index="{{ $index }}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #0066cc; padding: 0;">
+                            <!-- <button type="button" class="btn-edit-guest" data-index="{{ $index }}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #0066cc; padding: 0;">
                                 <i class="fa-solid fa-pencil"></i> Edit
-                            </button>
+                            </button> -->
                             @if ($booking instanceof \App\Models\ActivityBooking && isset($guest->id) && $canDownload)
                                 @php
                                     $hasTimeSlot = isset($booking->participant_time_slots[$guest->guest_number ?? ($index + 1)]) && !empty($booking->participant_time_slots[$guest->guest_number ?? ($index + 1)]);

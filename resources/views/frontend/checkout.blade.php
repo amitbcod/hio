@@ -603,8 +603,9 @@
                             @foreach($cart as $item)
                                 @php
                                     $nights = (int) ($item['nights'] ?? 1);
+                                    $rooms  = (int) ($item['rooms'] ?? 1);
                                     $lbl = $item['type'] === 'accommodation'
-                                        ? '1 Room · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '')
+                                        ? $rooms . ' Room' . ($rooms !== 1 ? 's' : '') . ' · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '')
                                         : 'Activity: ' . ($item['variant_name'] ?: $item['title']);
                                 @endphp
                                 <div class="fare-row">
@@ -1296,18 +1297,6 @@ label.saved-guest-checkbox {
             if (!container) return;
             container.innerHTML = '';
 
-            if (selfGuest) {
-                const exists = savedGuestsData.some(guest =>
-                    guest.first_name === selfGuest.first_name &&
-                    guest.last_name === selfGuest.last_name &&
-                    guest.dob === selfGuest.dob &&
-                    guest.nationality === selfGuest.nationality
-                );
-                if (!exists && selfGuest.first_name && selfGuest.last_name) {
-                    savedGuestsData.unshift(selfGuest);
-                }
-            }
-
             if (!savedGuestsData || savedGuestsData.length === 0) {
                 container.innerHTML = '<div class="form-hint">No saved guest profiles available.</div>';
                 return;
@@ -1353,6 +1342,9 @@ label.saved-guest-checkbox {
                 const name = document.createElement('div');
                 name.className = 'saved-guest-name';
                 name.textContent = `${guest.first_name || ''} ${guest.last_name || ''}`.trim();
+                if (guest.id === 'self' || guest.relation === 'self') {
+                    name.textContent += ' (You)';
+                }
 
                 const formattedDob = guest.dob ? (new Date(guest.dob).toLocaleDateString('en-GB') || guest.dob) : 'No DOB';
                 const details = document.createElement('div');
@@ -1478,19 +1470,6 @@ label.saved-guest-checkbox {
                     </div>
                 `;
                 container.appendChild(guestItem);
-
-                const select = guestItem.querySelector('.guest-time-slot-select');
-                if (select) {
-                    select.addEventListener('change', function () {
-                        const itemKey = this.dataset.item;
-                        const guestIndex = parseInt(this.dataset.index);
-                        if (additionalGuests[itemKey] && additionalGuests[itemKey][guestIndex]) {
-                            additionalGuests[itemKey][guestIndex].time_slot = this.value || null;
-                            saveGuestsToForm();
-                            renderItemGuestsList(itemKey, container);
-                        }
-                    });
-                }
             });
 
             // Attach event listeners using delegation
@@ -1680,26 +1659,45 @@ label.saved-guest-checkbox {
                 guestsContainer.style.display = 'none';
 
                 const timeSlotsByItem = {};
+                
+                // Get primary guest data from form
+                const primaryGuestData = {
+                    relation: document.getElementById('guests_0_relation')?.value || 'self',
+                    gender: document.getElementById('guests_0_gender')?.value || '',
+                    first_name: document.getElementById('guests_0_first_name')?.value || '',
+                    middle_name: document.getElementById('guests_0_middle_name')?.value || '',
+                    last_name: document.getElementById('guests_0_last_name')?.value || '',
+                    dob: document.getElementById('guests_0_dob')?.value || '',
+                    nationality: document.getElementById('guests_0_nationality')?.value || '',
+                    passport_number: document.getElementById('guests_0_passport_number')?.value || '',
+                    notes: document.getElementById('guests_0_notes')?.value || '',
+                };
 
                 // Add per item guests
                 Object.keys(additionalGuests).forEach(itemKey => {
+                    const item = cartItems[itemKey];
+                    let itemGuestIndex = 0;
+                    
+                    // Add additional guests for this item
                     additionalGuests[itemKey].forEach((guest, index) => {
-                        Object.keys(guest).forEach(key => {
-                            if (key !== 'below_12' && key !== 'time_slot') {
-                                const input = document.createElement('input');
-                                input.type = 'hidden';
-                                input.name = `guests[${itemKey}][${index}][${key}]`;
-                                input.value = guest[key];
-                                guestsContainer.appendChild(input);
-                            }
-                        });
-                        
-                        // Collect time slots separately for activities
-                        if (guest.time_slot) {
+                        if (typeof guest === 'object' && guest !== null) {
+                            const guestIndex = itemGuestIndex + index + 1;
+                            
+                            Object.keys(guest).forEach(key => {
+                                if (key !== 'below_12' && key !== 'time_slot' && key !== '_primary_guest_time_slot') {
+                                    const input = document.createElement('input');
+                                    input.type = 'hidden';
+                                    input.name = `guests[${itemKey}][${guestIndex}][${key}]`;
+                                    input.value = guest[key];
+                                    guestsContainer.appendChild(input);
+                                }
+                            });
+                            
+                            // Collect time slots separately for activities (include ALL guests)
                             if (!timeSlotsByItem[itemKey]) {
                                 timeSlotsByItem[itemKey] = {};
                             }
-                            timeSlotsByItem[itemKey][index] = guest.time_slot;
+                            timeSlotsByItem[itemKey][guestIndex] = guest.time_slot || '';
                         }
                     });
                 });
@@ -1792,27 +1790,94 @@ label.saved-guest-checkbox {
         renderSavedGuestsForItem('{{ $key }}');
         @endforeach
 
-        // Auto-fill DOB when "Self" is selected
-        const relationSelect = document.getElementById('guests_0_relation');
-        const dobInput = document.getElementById('guests_0_dob');
-        const travelerDOB = '{{ $guestDefaults["dob"] ?? "" }}';
+        // Handle Myself/Someone Else radio buttons and auto-fill
+        const myselfRadio = document.querySelector('input[name="guest_type"][value="myself"]');
+        const someoneElseRadio = document.querySelector('input[name="guest_type"][value="someone_else"]');
+        const relationSelectEl = document.getElementById('guests_0_relation');
+        const genderSelect = document.getElementById('guests_0_gender');
+        const firstNameInput = document.getElementById('guests_0_first_name');
+        const middleNameInput = document.getElementById('guests_0_middle_name');
+        const lastNameInput = document.getElementById('guests_0_last_name');
+        const dobInputEl = document.getElementById('guests_0_dob');
+        const nationalitySelect = document.getElementById('guests_0_nationality');
+        const passportInput = document.getElementById('guests_0_passport_number');
+        const notesTextarea = document.getElementById('guests_0_notes');
 
-        if (relationSelect && dobInput && travelerDOB) {
-            // Function to handle DOB auto-fill
-            function handleSelfSelection() {
-                if (relationSelect.value === 'self') {
-                    dobInput.value = travelerDOB;
-                } else {
-                    dobInput.value = '';
-                }
+        // Traveler data from PHP
+        const travelerData = {
+            first_name: '{{ $traveler?->profile->first_name ?? $traveler?->first_name ?? "" }}',
+            middle_name: '{{ $traveler?->profile->middle_name ?? "" }}',
+            last_name: '{{ $traveler?->profile->last_name ?? $traveler?->last_name ?? "" }}',
+            dob: '{{ $guestDefaults["dob"] ?? "" }}',
+            gender: '{{ $traveler?->profile->gender ?? "" }}',
+            nationality: '{{ $traveler?->profile->nationality ?? $traveler?->profile->country ?? "" }}',
+            passport_number: '{{ $traveler?->profile->passport_number ?? "" }}',
+        };
+
+        // Normalize traveler gender
+        travelerData.gender = normalizeBookingGender(travelerData.gender);
+
+        function ensureHiddenRelationInput(value) {
+            let hiddenInput = document.getElementById('guests_0_relation_hidden');
+            if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.id = 'guests_0_relation_hidden';
+                hiddenInput.name = 'guests[0][relation]';
+                relationSelectEl.parentNode?.insertBefore(hiddenInput, relationSelectEl.nextSibling);
             }
-
-            // Listen for changes
-            relationSelect.addEventListener('change', handleSelfSelection);
-
-            // Run on page load in case 'self' is already selected
-            handleSelfSelection();
+            hiddenInput.value = value;
         }
+
+        function removeHiddenRelationInput() {
+            const hiddenInput = document.getElementById('guests_0_relation_hidden');
+            if (hiddenInput) {
+                hiddenInput.remove();
+            }
+        }
+
+        function handleGuestTypeChange() {
+            if (myselfRadio && myselfRadio.checked) {
+                // Auto-fill for Myself
+                relationSelectEl.value = 'self';
+                relationSelectEl.disabled = true;
+                ensureHiddenRelationInput('self');
+                if (genderSelect) genderSelect.value = travelerData.gender || '';
+                if (firstNameInput) firstNameInput.value = travelerData.first_name || '';
+                if (middleNameInput) middleNameInput.value = travelerData.middle_name || '';
+                if (lastNameInput) lastNameInput.value = travelerData.last_name || '';
+                if (dobInputEl) dobInputEl.value = travelerData.dob || '';
+                if (nationalitySelect) nationalitySelect.value = travelerData.nationality || '';
+                if (passportInput) passportInput.value = travelerData.passport_number || '';
+                if (notesTextarea) notesTextarea.value = '';
+            } else {
+                // Enable for Someone Else
+                relationSelectEl.disabled = false;
+                removeHiddenRelationInput();
+            }
+        }
+
+        // Auto-fill DOB when relation is "self" (for Someone Else mode)
+        function handleRelationChange() {
+            if (relationSelectEl.value === 'self') {
+                if (dobInputEl) dobInputEl.value = travelerData.dob || '';
+            } else {
+                if (dobInputEl) dobInputEl.value = '';
+            }
+        }
+
+        if (myselfRadio && someoneElseRadio) {
+            myselfRadio.addEventListener('change', handleGuestTypeChange);
+            someoneElseRadio.addEventListener('change', handleGuestTypeChange);
+            // Run on page load
+            handleGuestTypeChange();
+        }
+
+        if (relationSelectEl) {
+            relationSelectEl.addEventListener('change', handleRelationChange);
+        }
+
+
 
         // Accordion toggles for checkout sections
         document.querySelectorAll('.accordion-header').forEach(header => {
@@ -1868,6 +1933,23 @@ label.saved-guest-checkbox {
                 const item = this.dataset.item;
                 addSavedGuestsToItem(item);
             });
+        });
+
+        // Global event delegation for timeslot changes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('guest-time-slot-select')) {
+                const itemKey = e.target.dataset.item;
+                const guestIndex = parseInt(e.target.dataset.index);
+                
+                if (additionalGuests[itemKey] && additionalGuests[itemKey][guestIndex]) {
+                    additionalGuests[itemKey][guestIndex].time_slot = e.target.value || null;
+                    saveGuestsToForm();
+                    const container = document.getElementById('item-guests-' + itemKey);
+                    if (container) {
+                        renderItemGuestsList(itemKey, container);
+                    }
+                }
+            }
         });
 
     });
