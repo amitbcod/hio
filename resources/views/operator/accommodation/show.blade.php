@@ -396,7 +396,7 @@
             </div>
         </div>
     </div>
-@endsection
+
 
  <script>
       function toggleMenu(element) {
@@ -426,3 +426,5 @@
          }
       });
    </script>
+
+   @endsection

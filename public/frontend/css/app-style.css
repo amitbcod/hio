@@ -409,7 +409,7 @@ button.btn.btn-sm.btn-danger {
     font-weight: bold !important;
 }
 .form-card input[type="file"] {
-  width: 100%;
+  /* width: 100%; */
   border: 1px solid #ccc;
   background: #f5f6fa;
   padding: 0px;
