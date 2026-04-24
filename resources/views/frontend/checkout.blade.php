@@ -603,8 +603,9 @@
                             @foreach($cart as $item)
                                 @php
                                     $nights = (int) ($item['nights'] ?? 1);
+                                    $rooms  = (int) ($item['rooms'] ?? 1);
                                     $lbl = $item['type'] === 'accommodation'
-                                        ? '1 Room · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '')
+                                        ? $rooms . ' Room' . ($rooms !== 1 ? 's' : '') . ' · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '')
                                         : 'Activity: ' . ($item['variant_name'] ?: $item['title']);
                                 @endphp
                                 <div class="fare-row">
@@ -1789,27 +1790,94 @@ label.saved-guest-checkbox {
         renderSavedGuestsForItem('{{ $key }}');
         @endforeach
 
-        // Auto-fill DOB when "Self" is selected
-        const relationSelect = document.getElementById('guests_0_relation');
-        const dobInput = document.getElementById('guests_0_dob');
-        const travelerDOB = '{{ $guestDefaults["dob"] ?? "" }}';
+        // Handle Myself/Someone Else radio buttons and auto-fill
+        const myselfRadio = document.querySelector('input[name="guest_type"][value="myself"]');
+        const someoneElseRadio = document.querySelector('input[name="guest_type"][value="someone_else"]');
+        const relationSelectEl = document.getElementById('guests_0_relation');
+        const genderSelect = document.getElementById('guests_0_gender');
+        const firstNameInput = document.getElementById('guests_0_first_name');
+        const middleNameInput = document.getElementById('guests_0_middle_name');
+        const lastNameInput = document.getElementById('guests_0_last_name');
+        const dobInputEl = document.getElementById('guests_0_dob');
+        const nationalitySelect = document.getElementById('guests_0_nationality');
+        const passportInput = document.getElementById('guests_0_passport_number');
+        const notesTextarea = document.getElementById('guests_0_notes');
 
-        if (relationSelect && dobInput && travelerDOB) {
-            // Function to handle DOB auto-fill
-            function handleSelfSelection() {
-                if (relationSelect.value === 'self') {
-                    dobInput.value = travelerDOB;
-                } else {
-                    dobInput.value = '';
-                }
+        // Traveler data from PHP
+        const travelerData = {
+            first_name: '{{ $traveler?->profile->first_name ?? $traveler?->first_name ?? "" }}',
+            middle_name: '{{ $traveler?->profile->middle_name ?? "" }}',
+            last_name: '{{ $traveler?->profile->last_name ?? $traveler?->last_name ?? "" }}',
+            dob: '{{ $guestDefaults["dob"] ?? "" }}',
+            gender: '{{ $traveler?->profile->gender ?? "" }}',
+            nationality: '{{ $traveler?->profile->nationality ?? $traveler?->profile->country ?? "" }}',
+            passport_number: '{{ $traveler?->profile->passport_number ?? "" }}',
+        };
+
+        // Normalize traveler gender
+        travelerData.gender = normalizeBookingGender(travelerData.gender);
+
+        function ensureHiddenRelationInput(value) {
+            let hiddenInput = document.getElementById('guests_0_relation_hidden');
+            if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.id = 'guests_0_relation_hidden';
+                hiddenInput.name = 'guests[0][relation]';
+                relationSelectEl.parentNode?.insertBefore(hiddenInput, relationSelectEl.nextSibling);
             }
-
-            // Listen for changes
-            relationSelect.addEventListener('change', handleSelfSelection);
-
-            // Run on page load in case 'self' is already selected
-            handleSelfSelection();
+            hiddenInput.value = value;
         }
+
+        function removeHiddenRelationInput() {
+            const hiddenInput = document.getElementById('guests_0_relation_hidden');
+            if (hiddenInput) {
+                hiddenInput.remove();
+            }
+        }
+
+        function handleGuestTypeChange() {
+            if (myselfRadio && myselfRadio.checked) {
+                // Auto-fill for Myself
+                relationSelectEl.value = 'self';
+                relationSelectEl.disabled = true;
+                ensureHiddenRelationInput('self');
+                if (genderSelect) genderSelect.value = travelerData.gender || '';
+                if (firstNameInput) firstNameInput.value = travelerData.first_name || '';
+                if (middleNameInput) middleNameInput.value = travelerData.middle_name || '';
+                if (lastNameInput) lastNameInput.value = travelerData.last_name || '';
+                if (dobInputEl) dobInputEl.value = travelerData.dob || '';
+                if (nationalitySelect) nationalitySelect.value = travelerData.nationality || '';
+                if (passportInput) passportInput.value = travelerData.passport_number || '';
+                if (notesTextarea) notesTextarea.value = '';
+            } else {
+                // Enable for Someone Else
+                relationSelectEl.disabled = false;
+                removeHiddenRelationInput();
+            }
+        }
+
+        // Auto-fill DOB when relation is "self" (for Someone Else mode)
+        function handleRelationChange() {
+            if (relationSelectEl.value === 'self') {
+                if (dobInputEl) dobInputEl.value = travelerData.dob || '';
+            } else {
+                if (dobInputEl) dobInputEl.value = '';
+            }
+        }
+
+        if (myselfRadio && someoneElseRadio) {
+            myselfRadio.addEventListener('change', handleGuestTypeChange);
+            someoneElseRadio.addEventListener('change', handleGuestTypeChange);
+            // Run on page load
+            handleGuestTypeChange();
+        }
+
+        if (relationSelectEl) {
+            relationSelectEl.addEventListener('change', handleRelationChange);
+        }
+
+
 
         // Accordion toggles for checkout sections
         document.querySelectorAll('.accordion-header').forEach(header => {
