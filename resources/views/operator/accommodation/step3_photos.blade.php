@@ -12,7 +12,7 @@
                     <div style="margin-bottom: 24px;">
                         <h2 style="font-weight: bold; margin-bottom: 8px;">Step 3: Photos & Media</h2>
                         <p style="color: #666; margin-bottom: 0;">Upload hero image, gallery, room photos, logo and optional video. Minimum 6 gallery images required.</p>
-                    </div>
+                    </div> 
 
                     @if($errors->any())
                         <div class="alert alert-danger">
