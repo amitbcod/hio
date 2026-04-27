@@ -25,6 +25,21 @@
                         </div>
                     </div>
 
+                    @if(session('success') || session('error'))
+                        <div style="margin-bottom: 24px;">
+                            @if(session('success'))
+                                <div style="background:#e8f5e9;border:1px solid #66bb6a;color:#2e7d32;border-radius:8px;padding:16px;">
+                                    {{ session('success') }}
+                                </div>
+                            @endif
+                            @if(session('error'))
+                                <div style="background:#ffebee;border:1px solid #ef5350;color:#c62828;border-radius:8px;padding:16px;">
+                                    {{ session('error') }}
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
                     {{-- Booking Information --}}
                     <div style="margin-bottom: 32px;">
                         <h4 style="font-weight: 600; margin-bottom: 20px; color: #333;">📋 Booking Information</h4>
@@ -242,7 +257,7 @@
                             @if($booking->accommodation->cancellation_policy_type === 'template')
                                 <p><strong>Template:</strong> {{ $booking->accommodation->cancellation_policy_template_id }}</p>
                             @else
-                                {!! nl2br(e($booking->accommodation->cancellation_policy)) !!}
+                                {!! $booking->accommodation->cancellation_policy !!}
                             @endif
                         </div>
                     </div>
@@ -250,18 +265,30 @@
 
                     {{-- Action Buttons --}}
                     <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
-                        <div style="display: flex; gap: 12px; justify-content: center;">
+                        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                             <a href="{{ route('operator.accommodation.bookings') }}" class="btn" style="background: #6c757d; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
                                 ← Back to All Bookings
                             </a>
+
                             @if($booking->booking_status === 'Pending')
-                            <button class="btn" style="background: #28a745; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
-                                ✓ Confirm Booking
-                            </button>
+                                <form method="POST" action="{{ route('operator.accommodation.booking.status', $booking->id) }}" style="display:inline;" onsubmit="return confirm('Confirm this booking?');">
+                                    @csrf
+                                    <input type="hidden" name="booking_status" value="Confirmed">
+                                    <button type="submit" class="btn" style="background: #28a745; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
+                                        ✓ Confirm Booking
+                                    </button>
+                                </form>
                             @endif
-                            <button class="btn" style="background: #dc3545; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
-                                ✕ Cancel Booking
-                            </button>
+
+                            @if($booking->booking_status !== 'Cancelled')
+                                <form method="POST" action="{{ route('operator.accommodation.booking.status', $booking->id) }}" style="display:inline;" onsubmit="return confirm('Cancel this booking?');">
+                                    @csrf
+                                    <input type="hidden" name="booking_status" value="Cancelled">
+                                    <button type="submit" class="btn" style="background: #dc3545; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
+                                        ✕ Cancel Booking
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </div>
                 </div>

@@ -3090,4 +3090,35 @@ class AccommodationController extends Controller
         
         return view('operator.accommodation.booking_details', compact('booking'));
     }
+
+    /**
+     * Update booking status for accommodation bookings
+     */
+    public function updateBookingStatus(Request $request, $bookingId)
+    {
+        if ($redirect = $this->checkPreconditions()) return $redirect;
+
+        $operator = auth()->user();
+
+        $accommodationIds = Accommodation::where('operator_id', $operator->id)
+            ->orWhere('business_id', $operator->business_id)
+            ->pluck('id');
+
+        $booking = AccommodationBooking::whereIn('accommodation_id', $accommodationIds)
+            ->where('id', $bookingId)
+            ->firstOrFail();
+
+        $request->validate([
+            'booking_status' => 'required|in:Confirmed,Cancelled',
+        ]);
+
+        if ($booking->booking_status === 'Cancelled') {
+            return back()->with('error', 'Cancelled bookings cannot be updated.');
+        }
+
+        $booking->booking_status = $request->input('booking_status');
+        $booking->save();
+
+        return back()->with('success', 'Booking status updated to ' . $booking->booking_status . '.');
+    }
 }

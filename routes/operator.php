@@ -66,6 +66,7 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::get('accommodation', [AccommodationController::class, 'index'])->name('accommodation.index');
         Route::get('accommodation/bookings', [AccommodationController::class, 'bookingList'])->name('accommodation.bookings');
         Route::get('accommodation/bookings/{booking}', [AccommodationController::class, 'bookingDetails'])->name('accommodation.booking.details');
+        Route::post('accommodation/bookings/{booking}/status', [AccommodationController::class, 'updateBookingStatus'])->name('accommodation.booking.status');
         Route::get('accommodation/create', [AccommodationController::class, 'create'])->name('accommodation.create');
         Route::post('accommodation', [AccommodationController::class, 'store'])->name('accommodation.store');
         Route::get('accommodation/{id}', [AccommodationController::class, 'show'])->name('accommodation.show');
@@ -137,6 +138,7 @@ Route::prefix('operator')->name('operator.')->group(function () {
         // Activity Bookings
         Route::get('activity/bookings', [ActivityController::class, 'bookingList'])->name('activity.bookings');
         Route::get('activity/bookings/{booking}', [ActivityController::class, 'bookingDetails'])->name('activity.booking.details');
+        Route::post('activity/bookings/{booking}/status', [ActivityController::class, 'updateBookingStatus'])->name('activity.booking.status');
 
         Route::get('activity/{id}', [ActivityController::class, 'show'])->name('activity.show');
         Route::patch('activity/{id}', [ActivityController::class, 'update'])->name('activity.update');
