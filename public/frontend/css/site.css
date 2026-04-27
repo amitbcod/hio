@@ -484,7 +484,7 @@ strong {
     outline: none;
     font-weight: bold;
     font-family: 'Open Sans';
-    font-size: 17px;
+    font-size: 16px;
     text-align: left;
     border: 0;
 }
@@ -2081,6 +2081,24 @@ label.saved-guest-checkbox {
     border: 1px solid #e1e1e1 !important;
 }
 
+/***************************/
+
+.category-search-cell.category-search-cell--transport {
+    padding: 0;
+}
+
+.category-search-cell--transport .transport-row {
+    display: flex;
+}
+
+.category-search-cell--transport .transport-row > div {
+    padding: 12px 17px 5px;
+    border-left: 2px solid rgba(255, 255, 255, 1);
+}
+
+.category-search-cell--transport .transport-row > div:first-child {
+    border-left:0;
+}
 
 
 
