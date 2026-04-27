@@ -281,6 +281,7 @@
                 <button type="submit" class="btn btn-primary">Save Changes</button>
             </form>
 
+            
             @if ($canDownload && ( $booking instanceof \App\Models\AccommodationBooking))
                 <a href="{{ route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}" target="_blank" class="btn btn-primary" style="margin-top: 16px;">Download Voucher</a>
             @endif

@@ -162,7 +162,7 @@
 
                                     <div class="room-option-meta">
                                         @if(!empty($roomDetail['capacity']))
-                                            <span>Up to {{ $roomDetail['capacity'] }} guests</span>
+                                            <!-- <span>Up to {{ $roomDetail['capacity'] }} guests</span> -->
                                         @endif
                                         @if(!empty($room['quantity']))
                                             <span>{{ $room['quantity'] }} room{{ (int)$room['quantity'] !== 1 ? 's' : '' }} left</span>
