@@ -156,13 +156,13 @@
                             <h2 class="summary-heading">Checkout Summary</h2>
 
                             {{-- Promo Code --}}
-                            <div class="promo-box">
+                            <!-- <div class="promo-box">
                                 <label class="promo-label">Have a promo code?</label>
                                 <div class="promo-input-row">
                                     <input type="text" placeholder="Enter code" class="promo-input" id="promoCodeInput">
                                     <button class="promo-apply-btn" type="button">Apply</button>
                                 </div>
-                            </div>
+                            </div> -->
 
                             <div class="summary-divider"></div>
 
