@@ -17,16 +17,25 @@
                 </div>
 
                 @if(session('success'))
-                <div style="background:#e8f5e9;border:1px solid #66bb6a;border-radius:8px;padding:16px;margin-bottom:16px;color:#2e7d32;">
+                <div class="alert alert-success" style="background:#e8f5e9;border:1px solid #66bb6a;border-radius:8px;padding:16px;margin-bottom:16px;color:#2e7d32;">
                     <strong>✓ {{ session('success') }}</strong>
                 </div>
                 @endif
 
                 @if(session('error'))
-                <div style="background:#ffebee;border:1px solid #ef5350;border-radius:8px;padding:16px;margin-bottom:16px;color:#c62828;">
-                    <strong>✗ {{ session('error') }}</strong>
+                <div class="alert alert-danger" style="background:#fff4e5;border:1px solid #ffb74d;border-radius:8px;padding:16px;margin-bottom:16px;color:#e65100;">
+                    <strong>Please fix the highlighted fields below.</strong>
+                    <ul style="margin:8px 0 0 18px;">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
                 @endif
+
+                {{-- AJAX Messages --}}
+                <div id="ajax-success" class="alert alert-success" style="display:none;background:#e8f5e9;border:1px solid #66bb6a;border-radius:8px;padding:16px;margin-bottom:16px;color:#2e7d32;"></div>
+                <div id="ajax-error" class="alert alert-danger" style="display:none;background:#ffebee;border:1px solid #ef5350;border-radius:8px;padding:16px;margin-bottom:16px;color:#c62828;"></div>
 
                 <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.04);margin-bottom:20px;">
                     <form method="POST" action="{{ route('operator.accommodation.step12.save', $accommodation->id) }}" enctype="multipart/form-data">
@@ -41,6 +50,11 @@
                             <label style="font-weight:600;">SEO Description</label>
                             <textarea name="seo_description" id="seo_description" style="display:none;">{{ old('seo_description', $accommodation->seo_description) }}</textarea>
                             <div id="seo_description_editor" style="height:120px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                                <small id="seo_description_count" style="color:#666;">0 / 160</small>
+                                <small id="seo_description_error" style="color:#d93025;display:none;"></small>
+                            </div>
+                            @error('seo_description')<small style="color:#d93025;display:block;margin-top:4px;">{{ $message }}</small>@enderror
                             <small style="color:#666;display:block;margin-top:4px;">Optimized description for search engines with formatting support</small>
                         </div>
 
@@ -57,10 +71,15 @@
                         </div>
 
                         <div style="margin-bottom:16px;">
-                            <label style="font-weight:600;">OpenGraph Description</label>
+                            <label style="font-weight:600;">OpenGraph Description <small style="font-weight:400;color:#666;">(max 225 characters, plain text)</small></label>
                             <textarea name="og_description" id="og_description" style="display:none;">{{ old('og_description', $accommodation->og_description) }}</textarea>
                             <div id="og_description_editor" style="height:120px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
-                            <small style="color:#666;display:block;margin-top:4px;">Description for social media sharing with formatting support</small>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                                <small id="og_description_count" style="color:#666;">0 / 225</small>
+                                <small id="og_description_error" style="color:#d93025;display:none;"></small>
+                            </div>
+                            @error('og_description')<small style="color:#d93025;display:block;margin-top:4px;">{{ $message }}</small>@enderror
+                            <small style="color:#666;display:block;margin-top:4px;">Description for social media sharing as plain text</small>
                         </div>
 
                         <div style="margin-bottom:16px;">
@@ -120,7 +139,13 @@
             // Set initial content from textareas
             var seoTextarea = document.getElementById('seo_description');
             var ogTextarea = document.getElementById('og_description');
-            
+            var seoDescriptionCount = document.getElementById('seo_description_count');
+            var ogDescriptionCount = document.getElementById('og_description_count');
+            var seoDescriptionError = document.getElementById('seo_description_error');
+            var ogDescriptionError = document.getElementById('og_description_error');
+            var seoDescriptionMax = 160;
+            var ogDescriptionMax = 225;
+
             if(seoTextarea.value){
                 seoDescEditor.root.innerHTML = seoTextarea.value;
             }
@@ -128,26 +153,120 @@
                 ogDescEditor.root.innerHTML = ogTextarea.value;
             }
 
-            // Sync editors with hidden textareas
+            function updateDescriptionCounter(editor, countEl, maxLength) {
+                if (!countEl) return;
+                var currentLength = editor.getText().trim().length;
+                countEl.textContent = currentLength + ' / ' + maxLength;
+                countEl.style.color = currentLength > maxLength ? '#d93025' : '#666';
+            }
+
+            function validateDescriptionLengths() {
+                var seoLength = seoDescEditor.getText().trim().length;
+                var ogLength = ogDescEditor.getText().trim().length;
+                var valid = true;
+
+                if (seoDescriptionError) {
+                    if (seoLength > seoDescriptionMax) {
+                        seoDescriptionError.style.display = 'block';
+                        seoDescriptionError.textContent = 'SEO Description exceeds ' + seoDescriptionMax + ' characters.';
+                        valid = false;
+                    } else {
+                        seoDescriptionError.style.display = 'none';
+                        seoDescriptionError.textContent = '';
+                    }
+                }
+
+                if (ogDescriptionError) {
+                    if (ogLength > ogDescriptionMax) {
+                        ogDescriptionError.style.display = 'block';
+                        ogDescriptionError.textContent = 'OpenGraph description exceeds ' + ogDescriptionMax + ' characters.';
+                        valid = false;
+                    } else {
+                        ogDescriptionError.style.display = 'none';
+                        ogDescriptionError.textContent = '';
+                    }
+                }
+
+                return valid;
+            }
+
             function syncSeoDesc(){
-                seoTextarea.value = seoDescEditor.root.innerHTML;
+                seoTextarea.value = seoDescEditor.getText().trim();
+                updateDescriptionCounter(seoDescEditor, seoDescriptionCount, seoDescriptionMax);
             }
 
             function syncOgDesc(){
-                ogTextarea.value = ogDescEditor.root.innerHTML;
+                ogTextarea.value = ogDescEditor.getText().trim();
+                updateDescriptionCounter(ogDescEditor, ogDescriptionCount, ogDescriptionMax);
             }
 
-            seoDescEditor.on('text-change', syncSeoDesc);
-            ogDescEditor.on('text-change', syncOgDesc);
+            seoDescEditor.on('text-change', function() {
+                syncSeoDesc();
+            });
+            ogDescEditor.on('text-change', function() {
+                syncOgDesc();
+            });
 
-            // Sync on form submit
+            // Sync and validate on form submit only
             var form = document.querySelector('form');
             if(form){
-                form.addEventListener('submit', function(){
+                var submitButton = form.querySelector('button[type="submit"]');
+                form.addEventListener('submit', function(event){
+                    event.preventDefault(); // Prevent default form submission
                     syncSeoDesc();
                     syncOgDesc();
+                    if (!validateDescriptionLengths()) {
+                        if (submitButton) {
+                            submitButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        return; // Don't proceed if validation fails
+                    }
+
+                    // If validation passes, send AJAX request
+                    var formData = new FormData(form);
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message
+                            var successDiv = document.getElementById('ajax-success');
+                            if (successDiv) {
+                                successDiv.style.display = 'block';
+                                successDiv.innerHTML = '<strong>✓ ' + data.message + '</strong>';
+                                successDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                            // Optionally reload or update UI
+                            setTimeout(() => location.reload(), 2000);
+                        } else {
+                            // Show error message
+                            var errorDiv = document.getElementById('ajax-error');
+                            if (errorDiv) {
+                                errorDiv.style.display = 'block';
+                                errorDiv.innerHTML = '<strong>✗ ' + data.message + '</strong>';
+                                errorDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        var errorDiv = document.getElementById('ajax-error');
+                        if (errorDiv) {
+                            errorDiv.style.display = 'block';
+                            errorDiv.innerHTML = '<strong>✗ An error occurred. Please try again.</strong>';
+                        }
+                    });
                 });
             }
+
+            updateDescriptionCounter(seoDescEditor, seoDescriptionCount, seoDescriptionMax);
+            updateDescriptionCounter(ogDescEditor, ogDescriptionCount, ogDescriptionMax);
         });
     </script>
 @endsection

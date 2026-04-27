@@ -27,16 +27,20 @@
                 @endif
 
                 @if(session('success'))
-                <div style="background:#e8f5e9;border:1px solid #66bb6a;border-radius:8px;padding:16px;margin-bottom:16px;color:#2e7d32;">
+                <div class="alert alert-success" style="background:#e8f5e9;border:1px solid #66bb6a;border-radius:8px;padding:16px;margin-bottom:16px;color:#2e7d32;">
                     <strong>✓ {{ session('success') }}</strong>
                 </div>
                 @endif
 
                 @if(session('error'))
-                <div style="background:#ffebee;border:1px solid #ef5350;border-radius:8px;padding:16px;margin-bottom:16px;color:#c62828;">
+                <div class="alert alert-danger" style="background:#ffebee;border:1px solid #ef5350;border-radius:8px;padding:16px;margin-bottom:16px;color:#c62828;">
                     <strong>✗ {{ session('error') }}</strong>
                 </div>
                 @endif
+
+                {{-- AJAX Messages --}}
+                <div id="ajax-success" class="alert alert-success" style="display:none;background:#e8f5e9;border:1px solid #66bb6a;border-radius:8px;padding:16px;margin-bottom:16px;color:#2e7d32;"></div>
+                <div id="ajax-error" class="alert alert-danger" style="display:none;background:#ffebee;border:1px solid #ef5350;border-radius:8px;padding:16px;margin-bottom:16px;color:#c62828;"></div>
 
                 {{-- Add New Promotion --}}
                 <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.04);margin-bottom:20px;">
@@ -101,7 +105,11 @@
                                         <label style="font-weight:600;">Campaign Description</label>
                                         <textarea name="campaign_description" id="campaign_description" style="display:none;"></textarea>
                                         <div id="campaign_description_editor" style="height:150px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
-                                        <small style="color:#666;display:block;margin-top:4px;">Optional; Detailed offer description with formatting</small>
+                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                                            <small id="campaign_description_count" style="color:#666;">0 / 500</small>
+                                            @error('campaign_description')<small style="color:#d93025;">{{ $message }}</small>@enderror
+                                        </div>
+                                        <small style="color:#666;display:block;margin-top:4px;">Optional; Detailed offer description with formatting (max 500 characters)</small>
                                     </div>
                                 </div>
                             </div>
@@ -315,24 +323,105 @@
 
             // Set initial content from textarea
             var campaignTextarea = document.getElementById('campaign_description');
+            var campaignDescriptionCount = document.getElementById('campaign_description_count');
+            var campaignDescriptionMax = 500;
+
             if(campaignTextarea.value){
                 campaignDescEditor.root.innerHTML = campaignTextarea.value;
+            }
+
+            function updateCampaignDescriptionCounter() {
+                if (!campaignDescriptionCount) return;
+                var currentLength = campaignDescEditor.getText().trim().length;
+                campaignDescriptionCount.textContent = currentLength + ' / ' + campaignDescriptionMax;
+                campaignDescriptionCount.style.color = currentLength > campaignDescriptionMax ? '#d93025' : '#666';
+            }
+
+            var campaignDescriptionError = document.getElementById('campaign_description_error');
+
+            function validateCampaignDescriptionLength() {
+                var currentLength = campaignDescEditor.getText().trim().length;
+                var valid = true;
+                if (campaignDescriptionError) {
+                    if (currentLength > campaignDescriptionMax) {
+                        campaignDescriptionError.style.display = 'block';
+                        campaignDescriptionError.textContent = 'Campaign Description exceeds ' + campaignDescriptionMax + ' characters.';
+                        valid = false;
+                    } else {
+                        campaignDescriptionError.style.display = 'none';
+                        campaignDescriptionError.textContent = '';
+                    }
+                }
+                return valid;
             }
 
             // Sync editor with hidden textarea
             function syncCampaignDesc(){
                 campaignTextarea.value = campaignDescEditor.root.innerHTML;
+                updateCampaignDescriptionCounter();
             }
 
-            campaignDescEditor.on('text-change', syncCampaignDesc);
+            campaignDescEditor.on('text-change', function() {
+                syncCampaignDesc();
+            });
 
-            // Sync on form submit
+            // Validate on form submit only
             var form = document.getElementById('promotionForm');
             if(form){
-                form.addEventListener('submit', function(){
+                form.addEventListener('submit', function(event){
+                    event.preventDefault(); // Prevent default form submission
                     syncCampaignDesc();
+                    if (!validateCampaignDescriptionLength()) {
+                        if (campaignDescriptionError) {
+                            campaignDescriptionError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        return; // Don't proceed if validation fails
+                    }
+
+                    // If validation passes, send AJAX request
+                    var formData = new FormData(form);
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message
+                            var successDiv = document.getElementById('ajax-success');
+                            if (successDiv) {
+                                successDiv.style.display = 'block';
+                                successDiv.innerHTML = '<strong>✓ ' + data.message + '</strong>';
+                                successDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                            // Optionally reload or update UI
+                            setTimeout(() => location.reload(), 2000);
+                        } else {
+                            // Show error message
+                            var errorDiv = document.getElementById('ajax-error');
+                            if (errorDiv) {
+                                errorDiv.style.display = 'block';
+                                errorDiv.innerHTML = '<strong>✗ ' + data.message + '</strong>';
+                                errorDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        var errorDiv = document.getElementById('ajax-error');
+                        if (errorDiv) {
+                            errorDiv.style.display = 'block';
+                            errorDiv.innerHTML = '<strong>✗ An error occurred. Please try again.</strong>';
+                        }
+                    });
                 });
             }
+
+            updateCampaignDescriptionCounter();
         });
 
         // Use business-level plans (room_id = null) for the Assign Plans modal,

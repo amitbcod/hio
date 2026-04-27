@@ -2731,7 +2731,7 @@ class AccommodationController extends Controller
             'room_id' => 'required|exists:accommodation_rooms,id',
             'rate_plan_id' => 'required|exists:accommodation_rates,id',
             'campaign_name' => 'nullable|string|max:255',
-            'campaign_description' => 'nullable|string|max:250',
+            'campaign_description' => 'nullable|string|max:500',
             'promotion_type' => 'nullable|in:Early-bird,Last-minute,Stay X Pay Y,Seasonal',
             'discount_type' => 'nullable|in:Amount/Night,Percentage',
             'discount_value' => 'nullable|numeric|min:0',
@@ -2804,10 +2804,17 @@ class AccommodationController extends Controller
 
             \Log::info('Promotion saved', ['promotion_id' => $promotion->id, 'accommodation_id' => $accommodation->id]);
 
+            if ($request->ajax()) {
+                return response()->json(['success' => true, 'message' => 'Promotion saved successfully!']);
+            }
+
             return redirect()->route('operator.accommodation.step11.show', $accommodation->id)
                 ->with('success', 'Promotion saved successfully!');
         } catch (\Exception $e) {
             \Log::error('savePromotion error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Failed to save promotion: ' . $e->getMessage()]);
+            }
             return redirect()->route('operator.accommodation.step11.show', $accommodation->id)
                 ->with('error', 'Failed to save promotion: ' . $e->getMessage());
         }
@@ -2905,19 +2912,23 @@ class AccommodationController extends Controller
 
         $data = $request->validate([
             'seo_title' => 'nullable|string|max:255',
-            'seo_description' => 'nullable|string|max:255',
+            'seo_description' => ['nullable', 'string', function ($attribute, $value, $fail) {
+                if (mb_strlen(strip_tags($value)) > 255) {
+                    $fail('The SEO description may not be greater than 255 characters.');
+                }
+            }],
             'keywords_tags' => 'nullable|string',
             'og_title' => 'nullable|string|max:255',
-            'og_description' => 'nullable|string|max:255',
+            'og_description' => 'nullable|string|max:1000',
             'og_image' => 'nullable|image|max:5120',
         ]);
 
         try {
             $accommodation->seo_title = $data['seo_title'] ?? null;
-            $accommodation->seo_description = $data['seo_description'] ?? null;
+            $accommodation->seo_description = isset($data['seo_description']) ? trim(strip_tags($data['seo_description'])) : null;
             $accommodation->keywords_tags = $data['keywords_tags'] ?? null;
             $accommodation->og_title = $data['og_title'] ?? null;
-            $accommodation->og_description = $data['og_description'] ?? null;
+            $accommodation->og_description = isset($data['og_description']) ? trim($data['og_description']) : null;
 
             if ($request->hasFile('og_image')) {
                 $path = $request->file('og_image')->store('accommodations/og', 'public');
@@ -2929,10 +2940,17 @@ class AccommodationController extends Controller
 
             $accommodation->save();
 
+            if ($request->ajax()) {
+                return response()->json(['success' => true, 'message' => 'SEO & Social settings saved.']);
+            }
+
             return redirect()->route('operator.accommodation.step12.show', $accommodation->id)
                 ->with('success', 'SEO & Social settings saved.');
         } catch (\Exception $e) {
             \Log::error('saveStep12Seo error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'accommodation_id' => $id]);
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Failed to save: ' . $e->getMessage()]);
+            }
             return redirect()->route('operator.accommodation.step12.show', $accommodation->id)
                 ->with('error', 'Failed to save: ' . $e->getMessage());
         }

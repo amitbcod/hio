@@ -123,11 +123,12 @@
                         <!-- Keywords/Tags -->
                         <div class="mb-3">
                             <label style="font-weight:600;font-size:13px;display:block;margin-bottom:8px;">Keywords/Tags (separated by commas)</label>
-                            <input type="text" id="keywordsInput" class="form-control" style="font-size:13px;" placeholder="kayaking, adventure, beach, water sports, snorkeling" value="{{ old('keywords_tags', implode(', ', $keywords)) }}">
+                            <input type="text" id="keywordsInput" class="form-control" style="font-size:13px;" placeholder="kayaking, adventure, beach, water sports, snorkeling" value="{{ old('keywords_tags') ? implode(', ', old('keywords_tags')) : implode(', ', $keywords) }}">
                             <small style="color:#666;">Press Enter or comma to add each keyword</small>
                             
                             <div id="keywordsList" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
-                                @foreach($keywords as $keyword)
+                                @php $displayKeywords = old('keywords_tags', $keywords) @endphp
+                                @foreach($displayKeywords as $keyword)
                                     <span style="background:#e3f2fd;color:#2196f3;padding:6px 12px;border-radius:20px;font-size:12px;display:flex;align-items:center;gap:6px;">
                                         {{ $keyword }}
                                         <button type="button" onclick="removeKeyword(this)" style="background:none;border:none;color:#2196f3;cursor:pointer;font-weight:bold;">×</button>
@@ -135,7 +136,7 @@
                                 @endforeach
                             </div>
                             <div id="keywordsHiddenInputs">
-                                @foreach($keywords as $keyword)
+                                @foreach($displayKeywords as $keyword)
                                     <input type="hidden" name="keywords_tags[]" value="{{ $keyword }}">
                                 @endforeach
                             </div>

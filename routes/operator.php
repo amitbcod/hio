@@ -139,6 +139,7 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::get('activity/bookings/{booking}', [ActivityController::class, 'bookingDetails'])->name('activity.booking.details');
 
         Route::get('activity/{id}', [ActivityController::class, 'show'])->name('activity.show');
+        Route::patch('activity/{id}', [ActivityController::class, 'update'])->name('activity.update');
         
         // Activity Step 1: Basic Information
         Route::get('activity/{id}/step1-basic', [ActivityController::class, 'step1Basic'])->name('activity.step1.show');

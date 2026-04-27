@@ -57,7 +57,7 @@
             <div class="detail-main">
                 <div class="detail-card">
                     <h2>Overview</h2>
-                    <div class="detail-text">{{ $activity['overview_text'] ?: $activity['excerpt'] }}</div>
+                    <div class="detail-text">{!! $activity['overview_text'] ?: $activity['excerpt'] !!}</div>
                 </div>
 
                 <div class="detail-card">
@@ -118,10 +118,10 @@
                 <div class="detail-card">
                     <h2>Location And Map</h2>
                     <div class="detail-text">
-                        {{ $activity['location'] }}
+                        {!! $activity['location'] !!}
                         @if(!empty($activity['meeting_point']))
 
-{{ $activity['meeting_point'] }}
+{!! $activity['meeting_point'] !!}
                         @endif
                     </div>
                     @if(!empty($activity['map_embed_url']))
@@ -138,30 +138,30 @@
 
                 <div class="detail-card">
                     <h2>Booking Notes</h2>
-                    <div class="detail-text">{{ $activity['booking_notes_text'] ?: 'Booking notes will be shared by the operator during confirmation.' }}</div>
+                    <div class="detail-text">{!! $activity['booking_notes_text'] ?: 'Booking notes will be shared by the operator during confirmation.' !!}</div>
                 </div>
 
                 <div class="detail-card">
                     <h2>Checkout Policy</h2>
-                    <div class="detail-text">{{ $activity['checkout_policy_text'] ?: 'Checkout policy is not available yet.' }}</div>
+                    <div class="detail-text">{!! $activity['checkout_policy_text'] ?: 'Checkout policy is not available yet.' !!}</div>
                 </div>
 
                 <div class="detail-card">
                     <h2>Terms And Conditions</h2>
-                    <div class="detail-text">{{ $activity['terms_conditions_text'] ?: 'Terms and conditions are not available yet.' }}</div>
+                    <div class="detail-text">{!! $activity['terms_conditions_text'] ?: 'Terms and conditions are not available yet.' !!}</div>
                 </div>
 
                 @if(!empty($activity['included_text']))
                     <div class="detail-card">
                         <h2>What’s Included</h2>
-                        <div class="detail-text">{{ $activity['included_text'] }}</div>
+                        <div class="detail-text">{!! $activity['included_text'] !!}</div>
                     </div>
                 @endif
 
                 @if(!empty($activity['itinerary_text']))
                     <div class="detail-card">
                         <h2>Itinerary</h2>
-                        <div class="detail-text">{{ $activity['itinerary_text'] }}</div>
+                        <div class="detail-text">{!! $activity['itinerary_text'] !!}</div>
                     </div>
                 @endif
             </div>

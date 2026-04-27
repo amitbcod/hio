@@ -84,9 +84,15 @@
                                             <div class="cart-item-price">
                                                 {{ $item['currency'] }} {{ number_format($item['total_price'], 2) }}
                                             </div>
+                                        @php
+                                        if($isAccom) {
+                                        @endphp
                                             <div class="cart-item-nights">
                                                 {{ $nights }} Night{{ $nights !== 1 ? 's' : '' }} Total
                                             </div>
+                                        @php
+                                        }
+                                        @endphp
                                         </div>
                                     </div>
 

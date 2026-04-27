@@ -86,7 +86,7 @@
 
                     <div class="category-input-group">
                         <div class="category-input-group-inner">
-                            <div class="category-search-cell">
+<div class="category-search-cell category-search-cell--region" style="{{ $selectedCategory === 'transport' ? 'display:none;' : '' }}">
                                 <h5>Region/Area ?</h5>
                                 <select name="region" class="category-search-select" data-search-region
                                     data-selected="{{ $filters['region'] }}">
@@ -155,6 +155,40 @@
                                             <input id="rooms-field" type="text" name="rooms" value="{{ request()->query('rooms', 1) }}" readonly>
                                             <button type="button" class="count-btn increment" data-target="rooms">+</button>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Transport: route, passengers and dates -->
+                            <div class="category-search-cell category-search-cell--transport" style="display: none;">
+                                <div class="transport-row" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+                                    <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
+                                        <h5>From</h5>
+                                        <input type="text" name="transport_from" class="category-search-input" value="{{ request()->query('transport_from', '') }}" placeholder="Departure location">
+                                    </div>
+                                    <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
+                                        <h5>To</h5>
+                                        <input type="text" name="transport_to" class="category-search-input" value="{{ request()->query('transport_to', '') }}" placeholder="Destination">
+                                    </div>
+                                    <div class="transport-field" style="flex: 0 1 120px; min-width: 120px;">
+                                        <h5>Passengers</h5>
+                                        <input type="number" name="passengers" class="category-search-input" min="1" value="{{ request()->query('passengers', 2) }}">
+                                    </div>
+                                    <div class="transport-field" style="flex: 1 1 140px; min-width: 130px;">
+                                        <h5>Arrival date</h5>
+                                        <input type="date" name="arrival_date" class="category-search-input" value="{{ request()->query('arrival_date', date('Y-m-d')) }}" min="{{ date('Y-m-d') }}">
+                                    </div>
+                                    <div class="transport-field" style="flex: 1 1 140px; min-width: 130px;">
+                                        <h5>Arrival time</h5>
+                                        <input type="time" name="arrival_time" class="category-search-input" value="{{ request()->query('arrival_time', '') }}">
+                                    </div>
+                                    <div class="transport-field" style="flex: 1 1 140px; min-width: 130px;">
+                                        <h5>Return date</h5>
+                                        <input type="date" name="return_date" class="category-search-input" value="{{ request()->query('return_date', '') }}" min="{{ date('Y-m-d') }}">
+                                    </div>
+                                    <div class="transport-field" style="flex: 1 1 140px; min-width: 130px;">
+                                        <h5>Return time</h5>
+                                        <input type="time" name="return_time" class="category-search-input" value="{{ request()->query('return_time', '') }}">
                                     </div>
                                 </div>
                             </div>
@@ -368,14 +402,122 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const findInput = (key) => document.querySelector(`[name='${key}']`);
+            const searchForm = document.getElementById('home-category-search-form');
+            const checkInInput = findInput('check_in');
+            const checkOutInput = findInput('check_out');
+            const arrivalDateInput = findInput('arrival_date');
+            const returnDateInput = findInput('return_date');
             const guestSummary = document.getElementById('guest-rooms-summary-text');
             const participantSummary = document.getElementById('participant-summary-text');
             const guestCell = document.querySelector('.category-search-cell--guests');
             const participantCell = document.querySelector('.category-search-cell--participants');
+            const regionCell = document.querySelector('.category-search-cell--region');
             const accommodationCheckInCell = document.querySelector('.category-search-cell--check-in');
             const accommodationCheckOutCell = document.querySelector('.category-search-cell--check-out');
+            const transportCells = document.querySelectorAll('.category-search-cell--transport');
             const toursActivityDateCell = document.querySelector('.category-search-cell--activity-date');
             const categoryRadios = document.querySelectorAll('input[name="category"]');
+
+            const showDateError = function (message) {
+                let errorNode = document.getElementById('date-validation-error');
+                if (!errorNode) {
+                    errorNode = document.createElement('div');
+                    errorNode.id = 'date-validation-error';
+                    errorNode.style.color = '#d93025';
+                    errorNode.style.margin = '10px 0 0';
+                    errorNode.style.fontSize = '0.95rem';
+                    errorNode.style.fontWeight = '500';
+                    if (searchForm) {
+                        searchForm.querySelector('.category-search-submit')?.before(errorNode);
+                    }
+                }
+                errorNode.textContent = message;
+            };
+
+            const clearDateError = function () {
+                const errorNode = document.getElementById('date-validation-error');
+                if (errorNode) {
+                    errorNode.remove();
+                }
+            };
+
+            const validateCheckInOut = function () {
+                const selectedCategory = document.querySelector('input[name="category"]:checked')?.value;
+                if (selectedCategory === 'tours') {
+                    clearDateError();
+                    return true;
+                }
+
+                if (!checkInInput || !checkOutInput) {
+                    clearDateError();
+                    return true;
+                }
+
+                const checkIn = checkInInput.value;
+                const checkOut = checkOutInput.value;
+                if (checkIn && checkOut && checkIn >= checkOut) {
+                    showDateError('Check-out date must be after the check-in date.');
+                    return false;
+                }
+
+                clearDateError();
+                return true;
+            };
+
+            const updateCheckOutMinDate = function () {
+                if (!checkInInput || !checkOutInput) return;
+
+                if (!checkInInput.value) return;
+
+                const selectedCheckIn = new Date(checkInInput.value);
+                selectedCheckIn.setDate(selectedCheckIn.getDate() + 1);
+                const minDate = selectedCheckIn.toISOString().split('T')[0];
+                checkOutInput.min = minDate;
+
+                if (checkOutInput.value && checkOutInput.value <= checkInInput.value) {
+                    checkOutInput.value = minDate;
+                }
+            };
+
+            const updateReturnMinDate = function () {
+                if (!arrivalDateInput || !returnDateInput) return;
+
+                if (!arrivalDateInput.value) return;
+
+                const selectedArrival = new Date(arrivalDateInput.value);
+                selectedArrival.setDate(selectedArrival.getDate() + 1);
+                const minDate = selectedArrival.toISOString().split('T')[0];
+                returnDateInput.min = minDate;
+
+                if (returnDateInput.value && returnDateInput.value <= arrivalDateInput.value) {
+                    returnDateInput.value = minDate;
+                }
+            };
+
+            if (checkInInput) {
+                checkInInput.addEventListener('change', function () {
+                    updateCheckOutMinDate();
+                    validateCheckInOut();
+                });
+            }
+
+            if (checkOutInput) {
+                checkOutInput.addEventListener('change', validateCheckInOut);
+            }
+
+            if (arrivalDateInput) {
+                arrivalDateInput.addEventListener('change', function () {
+                    updateReturnMinDate();
+                });
+            }
+
+            if (searchForm) {
+                searchForm.addEventListener('submit', function (event) {
+                    if (!validateCheckInOut()) {
+                        event.preventDefault();
+                    }
+                });
+            }
 
             // Update guest rooms summary text
             const updateGuestSummary = function () {
@@ -400,19 +542,31 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                 const selectedCategory = document.querySelector('input[name="category"]:checked')?.value;
 
                 if (selectedCategory === 'tours') {
-                    // Show tours fields, hide accommodation fields
+                    // Show tours fields, hide accommodation and transport fields
                     accommodationCheckInCell.style.display = 'none';
                     accommodationCheckOutCell.style.display = 'none';
                     guestCell.style.display = 'none';
                     toursActivityDateCell.style.display = 'block';
                     participantCell.style.display = 'block';
+                    transportCells.forEach(el => el.style.display = 'none');
+                } else if (selectedCategory === 'transport') {
+                    // Show transport-specific fields, hide accommodation, tours, and region fields
+                    accommodationCheckInCell.style.display = 'none';
+                    accommodationCheckOutCell.style.display = 'none';
+                    guestCell.style.display = 'none';
+                    toursActivityDateCell.style.display = 'none';
+                    participantCell.style.display = 'none';
+                    transportCells.forEach(el => el.style.display = 'block');
+                    if (regionCell) regionCell.style.display = 'none';
                 } else {
-                    // Show accommodation fields (default for accommodation and transport)
+                    // Show accommodation fields and region
                     accommodationCheckInCell.style.display = 'block';
                     accommodationCheckOutCell.style.display = 'block';
                     guestCell.style.display = 'block';
                     toursActivityDateCell.style.display = 'none';
                     participantCell.style.display = 'none';
+                    transportCells.forEach(el => el.style.display = 'none');
+                    if (regionCell) regionCell.style.display = 'block';
                 }
             };
 
@@ -496,6 +650,8 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
             updateCategoryFields();
             updateGuestSummary();
             updateParticipantSummary();
+            updateCheckOutMinDate();
+            validateCheckInOut();
         });
     </script>
 @endsection

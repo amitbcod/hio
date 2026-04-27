@@ -77,6 +77,26 @@ class ActivityController extends Controller
         ]);
     }
 
+    public function update(Request $request, $id)
+    {
+        $activity = Activity::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($activity->operator_id !== $operator->id) {
+            abort(403);
+        }
+
+        if ($request->has('mark_step')) {
+            $step = $request->input('mark_step');
+            $activity->completeStep($step);
+            return redirect()->route('operator.activity.show', $activity->id)
+                ->with('success', 'Step completed successfully.');
+        }
+
+        return redirect()->route('operator.activity.show', $activity->id)
+            ->with('error', 'Invalid request.');
+    }
+
     /**
      * Step 1: Basic Information
      */

@@ -327,9 +327,12 @@ class HomeController extends Controller
                 ?? $activity->overview
         );
 
-        $overviewText = $this->plainText($activity->overview);
-        $includedText = $this->plainText($activity->whats_included);
-        $itineraryText = $this->plainText($activity->itinerary);
+        // For detailed views, use HTML content; for lists, use plain text
+        $overviewText = $detailed ? ($activity->overview ?: '') : $this->plainText($activity->overview);
+        $includedText = $detailed ? ($activity->whats_included ?: '') : $this->plainText($activity->whats_included);
+        $itineraryText = $detailed ? ($activity->itinerary ?: '') : $this->plainText($activity->itinerary);
+        $meetingPoint = $detailed ? ($activity->meeting_point_details ?: '') : $this->plainText($activity->meeting_point_details);
+        
         $bookingContext = $bookingContext ?? $this->defaultDetailBookingContext();
         $rates = collect($activity->relationLoaded('rates') ? $activity->rates : []);
         $policy = $activity->relationLoaded('policy') ? $activity->policy : null;
@@ -373,25 +376,30 @@ class HomeController extends Controller
             ? $this->buildActivityAvailability($variants, $rates, $allotments, $bookingContext)
             : [];
 
-        $bookingNotesText = $policy
-            ? $this->plainText($policy->booking_window_rules ?: $policy->no_show_policy)
-            : '';
+        // For detailed views, use HTML content; for lists, use plain text
+        $bookingNotesText = '';
+        $checkoutPolicyText = '';
+        $termsConditionsText = '';
+        
+        if ($policy) {
+            if ($detailed) {
+                $bookingNotesText = $policy->booking_window_rules ?: $policy->no_show_policy ?: '';
+                $checkoutPolicyText = $policy->cancellation_policy ?: $policy->amendment_policy ?: '';
+                $termsConditionsText = $policy->safety_requirements ?: '';
+            } else {
+                $bookingNotesText = $this->plainText($policy->booking_window_rules ?: $policy->no_show_policy);
+                $checkoutPolicyText = $this->plainText($policy->cancellation_policy ?: $policy->amendment_policy);
+                $termsConditionsText = $this->plainText($policy->safety_requirements);
+            }
+        }
 
         if (blank($bookingNotesText) && !blank($activity->booking_confirmation_type)) {
             $bookingNotesText = 'Booking confirmation: ' . $activity->booking_confirmation_type;
         }
 
-        $checkoutPolicyText = $policy
-            ? $this->plainText($policy->cancellation_policy ?: $policy->amendment_policy)
-            : '';
-
         if (blank($checkoutPolicyText) && $policy && !blank($policy->cancellation_policy_template_id)) {
             $checkoutPolicyText = 'Cancellation policy template: ' . $policy->cancellation_policy_template_id;
         }
-
-        $termsConditionsText = $policy
-            ? $this->plainText($policy->safety_requirements)
-            : '';
 
         if (blank($termsConditionsText) && $policy && !blank($policy->health_requirements_type) && $policy->health_requirements_type !== 'None') {
             $termsConditionsText = 'Health requirements: ' . $policy->health_requirements_type;
@@ -421,7 +429,7 @@ class HomeController extends Controller
             'overview_text' => $overviewText,
             'included_text' => $includedText,
             'itinerary_text' => $itineraryText,
-            'meeting_point' => $this->plainText($activity->meeting_point_details),
+            'meeting_point' => $meetingPoint,
             'booking' => $detailed ? $bookingContext : [],
             'available_rooms' => $availableRooms,
             'map_embed_url' => $mapData['embed_url'],

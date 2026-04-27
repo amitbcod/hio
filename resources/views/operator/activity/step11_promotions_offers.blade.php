@@ -149,7 +149,10 @@
                             <label style="font-weight:600;font-size:13px;">Campaign Description <span style="color:#666;font-weight:normal;font-size:12px;">(max 250 chars)</span></label>
                             <textarea name="campaign_description" id="campaignDescription" maxlength="250" style="display:none;"></textarea>
                             <div id="campaignDescriptionEditor" style="height:120px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
-                            <small style="color:#666;">Character count: <span id="descCharCount">0</span>/250</small>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                                <small style="color:#666;">Character count: <span id="descCharCount">0</span>/250</small>
+                                <small id="campaignDescriptionError" style="color:#d93025;display:none;"></small>
+                            </div>
                         </div>
 
                         <!-- Specifications -->
@@ -232,12 +235,12 @@
                 <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:16px;">
                     <a href="{{ route('operator.activity.step10.show', $activity->id) }}" class="btn" style="background:#f0f0f0;color:#333;padding:8px 12px;border-radius:4px;text-decoration:none;">← Back to Step 10</a>
                     @if($promotions->count() > 0)
-                    <form method="POST" action="{{ route('operator.activity.show', $activity->id) }}" style="display:inline;">
+                     <form method="POST" action="{{ route('operator.activity.update', $activity->id) }}" style="display:inline;">
                         @csrf
                         @method('PATCH')
                         <input type="hidden" name="mark_step" value="step11_promotions_offers">
                         <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:8px 12px;border-radius:4px;border:none;cursor:pointer;">Complete Step 11 →</button>
-                    </form>
+                    </form> 
                     @endif
                 </div>
             </div>
@@ -289,7 +292,27 @@
             if (!countElement || !editor) {
                 return;
             }
-            countElement.textContent = String(getEditorTextLength(editor));
+            const length = getEditorTextLength(editor);
+            countElement.textContent = String(length);
+            countElement.style.color = length > 250 ? '#d93025' : '#666';
+        }
+
+        function validateCampaignDescription() {
+            const editor = promotionEditors.campaignDescription;
+            const errorElement = document.getElementById('campaignDescriptionError');
+            if (!editor || !errorElement) {
+                return true;
+            }
+            const length = getEditorTextLength(editor);
+            if (length > 250) {
+                errorElement.style.display = 'block';
+                errorElement.textContent = 'Campaign Description exceeds 250 characters.';
+                return false;
+            } else {
+                errorElement.style.display = 'none';
+                errorElement.textContent = '';
+                return true;
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -343,13 +366,6 @@
                 }
 
                 editor.on('text-change', function() {
-                    if (config.maxLength) {
-                        const textLength = getEditorTextLength(editor);
-                        if (textLength > config.maxLength) {
-                            editor.deleteText(config.maxLength, editor.getLength());
-                        }
-                    }
-
                     syncEditorToTextarea(config.textareaId);
 
                     if (config.textareaId === 'campaignDescription') {
@@ -372,11 +388,17 @@
 
             const form = document.getElementById('promotionForm');
             if (form) {
-                form.addEventListener('submit', function() {
+                form.addEventListener('submit', function(event) {
                     syncEditorToTextarea('campaignDescription');
                     syncEditorToTextarea('specifications');
                     syncEditorToTextarea('inclusions');
                     syncEditorToTextarea('exclusions');
+                    
+                    if (!validateCampaignDescription()) {
+                        event.preventDefault();
+                        document.getElementById('campaignDescriptionError').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        return false;
+                    }
                 });
             }
 
