@@ -566,4 +566,9 @@ main .container-fluid {
     flex-direction: column-reverse;
 }
 
+.step-3-form {
+    display: inline-block !important;
+   
+}
+
 }

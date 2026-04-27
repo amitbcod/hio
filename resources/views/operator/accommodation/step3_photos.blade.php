@@ -4,7 +4,7 @@
     <div class="container mt-5">
         @php $currentStep = 3; @endphp
         <div class="row">
-            <div class="col-md-3">
+            <div id="sidebar"  class="col-md-3">
                 @include('operator.accommodation._steps_sidebar')
             </div>
             <div class="col-md-9">
@@ -75,3 +75,32 @@
         </div>
     </div>
 @endsection
+
+ <script>
+      function toggleMenu(element) {
+         let submenu = element.nextElementSibling;
+
+         element.classList.toggle("active");
+         submenu.classList.toggle("hidden");
+      }
+   </script>
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+   </script>
+
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+
+      document.addEventListener("click", function (e) {
+         let sidebar = document.getElementById("sidebar");
+         let hamburger = document.querySelector(".hamburger");
+
+         if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+            sidebar.classList.remove("active");
+         }
+      });
+   </script>
