@@ -5,7 +5,7 @@
 
 @section('content')
     <section class="hero" data-hero-slider>
-        <div class="hero-slides">
+        <!-- <div class="hero-slides">
             @foreach($heroSlides as $index => $slide)
                 <article class="hero-slide {{ $index === 0 ? 'is-active' : '' }}" data-hero-slide>
                     <img src="{{ $slide['image'] }}" alt="{{ $slide['title'] }}">
@@ -30,7 +30,26 @@
                         aria-label="Show slide {{ $index + 1 }}"></button>
                 @endforeach
             </div>
-        @endif
+        @endif -->
+
+        <div class="hero-slides">
+    <article class="hero-slide is-active">
+        <img src="{{ asset('storage/logos/mauritius.jpg') }}" alt="Mauritius">
+        
+        <div class="hero-overlay"></div>
+
+        <div class="wrap hero-content">
+            <span class="hero-badge">Explore</span>
+            <h1>Discover Mauritius</h1>
+            <p>Experience beaches, resorts, and unforgettable holidays</p>
+
+            <div class="hero-actions">
+                <a href="#" class="btn-primary">Explore now</a>
+                <a href="#discover-mauritius" class="btn-outline">Browse homepage listings</a>
+            </div>
+        </div>
+    </article>
+</div>
 
 
         <div class="main-search home-main-search">
