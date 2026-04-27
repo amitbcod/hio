@@ -86,7 +86,7 @@
 
                     <div class="category-input-group">
                         <div class="category-input-group-inner">
-<div class="category-search-cell category-search-cell--region" style="{{ $selectedCategory === 'transport' ? 'display:none;' : '' }}">
+                            <div class="category-search-cell category-search-cell--region" style="{{ $selectedCategory === 'transport' ? 'display:none;' : '' }}">
                                 <h5>Region/Area ?</h5>
                                 <select name="region" class="category-search-select" data-search-region
                                     data-selected="{{ $filters['region'] }}">
@@ -161,7 +161,7 @@
 
                             <!-- Transport: route, passengers and dates -->
                             <div class="category-search-cell category-search-cell--transport" style="display: none;">
-                                <div class="transport-row" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+                                <div class="transport-row" style="">
                                     <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
                                         <h5>From</h5>
                                         <input type="text" name="transport_from" class="category-search-input" value="{{ request()->query('transport_from', '') }}" placeholder="Departure location">
@@ -170,23 +170,23 @@
                                         <h5>To</h5>
                                         <input type="text" name="transport_to" class="category-search-input" value="{{ request()->query('transport_to', '') }}" placeholder="Destination">
                                     </div>
-                                    <div class="transport-field" style="flex: 0 1 120px; min-width: 120px;">
+                                    <div class="transport-field" style="flex: 0 1 110px; min-width: 110px;">
                                         <h5>Passengers</h5>
                                         <input type="number" name="passengers" class="category-search-input" min="1" value="{{ request()->query('passengers', 2) }}">
                                     </div>
-                                    <div class="transport-field" style="flex: 1 1 140px; min-width: 130px;">
+                                    <div class="transport-field" style="flex: 1 1 160px; min-width: 160px;">
                                         <h5>Arrival date</h5>
                                         <input type="date" name="arrival_date" class="category-search-input" value="{{ request()->query('arrival_date', date('Y-m-d')) }}" min="{{ date('Y-m-d') }}">
                                     </div>
-                                    <div class="transport-field" style="flex: 1 1 140px; min-width: 130px;">
+                                    <div class="transport-field" style="flex: 1 1 120px; min-width: 120px;">
                                         <h5>Arrival time</h5>
                                         <input type="time" name="arrival_time" class="category-search-input" value="{{ request()->query('arrival_time', '') }}">
                                     </div>
-                                    <div class="transport-field" style="flex: 1 1 140px; min-width: 130px;">
+                                    <div class="transport-field" style="flex: 1 1 160px; min-width: 160px;">
                                         <h5>Return date</h5>
                                         <input type="date" name="return_date" class="category-search-input" value="{{ request()->query('return_date', '') }}" min="{{ date('Y-m-d') }}">
                                     </div>
-                                    <div class="transport-field" style="flex: 1 1 140px; min-width: 130px;">
+                                    <div class="transport-field" style="flex: 1 1 120px; min-width: 120px;">
                                         <h5>Return time</h5>
                                         <input type="time" name="return_time" class="category-search-input" value="{{ request()->query('return_time', '') }}">
                                     </div>

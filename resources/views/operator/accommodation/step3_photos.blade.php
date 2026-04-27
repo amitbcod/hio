@@ -4,7 +4,7 @@
     <div class="container mt-5">
         @php $currentStep = 3; @endphp
         <div class="row">
-            <div id="sidebar"  class="col-md-3">
+            <div id="sidebar" class="col-md-3" style=" background: none !important;">
                 @include('operator.accommodation._steps_sidebar')
             </div>
             <div class="col-md-9">
