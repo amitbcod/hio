@@ -11,7 +11,7 @@
         <thead>
             <tr>
                 <th>Ref</th>
-                <th>Operator Email</th>
+                <th>Operator</th>
                 <th>Company</th>
                 <th>Activity</th>
                 <th>Guest</th>
@@ -27,7 +27,7 @@
             @forelse($bookings as $booking)
                 <tr>
                     <td>{{ $booking->booking_reference }}</td>
-                    <td>{{ optional($booking->activity->operator)->email ?? 'N/A' }}</td>
+                    <td>{{ optional($booking->activity->operator)->full_name ?? 'N/A' }} {{ optional($booking->activity->operator)->email ?? 'N/A' }}</td>
                     <td>{{ optional(optional($booking->activity->operator)->business)->legal_name ?? 'N/A' }}</td>
                     <td>{{ optional($booking->activity)->activity_name ?? 'N/A' }}</td>
                     <td>{{ $booking->guest_name ?? 'N/A' }}</td>

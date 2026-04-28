@@ -26,7 +26,7 @@
             @forelse($bookings as $booking)
                 <tr>
                     <td>{{ $booking->booking_reference }}</td>
-                    <td>{{ optional($booking->accommodation->operator)->email ?? 'N/A' }}</td>
+                    <td>{{ optional($booking->accommodation->operator)->full_name ?? 'N/A' }} {{ optional($booking->accommodation->operator)->email ?? 'N/A' }}</td>
                     <td>{{ optional($booking->accommodation)->property_name ?? 'N/A' }}</td>
                     <td>{{ $booking->guest_name ?? 'N/A' }}</td>
                     <td>
