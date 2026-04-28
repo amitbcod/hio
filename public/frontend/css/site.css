@@ -1194,6 +1194,14 @@ strong {
     color:var(--blue-dark);
 }
 
+.page-hero .breadcrumbs a {
+    color:var(--white);
+}
+
+.page-hero .breadcrumbs span {
+       color:var(--white);
+}
+
 .page-hero h1 {
     /* font-family: 'Roboto Slab', Georgia, serif; */
     font-size: clamp(34px, 5vw, 56px);
@@ -1772,7 +1780,7 @@ button#cancelModalBtn {
     border: 0;
     font-weight: bold;
     color: #181818;
-    font-size: 17px;
+    font-size: 16px;
 }
 
 .category-search-cell--guests.is-open .guest-rooms-selector {
@@ -1832,7 +1840,7 @@ button#cancelModalBtn {
     border: 0;
     font-weight: bold;
     color: #181818;
-    font-size: 17px;
+    font-size: 16px;
 }
 
 .category-search-cell--participants.is-open .participant-selector {
@@ -2035,6 +2043,7 @@ label.saved-guest-checkbox {
     border-radius: 10px;
     padding: 10px;
     width: 100%;
+    flex-wrap: wrap;
 }
 
 .item-guests-list .guest-item .guest-item-name {
@@ -2094,6 +2103,7 @@ label.saved-guest-checkbox {
 .category-search-cell--transport .transport-row > div {
     padding: 12px 17px 5px;
     border-left: 2px solid rgba(255, 255, 255, 1);
+    margin-bottom: 7px;
 }
 
 .category-search-cell--transport .transport-row > div:first-child {
