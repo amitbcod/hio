@@ -143,7 +143,10 @@ class BookingController extends Controller
         $variantName = $request->input('variant_name', '');
         $checkIn     = $request->input('check_in') ?: $request->input('activity_date');   // activity date
         $checkOut    = $request->input('check_out') ?: $checkIn;
-        $adults      = max(1, (int) $request->input('adults', 2));
+        $participants = $request->has('participants')
+            ? max(1, (int) $request->input('participants'))
+            : max(1, (int) $request->input('adults', 1));
+        $adults      = $participants;
         $children    = max(0, (int) $request->input('children', 0));
         $totalPrice  = (float) $request->input('total_price', 0);
         $currency    = $request->input('currency', 'USD');
@@ -205,6 +208,7 @@ class BookingController extends Controller
             'nights'           => 1,
             'adults'           => $adults,
             'children'         => $children,
+            'participants'     => $participants,
             'nightly_price'    => $totalPrice,
             'total_price'      => $totalPrice,
             'currency'         => $currency,

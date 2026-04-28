@@ -551,11 +551,13 @@
                                         </button>
                                         <div class="item-panel-content">
                                             <div class="item-panel-summary">
-                                                <span><i class="fa-solid fa-user"></i> {{ $item['adults'] }} adult{{ $item['adults'] != 1 ? 's' : '' }}</span>
-                                                <span><i class="fa-solid fa-child"></i> {{ $item['children'] }} child{{ $item['children'] != 1 ? 'ren' : '' }}</span>
                                                 @if($item['type'] === 'accommodation')
+                                                    <span><i class="fa-solid fa-user"></i> {{ $item['adults'] }} adult{{ $item['adults'] != 1 ? 's' : '' }}</span>
+                                                    <span><i class="fa-solid fa-child"></i> {{ $item['children'] }} child{{ $item['children'] != 1 ? 'ren' : '' }}</span>
                                                     <span><i class="fa-solid fa-bed"></i> {{ $item['room_name'] }} · {{ $item['nights'] }} night{{ $item['nights'] != 1 ? 's' : '' }}</span>
                                                 @else
+                                                    @php $participantCount = ($item['adults'] ?? 0) + ($item['children'] ?? 0); @endphp
+                                                    <span><i class="fa-solid fa-user"></i> {{ $participantCount }} participant{{ $participantCount != 1 ? 's' : '' }}</span>
                                                     <span><i class="fa-solid fa-person-hiking"></i> {{ $item['variant_name'] ?: 'Standard' }}</span>
                                                 @endif
                                                 <span><i class="fa-solid fa-money-bill-wave"></i> {{ $item['currency'] }} {{ number_format($item['net_amount'], 2) }}</span>

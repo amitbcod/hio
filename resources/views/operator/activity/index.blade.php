@@ -3,7 +3,7 @@
 @section('content')
     <div class="container mt-5">
         <div class="row">
-            <div class="col-md-3">
+            <div id="sidebar" class="col-md-3 net-section">
                 @include('operator.registration._sidebar_main')
             </div>
             <div class="col-md-9">
