@@ -58,7 +58,7 @@
     </li>
 </ul>
 
-    <ul style="list-style: none; padding: 0; margin: 0;">
+    <!-- <ul style="list-style: none; padding: 0; margin: 0;">
         @php
             $menuItems = [
                 ['label' => 'Dashboard', 'items' => []],
@@ -191,7 +191,7 @@
                 @endif
             </li>
         @endforeach
-    </ul>
+    </ul> -->
 </div>
 <style>
     .hidden {

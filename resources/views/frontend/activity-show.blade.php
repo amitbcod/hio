@@ -30,89 +30,100 @@
         </div>
     </section>
 
-    <section class="page-section">
-        <div class="wrap detail-shell detail-shell--booking">
-            <aside class="detail-side booking-side">
-                <form method="GET" action="{{ route('frontend.activities.show', $activity['id']) }}" class="booking-form">
-                    <div class="side-list">
-                        <div class="side-item">
-                            <span>Select Date</span>
-                            <strong>{{ $booking['activity_date_display'] }}</strong>
+    <section class="page-section detail-page-shell">
+        <div class="wrap">
+            <div class="detail-top-grid">
+                <div class="detail-gallery-card">
+                    @php
+                        $gallery = $activity['gallery'] ?? [];
+                        $mainImage = $gallery[0] ?? $activity['image'];
+                    @endphp
+                    <img src="{{ $mainImage }}" alt="{{ $activity['title'] }}" id="detailMainImage" class="detail-main-image">
+
+                    @if(count($gallery) > 1)
+                        <div class="detail-thumbs-row">
+                            @foreach($gallery as $index => $image)
+                                <button type="button" class="detail-thumb {{ $index === 0 ? 'is-active' : '' }}" data-gallery-image="{{ $image }}">
+                                    <img src="{{ $image }}" alt="{{ $activity['title'] }} thumbnail {{ $index + 1 }}">
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                <aside class="detail-booking-card">
+                    <form method="GET" action="{{ route('frontend.activities.show', $activity['id']) }}" class="booking-form-grid">
+                        <div class="booking-field">
+                            <label>Activity Date</label>
                             <input type="date" name="activity_date" value="{{ $booking['activity_date'] }}" class="booking-input" min="{{ date('Y-m-d') }}">
                         </div>
-                        <div class="side-item">
-                            <span>Participants</span>
-                            <strong>{{ $booking['participants'] }}</strong>
+                        <div class="booking-field">
+                            <label>Participants</label>
                             <input type="number" name="participants" min="1" value="{{ $booking['participants'] }}" class="booking-input">
                         </div>
-                        <div class="side-item">
-                            <button type="submit" class="btn-primary booking-btn">Check Rates</button>
-                            <p class="booking-note">Book for more than 20 people, please contact us directly.</p>
-                            <p class="booking-note">On Request Booking (we will get back within 24 hours)</p>
+
+                        <button type="submit" class="btn-primary booking-btn">Check Rates</button>
+                        <p class="booking-note">Book for more than 20 people, please contact us directly.</p>
+                        <p class="booking-note">On Request Booking (we will get back within 24 hours)</p>
+                    </form>
+
+                    @if(!empty($availableRooms))
+                        <div class="available-options-section">
+                            <h3>Available Options</h3>
+                            <div class="availability-table-wrap">
+                                <table class="availability-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Option / Variant</th>
+                                            <th>Total Price</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($availableRooms as $room)
+                                            <tr>
+                                                <td>{{ $room['room_name'] }}</td>
+                                                <td>
+                                                    @if($room['total_price'] !== null)
+                                                        <strong>{{ $room['currency'] }} {{ number_format((float) $room['total_price'], 2) }}</strong>
+                                                    @else
+                                                        On request
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($room['total_price'] !== null)
+                                                        <form method="POST" action="{{ route('frontend.booking.cart.add') }}">
+                                                            @csrf
+                                                            <input type="hidden" name="type" value="activity">
+                                                            <input type="hidden" name="activity_id" value="{{ $activity['id'] }}">
+                                                            <input type="hidden" name="variant_id" value="{{ $room['room_id'] ?? '' }}">
+                                                            <input type="hidden" name="variant_name" value="{{ $room['room_name'] }}">
+                                                            <input type="hidden" name="title" value="{{ $activity['title'] }}"}>
+                                                            <input type="hidden" name="image" value="{{ $activity['image'] }}">
+                                                            <input type="hidden" name="activity_date" value="{{ $booking['activity_date'] }}">
+                                                            <input type="hidden" name="participants" value="{{ $booking['participants'] }}">
+                                                            <input type="hidden" name="total_price" value="{{ $room['total_price'] }}">
+                                                            <input type="hidden" name="currency" value="{{ $room['currency'] }}">
+                                                            <button type="submit" class="btn-book-now">Book Now</button>
+                                                        </form>
+                                                    @else
+                                                        <a href="tel:+23052511153" class="btn-book-now btn-book-now--outline">Request</a>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                </form>
-            </aside>
+                    @endif
+                </aside>
+            </div>
 
             <div class="detail-main">
                 <div class="detail-card">
                     <h2>Overview</h2>
                     <div class="detail-text">{!! $activity['overview_text'] ?: $activity['excerpt'] !!}</div>
-                </div>
-
-                <div class="detail-card">
-                    <h2>Available Options</h2>
-                    @if(empty($availableRooms))
-                        <div class="detail-text">No availability is currently configured for the selected dates.</div>
-                    @else
-                        <div class="availability-table-wrap">
-                            <table class="availability-table">
-                                <thead>
-                                    <tr>
-                                        <th>Option / Variant</th>
-                                        <th>Qty</th>
-                                        <th>Total Price</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($availableRooms as $room)
-                                        <tr>
-                                            <td>{{ $room['room_name'] }}</td>
-                                            <td>{{ $room['quantity'] }}</td>
-                                            <td>
-                                                @if($room['total_price'] !== null)
-                                                    <strong>{{ $room['currency'] }} {{ number_format((float) $room['total_price'], 2) }}</strong>
-                                                @else
-                                                    On request
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($room['total_price'] !== null)
-                                                    <form method="POST" action="{{ route('frontend.booking.cart.add') }}">
-                                                        @csrf
-                                                        <input type="hidden" name="type" value="activity">
-                                                        <input type="hidden" name="activity_id" value="{{ $activity['id'] }}">
-                                                        <input type="hidden" name="variant_id" value="{{ $room['room_id'] ?? '' }}">
-                                                        <input type="hidden" name="variant_name" value="{{ $room['room_name'] }}">
-                                                        <input type="hidden" name="title" value="{{ $activity['title'] }}">
-                                                        <input type="hidden" name="image" value="{{ $activity['image'] }}">
-                                                        <input type="hidden" name="activity_date" value="{{ $booking['activity_date'] }}">
-                                                        <input type="hidden" name="participants" value="{{ $booking['participants'] }}">
-                                                        <input type="hidden" name="total_price" value="{{ $room['total_price'] }}">
-                                                        <input type="hidden" name="currency" value="{{ $room['currency'] }}">
-                                                        <button type="submit" class="btn-book-now">Book Now</button>
-                                                    </form>
-                                                @else
-                                                    <a href="tel:+23052511153" class="btn-book-now btn-book-now--outline">Request</a>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @endif
                 </div>
 
                 <div class="detail-card">
@@ -168,42 +179,91 @@
         </div>
     </section>
 
-    @if(!empty($activity['gallery']))
-        <section class="page-section" style="padding-top:0;">
-            <div class="wrap">
-                <div class="section-header">
-                    <div>
-                        <h2>Gallery</h2>
-                        <p>Images uploaded by the operator for this activity.</p>
-                    </div>
-                </div>
-                <div class="gallery-grid">
-                    @foreach($activity['gallery'] as $image)
-                        <img src="{{ $image }}" alt="{{ $activity['title'] }} gallery image">
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
 @endsection
 
 @push('styles')
     <style>
-        .detail-shell--booking {
-            grid-template-columns: 0.95fr 1.65fr;
+        .detail-top-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 24px;
+            margin-bottom: 32px;
         }
 
-        .detail-main {
+        .detail-gallery-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .detail-main-image {
+            width: 100%;
+            border-radius: 12px;
+            object-fit: cover;
+            aspect-ratio: 1 / 1;
+        }
+
+        .detail-thumbs-row {
             display: grid;
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px;
+        }
+
+        .detail-thumb {
+            width: 80px;
+            height: 80px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+            transition: border-color 0.2s;
+        }
+
+        .detail-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .detail-thumb.is-active {
+            border-color: #19b5b5;
+        }
+
+        .detail-booking-card {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 12px;
+            height: fit-content;
+        }
+
+        .booking-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .booking-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .booking-field label {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--ink);
         }
 
         .booking-input {
             width: 100%;
             min-height: 42px;
             border: 1px solid var(--line);
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 0 12px;
             font: inherit;
             color: var(--ink);
@@ -214,14 +274,20 @@
             width: 100%;
             border: 0;
             cursor: pointer;
-            margin-top: 4px;
+            grid-column: 1 / -1;
         }
 
         .booking-note {
-            margin: 12px 0 0;
+            margin: 0;
             color: var(--muted);
-            font-size: 13px;
+            font-size: 12px;
             line-height: 1.6;
+            grid-column: 1 / -1;
+        }
+
+        .detail-main {
+            display: grid;
+            gap: 24px;
         }
 
         .availability-table-wrap {
@@ -278,9 +344,25 @@
         }
 
         @media (max-width: 1080px) {
-            .detail-shell--booking {
+            .detail-top-grid {
                 grid-template-columns: 1fr;
             }
         }
     </style>
+@endpush
+
+@push('scripts')
+    <script>
+        document.querySelectorAll('.detail-thumb').forEach(thumb => {
+            thumb.addEventListener('click', function() {
+                const imageSrc = this.dataset.galleryImage;
+                const mainImage = document.getElementById('detailMainImage');
+                if (mainImage) {
+                    mainImage.src = imageSrc;
+                }
+                document.querySelectorAll('.detail-thumb').forEach(t => t.classList.remove('is-active'));
+                this.classList.add('is-active');
+            });
+        });
+    </script>
 @endpush
