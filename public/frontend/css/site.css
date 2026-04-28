@@ -2111,6 +2111,12 @@ label.saved-guest-checkbox {
     border-left:0;
 }
 
+/*************************/
+
+.detail-booking-card {
+    position: sticky;
+    top: 120px;
+}
 
 
 
