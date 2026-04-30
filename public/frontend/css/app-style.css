@@ -260,6 +260,7 @@ select.form-control {
 #sidebar,
 .col-md-3.net-section {
     background: #4c938d !important;
+    padding-top: 20px !important;
 }
 
 #sidebar div,
@@ -301,6 +302,7 @@ body .col-md-3.net-section div[style] {
     background: transparent !important;
 }
 
+
 .net-section span#registrationToggleIcon:last-child {
     font-size: 0 !important;
 }
@@ -322,7 +324,7 @@ body .col-md-3.net-section div[style] {
     font-size: 16px !important;
     font-weight: bold;
     padding-bottom: 0;
-        border-top: none !important;
+    border-top: none !important;
 }
 
 span.dropdownArrow:before {
