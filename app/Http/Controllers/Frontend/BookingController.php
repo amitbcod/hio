@@ -59,6 +59,7 @@ class BookingController extends Controller
         $checkOut        = $request->input('check_out');
         $adults          = max(1, (int) $request->input('adults', 2));
         $children        = max(0, (int) $request->input('children', 0));
+        $infants         = max(0, (int) $request->input('infants', 0));
         $nightlyPrice    = (float) $request->input('nightly_price', 0);
         $totalPrice      = (float) $request->input('total_price', 0);
         $currency        = $request->input('currency', 'USD');
@@ -67,6 +68,8 @@ class BookingController extends Controller
         $nights          = max(1, (int) $request->input('nights', 1));
         $image           = $request->input('image', '');
         $title           = $request->input('title', '');
+        $pricingSetting  = $request->input('pricing_setting', 'Per Room/Night');
+        $planLabel       = $request->input('plan_label', '');
 
         // Load accommodation for tax/fee details
         $accommodation = Accommodation::find($accommodationId);
@@ -123,6 +126,7 @@ class BookingController extends Controller
             'nights'           => $nights,
             'adults'           => $adults,
             'children'         => $children,
+            'infants'          => $infants,
             'nightly_price'    => $nightlyPrice,
             'total_price'      => $totalPrice,
             'currency'         => $currency,
@@ -133,6 +137,8 @@ class BookingController extends Controller
             'rooms'            => $rooms,
             'promotion_id'     => $promotionId,
             'is_non_refundable'=> $isNonRefundable,
+            'pricing_setting'  => $pricingSetting,
+            'plan_label'       => $planLabel,
         ];
     }
 
@@ -274,7 +280,7 @@ class BookingController extends Controller
 
         $totalGuests = 0;
         foreach ($cart as $item) {
-            $totalGuests += $item['adults'] + $item['children'];
+            $totalGuests += $item['adults'] + $item['children'] + ($item['infants'] ?? 0);
         }
 
         $traveler = Auth::guard('traveler')->user();
@@ -385,7 +391,7 @@ class BookingController extends Controller
 
         $totalGuests = 0;
         foreach ($cart as $item) {
-            $totalGuests += $item['adults'] + $item['children'];
+            $totalGuests += $item['adults'] + $item['children'] + ($item['infants'] ?? 0);
         }
 
         $guestsInput = $request->input('guests', []);

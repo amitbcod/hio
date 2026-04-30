@@ -21,7 +21,7 @@ class HomeController extends Controller
         $filters = $this->collectSearchFilters($request);
         $searchOptions = $this->buildSearchOptions();
 
-        $activities = Activity::with('seoSocial')
+        $activities = $this->approvedActivityQuery()->with('seoSocial')
             ->whereNotNull('activity_name')
             ->latest('updated_at')
             ->take(8)
@@ -169,7 +169,7 @@ class HomeController extends Controller
             })
             ->values();
 
-        $activities = Activity::with([
+        $activities = $this->approvedActivityQuery()->with([
                 'seoSocial',
                 'rates' => function ($query) {
                     $query->orderBy('adult_rate')->orderBy('equipment_rate')->orderBy('private_exclusive_rate');
@@ -225,6 +225,7 @@ class HomeController extends Controller
     public function showActivity(Request $request, Activity $activity)
     {
         abort_if(blank($activity->activity_name), 404);
+        abort_if(!$this->isActivityApprovedForFrontend($activity), 404);
 
         $bookingContext = $this->buildActivityBookingContext($request);
 
@@ -887,6 +888,7 @@ class HomeController extends Controller
             'check_out_display' => $checkOut->format('d-m-Y'),
             'adults' => 2,
             'children' => 0,
+            'infants' => 0,
             'total_guests' => 2,
             'nights' => 2,
         ];
@@ -912,6 +914,7 @@ class HomeController extends Controller
 
         $adults = max(1, (int) $request->query('adults', 2));
         $children = max(0, (int) $request->query('children', 0));
+        $infants = max(0, (int) $request->query('infants', 0));
         $nights = max(1, $checkIn->diffInDays($checkOut));
 
         return [
@@ -921,7 +924,8 @@ class HomeController extends Controller
             'check_out_display' => $checkOut->format('d-m-Y'),
             'adults' => $adults,
             'children' => $children,
-            'total_guests' => $adults + $children,
+            'infants' => $infants,
+            'total_guests' => $adults + $children + $infants,
             'nights' => $nights,
         ];
     }
@@ -1091,46 +1095,111 @@ class HomeController extends Controller
 
             $candidateRates = $roomRates->isNotEmpty() ? $roomRates : $globalRates;
 
-            $selectedRateData = $candidateRates
-                ->filter(fn ($rate) => $this->rateOverlapsStay($rate, $checkIn, $checkOut))
-                ->map(function ($rate) use ($bookingContext) {
-                    $nightly = $this->calculateAccommodationNightlyTotal(
-                        $rate,
-                        (int) $bookingContext['adults'],
-                        (int) $bookingContext['children']
-                    );
+            // Build pricing options grouped by pricing_setting
+            $pricingOptions = [];
+            $validRates = $candidateRates->filter(fn ($rate) => $this->rateOverlapsStay($rate, $checkIn, $checkOut));
 
-                    return [
-                        'rate' => $rate,
-                        'nightly' => $nightly,
-                    ];
-                })
-                ->filter(fn (array $item) => $item['nightly'] !== null)
-                ->sortBy('nightly')
-                ->first();
+            if ($validRates->isNotEmpty()) {
+                $groupedByPricingSetting = $validRates->groupBy(function ($rate) {
+                    return (string) ($rate->pricing_setting ?? 'Per Room/Night');
+                });
 
-            if (!$selectedRateData && $roomRates->isNotEmpty() && $globalRates->isNotEmpty()) {
-                $selectedRateData = $globalRates
-                    ->filter(fn ($rate) => $this->rateOverlapsStay($rate, $checkIn, $checkOut))
-                    ->map(function ($rate) use ($bookingContext) {
-                        $nightly = $this->calculateAccommodationNightlyTotal(
-                            $rate,
-                            (int) $bookingContext['adults'],
-                            (int) $bookingContext['children']
-                        );
+                foreach ($groupedByPricingSetting as $pricingSetting => $settingRates) {
+                    $bestRateData = $settingRates
+                        ->map(function ($rate) use ($bookingContext, $room) {
+                            $nightly = $this->calculateAccommodationNightlyTotal(
+                                $rate,
+                                (int) $bookingContext['adults'],
+                                (int) $bookingContext['children'],
+                                (int) ($bookingContext['infants'] ?? 0),
+                                (int) ($room->capacity ?? 0),
+                                (int) ($room->children_capacity ?? 0),
+                                (int) ($room->infant_capacity ?? 0)
+                            );
 
-                        return [
-                            'rate' => $rate,
-                            'nightly' => $nightly,
+                            return [
+                                'rate' => $rate,
+                                'nightly' => $nightly,
+                            ];
+                        })
+                        ->filter(fn (array $item) => $item['nightly'] !== null)
+                        ->sort(function (array $left, array $right) {
+                            // Always prefer is_default=1 rates first
+                            $leftDefault = $left['rate']->is_default ? 1 : 0;
+                            $rightDefault = $right['rate']->is_default ? 1 : 0;
+
+                            if ($leftDefault !== $rightDefault) {
+                                return $rightDefault <=> $leftDefault;
+                            }
+
+                            // Then fallback to lowest nightly price
+                            return $left['nightly'] <=> $right['nightly'];
+                        })
+                        ->first();
+
+                    if ($bestRateData) {
+                        $pricingOptions[] = [
+                            'rate' => $bestRateData['rate'],
+                            'nightly' => $bestRateData['nightly'],
+                            'pricing_setting' => $pricingSetting,
                         ];
-                    })
-                    ->filter(fn (array $item) => $item['nightly'] !== null)
-                    ->sortBy('nightly')
-                    ->first();
+                    }
+                }
             }
 
-            $selectedRate = $selectedRateData['rate'] ?? null;
-            $nightlyPrice = $selectedRateData['nightly'] ?? null;
+            // If no rates found, try global rates
+            if (empty($pricingOptions) && $roomRates->isNotEmpty() && $globalRates->isNotEmpty()) {
+                $validGlobalRates = $globalRates->filter(fn ($rate) => $this->rateOverlapsStay($rate, $checkIn, $checkOut));
+                $groupedByPricingSetting = $validGlobalRates->groupBy(function ($rate) {
+                    return (string) ($rate->pricing_setting ?? 'Per Room/Night');
+                });
+
+                foreach ($groupedByPricingSetting as $pricingSetting => $settingRates) {
+                    $bestRateData = $settingRates
+                        ->map(function ($rate) use ($bookingContext, $room) {
+                            $nightly = $this->calculateAccommodationNightlyTotal(
+                                $rate,
+                                (int) $bookingContext['adults'],
+                                (int) $bookingContext['children'],
+                                (int) ($bookingContext['infants'] ?? 0),
+                                (int) ($room->capacity ?? 0),
+                                (int) ($room->children_capacity ?? 0),
+                                (int) ($room->infant_capacity ?? 0)
+                            );
+
+                            return [
+                                'rate' => $rate,
+                                'nightly' => $nightly,
+                            ];
+                        })
+                        ->filter(fn (array $item) => $item['nightly'] !== null)
+                        ->sort(function (array $left, array $right) {
+                            // Always prefer is_default=1 rates first
+                            $leftDefault = $left['rate']->is_default ? 1 : 0;
+                            $rightDefault = $right['rate']->is_default ? 1 : 0;
+
+                            if ($leftDefault !== $rightDefault) {
+                                return $rightDefault <=> $leftDefault;
+                            }
+
+                            // Then fallback to lowest nightly price
+                            return $left['nightly'] <=> $right['nightly'];
+                        })
+                        ->first();
+
+                    if ($bestRateData) {
+                        $pricingOptions[] = [
+                            'rate' => $bestRateData['rate'],
+                            'nightly' => $bestRateData['nightly'],
+                            'pricing_setting' => $pricingSetting,
+                        ];
+                    }
+                }
+            }
+
+            // Use first pricing option as primary
+            $selectedRate = !empty($pricingOptions) ? $pricingOptions[0]['rate'] : null;
+            $nightlyPrice = !empty($pricingOptions) ? $pricingOptions[0]['nightly'] : null;
 
             if ($nightlyPrice === null) {
                 $roomBasePrice = $room->base_price !== null ? (float) $room->base_price : null;
@@ -1192,19 +1261,54 @@ class HomeController extends Controller
                 continue;
             }
 
-            $totalPrice = $nightlyPrice !== null
-                ? round($nightlyPrice * (int) $bookingContext['nights'], 2)
-                : null;
+            // Add a pricing option for each applicable plan
+            if (empty($pricingOptions)) {
+                // Fallback: use base_price if no rates available
+                $nightlyPrice = $room->base_price !== null ? (float) $room->base_price : null;
+                if ($nightlyPrice !== null && $nightlyPrice > 0) {
+                    $totalPrice = round($nightlyPrice * (int) $bookingContext['nights'], 2);
+                    $results[] = [
+                        'room_id' => (int) $room->id,
+                        'room_name' => (string) ($room->room_name ?: ($room->room_type ?: 'Room')),
+                        'room_type' => $room->room_type,
+                        'quantity' => $quantity,
+                        'nightly_price' => $nightlyPrice,
+                        'total_price' => $totalPrice,
+                        'currency' => $accommodation->currency_code ?? 'MUR',
+                        'pricing_setting' => 'Per Room/Night',
+                        'plan_label' => 'Standard Rate',
+                    ];
+                }
+            } else {
+                // Add each pricing option as a separate item
+                foreach ($pricingOptions as $option) {
+                    $nightlyPrice = $option['nightly'];
+                    $pricingSetting = $option['pricing_setting'];
+                    $rate = $option['rate'];
+                    
+                    $totalPrice = $nightlyPrice !== null
+                        ? round($nightlyPrice * (int) $bookingContext['nights'], 2)
+                        : null;
 
-            $results[] = [
-                'room_id' => (int) $room->id,
-                'room_name' => (string) ($room->room_name ?: ($room->room_type ?: 'Room')),
-                'room_type' => $room->room_type,
-                'quantity' => $quantity,
-                'nightly_price' => $nightlyPrice,
-                'total_price' => $totalPrice,
-                'currency' => $selectedRate->currency ?? $accommodation->currency_code ?? 'MUR',
-            ];
+                    if ($totalPrice !== null) {
+                        $planLabel = $pricingSetting === 'Per Person/Night' 
+                            ? 'Per Person Plan' 
+                            : ($pricingSetting === 'Per Property/Night' ? 'Property Rate' : 'Per Room Plan');
+
+                        $results[] = [
+                            'room_id' => (int) $room->id,
+                            'room_name' => (string) ($room->room_name ?: ($room->room_type ?: 'Room')),
+                            'room_type' => $room->room_type,
+                            'quantity' => $quantity,
+                            'nightly_price' => $nightlyPrice,
+                            'total_price' => $totalPrice,
+                            'currency' => $rate->currency ?? $accommodation->currency_code ?? 'MUR',
+                            'pricing_setting' => $pricingSetting,
+                            'plan_label' => $planLabel,
+                        ];
+                    }
+                }
+            }
         }
 
         usort($results, function (array $left, array $right) {
@@ -1217,7 +1321,7 @@ class HomeController extends Controller
         return $results;
     }
 
-    private function calculateAccommodationNightlyTotal($rate, int $adults, int $children): ?float
+    private function calculateAccommodationNightlyTotal($rate, int $adults, int $children, int $infants = 0, int $includedAdults = 2, int $includedChildren = 0, int $includedInfants = 0): ?float
     {
         if (!$rate) {
             return null;
@@ -1232,30 +1336,69 @@ class HomeController extends Controller
 
         $adults = max(1, $adults);
         $children = max(0, $children);
+        $infants = max(0, $infants);
         $pricingSetting = (string) ($rate->pricing_setting ?? 'Per Room/Night');
 
         if ($pricingSetting === 'Per Person/Night') {
             $total = $baseRate * $adults;
+            $extraBedRate = (float) ($rate->extra_bed_rate ?? 0);
             $childRate = $rate->children_rate !== null ? (float) $rate->children_rate : $baseRate;
+            $infantRate = $rate->infant_rate !== null ? (float) $rate->infant_rate : 0.0;
+
+            if ($childRate <= 0 && $extraBedRate > 0) {
+                $childRate = $extraBedRate;
+            }
+
+            if ($infantRate <= 0 && $extraBedRate > 0) {
+                $infantRate = $extraBedRate;
+            }
+
             if ($children > 0) {
                 $total += $childRate * $children;
+            }
+
+            if ($infants > 0 && $infantRate > 0) {
+                $total += $infantRate * $infants;
             }
 
             return round($total, 2);
         }
 
-        $includedAdults = 2;
+        $includedAdults = max(0, $includedAdults);
+        $includedChildren = max(0, $includedChildren);
+        $includedInfants = max(0, $includedInfants);
+
         $extraAdults = max($adults - $includedAdults, 0);
+        $extraChildren = max($children - $includedChildren, 0);
+        $extraInfants = max($infants - $includedInfants, 0);
+
         $extraAdultRate = (float) ($rate->extra_adult_rate ?? 0);
+        $extraBedRate = (float) ($rate->extra_bed_rate ?? 0);
         $childrenRate = (float) ($rate->children_rate ?? 0);
+        $infantRate = (float) ($rate->infant_rate ?? 0);
+
+        if ($childrenRate <= 0 && $extraBedRate > 0) {
+            $childrenRate = $extraBedRate;
+        }
+
+        if ($infantRate <= 0 && $extraBedRate > 0) {
+            $infantRate = $extraBedRate;
+        }
 
         $total = $baseRate;
+//return round($extraAdultRate, 2);exit;
+//$extraAdults.'------'.$extraAdultRate;exit;
+        // Charge extra adults exclusively by extra_adult_rate, not extra_bed_rate.
         if ($extraAdults > 0 && $extraAdultRate > 0) {
             $total += $extraAdults * $extraAdultRate;
         }
 
-        if ($children > 0 && $childrenRate > 0) {
-            $total += $children * $childrenRate;
+        if ($extraChildren > 0 && $childrenRate > 0) {
+            $total += $extraChildren * $childrenRate;
+        }
+
+        if ($extraInfants > 0 && $infantRate > 0) {
+            $total += $extraInfants * $infantRate;
         }
 
         return round($total, 2);
@@ -1753,10 +1896,23 @@ class HomeController extends Controller
             ->where('status', Accommodation::STATUS_ACTIVE);
     }
 
+    private function approvedActivityQuery()
+    {
+        return Activity::query()
+            ->where('approval_status', 'Approved')
+            ->where('status', Activity::STATUS_ACTIVE);
+    }
+
     private function isAccommodationApprovedForFrontend(Accommodation $accommodation): bool
     {
         return (string) $accommodation->approval_status === 'Approved'
             && (string) $accommodation->status === Accommodation::STATUS_ACTIVE;
+    }
+
+    private function isActivityApprovedForFrontend(Activity $activity): bool
+    {
+        return (string) $activity->approval_status === 'Approved'
+            && (string) $activity->status === Activity::STATUS_ACTIVE;
     }
 
     private function calculateAvailableRooms(Accommodation $accommodation, string $checkIn, string $checkOut): ?int

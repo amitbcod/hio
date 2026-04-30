@@ -540,6 +540,9 @@
                                         <button type="button" class="item-panel-header">
                                             <div class="item-panel-title">
                                                 <strong>{{ $item['title'] }}</strong>
+                                                @if($item['type'] === 'accommodation' && !empty($item['plan_label']))
+                                                    <span style="background: #f0f7f7; color: #19b5b5; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px;">{{ $item['plan_label'] }}</span>
+                                                @endif
                                                 <span class="item-panel-meta">
                                                     {{ $item['check_in_display'] }}
                                                     @if($item['check_in'] !== $item['check_out'])
@@ -554,6 +557,9 @@
                                                 @if($item['type'] === 'accommodation')
                                                     <span><i class="fa-solid fa-user"></i> {{ $item['adults'] }} adult{{ $item['adults'] != 1 ? 's' : '' }}</span>
                                                     <span><i class="fa-solid fa-child"></i> {{ $item['children'] }} child{{ $item['children'] != 1 ? 'ren' : '' }}</span>
+                                                    @if(!empty($item['infants']))
+                                                        <span><i class="fa-solid fa-baby-carriage"></i> {{ $item['infants'] }} infant{{ $item['infants'] != 1 ? 's' : '' }}</span>
+                                                    @endif
                                                     <span><i class="fa-solid fa-bed"></i> {{ $item['room_name'] }} · {{ $item['nights'] }} night{{ $item['nights'] != 1 ? 's' : '' }}</span>
                                                 @else
                                                     @php $participantCount = ($item['adults'] ?? 0) + ($item['children'] ?? 0); @endphp

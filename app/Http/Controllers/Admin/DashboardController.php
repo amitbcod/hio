@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Business;
 use App\Models\Accommodation;
+use App\Models\Activity;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BusinessApproved;
 
@@ -35,7 +36,18 @@ class DashboardController extends Controller
             ->orderByRaw('COALESCE(submitted_for_approval_at, created_at) DESC')
             ->get();
 
-        return view('admin.dashboard.index', compact('businesses', 'pendingAccommodations'));
+        $pendingActivities = Activity::with(['operator'])
+            ->where(function ($query) {
+                $query->where('approval_status', 'Pending')
+                    ->orWhere(function ($fallbackQuery) {
+                        $fallbackQuery->whereNull('approval_status')
+                            ->where('status', Activity::STATUS_IN_REVIEW);
+                    });
+            })
+            ->orderByRaw('COALESCE(submitted_for_approval_at, created_at) DESC')
+            ->get();
+
+        return view('admin.dashboard.index', compact('businesses', 'pendingAccommodations', 'pendingActivities'));
     }
 
     public function approveBusiness(Request $request, Business $business)
@@ -119,5 +131,48 @@ class DashboardController extends Controller
         ]);
 
         return redirect()->route('admin.dashboard')->with('success', 'Accommodation rejected. Operator can update and resubmit.');
+    }
+
+    public function approveActivity(Request $request, Activity $activity)
+    {
+        if (!session('admin_id')) return redirect()->route('admin.login');
+
+        $data = $request->validate([
+            'approval_notes' => 'nullable|string|max:2000',
+        ]);
+
+        $adminId = (int) session('admin_id');
+
+        $activity->update([
+            'approval_status' => 'Approved',
+            'status' => Activity::STATUS_ACTIVE,
+            'approved_at' => now(),
+            'approved_by' => $adminId > 0 ? $adminId : null,
+            'approval_notes' => $data['approval_notes'] ?? null,
+            'step13_publish' => 1,
+        ]);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Activity approved and now visible on frontend.');
+    }
+
+    public function rejectActivity(Request $request, Activity $activity)
+    {
+        if (!session('admin_id')) return redirect()->route('admin.login');
+
+        $data = $request->validate([
+            'approval_notes' => 'nullable|string|max:2000',
+        ]);
+
+        $adminId = (int) session('admin_id');
+
+        $activity->update([
+            'approval_status' => 'Rejected',
+            'status' => Activity::STATUS_IN_REVIEW,
+            'approved_at' => null,
+            'approved_by' => $adminId > 0 ? $adminId : null,
+            'approval_notes' => $data['approval_notes'] ?? null,
+        ]);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Activity rejected. Operator can update and resubmit.');
     }
 }

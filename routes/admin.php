@@ -15,6 +15,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('businesses/{business}/reject', [DashboardController::class, 'rejectBusiness'])->name('business.reject');
     Route::post('accommodations/{accommodation}/approve', [DashboardController::class, 'approveAccommodation'])->name('accommodation.approve');
     Route::post('accommodations/{accommodation}/reject', [DashboardController::class, 'rejectAccommodation'])->name('accommodation.reject');
+    Route::post('activities/{activity}/approve', [DashboardController::class, 'approveActivity'])->name('activity.approve');
+    Route::post('activities/{activity}/reject', [DashboardController::class, 'rejectActivity'])->name('activity.reject');
 
     // Admin role management (create global / business-scoped roles)
     Route::get('roles', [\App\Http\Controllers\Admin\RoleController::class, 'index'])->name('roles.index');

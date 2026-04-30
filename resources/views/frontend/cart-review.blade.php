@@ -56,8 +56,8 @@
                                     ? ($rooms . ' Room' . ($rooms !== 1 ? 's' : '') . ' · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '') . ' · ' . $item['room_name'])
                                     : ('Activity · ' . ($item['variant_name'] ?: 'Standard'));
                                 $subLabel = $isAccom
-                                    ? ($item['adults'] . ' Adults' . ($item['children'] > 0 ? ', ' . $item['children'] . ' Children' : '') . ' · ' . $rooms . '× ' . $item['room_name'])
-                                    : ($item['adults'] . ' Adults' . ($item['children'] > 0 ? ', ' . $item['children'] . ' Children' : ''));
+                                    ? ($item['adults'] . ' Adults' . ($item['children'] > 0 ? ', ' . $item['children'] . ' Children' : '') . (!empty($item['infants']) ? ', ' . $item['infants'] . ' Infants' : '') . ' · ' . $rooms . '× ' . $item['room_name'])
+                                    : ($item['adults'] . ' Adults' . ($item['children'] > 0 ? ', ' . $item['children'] . ' Children' : '') . (!empty($item['infants']) ? ', ' . $item['infants'] . ' Infants' : ''));
                             @endphp
 
                             <div class="cart-item-card">
@@ -78,6 +78,9 @@
                                         <div>
                                             <span class="cart-item-badge">{{ $isAccom ? 'Stay' : 'Activity' }}</span>
                                             <h3 class="cart-item-title">{{ $item['title'] }}</h3>
+                                            @if($isAccom && !empty($item['plan_label']))
+                                                <p class="cart-item-sub" style="color: #19b5b5; font-weight: 500;">{{ $item['plan_label'] }} • {{ $item['pricing_setting'] ?? 'Per Room/Night' }}</p>
+                                            @endif
                                             <p class="cart-item-sub">{{ $subLabel }}</p>
                                         </div>
                                         <div class="cart-item-price-col">

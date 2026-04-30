@@ -52,6 +52,7 @@ class Activity extends Model
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
         'submitted_for_approval_at' => 'datetime',
+        'approved_at' => 'datetime',
     ];
 
     /**

@@ -171,8 +171,9 @@
                                                         </div>
                                                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
                                                             <div>
-                                                                <label style="font-weight:600;font-size:11px;">Adult Rate (MUR) *</label>
+                                                                <label style="font-weight:600;font-size:11px;">Room Rate (MUR) *</label>
                                                                 <input type="number" name="adult_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;" value="{{ $combo['default_pricing']->base_rate }}">
+                                                                <div style="font-size:11px;color:#666;margin-top:4px;">Base room price covers configured adults, children, and infants occupancy.</div>
                                                             </div>
                                                             <div>
                                                                 <label style="font-weight:600;font-size:11px;">Extra Adult Rate (MUR) *</label>
@@ -231,8 +232,9 @@
                 <input type="hidden" id="defaultPlanId" name="plan_id">
                 
                 <div class="mb-3">
-                    <label style="font-weight:600;">Adult Rate (MUR) *</label>
+                    <label style="font-weight:600;">Room Rate (MUR) *</label>
                     <input type="number" name="adult_rate" class="form-control" step="0.01" min="0" required placeholder="0.00">
+                    <small style="display:block;margin-top:4px;color:#666;">This base room price covers configured adults, children, and infants occupancy.</small>
                 </div>
                 <div class="mb-3">
                     <label style="font-weight:600;">Extra Adult Rate (MUR) *</label>
@@ -287,8 +289,9 @@
                     <input type="date" id="editValidTo" name="valid_to" class="form-control" required style="font-size:12px;">
                 </div>
                 <div class="mb-3">
-                    <label style="font-weight:600;">Adult Rate (MUR) *</label>
+                    <label style="font-weight:600;">Room Rate (MUR) *</label>
                     <input type="number" id="editAdultRate" name="adult_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;">
+                    <small style="display:block;margin-top:4px;color:#666;">This base room price covers configured adults, children, and infants occupancy.</small>
                 </div>
                 <div class="mb-3">
                     <label style="font-weight:600;">Extra Adult Rate (MUR) *</label>

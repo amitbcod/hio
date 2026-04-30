@@ -76,5 +76,45 @@
             @endforelse
         </tbody>
     </table>
+
+    <h5 class="mt-5">Pending Activity Approvals</h5>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Activity</th>
+                <th>Operator</th>
+                <th>Submitted</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse(($pendingActivities ?? collect()) as $activity)
+                <tr>
+                    <td>{{ $activity->id }}</td>
+                    <td>
+                        <strong>{{ $activity->activity_name }}</strong><br>
+                        <small class="text-muted">{{ $activity->service_type }}</small>
+                    </td>
+                    <td>{{ $activity->operator->email ?? 'N/A' }}</td>
+                    <td>{{ $activity->submitted_for_approval_at ? $activity->submitted_for_approval_at->format('Y-m-d H:i') : ($activity->created_at ? $activity->created_at->format('Y-m-d H:i') : 'N/A') }}</td>
+                    <td>{{ $activity->approval_status ?? $activity->status }}</td>
+                    <td>
+                        <form method="POST" action="{{ route('admin.activity.approve', $activity) }}" style="display:inline">
+                            @csrf
+                            <button class="btn btn-sm btn-success">Approve</button>
+                        </form>
+                        <form method="POST" action="{{ route('admin.activity.reject', $activity) }}" style="display:inline" onsubmit="return confirm('Reject this activity submission?');">
+                            @csrf
+                            <button class="btn btn-sm btn-danger">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="6">No pending activity submissions.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
 </div>
 @endsection

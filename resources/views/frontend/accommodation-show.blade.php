@@ -12,6 +12,7 @@
             'check_out_display' => now()->addDays(2)->format('d-m-Y'),
             'adults' => 2,
             'children' => 0,
+            'infants' => 0,
             'nights' => 2,
             'total_guests' => 2,
         ];
@@ -30,6 +31,7 @@
             'check_out' => $booking['check_out'],
             'adults' => $booking['adults'],
             'children' => $booking['children'],
+            'infants' => $booking['infants'],
         ]);
     @endphp
 
@@ -101,12 +103,20 @@
                             <label>Children</label>
                             <input type="number" name="children" min="0" value="{{ $booking['children'] }}" class="booking-input">
                         </div>
+                        <div class="booking-field">
+                            <label>Infants</label>
+                            <input type="number" name="infants" min="0" value="{{ $booking['infants'] }}" class="booking-input">
+                        </div>
 
                         <button type="submit" class="btn-primary booking-btn">Update Search</button>
                     </form>
 
                     <div class="booking-summary-line">
-                        <span>{{ $booking['adults'] }} Adults{{ $booking['children'] > 0 ? ', ' . $booking['children'] . ' Children' : '' }}</span>
+                        <span>
+                            {{ $booking['adults'] }} Adults
+                            {{ $booking['children'] > 0 ? ', ' . $booking['children'] . ' Children' : '' }}
+                            {{ $booking['infants'] > 0 ? ', ' . $booking['infants'] . ' Infants' : '' }}
+                        </span>
                         <strong>{{ max(1, (int) ($booking['nights'] ?? 1)) }} Night{{ ((int) ($booking['nights'] ?? 1)) !== 1 ? 's' : '' }}</strong>
                     </div>
                     @if($startingRate)
@@ -142,16 +152,21 @@
                     <p class="detail-empty">No room availability is currently configured for the selected dates.</p>
                 @else
                     <div class="room-option-list">
-                        @foreach($availableRooms as $room)
+                        @php
+                            // Group rooms by room_id to show each room once with multiple pricing options
+                            $roomsByRoomId = collect($availableRooms)->groupBy('room_id');
+                        @endphp
+                        @foreach($roomsByRoomId as $roomId => $roomVariants)
                             @php
-                                $roomDetail = $roomCatalog->get((int) ($room['room_id'] ?? 0));
+                                $roomDetail = $roomCatalog->get((int) $roomId);
                                 $nights = max(1, (int) ($booking['nights'] ?? 1));
+                                $firstVariant = $roomVariants->first();
                             @endphp
                             <div class="room-option-item">
                                 <div class="room-option-left">
-                                    <h3>{{ $room['room_name'] }}</h3>
+                                    <h3>{{ $firstVariant['room_name'] }}</h3>
                                     <p class="room-option-sub">
-                                        {{ $room['room_type'] ?: ($roomDetail['room_type'] ?? 'Room') }}
+                                        {{ $firstVariant['room_type'] ?: ($roomDetail['room_type'] ?? 'Room') }}
                                         @if(!empty($roomDetail['size_sqm'])) • {{ rtrim(rtrim(number_format((float) $roomDetail['size_sqm'], 2, '.', ''), '0'), '.') }} sqm @endif
                                         @if(!empty($roomDetail['view'])) • {{ $roomDetail['view'] }} view @endif
                                     </p>
@@ -161,11 +176,8 @@
                                     @endif
 
                                     <div class="room-option-meta">
-                                        @if(!empty($roomDetail['capacity']))
-                                            <!-- <span>Up to {{ $roomDetail['capacity'] }} guests</span> -->
-                                        @endif
-                                        @if(!empty($room['quantity']))
-                                            <span>{{ $room['quantity'] }} room{{ (int)$room['quantity'] !== 1 ? 's' : '' }} left</span>
+                                        @if(!empty($firstVariant['quantity']))
+                                            <span>{{ $firstVariant['quantity'] }} room{{ (int)$firstVariant['quantity'] !== 1 ? 's' : '' }} left</span>
                                         @endif
                                         @if(!empty($roomDetail['smoking']))
                                             <span>{{ $roomDetail['smoking'] }}</span>
@@ -185,36 +197,52 @@
                                 </div>
 
                                 <div class="room-option-right">
-                                    <div class="room-price">
-                                        @if($room['total_price'] !== null)
-                                            <strong>{{ $room['currency'] }} {{ number_format((float) $room['total_price'], 2) }}</strong>
-                                            <small>{{ $nights }} night{{ $nights !== 1 ? 's' : '' }} total</small>
-                                        @else
-                                            <strong>On request</strong>
-                                        @endif
-                                    </div>
+                                    {{-- Show all pricing plan options for this room --}}
+                                    @foreach($roomVariants as $room)
+                                        <div class="room-price" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #eee;">
+                                            @if($room['total_price'] !== null)
+                                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                                    <strong>{{ $room['currency'] }} {{ number_format((float) $room['total_price'], 2) }}</strong>
+                                                    @if(!empty($room['plan_label']))
+                                                        <span style="background: #f0f7f7; color: #19b5b5; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">{{ $room['plan_label'] }}</span>
+                                                    @endif
+                                                </div>
+                                                <small>{{ $nights }} night{{ $nights !== 1 ? 's' : '' }} total</small>
+                                                @if(!empty($room['pricing_setting']))
+                                                    <small style="display: block; color: #666; margin-top: 4px; font-size: 11px;">{{ $room['pricing_setting'] }}</small>
+                                                @endif
+                                            @else
+                                                <strong>On request</strong>
+                                            @endif
+                                        </div>
 
-                                    @if($room['total_price'] !== null)
-                                        <form method="POST" action="{{ route('frontend.booking.cart.add') }}" class="room-booking-form">
-                                            @csrf
-                                            <input type="hidden" name="type" value="accommodation">
-                                            <input type="hidden" name="accommodation_id" value="{{ $accommodation['id'] }}">
-                                            <input type="hidden" name="room_id" value="{{ $room['room_id'] ?? '' }}">
-                                            <input type="hidden" name="room_name" value="{{ $room['room_name'] }}">
-                                            <input type="hidden" name="title" value="{{ $accommodation['title'] }}">
-                                            <input type="hidden" name="image" value="{{ $accommodation['image'] }}">
-                                            <input type="hidden" name="check_in" value="{{ $booking['check_in'] }}">
-                                            <input type="hidden" name="check_out" value="{{ $booking['check_out'] }}">
-                                            <input type="hidden" name="nights" value="{{ $nights }}">
-                                            <input type="hidden" name="adults" value="{{ $booking['adults'] }}">
-                                            <input type="hidden" name="children" value="{{ $booking['children'] }}">
-                                            <input type="hidden" name="rooms" value="{{ request()->query('rooms', 1) }}">
-                                            <input type="hidden" name="nightly_price" value="{{ $room['nightly_price'] ?? $room['total_price'] }}">
-                                            <input type="hidden" name="total_price" value="{{ $room['total_price'] }}">
-                                            <input type="hidden" name="currency" value="{{ $room['currency'] }}">
-                                            <button type="submit" class="btn-primary room-book-btn">Select Room</button>
-                                        </form>
-                                    @else
+                                        @if($room['total_price'] !== null)
+                                            <form method="POST" action="{{ route('frontend.booking.cart.add') }}" class="room-booking-form" style="margin-bottom: 8px;">
+                                                @csrf
+                                                <input type="hidden" name="type" value="accommodation">
+                                                <input type="hidden" name="accommodation_id" value="{{ $accommodation['id'] }}">
+                                                <input type="hidden" name="room_id" value="{{ $room['room_id'] ?? '' }}">
+                                                <input type="hidden" name="room_name" value="{{ $room['room_name'] }}">
+                                                <input type="hidden" name="title" value="{{ $accommodation['title'] }}">
+                                                <input type="hidden" name="image" value="{{ $accommodation['image'] }}">
+                                                <input type="hidden" name="check_in" value="{{ $booking['check_in'] }}">
+                                                <input type="hidden" name="check_out" value="{{ $booking['check_out'] }}">
+                                                <input type="hidden" name="nights" value="{{ $nights }}">
+                                                <input type="hidden" name="adults" value="{{ $booking['adults'] }}">
+                                                <input type="hidden" name="children" value="{{ $booking['children'] }}">
+                                                <input type="hidden" name="infants" value="{{ $booking['infants'] }}">
+                                                <input type="hidden" name="rooms" value="{{ request()->query('rooms', 1) }}">
+                                                <input type="hidden" name="nightly_price" value="{{ $room['nightly_price'] ?? $room['total_price'] }}">
+                                                <input type="hidden" name="total_price" value="{{ $room['total_price'] }}">
+                                                <input type="hidden" name="currency" value="{{ $room['currency'] }}">
+                                                <input type="hidden" name="pricing_setting" value="{{ $room['pricing_setting'] ?? 'Per Room/Night' }}">
+                                                <input type="hidden" name="plan_label" value="{{ $room['plan_label'] ?? '' }}">
+                                                <button type="submit" class="btn-primary room-book-btn">{{ !empty($room['plan_label']) ? 'Select (' . $room['plan_label'] . ')' : 'Select Room' }}</button>
+                                            </form>
+                                        @endif
+                                    @endforeach
+
+                                    @if($firstVariant['total_price'] === null)
                                         <a href="tel:+23052511153" class="room-request-link">Request quote</a>
                                     @endif
 
