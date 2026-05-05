@@ -15,7 +15,7 @@ return new class extends Migration
             $table->unsignedBigInteger('booking_id')->nullable()->index(); // Links to first accommodation/activity booking
             $table->boolean('is_verified')->default(false);
             $table->timestamp('verified_at')->nullable();
-            $table->timestamp('expires_at');
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
 
             // Compound index for email + OTP lookups
