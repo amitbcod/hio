@@ -356,18 +356,18 @@
                 </div>
                 <h1>Complete Your Booking</h1>
                 <p class="checkout-subtitle">Cash on Delivery — your booking will be confirmed within 24 hours.</p>
-            </div>
+                    @if(!auth('traveler')->check())
+                        <p class="checkout-login-link">
+                            Already have an account? <a href="{{ route('traveler.login') . '?redirect=' . urlencode(route('frontend.booking.checkout')) }}">Login</a>
+                        </p>
+                    @endif
 
-            <div class="checkout-layout">
+                <form method="POST" action="{{ route('frontend.booking.place-order') }}" class="checkout-form" id="checkoutForm">
+                    @csrf
 
-                {{-- ════════ LEFT — Guest Info Form ════════ --}}
-                <div class="checkout-form-wrap">
-                    <form method="POST" action="{{ route('frontend.booking.place-order') }}" class="checkout-form" id="checkoutForm">
-                        @csrf
-
-                        @if($errors->any())
-                            <div class="form-errors">
-                                <ul>
+                    @if($errors->any())
+                        <div class="form-errors">
+                            <ul>
                                     @foreach($errors->all() as $err)
                                         <li>{{ $err }}</li>
                                     @endforeach
@@ -473,8 +473,8 @@
 
                                 <div class="form-grid" style="margin-top: 20px;">
                                     <div class="form-group">
-                                        <label for="guest_email">Email Address</label>
-                                        <input type="email" id="guest_email" name="guest_email" value="{{ old('guest_email', $guestDefaults['guest_email'] ?? '') }}" placeholder="you@example.com" class="form-input">
+                                        <label for="guest_email">Email Address <span class="req">*</span></label>
+                                        <input type="email" id="guest_email" name="guest_email" value="{{ old('guest_email', $guestDefaults['guest_email'] ?? '') }}" placeholder="you@example.com" class="form-input" required>
                                         <p class="form-hint">Booking confirmation will be sent here.</p>
                                     </div>
 

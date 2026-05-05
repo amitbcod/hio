@@ -461,14 +461,12 @@ class BookingController extends Controller
         $isGuestCheckout = !Auth::guard('traveler')->check();
         $travelerAccount = Auth::guard('traveler')->user();
         
-        // Validate email for guest checkout
-        if ($isGuestCheckout) {
-            if (empty($guestEmail)) {
-                return back()->with('error', 'Email is required for guest checkout.');
-            }
-            if (!filter_var($guestEmail, FILTER_VALIDATE_EMAIL)) {
-                return back()->with('error', 'Please enter a valid email address.');
-            }
+        // Validate email address for all checkout flows
+        if (empty($guestEmail)) {
+            return back()->with('error', 'Email Address is required.');
+        }
+        if (!filter_var($guestEmail, FILTER_VALIDATE_EMAIL)) {
+            return back()->with('error', 'Please enter a valid email address.');
         }
 
         // Parse participant time slots JSON

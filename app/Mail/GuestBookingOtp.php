@@ -47,6 +47,7 @@ class GuestBookingOtp extends Mailable
                 'otp' => $this->otpToken->otp_code,
                 'email' => $this->otpToken->email,
                 'tripUrl' => $this->tripUrl,
+                'verificationUrl' => route('frontend.guest-order-search', ['email' => $this->otpToken->email]),
                 'accommodationName' => $accommodationName,
                 'checkInDate' => $checkInDate ? Carbon::parse($checkInDate)->format('F d, Y') : 'N/A',
                 'checkOutDate' => $checkOutDate ? Carbon::parse($checkOutDate)->format('F d, Y') : 'N/A',

@@ -827,49 +827,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function openCheckoutModal() {
-    // Check if user is authenticated
     const isAuthenticated = {{ auth('traveler')->check() ? 'true' : 'false' }};
-    
-    if (isAuthenticated) {
-        // If user is logged in, proceed directly to checkout
-        window.location.href = '{{ route("frontend.booking.checkout") }}';
-    } else {
-        // If not logged in, show the modal with options
-        const modal = document.getElementById('checkoutOptionsModal');
-        if (modal) {
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-    }
+    const targetUrl = isAuthenticated ? '{{ route("frontend.booking.checkout") }}' : '{{ route("frontend.booking.guest-checkout") }}';
+    window.location.href = targetUrl;
 }
 
-function closeCheckoutModal() {
-    const modal = document.getElementById('checkoutOptionsModal');
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-}
-
-function proceedGuestCheckout() {
-    // Navigate to guest checkout
-    window.location.href = '{{ route("frontend.booking.guest-checkout") }}';
-}
-
-function proceedLogin() {
-    // Navigate to login, then redirect back to checkout
-    window.location.href = '{{ route("traveler.login") }}?redirect={{ urlencode(route("frontend.booking.checkout")) }}';
-}
-
-// Close modal when clicking overlay
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('checkoutOptionsModal');
-    if (modal) {
-        const overlay = modal.querySelector('.modal-overlay');
-        if (overlay) {
-            overlay.addEventListener('click', closeCheckoutModal);
-        }
-    }
-});
 </script>
 @endpush

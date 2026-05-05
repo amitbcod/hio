@@ -86,20 +86,24 @@
 
             <h2>Access Your Trip Details</h2>
 
-            <p>To view and manage your booking, use this one-time password (OTP):</p>
+            <p>To view and manage your booking, use this one-time verification link:</p>
 
-            <div class="otp-code">{{ $otp }}</div>
+            <!-- <div class="otp-code">{{ $otp }}</div> -->
 
             <p style="text-align: center; margin-top: 30px;">
                 <a href="{{ $tripUrl }}" class="button">View Your Booking</a>
             </p>
 
             <p><strong>Your Email:</strong> {{ $email }}</p>
+            
 
             <p style="color: #999; font-size: 12px;">
-                This OTP will expire in 15 minutes and can be used one time only to access your guest trip details.
+                This verification link will expire in 15 minutes and can be used one time only to access your guest trip details.
             </p>
-
+            <p style="color: #999; font-size: 12px;">
+                You can access your guest trip bookings and manage them by generating a new verification link 
+                <a href="{{ $verificationUrl }}" style="color:#007bff;">click here</a>.
+            </p>
             <div class="footer">
                 <p><strong>Questions?</strong></p>
                 <p>If you have any questions about your booking, please contact us at support@holidaysio.com</p>
