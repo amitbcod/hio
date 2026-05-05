@@ -187,9 +187,9 @@
     <div class="wrap">
         <div class="page-header">
             <div class="breadcrumbs">
-                <a href="{{ route('traveler.trips') }}">Trips</a>
+                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.show', ['otp' => $otp]) : route('traveler.trips') }}">Trips</a>
                 <span>/</span>
-                <a href="{{ route('traveler.trip.detail', $trip) }}">{{ $trip->trip_name }}</a>
+                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip]) : route('traveler.trip.detail', $trip) }}">{{ $trip->trip_name }}</a>
                 <span>/</span>
                 <span>Manage Guests</span>
             </div>
@@ -199,7 +199,7 @@
 
         @php $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0); $addedCount = $booking->guests->count(); $canDownload = $bookedCount == $addedCount; @endphp
         <div class="manage-guests-card" style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-bottom: 30px;">
-            <form id="manageGuestsForm" method="POST" action="{{ route('traveler.trip.booking.update-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}">
+            <form id="manageGuestsForm" method="POST" action="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.update-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.update-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}">
                 @csrf
                 <p style="margin-bottom: 20px; font-weight: 600;">Booked: {{ $bookedCount }} &nbsp;|&nbsp; Added: <span id="added-count">{{ $booking->guests->count() }}</span></p>
 
@@ -258,7 +258,7 @@
                                     $hasTimeSlot = isset($booking->participant_time_slots[$guest->guest_number ?? ($index + 1)]) && !empty($booking->participant_time_slots[$guest->guest_number ?? ($index + 1)]);
                                 @endphp
                                 @if($hasTimeSlot)
-                                    <a href="{{ route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) }}" target="_blank" style="font-size: 14px; color: #007bff; text-decoration: none; display: inline-flex; align-items: center;">
+                                    <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) }}" target="_blank" style="font-size: 14px; color: #007bff; text-decoration: none; display: inline-flex; align-items: center;">
                                         <i class="fa-solid fa-download"></i> Download Voucher
                                     </a>
                                 @else
@@ -283,11 +283,11 @@
 
             
             @if ($canDownload && ( $booking instanceof \App\Models\AccommodationBooking))
-                <a href="{{ route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}" target="_blank" class="btn btn-primary" style="margin-top: 16px;">Download Voucher</a>
+                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}" target="_blank" class="btn btn-primary" style="margin-top: 16px;">Download Voucher</a>
             @endif
         </div>
 
-        <a href="{{ route('traveler.trip.detail', $trip) }}" class="btn btn-secondary">&larr; Back to Trip</a>
+        <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip]) : route('traveler.trip.detail', $trip) }}" class="btn btn-secondary">&larr; Back to Trip</a>
     </div>
 </section>
 

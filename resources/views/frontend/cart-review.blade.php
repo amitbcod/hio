@@ -220,10 +220,10 @@
                                 <span>{{ $summary['currency'] }} {{ number_format($summary['net_payable'], 2) }}</span>
                             </div>
 
-                            <a href="{{ route('frontend.booking.checkout') }}" class="btn-checkout">
+                            <button type="button" class="btn-checkout" id="proceedCheckoutBtn">
                                 Proceed to Checkout
                                 <i class="fa-solid fa-arrow-right"></i>
-                            </a>
+                            </button>
 
                             <p class="summary-note">
                                 <i class="fa-solid fa-shield-halved"></i>
@@ -234,6 +234,56 @@
 
                 </div>{{-- .cart-layout --}}
             @endif
+
+            <!-- ═════════════════════════════════════════════════════════════
+                  Checkout Options Modal (Guest vs Login)
+                 ═════════════════════════════════════════════════════════════ -->
+            <div id="checkoutOptionsModal" class="modal" style="display: none;">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>How would you like to proceed?</h2>
+                        <button type="button" class="modal-close" onclick="closeCheckoutModal()">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="checkout-options">
+                            <!-- Option 1: Guest Checkout -->
+                            <div class="checkout-option-card">
+                                <div class="option-icon">
+                                    <i class="fa-solid fa-user-plus"></i>
+                                </div>
+                                <h3>Guest Checkout</h3>
+                                <p>Book without creating an account. You'll receive an email with a link to access your booking details.</p>
+                                <button type="button" class="btn-option-primary" onclick="proceedGuestCheckout()">
+                                    Continue as Guest
+                                </button>
+                            </div>
+
+                            <!-- Option 2: Login -->
+                            <div class="checkout-option-card">
+                                <div class="option-icon">
+                                    <i class="fa-solid fa-sign-in-alt"></i>
+                                </div>
+                                <h3>Existing Customer</h3>
+                                <p>Sign in to your account to save your bookings, manage preferences, and track trips easily.</p>
+                                <button type="button" class="btn-option-primary" onclick="proceedLogin()">
+                                    Sign In
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <p class="option-note">
+                            <i class="fa-solid fa-lock-open"></i>
+                            Your information is secure. We never share your details with third parties.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
         </div>
     </section>
@@ -582,5 +632,244 @@
     }
     .cart-item-title { max-width: 100%; white-space: normal; }
 }
+
+/* ═════════════════════════════════════════════════════════════
+   Checkout Options Modal
+═════════════════════════════════════════════════════════════ */
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: -1;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: 16px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px;
+    border-bottom: 1px solid #f0f0f5;
+}
+
+.modal-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    color: #1a1a2e;
+}
+
+.modal-body {
+    padding: 32px 28px;
+}
+
+.checkout-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.checkout-option-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+    border: 2px solid #f0f0f5;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.checkout-option-card:hover {
+    border-color: #1a1a2e;
+    box-shadow: 0 8px 20px rgba(26, 26, 46, 0.1);
+}
+
+.option-icon {
+    font-size: 48px;
+    color: #1a1a2e;
+    margin-bottom: 16px;
+}
+
+.checkout-option-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 8px;
+}
+
+.checkout-option-card p {
+    font-size: 14px;
+    color: #666;
+    margin: 0 0 16px;
+    line-height: 1.5;
+}
+
+.btn-option-primary {
+    background: #1a1a2e;
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    align-self: center;
+}
+
+.btn-option-primary:hover {
+    background: #0f0f1e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.modal-footer {
+    padding: 20px 28px;
+    border-top: 1px solid #f0f0f5;
+    background: #fafafa;
+}
+
+.option-note {
+    font-size: 13px;
+    color: #666;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.option-note i {
+    color: #1a1a2e;
+}
+
+@media (max-width: 600px) {
+    .checkout-options {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-content {
+        width: 95%;
+    }
+
+    .modal-header h2 {
+        font-size: 18px;
+    }
+
+    .modal-header {
+        padding: 20px;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .modal-footer {
+        padding: 16px 20px;
+    }
+}
 </style>
+@endpush
+
+@push('scripts')
+<script>
+// ═════════════════════════════════════════════════════════════
+//  Checkout Options Modal Functions
+// ═════════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', function() {
+    const proceedBtn = document.getElementById('proceedCheckoutBtn');
+    if (proceedBtn) {
+        proceedBtn.addEventListener('click', openCheckoutModal);
+    }
+});
+
+function openCheckoutModal() {
+    // Check if user is authenticated
+    const isAuthenticated = {{ auth('traveler')->check() ? 'true' : 'false' }};
+    
+    if (isAuthenticated) {
+        // If user is logged in, proceed directly to checkout
+        window.location.href = '{{ route("frontend.booking.checkout") }}';
+    } else {
+        // If not logged in, show the modal with options
+        const modal = document.getElementById('checkoutOptionsModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+}
+
+function closeCheckoutModal() {
+    const modal = document.getElementById('checkoutOptionsModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function proceedGuestCheckout() {
+    // Navigate to guest checkout
+    window.location.href = '{{ route("frontend.booking.guest-checkout") }}';
+}
+
+function proceedLogin() {
+    // Navigate to login, then redirect back to checkout
+    window.location.href = '{{ route("traveler.login") }}?redirect={{ urlencode(route("frontend.booking.checkout")) }}';
+}
+
+// Close modal when clicking overlay
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('checkoutOptionsModal');
+    if (modal) {
+        const overlay = modal.querySelector('.modal-overlay');
+        if (overlay) {
+            overlay.addEventListener('click', closeCheckoutModal);
+        }
+    }
+});
+</script>
 @endpush

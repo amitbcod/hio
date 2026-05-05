@@ -34,4 +34,9 @@ class AccommodationBooking extends Model
     {
         return $this->hasMany(BookingGuest::class, 'booking_id')->where('booking_type', 'accommodation');
     }
+
+    public function guestOtpToken()
+    {
+        return $this->belongsTo(GuestOtpToken::class, 'guest_otp_token_id');
+    }
 }

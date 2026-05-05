@@ -128,6 +128,14 @@ class TravelerAuthController extends Controller
 
         $this->syncCartAfterAuthentication($traveler->id, $request);
 
+        $redirect = $request->input('redirect') ?: $request->query('redirect');
+        if ($redirect) {
+            $parsed = parse_url($redirect);
+            if (!isset($parsed['host']) || $parsed['host'] === $request->getHost()) {
+                return redirect()->intended($redirect);
+            }
+        }
+
         return redirect()->intended(route('traveler.profile'));
     }
 

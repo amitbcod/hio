@@ -18,10 +18,13 @@ use App\Models\Booking;
 use App\Models\BookingLineItem;
 use App\Models\Traveller;
 use App\Models\BliTravellerAllocation;
+use App\Models\GuestOtpToken;
 use App\Services\TripService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class BookingController extends Controller
@@ -261,7 +264,62 @@ class BookingController extends Controller
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  CHECKOUT (Guest info form)
+    //  GUEST CHECKOUT (No auth required - simple form)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    public function guestCheckout()
+    {
+        $cart = $this->resolveCart();
+
+        if (empty($cart)) {
+            return redirect()->route('frontend.home')->with('error', 'Your booking is empty.');
+        }
+
+        $summary = $this->buildCartSummary($cart);
+
+        $totalGuests = 0;
+        foreach ($cart as $item) {
+            $totalGuests += $item['adults'] + $item['children'] + ($item['infants'] ?? 0);
+        }
+
+        $guestDefaults = [
+            'guest_name' => old('guest_name') ?: '',
+            'guest_email' => old('guest_email') ?: '',
+            'guest_phone' => old('guest_phone') ?: '',
+            'dob' => old('dob') ?: '',
+        ];
+
+        // Load time slots for activities in cart
+        $activityTimeSlots = [];
+        foreach ($cart as $item) {
+            if ($item['type'] === 'activity' && !empty($item['activity_id'])) {
+                $activity = Activity::with('schedulingTimeSlots')->find($item['activity_id']);
+                if ($activity) {
+                    $slots = $activity->schedulingTimeSlots
+                        ->map(fn($slot) => [
+                            'id' => $slot->timeslot_id,
+                            'start_time' => $slot->start_time,
+                            'end_time' => $slot->end_time,
+                            'duration' => $slot->duration,
+                            'display' => $slot->start_time . ' - ' . $slot->end_time . ' (' . $slot->duration . ')',
+                        ])
+                        ->values()
+                        ->toArray();
+                    $activityTimeSlots[$item['activity_id']] = $slots;
+                }
+            }
+        }
+
+        $countries = $this->countries();
+        $savedGuests = collect(); // No saved guests for guests
+        $traveler = null;
+        $travelerProfile = null;
+
+        return view('frontend.checkout', compact('cart', 'summary', 'guestDefaults', 'traveler', 'travelerProfile', 'countries', 'totalGuests', 'savedGuests', 'activityTimeSlots'));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  CHECKOUT (Guest info form - requires auth)
     // ═══════════════════════════════════════════════════════════════════════
 
     public function checkout()
@@ -395,6 +453,23 @@ class BookingController extends Controller
         }
 
         $guestsInput = $request->input('guests', []);
+        $guestEmail = $request->input('guest_email');
+        $guestPhone = $request->input('guest_phone');
+        $special    = $request->input('special_requests', '');
+
+        // Determine if this is a guest or authenticated checkout
+        $isGuestCheckout = !Auth::guard('traveler')->check();
+        $travelerAccount = Auth::guard('traveler')->user();
+        
+        // Validate email for guest checkout
+        if ($isGuestCheckout) {
+            if (empty($guestEmail)) {
+                return back()->with('error', 'Email is required for guest checkout.');
+            }
+            if (!filter_var($guestEmail, FILTER_VALIDATE_EMAIL)) {
+                return back()->with('error', 'Please enter a valid email address.');
+            }
+        }
 
         // Parse participant time slots JSON
         $participantTimeSlotsJson = $request->input('participant_time_slots_json', '{}');
@@ -453,6 +528,7 @@ class BookingController extends Controller
 
         $allAdditionalGuests = array_merge($allAdditionalGuests, $globalAdditionalGuests);
 
+        // Only validate guest details if they are provided (optional for guest checkout)
         if (!empty($allAdditionalGuests)) {
             Validator::make(['guests' => $allAdditionalGuests], [
                 'guests' => 'array',
@@ -489,6 +565,7 @@ class BookingController extends Controller
         // Use the first item's currency / grand total
         $summary = $this->buildCartSummary($cart);
         $bookingRefs = [];
+        $guestOtp = null;
 
         // Get or create Trip ID
         $travelerAccount = Auth::guard('traveler')->user();
@@ -504,16 +581,25 @@ class BookingController extends Controller
             $tripData['title'] = $tripData['title'] ?? ucfirst($item['type']) . ' Trip';
         }
 
-        // Create or get Trip ID - check for explicit trip selection first
+        // Get or create Trip ID - check for explicit trip selection first
         $tripId = null;
-        if ($travelerAccount) {
-            $explicitTripId = session('add_to_trip_id');
-            if ($explicitTripId) {
-                $tripId = $explicitTripId;
-                session()->forget('add_to_trip_id');
-            } else {
-                $tripId = TripService::getOrCreateTripId($travelerAccount, $tripData);
-            }
+        $explicitTripId = session('add_to_trip_id');
+        
+        if ($explicitTripId) {
+            $tripId = $explicitTripId;
+            session()->forget('add_to_trip_id');
+        } elseif ($travelerAccount) {
+            $tripId = TripService::getOrCreateTripId($travelerAccount, $tripData);
+        } elseif ($isGuestCheckout) {
+            // Create trip for guest booking
+            $trip = \App\Models\Trip::create([
+                'traveler_account_id' => null,
+                'title' => $tripData['title'] ?? 'Guest Trip',
+                'start_date' => $tripData['start_date'] ?? null,
+                'end_date' => $tripData['end_date'] ?? null,
+                'status' => 'planned',
+            ]);
+            $tripId = $trip->id;
         }
 
         foreach ($cart as $item) {
@@ -546,7 +632,7 @@ class BookingController extends Controller
                 $primaryGuest['notes'] = $primaryGuest['notes'] ?? null;
             }
 
-            $guestName = trim(($primaryGuest['first_name'] ?? '') . ' ' . ($primaryGuest['middle_name'] ?? '') . ' ' . ($primaryGuest['last_name'] ?? '')) ?: ($travelerAccount->full_name ?? $travelerAccount->email ?? 'Guest');
+            $guestName = trim(($primaryGuest['first_name'] ?? '') . ' ' . ($primaryGuest['middle_name'] ?? '') . ' ' . ($primaryGuest['last_name'] ?? '')) ?: ($travelerAccount?->full_name ?? $travelerAccount?->email ?? 'Guest');
 
             if ($item['type'] === 'accommodation') {
                 $booking = AccommodationBooking::create([
@@ -575,7 +661,36 @@ class BookingController extends Controller
                     'source_channel'    => 'Direct',
                     'booked_at'         => now(),
                     'trip_id'           => $tripId,
+                    'guest_otp_token_id' => $guestOtp?->id,
+                    'is_guest'          => $isGuestCheckout ? 1 : 0,
                 ]);
+
+                if ($isGuestCheckout && !$guestOtp) {
+                    $guestOtp = GuestOtpToken::createForGuest($guestEmail, $booking->id);
+                }
+
+                if ($isGuestCheckout && $guestOtp) {
+                    $booking->guest_otp_token_id = $guestOtp->id;
+                    $booking->save();
+                }
+
+                if ($isGuestCheckout && $guestOtp && !$guestOtp->wasRecentlyCreated) {
+                    // no-op, already created earlier
+                }
+
+                if ($isGuestCheckout && $guestOtp && $guestOtp->wasRecentlyCreated) {
+                    // Send OTP email to guest once after first booking creation
+                    try {
+                        $tripUrl = url('/') . '/traveler/guest-trips/' . $guestOtp->otp_code;
+                        Mail::to($guestEmail)->send(new \App\Mail\GuestBookingOtp($booking, $guestOtp, $tripUrl));
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to send guest booking OTP email', [
+                            'email' => $guestEmail,
+                            'booking_id' => $booking->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
 
                 // Create Trip party members if Trip exists
                 if ($tripId) {
@@ -703,7 +818,30 @@ class BookingController extends Controller
                     'participant_time_slots' => !empty($itemTimeSlotsMap) ? $itemTimeSlotsMap : null,
                     'booked_at'         => now(),
                     'trip_id'           => $tripId,
+                    'is_guest'          => $isGuestCheckout ? 1 : 0,
                 ]);
+
+                if ($isGuestCheckout && !$guestOtp) {
+                    $guestOtp = GuestOtpToken::createForGuest($guestEmail, $booking->id);
+                }
+
+                if ($isGuestCheckout && $guestOtp) {
+                    $booking->guest_otp_token_id = $guestOtp->id;
+                    $booking->save();
+                }
+
+                if ($isGuestCheckout && $guestOtp && $guestOtp->wasRecentlyCreated) {
+                    try {
+                        $tripUrl = url('/') . '/traveler/guest-trips/' . $guestOtp->otp_code;
+                        Mail::to($guestEmail)->send(new \App\Mail\GuestBookingOtp($booking, $guestOtp, $tripUrl));
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to send guest booking OTP email', [
+                            'email' => $guestEmail,
+                            'booking_id' => $booking->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
 
                 // Create Trip party members if Trip exists
                 if ($tripId) {
@@ -1146,4 +1284,94 @@ class BookingController extends Controller
 
         return response()->json(['error' => 'Guest not found'], 404);
     }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  GUEST ORDER SEARCH (Access via email for guest bookings)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    public function guestOrderSearch(Request $request)
+    {
+        $email = $request->input('email');
+
+        if (!$email) {
+            return redirect()->route('frontend.home')->with('error', 'Please provide an email address.');
+        }
+
+        // Check if guest has any bookings with this email
+        $accommodationBookings = AccommodationBooking::where('guest_email', $email)
+            ->where('is_guest', 1)
+            ->get();
+
+        $activityBookings = ActivityBooking::where('guest_email', $email)
+            ->where('is_guest', 1)
+            ->get();
+
+        if ($accommodationBookings->isEmpty() && $activityBookings->isEmpty()) {
+            return back()->with('error', 'No guest bookings found for this email. Please check and try again.');
+        }
+
+        // Show guest bookings list (without requiring OTP verification yet)
+        return view('frontend.guest-order-list', compact('email', 'accommodationBookings', 'activityBookings'));
+    }
+
+    public function sendGuestOrderOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $email = $request->input('email');
+
+        // Find any booking with this email
+        $booking = AccommodationBooking::where('guest_email', $email)
+            ->where('is_guest', 1)
+            ->first();
+
+        if (!$booking) {
+            $booking = ActivityBooking::where('guest_email', $email)
+                ->where('is_guest', 1)
+                ->first();
+        }
+
+        if (!$booking) {
+            return back()->with('error', 'No guest bookings found for this email.');
+        }
+
+        // Create or get existing OTP token
+        $guestOtp = GuestOtpToken::where('email', $email)
+            ->where('expires_at', '>', now())
+            ->first();
+
+        if (!$guestOtp) {
+            $guestOtp = GuestOtpToken::createForGuest($email, $booking->id);
+        }
+
+        // Send OTP email
+        try {
+            $tripUrl = url('/') . '/traveler/guest-trips/' . $guestOtp->otp_code;
+            
+            // Get accommodation or activity for email
+            $accommodationName = 'Your Booking';
+            if ($booking instanceof AccommodationBooking && $booking->accommodation) {
+                $accommodationName = $booking->accommodation->property_name;
+            } elseif ($booking instanceof ActivityBooking && $booking->activity) {
+                $accommodationName = $booking->activity->activity_name;
+            }
+
+            Mail::to($email)->send(new \App\Mail\GuestBookingOtp($booking, $guestOtp, $tripUrl));
+
+            return back()
+                ->with('success', 'A verification link has been sent to your email. Please check your inbox and use the email link to access your guest trip.');
+        } catch (\Exception $e) {
+            Log::error('Failed to send guest order verification link', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            $errorMessage = config('app.debug') ? $e->getMessage() : 'Failed to send verification link. Please try again later.';
+            return back()->with('error', $errorMessage);
+        }
+    }
 }
+

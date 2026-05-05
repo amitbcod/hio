@@ -3,47 +3,82 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use App\Models\SavedGuest;
-use App\Models\Trip;
-use App\Models\ActivityBooking;
+use App\Models\GuestOtpToken;
 use App\Models\AccommodationBooking;
+use App\Models\ActivityBooking;
+use App\Models\Trip;
 use Illuminate\Http\Request;
 
-class TripController extends Controller
+class GuestTripController extends Controller
 {
-    public function index()
+    /**
+     * Show guest trip listing using verification link  
+     */
+    public function show($otp)
     {
-        $traveler = auth('traveler')->user();
-        $trips = Trip::where('traveler_account_id', $traveler->id)
-            ->with(['accommodationBookings', 'activityBookings'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $otpToken = $this->resolveGuestToken($otp);
+        if (!$otpToken) {
+            return redirect()->route('frontend.home')
+                ->with('error', 'Invalid or expired verification link. Please check your email for a new link.');
+        }
 
-        return view('frontend.traveler.trips', compact('trips'))->with('guestMode', false);
+        $this->authenticateGuest($otpToken);
+
+        // Try to get trips first
+        $tripIds = $this->getGuestTripIds($otpToken);
+
+        if (empty($tripIds)) {
+            $this->attachTripsToGuestBookings($otpToken);
+            $tripIds = $this->getGuestTripIds($otpToken);
+        }
+
+        if (!empty($tripIds)) {
+            // Show trips in table view (same as authenticated customers)
+            $trips = Trip::with([
+                'accommodationBookings.guests',
+                'activityBookings.guests'
+            ])
+                ->whereIn('id', $tripIds)
+                ->orderBy('start_date', 'desc')
+                ->get();
+
+            return view('frontend.traveler.trips', compact('trips', 'otp'))
+                ->with('guestMode', true);
+        }
+
+        // Fallback: Show bookings directly if no trips
+        [$accommodationBookings, $activityBookings] = $this->getGuestBookings($otpToken);
+
+        if ($accommodationBookings->isEmpty() && $activityBookings->isEmpty()) {
+            return view('frontend.guest-trip', compact('otpToken'))
+                ->with('guestMode', true);
+        }
+
+        return view('frontend.guest-trip', compact('otpToken', 'accommodationBookings', 'activityBookings'))
+            ->with('guestMode', true);
     }
 
-    public function show(Trip $trip)
+    public function showTrip($otp, Trip $trip)
     {
-        $traveler = auth('traveler')->user();
-        if ($trip->traveler_account_id !== $traveler->id) {
+        $otpToken = $this->resolveGuestToken($otp);
+        if (!$otpToken || !$this->tripBelongsToGuest($trip, $otpToken)) {
             abort(403);
         }
+
+        $this->authenticateGuest($otpToken);
+
         $trip->load('bookings.lineItems.travellers', 'travellers');
-        
-        // Load associated accommodation and activity bookings (exclude guest bookings)
-        $accommodationBookings = \App\Models\AccommodationBooking::where('trip_id', $trip->id)
-            ->where('is_guest', 0)
+
+        $accommodationBookings = AccommodationBooking::where('trip_id', $trip->id)
             ->with(['accommodation', 'room', 'guests'])
             ->orderBy('check_in_date', 'asc')
             ->get();
-        
-        $activityBookings = \App\Models\ActivityBooking::where('trip_id', $trip->id)
-            ->where('is_guest', 0)
+
+        $activityBookings = ActivityBooking::where('trip_id', $trip->id)
             ->with(['activity', 'guests'])
             ->orderBy('activity_date', 'asc')
             ->get();
-        
-        // Calculate actual trip dates from all bookings
+
         $allDates = [];
         foreach ($accommodationBookings as $booking) {
             if ($booking->check_in_date) $allDates[] = $booking->check_in_date;
@@ -52,91 +87,36 @@ class TripController extends Controller
         foreach ($activityBookings as $booking) {
             if ($booking->activity_date) $allDates[] = $booking->activity_date;
         }
-        
+
         $tripStartDate = !empty($allDates) ? min($allDates) : $trip->start_date;
         $tripEndDate = !empty($allDates) ? max($allDates) : $trip->end_date;
-        
-        return view('frontend.traveler.trip-detail', compact('trip', 'accommodationBookings', 'activityBookings', 'tripStartDate', 'tripEndDate'));
+
+        return view('frontend.traveler.trip-detail', compact(
+            'trip',
+            'accommodationBookings',
+            'activityBookings',
+            'tripStartDate',
+            'tripEndDate',
+            'otp'
+        ))->with('guestMode', true);
     }
 
-    public function manageGuests(Trip $trip, $bookingId)
+    public function downloadVoucher($otp, Trip $trip, $bookingId, $guestId = null)
     {
-        $traveler = auth('traveler')->user();
-        if ($trip->traveler_account_id !== $traveler->id) {
+        $otpToken = $this->resolveGuestToken($otp);
+        if (!$otpToken || !$this->tripBelongsToGuest($trip, $otpToken)) {
             abort(403);
         }
 
-        // Find the booking
-        $booking = \App\Models\AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->with('guests')->first();
-        if (!$booking) {
-            $booking = \App\Models\ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->with('guests')->first();
-        }
-        if (!$booking) {
-            abort(404);
-        }
+        $this->authenticateGuest($otpToken);
 
-        if ($booking instanceof \App\Models\ActivityBooking) {
-            $booking->load(['activity.operator', 'activity.operationsStaffing', 'activity.schedulingTimeSlots']);
-        }
-
-        $savedGuests = SavedGuest::where('user_id', $traveler->id)->get();
-
-        $selfGuest = new SavedGuest([
-            'first_name' => $traveler->profile->first_name ?? $traveler->first_name ?? '',
-            'middle_name' => $traveler->profile->middle_name ?? '',
-            'last_name' => $traveler->profile->last_name ?? $traveler->last_name ?? '',
-            'dob' => optional($traveler->profile->date_of_birth)->format('Y-m-d'),
-            'gender' => $traveler->profile->gender ?? null,
-            'nationality' => $traveler->profile->nationality ?? null,
-            'passport_number' => $traveler->profile->passport_number ?? null,
-            'notes' => null,
-        ]);
-        $selfGuest->id = 'self';
-        $selfGuest->relation = 'self';
-        $savedGuests->prepend($selfGuest);
-
-        $countries = [
-            'Australia',
-            'Canada',
-            'China',
-            'France',
-            'Germany',
-            'India',
-            'Italy',
-            'Kenya',
-            'Madagascar',
-            'Mauritius',
-            'Reunion',
-            'Singapore',
-            'South Africa',
-            'United Arab Emirates',
-            'United Kingdom',
-            'United States',
-        ];
-
-        $activityTimeSlots = [];
-        if ($booking instanceof \App\Models\ActivityBooking && $booking->activity) {
-            $activityTimeSlots = $booking->activity->schedulingTimeSlots ?? collect();
-        }
-
-        return view('frontend.traveler.manage-guests', compact('trip', 'booking', 'savedGuests', 'countries', 'activityTimeSlots'));
-    }
-
-    public function downloadVoucher(Trip $trip, $bookingId, $guestId = null)
-    {
-        $traveler = auth('traveler')->user();
-        if ($trip->traveler_account_id !== $traveler->id) {
-            abort(403);
-        }
-
-        // Find the booking (accommodation or activity)
-        $booking = \App\Models\AccommodationBooking::where('id', $bookingId)
+        $booking = AccommodationBooking::where('id', $bookingId)
             ->where('trip_id', $trip->id)
             ->with(['accommodation', 'room', 'guests'])
             ->first();
 
         if (!$booking) {
-            $booking = \App\Models\ActivityBooking::where('id', $bookingId)
+            $booking = ActivityBooking::where('id', $bookingId)
                 ->where('trip_id', $trip->id)
                 ->with(['activity.operator', 'activity.operationsStaffing', 'activity.schedulingTimeSlots', 'guests'])
                 ->first();
@@ -146,8 +126,8 @@ class TripController extends Controller
             abort(404);
         }
 
-        $isActivity = $booking instanceof \App\Models\ActivityBooking;
-        $isAccommodation = $booking instanceof \App\Models\AccommodationBooking;
+        $isActivity = $booking instanceof ActivityBooking;
+        $isAccommodation = $booking instanceof AccommodationBooking;
 
         if ($isActivity) {
             $activity = $booking->activity;
@@ -166,25 +146,27 @@ class TripController extends Controller
         } else {
             abort(404);
         }
+
         $voucherDate = $isActivity ? optional($booking->activity_date)->format('d/m/Y') : (optional($booking->check_in_date)->format('d/m/Y') . ' - ' . optional($booking->check_out_date)->format('d/m/Y'));
         $serviceName = $isActivity ? ($activity->activity_name ?? 'Activity') : ($accommodation->property_name ?? 'Accommodation');
         $variantName = $isActivity ? ($booking->variant_name ? 'Variant: ' . $booking->variant_name : 'Standard option') : ($room ? 'Room: ' . $room->room_name : 'Standard room');
         $duration = $isActivity ? ($activity->duration ? 'Duration: ' . $activity->duration : '') : '';
         $allowedTags = '<strong><em><u><br><p><ul><ol><li><b><i>';
+
         if ($isActivity) {
             $meetingPoint = $activity->meeting_point_details ? strip_tags($activity->meeting_point_details, $allowedTags) : 'Not available';
             $overview = $activity->overview ? strip_tags($activity->overview, $allowedTags) : 'Not available';
             if ($meetingPoint !== 'Not available') {
-                $meetingPoint = preg_replace('/\\r\\n|\\r|\\n/', '<br>', $meetingPoint);
+                $meetingPoint = preg_replace('/\r\n|\r|\n/', '<br>', $meetingPoint);
             }
             if ($overview !== 'Not available') {
-                $overview = preg_replace('/\\r\\n|\\r|\\n/', '<br>', $overview);
+                $overview = preg_replace('/\r\n|\r|\n/', '<br>', $overview);
             }
         } elseif ($isAccommodation) {
             $meetingPoint = 'Check-in: ' . optional($booking->check_in_date)->format('d/m/Y') . '<br>Check-out: ' . optional($booking->check_out_date)->format('d/m/Y');
             $overview = $accommodation->property_description ? strip_tags($accommodation->property_description, $allowedTags) : 'Not available';
             if ($overview !== 'Not available') {
-                $overview = preg_replace('/\\r\\n|\\r|\\n/', '<br>', $overview);
+                $overview = preg_replace('/\r\n|\r|\n/', '<br>', $overview);
             }
         }
 
@@ -281,7 +263,7 @@ class TripController extends Controller
                 $managementContact[] = 'Mobile: ' . $accommodation->management_contact_mobile;
             }
 
-            $opsContact = []; // No ops for accommodation
+            $opsContact = [];
         }
 
         $voucherGuest = null;
@@ -294,7 +276,6 @@ class TripController extends Controller
 
         $guestsForVoucher = $voucherGuest ? [$voucherGuest] : $booking->guests->all();
         
-        // For activity bookings, check if time slots are required and present
         if ($isActivity && !$voucherGuest) {
             $participantTimeSlots = $booking->participant_time_slots ?? [];
             $missingTimeSlots = [];
@@ -308,7 +289,6 @@ class TripController extends Controller
             }
         }
         
-        // Get activity time slot info for booking details
         $activityTimeSlotDisplay = '-';
         if ($isActivity && !empty($guestsForVoucher)) {
             $firstGuest = $guestsForVoucher[0];
@@ -356,7 +336,7 @@ class TripController extends Controller
 
         $pdf = new \TCPDF();
         $pdf->SetCreator('Holidaysio');
-        $pdf->SetAuthor($traveler->name ?? $traveler->first_name ?? 'Traveler');
+        $pdf->SetAuthor($otpToken->email ?? 'Guest');
         $pdf->SetTitle('Voucher - ' . ($booking->booking_reference ?? ($isActivity ? 'activity' : 'accommodation')));
         $pdf->SetMargins(15, 15, 15);
         $pdf->AddPage();
@@ -367,23 +347,251 @@ class TripController extends Controller
         exit;
     }
 
-    public function updateGuests(Request $request, Trip $trip, $bookingId)
+    protected function getGuestTripIds(GuestOtpToken $otpToken)
     {
-        $traveler = auth('traveler')->user();
-        if ($trip->traveler_account_id !== $traveler->id) {
+        $accommodationTripIds = AccommodationBooking::where('guest_email', $otpToken->email)
+            ->where('is_guest', 1)
+            ->pluck('trip_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $activityTripIds = ActivityBooking::where('guest_email', $otpToken->email)
+            ->where('is_guest', 1)
+            ->pluck('trip_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $tokenAccommodationTripIds = AccommodationBooking::where('guest_otp_token_id', $otpToken->id)
+            ->pluck('trip_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $tokenActivityTripIds = ActivityBooking::where('guest_otp_token_id', $otpToken->id)
+            ->pluck('trip_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        return array_values(array_unique(array_merge(
+            $accommodationTripIds,
+            $activityTripIds,
+            $tokenAccommodationTripIds,
+            $tokenActivityTripIds
+        )));
+    }
+
+    protected function getGuestBookings(GuestOtpToken $otpToken)
+    {
+        $accommodationBookings = AccommodationBooking::where(function ($query) use ($otpToken) {
+                $query->where('guest_email', $otpToken->email)
+                      ->where('is_guest', 1);
+            })
+            ->orWhere('guest_otp_token_id', $otpToken->id)
+            ->with(['accommodation', 'room', 'guests'])
+            ->orderBy('check_in_date', 'asc')
+            ->get();
+
+        $activityBookings = ActivityBooking::where(function ($query) use ($otpToken) {
+                $query->where('guest_email', $otpToken->email)
+                      ->where('is_guest', 1);
+            })
+            ->orWhere('guest_otp_token_id', $otpToken->id)
+            ->with(['activity', 'guests'])
+            ->orderBy('activity_date', 'asc')
+            ->get();
+
+        return [$accommodationBookings, $activityBookings];
+    }
+
+    protected function attachTripsToGuestBookings(GuestOtpToken $otpToken)
+    {
+        $accommodationBookings = AccommodationBooking::whereNull('trip_id')
+            ->where(function ($query) use ($otpToken) {
+                $query->where('guest_otp_token_id', $otpToken->id)
+                      ->orWhere(function ($subQuery) use ($otpToken) {
+                          $subQuery->where('guest_email', $otpToken->email)
+                                   ->where('is_guest', 1);
+                      });
+            })
+            ->get();
+
+        $activityBookings = ActivityBooking::whereNull('trip_id')
+            ->where(function ($query) use ($otpToken) {
+                $query->where('guest_otp_token_id', $otpToken->id)
+                      ->orWhere(function ($subQuery) use ($otpToken) {
+                          $subQuery->where('guest_email', $otpToken->email)
+                                   ->where('is_guest', 1);
+                      });
+            })
+            ->get();
+
+        $allBookings = $accommodationBookings->concat($activityBookings);
+
+        foreach ($allBookings as $booking) {
+            if ($booking->trip_id) {
+                continue;
+            }
+
+            $startDate = $booking->check_in_date ?? $booking->activity_date ?? now()->toDateString();
+            $endDate = $booking->check_out_date ?? $booking->activity_date ?? $startDate;
+            $title = $booking instanceof AccommodationBooking ? 'Accommodation Trip' : 'Activity Trip';
+
+            $trip = Trip::create([
+                'traveler_account_id' => null,
+                'title' => $title,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'status' => 'planned',
+            ]);
+
+            $booking->trip_id = $trip->id;
+            $booking->save();
+        }
+    }
+
+    protected function resolveGuestToken($otp)
+    {
+        $token = GuestOtpToken::where('otp_code', $otp)
+            ->where('expires_at', '>', now())
+            ->first();
+
+        if (!$token && session('guest_trip_access') && session('guest_otp_token_id')) {
+            $token = GuestOtpToken::find(session('guest_otp_token_id'));
+        }
+
+        return $token;
+    }
+
+    protected function authenticateGuest(GuestOtpToken $otpToken)
+    {
+        if (!$otpToken->is_verified) {
+            $otpToken->verify();
+        }
+
+        if (!session('guest_trip_access')) {
+            session([
+                'guest_email' => $otpToken->email,
+                'guest_otp_token_id' => $otpToken->id,
+                'guest_trip_access' => true,
+            ]);
+        }
+    }
+
+    protected function resolveGuestTrip(GuestOtpToken $otpToken)
+    {
+        $tripId = $otpToken->booking?->trip_id;
+
+        if (!$tripId) {
+            $activityBooking = ActivityBooking::where('guest_otp_token_id', $otpToken->id)->first();
+            $tripId = $activityBooking?->trip_id;
+        }
+
+        if (!$tripId) {
+            $booking = AccommodationBooking::where('guest_email', $otpToken->email)
+                ->where('is_guest', 1)
+                ->first();
+            $tripId = $booking?->trip_id;
+        }
+
+        if (!$tripId) {
+            $booking = ActivityBooking::where('guest_email', $otpToken->email)
+                ->where('is_guest', 1)
+                ->first();
+            $tripId = $booking?->trip_id;
+        }
+
+        return $tripId ? Trip::find($tripId) : null;
+    }
+
+    protected function tripBelongsToGuest(Trip $trip, GuestOtpToken $otpToken)
+    {
+        return AccommodationBooking::where('trip_id', $trip->id)
+                ->where('guest_email', $otpToken->email)
+                ->exists()
+            || ActivityBooking::where('trip_id', $trip->id)
+                ->where('guest_email', $otpToken->email)
+                ->exists();
+    }
+
+    protected function findBookingForTrip(Trip $trip, $bookingId)
+    {
+        $booking = AccommodationBooking::where('id', $bookingId)
+            ->where('trip_id', $trip->id)
+            ->with('guests')
+            ->first();
+
+        if (!$booking) {
+            $booking = ActivityBooking::where('id', $bookingId)
+                ->where('trip_id', $trip->id)
+                ->with('guests')
+                ->first();
+        }
+
+        return $booking;
+    }
+
+    public function manageGuests($otp, Trip $trip, $bookingId)
+    {
+        $otpToken = $this->resolveGuestToken($otp);
+        if (!$otpToken || !$this->tripBelongsToGuest($trip, $otpToken)) {
             abort(403);
         }
 
-        // Find the booking
-        $booking = \App\Models\AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->first();
-        if (!$booking) {
-            $booking = \App\Models\ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->first();
-        }
+        $this->authenticateGuest($otpToken);
+
+        $booking = $this->findBookingForTrip($trip, $bookingId);
         if (!$booking) {
             abort(404);
         }
 
-        // Validate and update guests
+        $countries = [
+            'Australia',
+            'Canada',
+            'China',
+            'France',
+            'Germany',
+            'India',
+            'Italy',
+            'Kenya',
+            'Madagascar',
+            'Mauritius',
+            'Reunion',
+            'Singapore',
+            'South Africa',
+            'United Arab Emirates',
+            'United Kingdom',
+            'United States',
+        ];
+
+        $activityTimeSlots = [];
+        if ($booking instanceof ActivityBooking && $booking->activity) {
+            $activityTimeSlots = $booking->activity->schedulingTimeSlots ?? collect();
+        }
+
+        return view('frontend.traveler.manage-guests', compact(
+            'trip',
+            'booking',
+            'countries',
+            'activityTimeSlots',
+            'otp'
+        ))->with([ 'guestMode' => true, 'savedGuests' => collect() ]);
+    }
+
+    public function updateGuests(Request $request, $otp, Trip $trip, $bookingId)
+    {
+        $otpToken = $this->resolveGuestToken($otp);
+        if (!$otpToken || !$this->tripBelongsToGuest($trip, $otpToken)) {
+            abort(403);
+        }
+
+        $booking = $this->findBookingForTrip($trip, $bookingId);
+        if (!$booking) {
+            abort(404);
+        }
+
         $request->validate([
             'guests' => 'array',
             'guests.*.first_name' => 'required|string|max:255',
@@ -393,10 +601,9 @@ class TripController extends Controller
             'guests.*.nationality' => 'required|string',
             'guests.*.passport_number' => 'nullable|string',
             'guests.*.notes' => 'nullable|string',
-            'guests.*.time_slot' => ($booking instanceof \App\Models\ActivityBooking ? 'required|string' : 'nullable|string'),
+            'guests.*.time_slot' => ($booking instanceof ActivityBooking ? 'required|string' : 'nullable|string'),
         ]);
 
-        // Delete existing guests
         $booking->guests()->delete();
 
         $guestInput = $request->input('guests', []);
@@ -404,7 +611,6 @@ class TripController extends Controller
             $guestInput = [];
         }
 
-        // Gender mapping from various formats to enum values
         $genderMapping = [
             'Mr' => 'male',
             'Mrs' => 'female',
@@ -415,16 +621,14 @@ class TripController extends Controller
             'Other' => 'other',
         ];
 
-        // Add new guests with explicit guest_number ordering
         foreach (array_values($guestInput) as $index => $guestData) {
             $guestData['guest_number'] = $index + 1;
             $guestData['gender'] = $genderMapping[$guestData['gender']] ?? $guestData['gender'];
-            $guestData['booking_type'] = $booking instanceof \App\Models\AccommodationBooking ? 'accommodation' : 'activity';
+            $guestData['booking_type'] = $booking instanceof ActivityBooking ? 'activity' : 'accommodation';
             $booking->guests()->create($guestData);
         }
 
-        // For activity bookings, update the participant_time_slots in the booking
-        if ($booking instanceof \App\Models\ActivityBooking) {
+        if ($booking instanceof ActivityBooking) {
             $participantTimeSlots = [];
             foreach (array_values($guestInput) as $index => $guestData) {
                 $participantTimeSlots[$index + 1] = $guestData['time_slot'] ?? '';
@@ -432,6 +636,20 @@ class TripController extends Controller
             $booking->update(['participant_time_slots' => $participantTimeSlots]);
         }
 
-        return redirect()->route('traveler.trip.detail', $trip)->with('success', 'Guests updated successfully.');
+        return redirect()->route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id])
+            ->with('success', 'Guests updated successfully.');
+    }
+
+    public function confirmAddService(Request $request, $otp, Trip $trip)
+    {
+        $otpToken = $this->resolveGuestToken($otp);
+        if (!$otpToken || !$this->tripBelongsToGuest($trip, $otpToken)) {
+            abort(403);
+        }
+
+        $request->session()->put('add_to_trip_id', $trip->id);
+
+        return redirect()->route('frontend.booking.cart')
+            ->with('success', 'Services will be added to Trip ID: ' . $trip->id);
     }
 }

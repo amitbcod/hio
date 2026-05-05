@@ -22,6 +22,9 @@
 
                 <form method="POST" action="{{ route('traveler.login.store') }}" class="traveler-login-form">
                     @csrf
+                    @if(request()->query('redirect'))
+                        <input type="hidden" name="redirect" value="{{ request()->query('redirect') }}">
+                    @endif
 
                     <div class="traveler-form-group">
                         <label for="email">Email</label>

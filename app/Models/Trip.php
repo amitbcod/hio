@@ -23,6 +23,16 @@ class Trip extends Model
         return $this->hasMany(Booking::class);
     }
 
+    public function accommodationBookings()
+    {
+        return $this->hasMany(AccommodationBooking::class, 'trip_id');
+    }
+
+    public function activityBookings()
+    {
+        return $this->hasMany(ActivityBooking::class, 'trip_id');
+    }
+
     public function travellers()
     {
         return $this->hasMany(Traveller::class);

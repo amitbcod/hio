@@ -5,6 +5,17 @@ use App\Http\Controllers\Frontend\TravelerProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('traveler')->name('traveler.')->group(function () {
+    // Guest trips (no auth required, uses OTP)
+    Route::get('/guest-trips/{otp}', [\App\Http\Controllers\Frontend\GuestTripController::class, 'show'])->name('guest-trip.show');
+    Route::get('/guest-trips/{otp}/trips/{trip}', [\App\Http\Controllers\Frontend\GuestTripController::class, 'showTrip'])->name('guest-trip.detail');
+    Route::post('/guest-trips/{otp}/verify', [\App\Http\Controllers\Frontend\GuestTripController::class, 'verify'])->name('guest-trip.verify');
+    Route::get('/guest-trips/logout', [\App\Http\Controllers\Frontend\GuestTripController::class, 'logout'])->name('guest-trip.logout');
+
+    Route::get('/guest-trips/{otp}/trips/{trip}/booking/{booking}/manage-guests', [\App\Http\Controllers\Frontend\GuestTripController::class, 'manageGuests'])->name('guest-trip.trip.booking.manage-guests');
+    Route::post('/guest-trips/{otp}/trips/{trip}/booking/{booking}/manage-guests', [\App\Http\Controllers\Frontend\GuestTripController::class, 'updateGuests'])->name('guest-trip.trip.booking.update-guests');
+    Route::post('/guest-trips/{otp}/trips/{trip}/add-service', [\App\Http\Controllers\Frontend\GuestTripController::class, 'confirmAddService'])->name('guest-trip.trip.add-service');
+    Route::get('/guest-trips/{otp}/trips/{trip}/booking/{booking}/download-voucher/{guest?}', [\App\Http\Controllers\Frontend\GuestTripController::class, 'downloadVoucher'])->name('guest-trip.trip.booking.download-voucher');
+
     Route::middleware('guest:traveler')->group(function () {
         Route::get('/register', [TravelerAuthController::class, 'showRegisterForm'])->name('register');
         Route::post('/register', [TravelerAuthController::class, 'register'])->name('register.store');

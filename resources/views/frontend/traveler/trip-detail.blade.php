@@ -9,7 +9,7 @@
     <div class="wrap">
         <!-- Header -->
         <div class="trip-detail-header-section" style="margin-bottom: 40px;">
-            <a href="{{ route('traveler.trips') }}" class="btn btn-secondary-outline">&larr; Back to Trips</a>
+            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.show', ['otp' => $otp]) : route('traveler.trips') }}" class="btn btn-secondary-outline">&larr; Back to Trips</a>
             <div style="margin-top: 20px;">
                 <h1 style="margin: 10px 0; font-size: 2.5rem;">Trip ID: <strong>#100{{ $trip->id }}</h1>
                 <!-- <p style="color: #666; font-size: 1rem; margin: 5px 0; padding: 12px 16px; background: #fff3e0; border-left: 4px solid #ff9500; display: inline-block; border-radius: 4px;">Trip ID: <strong>#{{ $trip->id }}</strong></p> -->
@@ -95,7 +95,7 @@
                                 </span>
                             </td>
                             <td style="padding: 12px; text-align: center;">
-                                <a href="{{ route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
+                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
                             </td>
                         </tr>
                         @endforeach
@@ -159,7 +159,7 @@
                                 </span>
                             </td>
                             <td style="padding: 12px; text-align: center;">
-                             <a href="{{ route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
+                             <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
                             </td>
                             </tr>
                         @endforeach
@@ -176,6 +176,7 @@
         </div>
         @endif
 
+        @if(!isset($guestMode) || !$guestMode)
         <!-- Add Services Section -->
         <div class="trip-actions-section" style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-top: 30px;">
             <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">Add More Services</h3>
@@ -195,10 +196,11 @@
                 </form>
             </div>
         </div>
+        @endif
 
         <!-- Back to Trips -->
         <div style="margin-top: 30px; text-align: center;">
-            <a href="{{ route('traveler.trips') }}" class="btn btn-secondary" style="padding: 12px 30px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block; transition: background 0.3s;">
+            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.show', ['otp' => $otp]) : route('traveler.trips') }}" class="btn btn-secondary" style="padding: 12px 30px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block; transition: background 0.3s;">
                 &larr; Back to All Trips
             </a>
         </div>

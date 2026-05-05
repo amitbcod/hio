@@ -79,6 +79,17 @@
                     </ul>
                 </div>
                 <div>
+                    <h4>Guest Orders</h4>
+                    <ul>
+                        <li><a href="javascript:void(0);" onclick="openGuestAccessModal()">Access My Guest Booking</a></li>
+                        <li>
+                            @if(!auth('traveler')->check())
+                                <a href="{{ route('traveler.login') }}">Traveller Login</a>
+                            @endif
+                        </li>
+                    </ul>
+                </div>
+                <div>
                            @if(auth('traveler')->check())
                     <h4>Traveler</h4>
                     <ul>
@@ -100,9 +111,80 @@
                 <!-- <span>Dynamic public frontend powered by Laravel</span> -->
             </div>
         </div>
+
+        <!-- ═════════════════════════════════════════════════════════
+             Guest Access Modal
+        ═════════════════════════════════════════════════════════ -->
+        <div id="guestAccessModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+            <div class="modal-content" style="background: white; padding: 40px; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; font-size: 20px;">Access Your Guest Booking</h2>
+                    <button type="button" onclick="closeGuestAccessModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
+                </div>
+
+                <div class="modal-body">
+                    <p style="color: #666; margin-bottom: 20px;">Enter your email address to search for your guest bookings.</p>
+
+                    <form id="guestAccessForm" style="display: flex; flex-direction: column; gap: 15px;">
+                        <div>
+                            <label for="guestEmail" style="display: block; margin-bottom: 5px; font-weight: 500;">Email Address</label>
+                            <input type="email" id="guestEmail" name="email" placeholder="your@email.com" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
+                        </div>
+
+                        <button type="submit" style="padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                            Find My Bookings
+                        </button>
+                    </form>
+
+                    <p style="font-size: 12px; color: #999; margin-top: 15px; text-align: center;">
+                        You'll receive an OTP via email to access your guest booking details.
+                    </p>
+                </div>
+            </div>
+        </div>
     </footer>
 
     <script src="{{ asset('frontend/js/site.js') }}"></script>
     @stack('scripts')
+
+    <script>
+        function openGuestAccessModal() {
+            const modal = document.getElementById('guestAccessModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeGuestAccessModal() {
+            const modal = document.getElementById('guestAccessModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('guestAccessModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeGuestAccessModal();
+                    }
+                });
+
+                // Handle form submission
+                document.getElementById('guestAccessForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const email = document.getElementById('guestEmail').value;
+                    if (email) {
+                        // Redirect to guest order search page or send email
+                        window.location.href = '/traveler/guest-order-search?email=' + encodeURIComponent(email);
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

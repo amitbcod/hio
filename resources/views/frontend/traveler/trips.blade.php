@@ -29,24 +29,22 @@
                             @foreach($trips as $trip)
                                 @php
                                     $serviceTypes = collect();
-                                    foreach ($trip->bookings as $booking) {
-                                        foreach ($booking->lineItems as $item) {
-                                            if (! empty($item->service_type)) {
-                                                $serviceTypes->push($item->service_type);
-                                            }
-                                        }
+                                    
+                                    // Collect booking types from accommodation bookings
+                                    if ($trip->accommodationBookings && $trip->accommodationBookings->isNotEmpty()) {
+                                        $serviceTypes->push('Accommodation');
                                     }
-                                    $serviceTypes = $serviceTypes->unique()->map(fn($type) => ucfirst(strtolower($type)));
-                                    $serviceTypeLabels = collect();
-                                    if ($serviceTypes->contains(fn($type) => str_contains(strtolower($type), 'accommodation'))) {
-                                        $serviceTypeLabels->push('Accommodation');
+                                    
+                                    // Collect booking types from activity bookings
+                                    if ($trip->activityBookings && $trip->activityBookings->isNotEmpty()) {
+                                        $serviceTypes->push('Activity');
                                     }
-                                    if ($serviceTypes->contains(fn($type) => str_contains(strtolower($type), 'activity'))) {
-                                        $serviceTypeLabels->push('Activity');
+                                    
+                                    if ($serviceTypes->isEmpty()) {
+                                        $serviceTypes->push('Travel');
                                     }
-                                    if ($serviceTypeLabels->isEmpty()) {
-                                        $serviceTypeLabels->push('Travel');
-                                    }
+                                    
+                                    $serviceTypes = $serviceTypes->unique();
                                 @endphp
                                 <tr>
                                     <td>
@@ -57,7 +55,7 @@
                                     </td>
                                     <td>
                                         <div class="service-type-badges">
-                                            @foreach($serviceTypeLabels as $type)
+                                            @foreach($serviceTypes as $type)
                                                 <span class="service-badge">{{ $type }}</span>
                                             @endforeach
                                         </div>
@@ -70,13 +68,15 @@
                                     <td>
                                         <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
                                     </td>
-                                    <td>{{ $trip->bookings->count() }}</td>
+                                    <td>{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
                                     <td class="trip-actions-cell">
-                                        <a href="{{ route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
-                                        <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display:inline-block; margin-left: 8px;">
-                                            @csrf
-                                            <button type="submit" class="btn btn-secondary">Add Service</button>
-                                        </form>
+                                        <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
+                                        @if(!isset($guestMode) || !$guestMode)
+                                            <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display:inline-block; margin-left: 8px;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-secondary">Add Service</button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
