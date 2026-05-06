@@ -7,10 +7,7 @@
 
 <section class="page-section guest-order-section" style="min-height: 60vh; padding: 60px 0; background: #f8f9fa;">
     <div class="wrap">
-        <div class="guest-order-header" style="text-align: center; margin-bottom: 40px;">
-            <h1 style="font-size: 28px; font-weight: 600; margin-bottom: 10px;">Your Guest Bookings</h1>
-            <p style="color: #666; font-size: 16px;">Found {{ $accommodationBookings->count() + $activityBookings->count() }} booking(s) for <strong>{{ $email }}</strong></p>
-        </div>
+      
 
         @if(session('success'))
             <div class="alert alert-success" style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 4px; margin-bottom: 30px;">
@@ -26,105 +23,7 @@
 
         <div class="guest-bookings-list" style="max-width: 900px; margin: 0 auto;">
 
-            {{-- Accommodation Bookings --}}
-            @if($accommodationBookings->count() > 0)
-                <div style="margin-bottom: 40px;">
-                    <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #2c3e50;">
-                        <i class="fa-solid fa-hotel" style="color: #19b5b5; margin-right: 10px;"></i>
-                        Accommodation Bookings
-                    </h2>
-
-                    <div style="display: grid; gap: 15px;">
-                        @foreach($accommodationBookings as $booking)
-                            <div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                <div style="display: flex; justify-content: space-between; align-items: start; gap: 20px;">
-                                    <div style="flex: 1;">
-                                        <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #2c3e50;">
-                                            {{ $booking->accommodation->property_name ?? 'Accommodation' }}
-                                        </h3>
-                                        <p style="margin: 5px 0; color: #666; font-size: 14px;">
-                                            <i class="fa-solid fa-calendar" style="color: #19b5b5; margin-right: 8px; width: 16px;"></i>
-                                            {{ $booking->check_in_date->format('d M Y') }} → {{ $booking->check_out_date->format('d M Y') }}
-                                        </p>
-                                        <p style="margin: 5px 0; color: #666; font-size: 14px;">
-                                            <i class="fa-solid fa-user" style="color: #19b5b5; margin-right: 8px; width: 16px;"></i>
-                                            {{ $booking->adults }} Adult(s)
-                                            @if($booking->children > 0)
-                                                , {{ $booking->children }} Child(ren)
-                                            @endif
-                                        </p>
-                                        <p style="margin: 5px 0; color: #666; font-size: 14px;">
-                                            <i class="fa-solid fa-hashtag" style="color: #19b5b5; margin-right: 8px; width: 16px;"></i>
-                                            Booking Ref: <strong>{{ $booking->booking_reference }}</strong>
-                                        </p>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div style="background: #f0f7f7; padding: 10px 15px; border-radius: 4px; margin-bottom: 10px;">
-                                            <p style="margin: 0; font-size: 12px; color: #666;">Status</p>
-                                            <p style="margin: 5px 0 0 0; font-weight: 600; color: #19b5b5;">{{ $booking->booking_status }}</p>
-                                        </div>
-                                        <p style="margin: 0; font-size: 14px; color: #666;">
-                                            {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
-            {{-- Activity Bookings --}}
-            @if($activityBookings->count() > 0)
-                <div style="margin-bottom: 40px;">
-                    <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #2c3e50;">
-                        <i class="fa-solid fa-person-hiking" style="color: #19b5b5; margin-right: 10px;"></i>
-                        Activity Bookings
-                    </h2>
-
-                    <div style="display: grid; gap: 15px;">
-                        @foreach($activityBookings as $booking)
-                            <div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                <div style="display: flex; justify-content: space-between; align-items: start; gap: 20px;">
-                                    <div style="flex: 1;">
-                                        <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #2c3e50;">
-                                            {{ $booking->activity->activity_name ?? 'Activity' }}
-                                        </h3>
-                                        @if($booking->variant_name)
-                                            <p style="margin: 5px 0; color: #666; font-size: 14px;">
-                                                <i class="fa-solid fa-tag" style="color: #19b5b5; margin-right: 8px; width: 16px;"></i>
-                                                {{ $booking->variant_name }}
-                                            </p>
-                                        @endif
-                                        <p style="margin: 5px 0; color: #666; font-size: 14px;">
-                                            <i class="fa-solid fa-calendar" style="color: #19b5b5; margin-right: 8px; width: 16px;"></i>
-                                            {{ $booking->activity_date->format('d M Y') }}
-                                        </p>
-                                        <p style="margin: 5px 0; color: #666; font-size: 14px;">
-                                            <i class="fa-solid fa-user" style="color: #19b5b5; margin-right: 8px; width: 16px;"></i>
-                                            {{ $booking->adults }} Participant(s)
-                                        </p>
-                                        <p style="margin: 5px 0; color: #666; font-size: 14px;">
-                                            <i class="fa-solid fa-hashtag" style="color: #19b5b5; margin-right: 8px; width: 16px;"></i>
-                                            Booking Ref: <strong>{{ $booking->booking_reference }}</strong>
-                                        </p>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div style="background: #f0f7f7; padding: 10px 15px; border-radius: 4px; margin-bottom: 10px;">
-                                            <p style="margin: 0; font-size: 12px; color: #666;">Status</p>
-                                            <p style="margin: 5px 0 0 0; font-weight: 600; color: #19b5b5;">{{ $booking->booking_status }}</p>
-                                        </div>
-                                        <p style="margin: 0; font-size: 14px; color: #666;">
-                                            {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
+           
             {{-- Send OTP Button --}}
             <div style="text-align: center; padding: 30px; background: white; border-radius: 8px; border: 1px solid #ddd;">
                 <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
@@ -136,7 +35,7 @@
                     <input type="hidden" name="email" value="{{ $email }}">
                     <button type="submit" style="padding: 12px 30px; background: #19b5b5; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px; transition: background 0.3s;">
                         <i class="fa-solid fa-envelope" style="margin-right: 8px;"></i>
-                        Send Me Link in Email
+                        Verify Your Email
                     </button>
                 </form>
 
