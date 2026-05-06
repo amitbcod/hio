@@ -201,8 +201,21 @@
         <div class="manage-guests-card" style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-bottom: 30px;">
             <form id="manageGuestsForm" method="POST" action="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.update-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.update-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}">
                 @csrf
-                <p style="margin-bottom: 20px; font-weight: 600;">Booked: {{ $bookedCount }} &nbsp;|&nbsp; Added: <span id="added-count">{{ $booking->guests->count() }}</span></p>
-
+                <p style="margin-bottom: 20px; font-weight: 600;margin-right:100px;">Booked: {{ $bookedCount }} &nbsp;|&nbsp; Added: <span id="added-count">{{ $booking->guests->count() }}</span></p>
+@if ($canDownload && ($booking instanceof \App\Models\AccommodationBooking))
+    <div style="margin-bottom: 10px;">
+        <a href="{{ isset($guestMode) && $guestMode 
+            ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) 
+            : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) 
+        }}"
+        target="_blank"
+        style="color: #007bff; text-decoration: none; display: inline-flex; align-items: center;">
+            
+            <i class="fa-solid fa-download" style="margin-right:5px;"></i> 
+            Download Voucher
+        </a>
+    </div>
+@endif
                 <div class="saved-guests-panel" style="border: 1px solid #dcdcdc; border-radius: 10px; padding: 18px; margin-bottom: 20px; background: #fafafa;">
                     <h3 style="margin-top: 0;">Use Saved Guest Details</h3>
                     @if($savedGuests->isEmpty())
@@ -282,9 +295,7 @@
             </form>
 
             
-            @if ($canDownload && ( $booking instanceof \App\Models\AccommodationBooking))
-                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}" target="_blank" class="btn btn-primary" style="margin-top: 16px;">Download Voucher</a>
-            @endif
+           
         </div>
 
         <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip]) : route('traveler.trip.detail', $trip) }}" class="btn btn-secondary">&larr; Back to Trip</a>
