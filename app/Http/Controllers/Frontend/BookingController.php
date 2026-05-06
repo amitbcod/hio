@@ -13,6 +13,8 @@ use App\Models\ActivityPromotion;
 use App\Models\BookingGuest;
 use App\Models\SavedGuest;
 use App\Models\TravelerCart;
+use App\Models\TravelerAccount;
+use App\Models\TravelerProfile;
 use App\Models\Trip;
 use App\Models\Booking;
 use App\Models\BookingLineItem;
@@ -26,6 +28,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
@@ -316,6 +319,107 @@ class BookingController extends Controller
         $travelerProfile = null;
 
         return view('frontend.checkout', compact('cart', 'summary', 'guestDefaults', 'traveler', 'travelerProfile', 'countries', 'totalGuests', 'savedGuests', 'activityTimeSlots'));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  CREATE GUEST ACCOUNT (from checkout)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    public function createGuestAccount(Request $request)
+    {
+        if (!$request->isJson()) {
+            return response()->json(['success' => false, 'error' => 'Invalid request.'], 400);
+        }
+
+        $email = $request->input('email');
+        $password = $request->input('password');
+        $passwordConfirmation = $request->input('password_confirmation');
+        $firstName = $request->input('first_name');
+        $middleName = $request->input('middle_name');
+        $lastName = $request->input('last_name');
+        $dob = $request->input('dob');
+        $gender = $request->input('gender');
+        $nationality = $request->input('nationality');
+        $guestPhone = $request->input('guest_phone');
+
+        // Validate inputs
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'email', 'max:150', 'unique:traveler_accounts,email'],
+            'password' => [
+                'required',
+                'confirmed',
+                'min:8',
+                'regex:/[A-Z]/',
+                'regex:/[a-z]/',
+                'regex:/[0-9]/',
+                'regex:/[@$!%*#?&^()_+\-=\[\]{};:\"\\|,.<>\/?]/',
+            ],
+            'first_name' => ['nullable', 'string', 'max:100'],
+            'middle_name' => ['nullable', 'string', 'max:100'],
+            'last_name' => ['nullable', 'string', 'max:100'],
+            'dob' => ['nullable', 'date'],
+            'gender' => ['nullable', 'string', 'max:20'],
+            'nationality' => ['nullable', 'string', 'max:100'],
+            'guest_phone' => ['nullable', 'string', 'max:25'],
+        ], [
+            'email.unique' => 'This email address is already in use.',
+            'password.regex' => 'Password must include uppercase, lowercase, number, and special character.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'error' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        try {
+            // Create traveler account
+            $account = \App\Models\TravelerAccount::create([
+                'traveler_id' => $this->generateTravelerId(),
+                'full_name' => trim(($firstName ? $firstName : explode('@', $email)[0]) . ' ' . ($lastName ?? '')),
+                'email' => strtolower(trim($email)),
+                'mobile_phone' => $guestPhone,
+                'password_hash' => \Illuminate\Support\Facades\Hash::make($password),
+                'verification_status' => 'Unverified',
+                'terms_accepted_at' => now(),
+                'terms_version' => 'TNC-2026.03',
+                'privacy_accepted_at' => now(),
+                'privacy_version' => 'PRIVACY-2026.03',
+            ]);
+
+            // Create traveler profile
+            $nameParts = $this->splitName(trim(($firstName ? $firstName : explode('@', $email)[0]) . ' ' . ($lastName ?? '')));
+            \App\Models\TravelerProfile::create([
+                'traveler_account_id' => $account->id,
+                'first_name' => $firstName ?: $nameParts['first_name'],
+                'middle_name' => $middleName,
+                'last_name' => $lastName ?: $nameParts['last_name'],
+                'gender' => $gender,
+                'date_of_birth' => $dob ?: null,
+                'nationality' => $nationality,
+                'country' => $nationality,
+                'preferred_language' => 'EN',
+            ]);
+
+            // Login the user
+            Auth::guard('traveler')->login($account);
+            $request->session()->regenerate();
+
+            // Sync cart after authentication
+            $this->syncCartAfterAuthentication($account->id, $request);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Account created and logged in successfully.',
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error creating guest account: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to create account. Please try again.',
+            ], 500);
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -1370,6 +1474,70 @@ class BookingController extends Controller
             $errorMessage = config('app.debug') ? $e->getMessage() : 'Failed to send verification link. Please try again later.';
             return back()->with('error', $errorMessage);
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  HELPER METHODS
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private function generateTravelerId(): string
+    {
+        do {
+            $candidate = 'TRV' . now()->format('Ymd') . strtoupper(Str::random(6));
+        } while (TravelerAccount::where('traveler_id', $candidate)->exists());
+
+        return $candidate;
+    }
+
+    private function splitName(string $fullName): array
+    {
+        $tokens = collect(preg_split('/\s+/', trim($fullName)) ?: [])->filter()->values();
+
+        if ($tokens->isEmpty()) {
+            return [
+                'first_name' => null,
+                'middle_name' => null,
+                'last_name' => null,
+            ];
+        }
+
+        $firstName = (string) $tokens->first();
+        $lastName = $tokens->count() > 1 ? (string) $tokens->last() : null;
+
+        $middleName = null;
+        if ($tokens->count() > 2) {
+            $middleName = $tokens->slice(1, $tokens->count() - 2)->implode(' ');
+        }
+
+        return [
+            'first_name' => $firstName,
+            'middle_name' => $middleName,
+            'last_name' => $lastName,
+        ];
+    }
+
+    private function syncCartAfterAuthentication(int $travelerId, Request $request): void
+    {
+        $sessionCart = $request->session()->get('booking_cart', []);
+
+        $storedCartRecord = TravelerCart::where('traveler_account_id', $travelerId)->first();
+        $storedCart = is_array($storedCartRecord?->items) ? $storedCartRecord->items : [];
+
+        $merged = $storedCart;
+        foreach ($sessionCart as $cartKey => $item) {
+            $merged[$cartKey] = $item;
+        }
+
+        if (empty($merged)) {
+            $request->session()->forget('booking_cart');
+        } else {
+            $request->session()->put('booking_cart', $merged);
+        }
+
+        TravelerCart::updateOrCreate(
+            ['traveler_account_id' => $travelerId],
+            ['items' => empty($merged) ? null : $merged]
+        );
     }
 }
 

@@ -474,15 +474,45 @@
                                 <div class="form-grid" style="margin-top: 20px;">
                                     <div class="form-group">
                                         <label for="guest_email">Email Address <span class="req">*</span></label>
-                                        <input type="email" id="guest_email" name="guest_email" value="{{ old('guest_email', $guestDefaults['guest_email'] ?? '') }}" placeholder="you@example.com" class="form-input" required>
+                                        <input type="email" id="guest_email" name="guest_email" value="{{ old('guest_email', $guestDefaults['guest_email'] ?? $traveler?->email ?? '') }}" placeholder="you@example.com" class="form-input" required>
                                         <p class="form-hint">Booking confirmation will be sent here.</p>
                                     </div>
 
                                     <div class="form-group">
                                         <label for="guest_phone">Phone Number</label>
-                                        <input type="tel" id="guest_phone" name="guest_phone" value="{{ old('guest_phone', $guestDefaults['guest_phone'] ?? '') }}" placeholder="+230 5xxx xxxx" class="form-input">
+                                        <input type="tel" id="guest_phone" name="guest_phone" value="{{ old('guest_phone', $guestDefaults['guest_phone'] ?? $traveler?->mobile_phone ?? '') }}" placeholder="+230 5xxx xxxx" class="form-input">
                                     </div>
                                 </div>
+
+                                {{-- Create Account Checkbox --}}
+                                @if(!auth('traveler')->check())
+                                <div class="form-group" style="margin-top: 20px;">
+                                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                        <input type="checkbox" id="createAccountCheckbox" name="create_account" value="1" class="form-input" style="width: auto; margin: 0;">
+                                        <span style="font-size: 14px; color: #333;">Create an account for exclusive member privileges.</span>
+                                    </label>
+                                </div>
+
+                                {{-- Account Creation Fields (Hidden by Default) --}}
+                                <div id="accountCreationSection" style="display: none; margin-top: 20px; padding: 16px; background: #f8f9fa; border-radius: 10px; border: 1px solid #e8e8ef;">
+                                    <div class="form-group">
+                                        <label for="account_password">Password <span class="req">*</span></label>
+                                        <input type="password" id="account_password" name="account_password" class="form-input" placeholder="Enter password">
+                                        <p class="form-hint" style="color: #666; margin-top: 6px;">
+                                            <i class="fa-solid fa-info-circle"></i> Minimum 8 characters with uppercase, lowercase, number, and special character.
+                                        </p>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="account_password_confirm">Confirm Password <span class="req">*</span></label>
+                                        <input type="password" id="account_password_confirm" name="account_password_confirm" class="form-input" placeholder="Confirm password">
+                                    </div>
+
+                                    <button type="button" id="createAccountBtn" class="btn-create-account" onclick="createGuestAccount()">
+                                        <i class="fa-solid fa-user-plus"></i> Create Account and Proceed
+                                    </button>
+                                </div>
+                                @endif
                             </div>
                         </div>
 
@@ -1132,6 +1162,26 @@ var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
 }
 .btn-checkout:hover { background: #16213e; }
 
+.btn-create-account {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px 18px;
+    background: #1a7f37;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: background .2s;
+}
+.btn-create-account:hover { background: #0f5a23; }
+.btn-create-account:disabled { background: #ccc; cursor: not-allowed; }
+
 .summary-note {
     margin: 14px 0 6px;
     font-size: 12px;
@@ -1194,6 +1244,147 @@ label.saved-guest-checkbox {
 
 @push('scripts')
 <script>
+    // Account Creation Helper Functions
+    function validatePassword(password) {
+        const regex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*#?&^()_+\-=\[\]{};:"\\|,.<>\/?]).{8,}$/;
+        return regex.test(password);
+    }
+
+    function toggleAccountCreationSection() {
+        const checkbox = document.getElementById('createAccountCheckbox');
+        const section = document.getElementById('accountCreationSection');
+        const passwordInput = document.getElementById('account_password');
+        const confirmInput = document.getElementById('account_password_confirm');
+        
+        if (checkbox && section) {
+            if (checkbox.checked) {
+                section.style.display = 'block';
+                passwordInput.setAttribute('required', 'required');
+                confirmInput.setAttribute('required', 'required');
+            } else {
+                section.style.display = 'none';
+                passwordInput.removeAttribute('required');
+                confirmInput.removeAttribute('required');
+                passwordInput.value = '';
+                confirmInput.value = '';
+                // Clear any validation error messages
+                const errorContainer = document.getElementById('accountCreationErrors');
+                if (errorContainer) {
+                    errorContainer.innerHTML = '';
+                    errorContainer.style.display = 'none';
+                }
+            }
+        }
+    }
+
+    function showAccountCreationError(message) {
+        let errorContainer = document.getElementById('accountCreationErrors');
+        if (!errorContainer) {
+            errorContainer = document.createElement('div');
+            errorContainer.id = 'accountCreationErrors';
+            errorContainer.style.cssText = 'background: #fff5f5; border: 1px solid #fc8181; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px;';
+            const section = document.getElementById('accountCreationSection');
+            section.parentNode.insertBefore(errorContainer, section);
+        }
+        errorContainer.innerHTML = '<ul style="margin: 0; padding-left: 18px;"><li style="font-size: 13px; color: #c53030;">' + message + '</li></ul>';
+        errorContainer.style.display = 'block';
+    }
+
+    function clearAccountCreationErrors() {
+        const errorContainer = document.getElementById('accountCreationErrors');
+        if (errorContainer) {
+            errorContainer.innerHTML = '';
+            errorContainer.style.display = 'none';
+        }
+    }
+
+    function createGuestAccount() {
+        clearAccountCreationErrors();
+        
+        const email = document.getElementById('guest_email').value.trim();
+        const password = document.getElementById('account_password').value;
+        const confirmPassword = document.getElementById('account_password_confirm').value;
+        const firstName = document.getElementById('guests_0_first_name')?.value.trim() || '';
+        const middleName = document.getElementById('guests_0_middle_name')?.value.trim() || '';
+        const lastName = document.getElementById('guests_0_last_name')?.value.trim() || '';
+        const dob = document.getElementById('guests_0_dob')?.value || '';
+        const gender = document.getElementById('guests_0_gender')?.value || '';
+        const nationality = document.getElementById('guests_0_nationality')?.value || '';
+        const phone = document.getElementById('guest_phone')?.value.trim() || '';
+        const btn = document.getElementById('createAccountBtn');
+
+        // Validate email
+        if (!email) {
+            showAccountCreationError('Email Address is required.');
+            return;
+        }
+
+        // Validate passwords match
+        if (password !== confirmPassword) {
+            showAccountCreationError('Password and Confirm Password do not match.');
+            return;
+        }
+
+        // Validate password strength
+        if (!validatePassword(password)) {
+            showAccountCreationError('Password must contain at least 8 characters with uppercase, lowercase, number, and special character.');
+            return;
+        }
+
+        // Disable button and show loading state
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Account...';
+
+        // Send account creation request
+        fetch('{{ route("frontend.booking.create-guest-account") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password,
+                password_confirmation: confirmPassword,
+                first_name: firstName,
+                middle_name: middleName,
+                last_name: lastName,
+                dob: dob,
+                gender: gender,
+                nationality: nationality,
+                guest_phone: phone,
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Account created and user logged in
+                // Redirect to checkout page for logged-in customer
+                window.location.href = '{{ route("frontend.booking.checkout") }}';
+            } else {
+                // Show error message
+                showAccountCreationError(data.error || 'Failed to create account. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Create Account and Proceed';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAccountCreationError('An error occurred. Please try again.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Create Account and Proceed';
+        });
+    }
+
+    // Setup checkbox toggle listener
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkbox = document.getElementById('createAccountCheckbox');
+        if (checkbox) {
+            checkbox.addEventListener('change', toggleAccountCreationSection);
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         // Define route URLs
         const saveGuestUrl = '{{ route("frontend.booking.save-guest") }}';
@@ -1816,7 +2007,7 @@ label.saved-guest-checkbox {
             first_name: '{{ $traveler?->profile->first_name ?? $traveler?->first_name ?? "" }}',
             middle_name: '{{ $traveler?->profile->middle_name ?? "" }}',
             last_name: '{{ $traveler?->profile->last_name ?? $traveler?->last_name ?? "" }}',
-            dob: '{{ $guestDefaults["dob"] ?? "" }}',
+            dob: '{{ $traveler?->profile->date_of_birth ? \Carbon\Carbon::parse($traveler->profile->date_of_birth)->format('Y-m-d') : ($guestDefaults['dob'] ?? '') }}',
             gender: '{{ $traveler?->profile->gender ?? "" }}',
             nationality: '{{ $traveler?->profile->nationality ?? $traveler?->profile->country ?? "" }}',
             passport_number: '{{ $traveler?->profile->passport_number ?? "" }}',

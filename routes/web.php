@@ -25,6 +25,7 @@ Route::post('/booking/cart/remove', [BookingController::class, 'removeFromCart']
 
 // Guest checkout (no auth required)
 Route::get('/booking/guest-checkout', [BookingController::class, 'guestCheckout'])->name('frontend.booking.guest-checkout');
+Route::post('/booking/create-guest-account', [BookingController::class, 'createGuestAccount'])->name('frontend.booking.create-guest-account');
 
 // Guest order search and OTP send (no auth required)
 Route::get('/traveler/guest-order-search', [BookingController::class, 'guestOrderSearch'])->name('frontend.guest-order-search');
