@@ -53,6 +53,15 @@ class BookingController extends Controller
         $cart[$item['cart_key']] = $item;
         $this->storeCart($cart);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Item added to cart.',
+                'cart' => array_values($cart),
+                'summary' => $this->buildCartSummary($cart),
+            ]);
+        }
+
         return redirect()->route('frontend.booking.cart')
             ->with('success', 'Item added. Please proceed to checkout.');
     }
@@ -237,9 +246,19 @@ class BookingController extends Controller
     //  VIEW CART (Review Page)
     // ═══════════════════════════════════════════════════════════════════════
 
-    public function viewCart()
+    public function viewCart(Request $request)
     {
         $cart = $this->resolveCart();
+
+        if ($request->expectsJson()) {
+            $summary = $this->buildCartSummary($cart);
+
+            return response()->json([
+                'success' => true,
+                'cart' => array_values($cart),
+                'summary' => $summary,
+            ]);
+        }
 
         if (empty($cart)) {
             return redirect()->route('frontend.home')
@@ -360,9 +379,10 @@ class BookingController extends Controller
             'dob' => ['nullable', 'date'],
             'gender' => ['nullable', 'string', 'max:20'],
             'nationality' => ['nullable', 'string', 'max:100'],
-            'guest_phone' => ['nullable', 'string', 'max:25'],
+            'guest_phone' => ['nullable', 'string', 'max:25', 'unique:traveler_accounts,mobile_phone'],
         ], [
             'email.unique' => 'This email address is already in use.',
+            'guest_phone.unique' => 'This mobile number is already associated with another account. Please use a different mobile number.',
             'password.regex' => 'Password must include uppercase, lowercase, number, and special character.',
         ]);
 
@@ -414,7 +434,10 @@ class BookingController extends Controller
                 'message' => 'Account created and logged in successfully.',
             ]);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error creating guest account: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error creating guest account: ' . $e->getMessage(), [
+                'email' => $email,
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to create account. Please try again.',

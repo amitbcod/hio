@@ -12,6 +12,180 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('frontend/css/site.css') }}">
+    <style>
+        .header-cart-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            margin-left: 6px;
+            padding: 0 6px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            background: #ff5a5f;
+            border-radius: 999px;
+        }
+        .mini-cart-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 9998;
+            display: none;
+            justify-content: flex-end;
+            align-items: stretch;
+            overflow: hidden;
+        }
+        .mini-cart-panel {
+            width: min(420px, 100%);
+            background: #fff;
+            box-shadow: -4px 0 30px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .mini-cart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 22px 24px;
+            border-bottom: 1px solid #eee;
+            background: #fafafa;
+        }
+        .mini-cart-header h2 {
+            margin: 0;
+            font-size: 18px;
+            line-height: 1.2;
+        }
+        .mini-cart-close {
+            border: none;
+            background: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+        }
+        .mini-cart-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .mini-cart-item {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid #f1f1f1;
+            align-items: start;
+        }
+        .mini-cart-item:last-child {
+            border-bottom: none;
+        }
+        .mini-cart-item-image {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .mini-cart-item-image img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #f5f5f5;
+        }
+        .mini-cart-item-image-label {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            color: #111;
+            line-height: 1.3;
+        }
+        .mini-cart-item-details {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: start;
+        }
+        .mini-cart-item-meta {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+        .mini-cart-item-price {
+            text-align: right;
+            font-size: 15px;
+            font-weight: 700;
+            color: #111;
+            min-width: 76px;
+        }
+        .mini-cart-summary {
+            padding: 16px 24px;
+            border-top: 1px solid #eee;
+            background: #f9f9f9;
+        }
+        .mini-cart-summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .mini-cart-summary-row.total {
+            font-weight: 700;
+            margin-top: 8px;
+        }
+        .mini-cart-actions {
+            display: flex;
+            gap: 12px;
+            padding: 18px 24px 24px;
+            background: #fff;
+            border-top: 1px solid #eee;
+        }
+        .mini-cart-actions .mini-cart-link,
+        .mini-cart-actions .mini-cart-checkout-btn {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+        .mini-cart-actions .mini-cart-link {
+            color: #333;
+            background: #f2f2f2;
+            border: 1px solid #ddd;
+        }
+        .mini-cart-actions .mini-cart-checkout-btn {
+            color: #fff;
+            background: #16213e;
+            border: none;
+        }
+        .mini-cart-empty {
+            color: #555;
+            font-size: 14px;
+            padding: 30px 0;
+            text-align: center;
+        }
+        .mini-cart-message {
+            padding: 14px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.4;
+            display: none;
+        }
+        .mini-cart-message.success {
+            background: #e6ffed;
+            color: #116530;
+            border: 1px solid #b9f2c2;
+        }
+        .mini-cart-message.error {
+            background: #ffe8e8;
+            color: #9f1c21;
+            border: 1px solid #f5c2c2;
+        }
+    </style>
     @stack('styles')
 </head>
 <body>
@@ -53,10 +227,37 @@
                 <a href="{{ url('/#accommodations-section') }}">Accommodation</a>
                 <a href="{{ url('/#activities-section') }}">Activities</a>
                 <a href="{{ url('/#discover-mauritius') }}">Discover Mauritius</a>
-                <a href="{{ route('frontend.booking.cart') }}"><i class="fa-solid fa-cart-shopping"></i> Cart</a>
+                <a href="{{ route('frontend.booking.cart') }}" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> Cart <span id="headerCartCount" class="header-cart-badge">{{ count(session('booking_cart', [])) }}</span></a>
             </nav>
         </div>
     </header>
+
+    <div id="miniCartOverlay" class="mini-cart-overlay" aria-hidden="true">
+        <div class="mini-cart-panel" role="dialog" aria-modal="true" aria-labelledby="miniCartTitle">
+            <div class="mini-cart-header">
+                <div>
+                    <h2 id="miniCartTitle">Booking Cart</h2>
+                    <p id="miniCartCountText" style="margin: 6px 0 0; color: #666; font-size: 13px;">0 items in cart</p>
+                </div>
+                <button id="closeMiniCartBtn" type="button" class="mini-cart-close" aria-label="Close cart">×</button>
+            </div>
+            <div class="mini-cart-body">
+                <div id="miniCartMessage" class="mini-cart-message"></div>
+                <div id="miniCartItems"></div>
+                <div id="miniCartEmpty" class="mini-cart-empty" style="display:none;">Your cart is empty. Add a booking to see it here.</div>
+            </div>
+            <div class="mini-cart-summary" id="miniCartSummary">
+                <div class="mini-cart-summary-row"><span>Subtotal</span><span id="miniCartSubtotal">USD 0.00</span></div>
+                <div class="mini-cart-summary-row"><span>Discount</span><span id="miniCartDiscount">USD 0.00</span></div>
+                <div class="mini-cart-summary-row"><span>Tax / Fees</span><span id="miniCartTaxFees">USD 0.00</span></div>
+                <div class="mini-cart-summary-row total"><span>Total</span><span id="miniCartTotal">USD 0.00</span></div>
+            </div>
+            <div class="mini-cart-actions">
+                <a href="{{ route('frontend.booking.cart') }}" class="mini-cart-link">View Cart</a>
+                <a href="{{ auth('traveler')->check() ? route('frontend.booking.checkout') : route('frontend.booking.guest-checkout') }}" class="mini-cart-checkout-btn">Proceed to Checkout</a>
+            </div>
+        </div>
+    </div>
 
     @yield('content')
 
@@ -78,7 +279,7 @@
                         <li><a href="{{ url('/#discover-mauritius') }}">Hotels</a></li>
                     </ul>
                 </div>
-                <div>
+                <!-- <div>
                     <h4>Guest Orders</h4>
                     <ul>
                         <li><a href="javascript:void(0);" onclick="openGuestAccessModal()">Access My Guest Booking</a></li>
@@ -88,7 +289,7 @@
                             @endif
                         </li>
                     </ul>
-                </div>
+                </div> -->
                 <div>
                            @if(auth('traveler')->check())
                     <h4>Traveler</h4>
