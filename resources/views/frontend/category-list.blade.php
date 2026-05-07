@@ -197,6 +197,7 @@
                         <input type="hidden" name="name" value="{{ $filters['name'] }}">
                         <input type="hidden" name="adults" value="{{ $filters['adults'] ?? 2 }}">
                         <input type="hidden" name="children" value="{{ $filters['children'] ?? 0 }}">
+                        <input type="hidden" name="infants" value="{{ $filters['infants'] ?? 0 }}">
                         <input type="hidden" name="rooms" value="{{ $filters['rooms'] ?? 1 }}">
                         <input type="hidden" name="participants" value="{{ $filters['participants'] ?? 1 }}">
 

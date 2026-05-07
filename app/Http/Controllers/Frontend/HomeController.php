@@ -517,6 +517,9 @@ class HomeController extends Controller
                     'capacity' => (int) ($room->capacity ?? 0),
                     'children_capacity' => (int) ($room->children_capacity ?? 0),
                     'infant_capacity' => (int) ($room->infant_capacity ?? 0),
+                    'max_person_capacity' => $room->max_person_capacity !== null
+                        ? (int) $room->max_person_capacity
+                        : ((int) ($room->capacity ?? 0) + (int) ($room->children_capacity ?? 0) + max(0, ((int) ($room->infant_capacity ?? 0) - 1))),
                     'quantity' => !is_null($room->allotment)
                         ? (int) $room->allotment
                         : (int) ($room->quantity ?? 0),
@@ -1584,6 +1587,7 @@ class HomeController extends Controller
             'name' => trim((string) $request->query('name', '')),
             'adults' => max(1, (int) $request->query('adults', 2)),
             'children' => max(0, (int) $request->query('children', 0)),
+            'infants' => max(0, (int) $request->query('infants', 0)),
             'rooms' => max(1, (int) $request->query('rooms', 1)),
             'participants' => max(1, (int) $request->query('participants', 1)),
         ];
@@ -1682,6 +1686,32 @@ class HomeController extends Controller
                     return true; // no date-based availability information available
                 }
                 return $availableRooms >= $requestedRooms;
+            });
+        }
+
+        if ($category === 'accommodation') {
+            $adults = $filters['adults'];
+            $children = $filters['children'];
+            $infants = $filters['infants'] ?? 0;
+            $effectivePersons = $adults + $children + max(0, $infants - 1);
+
+            $items = $items->filter(function (array $item) use ($adults, $children, $infants, $effectivePersons) {
+                $roomCatalog = $item['room_catalog'] ?? [];
+                foreach ($roomCatalog as $room) {
+                    $roomAdults = (int) ($room['capacity'] ?? 0);
+                    $roomChildren = (int) ($room['children_capacity'] ?? 0);
+                    $roomInfants = (int) ($room['infant_capacity'] ?? 0);
+                    $roomMaxPersons = (int) ($room['max_person_capacity'] ?? ($roomAdults + $roomChildren + max(0, $roomInfants - 1)));
+
+                    if ($roomAdults >= $adults
+                        && $roomChildren >= $children
+                        && $roomInfants >= $infants
+                        && $roomMaxPersons >= $effectivePersons) {
+                        return true;
+                    }
+                }
+
+                return false;
             });
         }
 

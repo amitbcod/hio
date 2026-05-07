@@ -58,13 +58,12 @@
                         <!-- Short Description -->
                         <div class="mb-3">
                             <label style="font-weight:600;font-size:13px;display:block;margin-bottom:8px;">
-                                Short Description (150-250 chars) *
+                                Short Description (up to 500 chars) *
                                 <span style="color:#666;font-weight:normal;font-size:12px;">
-                                    (Character count: <span id="shortDescCount" style="color:#666;">{{ strlen(old('short_description', $seoSocial->short_description ?? '')) }}</span>/250)
-                                    <span id="shortDescWarning" style="color:#f44336;display:none;">⚠ Minimum 150 characters required</span>
+                                    (Character count: <span id="shortDescCount" style="color:#666;">{{ strlen(old('short_description', $seoSocial->short_description ?? '')) }}</span>/500)
                                 </span>
                             </label>
-                            <textarea name="short_description" id="shortDescInput" required minlength="150" maxlength="250" style="display:none;">{{ old('short_description', $seoSocial->short_description ?? '') }}</textarea>
+                            <textarea name="short_description" id="shortDescInput" required maxlength="500" style="display:none;">{{ old('short_description', $seoSocial->short_description ?? '') }}</textarea>
                             <div id="shortDescEditor" style="height:90px;background:#fff;border-radius:4px;"></div>
                             <small style="color:#666;">Used in search results and overview pages</small>
                         </div>
@@ -75,10 +74,9 @@
                                 Full Description *
                                 <span style="color:#666;font-weight:normal;font-size:12px;">
                                     (Character count: <span id="fullDescCount" style="color:#666;">{{ strlen(old('full_description', $seoSocial->full_description ?? '')) }}</span>)
-                                    <span id="fullDescWarning" style="color:#f44336;display:none;">⚠ Minimum 250 characters required</span>
                                 </span>
                             </label>
-                            <textarea name="full_description" id="fullDescInput" required minlength="250" style="display:none;">{{ old('full_description', $seoSocial->full_description ?? '') }}</textarea>
+                            <textarea name="full_description" id="fullDescInput" required style="display:none;">{{ old('full_description', $seoSocial->full_description ?? '') }}</textarea>
                             <div id="fullDescEditor" style="height:160px;background:#fff;border-radius:4px;"></div>
                             <small style="color:#666;">Comprehensive description for the activity details page</small>
                         </div>
@@ -111,10 +109,10 @@
                             </div>
                             <div class="col-md-6">
                                 <label style="font-weight:600;font-size:13px;">
-                                    SEO Description (≤160 chars)
-                                    <span style="color:#666;font-weight:normal;">(<span id="seoDescCount">{{ strlen(old('seo_description', $seoSocial->seo_description ?? '')) }}</span>/160)</span>
+                                    SEO Description (≤500 chars)
+                                    <span style="color:#666;font-weight:normal;">(</span><span id="seoDescCount">{{ strlen(old('seo_description', $seoSocial->seo_description ?? '')) }}</span>/500)</span>
                                 </label>
-                                <textarea name="seo_description" id="seoDescInput" maxlength="160" style="display:none;">{{ old('seo_description', $seoSocial->seo_description ?? '') }}</textarea>
+                                <textarea name="seo_description" id="seoDescInput" maxlength="500" style="display:none;">{{ old('seo_description', $seoSocial->seo_description ?? '') }}</textarea>
                                 <div id="seoDescEditor" style="height:80px;background:#fff;border-radius:4px;"></div>
                                 <small style="color:#666;">Description shown below title in search</small>
                             </div>
@@ -160,10 +158,10 @@
                             </div>
                             <div class="col-md-6">
                                 <label style="font-weight:600;font-size:13px;">
-                                    OG Description (≤200 chars)
-                                    <span style="color:#666;font-weight:normal;">(<span id="ogDescCount">{{ strlen(old('og_description', $seoSocial->og_description ?? '')) }}</span>/200)</span>
+                                    OG Description (≤500 chars)
+                                    <span style="color:#666;font-weight:normal;">(</span><span id="ogDescCount">{{ strlen(old('og_description', $seoSocial->og_description ?? '')) }}</span>/500)</span>
                                 </label>
-                                <textarea name="og_description" id="ogDescInput" maxlength="200" style="display:none;">{{ old('og_description', $seoSocial->og_description ?? '') }}</textarea>
+                                <textarea name="og_description" id="ogDescInput" maxlength="500" style="display:none;">{{ old('og_description', $seoSocial->og_description ?? '') }}</textarea>
                                 <div id="ogDescEditor" style="height:80px;background:#fff;border-radius:4px;"></div>
                                 <small style="color:#666;">Description shown when link is shared</small>
                             </div>
@@ -262,8 +260,7 @@
                     editorId: 'shortDescEditor',
                     textareaId: 'shortDescInput',
                     placeholder: 'Brief, compelling summary of the activity...',
-                    minLength: 150,
-                    maxLength: 250,
+                    maxLength: 500,
                     height: '90px',
                     borderWidth: '2px'
                 },
@@ -272,7 +269,6 @@
                     editorId: 'fullDescEditor',
                     textareaId: 'fullDescInput',
                     placeholder: 'Detailed description of the activity, experience, and what travelers can expect...',
-                    minLength: 250,
                     height: '160px',
                     borderWidth: '2px'
                 },
@@ -288,7 +284,7 @@
                     editorId: 'seoDescEditor',
                     textareaId: 'seoDescInput',
                     placeholder: 'Meta description for search results',
-                    maxLength: 160,
+                    maxLength: 500,
                     height: '80px'
                 },
                 {
@@ -296,7 +292,7 @@
                     editorId: 'ogDescEditor',
                     textareaId: 'ogDescInput',
                     placeholder: 'Description when shared on social platforms',
-                    maxLength: 200,
+                    maxLength: 500,
                     height: '80px'
                 }
             ];
@@ -365,40 +361,20 @@
             function updateShortDescState() {
                 const count = getEditorTextLength('shortDesc');
                 const counter = document.getElementById('shortDescCount');
-                const warning = document.getElementById('shortDescWarning');
 
                 counter.textContent = count;
-
-                if (count < 150) {
-                    counter.style.color = '#f44336';
-                    warning.style.display = 'inline';
-                    setEditorBorder('shortDesc', '#f44336');
-                    return false;
-                }
-
-                counter.style.color = '#28a745';
-                warning.style.display = 'none';
-                setEditorBorder('shortDesc', '#28a745');
+                counter.style.color = '#666';
+                setEditorBorder('shortDesc', '#ddd');
                 return true;
             }
 
             function updateFullDescState() {
                 const count = getEditorTextLength('fullDesc');
                 const counter = document.getElementById('fullDescCount');
-                const warning = document.getElementById('fullDescWarning');
 
                 counter.textContent = count;
-
-                if (count < 250) {
-                    counter.style.color = '#f44336';
-                    warning.style.display = 'inline';
-                    setEditorBorder('fullDesc', '#f44336');
-                    return false;
-                }
-
-                counter.style.color = '#28a745';
-                warning.style.display = 'none';
-                setEditorBorder('fullDesc', '#28a745');
+                counter.style.color = '#666';
+                setEditorBorder('fullDesc', '#ddd');
                 return true;
             }
 
@@ -414,26 +390,8 @@
                 syncEditorToTextarea('seoDesc', 'seoDescInput');
                 syncEditorToTextarea('ogDesc', 'ogDescInput');
 
-                const shortValid = updateShortDescState();
-                const fullValid = updateFullDescState();
-
-                if (!shortValid) {
-                    e.preventDefault();
-                    alert('Short Description must be at least 150 characters. Current: ' + getEditorTextLength('shortDesc'));
-                    if (quillEditors.shortDesc) {
-                        quillEditors.shortDesc.focus();
-                    }
-                    return false;
-                }
-
-                if (!fullValid) {
-                    e.preventDefault();
-                    alert('Full Description must be at least 250 characters. Current: ' + getEditorTextLength('fullDesc'));
-                    if (quillEditors.fullDesc) {
-                        quillEditors.fullDesc.focus();
-                    }
-                    return false;
-                }
+                updateShortDescState();
+                updateFullDescState();
 
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Saving...';

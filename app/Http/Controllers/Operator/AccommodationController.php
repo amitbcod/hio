@@ -1035,6 +1035,7 @@ class AccommodationController extends Controller
             'occupancy_adults' => 'required|integer|min:1',
             'occupancy_children' => 'required|integer|min:0',
             'occupancy_infant' => 'nullable|integer|min:0',
+            'max_person_capacity' => 'required|integer|min:1',
             'max_capacity' => 'required|integer|min:0',
             'allotment' => 'required|integer|min:0',
             'images' => 'required|array|min:1',
@@ -1042,6 +1043,11 @@ class AccommodationController extends Controller
         ];
 
         $data = $request->validate($rules);
+
+        $effectiveOccupants = intval($data['occupancy_adults']) + intval($data['occupancy_children']) + max(0, intval($data['occupancy_infant'] ?? 0) - 1);
+        if (intval($data['max_person_capacity']) < $effectiveOccupants) {
+            return back()->withInput()->withErrors(['max_person_capacity' => 'Max person capacity must be at least adults + children + infants beyond the first.']);
+        }
 
         // Create unique room_id
         $roomId = 'R' . strtoupper(uniqid());
@@ -1059,6 +1065,7 @@ class AccommodationController extends Controller
             'capacity' => max(1, intval($data['occupancy_adults'])),
             'children_capacity' => intval($data['occupancy_children'] ?? 0),
             'infant_capacity' => $data['occupancy_infant'] ?? null,
+            'max_person_capacity' => intval($data['max_person_capacity']),
             'quantity' => 1,
             'max_capacity' => intval($data['max_capacity']),
             'allotment' => intval($data['allotment']),
@@ -1151,6 +1158,7 @@ class AccommodationController extends Controller
             'occupancy_adults' => 'required|integer|min:1',
             'occupancy_children' => 'required|integer|min:0',
             'occupancy_infant' => 'nullable|integer|min:0',
+            'max_person_capacity' => 'required|integer|min:1',
             'max_capacity' => 'required|integer|min:0',
             'allotment' => 'required|integer|min:0',
             'images' => 'required|array|min:1',
@@ -1158,6 +1166,11 @@ class AccommodationController extends Controller
         ];
 
         $data = $request->validate($rules);
+
+        $effectiveOccupants = intval($data['occupancy_adults']) + intval($data['occupancy_children']) + max(0, intval($data['occupancy_infant'] ?? 0) - 1);
+        if (intval($data['max_person_capacity']) < $effectiveOccupants) {
+            return back()->withInput()->withErrors(['max_person_capacity' => 'Max person capacity must be at least adults + children + infants beyond the first.']);
+        }
 
         $room->update([
             'room_name' => $data['room_name'],
@@ -1170,6 +1183,7 @@ class AccommodationController extends Controller
             'capacity' => max(1, intval($data['occupancy_adults'])),
             'children_capacity' => intval($data['occupancy_children'] ?? 0),
             'infant_capacity' => $data['occupancy_infant'] ?? null,
+            'max_person_capacity' => intval($data['max_person_capacity']),
             'max_capacity' => intval($data['max_capacity']),
             'allotment' => intval($data['allotment']),
             'is_accessible' => !empty($data['accessibility']),
@@ -2719,11 +2733,6 @@ class AccommodationController extends Controller
             $request->merge(['non_refundable' => false]);
         } else {
             $request->merge(['non_refundable' => filter_var($request->input('non_refundable'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true]);
-        }
-
-        // Defensive: remove any incoming promotion_id from the raw request to avoid accidental insertion
-        if ($request->request->has('promotion_id')) {
-            $request->request->remove('promotion_id');
         }
 
         $data = $request->validate([

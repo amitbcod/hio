@@ -47,11 +47,11 @@
                         </div>
 
                         <div style="margin-bottom:16px;">
-                            <label style="font-weight:600;">SEO Description</label>
+                            <label style="font-weight:600;">SEO Description (≤500 chars)</label>
                             <textarea name="seo_description" id="seo_description" style="display:none;">{{ old('seo_description', $accommodation->seo_description) }}</textarea>
                             <div id="seo_description_editor" style="height:120px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
-                                <small id="seo_description_count" style="color:#666;">0 / 160</small>
+                                <small id="seo_description_count" style="color:#666;">0 / 500</small>
                                 <small id="seo_description_error" style="color:#d93025;display:none;"></small>
                             </div>
                             @error('seo_description')<small style="color:#d93025;display:block;margin-top:4px;">{{ $message }}</small>@enderror
@@ -71,11 +71,11 @@
                         </div>
 
                         <div style="margin-bottom:16px;">
-                            <label style="font-weight:600;">OpenGraph Description <small style="font-weight:400;color:#666;">(max 225 characters, plain text)</small></label>
+                            <label style="font-weight:600;">OpenGraph Description <small style="font-weight:400;color:#666;">(max 500 characters)</small></label>
                             <textarea name="og_description" id="og_description" style="display:none;">{{ old('og_description', $accommodation->og_description) }}</textarea>
                             <div id="og_description_editor" style="height:120px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
-                                <small id="og_description_count" style="color:#666;">0 / 225</small>
+                                <small id="og_description_count" style="color:#666;">0 / 500</small>
                                 <small id="og_description_error" style="color:#d93025;display:none;"></small>
                             </div>
                             @error('og_description')<small style="color:#d93025;display:block;margin-top:4px;">{{ $message }}</small>@enderror
@@ -143,8 +143,8 @@
             var ogDescriptionCount = document.getElementById('og_description_count');
             var seoDescriptionError = document.getElementById('seo_description_error');
             var ogDescriptionError = document.getElementById('og_description_error');
-            var seoDescriptionMax = 160;
-            var ogDescriptionMax = 225;
+            var seoDescriptionMax = 500;
+            var ogDescriptionMax = 500;
 
             if(seoTextarea.value){
                 seoDescEditor.root.innerHTML = seoTextarea.value;

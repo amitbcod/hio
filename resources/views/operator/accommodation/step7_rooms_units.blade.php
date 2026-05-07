@@ -26,7 +26,12 @@
                             <div style="background:#f5f5f5;padding:10px;border-radius:6px;display:flex;align-items:center;gap:12px;margin-bottom:8px;">
                                 <div style="flex:1;">
                                     <strong>{{ $r->room_name }}</strong> - <span style="opacity:0.8;">Bed: {{ $r->room_type }}</span>
-                                    <div style="font-size:12px;color:#666;margin-top:6px;">Max Occupancy: Adults - {{ $r->capacity }} · Children - {{ $r->children_capacity ?? 0 }} · Infant - {{ $r->infant_capacity ?? 0 }}</div>
+                                    <div style="font-size:12px;color:#666;margin-top:6px;">
+                                        Max Occupancy: Adults - {{ $r->capacity }} · Children - {{ $r->children_capacity ?? 0 }} · Infant - {{ $r->infant_capacity ?? 0 }}
+                                        @if($r->max_person_capacity !== null)
+                                            · Max Person Capacity - {{ $r->max_person_capacity }}
+                                        @endif
+                                    </div>
                                 </div>
                                 <div style="display:flex;gap:8px;">
                                     <!-- <a href="#" style="padding:6px 8px;background:#e0e0e0;border-radius:4px;color:#333;text-decoration:none;">View</a> -->
@@ -153,6 +158,16 @@
                                 <input type="number" id="max_capacity" name="max_capacity" class="form-control" min="0" required value="{{ old('max_capacity', $room->max_capacity ?? '') }}">
                                 <small style="color:#666;display:block;margin-top:4px;">Full capacity of this room category</small>
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label style="font-weight:600;">Max Person Capacity *</label>
+                                <input type="number" id="max_person_capacity" name="max_person_capacity" class="form-control" min="1" required value="{{ old('max_person_capacity', $room->max_person_capacity ?? '') }}">
+                                @error('max_person_capacity')
+                                    <div style="color:#d32f2f;font-size:13px;margin-top:4px;">{{ $message }}</div>
+                                @enderror
+                                <small style="color:#666;display:block;margin-top:4px;">Maximum total persons allowed by this room type (adults + children + infants beyond the first).</small>
+                            </div>
+                        </div>
+                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label style="font-weight:600;">Allotment (Sellable Units) *</label>
                                 <input type="number" id="allotment" name="allotment" class="form-control" min="0" required value="{{ old('allotment', $room->allotment ?? '') }}">

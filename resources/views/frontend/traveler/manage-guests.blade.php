@@ -812,16 +812,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        item.innerHTML = `
+        // item.innerHTML = `
+        //     <div class="guest-item-info">
+        //         <span class="guest-item-name" style="font-weight: 500; color: #333; display: block;">${guestName}</span>
+        //         <span class="guest-item-age" style="font-size: 12px; color: #666; display: block;">${guest.nationality || 'Unknown'} · ${dobFormatted}</span>
+        //         ${timeSlotHtml}
+        //     </div>
+        //     <div class="guest-item-actions" style="display: flex; gap: 10px;">
+        //         <button type="button" class="btn-edit-guest" data-index="${index}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #0066cc; padding: 0;">
+        //             <i class="fa-solid fa-pencil"></i> Edit
+        //         </button>
+        //         <button type="button" class="btn-remove-guest" data-index="${index}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #dc3545; padding: 0;">
+        //             <i class="fa-solid fa-trash"></i> Delete
+        //         </button>
+        //     </div>
+        // `;
+
+         item.innerHTML = `
             <div class="guest-item-info">
                 <span class="guest-item-name" style="font-weight: 500; color: #333; display: block;">${guestName}</span>
                 <span class="guest-item-age" style="font-size: 12px; color: #666; display: block;">${guest.nationality || 'Unknown'} · ${dobFormatted}</span>
                 ${timeSlotHtml}
             </div>
             <div class="guest-item-actions" style="display: flex; gap: 10px;">
-                <button type="button" class="btn-edit-guest" data-index="${index}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #0066cc; padding: 0;">
-                    <i class="fa-solid fa-pencil"></i> Edit
-                </button>
+                
                 <button type="button" class="btn-remove-guest" data-index="${index}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #dc3545; padding: 0;">
                     <i class="fa-solid fa-trash"></i> Delete
                 </button>

@@ -240,7 +240,7 @@
                                     </td>
                                     <td style="padding:12px;border:1px solid #ddd;">
                                         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                                            <!-- <button type="button" onclick="editPromotion({{ $promo->id }})" style="padding:4px 8px;background:#007bff;border:none;border-radius:3px;color:#fff;cursor:pointer;font-size:11px;">Edit</button> -->
+                                            <button type="button" onclick="editPromotion({{ $promo->id }})" style="padding:4px 8px;background:#007bff;border:none;border-radius:3px;color:#fff;cursor:pointer;font-size:11px;">Edit</button>
                                             <button type="button" onclick="deletePromotion({{ $promo->id }})" style="padding:4px 8px;background:#ff6b6b;border:none;border-radius:3px;color:#fff;cursor:pointer;font-size:11px;">Delete</button>
                                         </div>
                                     </td>

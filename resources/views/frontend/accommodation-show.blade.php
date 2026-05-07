@@ -162,7 +162,11 @@
                                 $nights = max(1, (int) ($booking['nights'] ?? 1));
                                 $firstVariant = $roomVariants->first();
                             @endphp
-                            <div class="room-option-item">
+                            <div class="room-option-item"
+                                data-room-adults="{{ (int) ($roomDetail['capacity'] ?? 0) }}"
+                                data-room-children="{{ (int) ($roomDetail['children_capacity'] ?? 0) }}"
+                                data-room-infants="{{ (int) ($roomDetail['infant_capacity'] ?? 0) }}"
+                                data-room-max-persons="{{ (int) ($roomDetail['max_person_capacity'] ?? ((int) ($roomDetail['capacity'] ?? 0) + (int) ($roomDetail['children_capacity'] ?? 0) + max(0, ((int) ($roomDetail['infant_capacity'] ?? 0) - 1)))) }}">
                                 <div class="room-option-left">
                                     <h3>{{ $firstVariant['room_name'] }}</h3>
                                     <p class="room-option-sub">
@@ -197,6 +201,7 @@
                                 </div>
 
                                 <div class="room-option-right">
+                                    <div class="room-capacity-warning" style="display:none; margin-bottom: 12px; color: #b43434; font-weight: 700;"></div>
                                     {{-- Show all pricing plan options for this room --}}
                                     @foreach($roomVariants as $room)
                                         <div class="room-price" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #eee;">
@@ -955,6 +960,84 @@
                     button.classList.add('is-active');
                 });
             });
+        })();
+
+        // Scroll to room-options when search is updated and validate room availability on the detail page
+        (() => {
+            const roomOptionsSection = document.getElementById('room-options');
+            const bookingForm = document.querySelector('.booking-form-grid');
+            const adultsInput = document.querySelector('input[name="adults"]');
+            const childrenInput = document.querySelector('input[name="children"]');
+            const infantsInput = document.querySelector('input[name="infants"]');
+            const roomItems = Array.from(document.querySelectorAll('.room-option-item'));
+
+            const parseCount = (input, fallback = 0) => {
+                if (!input) {
+                    return fallback;
+                }
+                const value = parseInt(input.value, 10);
+                return Number.isNaN(value) ? fallback : value;
+            };
+
+            const updateRoomCapacityWarnings = () => {
+                const adults = Math.max(1, parseCount(adultsInput, 1));
+                const children = Math.max(0, parseCount(childrenInput, 0));
+                const infants = Math.max(0, parseCount(infantsInput, 0));
+                const effectiveGuests = adults + children + Math.max(0, infants - 1);
+
+                roomItems.forEach((item) => {
+                    const roomAdults = parseInt(item.dataset.roomAdults, 10) || 0;
+                    const roomChildren = parseInt(item.dataset.roomChildren, 10) || 0;
+                    const roomInfants = parseInt(item.dataset.roomInfants, 10) || 0;
+                    const roomMaxPersons = parseInt(item.dataset.roomMaxPersons, 10) || 0;
+                    const warning = item.querySelector('.room-capacity-warning');
+                    const bookButtons = Array.from(item.querySelectorAll('button[type="submit"]'));
+
+                    const isValid = roomAdults >= adults
+                        && roomChildren >= children
+                        && roomInfants >= infants
+                        && roomMaxPersons >= effectiveGuests;
+
+                    if (!isValid) {
+                        if (warning) {
+                            warning.textContent = 'This room cannot accommodate your selected number of guests. Please update your search or choose another room.';
+                            warning.style.display = 'block';
+                        }
+                        bookButtons.forEach((button) => {
+                            button.disabled = true;
+                            button.classList.add('disabled');
+                        });
+                    } else {
+                        if (warning) {
+                            warning.style.display = 'none';
+                            warning.textContent = '';
+                        }
+                        bookButtons.forEach((button) => {
+                            button.disabled = false;
+                            button.classList.remove('disabled');
+                        });
+                    }
+                });
+            };
+
+            if (roomOptionsSection && sessionStorage.getItem('scrollToRoomOptions')) {
+                sessionStorage.removeItem('scrollToRoomOptions');
+                setTimeout(() => {
+                    roomOptionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+
+            if (bookingForm) {
+                bookingForm.addEventListener('submit', (e) => {
+                    sessionStorage.setItem('scrollToRoomOptions', 'true');
+                });
+            }
+
+            if (adultsInput || childrenInput || infantsInput) {
+                const inputs = [adultsInput, childrenInput, infantsInput].filter(Boolean);
+                inputs.forEach((input) => input.addEventListener('input', updateRoomCapacityWarnings));
+                updateRoomCapacityWarnings();
+            }
         })();
     </script>
 @endpush

@@ -432,6 +432,6 @@ class TripController extends Controller
             $booking->update(['participant_time_slots' => $participantTimeSlots]);
         }
 
-        return redirect()->route('traveler.trip.detail', $trip)->with('success', 'Guests updated successfully.');
+        return redirect()->route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id])->with('success', 'Guests updated successfully.');
     }
 }
