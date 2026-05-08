@@ -61,7 +61,7 @@
                                         <th style="padding:12px;text-align:left;font-weight:600;">Variant</th>
                                         <th style="padding:12px;text-align:left;font-weight:600;">Season</th>
                                         <th style="padding:12px;text-align:left;font-weight:600;">Specificity</th>
-                                        <th style="padding:12px;text-align:left;font-weight:600;">Session Period</th>
+                                        <th style="padding:12px;text-align:left;font-weight:600;">Season Period</th>
                                         <th style="padding:12px;text-align:left;font-weight:600;">Rates</th>
                                         <th style="padding:12px;text-align:center;font-weight:600;">Actions</th>
                                     </tr>
@@ -121,7 +121,7 @@
                                                             data-equipment-rate="{{ $rate?->equipment_rate ?? '' }}"
                                                             data-private-exclusive-rate="{{ $rate?->private_exclusive_rate ?? '' }}"
                                                             style="padding:6px 10px;background:#e3f2fd;color:#1565c0;border:none;border-radius:4px;cursor:pointer;font-size:12px;">
-                                                            {{ $rate ? 'Edit Rate' : 'Set Session & Rate' }}
+                                                            {{ $rate ? 'Edit Rate' : 'Set Season & Rate' }}
                                                         </button>
                                                         @if($rate)
                                                             <button type="button"
