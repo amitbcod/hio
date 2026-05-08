@@ -44,20 +44,24 @@ document.addEventListener('DOMContentLoaded', function () {
             const category = activeCategory ? activeCategory.value : 'accommodation';
             const optionSet = searchOptions[category] || { regions: [], types: [] };
 
-            populateSelect(
-                regionSelect,
-                optionSet.regions || [],
-                'All',
-                keepCurrentValues ? regionSelect.value : regionSelect.getAttribute('data-selected') || 'all',
-                'all'
-            );
+            if (regionSelect) {
+                populateSelect(
+                    regionSelect,
+                    optionSet.regions || [],
+                    'All',
+                    keepCurrentValues ? regionSelect.value : (regionSelect.getAttribute('data-selected') || 'all'),
+                    'all'
+                );
+            }
 
-            populateSelect(
-                typeSelect,
-                optionSet.types || [],
-                'Any',
-                keepCurrentValues ? typeSelect.value : typeSelect.getAttribute('data-selected') || ''
-            );
+            if (typeSelect) {
+                populateSelect(
+                    typeSelect,
+                    optionSet.types || [],
+                    'Any',
+                    keepCurrentValues ? typeSelect.value : (typeSelect.getAttribute('data-selected') || '')
+                );
+            }
         }
 
         categoryInputs.forEach(function (input) {
@@ -257,12 +261,19 @@ function initMiniCart() {
 
         miniCartItems.innerHTML = '';
 
+        const miniCartSummary = document.getElementById('miniCartSummary');
+        const miniCartActions = document.querySelector('.mini-cart-actions');
+
         if (cartItems.length === 0) {
             miniCartEmpty.style.display = 'block';
+            if (miniCartSummary) miniCartSummary.style.display = 'none';
+            if (miniCartActions) miniCartActions.style.display = 'none';
             return;
         }
 
         miniCartEmpty.style.display = 'none';
+        if (miniCartSummary) miniCartSummary.style.display = 'block';
+        if (miniCartActions) miniCartActions.style.display = 'flex';
 
         cartItems.forEach(function (item) {
             const itemWrapper = document.createElement('div');
@@ -305,7 +316,7 @@ function initMiniCart() {
         document.getElementById('miniCartTotal').textContent = formatMoney(summary.net_payable || 0, summary.currency || 'USD');
     }
 
-    async function fetchMiniCart(openOnLoad = false, message = '') {
+    async function fetchMiniCart(showPopup = false, message = '') {
         try {
             const response = await fetch('/booking/cart', {
                 method: 'GET',
@@ -321,12 +332,18 @@ function initMiniCart() {
 
             const data = await response.json();
             renderMiniCart(data);
-            if (openOnLoad) {
-                showMiniCart(message || 'Item added to cart.');
+            
+            if (showPopup) {
+                const cartItems = Array.isArray(data?.cart) ? data.cart : [];
+                if (cartItems.length === 0) {
+                    showMiniCart('Your cart is empty');
+                } else {
+                    showMiniCart(message || '');
+                }
             }
         } catch (error) {
             console.error(error);
-            if (openOnLoad) {
+            if (showPopup) {
                 showMiniCart('Item added to cart. Unable to load cart details.', 'error');
             }
         }
@@ -369,7 +386,9 @@ function initMiniCart() {
     if (headerCartToggle) {
         headerCartToggle.addEventListener('click', function (event) {
             event.preventDefault();
+            event.stopPropagation();
             fetchMiniCart(true);
+            return false;
         });
     }
 
