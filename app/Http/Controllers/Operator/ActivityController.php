@@ -132,6 +132,10 @@ class ActivityController extends Controller
             abort(403);
         }
 
+        if ($request->has('whats_included')) {
+            $request->merge(['whats_included' => trim($request->input('whats_included')) ?: null]);
+        }
+
         $data = $request->validate([
             'service_type' => 'required|in:' . implode(',', Activity::SERVICE_TYPES),
             'activity_name' => 'required|string|min:5|max:120',
@@ -149,7 +153,7 @@ class ActivityController extends Controller
             'longitude' => 'required|numeric|between:-180,180',
             'meeting_point_details' => 'required|string|min:10',
             'overview' => 'required|string|min:20',
-            'whats_included' => 'required|string|min:20',
+            'whats_included' => 'nullable|string',
             'itinerary' => 'required|string|min:20',
             'duration' => 'required|string|max:50',
             'suitable_for_age' => 'nullable|string|max:100',
@@ -174,7 +178,7 @@ class ActivityController extends Controller
             $activity->longitude = $data['longitude'];
             $activity->meeting_point_details = $data['meeting_point_details'];
             $activity->overview = $data['overview'];
-            $activity->whats_included = $data['whats_included'];
+            $activity->whats_included = $data['whats_included'] ?? null;
             $activity->itinerary = $data['itinerary'];
             $activity->duration = $data['duration'];
             $activity->suitable_for_age = $data['suitable_for_age'] ?? null;

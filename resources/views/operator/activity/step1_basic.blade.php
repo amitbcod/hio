@@ -179,8 +179,8 @@
 
                             <div class="row mb-3">
                                 <div class="col-md-12">
-                                    <label style="font-weight:600;">What are included in the activity? * (min 20 chars)</label>
-                                    <textarea name="whats_included" id="whats_included" style="display:none;" required>{{ old('whats_included', $activity->whats_included) }}</textarea>
+                                    <label style="font-weight:600;">What are included in the activity? </label>
+                                    <textarea name="whats_included" id="whats_included" style="display:none;" >{{ old('whats_included', $activity->whats_included) }}</textarea>
                                     <div id="whats_included_editor" style="height:170px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                                     <div id="error_whats_included" style="display:none;color:#c62828;font-size:12px;margin-top:4px;padding:6px;background:#ffebee;border-radius:4px;"></div>
                                 </div>
