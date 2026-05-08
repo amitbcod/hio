@@ -2920,14 +2920,14 @@ class AccommodationController extends Controller
         }
 
         $data = $request->validate([
-            'seo_title' => 'nullable|string|max:255',
+            'seo_title' => 'nullable|string|max:500',
             'seo_description' => ['nullable', 'string', function ($attribute, $value, $fail) {
-                if (mb_strlen(strip_tags($value)) > 255) {
-                    $fail('The SEO description may not be greater than 255 characters.');
+                if (mb_strlen(strip_tags($value)) > 500) {
+                    $fail('The SEO description may not be greater than 500 characters.');
                 }
             }],
             'keywords_tags' => 'nullable|string',
-            'og_title' => 'nullable|string|max:255',
+            'og_title' => 'nullable|string|max:500',
             'og_description' => 'nullable|string|max:1000',
             'og_image' => 'nullable|image|max:5120',
         ]);
