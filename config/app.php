@@ -123,4 +123,10 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'Againgencypayment' => [
+        'username' => env('AGAINCENCY_PAYMENT_USERNAME'),
+        'email' => env('AGAINCENCY_PAYMENT_EMAIL'),
+    ],
+
+    
 ];
