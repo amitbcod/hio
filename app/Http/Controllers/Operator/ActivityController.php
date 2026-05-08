@@ -2339,15 +2339,15 @@ class ActivityController extends Controller
         }
 
         $validated = $request->validate([
-            'short_description' => 'required|string|min:150|max:250',
-            'full_description' => 'required|string|min:250',
+            'short_description' => 'required|string|max:500',
+            'full_description' => 'required|string',
             'highlights' => 'nullable|string',
-            'seo_title' => 'nullable|string|max:60',
-            'seo_description' => 'nullable|string|max:160',
+            'seo_title' => 'nullable|string|max:500',
+            'seo_description' => 'nullable|string|max:500',
             'keywords_tags' => 'nullable|array',
-            'keywords_tags.*' => 'string|max:50',
-            'og_title' => 'nullable|string|max:60',
-            'og_description' => 'nullable|string|max:200',
+            'keywords_tags.*' => 'string|max:500',
+            'og_title' => 'nullable|string|max:500',
+            'og_description' => 'nullable|string|max:500',
             'og_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
