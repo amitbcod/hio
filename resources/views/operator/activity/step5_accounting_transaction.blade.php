@@ -148,13 +148,12 @@
 
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label style="font-weight:600;">Tax Type <span class="text-danger">*</span></label>
-                                    <select name="tax_type" id="tax_type" class="form-control" required>
-                                        <option value="">Select tax type</option>
-                                        <option value="Tourism" {{ old('tax_type', $accounting->tax_type ?? '') === 'Tourism' ? 'selected' : '' }}>Tourism Tax</option>
-                                        <option value="City" {{ old('tax_type', $accounting->tax_type ?? '') === 'City' ? 'selected' : '' }}>City Tax</option>
-                                        <option value="Environmental" {{ old('tax_type', $accounting->tax_type ?? '') === 'Environmental' ? 'selected' : '' }}>Environmental Tax</option>
-                                        <option value="None" {{ old('tax_type', $accounting->tax_type ?? '') === 'None' ? 'selected' : '' }}>None</option>
+                                    <label style="font-weight:600;">Tax Type</label>
+                                    <select name="tax_type" id="tax_type" class="form-control">
+                                        <option value="None" {{ old('tax_type', $accounting->tax_type ?? 'None') === 'None' ? 'selected' : '' }}>None</option>
+                                        <option value="Tourism" {{ old('tax_type', $accounting->tax_type ?? 'None') === 'Tourism' ? 'selected' : '' }}>Tourism Tax</option>
+                                        <option value="City" {{ old('tax_type', $accounting->tax_type ?? 'None') === 'City' ? 'selected' : '' }}>City Tax</option>
+                                        <option value="Environmental" {{ old('tax_type', $accounting->tax_type ?? 'None') === 'Environmental' ? 'selected' : '' }}>Environmental Tax</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -168,7 +167,7 @@
                                 </div>
                             </div>
 
-                            <div class="row mb-3" id="tax_charges_fields">
+                            <div class="row mb-3" id="tax_charges_fields" style="display: {{ old('tax_type', $accounting->tax_type ?? 'None') === 'None' ? 'none' : 'flex' }};">
                                 <div class="col-md-4">
                                     <label style="font-weight:600;">Tax Charges Type</label>
                                     <select name="tax_charges_type" id="tax_charges_type" class="form-control">
@@ -191,8 +190,8 @@
 
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label style="font-weight:600;">Tax Payment Collection <span class="text-danger">*</span></label>
-                                    <select name="tax_payment_collection" id="tax_payment_collection" class="form-control" required>
+                                    <label style="font-weight:600;">Tax Payment Collection</label>
+                                    <select name="tax_payment_collection" id="tax_payment_collection" class="form-control">
                                         <option value="">Select collection method</option>
                                         <option value="Operator" {{ old('tax_payment_collection', $accounting->tax_payment_collection ?? '') === 'Operator' ? 'selected' : '' }}>Operator</option>
                                         <option value="MPO" {{ old('tax_payment_collection', $accounting->tax_payment_collection ?? '') === 'MPO' ? 'selected' : '' }}>MPO</option>

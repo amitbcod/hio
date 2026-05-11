@@ -446,7 +446,17 @@ class ActivityController extends Controller
             $compliance = new \App\Models\ActivityCompliance();
         }
 
-        return view('operator.activity.step4_legal_compliance', compact('activity', 'compliance', 'operator'));
+        $operatorBusinessRegistrationNumber = '';
+        if ($operator->business) {
+            $operatorBusinessRegistrationNumber = $operator->business->registration_number;
+        } else {
+            $operatorProfile = \App\Models\OperatorProfile::where('operator_id', $operator->operator_id)->first();
+            if ($operatorProfile) {
+                $operatorBusinessRegistrationNumber = $operatorProfile->business_registration_number;
+            }
+        }
+
+        return view('operator.activity.step4_legal_compliance', compact('activity', 'compliance', 'operator', 'operatorBusinessRegistrationNumber'));
     }
 
     /**
@@ -632,8 +642,8 @@ class ActivityController extends Controller
                 'iban' => 'nullable|string|max:100',
                 'swift_code' => 'nullable|string|max:50',
                 'agreement_name' => 'nullable|string',
-                'tax_type' => 'required|string',
-                'tax_payment_collection' => 'required|string',
+                'tax_type' => 'nullable|in:Tourism,City,Environmental,None',
+                'tax_payment_collection' => 'nullable|in:Operator,MPO',
                 'commission_type' => 'nullable|string',
                 'commission_value' => 'nullable|numeric',
                 'currency_net' => 'nullable|string|max:10',

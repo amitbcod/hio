@@ -294,9 +294,9 @@
         }
 
         // Auto-fill from operator data
-        const operatorBusinessReg = "{{ addslashes($operator->business_registration_number ?? '') }}";
-        const operatorTourismPermit = "{{ addslashes($operator->tourism_permit_number ?? '') }}";
-        const operatorInsurance = "{{ addslashes($operator->insurance_number ?? '') }}";
+        const operatorBusinessReg = "{{ addslashes($operatorBusinessRegistrationNumber ?? '') }}";
+        const operatorTourismPermit = "{{ addslashes(optional($operator->business)->tourism_permit_number ?? '') }}";
+        const operatorInsurance = "{{ addslashes(optional($operator->business)->public_liability_insurance_number ?? '') }}";
 
         const businessSame = document.getElementById('business_same_as_operator');
         if (businessSame) {
