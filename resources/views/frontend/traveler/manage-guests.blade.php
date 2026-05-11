@@ -231,14 +231,6 @@
                                             <small>{{ $guest->nationality ?? 'Unknown' }} · {{ $guest->dob ? \Carbon\Carbon::parse($guest->dob)->format('d/m/Y') : 'No DOB' }}</small>
                                         </div>
                                     </label>
-                                    @if($booking instanceof \App\Models\ActivityBooking && $activityTimeSlots->isNotEmpty())
-                                        <select class="saved-guest-time-slot form-input" disabled style="max-width: 220px;">
-                                            <option value="">Select time slot</option>
-                                            @foreach($activityTimeSlots as $slot)
-                                                <option value="{{ $slot->timeslot_id }}">{{ $slot->start_time }} - {{ $slot->end_time }}</option>
-                                            @endforeach
-                                        </select>
-                                    @endif
                                 </div>
                             @endforeach
                         </div>
@@ -252,9 +244,11 @@
                         <div class="guest-item-info">
                             <span class="guest-item-name" style="font-weight: 500; color: #333; display: block;">{{ trim($guest->first_name . ' ' . ($guest->last_name ?? '')) }}</span>
                             <span class="guest-item-age" style="font-size: 12px; color: #666; display: block;">{{ $guest->nationality ?? 'Unknown' }} · {{ $guest->dob ? \Carbon\Carbon::parse($guest->dob)->format('d/m/Y') : 'No DOB' }}</span>
-                            @if($booking instanceof \App\Models\ActivityBooking && isset($booking->participant_time_slots[$guest->guest_number ?? ($index + 1)]))
+                            @if($booking instanceof \App\Models\ActivityBooking && isset($booking->participant_time_slots) && !empty($booking->participant_time_slots))
                                 @php
-                                    $timeSlotId = $booking->participant_time_slots[$guest->guest_number ?? ($index + 1)];
+                                    // Since timeslots are now the same for all participants, show the first one
+                                    $participantTimeSlots = $booking->participant_time_slots;
+                                    $timeSlotId = reset($participantTimeSlots);
                                     $timeSlot = $activityTimeSlots->where('timeslot_id', $timeSlotId)->first();
                                 @endphp
                                 @if($timeSlot)
@@ -268,7 +262,8 @@
                             </button> -->
                             @if ($booking instanceof \App\Models\ActivityBooking && isset($guest->id) && $canDownload)
                                 @php
-                                    $hasTimeSlot = isset($booking->participant_time_slots[$guest->guest_number ?? ($index + 1)]) && !empty($booking->participant_time_slots[$guest->guest_number ?? ($index + 1)]);
+                                    // Timeslots are now set at booking level, so check if booking has any time slots
+                                    $hasTimeSlot = isset($booking->participant_time_slots) && !empty($booking->participant_time_slots);
                                 @endphp
                                 @if($hasTimeSlot)
                                     <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) }}" target="_blank" style="font-size: 14px; color: #007bff; text-decoration: none; display: inline-flex; align-items: center;">
@@ -372,19 +367,6 @@
                     <label for="modal_notes">Notes</label>
                     <textarea id="modal_notes" name="notes" class="form-input" rows="3"></textarea>
                 </div>
-                @if($booking instanceof \App\Models\ActivityBooking && $activityTimeSlots->isNotEmpty())
-
-                
-                <div class="form-group" style="margin-top: 15px;">
-                    <label for="modal_time_slot">Activity Time Slot <span class="req">*</span></label>
-                    <select id="modal_time_slot" name="time_slot" class="form-input" required>
-                        <option value="">Select time slot</option>
-                        @foreach($activityTimeSlots as $slot)
-                            <option value="{{ $slot->timeslot_id }}">{{ $slot->start_time }} - {{ $slot->end_time }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                @endif
                 <div class="form-group" style="margin-top: 15px;">
                     <label class="checkbox-label">
                         <input type="checkbox" id="modal_save_to_list" name="save_to_list">
@@ -402,22 +384,7 @@
 
 <script>
 
-    document.addEventListener('change', function(e) {
-    if (e.target.classList.contains('saved-guest-checkbox-input')) {
-
-        const checkbox = e.target;
-        const row = checkbox.closest('.saved-guest-checkbox');
-        const select = row?.querySelector('.saved-guest-time-slot');
-
-        if (select) {
-            select.disabled = !checkbox.checked;
-
-            if (!checkbox.checked) {
-                select.value = ''; // reset only when unchecked
-            }
-        }
-    }
-});
+    // Removed initial timeslot event listener - timeslots come from activity page
 document.addEventListener('DOMContentLoaded', function() {
     const maxGuests = {{ $bookedCount }};
     const addGuestBtn = document.getElementById('add-guest-btn');
@@ -458,7 +425,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     nationality: '',
                     passport_number: '',
                     notes: '',
-                    time_slot: '',
+                    // time_slot: '', // Removed - timeslots come from activity page
                 };
             }
         });
@@ -481,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nationality: guest.nationality || '',
             passport_number: guest.passport_number || '',
             notes: guest.notes || '',
-            time_slot: isActivityBooking ? (participantTimeSlots[guest.guest_number] || '') : '',
+            // Removed time_slot assignment - timeslots are managed at booking level
         };
     });
 
@@ -530,14 +497,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return selectedValue;
     }*/
 
-        function getSavedGuestTimeSlot(input) {
-            const row = input.closest('.saved-guest-checkbox');
-            const select = row?.querySelector('.saved-guest-time-slot');
-
-            if (!select || select.disabled) return '';
-
-            return (select.value || '').trim();
-        }
+    function getSavedGuestTimeSlot(input) {
+        // Timeslots are no longer selected here - they come from activity page
+        return '';
+    }
 
     // Function to update checkbox states for saved guests
     function updateSavedGuestsCheckboxes() {
@@ -556,16 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
             checkbox.disabled = !isAdded && isFull;
 
             const label = checkbox.closest('.saved-guest-checkbox');
-            const timeSlotSelect = label?.querySelector('.saved-guest-time-slot');
-            if (timeSlotSelect) {
-                timeSlotSelect.disabled = !checkbox.checked;
-                if (!checkbox.checked) {
-                    timeSlotSelect.value = '';
-                    delete checkbox.dataset.timeSlot;
-                } else {
-                    getSavedGuestTimeSlot(checkbox);
-                }
-            }
+            // Removed timeslot select handling
 
             if (label) {
                 label.style.opacity = !isAdded && isFull ? '0.6' : '';
@@ -617,25 +571,8 @@ document.addEventListener('DOMContentLoaded', function() {
                  // console.log('input:', input);
                 //const selectedValue = getSavedGuestTimeSlot(input);
 
-                const row = input.closest('.saved-guest-checkbox');
-                const select = row?.querySelector('.saved-guest-time-slot');
-
-                if (select && select.disabled) {
-                    select.disabled = false; // 🔥 force enable before reading
-                }
-
-                const selectedValue = getSavedGuestTimeSlot(input);
-
-                if (isActivityBooking && activityTimeSlots.length > 0) {
-                    const row = input.closest('.saved-guest-checkbox');
-                    const select = row?.querySelector('.saved-guest-time-slot');
-
-                    if (!select || !select.value || select.value === '') {
-                        const guestName = `${input.dataset.firstName || ''} ${input.dataset.lastName || ''}`.trim();
-                        alert(`Please select a time slot for ${guestName || 'the saved guest'} before adding.`);
-                        return;
-                    }
-                }
+                // Timeslots are now selected from activity page, no validation needed here
+                // All guests will use the same timeslot from the booking
             }
 
             newGuests.forEach(input => {
@@ -651,7 +588,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     nationality: input.dataset.nationality || '',
                     passport_number: input.dataset.passport || '',
                     notes: input.dataset.notes || '',
-                    time_slot: selectedValue || '',
+                    // time_slot: selectedValue || '', // Removed - timeslots come from activity page
                 };
                 appendGuestItem(guestData[index], index);
             });
@@ -661,39 +598,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function syncSavedGuestTimeSlots() {
-        document.querySelectorAll('.saved-guest-checkbox-input').forEach(input => {
-            getSavedGuestTimeSlot(input);
-        });
-    }
+    // Removed syncSavedGuestTimeSlots function - timeslots come from activity page
 
     // Initialize checkboxes on page load
     updateSavedGuestsCheckboxes();
-    syncSavedGuestTimeSlots();
+    // Removed syncSavedGuestTimeSlots() - timeslots come from activity page
 
     // Enable or disable timeslot select when saved guest checkbox changes
     document.addEventListener('change', function(e) {
         if (e.target.matches('.saved-guest-checkbox-input')) {
             const checkbox = e.target;
-            const timeSlotSelect = checkbox.closest('.saved-guest-checkbox')?.querySelector('.saved-guest-time-slot');
-            if (timeSlotSelect) {
-                timeSlotSelect.disabled = !checkbox.checked;
-                if (!checkbox.checked) {
-                    timeSlotSelect.value = '';
-                    delete checkbox.dataset.timeSlot;
-                } else {
-                    //checkbox.dataset.timeSlot = getSavedGuestTimeSlot(checkbox);
-                }
-            }
+            // Removed timeslot select handling - timeslots come from activity page
         }
 
-        if (e.target.matches('.saved-guest-time-slot')) {
-            const timeSlotSelect = e.target;
-            const checkbox = timeSlotSelect.closest('.saved-guest-checkbox')?.querySelector('.saved-guest-checkbox-input');
-            if (checkbox) {
-               // checkbox.dataset.timeSlot = getSavedGuestTimeSlot(checkbox);
-            }
-        }
+        // Removed timeslot select change handling
     });
 
     // Add guest button
@@ -751,7 +669,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nationality: document.getElementById('modal_nationality').value,
             passport_number: document.getElementById('modal_passport_number').value,
             notes: document.getElementById('modal_notes').value,
-            time_slot: isActivityBooking ? document.getElementById('modal_time_slot').value : '',
+            // time_slot: isActivityBooking ? document.getElementById('modal_time_slot').value : '', // Removed - timeslots come from activity page
         };
 
         const saveToList = saveToListCheckbox?.checked;
@@ -804,13 +722,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const dobFormatted = guest.dob ? new Date(guest.dob).toLocaleDateString('en-GB') : 'No DOB';
         
         let timeSlotHtml = '';
-        if (isActivityBooking && guest.time_slot) {
-            //const timeSlot = activityTimeSlots.find(slot => slot.timeslot_id == guest.time_slot);
-           const timeSlot = activityTimeSlots.find(slot => slot.timeslot_id == guest.time_slot);
-            if (timeSlot) {
-                timeSlotHtml = `<span class="guest-item-timeslot" style="font-size: 12px; color: #007bff; display: block;">Time Slot: ${timeSlot.start_time} - ${timeSlot.end_time}</span>`;
-            }
-        }
+        // Removed timeSlotHtml generation - timeslots are displayed from booking level
         
         // item.innerHTML = `
         //     <div class="guest-item-info">
@@ -877,9 +789,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('modal_nationality').value = guest.nationality || '';
         document.getElementById('modal_passport_number').value = guest.passport_number || '';
         document.getElementById('modal_notes').value = guest.notes || '';
-        if (isActivityBooking) {
-            document.getElementById('modal_time_slot').value = guest.time_slot || '';
-        }
+        // Removed modal_time_slot assignment - timeslots come from activity page
         openModal();
     }
 

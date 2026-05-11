@@ -785,15 +785,6 @@
                             <textarea id="modal_notes" name="notes" class="form-input" rows="2"></textarea>
                         </div>
 
-                        <!-- Time Slot Selection for Activities -->
-                        <div class="form-group" id="modal_timeslot_group" style="display: none;">
-                            <label for="modal_time_slot">Activity Time Slot</label>
-                            <select id="modal_time_slot" name="time_slot" class="form-input">
-                                <option value="">Select a time slot</option>
-                            </select>
-                            <p class="form-hint">Choose your preferred time for this activity.</p>
-                        </div>
-
                         <div class="form-group">
                             <label style="display: flex; align-items: center; gap: 10px;">
                                 <input type="checkbox" id="modal_below_12" name="below_12">
@@ -1406,8 +1397,8 @@ label.saved-guest-checkbox {
             })->all();
         @endphp
         const savedGuestsData = @json($savedGuestsArray);
-        const activityTimeSlots = @json($activityTimeSlots ?? []);
         const cartItems = @json($cart);
+        const isTraveler = {{ $traveler ? 'true' : 'false' }};
 
         function normalizeBookingGender(value) {
             if (!value) {
@@ -1581,7 +1572,6 @@ label.saved-guest-checkbox {
                     nationality: input.dataset.nationality,
                     passport_number: input.dataset.passport,
                     notes: input.dataset.notes,
-                    time_slot: null,
                     below_12: (() => {
                         if (!input.dataset.dob) return false;
                         const dob = new Date(input.dataset.dob);
@@ -1627,38 +1617,11 @@ label.saved-guest-checkbox {
                 const guestItem = document.createElement('div');
                 guestItem.className = 'guest-item';
 
-                let timeslotInfo = '';
-                let timeslotControls = '';
-                if (item && item.type === 'activity' && item.activity_id && activityTimeSlots[item.activity_id]) {
-                    const slotOptions = activityTimeSlots[item.activity_id].map(slot => {
-                        const selected = slot.id == guest.time_slot ? 'selected' : '';
-                        return `<option value="${slot.id}" ${selected}>${slot.display}</option>`;
-                    }).join('');
-
-                    timeslotControls = `
-                        <div class="guest-item-timeslot">
-                            <label for="guest_time_slot_${itemKey}_${index}">Time Slot</label>
-                            <select id="guest_time_slot_${itemKey}_${index}" class="form-input guest-time-slot-select" data-item="${itemKey}" data-index="${index}">
-                                <option value="">Select a time slot</option>
-                                ${slotOptions}
-                            </select>
-                        </div>
-                    `;
-
-                    if (guest.time_slot) {
-                        const slot = activityTimeSlots[item.activity_id].find(s => s.id == guest.time_slot);
-                        if (slot) {
-                            timeslotInfo = ` • ${slot.display}`;
-                        }
-                    }
-                }
-
                 guestItem.innerHTML = `
                     <div class="guest-item-info">
                         <span class="guest-item-name">${guestName}</span>
-                        <span class="guest-item-age">${guest.relation}${ageLabel}${timeslotInfo}</span>
+                        <span class="guest-item-age">${guest.relation}${ageLabel}</span>
                     </div>
-                    ${timeslotControls}
                     <div class="guest-item-actions">
                         <button type="button" class="btn-edit-guest" data-item="${itemKey}" data-index="${index}">
                             <i class="fa-solid fa-pencil"></i>
@@ -1703,30 +1666,14 @@ label.saved-guest-checkbox {
             addGuestForm.reset();
             editingIndex = null;
 
-            // Show/hide time slot field based on item type
+            // Per-guest time slot entry is no longer used in checkout.
             const timeslotGroup = document.getElementById('modal_timeslot_group');
             const timeslotSelect = document.getElementById('modal_time_slot');
-            
-            if (itemKey && cartItems[itemKey]) {
-                const item = cartItems[itemKey];
-                if (item.type === 'activity' && item.activity_id && activityTimeSlots[item.activity_id]) {
-                    // Show time slot field and populate options
-                    timeslotGroup.style.display = 'block';
-                    timeslotSelect.innerHTML = '<option value="">Select a time slot</option>';
-                    
-                    activityTimeSlots[item.activity_id].forEach(slot => {
-                        const option = document.createElement('option');
-                        option.value = slot.id;
-                        option.textContent = slot.display;
-                        timeslotSelect.appendChild(option);
-                    });
-                } else {
-                    // Hide time slot field for accommodations or items without slots
-                    timeslotGroup.style.display = 'none';
-                    timeslotSelect.value = '';
-                }
-            } else {
+            if (timeslotGroup) {
                 timeslotGroup.style.display = 'none';
+            }
+            if (timeslotSelect) {
+                timeslotSelect.value = '';
             }
         }
 
@@ -1758,57 +1705,57 @@ label.saved-guest-checkbox {
                 passport_number: document.getElementById('modal_passport_number').value,
                 notes: document.getElementById('modal_notes').value,
                 below_12: document.getElementById('modal_below_12').checked,
-                time_slot: document.getElementById('modal_time_slot').value || null
             };
 
-            // Save to server
-            fetch(saveGuestUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({
-                    first_name: guestData.first_name,
-                    middle_name: guestData.middle_name,
-                    last_name: guestData.last_name,
-                    dob: guestData.dob,
-                    gender: guestData.gender,
-                    nationality: guestData.nationality,
-                    passport_number: guestData.passport_number,
-                    notes: guestData.notes
-                })
-            }).then(async response => {
-                const data = await response.json();
-                if (!response.ok) {
-                    const validationErrors = data.errors ? Object.values(data.errors).flat().join('; ') : null;
-                    const msg = validationErrors || data.error || 'Unknown error';
-                    throw new Error(msg);
-                }
+            if (isTraveler) {
+                // Save to server for logged-in travelers only
+                fetch(saveGuestUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        first_name: guestData.first_name,
+                        middle_name: guestData.middle_name,
+                        last_name: guestData.last_name,
+                        dob: guestData.dob,
+                        gender: guestData.gender,
+                        nationality: guestData.nationality,
+                        passport_number: guestData.passport_number,
+                        notes: guestData.notes
+                    })
+                }).then(async response => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        const validationErrors = data.errors ? Object.values(data.errors).flat().join('; ') : null;
+                        const msg = validationErrors || data.error || 'Unknown error';
+                        throw new Error(msg);
+                    }
 
-                if (!data.success) {
-                    throw new Error(data.error || 'Unknown error');
-                }
+                    if (!data.success) {
+                        throw new Error(data.error || 'Unknown error');
+                    }
 
-                // Add the new guest to the saved guests data array
-                savedGuestsData.push({
-                    id: data.guest.id,
-                    relation: data.guest.relation || 'other',
-                    gender: data.guest.gender,
-                    first_name: data.guest.first_name,
-                    middle_name: data.guest.middle_name,
-                    last_name: data.guest.last_name,
-                    dob: data.guest.dob,
-                    nationality: data.guest.nationality,
-                    passport_number: data.guest.passport_number,
-                    notes: data.guest.notes,
+                    savedGuestsData.push({
+                        id: data.guest.id,
+                        relation: data.guest.relation || 'other',
+                        gender: data.guest.gender,
+                        first_name: data.guest.first_name,
+                        middle_name: data.guest.middle_name,
+                        last_name: data.guest.last_name,
+                        dob: data.guest.dob,
+                        nationality: data.guest.nationality,
+                        passport_number: data.guest.passport_number,
+                        notes: data.guest.notes,
+                    });
+                    itemKeys.forEach(key => renderSavedGuestsForItem(key));
+                }).catch(error => {
+                    console.error('Error saving guest:', error);
+                    alert('Failed to save guest: ' + (error.message || 'Please try again.'));
                 });
-                itemKeys.forEach(key => renderSavedGuestsForItem(key));
-            }).catch(error => {
-                console.error('Error saving guest:', error);
-                alert('Failed to save guest: ' + (error.message || 'Please try again.'));
-            });
+            }
 
             if (editingIndex !== null && currentItem) {
                 additionalGuests[currentItem][editingIndex] = guestData;
@@ -1840,7 +1787,6 @@ label.saved-guest-checkbox {
             document.getElementById('modal_passport_number').value = guest.passport_number;
             document.getElementById('modal_notes').value = guest.notes;
             document.getElementById('modal_below_12').checked = guest.below_12;
-            document.getElementById('modal_time_slot').value = guest.time_slot || '';
             openModal(itemKey);
         }
 
@@ -1857,8 +1803,6 @@ label.saved-guest-checkbox {
                 const guestsContainer = document.createElement('div');
                 guestsContainer.style.display = 'none';
 
-                const timeSlotsByItem = {};
-                
                 // Get primary guest data from form
                 const primaryGuestData = {
                     relation: document.getElementById('guests_0_relation')?.value || 'self',
@@ -1883,7 +1827,7 @@ label.saved-guest-checkbox {
                             const guestIndex = itemGuestIndex + index + 1;
                             
                             Object.keys(guest).forEach(key => {
-                                if (key !== 'below_12' && key !== 'time_slot' && key !== '_primary_guest_time_slot') {
+                                if (key !== 'below_12' && key !== '_primary_guest_time_slot') {
                                     const input = document.createElement('input');
                                     input.type = 'hidden';
                                     input.name = `guests[${itemKey}][${guestIndex}][${key}]`;
@@ -1891,26 +1835,12 @@ label.saved-guest-checkbox {
                                     guestsContainer.appendChild(input);
                                 }
                             });
-                            
-                            // Collect time slots separately for activities (include ALL guests)
-                            if (!timeSlotsByItem[itemKey]) {
-                                timeSlotsByItem[itemKey] = {};
-                            }
-                            timeSlotsByItem[itemKey][guestIndex] = guest.time_slot || '';
                         }
                     });
                 });
 
                 this.appendChild(guestsContainer);
 
-                // Add time slots as JSON
-                if (Object.keys(timeSlotsByItem).length > 0) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'participant_time_slots_json';
-                    input.value = JSON.stringify(timeSlotsByItem);
-                    this.appendChild(input);
-                }
             });
         }
 
@@ -2135,21 +2065,6 @@ label.saved-guest-checkbox {
         });
 
         // Global event delegation for timeslot changes
-        document.addEventListener('change', function(e) {
-            if (e.target.classList.contains('guest-time-slot-select')) {
-                const itemKey = e.target.dataset.item;
-                const guestIndex = parseInt(e.target.dataset.index);
-                
-                if (additionalGuests[itemKey] && additionalGuests[itemKey][guestIndex]) {
-                    additionalGuests[itemKey][guestIndex].time_slot = e.target.value || null;
-                    saveGuestsToForm();
-                    const container = document.getElementById('item-guests-' + itemKey);
-                    if (container) {
-                        renderItemGuestsList(itemKey, container);
-                    }
-                }
-            }
-        });
 
     });
 </script>

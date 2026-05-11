@@ -63,6 +63,9 @@
                         </div>
 
                         <button type="submit" class="btn-primary booking-btn">Check Rates</button>
+                        @if(empty($activity['time_slots']))
+                            <p class="booking-note">This activity requires a time slot and none are available for the selected date.</p>
+                        @endif
                         <p class="booking-note">Book for more than 20 people, please contact us directly.</p>
                         <p class="booking-note">On Request Booking (we will get back within 24 hours)</p>
                     </form>
@@ -98,13 +101,26 @@
                                                             <input type="hidden" name="activity_id" value="{{ $activity['id'] }}">
                                                             <input type="hidden" name="variant_id" value="{{ $room['room_id'] ?? '' }}">
                                                             <input type="hidden" name="variant_name" value="{{ $room['room_name'] }}">
-                                                            <input type="hidden" name="title" value="{{ $activity['title'] }}"}>
+                                                            <input type="hidden" name="title" value="{{ $activity['title'] }}">
                                                             <input type="hidden" name="image" value="{{ $activity['image'] }}">
                                                             <input type="hidden" name="activity_date" value="{{ $booking['activity_date'] }}">
                                                             <input type="hidden" name="participants" value="{{ $booking['participants'] }}">
                                                             <input type="hidden" name="total_price" value="{{ $room['total_price'] }}">
                                                             <input type="hidden" name="currency" value="{{ $room['currency'] }}">
-                                                            <button type="submit" class="btn-book-now">Book Now</button>
+                                                            @if(!empty($room['time_slots']))
+                                                                <div style="margin-bottom:10px;">
+                                                                    <label for="activity_time_slot_id_{{ $room['room_id'] }}" style="display:block;margin-bottom:6px;font-size:13px;color:#333;">Select Time Slot</label>
+                                                                    <select id="activity_time_slot_id_{{ $room['room_id'] }}" name="activity_time_slot_id" class="form-control" required>
+                                                                        <option value="">Select a time slot</option>
+                                                                        @foreach($room['time_slots'] as $slot)
+                                                                            <option value="{{ $slot['id'] }}">{{ $slot['display'] }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
+                                                                <button type="submit" class="btn-book-now">Book Now</button>
+                                                            @else
+                                                                <button type="button" class="btn-book-now" disabled>No time slot available</button>
+                                                            @endif
                                                         </form>
                                                     @else
                                                         <a href="tel:+23052511153" class="btn-book-now btn-book-now--outline">Request</a>
@@ -362,6 +378,33 @@
                 }
                 document.querySelectorAll('.detail-thumb').forEach(t => t.classList.remove('is-active'));
                 this.classList.add('is-active');
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const timeslotSelect = document.getElementById('activity_time_slot_id');
+            if (!timeslotSelect) {
+                return;
+            }
+
+            // Keep booking forms in sync with the selected time slot.
+            function syncHiddenTimeSlot() {
+                const value = timeslotSelect.value;
+                document.querySelectorAll('.activity-time-slot-hidden').forEach(input => {
+                    input.value = value;
+                });
+            }
+
+            timeslotSelect.addEventListener('change', syncHiddenTimeSlot);
+            syncHiddenTimeSlot();
+
+            document.querySelectorAll('form[action="{{ route('frontend.booking.cart.add') }}"]').forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    if (!timeslotSelect.value) {
+                        event.preventDefault();
+                        alert('Please select a time slot before booking.');
+                    }
+                });
             });
         });
     </script>

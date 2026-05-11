@@ -393,7 +393,7 @@ class TripController extends Controller
             'guests.*.nationality' => 'required|string',
             'guests.*.passport_number' => 'nullable|string',
             'guests.*.notes' => 'nullable|string',
-            'guests.*.time_slot' => ($booking instanceof \App\Models\ActivityBooking ? 'required|string' : 'nullable|string'),
+            // Removed time_slot validation - timeslots are set from activity page
         ]);
 
         // Delete existing guests
@@ -423,14 +423,7 @@ class TripController extends Controller
             $booking->guests()->create($guestData);
         }
 
-        // For activity bookings, update the participant_time_slots in the booking
-        if ($booking instanceof \App\Models\ActivityBooking) {
-            $participantTimeSlots = [];
-            foreach (array_values($guestInput) as $index => $guestData) {
-                $participantTimeSlots[$index + 1] = $guestData['time_slot'] ?? '';
-            }
-            $booking->update(['participant_time_slots' => $participantTimeSlots]);
-        }
+        // Removed participant_time_slots update - timeslots are set from activity page and apply to all participants
 
         return redirect()->route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id])->with('success', 'Guests updated successfully.');
     }

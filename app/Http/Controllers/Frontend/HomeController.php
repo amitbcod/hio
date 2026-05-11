@@ -245,6 +245,7 @@ class HomeController extends Controller
                         ->orderBy('equipment_rate')
                         ->orderBy('private_exclusive_rate');
                 },
+                'schedulingTimeSlots',
             ]), true, $bookingContext),
         ]);
     }
@@ -377,6 +378,29 @@ class HomeController extends Controller
             ? $this->buildActivityAvailability($variants, $rates, $allotments, $bookingContext)
             : [];
 
+        $timeSlots = [];
+        if ($detailed && $activity->relationLoaded('schedulingTimeSlots')) {
+            $timeSlotsByVariant = collect($activity->schedulingTimeSlots)
+                ->groupBy(fn ($slot) => (int) ($slot->variant_id ?? 0))
+                ->map(fn ($slots) => $slots->map(function ($slot) {
+                    return [
+                        'id' => $slot->timeslot_id,
+                        'start_time' => $slot->start_time,
+                        'end_time' => $slot->end_time,
+                        'duration' => $slot->duration,
+                        'display' => trim(($slot->start_time ?? '') . ' - ' . ($slot->end_time ?? '') . ($slot->duration ? ' (' . $slot->duration . ')' : '')),
+                    ];
+                })->filter(fn ($slot) => !empty($slot['id']))->values()->all());
+
+            foreach ($availableRooms as &$availableRoom) {
+                $variantKey = (int) ($availableRoom['room_id'] ?? 0);
+                $availableRoom['time_slots'] = $timeSlotsByVariant[$variantKey] ?? [];
+            }
+            unset($availableRoom);
+
+            $timeSlots = $timeSlotsByVariant->flatten(1)->values()->all();
+        }
+
         // For detailed views, use HTML content; for lists, use plain text
         $bookingNotesText = '';
         $checkoutPolicyText = '';
@@ -438,6 +462,7 @@ class HomeController extends Controller
             'booking_notes_text' => $bookingNotesText,
             'checkout_policy_text' => $checkoutPolicyText,
             'terms_conditions_text' => $termsConditionsText,
+            'time_slots' => $timeSlots,
             'gallery' => $detailed
                 ? $galleryImages->merge($vehicleImages)->prepend($primaryImage)->unique()->values()->all()
                 : [],

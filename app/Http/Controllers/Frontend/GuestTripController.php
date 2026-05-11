@@ -601,7 +601,7 @@ class GuestTripController extends Controller
             'guests.*.nationality' => 'required|string',
             'guests.*.passport_number' => 'nullable|string',
             'guests.*.notes' => 'nullable|string',
-            'guests.*.time_slot' => ($booking instanceof ActivityBooking ? 'required|string' : 'nullable|string'),
+            // Removed time_slot validation - timeslots are set from activity page
         ]);
 
         $booking->guests()->delete();
@@ -628,13 +628,7 @@ class GuestTripController extends Controller
             $booking->guests()->create($guestData);
         }
 
-        if ($booking instanceof ActivityBooking) {
-            $participantTimeSlots = [];
-            foreach (array_values($guestInput) as $index => $guestData) {
-                $participantTimeSlots[$index + 1] = $guestData['time_slot'] ?? '';
-            }
-            $booking->update(['participant_time_slots' => $participantTimeSlots]);
-        }
+        // Removed participant_time_slots update - timeslots are set from activity page and apply to all participants
 
         return redirect()->route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id])
             ->with('success', 'Guests updated successfully.');

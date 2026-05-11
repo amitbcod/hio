@@ -10,6 +10,7 @@ use App\Models\AccommodationPromotion;
 use App\Models\Activity;
 use App\Models\ActivityBooking;
 use App\Models\ActivityPromotion;
+use App\Models\ActivitySchedulingTimeSlot;
 use App\Models\BookingGuest;
 use App\Models\SavedGuest;
 use App\Models\TravelerCart;
@@ -29,6 +30,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class BookingController extends Controller
 {
@@ -39,6 +41,20 @@ class BookingController extends Controller
     public function addToCart(Request $request)
     {
         $type = $request->input('type'); // 'accommodation' | 'activity'
+
+        if ($type === 'activity') {
+            Validator::make($request->all(), [
+                'activity_time_slot_id' => [
+                    'required',
+                    'integer',
+                    Rule::exists('activity_scheduling_timeslots', 'timeslot_id')
+                        ->where('activity_id', $request->input('activity_id')),
+                ],
+            ], [
+                'activity_time_slot_id.required' => 'Please select an activity time slot before booking.',
+                'activity_time_slot_id.exists' => 'Selected time slot is invalid for this activity.',
+            ])->validate();
+        }
 
         $cart = $this->resolveCart();
 
@@ -214,6 +230,15 @@ class BookingController extends Controller
         $priceAfterDiscount = max(0, $totalPrice - $discountAmount);
         $netAmount          = $priceAfterDiscount + $taxAmount;
 
+        $activityTimeSlotId = $request->input('activity_time_slot_id') ? (int) $request->input('activity_time_slot_id') : null;
+        $activityTimeSlotDisplay = null;
+        if ($activityTimeSlotId && $activity) {
+            $timeSlot = ActivitySchedulingTimeSlot::find($activityTimeSlotId);
+            if ($timeSlot && $timeSlot->activity_id === $activityId) {
+                $activityTimeSlotDisplay = trim(($timeSlot->start_time ?? '') . ' - ' . ($timeSlot->end_time ?? '') . ($timeSlot->duration ? ' (' . $timeSlot->duration . ')' : ''));
+            }
+        }
+
         return [
             'cart_key'         => uniqid('actv_', true),
             'type'             => 'activity',
@@ -239,6 +264,8 @@ class BookingController extends Controller
             'net_amount'       => $netAmount,
             'promotion_id'     => $promotionId,
             'is_non_refundable'=> $isNonRefundable,
+            'activity_time_slot_id' => $activityTimeSlotId,
+            'activity_time_slot_display' => $activityTimeSlotDisplay,
         ];
     }
 
@@ -911,6 +938,11 @@ class BookingController extends Controller
                 $itemTimeSlotsMap = [];
                 if (isset($participantTimeSlots[$item['cart_key']])) {
                     $itemTimeSlotsMap = $participantTimeSlots[$item['cart_key']];
+                } elseif (!empty($item['activity_time_slot_id'])) {
+                    $crewCount = max(1, ($item['adults'] ?? 0) + ($item['children'] ?? 0) + ($item['infants'] ?? 0));
+                    for ($guestNumber = 1; $guestNumber <= $crewCount; $guestNumber++) {
+                        $itemTimeSlotsMap[$guestNumber] = $item['activity_time_slot_id'];
+                    }
                 }
 
                 $booking = ActivityBooking::create([
