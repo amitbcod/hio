@@ -83,12 +83,12 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label style="font-weight:600;">Tourism Activity Permit *</label>
-                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                                    <!-- <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                                         <label style="margin-bottom:0;">
                                             <input type="checkbox" id="permit_same_as_operator" style="margin-right:6px;"> 
                                             Same as Operator
                                         </label>
-                                    </div>
+                                    </div> -->
                                     <input type="text" name="tourism_activity_permit" id="tourism_activity_permit" 
                                         class="form-control" required 
                                         value="{{ old('tourism_activity_permit', $compliance->tourism_activity_permit ?? '') }}"
@@ -102,12 +102,12 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label style="font-weight:600;">Public Liability Insurance Number *</label>
-                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                                    <!-- <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                                         <label style="margin-bottom:0;">
                                             <input type="checkbox" id="insurance_same_as_operator" style="margin-right:6px;"> 
                                             Same as Operator
-                                        </label>
-                                    </div>
+                                        </label> 
+                                    </div> -->
                                     <input type="text" name="public_liability_insurance" id="public_liability_insurance" 
                                         class="form-control" required 
                                         value="{{ old('public_liability_insurance', $compliance->public_liability_insurance ?? '') }}"
