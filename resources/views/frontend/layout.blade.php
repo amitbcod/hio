@@ -37,9 +37,9 @@
             align-items: stretch;
             overflow: hidden;
 
-            opacity: 0;
+            /* opacity: 0;
             visibility: hidden;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s ease; */
         }
 
         .mini-cart-overlay.show {
@@ -55,8 +55,8 @@
             flex-direction: column;
             overflow: hidden;
 
-            transform: translateX(100%);
-            transition: transform 0.35s ease;
+            /* transform: translateX(100%);
+            transition: transform 0.35s ease; */
         }
 
         .mini-cart-overlay.show .mini-cart-panel {

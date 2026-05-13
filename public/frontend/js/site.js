@@ -388,23 +388,18 @@ function initMiniCart() {
             event.preventDefault();
             event.stopPropagation();
             fetchMiniCart(true);
-
-            miniCart.classList.add('show'); // show mini cart
-
             return false;
         });
     }
 
     if (closeMiniCartBtn) {
         closeMiniCartBtn.addEventListener('click', closeMiniCart);
-        miniCart.classList.remove('show'); // hide mini cart
     }
 
     if (miniCartOverlay) {
         miniCartOverlay.addEventListener('click', function (event) {
             if (event.target === miniCartOverlay) {
                 closeMiniCart();
-                miniCart.classList.remove('show'); // hide mini cart
             }
         });
     }
