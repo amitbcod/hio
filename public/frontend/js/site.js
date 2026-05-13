@@ -1,3 +1,12 @@
+// Get base URL from meta tag
+const baseUrl = document.querySelector('meta[name="app-base-url"]')?.content || '';
+
+function getApiUrl(path) {
+    // Remove leading slash if present
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return baseUrl ? baseUrl.replace(/\/$/, '') + '/' + cleanPath : '/' + cleanPath;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-search-options]').forEach(function (form) {
         let searchOptions = {};
@@ -357,7 +366,7 @@ function initMiniCart() {
 
     async function fetchMiniCart(showPopup = false, message = '') {
         try {
-            const response = await fetch('/booking/cart', {
+            const response = await fetch(getApiUrl('/booking/cart'), {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json'
@@ -418,7 +427,7 @@ function initMiniCart() {
 
     async function removeFromCart(cartKey) {
         try {
-            const response = await fetch('/booking/cart/remove', {
+            const response = await fetch(getApiUrl('/booking/cart/remove'), {
                 method: 'POST',
                 body: JSON.stringify({ cart_key: cartKey }),
                 headers: {
