@@ -87,48 +87,47 @@
                                         <tr>
                                             <th>Option / Variant</th>
                                             <th>Total Price</th>
-                                            <th></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach($availableRooms as $room)
                                             <tr>
                                                 <td>
-                                                    <div style="display:flex;flex-direction:column;gap:12px;">
-                                                        <strong>{{ $room['room_name'] }}</strong>
+                                                    <div class="activity-option-card">
+                                                        <div class="activity-option-card__header">
+                                                            <strong>{{ $room['room_name'] }}</strong>
+                                                        </div>
 
                                                         @if($room['rate_specificity'] === 'Per Equipment')
-                                                            <div style="font-size:13px;color:#444;">Equipment Rate: <strong>{{ $room['currency'] }} {{ number_format((float) $room['equipment_rate'] ?? 0, 2) }}</strong></div>
+                                                            <div class="activity-option-card__equipment">
+                                                                Equipment Rate: <strong>{{ $room['currency'] }} {{ number_format((float) $room['equipment_rate'] ?? 0, 2) }}</strong>
+                                                            </div>
                                                         @else
-                                                            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
-                                                                <div style="background:#f5f8ff;border-radius:10px;padding:12px; text-align:center;">
-                                                                    <div style="font-size:12px;color:#666;margin-bottom:6px;">Adult</div>
-                                                                    <span class="adult_count">{{ $activity['booking']['adults'] }}</span> * <div style="font-weight:600;">{{ $room['currency'] }} {{ number_format((float) $room['adult_rate'] ?? 0, 2) }}</div>
+                                                            <div class="activity-option-person-grid">
+                                                                <div class="person-block">
+                                                                    <div class="person-block__count">{{ $activity['booking']['adults'] }}</div>
+                                                                    <div class="person-block__label">Adult</div>
+                                                                    <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['adult_rate'] ?? 0, 2) }}/Adult</div>
                                                                 </div>
-                                                                <div style="background:#f5f8ff;border-radius:10px;padding:12px; text-align:center;">
-                                                                    <div style="font-size:12px;color:#666;margin-bottom:6px;">Children</div>
-                                                                    <span class="children_count">{{ $activity['booking']['children'] }}</span> * <div style="font-weight:600;">{{ $room['currency'] }} {{ number_format((float) $room['children_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}</div>
+                                                                <div class="person-block">
+                                                                    <div class="person-block__count">{{ $activity['booking']['children'] }}</div>
+                                                                    <div class="person-block__label">Children</div>
+                                                                    <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['children_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}/Child</div>
                                                                 </div>
-                                                                <div style="background:#f5f8ff;border-radius:10px;padding:12px; text-align:center;">
-                                                                    <div style="font-size:12px;color:#666;margin-bottom:6px;">Infant</div>
-                                                                    <span class="infant_count">{{ $activity['booking']['infants'] }}</span> * <div style="font-weight:600;">{{ $room['currency'] }} {{ number_format((float) $room['infant_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}</div>
+                                                                <div class="person-block">
+                                                                    <div class="person-block__count">{{ $activity['booking']['infants'] }}</div>
+                                                                    <div class="person-block__label">Infant</div>
+                                                                    <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['infant_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}/Infant</div>
                                                                 </div>
                                                             </div>
                                                         @endif
 
                                                         @if($room['private_exclusive_rate'])
-                                                            <div style="font-size:13px;color:#222;">Private/Exclusive Rate: <strong>{{ $room['currency'] }} {{ number_format((float) $room['private_exclusive_rate'], 2) }}</strong> (added once)</div>
+                                                            <div class="activity-option-card__footer">
+                                                                Private/Exclusive Rate: <strong>{{ $room['currency'] }} {{ number_format((float) $room['private_exclusive_rate'], 2) }}</strong> (added once)
+                                                            </div>
                                                         @endif
                                                     </div>
-                                                </td>
-                                                <td>
-                                                    <strong class="variant-total">
-                                                        @if($room['total_price'] !== null)
-                                                            {{ $room['currency'] }} {{ number_format((float) $room['total_price'], 2) }}
-                                                        @else
-                                                            Price unavailable
-                                                        @endif
-                                                    </strong>
                                                 </td>
                                                 <td>
                                                     @if($room['total_price'] !== null)
@@ -154,20 +153,26 @@
                                                             <input type="hidden" name="adults" class="hidden-adults" value="{{ $activity['booking']['adults'] ?? 1 }}">
                                                             <input type="hidden" name="children" class="hidden-children" value="{{ $activity['booking']['children'] ?? 0 }}">
                                                             <input type="hidden" name="infants" class="hidden-infants" value="{{ $activity['booking']['infants'] ?? 0 }}">
-                                                            @if(!empty($room['time_slots']))
-                                                                <div style="margin-bottom:10px;">
-                                                                    <label for="activity_time_slot_id_{{ $room['room_id'] }}" style="display:block;margin-bottom:6px;font-size:13px;color:#333;">Select Time Slot</label>
+                                                            <div class="activity-option-summary">
+                                                                <div class="activity-option-summary__top">
+                                                                    <span>Total:</span>
+                                                                    <strong class="variant-total">
+                                                                        {{ $room['currency'] }} {{ number_format((float) $room['total_price'], 2) }}
+                                                                    </strong>
+                                                                </div>
+                                                                @if(!empty($room['time_slots']))
+                                                                    <label class="activity-option-summary__label" for="activity_time_slot_id_{{ $room['room_id'] }}">Select Time Slot</label>
                                                                     <select id="activity_time_slot_id_{{ $room['room_id'] }}" name="activity_time_slot_id" class="form-control" required>
                                                                         <option value="">Select a time slot</option>
                                                                         @foreach($room['time_slots'] as $slot)
                                                                             <option value="{{ $slot['id'] }}">{{ $slot['display'] }}</option>
                                                                         @endforeach
                                                                     </select>
-                                                                </div>
-                                                                <button type="submit" class="btn-book-now">Book Now</button>
-                                                            @else
-                                                                <button type="button" class="btn-book-now" disabled>No time slot available</button>
-                                                            @endif
+                                                                    <button type="submit" class="btn-book-now">Book Now</button>
+                                                                @else
+                                                                    <button type="button" class="btn-book-now" disabled>No time slot available</button>
+                                                                @endif
+                                                            </div>
                                                         </form>
                                                     @else
                                                         <a href="tel:+23052511153" class="btn-book-now btn-book-now--outline">Request</a>
@@ -368,6 +373,7 @@
             text-align: left;
             padding: 12px 8px;
             font-size: 14px;
+            vertical-align: top;
         }
 
         .availability-table th {
@@ -375,6 +381,114 @@
             letter-spacing: 0.05em;
             color: var(--muted);
             font-size: 12px;
+        }
+
+        .activity-option-card {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 18px;
+            border-radius: 16px;
+            background: #f5f8ff;
+        }
+
+        .activity-option-card__header {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .activity-option-card__equipment,
+        .activity-option-card__footer {
+            font-size: 13px;
+            color: #222;
+        }
+
+        .activity-option-person-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .person-block {
+            border-radius: 14px;
+            background: #ffffff;
+            padding: 16px;
+            box-shadow: 0 8px 18px rgba(16, 34, 71, 0.06);
+            text-align: center;
+        }
+
+        .person-block__count {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 6px;
+        }
+
+        .person-block__label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+        }
+
+        .person-block__rate {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a2e;
+            line-height: 1.4;
+        }
+
+        .activity-option-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 18px;
+            border-radius: 16px;
+            background: #fff;
+            border: 1px solid rgba(16, 34, 71, 0.08);
+            min-width: 240px;
+            max-width: 300px;
+        }
+
+        .activity-option-summary__top {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .activity-option-summary__top span {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .activity-option-summary__top .variant-total {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .activity-option-summary__label {
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .activity-option-summary select.form-control {
+            width: 100%;
+            min-height: 44px;
+            border-radius: 10px;
+            border: 1px solid #d6d9e6;
+            padding: 0 12px;
+            background: #fff;
+            font: inherit;
+            color: #1a1a2e;
+        }
+
+        .activity-option-summary .btn-book-now {
+            width: 100%;
         }
 
         .btn-book-now {
