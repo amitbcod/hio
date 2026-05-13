@@ -32,7 +32,7 @@
             inset: 0;
             background: rgba(0, 0, 0, 0.45);
             z-index: 9998;
-            display: flex;
+            display: none;
             justify-content: flex-end;
             align-items: stretch;
             overflow: hidden;
@@ -370,8 +370,7 @@
         function openGuestAccessModal() {
             const modal = document.getElementById('guestAccessModal');
             if (modal) {
-                modal.classList.add('show');
-                // modal.style.display = 'flex';
+                modal.style.display = 'flex';
                 document.body.style.overflow = 'hidden';
             }
         }
@@ -379,8 +378,7 @@
         function closeGuestAccessModal() {
             const modal = document.getElementById('guestAccessModal');
             if (modal) {
-                modal.classList.remove('show');
-                // modal.style.display = 'none';
+                modal.style.display = 'none';
                 document.body.style.overflow = 'auto';
             }
         }
