@@ -269,7 +269,7 @@
         .detail-thumbs-row {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 8px;
+            gap: 4px;
         }
 
         .detail-thumb {

@@ -17,7 +17,7 @@
         @include('operator.management._sidebar')
 
         {{-- Registration Steps as Collapsible Section --}}
-        <div style="background: #4c938d;color: #ffffff;margin-top: 0;padding: 12px 0;">
+        <div style="background: #4c938d;color: #ffffff;margin-top: 0;padding: 0px 0px;">
             <div style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 14px; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between;" onclick="document.getElementById('registrationStepsCollapse').classList.toggle('hidden');">
                 <span>PROFILE SETUP</span>
                 <span id="registrationToggleIcon" style="font-size: 16px; transition: transform 0.3s;">▼</span>
