@@ -245,9 +245,9 @@
                             @php
                                 $metaLabel = $item['property_type'] ?? $item['meta'] ?? $item['kind'] ?? $categoryTitle;
                                 $baseUrl = $item['url'] ?? '#';
-                                $itemUrl = $baseUrl;
+                                $iteUSDl = $baseUrl;
                                 if (!empty($detailQuery) && $baseUrl !== '#') {
-                                    $itemUrl .= (str_contains($baseUrl, '?') ? '&' : '?') . http_build_query($detailQuery);
+                                    $iteUSDl .= (str_contains($baseUrl, '?') ? '&' : '?') . http_build_query($detailQuery);
                                 }
                                 $startingRate = $item['starting_rate'] ?? null;
                                 $isActivityListing = ($item['kind'] ?? null) === 'Activity' || $category === 'tours';
@@ -260,12 +260,12 @@
                                         <div class="availability-label">available</div>
                                     </div>
                                 @endif
-                                <a href="{{ $itemUrl }}" class="category-result-media">
+                                <a href="{{ $iteUSDl }}" class="category-result-media">
                                     <img src="{{ $item['image'] }}" alt="{{ $item['title'] }}">
                                 </a>
                                 <div class="category-result-body">
                                     <span class="listing-location"><i class="fa-solid fa-location-dot"></i> {{ $item['location'] }}</span>
-                                    <h3><a href="{{ $itemUrl }}">{{ $item['title'] }}</a></h3>
+                                    <h3><a href="{{ $iteUSDl }}">{{ $item['title'] }}</a></h3>
                                     <p>{{ $item['excerpt'] }}</p>
                                     <div class="category-result-footer">
                                         <span class="chip">{{ $metaLabel }}</span>
@@ -273,9 +273,9 @@
                                             <!-- <span class="listing-availability">{{ $item['available_rooms_count'] }} rooms available</span> -->
                                         @endif
                                         @if($startingRate !== null)
-                                            <span class="listing-price">From MUR {{ number_format((float) $startingRate, 0) }} {{ $priceUnit }}</span>
+                                            <span class="listing-price">From USD {{ number_format((float) $startingRate, 0) }} {{ $priceUnit }}</span>
                                         @endif
-                                        <a href="{{ $itemUrl }}">View details</a>
+                                        <a href="{{ $iteUSDl }}">View details</a>
                                     </div>
                                 </div>
                             </article>

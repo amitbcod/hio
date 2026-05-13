@@ -25,7 +25,7 @@
         $gallery = $accommodation['gallery'] ?? [];
         $mainImage = $gallery[0] ?? $accommodation['image'];
         $startingRate = $accommodation['starting_rate'] ?? null;
-        $startingCurrency = $availableRooms[0]['currency'] ?? 'MUR';
+        $startingCurrency = $availableRooms[0]['currency'] ?? 'USD';
         $detailQuery = http_build_query([
             'check_in' => $booking['check_in'],
             'check_out' => $booking['check_out'],
@@ -375,7 +375,7 @@
                                     <div class="similar-footer">
                                         <strong>
                                             @if(!empty($item['starting_rate']))
-                                                MUR {{ number_format((float) $item['starting_rate'], 2) }} / night
+                                                USD {{ number_format((float) $item['starting_rate'], 2) }} / night
                                             @else
                                                 On request
                                             @endif

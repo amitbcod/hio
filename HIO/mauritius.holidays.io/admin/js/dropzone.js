@@ -2007,14 +2007,14 @@ var Dropzone = function (_Emitter) {
           return;
         }
 
-        return _this12.createThumbnailFromUrl(file, width, height, resizeMethod, fixOrientation, callback);
+        return _this12.createThumbnailFroUSDl(file, width, height, resizeMethod, fixOrientation, callback);
       };
 
       return fileReader.readAsDataURL(file);
     }
   }, {
-    key: "createThumbnailFromUrl",
-    value: function createThumbnailFromUrl(file, width, height, resizeMethod, fixOrientation, callback, crossOrigin) {
+    key: "createThumbnailFroUSDl",
+    value: function createThumbnailFroUSDl(file, width, height, resizeMethod, fixOrientation, callback, crossOrigin) {
       var _this13 = this;
 
       // Not using `new Image` here because of a bug in latest Chrome versions.

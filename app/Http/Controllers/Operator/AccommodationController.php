@@ -794,7 +794,7 @@ class AccommodationController extends Controller
             'tax_charges_value_type' => $request->tax_charges_value_type ?? null,
             'tax_charges_value' => $request->tax_charges_value ?? null,
             'tax_collection_method' => $request->tax_collection_method,
-            'currency_code' => $request->currency_code ?? 'MUR',
+            'currency_code' => $request->currency_code ?? 'USD',
         ]);
 
         // Mark step complete
@@ -1496,7 +1496,7 @@ class AccommodationController extends Controller
                         'valid_from' => $plan->valid_from ?? now()->toDateString(),
                         'valid_to' => $plan->valid_to ?? now()->addYear()->toDateString(),
                         'rate_type' => $plan->rate_type ?? 'Standard',
-                        'currency' => $plan->currency ?? 'MUR',
+                        'currency' => $plan->currency ?? 'USD',
                         'min_nights' => $plan->min_nights ?? 1,
                         'max_nights' => $plan->max_nights,
                         'is_active' => $plan->is_active ?? true,
@@ -1717,7 +1717,7 @@ class AccommodationController extends Controller
             'valid_from' => $request->valid_from,
             'valid_to' => $request->valid_to,
             'rate_type' => 'Seasonal',
-            'currency' => $ratePlan->currency ?? 'MUR',
+            'currency' => $ratePlan->currency ?? 'USD',
             'is_active' => true,
         ]);
 
@@ -1856,7 +1856,7 @@ class AccommodationController extends Controller
                 'valid_from' => now()->toDateString(),
                 'valid_to' => now()->addYears(10)->toDateString(),
                 'rate_type' => 'Standard',
-                'currency' => 'MUR',
+                'currency' => 'USD',
                 'is_active' => true,
             ]);
 
@@ -2069,7 +2069,7 @@ class AccommodationController extends Controller
                 'valid_from' => $request->valid_from,
                 'valid_to' => $request->valid_to,
                 'rate_type' => 'Seasonal',
-                'currency' => 'MUR',
+                'currency' => 'USD',
                 'is_active' => true,
             ]);
 

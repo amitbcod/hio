@@ -30,7 +30,7 @@ return new class extends Migration
             $table->string('agreement_name')->nullable();
             $table->string('commission_type')->nullable(); // Amount or Percentage
             $table->decimal('commission_value', 10, 2)->nullable();
-            $table->string('currency_net', 10)->nullable(); // MUR, EUR, USD
+            $table->string('currency_net', 10)->nullable(); // USD, EUR, USD
             
             // Tax Configuration
             $table->string('tax_type')->nullable(); // Tourism, City, Environmental, None

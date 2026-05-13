@@ -135,7 +135,7 @@
                                 <div class="col-md-6">
                                     <label style="font-weight:600;">Currency (Net)</label>
                                     <select name="currency_code" id="currency_code" class="form-control">
-                                        <option value="MUR" {{ old('currency_code', $accommodation->currency_code ?? 'MUR') === 'MUR' ? 'selected' : '' }}>MUR (Mauritian Rupee)</option>
+                                        <option value="USD" {{ old('currency_code', $accommodation->currency_code ?? 'USD') === 'USD' ? 'selected' : '' }}>USD (Mauritian Rupee)</option>
                                         <option value="USD" {{ old('currency_code', $accommodation->currency_code ?? '') === 'USD' ? 'selected' : '' }}>USD (US Dollar)</option>
                                         <option value="EUR" {{ old('currency_code', $accommodation->currency_code ?? '') === 'EUR' ? 'selected' : '' }}>EUR (Euro)</option>
                                         <option value="GBP" {{ old('currency_code', $accommodation->currency_code ?? '') === 'GBP' ? 'selected' : '' }}>GBP (British Pound)</option>

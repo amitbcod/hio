@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('account_number', 50);
             $table->string('iban', 50)->nullable();
             $table->string('swift_code', 20)->nullable();
-            $table->string('currency_preference', 3)->default('MUR');
+            $table->string('currency_preference', 3)->default('USD');
             $table->string('vat_number', 50)->nullable();
             $table->tinyInteger('vat_exempted')->default(0);
             $table->enum('commission_type', ['Fixed','Percentage']);

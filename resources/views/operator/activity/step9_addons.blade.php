@@ -63,7 +63,7 @@
                                     <tr style="background:#f5f5f5;border-bottom:2px solid #e0e0e0;">
                                         <th style="padding:12px;text-align:left;font-weight:600;">Add-On Name</th>
                                         <th style="padding:12px;text-align:left;font-weight:600;">Pricing Type</th>
-                                        <th style="padding:12px;text-align:left;font-weight:600;">Price (MUR)</th>
+                                        <th style="padding:12px;text-align:left;font-weight:600;">Price (USD)</th>
                                         <th style="padding:12px;text-align:left;font-weight:600;">Type</th>
                                         <th style="padding:12px;text-align:left;font-weight:600;">Variant</th>
                                         <th style="padding:12px;text-align:center;font-weight:600;">Actions</th>
@@ -153,7 +153,7 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label style="font-weight:600;font-size:13px;">Price (MUR) *</label>
+                                <label style="font-weight:600;font-size:13px;">Price (USD) *</label>
                                 <input type="number" name="price" class="form-control" required step="0.01" min="0" style="font-size:13px;">
                                 @error('price')<small style="color:#dc3545;">{{ $message }}</small>@enderror
                             </div>

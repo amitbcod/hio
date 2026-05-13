@@ -291,21 +291,21 @@
                             <h6 style="margin:0 0 12px 0;font-weight:600;color:#333;">Per Person Rates</h6>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label style="font-weight:600;font-size:13px;">Adult Rate (MUR) *</label>
+                                    <label style="font-weight:600;font-size:13px;">Adult Rate (USD) *</label>
                                     <input type="number" name="adult_rate" class="form-control" step="0.01" min="0" style="font-size:13px;">
                                 </div>
                                 <!-- <div class="col-md-6 mb-3">
-                                    <label style="font-weight:600;font-size:13px;">Teen Rate (MUR) *</label>
+                                    <label style="font-weight:600;font-size:13px;">Teen Rate (USD) *</label>
                                     <input type="number" name="teen_rate" class="form-control" step="0.01" min="0" style="font-size:13px;">
                                 </div> -->
                             <!-- </div>
                             <div class="row"> -->
                                 <div class="col-md-6 mb-3">
-                                    <label style="font-weight:600;font-size:13px;">Children Rate (MUR) *</label>
+                                    <label style="font-weight:600;font-size:13px;">Children Rate (USD) *</label>
                                     <input type="number" name="children_rate" class="form-control" step="0.01" min="0" style="font-size:13px;">
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label style="font-weight:600;font-size:13px;">Infant Rate (MUR) *</label>
+                                    <label style="font-weight:600;font-size:13px;">Infant Rate (USD) *</label>
                                     <input type="number" name="infant_rate" class="form-control" step="0.01" min="0" style="font-size:13px;">
                                 </div>
                             </div>
@@ -315,7 +315,7 @@
                             <h6 style="margin:0 0 12px 0;font-weight:600;color:#333;">Per Equipment Rate</h6>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label style="font-weight:600;font-size:13px;">Equipment Rate (MUR) *</label>
+                                    <label style="font-weight:600;font-size:13px;">Equipment Rate (USD) *</label>
                                     <input type="number" name="equipment_rate" class="form-control" step="0.01" min="0" style="font-size:13px;">
                                 </div>
                             </div>
@@ -323,7 +323,7 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label style="font-weight:600;font-size:13px;">Private/Exclusive Rate (MUR)</label>
+                                <label style="font-weight:600;font-size:13px;">Private/Exclusive Rate (USD)</label>
                                 <input type="number" name="private_exclusive_rate" class="form-control" step="0.01" min="0" style="font-size:13px;">
                             </div>
                         </div>

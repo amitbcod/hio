@@ -61,7 +61,7 @@
                             <div class="col-md-6 mb-3">
                                 <label>Currency Preference</label>
                                 <select name="currency_preference" class="form-control">
-                                    <option value="MUR" {{ old('currency_preference', $accounting?->currency_preference) == 'MUR' ? 'selected' : '' }}>MUR - Mauritian Rupee</option>
+                                    <option value="USD" {{ old('currency_preference', $accounting?->currency_preference) == 'USD' ? 'selected' : '' }}>USD - Mauritian Rupee</option>
                                     <option value="USD" {{ old('currency_preference', $accounting?->currency_preference) == 'USD' ? 'selected' : '' }}>USD - US Dollar</option>
                                     <option value="EUR" {{ old('currency_preference', $accounting?->currency_preference) == 'EUR' ? 'selected' : '' }}>EUR - Euro</option>
                                 </select>
@@ -171,7 +171,7 @@
                                     <div class="col-md-6">
                                         <label>Currency</label>
                                         <select name="currency" class="form-control" required>
-                                            <option value="MUR" {{ old('currency', $accounting?->currency_preference ?? 'MUR') == 'MUR' ? 'selected' : '' }}>MUR</option>
+                                            <option value="USD" {{ old('currency', $accounting?->currency_preference ?? 'USD') == 'USD' ? 'selected' : '' }}>USD</option>
                                             <option value="USD" {{ old('currency', $accounting?->currency_preference ?? '') == 'USD' ? 'selected' : '' }}>USD</option>
                                             <option value="EUR" {{ old('currency', $accounting?->currency_preference ?? '') == 'EUR' ? 'selected' : '' }}>EUR</option>
                                         </select>

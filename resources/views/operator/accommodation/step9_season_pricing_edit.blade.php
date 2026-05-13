@@ -39,25 +39,25 @@
                         </div>
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label style="font-weight:600;">Adult Rate (MUR) *</label>
+                                <label style="font-weight:600;">Adult Rate (USD) *</label>
                                 <input type="number" name="adult_rate" class="form-control" step="0.01" min="0" value="{{ $pricing->base_rate }}" required>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label style="font-weight:600;">Extra Adult Rate (MUR) *</label>
+                                <label style="font-weight:600;">Extra Adult Rate (USD) *</label>
                                 <input type="number" name="extra_adult_rate" class="form-control" step="0.01" min="0" value="{{ $pricing->extra_adult_rate }}" required>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label style="font-weight:600;">Extra Bed Rate (MUR)</label>
+                                <label style="font-weight:600;">Extra Bed Rate (USD)</label>
                                 <input type="number" name="extra_bed" class="form-control" step="0.01" min="0" value="{{ $pricing->extra_bed_rate }}">
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label style="font-weight:600;">Children Rate (MUR) *</label>
+                                <label style="font-weight:600;">Children Rate (USD) *</label>
                                 <input type="number" name="children_rate" class="form-control" step="0.01" min="0" value="{{ $pricing->children_rate }}" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label style="font-weight:600;">Infant Rate (MUR) *</label>
+                                <label style="font-weight:600;">Infant Rate (USD) *</label>
                                 <input type="number" name="infant_rate" class="form-control" step="0.01" min="0" value="{{ $pricing->infant_rate }}" required>
                             </div>
                         </div>

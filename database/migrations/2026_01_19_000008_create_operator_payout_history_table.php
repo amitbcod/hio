@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('adjustment_reason')->nullable();
             $table->decimal('processing_fee', 10, 2)->default(0.00)->nullable();
             $table->decimal('payout_amount', 12, 2);
-            $table->string('currency', 3)->default('MUR')->nullable();
+            $table->string('currency', 3)->default('USD')->nullable();
             $table->enum('payout_method', ['Bank','Wallet','Check'])->default('Bank');
             $table->string('transaction_ref', 100)->nullable();
             $table->enum('status', ['Pending','Processing','Paid','Failed'])->default('Pending');

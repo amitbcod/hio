@@ -1308,7 +1308,7 @@ class HomeController extends Controller
                         'quantity' => $quantity,
                         'nightly_price' => $nightlyPrice,
                         'total_price' => $totalPrice,
-                        'currency' => $accommodation->currency_code ?? 'MUR',
+                        'currency' => $accommodation->currency_code ?? 'USD',
                         'pricing_setting' => 'Per Room/Night',
                         'plan_label' => 'Standard Rate',
                     ];
@@ -1336,7 +1336,7 @@ class HomeController extends Controller
                             'quantity' => $quantity,
                             'nightly_price' => $nightlyPrice,
                             'total_price' => $totalPrice,
-                            'currency' => $rate->currency ?? $accommodation->currency_code ?? 'MUR',
+                            'currency' => $rate->currency ?? $accommodation->currency_code ?? 'USD',
                             'pricing_setting' => $pricingSetting,
                             'plan_label' => $planLabel,
                         ];
@@ -1531,7 +1531,7 @@ class HomeController extends Controller
                 'quantity' => $quantity,
                 'nightly_price' => null,
                 'total_price' => $totalPrice,
-                'currency' => 'MUR',
+                'currency' => 'USD',
                 'rate_specificity' => $selectedRate?->rate_specificity,
                 'adult_rate' => $selectedRate?->adult_rate,
                 'teen_rate' => $selectedRate?->teen_rate,

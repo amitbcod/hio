@@ -21,7 +21,7 @@ return new class extends Migration
             $table->decimal('tax_amount', 10, 2)->nullable();
             $table->decimal('surcharge_amount', 10, 2)->nullable();
             $table->decimal('final_rate', 10, 2)->required();
-            $table->string('currency', 3)->default('MUR');
+            $table->string('currency', 3)->default('USD');
             $table->enum('meal_plan', ['Room Only', 'Breakfast', 'Half Board', 'Full Board', 'All Inclusive'])->default('Room Only');
             $table->integer('min_nights')->default(1);
             $table->integer('max_nights')->nullable();

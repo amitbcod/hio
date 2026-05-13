@@ -248,12 +248,12 @@
                                 <div class="col-md-6">
                                     <label style="font-weight:600;">Currency (Net)</label>
                                     <select name="currency_net" class="form-control" style="background:#fff;">
-                                        <option value="MUR" {{ old('currency_net', $accounting->currency_net ?? 'MUR') === 'MUR' ? 'selected' : '' }}>MUR (Mauritian Rupee)</option>
+                                        <option value="USD" {{ old('currency_net', $accounting->currency_net ?? 'USD') === 'USD' ? 'selected' : '' }}>USD (Mauritian Rupee)</option>
                                         <option value="USD" {{ old('currency_net', $accounting->currency_net ?? '') === 'USD' ? 'selected' : '' }}>USD (US Dollar)</option>
                                         <option value="EUR" {{ old('currency_net', $accounting->currency_net ?? '') === 'EUR' ? 'selected' : '' }}>EUR (Euro)</option>
                                         <option value="GBP" {{ old('currency_net', $accounting->currency_net ?? '') === 'GBP' ? 'selected' : '' }}>GBP (British Pound)</option>
                                     </select>
-                                    <small style="color:#666;display:block;margin-top:4px;">Processing in USD, net payment in MUR (MPO Controller can override)</small>
+                                    <small style="color:#666;display:block;margin-top:4px;">Processing in USD, net payment in USD (MPO Controller can override)</small>
                                 </div>
                             </div>
                         </div>

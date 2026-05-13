@@ -46,7 +46,7 @@ return new class extends Migration
 
             // Currency
             if (!Schema::hasColumn('accommodations', 'currency_code')) {
-                $table->enum('currency_code', ['MUR', 'EUR', 'USD', 'GBP', 'INR', 'AED', 'CNY'])->default('MUR')->after('commission_value');
+                $table->enum('currency_code', ['USD', 'EUR', 'USD', 'GBP', 'INR', 'AED', 'CNY'])->default('USD')->after('commission_value');
             }
         });
     }

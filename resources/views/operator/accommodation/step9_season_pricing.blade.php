@@ -39,7 +39,7 @@
                                             </div>
                                             @if($combo['has_default'] && $combo['default_pricing'])
                                                 <div style="color:#28a745;font-size:11px;margin-top:4px;">
-                                                    <strong>✓ Default: MUR {{ number_format($combo['default_pricing']->base_rate, 2) }}</strong>
+                                                    <strong>✓ Default: USD {{ number_format($combo['default_pricing']->base_rate, 2) }}</strong>
                                                 </div>
                                             @else
                                                 <div style="color:#e67e22;font-size:11px;margin-top:4px;">
@@ -113,9 +113,9 @@
                                                                     <div style="display:flex;justify-content:space-between;align-items:start;gap:12px;">
                                                                         <div style="flex:1;">
                                                                             <strong>{{ \Carbon\Carbon::parse($entry->valid_from)->format('M d, Y') }} - {{ \Carbon\Carbon::parse($entry->valid_to)->format('M d, Y') }}</strong><br>
-                                                                            Adult: MUR {{ number_format($entry->base_rate, 2) }} | 
-                                                                            Extra Adult: MUR {{ number_format($entry->extra_adult_rate, 2) }} | 
-                                                                            Children: MUR {{ number_format($entry->children_rate, 2) }}
+                                                                            Adult: USD {{ number_format($entry->base_rate, 2) }} | 
+                                                                            Extra Adult: USD {{ number_format($entry->extra_adult_rate, 2) }} | 
+                                                                            Children: USD {{ number_format($entry->children_rate, 2) }}
                                                                         </div>
                                                                         <div style="display:flex;gap:6px;">
                                                                             <button type="button" 
@@ -171,27 +171,27 @@
                                                         </div>
                                                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
                                                             <div>
-                                                                <label style="font-weight:600;font-size:11px;">Room Rate (MUR) *</label>
+                                                                <label style="font-weight:600;font-size:11px;">Room Rate (USD) *</label>
                                                                 <input type="number" name="adult_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;" value="{{ $combo['default_pricing']->base_rate }}">
                                                                 <div style="font-size:11px;color:#666;margin-top:4px;">Base room price covers configured adults, children, and infants occupancy.</div>
                                                             </div>
                                                             <div>
-                                                                <label style="font-weight:600;font-size:11px;">Extra Adult Rate (MUR) *</label>
+                                                                <label style="font-weight:600;font-size:11px;">Extra Adult Rate (USD) *</label>
                                                                 <input type="number" name="extra_adult_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;" value="{{ $combo['default_pricing']->extra_adult_rate }}">
                                                             </div>
                                                         </div>
                                                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
                                                             <div>
-                                                                <label style="font-weight:600;font-size:11px;">Extra Bed Rate (MUR)</label>
+                                                                <label style="font-weight:600;font-size:11px;">Extra Bed Rate (USD)</label>
                                                                 <input type="number" name="extra_bed_rate" class="form-control" step="0.01" min="0" style="font-size:12px;" value="{{ $combo['default_pricing']->extra_bed_rate ?? 0 }}">
                                                             </div>
                                                             <div>
-                                                                <label style="font-weight:600;font-size:11px;">Children Rate (MUR) *</label>
+                                                                <label style="font-weight:600;font-size:11px;">Children Rate (USD) *</label>
                                                                 <input type="number" name="children_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;" value="{{ $combo['default_pricing']->children_rate }}">
                                                             </div>
                                                         </div>
                                                         <div style="margin-bottom:8px;">
-                                                            <label style="font-weight:600;font-size:11px;">Infant Rate (MUR) *</label>
+                                                            <label style="font-weight:600;font-size:11px;">Infant Rate (USD) *</label>
                                                             <input type="number" name="infant_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;" value="{{ $combo['default_pricing']->infant_rate }}">
                                                         </div>
                                                         <button type="submit" style="padding:6px 12px;background:#28a745;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;">Add Seasonal Entry</button>
@@ -232,24 +232,24 @@
                 <input type="hidden" id="defaultPlanId" name="plan_id">
                 
                 <div class="mb-3">
-                    <label style="font-weight:600;">Room Rate (MUR) *</label>
+                    <label style="font-weight:600;">Room Rate (USD) *</label>
                     <input type="number" name="adult_rate" class="form-control" step="0.01" min="0" required placeholder="0.00">
                     <small style="display:block;margin-top:4px;color:#666;">This base room price covers configured adults, children, and infants occupancy.</small>
                 </div>
                 <div class="mb-3">
-                    <label style="font-weight:600;">Extra Adult Rate (MUR) *</label>
+                    <label style="font-weight:600;">Extra Adult Rate (USD) *</label>
                     <input type="number" name="extra_adult_rate" class="form-control" step="0.01" min="0" required placeholder="0.00">
                 </div>
                 <div class="mb-3">
-                    <label style="font-weight:600;">Extra Bed Rate (MUR)</label>
+                    <label style="font-weight:600;">Extra Bed Rate (USD)</label>
                     <input type="number" name="extra_bed_rate" class="form-control" step="0.01" min="0" placeholder="0.00">
                 </div>
                 <div class="mb-3">
-                    <label style="font-weight:600;">Children Rate (MUR) *</label>
+                    <label style="font-weight:600;">Children Rate (USD) *</label>
                     <input type="number" name="children_rate" class="form-control" step="0.01" min="0" required placeholder="0.00">
                 </div>
                 <div class="mb-3">
-                    <label style="font-weight:600;">Infant Rate (MUR) *</label>
+                    <label style="font-weight:600;">Infant Rate (USD) *</label>
                     <input type="number" name="infant_rate" class="form-control" step="0.01" min="0" required placeholder="0.00">
                 </div>
 
@@ -289,24 +289,24 @@
                     <input type="date" id="editValidTo" name="valid_to" class="form-control" required style="font-size:12px;">
                 </div>
                 <div class="mb-3">
-                    <label style="font-weight:600;">Room Rate (MUR) *</label>
+                    <label style="font-weight:600;">Room Rate (USD) *</label>
                     <input type="number" id="editAdultRate" name="adult_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;">
                     <small style="display:block;margin-top:4px;color:#666;">This base room price covers configured adults, children, and infants occupancy.</small>
                 </div>
                 <div class="mb-3">
-                    <label style="font-weight:600;">Extra Adult Rate (MUR) *</label>
+                    <label style="font-weight:600;">Extra Adult Rate (USD) *</label>
                     <input type="number" id="editExtraAdultRate" name="extra_adult_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;">
                 </div>
                 <div class="mb-3">
-                    <label style="font-weight:600;">Extra Bed Rate (MUR)</label>
+                    <label style="font-weight:600;">Extra Bed Rate (USD)</label>
                     <input type="number" id="editExtraBedRate" name="extra_bed_rate" class="form-control" step="0.01" min="0" style="font-size:12px;">
                 </div>
                 <div class="mb-3">
-                    <label style="font-weight:600;">Children Rate (MUR) *</label>
+                    <label style="font-weight:600;">Children Rate (USD) *</label>
                     <input type="number" id="editChildrenRate" name="children_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;">
                 </div>
                 <div class="mb-3">
-                    <label style="font-weight:600;">Infant Rate (MUR) *</label>
+                    <label style="font-weight:600;">Infant Rate (USD) *</label>
                     <input type="number" id="editInfantRate" name="infant_rate" class="form-control" step="0.01" min="0" required style="font-size:12px;">
                 </div>
 
