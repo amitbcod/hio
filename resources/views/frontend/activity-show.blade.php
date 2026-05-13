@@ -127,6 +127,11 @@
                                                                 Private/Exclusive Rate: <strong>{{ $room['currency'] }} {{ number_format((float) $room['private_exclusive_rate'], 2) }}</strong> (added once)
                                                             </div>
                                                         @endif
+                                                        @if(!empty($room['max_participants']))
+                                                            <div class="activity-option-card__meta">
+                                                                Max Participants: <strong>{{ $room['max_participants'] }}</strong>
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                 </td>
                                                 <td>
@@ -138,6 +143,7 @@
                                                             data-infant-rate="{{ $room['infant_rate'] ?? ($room['adult_rate'] ?? 0) }}"
                                                             data-equipment-rate="{{ $room['equipment_rate'] ?? 0 }}"
                                                             data-private-exclusive-rate="{{ $room['private_exclusive_rate'] ?? 0 }}"
+                                                            data-max-participants="{{ $room['max_participants'] ?? 0 }}"
                                                         >
                                                             @csrf
                                                             <input type="hidden" name="type" value="activity">
@@ -160,6 +166,7 @@
                                                                         {{ $room['currency'] }} {{ number_format((float) $room['total_price'], 2) }}
                                                                     </strong>
                                                                 </div>
+                                                                <div class="activity-option-summary__error" aria-live="polite"></div>
                                                                 @if(!empty($room['time_slots']))
                                                                     <label class="activity-option-summary__label" for="activity_time_slot_id_{{ $room['room_id'] }}">Select Time Slot</label>
                                                                     <select id="activity_time_slot_id_{{ $room['room_id'] }}" name="activity_time_slot_id" class="form-control" required>
@@ -399,9 +406,14 @@
         }
 
         .activity-option-card__equipment,
-        .activity-option-card__footer {
+        .activity-option-card__footer,
+        .activity-option-card__meta {
             font-size: 13px;
             color: #222;
+        }
+
+        .activity-option-card__meta {
+            margin-top: 8px;
         }
 
         .activity-option-person-grid {
@@ -474,6 +486,12 @@
             color: #333;
             margin-bottom: 6px;
             display: block;
+        }
+
+        .activity-option-summary__error {
+            font-size: 13px;
+            color: #c53030;
+            min-height: 18px;
         }
 
         .activity-option-summary select.form-control {
@@ -584,51 +602,51 @@
                 const privateExclusiveRate = parseFloat(form.dataset.privateExclusiveRate) || 0;
                 const currency = form.querySelector('input[name="currency"]')?.value || '';
 
-                const row = form.closest('tr');
-                const adultsInput = row.querySelector('input[name="adults"]');
-                const childrenInput = row.querySelector('input[name="children"]');
-                const infantsInput = row.querySelector('input[name="infants"]');
+                const maxParticipants = parseInt(form.dataset.maxParticipants, 10) || 0;
                 const hiddenAdults = form.querySelector('.hidden-adults');
                 const hiddenChildren = form.querySelector('.hidden-children');
                 const hiddenInfants = form.querySelector('.hidden-infants');
                 const participantsInput = form.querySelector('.participants-input');
                 const totalPriceInput = form.querySelector('.total-price-input');
-                const totalDisplay = row.querySelector('.variant-total');
+                const totalDisplay = form.closest('tr')?.querySelector('.variant-total');
                 const timeSlotSelect = form.querySelector('select[name="activity_time_slot_id"]');
-
-                const buttonControls = row.querySelectorAll('.count-btn');
-                buttonControls.forEach(button => {
-                    button.addEventListener('click', function() {
-                        const fieldName = this.dataset.field;
-                        const action = this.dataset.action;
-                        const input = row.querySelector(`input[name="${fieldName}"]`);
-                        if (!input) {
-                            return;
-                        }
-                        let value = parseInt(input.value, 10) || 0;
-                        if (action === 'increment') {
-                            value += 1;
-                        } else if (action === 'decrement') {
-                            value = Math.max(fieldName === 'adults' ? 1 : 0, value - 1);
-                        }
-                        input.value = value;
-                        updateTotals();
-                    });
-                });
+                const errorContainer = form.querySelector('.activity-option-summary__error');
+                const bookNowButton = form.querySelector('.btn-book-now');
 
                 function getNumericValue(inputElement, fallback = 0) {
                     return Math.max(0, parseInt(inputElement?.value, 10) || fallback);
                 }
 
+                function validateParticipants() {
+                    const adults = getNumericValue(hiddenAdults, 1);
+                    const children = getNumericValue(hiddenChildren, 0);
+                    const infants = getNumericValue(hiddenInfants, 0);
+                    const participants = adults + children + infants;
+
+                    participantsInput.value = Math.max(1, participants);
+
+                    const isValid = !(maxParticipants > 0 && participants > maxParticipants);
+                    if (!isValid) {
+                        if (errorContainer) {
+                            errorContainer.textContent = `Maximum participants allowed for this option is ${maxParticipants}. Please reduce adults, children, or infants.`;
+                        }
+                    } else if (errorContainer) {
+                        errorContainer.textContent = '';
+                    }
+
+                    if (bookNowButton) {
+                        bookNowButton.disabled = !isValid;
+                    }
+
+                    return isValid;
+                }
+
                 function updateTotals() {
-                    const adults = getNumericValue(adultsInput, 1);
-                    const children = getNumericValue(childrenInput, 0);
-                    const infants = getNumericValue(infantsInput, 0);
+                    const adults = getNumericValue(hiddenAdults, 1);
+                    const children = getNumericValue(hiddenChildren, 0);
+                    const infants = getNumericValue(hiddenInfants, 0);
                     const participants = Math.max(1, adults + children + infants);
 
-                    hiddenAdults.value = adults;
-                    hiddenChildren.value = children;
-                    hiddenInfants.value = infants;
                     participantsInput.value = participants;
 
                     let total = 0;
@@ -663,10 +681,17 @@
                     if (timeSlotSelect && !timeSlotSelect.value) {
                         event.preventDefault();
                         alert('Please select a time slot before booking.');
+                        return;
+                    }
+
+                    if (!validateParticipants()) {
+                        event.preventDefault();
+                        return;
                     }
                 });
 
                 updateTotals();
+                validateParticipants();
             });
         });
     </script>

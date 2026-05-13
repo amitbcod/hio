@@ -11,6 +11,7 @@ use App\Models\Activity;
 use App\Models\ActivityBooking;
 use App\Models\ActivityPromotion;
 use App\Models\ActivitySchedulingTimeSlot;
+use App\Models\ActivityVariant;
 use App\Models\BookingGuest;
 use App\Models\SavedGuest;
 use App\Models\TravelerCart;
@@ -56,6 +57,21 @@ class BookingController extends Controller
                 'activity_time_slot_id.required' => 'Please select an activity time slot before booking.',
                 'activity_time_slot_id.exists' => 'Selected time slot is invalid for this activity.',
             ])->validate();
+
+            $variantId = $request->input('variant_id') ? (int) $request->input('variant_id') : null;
+            $adults = max(1, (int) $request->input('adults', 1));
+            $children = max(0, (int) $request->input('children', 0));
+            $infants = max(0, (int) $request->input('infants', 0));
+            $participants = $adults + $children + $infants;
+
+            if ($variantId) {
+                $variant = ActivityVariant::find($variantId);
+                if ($variant && $variant->max_participants !== null && $variant->max_participants > 0 && $participants > $variant->max_participants) {
+                    return back()
+                        ->withInput()
+                        ->with('error', "Maximum participants allowed for this option is {$variant->max_participants}. Please adjust your booking quantities.");
+                }
+            }
         }
 
         $cart = $this->resolveCart();

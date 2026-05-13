@@ -1539,6 +1539,7 @@ class HomeController extends Controller
                 'infant_rate' => $selectedRate?->infant_rate,
                 'equipment_rate' => $selectedRate?->equipment_rate,
                 'private_exclusive_rate' => $selectedRate?->private_exclusive_rate,
+                'max_participants' => $variant->max_participants ?? $variant->max_pax,
             ];
         }
 
