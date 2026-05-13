@@ -372,7 +372,9 @@
             if (modal) {
                 modal.style.display = 'flex';
 
-                modal.classList.add('show');
+                requestAnimationFrame(() => {
+                    modal.classList.add('show');
+                });
 
                 document.body.style.overflow = 'hidden';
             }
@@ -381,9 +383,11 @@
         function closeGuestAccessModal() {
             const modal = document.getElementById('guestAccessModal');
             if (modal) {
-                modal.style.display = 'none';
-
                 modal.classList.remove('show');
+            
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
 
                 document.body.style.overflow = 'auto';
             }
