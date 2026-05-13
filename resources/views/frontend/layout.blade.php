@@ -32,7 +32,7 @@
             inset: 0;
             background: rgba(0, 0, 0, 0.45);
             z-index: 9998;
-            display: none;
+            display: flex;
             justify-content: flex-end;
             align-items: stretch;
             overflow: hidden;
@@ -370,12 +370,8 @@
         function openGuestAccessModal() {
             const modal = document.getElementById('guestAccessModal');
             if (modal) {
-                modal.style.display = 'flex';
-
-                requestAnimationFrame(() => {
-                    modal.classList.add('show');
-                });
-
+                modal.classList.add('show');
+                // modal.style.display = 'flex';
                 document.body.style.overflow = 'hidden';
             }
         }
@@ -384,11 +380,7 @@
             const modal = document.getElementById('guestAccessModal');
             if (modal) {
                 modal.classList.remove('show');
-            
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                }, 300);
-
+                // modal.style.display = 'none';
                 document.body.style.overflow = 'auto';
             }
         }
