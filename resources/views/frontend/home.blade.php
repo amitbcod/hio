@@ -125,11 +125,11 @@
                                 </div>
                             </div>
 
-                            <!-- Accommodation/Transport: Guest & Rooms -->
-                            <div class="category-search-cell category-search-cell--accommodation category-search-cell--guests" style="display: none;">
-                                <h5>Guest & Rooms</h5>
+                            <!-- Accommodation/Transport/Activity: Guest details -->
+                            <div class="category-search-cell category-search-cell--guests" style="display: none;">
+                                <h5 id="guest-cell-heading">Guest & Rooms</h5>
                                 <div class="guest-rooms-summary">
-                                    <span id="guest-rooms-summary-text">{{ (int) request()->query('adults',2) }} Adults &middot; {{ (int) request()->query('children',0) }} Child &middot; {{ (int) request()->query('rooms',1) }} Rooms</span>
+                                    <span id="guest-rooms-summary-text">{{ (int) request()->query('adults',2) }} Adults &middot; {{ (int) request()->query('children',0) }} Child &middot; {{ (int) request()->query('infants',0) }} Infant &middot; {{ (int) request()->query('rooms',1) }} Rooms</span>
                                 </div>
                                 <div class="guest-rooms-selector">
                                     <div class="guest-rooms-row">
@@ -149,6 +149,14 @@
                                         </div>
                                     </div>
                                     <div class="guest-rooms-row">
+                                        <label for="infants-field">Infants <span>(0-2 yr)</span></label>
+                                        <div class="guest-rooms-counter">
+                                            <button type="button" class="count-btn decrement" data-target="infants">−</button>
+                                            <input id="infants-field" type="text" name="infants" value="{{ request()->query('infants', 0) }}" readonly>
+                                            <button type="button" class="count-btn increment" data-target="infants">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="guest-rooms-row" id="rooms-row">
                                         <label for="rooms-field">Rooms <span>(Max 20)</span></label>
                                         <div class="guest-rooms-counter">
                                             <button type="button" class="count-btn decrement" data-target="rooms">−</button>
@@ -189,24 +197,6 @@
                                     <div class="transport-field" style="flex: 1 1 120px; min-width: 120px;">
                                         <h5>Return time</h5>
                                         <input type="time" name="return_time" class="category-search-input" value="{{ request()->query('return_time', '') }}">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Tours/Activity: Participant Count -->
-                            <div class="category-search-cell category-search-cell--tours category-search-cell--participants" style="display: none;">
-                                <h5>Select Participant</h5>
-                                <div class="participant-summary">
-                                    <span id="participant-summary-text">{{ (int) request()->query('participants', 1) }} Participant{{ (int) request()->query('participants', 1) !== 1 ? 's' : '' }}</span>
-                                </div>
-                                <div class="participant-selector">
-                                    <div class="participant-row">
-                                        <label for="participants-field">Number of Participants</label>
-                                        <div class="participant-counter">
-                                            <button type="button" class="count-btn decrement" data-target="participants">−</button>
-                                            <input id="participants-field" type="text" name="participants" value="{{ request()->query('participants', 1) }}" readonly>
-                                            <button type="button" class="count-btn increment" data-target="participants">+</button>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -408,14 +398,14 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
             const arrivalDateInput = findInput('arrival_date');
             const returnDateInput = findInput('return_date');
             const guestSummary = document.getElementById('guest-rooms-summary-text');
-            const participantSummary = document.getElementById('participant-summary-text');
+            const guestCellHeading = document.getElementById('guest-cell-heading');
             const guestCell = document.querySelector('.category-search-cell--guests');
-            const participantCell = document.querySelector('.category-search-cell--participants');
             const regionCell = document.querySelector('.category-search-cell--region');
             const accommodationCheckInCell = document.querySelector('.category-search-cell--check-in');
             const accommodationCheckOutCell = document.querySelector('.category-search-cell--check-out');
             const transportCells = document.querySelectorAll('.category-search-cell--transport');
             const toursActivityDateCell = document.querySelector('.category-search-cell--activity-date');
+            const roomsRow = document.getElementById('rooms-row');
             const categoryRadios = document.querySelectorAll('input[name="category"]');
 
             const showDateError = function (message) {
@@ -523,17 +513,11 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
             const updateGuestSummary = function () {
                 const adults = parseInt(findInput('adults')?.value || 0, 10);
                 const children = parseInt(findInput('children')?.value || 0, 10);
+                const infants = parseInt(findInput('infants')?.value || 0, 10);
                 const rooms = parseInt(findInput('rooms')?.value || 0, 10);
+                const selectedCategory = document.querySelector('input[name="category"]:checked')?.value;
                 if (guestSummary) {
-                    guestSummary.textContent = `${adults} Adults · ${children} Child${children === 1 ? '' : 'ren'} · ${rooms} Room${rooms === 1 ? '' : 's'}`;
-                }
-            };
-
-            // Update participant summary text
-            const updateParticipantSummary = function () {
-                const participants = parseInt(findInput('participants')?.value || 1, 10);
-                if (participantSummary) {
-                    participantSummary.textContent = `${participants} Participant${participants !== 1 ? 's' : ''}`;
+                    guestSummary.textContent = `${adults} Adults · ${children} Child${children === 1 ? '' : 'ren'} · ${infants} Infant${infants === 1 ? '' : 's'}` + (selectedCategory === 'accommodation' ? ` · ${rooms} Room${rooms === 1 ? '' : 's'}` : '');
                 }
             };
 
@@ -542,32 +526,32 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                 const selectedCategory = document.querySelector('input[name="category"]:checked')?.value;
 
                 if (selectedCategory === 'tours') {
-                    // Show tours fields, hide accommodation and transport fields
                     accommodationCheckInCell.style.display = 'none';
                     accommodationCheckOutCell.style.display = 'none';
-                    guestCell.style.display = 'none';
+                    guestCell.style.display = 'block';
+                    if (guestCellHeading) guestCellHeading.textContent = 'Participants';
+                    if (roomsRow) roomsRow.style.display = 'none';
                     toursActivityDateCell.style.display = 'block';
-                    participantCell.style.display = 'block';
                     transportCells.forEach(el => el.style.display = 'none');
+                    if (regionCell) regionCell.style.display = 'block';
                 } else if (selectedCategory === 'transport') {
-                    // Show transport-specific fields, hide accommodation, tours, and region fields
                     accommodationCheckInCell.style.display = 'none';
                     accommodationCheckOutCell.style.display = 'none';
                     guestCell.style.display = 'none';
                     toursActivityDateCell.style.display = 'none';
-                    participantCell.style.display = 'none';
                     transportCells.forEach(el => el.style.display = 'block');
                     if (regionCell) regionCell.style.display = 'none';
                 } else {
-                    // Show accommodation fields and region
                     accommodationCheckInCell.style.display = 'block';
                     accommodationCheckOutCell.style.display = 'block';
                     guestCell.style.display = 'block';
+                    if (guestCellHeading) guestCellHeading.textContent = 'Guest & Rooms';
+                    if (roomsRow) roomsRow.style.display = 'flex';
                     toursActivityDateCell.style.display = 'none';
-                    participantCell.style.display = 'none';
                     transportCells.forEach(el => el.style.display = 'none');
                     if (regionCell) regionCell.style.display = 'block';
                 }
+                updateGuestSummary();
             };
 
             // Attach change event to category radios
@@ -584,19 +568,6 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                 document.addEventListener('click', function (event) {
                     if (!guestCell.contains(event.target)) {
                         guestCell.classList.remove('is-open');
-                    }
-                });
-            }
-
-            // Handle participant cell expand/collapse
-            if (participantCell && participantSummary) {
-                participantSummary.addEventListener('click', function () {
-                    participantCell.classList.toggle('is-open');
-                });
-
-                document.addEventListener('click', function (event) {
-                    if (!participantCell.contains(event.target)) {
-                        participantCell.classList.remove('is-open');
                     }
                 });
             }
@@ -626,30 +597,9 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                 });
             });
 
-            // Handle participant counter buttons
-            document.querySelectorAll('.participant-selector .count-btn').forEach(function (button) {
-                button.addEventListener('click', function () {
-                    const target = button.getAttribute('data-target');
-                    const input = findInput(target);
-                    if (!input) return;
-
-                    let value = parseInt(input.value, 10) || 1;
-                    if (button.classList.contains('increment')) {
-                        value += 1;
-                    } else if (button.classList.contains('decrement')) {
-                        value -= 1;
-                    }
-
-                    value = Math.max(1, value);
-                    input.value = value;
-                    updateParticipantSummary();
-                });
-            });
-
             // Initialize display on page load
             updateCategoryFields();
             updateGuestSummary();
-            updateParticipantSummary();
             updateCheckOutMinDate();
             validateCheckInOut();
         });
