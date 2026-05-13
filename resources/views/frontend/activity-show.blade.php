@@ -417,7 +417,7 @@
         }
 
         .activity-option-person-grid {
-            display: grid;
+            display: flex;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 10px;
         }

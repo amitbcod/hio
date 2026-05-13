@@ -327,6 +327,15 @@ class BookingController extends Controller
         unset($cart[$cartKey]);
         $this->storeCart($cart);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Item removed from cart.',
+                'cart' => array_values($cart),
+                'summary' => $this->buildCartSummary($cart),
+            ]);
+        }
+
         return back()->with('success', 'Item removed from cart.');
     }
 

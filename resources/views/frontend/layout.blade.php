@@ -94,7 +94,7 @@
         }
         .mini-cart-item {
             display: grid;
-            grid-template-columns: 100px 1fr;
+            grid-template-columns: 100px 1fr auto;
             gap: 12px;
             padding: 14px 0;
             border-bottom: 1px solid #f1f1f1;
@@ -107,6 +107,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            position: relative;
         }
         .mini-cart-item-image img {
             width: 100%;
@@ -123,10 +124,10 @@
             line-height: 1.3;
         }
         .mini-cart-item-details {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 12px;
-            align-items: start;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-start;
         }
         .mini-cart-item-meta {
             font-size: 13px;
@@ -139,6 +140,44 @@
             font-weight: 700;
             color: #111;
             min-width: 76px;
+        }
+        .mini-cart-item-delete {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+        .mini-cart-item-delete:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        .mini-cart-item-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 4px;
+        }
+        .mini-cart-item-date {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .mini-cart-item-guests {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
         }
         .mini-cart-summary {
             padding: 16px 24px;

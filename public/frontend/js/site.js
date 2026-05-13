@@ -185,14 +185,14 @@ function initMiniCart() {
 
     function getItemSubtitle(item) {
         if (item.type === 'accommodation') {
-            return item.room_name ? item.room_name + ' · ' + getQuantityText(item) : getQuantityText(item);
+            return item.room_name ? item.room_name : 'Accommodation';
         }
 
         if (item.type === 'activity') {
-            return item.variant_name ? item.variant_name + ' · ' + getQuantityText(item) : getQuantityText(item);
+            return item.variant_name ? item.variant_name : 'Activity';
         }
 
-        return getQuantityText(item);
+        return 'Item';
     }
 
     function getItemDateLabel(item) {
@@ -201,10 +201,24 @@ function initMiniCart() {
         }
 
         if (item.type === 'activity') {
-            return item.activity_date ? 'Date: ' + item.activity_date : '';
+            return item.check_in_display ? 'Date: ' + item.check_in_display : '';
         }
 
         return '';
+    }
+
+    function getItemGuestDetails(item) {
+        const details = [];
+        if (item.adults) {
+            details.push((parseInt(item.adults, 10) || 0) + ' Adult' + (item.adults !== 1 ? 's' : ''));
+        }
+        if (item.children) {
+            details.push((parseInt(item.children, 10) || 0) + ' Child' + (item.children !== 1 ? 'ren' : ''));
+        }
+        if (item.infants) {
+            details.push((parseInt(item.infants, 10) || 0) + ' Infant' + (item.infants !== 1 ? 's' : ''));
+        }
+        return details.length > 0 ? details.join(', ') : '';
     }
 
     function updateHeaderCartCount(count) {
@@ -291,22 +305,47 @@ function initMiniCart() {
             imageLabel.textContent = item.title || (item.type === 'accommodation' ? 'Accommodation' : 'Activity');
             imageWrap.appendChild(imageLabel);
 
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'mini-cart-item-delete';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.setAttribute('title', 'Remove item');
+            deleteBtn.onclick = function (e) {
+                e.preventDefault();
+                removeFromCart(item.cart_key || item.id);
+            };
+            imageWrap.appendChild(deleteBtn);
+
             const details = document.createElement('div');
             details.className = 'mini-cart-item-details';
 
-            const meta = document.createElement('div');
-            meta.className = 'mini-cart-item-meta';
-            meta.innerHTML = `<strong>${getItemSubtitle(item)}</strong>${getItemDateLabel(item) ? '<br>' + getItemDateLabel(item) : ''}`;
+            const title = document.createElement('div');
+            title.className = 'mini-cart-item-title';
+            title.innerHTML = `<strong>${getItemSubtitle(item)}</strong>`;
+            details.appendChild(title);
+
+            const dateLabel = getItemDateLabel(item);
+            if (dateLabel) {
+                const date = document.createElement('div');
+                date.className = 'mini-cart-item-date';
+                date.textContent = dateLabel;
+                details.appendChild(date);
+            }
+
+            const guestDetails = getItemGuestDetails(item);
+            if (guestDetails) {
+                const guests = document.createElement('div');
+                guests.className = 'mini-cart-item-guests';
+                guests.textContent = guestDetails;
+                details.appendChild(guests);
+            }
 
             const price = document.createElement('div');
             price.className = 'mini-cart-item-price';
             price.textContent = formatMoney(item.net_amount || item.total_price || 0, item.currency || 'USD');
 
-            details.appendChild(meta);
-            details.appendChild(price);
-
             itemWrapper.appendChild(imageWrap);
             itemWrapper.appendChild(details);
+            itemWrapper.appendChild(price);
             miniCartItems.appendChild(itemWrapper);
         });
 
@@ -374,6 +413,32 @@ function initMiniCart() {
             showMiniCart(payload.message || 'Item added to cart.');
         } catch (error) {
             showMiniCart(error.message || 'Unable to add item to cart.', 'error');
+        }
+    }
+
+    async function removeFromCart(cartKey) {
+        try {
+            const response = await fetch('/booking/cart/remove', {
+                method: 'POST',
+                body: JSON.stringify({ cart_key: cartKey }),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                },
+                credentials: 'same-origin'
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.message || 'Unable to remove item from cart.');
+            }
+
+            renderMiniCart(payload);
+            showMiniCart(payload.message || 'Item removed from cart.');
+        } catch (error) {
+            showMiniCart(error.message || 'Unable to remove item from cart.', 'error');
         }
     }
 
