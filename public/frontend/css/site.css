@@ -2118,6 +2118,26 @@ label.saved-guest-checkbox {
     top: 120px;
 }
 
+.detail-gallery-card {
+    position: sticky;
+    top: 120px;
+    height: fit-content;
+}
+
+.detail-gallery-card .detail-main-image {
+    max-height: 400px;
+}
+
+.availability-table select.form-control {
+    width: 100%;
+    min-height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0 12px 0 6px;
+    font: inherit;
+    color: var(--ink);
+    background: #fff;
+}
 
 
 
