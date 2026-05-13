@@ -55,7 +55,11 @@
                         </div>
                         <div class="confirm-summary-row">
                             <span>Payment Method</span>
-                            <span class="cod-badge"><i class="fa-solid fa-money-bill-wave"></i> Cash on Delivery</span>
+                            @if(($paymentMethod ?? 'cod') === 'againgency')
+                                <span class="cod-badge"><i class="fa-solid fa-credit-card"></i> Againgency Online Payment</span>
+                            @else
+                                <span class="cod-badge"><i class="fa-solid fa-money-bill-wave"></i> Cash on Delivery</span>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -129,8 +133,13 @@
                         <li>
                             <i class="fa-solid fa-money-bill-wave"></i>
                             <div>
-                                <strong>Pay on Arrival</strong>
-                                <p>Cash on Delivery — settle payment when you check in.</p>
+                                @if(($paymentMethod ?? 'cod') === 'againgency')
+                                    <strong>{{ ($paymentStatus ?? 'pending') === 'paid' ? 'Online Payment Received' : 'Payment Pending' }}</strong>
+                                    <p>{{ ($paymentStatus ?? 'pending') === 'paid' ? 'Your payment was processed with Againgency.' : 'Your payment is being processed. We will update your booking once confirmation is received.' }}</p>
+                                @else
+                                    <strong>Pay on Arrival</strong>
+                                    <p>Cash on Delivery — settle payment when you check in.</p>
+                                @endif
                             </div>
                         </li>
                     </ol>

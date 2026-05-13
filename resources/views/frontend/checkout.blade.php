@@ -355,7 +355,7 @@
                     <span>Checkout</span>
                 </div>
                 <h1>Complete Your Booking</h1>
-                <p class="checkout-subtitle">Cash on Delivery — your booking will be confirmed within 24 hours.</p>
+                <p class="checkout-subtitle">Choose your guest details and payment method to complete the booking.</p>
                     @if(!auth('traveler')->check())
                         <p class="checkout-login-link">
                             Already have an account? <a href="{{ route('traveler.login') . '?redirect=' . urlencode(route('frontend.booking.checkout')) }}">Login</a>
@@ -364,6 +364,14 @@
 
                 <form method="POST" action="{{ route('frontend.booking.place-order') }}" class="checkout-form" id="checkoutForm">
                     @csrf
+
+                    @if(session('error'))
+                        <div class="form-errors">
+                            <ul>
+                                <li>{{ session('error') }}</li>
+                            </ul>
+                        </div>
+                    @endif
 
                     @if($errors->any())
                         <div class="form-errors">
@@ -541,16 +549,28 @@
                                 <span class="accordion-toggle">−</span>
                             </button>
                             <div class="accordion-panel">
-                                <div class="payment-option selected">
-                                    <div class="payment-option-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
-                                    <div>
-                                        <strong>Cash on Delivery</strong>
-                                        <p>Pay when you check in. No advance payment required.</p>
-                                    </div>
-                                    <i class="fa-solid fa-circle-check payment-tick"></i>
+                                <div class="payment-options">
+                                    <label class="payment-option {{ old('payment_method', 'cod') === 'cod' ? 'selected' : '' }}">
+                                        <input type="radio" name="payment_method" value="cod" hidden {{ old('payment_method', 'cod') === 'cod' ? 'checked' : '' }}>
+                                        <div class="payment-option-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+                                        <div>
+                                            <strong>Cash on Delivery</strong>
+                                            <p>Pay when you check in. No advance payment required.</p>
+                                        </div>
+                                        <i class="fa-solid fa-circle-check payment-tick"></i>
+                                    </label>
+                                    <label class="payment-option {{ old('payment_method') === 'againgency' ? 'selected' : '' }}">
+                                        <input type="radio" name="payment_method" value="againgency" hidden {{ old('payment_method') === 'againgency' ? 'checked' : '' }}>
+                                        <div class="payment-option-icon"><i class="fa-solid fa-credit-card"></i></div>
+                                        <div>
+                                            <strong>Againgency Online Payment</strong>
+                                            <p>Pay securely now through our payment gateway.</p>
+                                        </div>
+                                        <i class="fa-solid fa-circle-check payment-tick"></i>
+                                    </label>
                                 </div>
                                 <p class="form-hint" style="margin-top:10px;">
-                                    Payment gateway integration coming soon. Currently COD only.
+                                    Select Cash on Delivery or pay securely with Againgency.
                                 </p>
                             </div>
                         </div>
@@ -1060,10 +1080,16 @@ var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
     display: flex;
     align-items: center;
     gap: 14px;
-    border: 2px solid #1a7f37;
+    border: 2px solid rgba(26, 127, 55, 0.25);
     border-radius: 12px;
     padding: 14px 16px;
     background: #f8f8ff;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+}
+.payment-option.selected {
+    border-color: #1a7f37;
+    background: #ecf9ed;
 }
 .payment-option-icon {
     font-size: 22px;
@@ -1072,7 +1098,16 @@ var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
 }
 .payment-option strong { display: block; font-size: 14px; color: #1a1a2e; }
 .payment-option p { font-size: 12px; color: #666; margin: 2px 0 0; }
-.payment-tick { margin-left: auto; color: #1a7f37; font-size: 20px; }
+.payment-tick {
+    margin-left: auto;
+    color: #1a7f37;
+    font-size: 20px;
+    opacity: 0;
+    transition: opacity .2s;
+}
+.payment-option.selected .payment-tick {
+    opacity: 1;
+}
 
 /* Mini Items */
 .mini-items { display: flex; flex-direction: column; gap: 12px; }
@@ -1840,8 +1875,28 @@ label.saved-guest-checkbox {
                 });
 
                 this.appendChild(guestsContainer);
-
             });
+
+            function refreshPaymentSelection() {
+                const selectedInput = document.querySelector('input[name="payment_method"]:checked');
+                const selectedMethod = selectedInput ? selectedInput.value : 'cod';
+                document.querySelectorAll('.payment-option').forEach(option => {
+                    const optionInput = option.querySelector('input[name="payment_method"]');
+                    option.classList.toggle('selected', optionInput ? optionInput.checked : false);
+                });
+
+                const checkoutButton = document.querySelector('.btn-checkout');
+                if (checkoutButton) {
+                    checkoutButton.innerHTML = selectedMethod === 'againgency'
+                        ? '<i class="fa-solid fa-credit-card"></i> Pay Securely with Againgency'
+                        : '<i class="fa-solid fa-lock"></i> Confirm Booking (COD)';
+                }
+            }
+
+            document.querySelectorAll('input[name="payment_method"]').forEach(input => {
+                input.addEventListener('change', refreshPaymentSelection);
+            });
+            refreshPaymentSelection();
         }
 
         // Event listeners

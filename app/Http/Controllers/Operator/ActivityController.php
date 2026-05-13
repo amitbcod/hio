@@ -1516,7 +1516,7 @@ class ActivityController extends Controller
             'valid_to' => 'required|date|date_format:Y-m-d|after:valid_from',
             'rate_specificity' => 'required|in:Per Person,Per Equipment',
             'adult_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
-            'teen_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
+           // 'teen_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
             'children_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
             'infant_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
             'equipment_rate' => 'nullable|required_if:rate_specificity,Per Equipment|numeric|min:0',
@@ -1536,7 +1536,7 @@ class ActivityController extends Controller
             $rate->valid_to = $validated['valid_to'];
             $rate->rate_specificity = $validated['rate_specificity'];
             $rate->adult_rate = $validated['adult_rate'] ?? null;
-            $rate->teen_rate = $validated['teen_rate'] ?? null;
+            //$rate->teen_rate = $validated['teen_rate'] ?? null;
             $rate->children_rate = $validated['children_rate'] ?? null;
             $rate->infant_rate = $validated['infant_rate'] ?? null;
             $rate->equipment_rate = $validated['equipment_rate'] ?? null;
@@ -1607,7 +1607,7 @@ class ActivityController extends Controller
             'valid_to' => 'required|date|date_format:Y-m-d|after:valid_from',
             'rate_specificity' => 'required|in:Per Person,Per Equipment',
             'adult_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
-            'teen_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
+            //'teen_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
             'children_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
             'infant_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
             'equipment_rate' => 'nullable|required_if:rate_specificity,Per Equipment|numeric|min:0',
@@ -1631,7 +1631,7 @@ class ActivityController extends Controller
             $rate->valid_to = $validated['valid_to'];
             $rate->rate_specificity = $validated['rate_specificity'];
             $rate->adult_rate = $validated['adult_rate'] ?? null;
-            $rate->teen_rate = $validated['teen_rate'] ?? null;
+            //$rate->teen_rate = $validated['teen_rate'] ?? null;
             $rate->children_rate = $validated['children_rate'] ?? null;
             $rate->infant_rate = $validated['infant_rate'] ?? null;
             $rate->equipment_rate = $validated['equipment_rate'] ?? null;

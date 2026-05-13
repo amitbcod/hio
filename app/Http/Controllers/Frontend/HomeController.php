@@ -965,12 +965,18 @@ class HomeController extends Controller
             now()
         );
 
-        $participants = max(1, (int) $request->query('participants', 1));
+        $adults = max(1, (int) $request->query('adults', $request->query('participants', 1)));
+        $children = max(0, (int) $request->query('children', 0));
+        $infants = max(0, (int) $request->query('infants', 0));
+        $participants = max(1, $adults + $children + $infants);
 
         return [
             'activity_date' => $activityDate->toDateString(),
             'activity_date_display' => $activityDate->format('d-m-Y'),
             'participants' => $participants,
+            'adults' => $adults,
+            'children' => $children,
+            'infants' => $infants,
         ];
     }
 
@@ -1502,7 +1508,9 @@ class HomeController extends Controller
                 ->sortBy(function ($rate) use ($bookingContext) {
                     $value = $this->calculateActivityRateTotal(
                         $rate,
-                        (int) $bookingContext['participants']
+                        (int) $bookingContext['adults'], 
+                        (int) $bookingContext['children'], 
+                        (int) $bookingContext['infants']
                     );
 
                     return $value !== null ? $value : PHP_INT_MAX;
@@ -1511,7 +1519,9 @@ class HomeController extends Controller
 
             $totalPrice = $this->calculateActivityRateTotal(
                 $selectedRate,
-                (int) $bookingContext['participants']
+                (int) $bookingContext['adults'], 
+                (int) $bookingContext['children'], 
+                (int) $bookingContext['infants']
             );
 
             $results[] = [
@@ -1522,6 +1532,13 @@ class HomeController extends Controller
                 'nightly_price' => null,
                 'total_price' => $totalPrice,
                 'currency' => 'MUR',
+                'rate_specificity' => $selectedRate?->rate_specificity,
+                'adult_rate' => $selectedRate?->adult_rate,
+                'teen_rate' => $selectedRate?->teen_rate,
+                'children_rate' => $selectedRate?->children_rate,
+                'infant_rate' => $selectedRate?->infant_rate,
+                'equipment_rate' => $selectedRate?->equipment_rate,
+                'private_exclusive_rate' => $selectedRate?->private_exclusive_rate,
             ];
         }
 
@@ -1555,13 +1572,16 @@ class HomeController extends Controller
         return true;
     }
 
-    private function calculateActivityRateTotal($rate, int $participants): ?float
+    private function calculateActivityRateTotal($rate, int $adults, int $children, int $infants): ?float
     {
         if (!$rate) {
             return null;
         }
 
-        $participants = max(1, $participants);
+        $adults = max(1, $adults);
+        $children = max(0, $children);
+        $infants = max(0, $infants);
+        $participants = max(1, $adults + $children + $infants);
 
         $rateSpecificity = (string) ($rate->rate_specificity ?? 'Per Person');
 
@@ -1572,17 +1592,32 @@ class HomeController extends Controller
                 : null;
         } else {
             $adultRate = $rate->adult_rate !== null ? (float) $rate->adult_rate : null;
+            $childrenRate = $rate->children_rate !== null ? (float) $rate->children_rate : $adultRate;
+            $infantRate = $rate->infant_rate !== null ? (float) $rate->infant_rate : $adultRate;
 
-            // For activities, we treat all participants as adults
-            // This is a simplified approach - you may need to adjust based on your business logic
-            $base = $adultRate !== null && $adultRate > 0
-                ? $adultRate * $participants
-                : null;
+            $base = null;
+            if ($adultRate !== null && $adultRate > 0) {
+                $base = $adultRate * $adults;
+            }
+            if ($childrenRate !== null) {
+                $base = ($base ?? 0) + ($childrenRate * $children);
+            }
+            if ($infantRate !== null) {
+                $base = ($base ?? 0) + ($infantRate * $infants);
+            }
+
+            if ($base !== null && $base <= 0) {
+                $base = null;
+            }
         }
 
         $privateRate = $rate->private_exclusive_rate !== null ? (float) $rate->private_exclusive_rate : null;
-        if (($base === null || $base <= 0) && $privateRate !== null && $privateRate > 0) {
-            $base = $privateRate;
+        if ($privateRate !== null && $privateRate > 0) {
+            if ($base === null) {
+                $base = $privateRate;
+            } else {
+                $base += $privateRate;
+            }
         }
 
         if ($base === null || $base <= 0) {

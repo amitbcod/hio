@@ -58,8 +58,16 @@
                             <input type="date" name="activity_date" value="{{ $booking['activity_date'] }}" class="booking-input" min="{{ date('Y-m-d') }}">
                         </div>
                         <div class="booking-field">
-                            <label>Participants</label>
-                            <input type="number" name="participants" min="1" value="{{ $booking['participants'] }}" class="booking-input">
+                            <label>Adults</label>
+                            <input type="number" name="adults" min="1" value="{{ $activity['booking']['adults'] ?? 1 }}" class="booking-input">
+                        </div>
+                        <div class="booking-field">
+                            <label>Children</label>
+                            <input type="number" name="children" min="0" value="{{ $activity['booking']['children'] ?? 0 }}" class="booking-input">
+                        </div>
+                        <div class="booking-field">
+                            <label>Infants</label>
+                            <input type="number" name="infants" min="0" value="{{ $activity['booking']['infants'] ?? 0 }}" class="booking-input">
                         </div>
 
                         <button type="submit" class="btn-primary booking-btn">Check Rates</button>
@@ -85,17 +93,53 @@
                                     <tbody>
                                         @foreach($availableRooms as $room)
                                             <tr>
-                                                <td>{{ $room['room_name'] }}</td>
                                                 <td>
-                                                    @if($room['total_price'] !== null)
-                                                        <strong>{{ $room['currency'] }} {{ number_format((float) $room['total_price'], 2) }}</strong>
-                                                    @else
-                                                        On request
-                                                    @endif
+                                                    <div style="display:flex;flex-direction:column;gap:12px;">
+                                                        <strong>{{ $room['room_name'] }}</strong>
+
+                                                        @if($room['rate_specificity'] === 'Per Equipment')
+                                                            <div style="font-size:13px;color:#444;">Equipment Rate: <strong>{{ $room['currency'] }} {{ number_format((float) $room['equipment_rate'] ?? 0, 2) }}</strong></div>
+                                                        @else
+                                                            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
+                                                                <div style="background:#f5f8ff;border-radius:10px;padding:12px; text-align:center;">
+                                                                    <div style="font-size:12px;color:#666;margin-bottom:6px;">Adult</div>
+                                                                    <span class="adult_count">{{ $activity['booking']['adults'] }}</span> * <div style="font-weight:600;">{{ $room['currency'] }} {{ number_format((float) $room['adult_rate'] ?? 0, 2) }}</div>
+                                                                </div>
+                                                                <div style="background:#f5f8ff;border-radius:10px;padding:12px; text-align:center;">
+                                                                    <div style="font-size:12px;color:#666;margin-bottom:6px;">Children</div>
+                                                                    <span class="children_count">{{ $activity['booking']['children'] }}</span> * <div style="font-weight:600;">{{ $room['currency'] }} {{ number_format((float) $room['children_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}</div>
+                                                                </div>
+                                                                <div style="background:#f5f8ff;border-radius:10px;padding:12px; text-align:center;">
+                                                                    <div style="font-size:12px;color:#666;margin-bottom:6px;">Infant</div>
+                                                                    <span class="infant_count">{{ $activity['booking']['infants'] }}</span> * <div style="font-weight:600;">{{ $room['currency'] }} {{ number_format((float) $room['infant_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}</div>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+
+                                                        @if($room['private_exclusive_rate'])
+                                                            <div style="font-size:13px;color:#222;">Private/Exclusive Rate: <strong>{{ $room['currency'] }} {{ number_format((float) $room['private_exclusive_rate'], 2) }}</strong> (added once)</div>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <strong class="variant-total">
+                                                        @if($room['total_price'] !== null)
+                                                            {{ $room['currency'] }} {{ number_format((float) $room['total_price'], 2) }}
+                                                        @else
+                                                            Price unavailable
+                                                        @endif
+                                                    </strong>
                                                 </td>
                                                 <td>
                                                     @if($room['total_price'] !== null)
-                                                        <form method="POST" action="{{ route('frontend.booking.cart.add') }}">
+                                                        <form method="POST" action="{{ route('frontend.booking.cart.add') }}" class="variant-booking-form"
+                                                            data-rate-specificity="{{ $room['rate_specificity'] }}"
+                                                            data-adult-rate="{{ $room['adult_rate'] ?? 0 }}"
+                                                            data-children-rate="{{ $room['children_rate'] ?? ($room['adult_rate'] ?? 0) }}"
+                                                            data-infant-rate="{{ $room['infant_rate'] ?? ($room['adult_rate'] ?? 0) }}"
+                                                            data-equipment-rate="{{ $room['equipment_rate'] ?? 0 }}"
+                                                            data-private-exclusive-rate="{{ $room['private_exclusive_rate'] ?? 0 }}"
+                                                        >
                                                             @csrf
                                                             <input type="hidden" name="type" value="activity">
                                                             <input type="hidden" name="activity_id" value="{{ $activity['id'] }}">
@@ -104,9 +148,12 @@
                                                             <input type="hidden" name="title" value="{{ $activity['title'] }}">
                                                             <input type="hidden" name="image" value="{{ $activity['image'] }}">
                                                             <input type="hidden" name="activity_date" value="{{ $booking['activity_date'] }}">
-                                                            <input type="hidden" name="participants" value="{{ $booking['participants'] }}">
-                                                            <input type="hidden" name="total_price" value="{{ $room['total_price'] }}">
+                                                            <input type="hidden" name="participants" class="participants-input" value="{{ $booking['participants'] }}">
+                                                            <input type="hidden" name="total_price" class="total-price-input" value="{{ $room['total_price'] }}">
                                                             <input type="hidden" name="currency" value="{{ $room['currency'] }}">
+                                                            <input type="hidden" name="adults" class="hidden-adults" value="{{ $activity['booking']['adults'] ?? 1 }}">
+                                                            <input type="hidden" name="children" class="hidden-children" value="{{ $activity['booking']['children'] ?? 0 }}">
+                                                            <input type="hidden" name="infants" class="hidden-infants" value="{{ $activity['booking']['infants'] ?? 0 }}">
                                                             @if(!empty($room['time_slots']))
                                                                 <div style="margin-bottom:10px;">
                                                                     <label for="activity_time_slot_id_{{ $room['room_id'] }}" style="display:block;margin-bottom:6px;font-size:13px;color:#333;">Select Time Slot</label>
@@ -351,6 +398,38 @@
         }
         .btn-book-now--outline:hover { background: #1a1a2e; color: #fff; }
 
+        .count-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            min-width: 30px;
+            height: 30px;
+            border: 1px solid #d6d9e6;
+            border-radius: 8px;
+            background: #fff;
+            color: #1a1a2e;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1;
+            padding: 0;
+            white-space: nowrap;
+        }
+
+        .count-input {
+            width: 50px;
+            height: 34px;
+            min-width: 50px;
+            border: 1px solid #d6d9e6;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            color: #1a1a2e;
+            background: #fff;
+            line-height: 1.2;
+        }
+
         .location-map iframe {
             width: 100%;
             min-height: 320px;
@@ -382,29 +461,98 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-            const timeslotSelect = document.getElementById('activity_time_slot_id');
-            if (!timeslotSelect) {
-                return;
-            }
+            document.querySelectorAll('.variant-booking-form').forEach(form => {
+                const rateSpecificity = form.dataset.rateSpecificity;
+                const adultRate = parseFloat(form.dataset.adultRate) || 0;
+                const childrenRate = parseFloat(form.dataset.childrenRate) || adultRate;
+                const infantRate = parseFloat(form.dataset.infantRate) || adultRate;
+                const equipmentRate = parseFloat(form.dataset.equipmentRate) || 0;
+                const privateExclusiveRate = parseFloat(form.dataset.privateExclusiveRate) || 0;
+                const currency = form.querySelector('input[name="currency"]')?.value || '';
 
-            // Keep booking forms in sync with the selected time slot.
-            function syncHiddenTimeSlot() {
-                const value = timeslotSelect.value;
-                document.querySelectorAll('.activity-time-slot-hidden').forEach(input => {
-                    input.value = value;
+                const row = form.closest('tr');
+                const adultsInput = row.querySelector('input[name="adults"]');
+                const childrenInput = row.querySelector('input[name="children"]');
+                const infantsInput = row.querySelector('input[name="infants"]');
+                const hiddenAdults = form.querySelector('.hidden-adults');
+                const hiddenChildren = form.querySelector('.hidden-children');
+                const hiddenInfants = form.querySelector('.hidden-infants');
+                const participantsInput = form.querySelector('.participants-input');
+                const totalPriceInput = form.querySelector('.total-price-input');
+                const totalDisplay = row.querySelector('.variant-total');
+                const timeSlotSelect = form.querySelector('select[name="activity_time_slot_id"]');
+
+                const buttonControls = row.querySelectorAll('.count-btn');
+                buttonControls.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const fieldName = this.dataset.field;
+                        const action = this.dataset.action;
+                        const input = row.querySelector(`input[name="${fieldName}"]`);
+                        if (!input) {
+                            return;
+                        }
+                        let value = parseInt(input.value, 10) || 0;
+                        if (action === 'increment') {
+                            value += 1;
+                        } else if (action === 'decrement') {
+                            value = Math.max(fieldName === 'adults' ? 1 : 0, value - 1);
+                        }
+                        input.value = value;
+                        updateTotals();
+                    });
                 });
-            }
 
-            timeslotSelect.addEventListener('change', syncHiddenTimeSlot);
-            syncHiddenTimeSlot();
+                function getNumericValue(inputElement, fallback = 0) {
+                    return Math.max(0, parseInt(inputElement?.value, 10) || fallback);
+                }
 
-            document.querySelectorAll('form[action="{{ route('frontend.booking.cart.add') }}"]').forEach(form => {
+                function updateTotals() {
+                    const adults = getNumericValue(adultsInput, 1);
+                    const children = getNumericValue(childrenInput, 0);
+                    const infants = getNumericValue(infantsInput, 0);
+                    const participants = Math.max(1, adults + children + infants);
+
+                    hiddenAdults.value = adults;
+                    hiddenChildren.value = children;
+                    hiddenInfants.value = infants;
+                    participantsInput.value = participants;
+
+                    let total = 0;
+                    if (rateSpecificity === 'Per Equipment') {
+                        total = equipmentRate * participants;
+                    } else {
+                        total = (adultRate * adults) + (childrenRate * children) + (infantRate * infants);
+                    }
+
+                    if (privateExclusiveRate > 0) {
+                        total += privateExclusiveRate;
+                    }
+
+                    if (totalDisplay) {
+                        totalDisplay.textContent = `${currency} ${total.toFixed(2)}`;
+                    }
+                    if (totalPriceInput) {
+                        totalPriceInput.value = total.toFixed(2);
+                    }
+                }
+
+                if (timeSlotSelect) {
+                    timeSlotSelect.addEventListener('change', function() {
+                        if (!this.value) {
+                            return;
+                        }
+                        updateTotals();
+                    });
+                }
+
                 form.addEventListener('submit', function(event) {
-                    if (!timeslotSelect.value) {
+                    if (timeSlotSelect && !timeSlotSelect.value) {
                         event.preventDefault();
                         alert('Please select a time slot before booking.');
                     }
                 });
+
+                updateTotals();
             });
         });
     </script>

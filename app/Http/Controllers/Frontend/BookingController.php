@@ -22,6 +22,8 @@ use App\Models\BookingLineItem;
 use App\Models\Traveller;
 use App\Models\BliTravellerAllocation;
 use App\Models\GuestOtpToken;
+use App\Models\PaymentTransaction;
+use App\Services\AgaingencyPaymentService;
 use App\Services\TripService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -610,6 +612,11 @@ class BookingController extends Controller
         $guestEmail = $request->input('guest_email');
         $guestPhone = $request->input('guest_phone');
         $special    = $request->input('special_requests', '');
+        $paymentMethod = $request->input('payment_method', 'cod');
+
+        Validator::make(['payment_method' => $paymentMethod], [
+            'payment_method' => ['required', Rule::in(['cod', 'againgency'])],
+        ])->validate();
 
         // Determine if this is a guest or authenticated checkout
         $isGuestCheckout = !Auth::guard('traveler')->check();
@@ -718,6 +725,7 @@ class BookingController extends Controller
         $summary = $this->buildCartSummary($cart);
         $bookingRefs = [];
         $guestOtp = null;
+        $tripBookingIds = [];
 
         // Get or create Trip ID
         $travelerAccount = Auth::guard('traveler')->user();
@@ -879,6 +887,8 @@ class BookingController extends Controller
                         'total_amount' => $item['net_amount'],
                         'status' => 'pending',
                     ]);
+                    $tripBookingIds[] = $tripBooking->id;
+                    $tripBookingIds[] = $tripBooking->id;
 
                     // Create BookingLineItem
                     $bli = BookingLineItem::create([
@@ -969,7 +979,7 @@ class BookingController extends Controller
                     'booking_status'    => 'Pending',
                     'total_amount'      => $item['net_amount'],
                     'currency'          => $item['currency'],
-                    'payment_method'    => 'COD',
+                    'payment_method'    => $paymentMethod === 'againgency' ? 'Againgency' : 'COD',
                     'source_channel'    => 'Direct',
                     'special_requests'  => $special,
                     'participant_time_slots' => !empty($itemTimeSlotsMap) ? $itemTimeSlotsMap : null,
@@ -1095,10 +1105,51 @@ class BookingController extends Controller
             $bookingRefs[] = $ref;
         }
 
-        $this->storeCart([]);
-
-        // Primary booking ref for confirmation page
         $primaryRef = $bookingRefs[0] ?? 'UNKNOWN';
+        session(['payment_method' => $paymentMethod]);
+
+        if ($paymentMethod === 'againgency') {
+            $transactionRef = 'aga_' . Str::uuid();
+            $firstBookingId = $tripBookingIds[0] ?? null;
+
+            if (!$firstBookingId) {
+                return back()->with('error', 'Unable to initialize payment for your booking. Please try again.');
+            }
+
+            $paymentTransaction = PaymentTransaction::create([
+                'booking_id' => $firstBookingId,
+                'amount' => $summary['net_payable'],
+                'method' => 'againgency',
+                'status' => 'pending',
+                'transaction_ref' => $transactionRef,
+            ]);
+
+            $callbackUrl = route('frontend.booking.payment.callback');
+            $successUrl = route('frontend.booking.payment.return', ['status' => 'success', 'ref' => $primaryRef, 'transaction_ref' => $transactionRef]);
+            $failureUrl = route('frontend.booking.payment.return', ['status' => 'failed', 'ref' => $primaryRef, 'transaction_ref' => $transactionRef]);
+
+            try {
+                $paymentUrl = AgaingencyPaymentService::createPaymentUrl(
+                    $transactionRef,
+                    $guestEmail,
+                    $guestName,
+                    $summary['net_payable'],
+                    $summary['currency'],
+                    $successUrl,
+                    $failureUrl,
+                    $callbackUrl
+                );
+            } catch (\Exception $e) {
+                // Keep cart and preserve input when payment gateway fails
+                return back()->withInput()->with('error', 'Payment gateway error: ' . $e->getMessage());
+            }
+
+            $this->storeCart([]);
+
+            return redirect()->away($paymentUrl);
+        }
+
+        $this->storeCart([]);
 
         return redirect()->route('frontend.booking.confirmation', ['ref' => $primaryRef])
             ->with('booking_refs', $bookingRefs)
@@ -1124,8 +1175,71 @@ class BookingController extends Controller
         $bookingRefs = session()->get('booking_refs', [$ref]);
         $guestName   = session()->get('guest_name', $booking?->guest_name ?? '');
         $summary     = session()->get('summary', []);
+        $paymentMethod = session()->get('payment_method');
+        $paymentStatus = 'pending';
 
-        return view('frontend.booking-confirmation', compact('booking', 'type', 'ref', 'bookingRefs', 'guestName', 'summary'));
+        if (!$paymentMethod && $booking) {
+            $paymentMethod = $booking->payments()->latest()->first() ? 'againgency' : 'cod';
+        }
+
+        if ($booking && ($paymentMethod === 'againgency' || !$paymentMethod)) {
+            $latestPayment = $booking->payments()->latest()->first();
+            if ($latestPayment) {
+                $paymentStatus = $latestPayment->status;
+            }
+        }
+
+        return view('frontend.booking-confirmation', compact('booking', 'type', 'ref', 'bookingRefs', 'guestName', 'summary', 'paymentMethod', 'paymentStatus'));
+    }
+
+    public function paymentCallback(Request $request)
+    {
+        $transactionRef = $request->input('transaction_ref') ?: $request->input('reference');
+        if (!$transactionRef) {
+            return response()->json(['error' => 'Missing payment reference'], 400);
+        }
+
+        $paymentTransaction = PaymentTransaction::where('transaction_ref', $transactionRef)->first();
+        if (!$paymentTransaction) {
+            return response()->json(['error' => 'Payment transaction not found'], 404);
+        }
+
+        $status = AgaingencyPaymentService::resolveCallbackStatus($request->input('status', $request->input('payment_status', 'pending')));
+        $paymentTransaction->status = $status;
+        $paymentTransaction->save();
+
+        $booking = $paymentTransaction->booking;
+        if ($booking && $status === 'paid') {
+            Booking::where('trip_id', $booking->trip_id)->update(['status' => 'paid']);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function paymentReturn(Request $request)
+    {
+        $status = AgaingencyPaymentService::resolveCallbackStatus($request->input('status', $request->input('payment_status', 'pending')));
+        $transactionRef = $request->input('transaction_ref') ?: $request->input('reference');
+        $primaryRef = $request->input('ref');
+
+        if ($transactionRef) {
+            $paymentTransaction = PaymentTransaction::where('transaction_ref', $transactionRef)->first();
+            if ($paymentTransaction && $status === 'paid') {
+                $paymentTransaction->status = 'paid';
+                $paymentTransaction->save();
+                Booking::where('trip_id', $paymentTransaction->booking->trip_id)->update(['status' => 'paid']);
+            }
+        }
+
+        if (!$primaryRef) {
+            return redirect()->route('frontend.booking.checkout')->with('error', 'Payment return data incomplete.');
+        }
+
+        return redirect()->route('frontend.booking.confirmation', ['ref' => $primaryRef])
+            ->with('booking_refs', session('booking_refs', [$primaryRef]))
+            ->with('guest_name', session('guest_name'))
+            ->with('summary', session('summary'))
+            ->with('payment_method', 'againgency');
     }
 
     // ═══════════════════════════════════════════════════════════════════════

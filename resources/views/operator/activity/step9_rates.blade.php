@@ -94,7 +94,7 @@
                                                     <td style="padding:12px;">{{ $seasonName }}</td>
                                                     <td style="padding:12px;">{{ $specificity }}</td>
                                                     <td style="padding:12px;font-size:12px;">{{ $sessionLabel }}</td>
-                                                    <td style="padding:12px;font-size:12px;">
+                                                    <!-- <td style="padding:12px;font-size:12px;">
                                                         @if($specificity === 'Per Person')
                                                             Adult: {{ $rate?->adult_rate ?? '-' }} · Teen: {{ $rate?->teen_rate ?? '-' }} · Child: {{ $rate?->children_rate ?? '-' }} · Infant: {{ $rate?->infant_rate ?? '-' }}
                                                         @else
@@ -103,9 +103,19 @@
                                                         @if($rate?->private_exclusive_rate)
                                                             <div style="margin-top:4px;color:#666;">Private: {{ $rate->private_exclusive_rate }}</div>
                                                         @endif
+                                                    </td> -->
+                                                    <td style="padding:12px;font-size:12px;">
+                                                        @if($specificity === 'Per Person')
+                                                            Adult: {{ $rate?->adult_rate ?? '-' }}  · Child: {{ $rate?->children_rate ?? '-' }} · Infant: {{ $rate?->infant_rate ?? '-' }}
+                                                        @else
+                                                            Equipment: {{ $rate?->equipment_rate ?? '-' }}
+                                                        @endif
+                                                        @if($rate?->private_exclusive_rate)
+                                                            <div style="margin-top:4px;color:#666;">Private: {{ $rate->private_exclusive_rate }}</div>
+                                                        @endif
                                                     </td>
                                                     <td style="padding:12px;text-align:center;">
-                                                        <button type="button"
+                                                        <!-- <button type="button"
                                                             class="rate-action"
                                                             data-action="session"
                                                             data-rate-id="{{ $rate?->rate_id ?? '' }}"
@@ -122,9 +132,27 @@
                                                             data-private-exclusive-rate="{{ $rate?->private_exclusive_rate ?? '' }}"
                                                             style="padding:6px 10px;background:#e3f2fd;color:#1565c0;border:none;border-radius:4px;cursor:pointer;font-size:12px;">
                                                             {{ $rate ? 'Edit Rate' : 'Set Season & Rate' }}
+                                                        </button> -->
+                                                         <button type="button"
+                                                            class="rate-action"
+                                                            data-action="session"
+                                                            data-rate-id="{{ $rate?->rate_id ?? '' }}"
+                                                            data-variant-id="{{ $variant->variant_id }}"
+                                                            data-season="{{ $seasonName }}"
+                                                            data-specificity="{{ $specificity }}"
+                                                            data-valid-from="{{ $rate?->valid_from ? $rate->valid_from->format('Y-m-d') : '' }}"
+                                                            data-valid-to="{{ $rate?->valid_to ? $rate->valid_to->format('Y-m-d') : '' }}"
+                                                            data-adult-rate="{{ $rate?->adult_rate ?? '' }}"
+                                                           
+                                                            data-children-rate="{{ $rate?->children_rate ?? '' }}"
+                                                            data-infant-rate="{{ $rate?->infant_rate ?? '' }}"
+                                                            data-equipment-rate="{{ $rate?->equipment_rate ?? '' }}"
+                                                            data-private-exclusive-rate="{{ $rate?->private_exclusive_rate ?? '' }}"
+                                                            style="padding:6px 10px;background:#e3f2fd;color:#1565c0;border:none;border-radius:4px;cursor:pointer;font-size:12px;">
+                                                            {{ $rate ? 'Edit Rate' : 'Set Season & Rate' }}
                                                         </button>
                                                         @if($rate)
-                                                            <button type="button"
+                                                            <!-- <button type="button"
                                                                 class="rate-duplicate"
                                                                 data-rate-id="{{ $rate->rate_id }}"
                                                                 data-variant-id="{{ $variant->variant_id }}"
@@ -133,6 +161,21 @@
                                                                 data-valid-to="{{ $rate->valid_to->format('Y-m-d') }}"
                                                                 data-adult-rate="{{ $rate->adult_rate ?? '' }}"
                                                                 data-teen-rate="{{ $rate->teen_rate ?? '' }}"
+                                                                data-children-rate="{{ $rate->children_rate ?? '' }}"
+                                                                data-infant-rate="{{ $rate->infant_rate ?? '' }}"
+                                                                data-equipment-rate="{{ $rate->equipment_rate ?? '' }}"
+                                                                data-private-exclusive-rate="{{ $rate->private_exclusive_rate ?? '' }}"
+                                                                style="padding:6px 10px;background:#fff3cd;color:#856404;border:none;border-radius:4px;cursor:pointer;font-size:12px;margin-left:4px;">
+                                                                Duplicate
+                                                            </button> -->
+                                                             <button type="button"
+                                                                class="rate-duplicate"
+                                                                data-rate-id="{{ $rate->rate_id }}"
+                                                                data-variant-id="{{ $variant->variant_id }}"
+                                                                data-specificity="{{ $specificity }}"
+                                                                data-valid-from="{{ $rate->valid_from->format('Y-m-d') }}"
+                                                                data-valid-to="{{ $rate->valid_to->format('Y-m-d') }}"
+                                                                data-adult-rate="{{ $rate->adult_rate ?? '' }}"
                                                                 data-children-rate="{{ $rate->children_rate ?? '' }}"
                                                                 data-infant-rate="{{ $rate->infant_rate ?? '' }}"
                                                                 data-equipment-rate="{{ $rate->equipment_rate ?? '' }}"
@@ -251,12 +294,12 @@
                                     <label style="font-weight:600;font-size:13px;">Adult Rate (MUR) *</label>
                                     <input type="number" name="adult_rate" class="form-control" step="0.01" min="0" style="font-size:13px;">
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <!-- <div class="col-md-6 mb-3">
                                     <label style="font-weight:600;font-size:13px;">Teen Rate (MUR) *</label>
                                     <input type="number" name="teen_rate" class="form-control" step="0.01" min="0" style="font-size:13px;">
-                                </div>
-                            </div>
-                            <div class="row">
+                                </div> -->
+                            <!-- </div>
+                            <div class="row"> -->
                                 <div class="col-md-6 mb-3">
                                     <label style="font-weight:600;font-size:13px;">Children Rate (MUR) *</label>
                                     <input type="number" name="children_rate" class="form-control" step="0.01" min="0" style="font-size:13px;">
@@ -344,7 +387,7 @@
                     validFrom: '{{ old('valid_from', '') }}',
                     validTo: '{{ old('valid_to', '') }}',
                     adultRate: '{{ old('adult_rate', '') }}',
-                    teenRate: '{{ old('teen_rate', '') }}',
+                    //teenRate: '{{ old('teen_rate', '') }}',
                     childrenRate: '{{ old('children_rate', '') }}',
                     infantRate: '{{ old('infant_rate', '') }}',
                     equipmentRate: '{{ old('equipment_rate', '') }}',
@@ -394,7 +437,7 @@
                 document.getElementById('perPersonSection').style.display = 'block';
                 document.getElementById('perEquipmentSection').style.display = 'none';
                 document.querySelector('input[name="adult_rate"]').value = data.adultRate || '';
-                document.querySelector('input[name="teen_rate"]').value = data.teenRate || '';
+                //document.querySelector('input[name="teen_rate"]').value = data.teenRate || '';
                 document.querySelector('input[name="children_rate"]').value = data.childrenRate || '';
                 document.querySelector('input[name="infant_rate"]').value = data.infantRate || '';
             } else if (data.specificity === 'Per Equipment') {

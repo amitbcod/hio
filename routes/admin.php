@@ -60,4 +60,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Admin activity booking management (superadmin)
     Route::get('activity/bookings', [\App\Http\Controllers\Admin\ActivityBookingController::class, 'index'])->name('activity.bookings');
     Route::get('activity/bookings/{booking}', [\App\Http\Controllers\Admin\ActivityBookingController::class, 'show'])->name('activity.booking.details');
+
+    // Admin payment transactions management
+    Route::get('payment-transactions', [\App\Http\Controllers\Admin\PaymentTransactionController::class, 'index'])->name('payment-transactions.index');
+    Route::get('payment-transactions/{transaction}', [\App\Http\Controllers\Admin\PaymentTransactionController::class, 'show'])->name('payment-transactions.show');
+    Route::post('payment-transactions/{transaction}/callbacks', [\App\Http\Controllers\Admin\PaymentTransactionController::class, 'getCallbacks'])->name('payment-transactions.callbacks');
 });
