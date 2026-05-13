@@ -2139,6 +2139,9 @@ label.saved-guest-checkbox {
     background: #fff;
 }
 
+.mini-cart-actions .mini-cart-checkout-btn {
+    font-weight: 600;
+}
 
 
 @media (max-width:767px) {

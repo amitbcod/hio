@@ -36,7 +36,17 @@
             justify-content: flex-end;
             align-items: stretch;
             overflow: hidden;
+
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
         }
+
+        .mini-cart-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
         .mini-cart-panel {
             width: min(420px, 100%);
             background: #fff;
@@ -44,7 +54,15 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+
+            transform: translateX(100%);
+            transition: transform 0.35s ease;
         }
+
+        .mini-cart-overlay.show .mini-cart-panel {
+            transform: translateX(0);
+        }
+
         .mini-cart-header {
             display: flex;
             align-items: center;
@@ -353,6 +371,9 @@
             const modal = document.getElementById('guestAccessModal');
             if (modal) {
                 modal.style.display = 'flex';
+
+                modal.classList.add('show');
+
                 document.body.style.overflow = 'hidden';
             }
         }
@@ -361,6 +382,9 @@
             const modal = document.getElementById('guestAccessModal');
             if (modal) {
                 modal.style.display = 'none';
+
+                modal.classList.remove('show');
+
                 document.body.style.overflow = 'auto';
             }
         }
