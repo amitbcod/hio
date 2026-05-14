@@ -207,6 +207,13 @@ nav.navbar.bg-light {
      
 }
 
+.login-full-section .container {
+    padding:0;
+}
+
+.login-full-section .container.mt-4 {
+    margin-top:0 !important;
+}
 
  @media(max-width:768px) {
 
