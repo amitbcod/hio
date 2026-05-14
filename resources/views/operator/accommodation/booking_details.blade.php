@@ -170,10 +170,13 @@
                                     @if($booking->children > 0)
                                         , {{ $booking->children }} Child{{ $booking->children > 1 ? 'ren' : '' }}
                                     @endif
+                                    @if($booking->infants > 0)
+                                        , {{ $booking->infants }} Infant{{ $booking->infants > 1 ? 's' : '' }}
+                                    @endif
                                 </div>
                                 <div class="col-md-6">
                                     <strong>Total Guests:</strong><br>
-                                    {{ $booking->adults + $booking->children }}
+                                    {{ $booking->adults + $booking->children + ($booking->infants ?? 0) }}
                                 </div>
                             </div>
                         </div>

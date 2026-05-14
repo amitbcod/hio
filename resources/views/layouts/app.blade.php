@@ -18,8 +18,11 @@
             <i class="fa-solid fa-bars"></i>
         </button>
         <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-brand" href="#"><img src="{{ asset('images/holidays-io-logo.png') }}" alt="Logo"
-                    width="130px"></a>
+            <a class="navbar-brand d-flex align-items-center" href="{{ url('/operator/accommodation') }}">
+              
+                <img src="{{ asset('images/holidays-io-logo.png') }}" alt="Logo" width="130px">
+              <!-- <i class="fa-solid fa-house me-2" aria-hidden="true"></i> -->
+            </a>
             @auth
                 @if((auth()->user()->is_owner ?? '') === 'yes')
                     <div class="ms-auto">
@@ -27,6 +30,7 @@
                     </div>
                 @endif
             @endauth
+            
             <div>
                 @auth
                     <span class="me-3">{{ auth()->user()->email }}</span>

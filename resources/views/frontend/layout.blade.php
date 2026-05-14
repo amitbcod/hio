@@ -14,6 +14,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('frontend/css/site.css') }}">
     <style>
+        .header-home-icon {
+            margin-right: 10px;
+            font-size: 24px;
+            color: #16213e;
+            vertical-align: middle;
+        }
+
         .header-cart-badge {
             display: inline-flex;
             align-items: center;
@@ -273,6 +280,7 @@
     <header class="site-header">
         <div class="wrap site-header-inner">
             <a href="{{ url('/') }}" class="brand">
+                <!-- <i class="fa-solid fa-house header-home-icon" aria-hidden="true"></i> -->
                 <img src="{{ asset('images/holidays-io-logo.png') }}" alt="Holidays.io logo">
                 <!-- <div>
                     <small>Your local connection</small>
@@ -285,6 +293,7 @@
                 <a href="{{ url('/#accommodations-section') }}">Accommodation</a>
                 <a href="{{ url('/#activities-section') }}">Activities</a>
                 <a href="{{ url('/#discover-mauritius') }}">Discover Mauritius</a>
+                <a href="{{ url('/operator/accommodation') }}">Operator</a>
                 <a href="{{ route('frontend.booking.cart') }}" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> Cart <span id="headerCartCount" class="header-cart-badge">{{ count(session('booking_cart', [])) }}</span></a>
             </nav>
         </div>

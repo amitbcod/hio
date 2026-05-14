@@ -56,11 +56,13 @@
                                             <td>{{ $booking->accommodation->property_name }}</td>
                                             <td>{{ $booking->guest_name ?? 'N/A' }}</td>
                                             <td>
-                                                Total Guests: {{ $booking->adults + $booking->children }}
-                                                @if($booking->children > 0)
-                                                    ({{ $booking->adults }} Adult{{ $booking->adults > 1 ? 's' : '' }}, {{ $booking->children }} Child{{ $booking->children > 1 ? 'ren' : '' }})
+                                                Total: {{ $booking->adults + $booking->children + ($booking->infants ?? 0) }}
+                                                @if($booking->infants > 0)
+                                                    ({{ $booking->adults }} A, {{ $booking->children }} C, {{ $booking->infants }} I)
+                                                @elseif($booking->children > 0)
+                                                    ({{ $booking->adults }} A, {{ $booking->children }} C)
                                                 @else
-                                                    ({{ $booking->adults }} Adult{{ $booking->adults > 1 ? 's' : '' }})
+                                                    ({{ $booking->adults }} A)
                                                 @endif
                                             </td>
                                             <td>{{ $booking->room->room_name ?? 'N/A' }}</td>
