@@ -56,7 +56,7 @@
                                             <td>{{ $booking->accommodation->property_name }}</td>
                                             <td>{{ $booking->guest_name ?? 'N/A' }}</td>
                                             <td>
-                                                Total: {{ $booking->adults + $booking->children + ($booking->infants ?? 0) }}
+                                               {{ $booking->adults + $booking->children + ($booking->infants ?? 0) }}
                                                 @if($booking->infants > 0)
                                                     ({{ $booking->adults }} A, {{ $booking->children }} C, {{ $booking->infants }} I)
                                                 @elseif($booking->children > 0)
