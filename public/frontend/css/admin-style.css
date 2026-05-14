@@ -21,6 +21,23 @@
      width: 100%;
  }
 
+ a {
+    color: rgb(65 176 170);
+    text-decoration: none;
+}
+
+a:hover {
+    color: #2463b1;
+}
+
+.nav-pagination .shadow-sm {
+    box-shadow: none;
+}
+
+.nav-pagination .flex.gap-2.items-center.justify-between {
+    display: none; 
+}
+
 
  /* .main-setion {
     background: linear-gradient(
