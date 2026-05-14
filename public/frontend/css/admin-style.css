@@ -191,10 +191,10 @@ a:hover {
     border-top:0;
 }
 
-.container {
+.navbar .container {
     max-width: 100% !important;
     padding-left: 40px;
-    padding-right: 40px;
+    padding-right: 40px; 
 }
 
 nav.navbar a.navbar-brand {
