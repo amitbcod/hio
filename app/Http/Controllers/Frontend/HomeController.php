@@ -357,6 +357,13 @@ class HomeController extends Controller
             ->filter(fn (float $value) => $value > 0)
             ->min();
 
+            $startingRateofadult = $rates
+            ->pluck('adult_rate')
+            ->filter(fn ($value) => $value !== null)
+            ->map(fn ($value) => (float) $value)
+            ->filter(fn (float $value) => $value > 0)
+            ->min();
+
         $location = implode(' • ', array_filter([
             $activity->destination,
             $activity->region,
@@ -451,6 +458,7 @@ class HomeController extends Controller
             'primary_themes' => array_values($activity->primary_themes ?? []),
             'languages' => array_values($activity->languages_offered ?? []),
             'starting_rate' => $startingRate,
+            'starting_rate_of_adult' => $startingRateofadult,
             'overview_text' => $overviewText,
             'included_text' => $includedText,
             'itinerary_text' => $itineraryText,

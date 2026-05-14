@@ -233,13 +233,15 @@
                     <div class="category-result-list">
                         @foreach($results as $item)
                             @php
+
+
                                 $metaLabel = $item['property_type'] ?? $item['meta'] ?? $item['kind'] ?? $categoryTitle;
                                 $baseUrl = $item['url'] ?? '#';
                                 $iteUSDl = $baseUrl;
                                 if (!empty($detailQuery) && $baseUrl !== '#') {
                                     $iteUSDl .= (str_contains($baseUrl, '?') ? '&' : '?') . http_build_query($detailQuery);
                                 }
-                                $startingRate = $item['starting_rate'] ?? null;
+                                $startingRate = $item['starting_rate_of_adult'] ?? null;
                                 $isActivityListing = ($item['kind'] ?? null) === 'Activity' || $category === 'tours';
                                 $priceUnit = $isActivityListing ? '/ person' : '/ room';
                             @endphp
