@@ -51,6 +51,6 @@
         </tbody>
     </table>
 
-    <div class="d-flex justify-content-center mt-3">{{ $bookings->links() }}</div>
+    <div class="d-flex justify-content-center mt-3 nav-pagination">{{ $bookings->links() }}</div>
 </div>
 @endsection

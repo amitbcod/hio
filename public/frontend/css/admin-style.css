@@ -131,6 +131,15 @@
      padding: 40px;
  }
 
+ .nav-pagination svg {
+    width: 30px;
+ }
+
+.nav-pagination .border {
+    border: 0 !important;
+}
+
+
 
  @media(max-width:768px) {
 
