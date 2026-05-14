@@ -218,14 +218,23 @@ function initMiniCart() {
 
     function getItemGuestDetails(item) {
         const details = [];
-        if (item.adults) {
-            details.push((parseInt(item.adults, 10) || 0) + ' Adult' + (item.adults !== 1 ? 's' : ''));
+        const adults = Math.max(0, parseInt(item.adults, 10) || 0);
+        const children = Math.max(0, parseInt(item.children, 10) || 0);
+        let infants = Math.max(0, parseInt(item.infants, 10) || 0);
+        const participants = parseInt(item.participants, 10);
+
+        if (infants === 0 && Number.isInteger(participants) && participants > adults + children) {
+            infants = participants - adults - children;
         }
-        if (item.children) {
-            details.push((parseInt(item.children, 10) || 0) + ' Child' + (item.children !== 1 ? 'ren' : ''));
+
+        if (adults > 0) {
+            details.push(adults + ' Adult' + (adults !== 1 ? 's' : ''));
         }
-        if (item.infants) {
-            details.push((parseInt(item.infants, 10) || 0) + ' Infant' + (item.infants !== 1 ? 's' : ''));
+        if (children > 0) {
+            details.push(children + ' Child' + (children !== 1 ? 'ren' : ''));
+        }
+        if (infants > 0) {
+            details.push(infants + ' Infant' + (infants !== 1 ? 's' : ''));
         }
         return details.length > 0 ? details.join(', ') : '';
     }
