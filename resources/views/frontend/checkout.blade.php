@@ -554,8 +554,8 @@
                                         <input type="radio" name="payment_method" value="cod" hidden {{ old('payment_method', 'cod') === 'cod' ? 'checked' : '' }}>
                                         <div class="payment-option-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
                                         <div>
-                                            <strong>Cash on Delivery</strong>
-                                            <p>Pay when you check in. No advance payment required.</p>
+                                            <strong>Testing Payment</strong>
+                                            <!-- <p>Pay when you check in. No advance payment required.</p> -->
                                         </div>
                                         <i class="fa-solid fa-circle-check payment-tick"></i>
                                     </label>

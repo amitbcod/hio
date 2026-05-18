@@ -36,6 +36,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('operators', [\App\Http\Controllers\Admin\OperatorController::class, 'store'])->name('operators.store');
     Route::get('operators/{operator}/edit', [\App\Http\Controllers\Admin\OperatorController::class, 'edit'])->name('operators.edit');
     Route::post('operators/{operator}', [\App\Http\Controllers\Admin\OperatorController::class, 'update'])->name('operators.update');
+    Route::post('operators/{operator}/select', [\App\Http\Controllers\Admin\OperatorController::class, 'select'])->name('operators.select');
     Route::delete('operators/{operator}', [\App\Http\Controllers\Admin\OperatorController::class, 'destroy'])->name('operators.destroy');
 
     // Admin travellers management
@@ -60,6 +61,126 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Admin activity booking management (superadmin)
     Route::get('activity/bookings', [\App\Http\Controllers\Admin\ActivityBookingController::class, 'index'])->name('activity.bookings');
     Route::get('activity/bookings/{booking}', [\App\Http\Controllers\Admin\ActivityBookingController::class, 'show'])->name('activity.booking.details');
+
+    // Admin accommodation management for selected operator/business
+    Route::get('accommodations/select-operator', [\App\Http\Controllers\Admin\AccommodationController::class, 'selectOperator'])->name('accommodation.select-operator');
+    Route::post('accommodations/select-operator', [\App\Http\Controllers\Admin\AccommodationController::class, 'setOperator'])->name('accommodation.set-operator');
+    Route::get('accommodations', [\App\Http\Controllers\Admin\AccommodationController::class, 'index'])->name('accommodation.index');
+    Route::get('accommodations/create', [\App\Http\Controllers\Admin\AccommodationController::class, 'create'])->name('accommodation.create');
+    Route::post('accommodations', [\App\Http\Controllers\Admin\AccommodationController::class, 'store'])->name('accommodation.store');
+    Route::get('accommodations/{id}', [\App\Http\Controllers\Admin\AccommodationController::class, 'show'])->name('accommodation.show');
+    Route::get('accommodations/{id}/edit/step1', [\App\Http\Controllers\Admin\AccommodationController::class, 'editStep1'])->name('accommodation.step1.edit');
+    Route::put('accommodations/{id}', [\App\Http\Controllers\Admin\AccommodationController::class, 'update'])->name('accommodation.update');
+    Route::get('accommodations/{id}/step2-reservation', [\App\Http\Controllers\Admin\AccommodationController::class, 'step2Reservation'])->name('accommodation.step2.show');
+    Route::post('accommodations/{id}/step2-reservation', [\App\Http\Controllers\Admin\AccommodationController::class, 'saveStep2'])->name('accommodation.saveStep2');
+    Route::get('accommodations/{id}/step3-photos', [\App\Http\Controllers\Admin\AccommodationController::class, 'step3Photos'])->name('accommodation.step3.show');
+    Route::post('accommodations/{id}/step3-photos', [\App\Http\Controllers\Admin\AccommodationController::class, 'saveStep3Photos'])->name('accommodation.saveStep3');
+    Route::post('accommodations/{id}/media/{mediaId}/delete', [\App\Http\Controllers\Admin\AccommodationController::class, 'deleteMedia'])->name('accommodation.media.delete');
+    Route::get('accommodations/{id}/step4-compliance', [\App\Http\Controllers\Admin\AccommodationController::class, 'step4Compliance'])->name('accommodation.step4.show');
+    Route::post('accommodations/{id}/step4-compliance', [\App\Http\Controllers\Admin\AccommodationController::class, 'saveStep4Compliance'])->name('accommodation.saveStep4');
+    Route::get('accommodations/{id}/step5-accounting', [\App\Http\Controllers\Admin\AccommodationController::class, 'step5Accounting'])->name('accommodation.step5.show');
+    Route::post('accommodations/{id}/step5-accounting', [\App\Http\Controllers\Admin\AccommodationController::class, 'saveStep5Accounting'])->name('accommodation.saveStep5');
+    Route::get('accommodations/{id}/step6-policies-rules', [\App\Http\Controllers\Admin\AccommodationController::class, 'step6PoliciesRules'])->name('accommodation.step6.show');
+    Route::post('accommodations/{id}/step6-policies-rules', [\App\Http\Controllers\Admin\AccommodationController::class, 'saveStep6PoliciesRules'])->name('accommodation.saveStep6');
+    Route::get('accommodations/{id}/step7-rooms', [\App\Http\Controllers\Admin\AccommodationController::class, 'step7RoomsUnits'])->name('accommodation.step7.show');
+    Route::post('accommodations/{id}/step7-rooms', [\App\Http\Controllers\Admin\AccommodationController::class, 'saveRoom'])->name('accommodation.saveStep7');
+    Route::get('accommodations/{id}/step7-rooms/{room}/edit', [\App\Http\Controllers\Admin\AccommodationController::class, 'editRoom'])->name('accommodation.step7.room.edit');
+    Route::post('accommodations/{id}/step7-rooms/{room}/edit', [\App\Http\Controllers\Admin\AccommodationController::class, 'updateRoom'])->name('accommodation.step7.room.update');
+    Route::post('accommodations/{id}/step7-rooms/{room}/delete', [\App\Http\Controllers\Admin\AccommodationController::class, 'deleteRoom'])->name('accommodation.step7.room.delete');
+    Route::get('accommodations/{id}/step8-rate-plans', [\App\Http\Controllers\Admin\AccommodationController::class, 'step8RatePlans'])->name('accommodation.step8.show');
+    Route::post('accommodations/{id}/step8-rate-plans', [\App\Http\Controllers\Admin\AccommodationController::class, 'saveRatePlan'])->name('accommodation.saveStep8');
+    Route::get('accommodations/{id}/step8-rate-plans/{plan}/edit', [\App\Http\Controllers\Admin\AccommodationController::class, 'editRatePlan'])->name('accommodation.step8.plan.edit');
+    Route::put('accommodations/{id}/step8-rate-plans/{plan}/edit', [\App\Http\Controllers\Admin\AccommodationController::class, 'updateRatePlan'])->name('accommodation.step8.plan.update');
+    Route::post('accommodations/{id}/step8-rate-plans/{plan}/delete', [\App\Http\Controllers\Admin\AccommodationController::class, 'deleteRatePlan'])->name('accommodation.step8.plan.delete');
+    Route::post('accommodations/{id}/step8-assign-plans', [\App\Http\Controllers\Admin\AccommodationController::class, 'assignPlansToRoom'])->name('accommodation.step8.assignPlans')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+    Route::post('accommodations/{id}/step8-remove-plan', [\App\Http\Controllers\Admin\AccommodationController::class, 'removePlanFromRoom'])->name('accommodation.step8.removePlan')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+    Route::get('accommodations/{id}/step9-season-pricing', [\App\Http\Controllers\Admin\AccommodationController::class, 'step9SeasonPricing'])->name('accommodation.step9.show');
+    Route::post('accommodations/{id}/step9-season-pricing', [\App\Http\Controllers\Admin\AccommodationController::class, 'saveSeasonPricing'])->name('accommodation.saveStep9');
+    Route::post('accommodations/{id}/step9-set-default-price', [\App\Http\Controllers\Admin\AccommodationController::class, 'setDefaultPrice'])->name('accommodation.step9.setDefaultPrice');
+    Route::post('accommodations/{id}/step9-add-season', [\App\Http\Controllers\Admin\AccommodationController::class, 'addSeasonalEntry'])->name('accommodation.step9.addSeason');
+    Route::post('accommodations/{id}/step9-delete-season/{entryId}', [\App\Http\Controllers\Admin\AccommodationController::class, 'deleteSeasonalEntry'])->name('accommodation.step9.deleteSeason');
+    Route::post('accommodations/{id}/step9-update-season/{entryId}', [\App\Http\Controllers\Admin\AccommodationController::class, 'updateSeasonalEntry'])->name('accommodation.step9.updateSeason');
+    Route::get('accommodations/{id}/step9-season-pricing/{pricing}/edit', [\App\Http\Controllers\Admin\AccommodationController::class, 'editSeasonPricing'])->name('accommodation.step9.pricing.edit');
+    Route::post('accommodations/{id}/step9-season-pricing/{pricing}/edit', [\App\Http\Controllers\Admin\AccommodationController::class, 'updateSeasonPricing'])->name('accommodation.step9.pricing.update');
+    Route::post('accommodations/{id}/step9-season-pricing/{pricing}/delete', [\App\Http\Controllers\Admin\AccommodationController::class, 'deleteSeasonPricing'])->name('accommodation.step9.pricing.delete');
+    Route::get('accommodations/{id}/step10-inventory-allotment', [\App\Http\Controllers\Admin\AccommodationController::class, 'step10InventoryAllotment'])->name('accommodation.step10.show');
+    Route::post('accommodations/{id}/step10-inventory-allotment', [\App\Http\Controllers\Admin\AccommodationController::class, 'saveInventoryAllotment'])->name('accommodation.step10.save');
+    Route::post('accommodations/{id}/step10-inventory-allotment/{inventoryId}/delete', [\App\Http\Controllers\Admin\AccommodationController::class, 'deleteInventoryAllotment'])->name('accommodation.step10.delete');
+    Route::get('accommodations/{id}/step10-inventory-allotment/{inventoryId}/get', [\App\Http\Controllers\Admin\AccommodationController::class, 'getInventoryAllotment'])->name('accommodation.step10.get');
+    Route::get('accommodations/{id}/step10-inventory-allotment/{inventoryId}/show', [\App\Http\Controllers\Admin\AccommodationController::class, 'showInventoryAllotment'])->name('accommodation.step10.show_detail');
+    Route::get('accommodations/{id}/booking-report', [\App\Http\Controllers\Admin\AccommodationController::class, 'bookingReport'])->name('accommodation.booking-report');
+    Route::get('accommodations/{id}/step11-promotions', [\App\Http\Controllers\Admin\AccommodationController::class, 'step11Promotions'])->name('accommodation.step11.show');
+    Route::post('accommodations/{id}/step11-promotions', [\App\Http\Controllers\Admin\AccommodationController::class, 'savePromotion'])->name('accommodation.step11.save');
+    Route::post('accommodations/{id}/step11-promotions/{promotionId}/delete', [\App\Http\Controllers\Admin\AccommodationController::class, 'deletePromotion'])->name('accommodation.step11.delete');
+    Route::get('accommodations/{id}/step11-promotions/{promotionId}/get', [\App\Http\Controllers\Admin\AccommodationController::class, 'getPromotion'])->name('accommodation.step11.get');
+    Route::get('accommodations/{id}/step12-seo-social', [\App\Http\Controllers\Admin\AccommodationController::class, 'step12Seo'])->name('accommodation.step12.show');
+    Route::post('accommodations/{id}/step12-seo-social', [\App\Http\Controllers\Admin\AccommodationController::class, 'saveStep12Seo'])->name('accommodation.step12.save');
+    Route::get('accommodations/{id}/step13-publish', [\App\Http\Controllers\Admin\AccommodationController::class, 'step13Publish'])->name('accommodation.step13.show');
+    Route::post('accommodations/{id}/submit-for-approval', [\App\Http\Controllers\Admin\AccommodationController::class, 'submitForApproval'])->name('accommodation.submit-approval');
+
+    // Admin activity management for selected operator/business
+    Route::get('activity', [\App\Http\Controllers\Admin\ActivityController::class, 'index'])->name('activity.index');
+    Route::get('activity/create', [\App\Http\Controllers\Admin\ActivityController::class, 'create'])->name('activity.create');
+    Route::post('activity', [\App\Http\Controllers\Admin\ActivityController::class, 'store'])->name('activity.store');
+    Route::get('activity/{id}', [\App\Http\Controllers\Admin\ActivityController::class, 'show'])->name('activity.show');
+    Route::patch('activity/{id}', [\App\Http\Controllers\Admin\ActivityController::class, 'update'])->name('activity.update');
+    Route::get('activity/{id}/step1-basic', [\App\Http\Controllers\Admin\ActivityController::class, 'step1Basic'])->name('activity.step1.show');
+    Route::post('activity/{id}/step1-basic', [\App\Http\Controllers\Admin\ActivityController::class, 'saveStep1Basic'])->name('activity.step1.save');
+    Route::get('activity/{id}/step2-management-communication', [\App\Http\Controllers\Admin\ActivityController::class, 'step2ManagementCommunication'])->name('activity.step2.show');
+    Route::post('activity/{id}/step2-management-communication', [\App\Http\Controllers\Admin\ActivityController::class, 'saveStep2ManagementCommunication'])->name('activity.step2.save');
+    Route::get('activity/{id}/step3-photos-media', [\App\Http\Controllers\Admin\ActivityController::class, 'step3PhotosMedia'])->name('activity.step3.show');
+    Route::post('activity/{id}/step3-photos-media', [\App\Http\Controllers\Admin\ActivityController::class, 'saveStep3PhotosMedia'])->name('activity.step3.save');
+    Route::get('activity/{id}/step4-legal-compliance', [\App\Http\Controllers\Admin\ActivityController::class, 'step4LegalCompliance'])->name('activity.step4.show');
+    Route::post('activity/{id}/step4-legal-compliance', [\App\Http\Controllers\Admin\ActivityController::class, 'saveStep4LegalCompliance'])->name('activity.step4.save');
+    Route::get('activity/{id}/step5-accounting-transaction', [\App\Http\Controllers\Admin\ActivityController::class, 'step5AccountingTransaction'])->name('activity.step5.show');
+    Route::post('activity/{id}/step5-accounting-transaction', [\App\Http\Controllers\Admin\ActivityController::class, 'saveStep5AccountingTransaction'])->name('activity.step5.save');
+    Route::get('activity/{id}/step6-policies-rules', [\App\Http\Controllers\Admin\ActivityController::class, 'step6PoliciesRules'])->name('activity.step6.show');
+    Route::post('activity/{id}/step6-policies-rules', [\App\Http\Controllers\Admin\ActivityController::class, 'saveStep6PoliciesRules'])->name('activity.step6.save');
+    Route::get('activity/{id}/step7-variants-equipment', [\App\Http\Controllers\Admin\ActivityController::class, 'step7VariantsEquipment'])->name('activity.step7.show');
+    Route::post('activity/{id}/step7-variants-equipment', [\App\Http\Controllers\Admin\ActivityController::class, 'storeVariant'])->name('activity.step7.store');
+    Route::get('activity/{id}/step7-variants-equipment/{variantId}/edit', [\App\Http\Controllers\Admin\ActivityController::class, 'editVariant'])->name('activity.step7.edit');
+    Route::put('activity/{id}/step7-variants-equipment/{variantId}', [\App\Http\Controllers\Admin\ActivityController::class, 'updateVariant'])->name('activity.step7.update');
+    Route::delete('activity/{id}/step7-variants-equipment/{variantId}', [\App\Http\Controllers\Admin\ActivityController::class, 'deleteVariant'])->name('activity.step7.delete');
+    Route::post('activity/{id}/step7-operations-staffing', [\App\Http\Controllers\Admin\ActivityController::class, 'saveOperationsStaffing'])->name('activity.step7.operations');
+    Route::delete('activity/{id}/step7-operations-staffing/{operationId}', [\App\Http\Controllers\Admin\ActivityController::class, 'deleteOperationsStaffing'])->name('activity.step7.operations.delete');
+    Route::put('activity/{id}/step7-operations-staffing/{operationId}', [\App\Http\Controllers\Admin\ActivityController::class, 'updateOperationsStaffing'])->name('activity.step7.operations.update');
+    Route::get('activity/{id}/step8-scheduling-timeslots', [\App\Http\Controllers\Admin\ActivityController::class, 'step8SchedulingTimeSlots'])->name('activity.step8.show');
+    Route::post('activity/{id}/step8-scheduling-timeslots', [\App\Http\Controllers\Admin\ActivityController::class, 'storeTimeSlot'])->name('activity.step8.store');
+    Route::get('activity/{id}/step8-scheduling-timeslots/{timeslotId}/edit', [\App\Http\Controllers\Admin\ActivityController::class, 'editTimeSlot'])->name('activity.step8.edit');
+    Route::put('activity/{id}/step8-scheduling-timeslots/{timeslotId}', [\App\Http\Controllers\Admin\ActivityController::class, 'updateTimeSlot'])->name('activity.step8.update');
+    Route::delete('activity/{id}/step8-scheduling-timeslots/{timeslotId}', [\App\Http\Controllers\Admin\ActivityController::class, 'deleteTimeSlot'])->name('activity.step8.delete');
+    Route::get('activity/{id}/step9-rates', [\App\Http\Controllers\Admin\ActivityController::class, 'step9Rates'])->name('activity.step9.show');
+    Route::post('activity/{id}/step9-rates', [\App\Http\Controllers\Admin\ActivityController::class, 'storeRate'])->name('activity.step9.store');
+    Route::get('activity/{id}/step9-rates/{rateId}/edit', [\App\Http\Controllers\Admin\ActivityController::class, 'editRate'])->name('activity.step9.edit');
+    Route::put('activity/{id}/step9-rates/{rateId}', [\App\Http\Controllers\Admin\ActivityController::class, 'updateRate'])->name('activity.step9.update');
+    Route::delete('activity/{id}/step9-rates/{rateId}', [\App\Http\Controllers\Admin\ActivityController::class, 'deleteRate'])->name('activity.step9.delete');
+    Route::get('activity/{id}/step9-addons', [\App\Http\Controllers\Admin\ActivityController::class, 'step9Addons'])->name('activity.step9.addons');
+    Route::post('activity/{id}/step9-addons', [\App\Http\Controllers\Admin\ActivityController::class, 'storeAddon'])->name('activity.step9.addons.store');
+    Route::put('activity/{id}/step9-addons/{addonId}', [\App\Http\Controllers\Admin\ActivityController::class, 'updateAddon'])->name('activity.step9.addons.update');
+    Route::delete('activity/{id}/step9-addons/{addonId}', [\App\Http\Controllers\Admin\ActivityController::class, 'deleteAddon'])->name('activity.step9.addons.delete');
+    Route::get('activity/{id}/step10-allotment', [\App\Http\Controllers\Admin\ActivityController::class, 'step10Allotment'])->name('activity.step10.show');
+    Route::post('activity/{id}/step10-allotment', [\App\Http\Controllers\Admin\ActivityController::class, 'storeAllotment'])->name('activity.step10.store');
+    Route::put('activity/{id}/step10-allotment/{allotmentId}', [\App\Http\Controllers\Admin\ActivityController::class, 'updateAllotment'])->name('activity.step10.update');
+    Route::delete('activity/{id}/step10-allotment/{allotmentId}', [\App\Http\Controllers\Admin\ActivityController::class, 'deleteAllotment'])->name('activity.step10.delete');
+    Route::post('activity/{id}/step10-allotment/blackout', [\App\Http\Controllers\Admin\ActivityController::class, 'storeBlackoutDate'])->name('activity.step10.blackout.store');
+    Route::delete('activity/{id}/step10-allotment/blackout/{blackoutId}', [\App\Http\Controllers\Admin\ActivityController::class, 'deleteBlackoutDate'])->name('activity.step10.blackout.delete');
+    Route::get('activity/{id}/step11-promotions', [\App\Http\Controllers\Admin\ActivityController::class, 'step11PromotionsOffers'])->name('activity.step11.show');
+    Route::post('activity/{id}/step11-promotions', [\App\Http\Controllers\Admin\ActivityController::class, 'storePromotion'])->name('activity.step11.store');
+    Route::put('activity/{id}/step11-promotions/{promotionId}', [\App\Http\Controllers\Admin\ActivityController::class, 'updatePromotion'])->name('activity.step11.update');
+    Route::delete('activity/{id}/step11-promotions/{promotionId}', [\App\Http\Controllers\Admin\ActivityController::class, 'deletePromotion'])->name('activity.step11.delete');
+    Route::get('activity/{id}/step12-seo-social', [\App\Http\Controllers\Admin\ActivityController::class, 'step12SeoSocial'])->name('activity.step12.show');
+    Route::post('activity/{id}/step12-seo-social', [\App\Http\Controllers\Admin\ActivityController::class, 'storeSeoSocial'])->name('activity.step12.store');
+    Route::get('activity/{id}/step13-publish', [\App\Http\Controllers\Admin\ActivityController::class, 'step13Publish'])->name('activity.step13.show');
+    Route::post('activity/{id}/submit-for-approval', [\App\Http\Controllers\Admin\ActivityController::class, 'submitForApproval'])->name('activity.submit-approval');
+    Route::delete('activity/{id}', [\App\Http\Controllers\Admin\ActivityController::class, 'destroy'])->name('activity.destroy');
+
+    // Save accommodation fees
+    Route::post('accommodations/{id}/fees', [\App\Http\Controllers\Admin\AccommodationController::class, 'saveFees'])->name('accommodation.fees.save');
+    Route::get('accommodations/{id}/fees', [\App\Http\Controllers\Admin\AccommodationController::class, 'getFees'])->name('accommodation.fees.get');
+
+    // Additional fees routes (preferred name)
+    Route::post('accommodations/{id}/additional-fees', [\App\Http\Controllers\Admin\AccommodationController::class, 'saveFees'])->name('accommodation.additional_fees.save');
+    Route::get('accommodations/{id}/additional-fees', [\App\Http\Controllers\Admin\AccommodationController::class, 'getFees'])->name('accommodation.additional_fees.get');
 
     // Admin payment transactions management
     Route::get('payment-transactions', [\App\Http\Controllers\Admin\PaymentTransactionController::class, 'index'])->name('payment-transactions.index');

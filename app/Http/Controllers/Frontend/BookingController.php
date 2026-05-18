@@ -1134,6 +1134,7 @@ class BookingController extends Controller
 
         if ($paymentMethod === 'againgency') {
             $transactionRef = 'aga_' . Str::uuid();
+            $orderId = $primaryRef;
             $firstBookingId = $tripBookingIds[0] ?? null;
 
             if (!$firstBookingId) {
@@ -1154,6 +1155,7 @@ class BookingController extends Controller
 
             try {
                 $paymentUrl = AgaingencyPaymentService::createPaymentUrl(
+                    $orderId,
                     $transactionRef,
                     $guestEmail,
                     $guestName,

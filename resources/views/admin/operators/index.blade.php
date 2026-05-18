@@ -21,7 +21,11 @@
                     <td>{{ $op->account_status }}</td>
                     <td>
                         <a href="{{ route('admin.operators.edit', $op) }}" class="btn btn-sm btn-secondary">Edit</a>
-                        <form method="POST" action="{{ route('admin.operators.destroy', $op) }}" style="display:inline;" onsubmit="return confirm('Delete operator?');">
+                        <form method="POST" action="{{ route('admin.operators.select', $op) }}" style="display:inline; margin-left:4px;">
+                            @csrf
+                            <button class="btn btn-sm btn-info">Select</button>
+                        </form>
+                        <form method="POST" action="{{ route('admin.operators.destroy', $op) }}" style="display:inline; margin-left:4px;" onsubmit="return confirm('Delete operator?');">
                             @csrf
                             @method('DELETE')
                             <button class="btn btn-sm btn-danger">Delete</button>

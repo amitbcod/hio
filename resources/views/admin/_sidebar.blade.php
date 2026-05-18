@@ -9,6 +9,10 @@
     @else
         <div class="list-group-item list-group-item-action text-muted">Businesses</div>
     @endif
+    <a href="{{ route('admin.accommodation.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/accommodations*') ? 'active' : '' }}">Accommodations</a>
+    <a href="{{ route('admin.accommodation.create') }}" class="list-group-item list-group-item-action {{ request()->is('admin/accommodations/create*') ? 'active' : '' }}">Create Accommodation</a>
+    <a href="{{ route('admin.activity.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/activity*') ? 'active' : '' }}">Activities</a>
+    <a href="{{ route('admin.activity.create') }}" class="list-group-item list-group-item-action {{ request()->is('admin/activity/create*') ? 'active' : '' }}">Create Activity</a>
     <a href="{{ route('admin.accommodation.bookings') }}" class="list-group-item list-group-item-action {{ request()->is('admin/accommodation/bookings*') ? 'active' : '' }}">Accommodation Bookings</a>
     <a href="{{ route('admin.activity.bookings') }}" class="list-group-item list-group-item-action {{ request()->is('admin/activity/bookings*') ? 'active' : '' }}">Activity Bookings</a>
     <a href="{{ route('admin.payment-transactions.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/payment-transactions*') ? 'active' : '' }}">Payment Transactions</a>

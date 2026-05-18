@@ -129,6 +129,8 @@ return [
         'api_base_url' => env('AGAINCENCY_PAYMENT_API_BASE_URL', 'https://api.againgency.com/api/v1'),
         'callback_secret' => env('AGAINCENCY_PAYMENT_CALLBACK_SECRET'),
         'api_key' => env('AGAINCENCY_PAYMENT_API_KEY'),
+        'auth_method' => env('AGAINCENCY_PAYMENT_AUTH_METHOD', 'AUTH'),
+        'payment_methods' => explode(',', env('AGAINCENCY_PAYMENT_METHODS', 'CARD')),
     ],
 
     

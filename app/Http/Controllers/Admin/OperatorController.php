@@ -86,6 +86,15 @@ class OperatorController extends Controller
         return redirect()->route('admin.operators.index')->with('success', 'Operator updated.');
     }
 
+    public function select(Operator $operator)
+    {
+        if (!session('admin_id')) return redirect()->route('admin.login');
+
+        session(['admin_selected_operator_id' => $operator->id]);
+        return redirect()->route('admin.accommodation.index')
+            ->with('success', 'Selected operator ' . $operator->full_name . ' for admin accommodation and activity management.');
+    }
+
     public function destroy(Operator $operator)
     {
         if (!session('admin_id')) return redirect()->route('admin.login');

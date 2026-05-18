@@ -1,0 +1,622 @@
+{
+	"info": {
+		"_postman_id": "1badad0d-af74-4394-b484-53e1b386fe04",
+		"name": "Againgency API",
+		"description": "API Introduction\n\nThis API is an interface allowing external applications to communicate with Againgency based on a unified abstract interface.  \nThis interface detaches the concept from a physical database structure and provides additional business logic and security when accessing the data.\n\nIntended audience\n\nThis document is intended to the third party software vendors who are developing a system which needs connectivity to Againgency.  \nThis document is intended for distribution to all vendors and developers of hospitality software systems.  \nThe data contained herein is public information and is published for public use.\n\nSystem Overview\n\nProvided functions.  \nThe API provides the following functionality:  \n• Order lookup  \n• Order update  \n• Order creation  \n• Payment lookup  \n• Payment update  \n• Payment creation  \n• Tender lookup  \n• Tender creation  \n• Transaction lookup  \n• Property lookup  \n• User lookup\n\nFields available for selection by request type  \nSpecification for Againgency Common API available on [https://api.againgency.com/docs](https://api.againgency.com/docs)\n\nAPI key can be generated from [https://deck.againgency.com/settings#integration](https://deck.againgency.com/settings#integration)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "15690166"
+	},
+	"item": [
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Create an Order + Payment in one post (payment link) CHARGE",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"external_id\": \"O-5674\",\r\n    \"currency_code\": \"USD\",\r\n    \"internal_description\": \"Laguna Beach Resort\",\r\n    \"positions\": [\r\n        {\r\n            \"name\": \"Lux Suite\",\r\n            \"type\": \"OTHER\",\r\n            \"quantity\": 1,\r\n            \"price\": 99.99,\r\n            \"amount\": 99.99\r\n        }\r\n    ],\r\n    \"customer\": {\r\n        \"first_name\": \"Sam\",\r\n        \"last_name\": \"Smith\",\r\n        \"email\": \"test@test.ru\",\r\n        \"language\": \"en\",\r\n        \"country\": \"GB\"\r\n    },\r\n    \"total\": {\r\n        \"sum\": 99.99\r\n    },\r\n    \"customer_notifications\": {\r\n        \"email\": false\r\n    },\r\n    \"payments\": [\r\n        {\r\n            \"type\": \"LINK\",\r\n            \"payment_methods\": [\r\n                \"CARD\"\r\n            ],\r\n            \"amount\": 10.00,\r\n            \"skip_pp\": false,\r\n            \"auth_method\": \"CHARGE\",\r\n            \"customer_email\": \"test@test.ru\",\r\n            \"callback_url\": \"https:\\/\\/urlforpayments.com\\/callback\",\r\n            \"success_url\": \"https:\\/\\/urlforpayments.com\\/success_page\",\r\n            \"fail_url\": \"https:\\/\\/urlforpayments.com\\/failed_page\"\r\n               }\r\n    ]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/orders",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create an Order + Payment in one post (payment link) AUTH",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"external_id\": \"O-5674\",\r\n    \"currency_code\": \"USD\",\r\n    \"internal_description\": \"Laguna Beach Resort\",\r\n    \"positions\": [\r\n        {\r\n            \"name\": \"Lux Suite\",\r\n            \"type\": \"OTHER\",\r\n            \"quantity\": 1,\r\n            \"price\": 99.99,\r\n            \"amount\": 99.99\r\n        }\r\n    ],\r\n    \"customer\": {\r\n        \"first_name\": \"Sam\",\r\n        \"last_name\": \"Smith\",\r\n        \"email\": \"test@test.ru\",\r\n        \"language\": \"en\",\r\n        \"country\": \"GB\"\r\n    },\r\n    \"total\": {\r\n        \"sum\": 99.99\r\n    },\r\n    \"customer_notifications\": {\r\n        \"email\": false\r\n    },\r\n    \"payments\": [\r\n        {\r\n            \"type\": \"LINK\",\r\n            \"payment_methods\": [\r\n                \"CARD\"\r\n            ],\r\n            \"amount\": 10.00,\r\n            \"skip_pp\": false,\r\n            \"auth_method\": \"AUTH\",\r\n            \"customer_email\": \"test@test.ru\",\r\n            \"callback_url\": \"https:\\/\\/urlforpayments.com\\/callback\",\r\n            \"success_url\": \"https:\\/\\/urlforpayments.com\\/success_page\",\r\n            \"fail_url\": \"https:\\/\\/urlforpayments.com\\/failed_page\"\r\n               }\r\n    ]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/orders",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Order",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"external_id\": \"FGV-23233\",\r\n    \"currency_code\": \"USD\",\r\n    \"internal_description\": \"Laguna Beach Resort, Lux Suite, 10 nights\",\r\n    \"positions\": [\r\n        {\r\n            \"name\": \"Lux Suite\",\r\n            \"type\": \"OTHER\",\r\n            \"quantity\": 1,\r\n            \"price\": 99.99,\r\n            \"amount\": 99.99\r\n        }\r\n    ],\r\n    \"customer\": {\r\n        \"first_name\": \"Sam\",\r\n        \"last_name\": \"Smith\",\r\n        \"email\": \"test@test.ru\",\r\n        \"language\": \"en\",\r\n        \"country\": \"GB\"\r\n    },\r\n    \"total\": {\r\n        \"sum\": 99.99\r\n    },\r\n    \"customer_notifications\": {\r\n        \"email\": false\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/orders",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create an Order + Payment in one post (card)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"external_id\": \"test-11333511\",\r\n    \"currency_code\": \"USD\",\r\n    \"total\": {\r\n        \"sum\": 99.99\r\n    },\r\n    \"positions\": [\r\n        {\r\n            \"name\": \"Lux Suite\",\r\n            \"type\": \"OTHER\",\r\n            \"quantity\": 1,\r\n            \"price\": 99.99,\r\n            \"amount\": 99.99\r\n        }\r\n    ],\r\n    \"customer\": {\r\n        \"first_name\": \"Sam\",\r\n        \"last_name\": \"Smith\",\r\n        \"email\": \"test@test.com\",\r\n        \"phone\": \"+12345678901\",\r\n        \"language\": \"en\",\r\n        \"country\": \"GB\"\r\n    },\r\n    \"internal_description\": \"Flight Booking\",\r\n    \"payments\": [\r\n        {\r\n            \"type\": \"CARD\",\r\n            \"amount\": 99.99,\r\n            \"customer_email\": \"test@test.com\",\r\n            \"tender\": {\r\n                \"pan\": \"4314220000000056\",\r\n                \"card_holder\": \"JOHN APPLESEED\",\r\n                \"expiration_month\": 12,\r\n                \"expiration_year\": 2022,\r\n                \"cvv\": \"1266\",\r\n                \"save_card\": false\r\n            }\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/orders",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Finalize Order",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"reason\": \" Finalize reason \",\r\n    \"customer_notifications\": {\r\n        \"email\": false\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/orders/9ac231d2-ef95-4dac-b434-ff0b9e5d7b7c/actions/FINALIZE",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"orders",
+								"9ac231d2-ef95-4dac-b434-ff0b9e5d7b7c",
+								"actions",
+								"FINALIZE"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unfinalize Order",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"reason\": \" Finalize reason \",\r\n    \"customer_notifications\": {\r\n        \"email\": false\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/orders/9ac231d2-ef95-4dac-b434-ff0b9e5d7b7c/actions/UNFINALIZE",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"orders",
+								"9ac231d2-ef95-4dac-b434-ff0b9e5d7b7c",
+								"actions",
+								"UNFINALIZE"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "Create Payment Link",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"order_id\": \"29faa8aa-386c-426a-abaf-d2268b89983c\",\r\n    \"type\": \"LINK\",\r\n    \"amount\": 99.99,\r\n    \"lifetime\": \"PT23H30M\",\r\n    \"customer_email\": \"john.smith@some-mail-domain.com\",\r\n    \"payment_methods\": [\r\n        \"CARD\"\r\n    ],\r\n    \"skip_pp\": false,\r\n    \"auth_method\": \"AUTH\",\r\n    \"callback_url\": \"https:\\/\\/urlforpayments.com\\/callback\",\r\n    \"success_url\": \"https:\\/\\/urlforpayments.com\\/success_page\",\r\n    \"fail_url\": \"https:\\/\\/urlforpayments.com\\/failed_page\"\r\n    }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/payments",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"payments"
+							]
+						},
+						"description": "Payment created Callback:\n\n{\n    \"project_id\": 926,\n    \"payment\": {\n        \"id\": \"ab903d58-b1a5-452b-9b7f-962e96586ab6\",\n        \"type\": \"LINK\",\n        \"status\": \"REGISTERED\",\n        \"state\": \"CREATED\",\n        \"payment_method\": \"CARD\",\n        \"sum\": {\n            \"amount\": 1500,\n            \"currency\": \"USD\"\n        },\n        \"sum_paid\": {\n            \"amount\": 0,\n            \"currency\": \"USD\"\n        }\n    },\n    \"order\": {\n        \"id\": \"69f9e281-56cd-411c-be16-bf37656c5a8a\",\n        \"number\": \"13324\",\n        \"status\": \"REGISTERED\",\n        \"state\": \"NEW\",\n        \"sum\": {\n            \"amount\": 10000,\n            \"currency\": \"USD\"\n        },\n        \"sum_paid\": {\n            \"amount\": 0,\n            \"currency\": \"USD\"\n        }\n    },\n    \"transactions\": [],\n    \"signature\": \"oGxEni8NXKLv6IUw0P2Eg2Ti3DWDkYZQi7H+58ZI1Fqt3/En53lCTHchQQ8tEXpAoBfxU0KAxHooN4aG4n/0rg==\"\n}\n\n\nPayment Authorized Callback:\n\n\n{\n    \"project_id\": 927,\n    \"payment\": {\n        \"id\": \"62d3eb46-7634-405a-ac14-90d3cb579d8d\",\n        \"type\": \"DAO\",\n        \"status\": \"IN_PROGRESS\",\n        \"state\": \"AUTHORIZED\",\n        \"payment_method\": \"CARD\",\n        \"sum\": {\n            \"amount\": 2000,\n            \"currency\": \"USD\"\n        },\n        \"sum_paid\": {\n            \"amount\": 0,\n            \"currency\": \"USD\"\n        }\n    },\n    \"order\": {\n        \"id\": \"69f9e281-56cd-411c-be16-bf37656c5a8a\",\n        \"number\": \"13324\",\n        \"status\": \"IN_PROGRESS\",\n        \"state\": \"PROCESSING\",\n        \"sum\": {\n            \"amount\": 10000,\n            \"currency\": \"USD\"\n        },\n        \"sum_paid\": {\n            \"amount\": 0,\n            \"currency\": \"USD\"\n        }\n    },\n    \"transactions\": [\n        {\n            \"type\": \"AUTH\",\n            \"status\": \"COMPLETED\",\n            \"state\": \"CAPTURED\",\n            \"sum\": {\n                \"amount\": 2000,\n                \"currency\": \"USD\"\n            }\n        }\n    ],\n    \"signature\": \"bkeGDqaxHd21q7kg5ILp9KkcPJ8khnzHfaLPiy3m8GeYk91Tj6DvZJIvjLiHnqBmoFzg055ErBMtpQwvPk9K1w==\"\n}"
+					},
+					"response": []
+				},
+				{
+					"name": "Request status of the payment",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/payments/43d5edb8-9a06-453f-a66e-04d2f87132d4",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"payments",
+								"43d5edb8-9a06-453f-a66e-04d2f87132d4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Request all charged payments for period",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/payments?state=charged&charged_at_start_date=2021-07-28&charged_at_end_date=2021-11-16",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"payments"
+							],
+							"query": [
+								{
+									"key": "state",
+									"value": "charged"
+								},
+								{
+									"key": "charged_at_start_date",
+									"value": "2021-07-28"
+								},
+								{
+									"key": "charged_at_end_date",
+									"value": "2021-11-16"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Capture payment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"amount\": 10.00,\r\n    \"description\": \"Capture comment\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/payments/43d5edb8-9a06-453f-a66e-04d2f87132d4/actions/CAPTURE",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"payments",
+								"43d5edb8-9a06-453f-a66e-04d2f87132d4",
+								"actions",
+								"CAPTURE"
+							]
+						},
+						"description": "Callback:\n\n{\n    \"project_id\": 927,\n    \"payment\": {\n        \"id\": \"62d3eb46-7634-405a-ac14-90d3cb579d8d\",\n        \"type\": \"DAO\",\n        \"status\": \"COMPLETED\",\n        \"state\": \"CAPTURED\",\n        \"payment_method\": \"CARD\",\n        \"sum\": {\n            \"amount\": 2000,\n            \"currency\": \"USD\"\n        },\n        \"sum_paid\": {\n            \"amount\": 2000,\n            \"currency\": \"USD\"\n        }\n    },\n    \"order\": {\n        \"id\": \"69f9e281-56cd-411c-be16-bf37656c5a8a\",\n        \"number\": \"13324\",\n        \"status\": \"IN_PROGRESS\",\n        \"state\": \"PARTIALLY_PAID\",\n        \"sum\": {\n            \"amount\": 10000,\n            \"currency\": \"USD\"\n        },\n        \"sum_paid\": {\n            \"amount\": 2000,\n            \"currency\": \"USD\"\n        }\n    },\n    \"transactions\": [\n        {\n            \"type\": \"AUTH\",\n            \"status\": \"COMPLETED\",\n            \"state\": \"CAPTURED\",\n            \"sum\": {\n                \"amount\": 2000,\n                \"currency\": \"USD\"\n            }\n        },\n        {\n            \"type\": \"CAPTURE\",\n            \"status\": \"COMPLETED\",\n            \"state\": \"CAPTURED\",\n            \"sum\": {\n                \"amount\": 2000,\n                \"currency\": \"USD\"\n            }\n        }\n    ],\n    \"signature\": \"ZQMCE3JNPWSM/zQtcHw5paXhc4Gzm5XBkGQO17BJVw6wyocLwuJGz3ACR5rIPgdwuLSClm07uUoMzrMhUqIKSQ==\"\n}"
+					},
+					"response": []
+				},
+				{
+					"name": "Revoke payment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"amount\": 10.00,\r\n    \"description\": \"Revoke comment\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/payments/43d5edb8-9a06-453f-a66e-04d2f87132d4/actions/REVOKE",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"payments",
+								"43d5edb8-9a06-453f-a66e-04d2f87132d4",
+								"actions",
+								"REVOKE"
+							]
+						},
+						"description": "Callback:\n\n{\n    \"project_id\": 926,\n    \"payment\": {\n        \"id\": \"ab903d58-b1a5-452b-9b7f-962e96586ab6\",\n        \"type\": \"LINK\",\n        \"status\": \"CANCELED\",\n        \"state\": \"REVOKED\",\n        \"payment_method\": \"CARD\",\n        \"sum\": {\n            \"amount\": 1500,\n            \"currency\": \"USD\"\n        },\n        \"sum_paid\": {\n            \"amount\": 0,\n            \"currency\": \"USD\"\n        }\n    },\n    \"order\": {\n        \"id\": \"69f9e281-56cd-411c-be16-bf37656c5a8a\",\n        \"number\": \"13324\",\n        \"status\": \"IN_PROGRESS\",\n        \"state\": \"PROCESSING\",\n        \"sum\": {\n            \"amount\": 10000,\n            \"currency\": \"USD\"\n        },\n        \"sum_paid\": {\n            \"amount\": 0,\n            \"currency\": \"USD\"\n        }\n    },\n    \"transactions\": [\n        {\n            \"type\": \"CHARGE\",\n            \"status\": \"CANCELED\",\n            \"state\": \"REVOKED\",\n            \"sum\": {}\n        }\n    ],\n    \"signature\": \"79XcO0oaQidZZT5V+hM2qKbho5SzlwGsymu5D/xP1MKpyWQezX47acDfxz1VlBn57g8EIf0Xu8OudisJUJGa3A==\"\n}"
+					},
+					"response": []
+				},
+				{
+					"name": "Void payment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"amount\": 10.00,\r\n    \"description\": \"Void comment\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/payments/43d5edb8-9a06-453f-a66e-04d2f87132d4/actions/VOID",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"payments",
+								"43d5edb8-9a06-453f-a66e-04d2f87132d4",
+								"actions",
+								"VOID"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refund",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"amount\": 10.00,\r\n    \"description\": \"Refund comment\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/payments/43d5edb8-9a06-453f-a66e-04d2f87132d4/actions/REFUND",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"payments",
+								"43d5edb8-9a06-453f-a66e-04d2f87132d4",
+								"actions",
+								"REFUND"
+							]
+						},
+						"description": "Callback:\n\n\n{\n    \"project_id\": 927,\n    \"payment\": {\n        \"id\": \"62d3eb46-7634-405a-ac14-90d3cb579d8d\",\n        \"type\": \"DAO\",\n        \"status\": \"CANCELED\",\n        \"state\": \"REFUNDED\",\n        \"payment_method\": \"CARD\",\n        \"sum\": {\n            \"amount\": 2000,\n            \"currency\": \"USD\"\n        },\n        \"sum_paid\": {\n            \"amount\": 0,\n            \"currency\": \"USD\"\n        }\n    },\n    \"order\": {\n        \"id\": \"69f9e281-56cd-411c-be16-bf37656c5a8a\",\n        \"number\": \"13324\",\n        \"status\": \"IN_PROGRESS\",\n        \"state\": \"PARTIALLY_PAID\",\n        \"sum\": {\n            \"amount\": 10000,\n            \"currency\": \"USD\"\n        },\n        \"sum_paid\": {\n            \"amount\": 0,\n            \"currency\": \"USD\"\n        }\n    },\n    \"transactions\": [\n        {\n            \"type\": \"AUTH\",\n            \"status\": \"COMPLETED\",\n            \"state\": \"CAPTURED\",\n            \"sum\": {\n                \"amount\": 2000,\n                \"currency\": \"USD\"\n            }\n        },\n        {\n            \"type\": \"CAPTURE\",\n            \"status\": \"COMPLETED\",\n            \"state\": \"CAPTURED\",\n            \"sum\": {\n                \"amount\": 2000,\n                \"currency\": \"USD\"\n            }\n        },\n        {\n            \"type\": \"CREATE_CASH_VOUCHER\",\n            \"status\": \"COMPLETED\",\n            \"state\": \"CREATED\",\n            \"sum\": {}\n        },\n        {\n            \"type\": \"REFUND\",\n            \"status\": \"COMPLETED\",\n            \"state\": \"REFUNDED\",\n            \"sum\": {\n                \"amount\": 2000,\n                \"currency\": \"USD\"\n            }\n        }\n    ],\n    \"signature\": \"3oU0HvDsFeqKtnQkicMsA6MDzxsAKIAMC62+Vguyahx2pJtkTvX8nI8lc7wA9oJ8wBHpNVmGf7U9srxnhGw/1Q==\"\n}"
+					},
+					"response": []
+				},
+				{
+					"name": "Notifications to user (letter with payment link)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": \"EMAIL\",\r\n    \"email\": \"user@example.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/payments/43d5edb8-9a06-453f-a66e-04d2f87132d4/notifications",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"payments",
+								"43d5edb8-9a06-453f-a66e-04d2f87132d4",
+								"notifications"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get QR code",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{BaseUrlPublic}}/{{Version}}/link/375f5b86-b2ea-4a16-b3af-efff450aad20/qrcode",
+							"host": [
+								"{{BaseUrlPublic}}"
+							],
+							"path": [
+								"{{Version}}",
+								"link",
+								"375f5b86-b2ea-4a16-b3af-efff450aad20",
+								"qrcode"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/payments/375f5b86-b2ea-4a16-b3af-efff450aad20/external-state",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"payments",
+								"375f5b86-b2ea-4a16-b3af-efff450aad20",
+								"external-state"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tenders",
+			"item": [
+				{
+					"name": "Tender fill",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"pan\": \"pan\",\r\n    \"card_holder\": \"NAME\",\r\n    \"expiration_month\": month,\r\n    \"expiration_year\": year\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/orders/9ac231d2-ef95-4dac-b434-ff0b9e5d7b7c/tenders",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"orders",
+								"9ac231d2-ef95-4dac-b434-ff0b9e5d7b7c",
+								"tenders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Card info request by Email",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"customer_email\": \"email\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{Version}}/orders/9ac231d2-ef95-4dac-b434-ff0b9e5d7b7c/card-request",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{Version}}",
+								"orders",
+								"9ac231d2-ef95-4dac-b434-ff0b9e5d7b7c",
+								"card-request"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tokens",
+			"item": [
+				{
+					"name": "Refresh token",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refresh_token\": \"string\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://api.againgency.com/auth/v0.2/token",
+							"protocol": "https",
+							"host": [
+								"api",
+								"againgency",
+								"com"
+							],
+							"path": [
+								"auth",
+								"v0.2",
+								"token"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "1c449e54b450fep474aaa589d8eff724551d",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "X-API-KEY",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BaseUrl",
+			"value": "https://api.againgency.com/api"
+		},
+		{
+			"key": "Version",
+			"value": "v1"
+		},
+		{
+			"key": "BaseUrlPublic",
+			"value": "https://api.againgency.com/public"
+		}
+	]
+}

@@ -17,6 +17,7 @@ class HomeController extends Controller
 {
     public function index(Request $request)
     {
+   
         $selectedCategory = $this->normalizeCategory($request->query('category'));
         $filters = $this->collectSearchFilters($request);
         $searchOptions = $this->buildSearchOptions();
