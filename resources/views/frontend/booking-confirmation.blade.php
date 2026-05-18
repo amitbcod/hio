@@ -10,16 +10,37 @@
 
             <div class="confirm-box">
 
-                {{-- Success Icon --}}
+                {{-- Status Icon & Heading --}}
+                @php
+                    $pm = $paymentMethod ?? 'cod';
+                    $ps = $paymentStatus ?? 'pending';
+                    $isFailed = ($pm === 'againgency' && $ps === 'failed');
+                    $isPaid = ($pm === 'againgency' && $ps === 'paid');
+                @endphp
+
                 <div class="confirm-icon">
-                    <i class="fa-solid fa-circle-check"></i>
+                    @if($isPaid)
+                        <i class="fa-solid fa-circle-check"></i>
+                    @elseif($isFailed)
+                        <i class="fa-solid fa-circle-xmark" style="color: #e53e3e;"></i>
+                    @else
+                        <i class="fa-solid fa-circle-check"></i>
+                    @endif
                 </div>
 
-                <h1 class="confirm-heading">Booking Received!</h1>
-                <p class="confirm-sub">
-                    Thank you{{ $guestName ? ', ' . $guestName : '' }}. Your booking is <strong>pending confirmation</strong>.
-                    Our team will get back to you within <strong>24 hours</strong>.
-                </p>
+                @if($isFailed)
+                    <h1 class="confirm-heading">Booking Failed</h1>
+                    <p class="confirm-sub">
+                        Sorry{{ $guestName ? ', ' . $guestName : '' }}. Your payment was not accepted and the booking could not be completed.
+                        Please try again or contact support.
+                    </p>
+                @else
+                    <h1 class="confirm-heading">Booking Received!</h1>
+                    <p class="confirm-sub">
+                        Thank you{{ $guestName ? ', ' . $guestName : '' }}. Your booking is <strong>pending confirmation</strong>.
+                        Our team will get back to you within <strong>24 hours</strong>.
+                    </p>
+                @endif
 
                 {{-- Booking Reference(s) --}}
                 <div class="confirm-refs">
@@ -134,8 +155,16 @@
                             <i class="fa-solid fa-money-bill-wave"></i>
                             <div>
                                 @if(($paymentMethod ?? 'cod') === 'againgency')
-                                    <strong>{{ ($paymentStatus ?? 'pending') === 'paid' ? 'Online Payment Received' : 'Payment Pending' }}</strong>
-                                    <p>{{ ($paymentStatus ?? 'pending') === 'paid' ? 'Your payment was processed with Againgency.' : 'Your payment is being processed. We will update your booking once confirmation is received.' }}</p>
+                                    @if(($paymentStatus ?? 'pending') === 'paid')
+                                        <strong>Online Payment Received</strong>
+                                        <p>Your payment was processed with Againgency.</p>
+                                    @elseif(($paymentStatus ?? 'pending') === 'failed')
+                                        <strong style="color:#e53e3e">Payment Failed</strong>
+                                        <p>Your payment was declined. The booking was not completed. Please try paying again or contact support.</p>
+                                    @else
+                                        <strong>Payment Pending</strong>
+                                        <p>Your payment is being processed. We will update your booking once confirmation is received.</p>
+                                    @endif
                                 @else
                                     <strong>Pay on Arrival</strong>
                                     <p>Cash on Delivery — settle payment when you check in.</p>

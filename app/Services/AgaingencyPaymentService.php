@@ -200,20 +200,21 @@ class AgaingencyPaymentService
 
         $paymentUrl = null;
 
-        if (!empty($body['payment_url'])) {
-            $paymentUrl = $body['payment_url'];
-        } elseif (!empty($body['link'])) {
-            $paymentUrl = $body['link'];
-        } elseif (!empty($body['payload']['link'])) {
-            $paymentUrl = $body['payload']['link'];
-        } elseif (!empty($body['payload']['payments'][0]['link'])) {
+        if (!empty($body['payload']['payments'][0]['link'])) {
+            // Prefer the actual payment link over the order page link
             $paymentUrl = $body['payload']['payments'][0]['link'];
         } elseif (!empty($body['payments'][0]['link'])) {
             $paymentUrl = $body['payments'][0]['link'];
+        } elseif (!empty($body['payment_url'])) {
+            $paymentUrl = $body['payment_url'];
         } elseif (!empty($body['data']['payment_url'])) {
             $paymentUrl = $body['data']['payment_url'];
         } elseif (!empty($body['data']['redirect_url'])) {
             $paymentUrl = $body['data']['redirect_url'];
+        } elseif (!empty($body['payload']['link'])) {
+            $paymentUrl = $body['payload']['link'];
+        } elseif (!empty($body['link'])) {
+            $paymentUrl = $body['link'];
         } elseif (!empty($body['redirect_url'])) {
             $paymentUrl = $body['redirect_url'];
         }
@@ -244,6 +245,7 @@ class AgaingencyPaymentService
         return match ($status) {
             'paid', 'success', 'successful', 'completed' => 'paid',
             'refunded' => 'refunded',
+            'failed', 'declined', 'rejected', 'cancelled' => 'failed',
             default => 'pending',
         };
     }

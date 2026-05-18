@@ -1205,11 +1205,32 @@ class BookingController extends Controller
         $paymentStatus = 'pending';
 
         if (!$paymentMethod && $booking) {
-            $paymentMethod = $booking->payments()->latest()->first() ? 'againgency' : 'cod';
+            // If $booking is a Booking model it will have payments() relation.
+            if ($booking instanceof \App\Models\Booking) {
+                $latest = $booking->payments()->latest()->first();
+            } else {
+                // For AccommodationBooking / ActivityBooking, find trip bookings and check their payment transactions
+                $tripBookingIds = [];
+                if (!empty($booking->trip_id)) {
+                    $tripBookingIds = Booking::where('trip_id', $booking->trip_id)->pluck('id')->toArray();
+                }
+                $latest = $tripBookingIds ? PaymentTransaction::whereIn('booking_id', $tripBookingIds)->latest()->first() : null;
+            }
+
+            $paymentMethod = ($latest && $latest->method === 'againgency') ? 'againgency' : 'cod';
         }
 
         if ($booking && ($paymentMethod === 'againgency' || !$paymentMethod)) {
-            $latestPayment = $booking->payments()->latest()->first();
+            if ($booking instanceof \App\Models\Booking) {
+                $latestPayment = $booking->payments()->latest()->first();
+            } else {
+                $tripBookingIds = [];
+                if (!empty($booking->trip_id)) {
+                    $tripBookingIds = Booking::where('trip_id', $booking->trip_id)->pluck('id')->toArray();
+                }
+                $latestPayment = $tripBookingIds ? PaymentTransaction::whereIn('booking_id', $tripBookingIds)->latest()->first() : null;
+            }
+
             if ($latestPayment) {
                 $paymentStatus = $latestPayment->status;
             }
@@ -1234,9 +1255,10 @@ class BookingController extends Controller
         $paymentTransaction->status = $status;
         $paymentTransaction->save();
 
-        $booking = $paymentTransaction->booking;
-        if ($booking && $status === 'paid') {
-            Booking::where('trip_id', $booking->trip_id)->update(['status' => 'paid']);
+        // PaymentTransaction.booking relationship may point to Booking model or be null
+        $bookingRecord = Booking::find($paymentTransaction->booking_id);
+        if ($bookingRecord && $status === 'paid') {
+            Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'paid']);
         }
 
         return response()->json(['success' => true]);
@@ -1253,7 +1275,10 @@ class BookingController extends Controller
             if ($paymentTransaction && $status === 'paid') {
                 $paymentTransaction->status = 'paid';
                 $paymentTransaction->save();
-                Booking::where('trip_id', $paymentTransaction->booking->trip_id)->update(['status' => 'paid']);
+                $bookingRecord = Booking::find($paymentTransaction->booking_id);
+                if ($bookingRecord) {
+                    Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'paid']);
+                }
             }
         }
 
