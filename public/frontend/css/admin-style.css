@@ -21,6 +21,23 @@
      width: 100%;
  }
 
+ a {
+    color: rgb(65 176 170);
+    text-decoration: none;
+}
+
+a:hover {
+    color: #2463b1;
+}
+
+.nav-pagination .shadow-sm {
+    box-shadow: none;
+}
+
+.nav-pagination .flex.gap-2.items-center.justify-between {
+    display: none; 
+}
+
 
  /* .main-setion {
     background: linear-gradient(
@@ -37,7 +54,7 @@
 
  .col-md-2.list-section {
      background: #c6ac50;
-     height: 100vh;
+     /* height: 100vh; */
      margin: 0 !important;
      padding: 0;
      border-radius: 0 !important;
@@ -70,11 +87,17 @@
      border-radius: 0;
      background-color: #c6ac50;
      color: #fff !important;
-     border-bottom: 1px solid #fff;
+     border-bottom: 1px solid #a15b5ba6;
      padding-top: 16px;
      border-left: 0;
      border-right: 0;
+     padding: 13px;
+     font-weight: 500;
  }
+
+ .list-group-item.list-group-item-action:hover {
+    background: #917318;
+}
 
  .dash-section h3 {
      font-weight: bold;
@@ -82,10 +105,16 @@
  }
 
  button.btn.btn-outline-light.btn-sm {
-     border: 1px solid red;
-     color: red;
-     padding: 5px 25px;
-     line-height: 1.6;
+     border: 1px solid #2a6db7;
+     color: #2a6db7;
+     line-height: 1;
+     padding: 9px;
+ }
+
+ button.btn.btn-outline-light.btn-sm:hover {
+     border: 1px solid #2a6db7;
+     background: #2a6db7;
+     color: #fff;
  }
 
  .table th {
@@ -118,6 +147,10 @@
      border: none;
  }
 
+ a.btn.btn-primary:hover {
+    background: #106460;
+}
+
  a.btn.btn-primary:active {
      background-color: #c6ac50;
  }
@@ -131,6 +164,56 @@
      padding: 40px;
  }
 
+ .nav-pagination svg {
+     width: 30px;
+ }
+
+ .nav-pagination .border {
+     border: 0 !important;
+ }
+
+ .login-full-section>.col-md-10.offset-md-1 {
+     margin-left: 0;
+     width: 100%;
+ }
+
+ .login-full-section h3 {
+     margin-top: 0 !important;
+ }
+
+ table.table thead tr th {
+     background: #2463b1 !important;
+     color: #fff !important;
+ }
+
+ .list-group-item+.list-group-item.active {
+    background: #917318;
+    border-top:0;
+}
+
+.navbar .container {
+    max-width: 100% !important;
+    padding-left: 40px;
+    padding-right: 40px; 
+}
+
+nav.navbar a.navbar-brand {
+    margin: 0;
+    margin-left: 20px;
+}
+
+nav.navbar.bg-light {
+    background: #fbf6e3 !important;
+     
+}
+
+.login-full-section .container {
+    padding:0;
+}
+
+.login-full-section .container.mt-4 {
+    margin-top:0 !important;
+}
 
  @media(max-width:768px) {
 
