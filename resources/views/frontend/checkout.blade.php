@@ -824,7 +824,9 @@
 <style>
 .checkout-section { padding-top: 32px; }
 
-.checkout-page-header { margin-bottom: 28px; }
+.checkout-section > .wrap {display: flex; gap: 20px;}
+
+.checkout-page-header { margin-bottom: 0; flex: 1;}
 .checkout-page-header h1 { font-size: 32px; font-weight: 700; color: 
 var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
 .checkout-subtitle { color: #666; font-size: 14px; margin: 0; }
@@ -1152,7 +1154,8 @@ var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
 .form-errors li { font-size: 13px; color: #c53030; margin-bottom: 4px; }
 
 /* Summary Sidebar (reuse cart-review styles, add here) */
-.checkout-summary { position: sticky; top: 120px; }
+.checkout-summary { position: sticky; top: 120px;     flex-basis: 35%;
+    align-self: flex-start; }
 .summary-card {
     background: var(--grey-light);
     border: 0px solid #e8e8ef;
@@ -1258,11 +1261,26 @@ label.saved-guest-checkbox {
 .saved-guest-info .saved-guest-details {
     font-size: 14px;
 }
+
+.payment-options {
+    display: flex;
+    gap: 10px;
+}
+
+.payment-options > label {
+    flex: 1;
+}
  
 @media (max-width: 860px) {
     .checkout-layout { grid-template-columns: 1fr; }
     .checkout-summary { position: static; }
     .form-grid { grid-template-columns: 1fr; }
+
+    .checkout-section > .wrap {display: block;}
+
+    .payment-options {
+    flex-direction: column;
+}
 }
 </style>
 @endpush
