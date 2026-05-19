@@ -1298,8 +1298,19 @@ class BookingController extends Controller
 
         // PaymentTransaction.booking relationship may point to Booking model or be null
         $bookingRecord = Booking::find($paymentTransaction->booking_id);
-        if ($bookingRecord && $status === 'paid') {
-            Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'confirmed']);
+        if ($bookingRecord) {
+            if ($status === 'paid') {
+                Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'confirmed']);
+                // Update per-item booking_status fields for accommodation/activity
+                AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
+                ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
+            } elseif ($status === 'failed') {
+                // If payment failed, mark related bookings as Cancelled
+                AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
+                ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
+                // Also mark the parent Booking as cancelled for consistency
+                Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'cancelled']);
+            }
         }
 
         return response()->json(['success' => true]);
@@ -1322,10 +1333,18 @@ class BookingController extends Controller
                 $paymentTransaction->status = $status;
                 $paymentTransaction->save();
 
-                $bookingRecord = Booking::find($paymentTransaction->booking_id);
-                if ($bookingRecord && $status === 'paid') {
-                    Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'confirmed']);
-                }
+                    $bookingRecord = Booking::find($paymentTransaction->booking_id);
+                    if ($bookingRecord) {
+                        if ($status === 'paid') {
+                            Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'confirmed']);
+                            AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
+                            ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
+                        } elseif ($status === 'failed') {
+                            AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
+                            ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
+                            Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'cancelled']);
+                        }
+                    }
             }
         }
 

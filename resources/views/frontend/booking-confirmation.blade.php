@@ -18,6 +18,12 @@
                     $isPaid = ($pm === 'againgency' && in_array($normalizedStatus, ['paid', 'success', 'successful', 'completed'], true));
                     $isFailed = ($pm === 'againgency' && !$isPaid && $normalizedStatus !== 'pending');
                     $statusLabel = ucfirst($normalizedStatus);
+
+                    // If payment failed for an Againgency payment, treat the booking as Cancelled
+                    $displayBookingStatus = null;
+                    if (isset($booking) && $booking->booking_status) {
+                        $displayBookingStatus = $isFailed ? 'Cancelled' : $booking->booking_status;
+                    }
                 @endphp
 
                 <div class="confirm-icon">
@@ -127,8 +133,8 @@
                             </div>
                             <div class="confirm-detail-item">
                                 <span class="detail-key">Status</span>
-                                <span class="detail-val status-badge status-{{ strtolower($booking->booking_status) }}">
-                                    {{ $booking->booking_status }}
+                                <span class="detail-val status-badge status-{{ strtolower($displayBookingStatus ?? ($booking->booking_status ?? 'pending')) }}">
+                                    {{ $displayBookingStatus ?? ($booking->booking_status ?? 'Pending') }}
                                 </span>
                             </div>
                             @if($booking->guest_email)
