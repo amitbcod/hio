@@ -1299,7 +1299,7 @@ class BookingController extends Controller
         // PaymentTransaction.booking relationship may point to Booking model or be null
         $bookingRecord = Booking::find($paymentTransaction->booking_id);
         if ($bookingRecord && $status === 'paid') {
-            Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'paid']);
+            Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'confirmed']);
         }
 
         return response()->json(['success' => true]);
@@ -1327,7 +1327,7 @@ class BookingController extends Controller
 
                 $bookingRecord = Booking::find($paymentTransaction->booking_id);
                 if ($bookingRecord && $status === 'paid') {
-                    Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'paid']);
+                    Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'confirmed']);
                 }
             }
         }
