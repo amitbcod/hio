@@ -85,23 +85,36 @@
 </div>
 
 <script>
+// Ensure we have a CSRF token available to JS (blade will render server token)
+const CSRF_TOKEN = '{{ csrf_token() }}';
+
 function loadCallbacks() {
     const btn = document.getElementById('loadCallbacksBtn');
     const result = document.getElementById('callbacksResult');
     const loading = document.getElementById('callbacksLoading');
     const content = document.getElementById('callbacksContent');
-
     btn.disabled = true;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Loading...';
     result.style.display = 'block';
     loading.style.display = 'block';
     content.innerHTML = '';
 
+    // Prefer embedded CSRF token, fall back to meta tag or empty string
+    let token = CSRF_TOKEN;
+    try {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        if (!token && meta) {
+            token = meta.getAttribute('content') || '';
+        }
+    } catch (e) {
+        token = token || '';
+    }
+
     fetch('{{ route("admin.payment-transactions.callbacks", $transaction) }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': token
         }
     })
     .then(response => response.json())

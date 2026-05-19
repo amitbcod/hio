@@ -10,6 +10,11 @@ class AgaingencyPaymentService
 {
     public static function createPaymentUrl(string $orderId, string $transactionRef, string $customerEmail, string $customerName, float $amount, string $currency, string $successUrl, string $failureUrl, string $callbackUrl, ?string $startDate = null, ?string $endDate = null): string
     {
+        return self::createPaymentSession($orderId, $transactionRef, $customerEmail, $customerName, $amount, $currency, $successUrl, $failureUrl, $callbackUrl, $startDate, $endDate)['payment_url'];
+    }
+
+    public static function createPaymentSession(string $orderId, string $transactionRef, string $customerEmail, string $customerName, float $amount, string $currency, string $successUrl, string $failureUrl, string $callbackUrl, ?string $startDate = null, ?string $endDate = null): array
+    {
         $startTime = microtime(true);
         $correlationId = Str::uuid();
         $logger = self::getLogger();
@@ -66,8 +71,7 @@ class AgaingencyPaymentService
                 'price' => number_format($amount, 2, '.', ''),
                 'amount' => number_format($amount, 2, '.', ''),
             ];
-            
-            // Add start_date and end_date if provided (required by Ecommpay for hospitality)
+
             if (!empty($startDate)) {
                 $position['start_date'] = $startDate;
             }
@@ -123,7 +127,6 @@ class AgaingencyPaymentService
             ];
         }
 
-        // Log payload being sent
         $logger->debug('Againgency Payment Request Payload', [
             'correlation_id' => $correlationId,
             'endpoint' => $endpoint,
@@ -144,7 +147,6 @@ class AgaingencyPaymentService
             $request = $request->withHeaders(['X-Callback-Secret' => $config['callback_secret']]);
         }
 
-        // Log request headers (without sensitive info)
         $headers = [
             'Accept' => 'application/json',
             'Timeout' => '30s',
@@ -170,7 +172,6 @@ class AgaingencyPaymentService
             throw $e;
         }
 
-        // Log response status and headers
         $logger->info('Againgency Payment Response Received', [
             'correlation_id' => $correlationId,
             'endpoint' => $endpoint,
@@ -200,7 +201,6 @@ class AgaingencyPaymentService
 
         $body = $response->json();
 
-        // Log full response body
         $logger->debug('Againgency Payment Response Body', [
             'correlation_id' => $correlationId,
             'response' => $body,
@@ -209,7 +209,6 @@ class AgaingencyPaymentService
         $paymentUrl = null;
 
         if (!empty($body['payload']['payments'][0]['link'])) {
-            // Prefer the actual payment link over the order page link
             $paymentUrl = $body['payload']['payments'][0]['link'];
         } elseif (!empty($body['payments'][0]['link'])) {
             $paymentUrl = $body['payments'][0]['link'];
@@ -223,27 +222,33 @@ class AgaingencyPaymentService
             $paymentUrl = $body['payload']['link'];
         } elseif (!empty($body['link'])) {
             $paymentUrl = $body['link'];
-        } elseif (!empty($body['redirect_url'])) {
-            $paymentUrl = $body['redirect_url'];
         }
 
-        if ($paymentUrl) {
-            $logger->info('Againgency Payment URL Generated Successfully', [
+        if ($paymentUrl === null) {
+            $logger->error('Againgency Payment Response - No Redirect URL Found', [
                 'correlation_id' => $correlationId,
-                'transaction_ref' => $transactionRef,
-                'payment_url' => $paymentUrl,
+                'response_body' => $body,
+                'available_keys' => array_keys($body),
                 'elapsed_time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms',
             ]);
-            return $paymentUrl;
+            throw new \RuntimeException('Againgency payment response did not contain a redirect URL.');
         }
 
-        $logger->error('Againgency Payment Response - No Redirect URL Found', [
+        $paymentId = self::extractPaymentId($body);
+
+        $logger->info('Againgency Payment URL Generated Successfully', [
             'correlation_id' => $correlationId,
-            'response_body' => $body,
-            'available_keys' => array_keys($body),
+            'transaction_ref' => $transactionRef,
+            'payment_url' => $paymentUrl,
+            'payment_id' => $paymentId,
             'elapsed_time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms',
         ]);
-        throw new \RuntimeException('Againgency payment response did not contain a redirect URL.');
+
+        return [
+            'payment_url' => $paymentUrl,
+            'payment_id' => $paymentId,
+            'response' => $body,
+        ];
     }
 
     public static function resolveCallbackStatus(string $status): string
@@ -354,6 +359,28 @@ class AgaingencyPaymentService
         ]);
 
         return $callbackData;
+    }
+
+    private static function extractPaymentId(array $body): ?string
+    {
+        $candidates = [
+            data_get($body, 'payload.payments.0.id'),
+            data_get($body, 'payload.payments.0.payment_id'),
+            data_get($body, 'payments.0.id'),
+            data_get($body, 'payments.0.payment_id'),
+            data_get($body, 'payment.id'),
+            data_get($body, 'data.payment.id'),
+            data_get($body, 'payload.payment.id'),
+            data_get($body, 'payment_id'),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (!empty($candidate)) {
+                return (string) $candidate;
+            }
+        }
+
+        return null;
     }
 
     private static function extractFirstName(string $fullName): string

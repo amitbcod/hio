@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PaymentTransaction;
 use App\Services\AgaingencyPaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PaymentTransactionController extends Controller
 {
@@ -28,8 +29,16 @@ class PaymentTransactionController extends Controller
     public function getCallbacks(PaymentTransaction $transaction)
     {
         try {
-            // Assuming the transaction_ref is the payment-id for the API
-            $callbacks = AgaingencyPaymentService::getPaymentCallbacks($transaction->transaction_ref);
+            $paymentId = $transaction->payment_id;
+            if (empty($paymentId) && Str::isUuid($transaction->transaction_ref)) {
+                $paymentId = $transaction->transaction_ref;
+            }
+
+            if (empty($paymentId)) {
+                throw new \RuntimeException('No valid external payment ID is available for this transaction.');
+            }
+
+            $callbacks = AgaingencyPaymentService::getPaymentCallbacks($paymentId);
 
             return response()->json([
                 'success' => true,

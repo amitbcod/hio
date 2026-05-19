@@ -1168,7 +1168,7 @@ class BookingController extends Controller
             }
 
             try {
-                $paymentUrl = AgaingencyPaymentService::createPaymentUrl(
+                $paymentSession = AgaingencyPaymentService::createPaymentSession(
                     $orderId,
                     $transactionRef,
                     $guestEmail,
@@ -1182,8 +1182,15 @@ class BookingController extends Controller
                     $endDate
                 );
             } catch (\Exception $e) {
-                // Keep cart and preserve input when payment gateway fails
                 return back()->withInput()->with('error', 'Payment gateway error: ' . $e->getMessage());
+            }
+
+            $paymentUrl = $paymentSession['payment_url'];
+            $paymentId = $paymentSession['payment_id'] ?? null;
+
+            if ($paymentId) {
+                $paymentTransaction->payment_id = $paymentId;
+                $paymentTransaction->save();
             }
 
             $this->storeCart([]);
