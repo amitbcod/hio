@@ -14,8 +14,10 @@
                 @php
                     $pm = $paymentMethod ?? 'cod';
                     $ps = $paymentStatus ?? 'pending';
-                    $isFailed = ($pm === 'againgency' && $ps === 'failed');
-                    $isPaid = ($pm === 'againgency' && $ps === 'paid');
+                    $normalizedStatus = strtolower(trim($ps));
+                    $isPaid = ($pm === 'againgency' && in_array($normalizedStatus, ['paid', 'success', 'successful', 'completed'], true));
+                    $isFailed = ($pm === 'againgency' && !$isPaid && $normalizedStatus !== 'pending');
+                    $statusLabel = ucfirst($normalizedStatus);
                 @endphp
 
                 <div class="confirm-icon">
@@ -29,10 +31,16 @@
                 </div>
 
                 @if($isFailed)
-                    <h1 class="confirm-heading">Booking Failed</h1>
+                    <h1 class="confirm-heading">Payment {{ $statusLabel }}</h1>
                     <p class="confirm-sub">
-                        Sorry{{ $guestName ? ', ' . $guestName : '' }}. Your payment was not accepted and the booking could not be completed.
-                        Please try again or contact support.
+                        Sorry{{ $guestName ? ', ' . $guestName : '' }}. Your payment status is <strong>{{ $statusLabel }}</strong>.
+                        Please try again or contact support if you need help.
+                    </p>
+                @elseif($isPaid)
+                    <h1 class="confirm-heading">Booking Received!</h1>
+                    <p class="confirm-sub">
+                        Thank you{{ $guestName ? ', ' . $guestName : '' }}. Your booking is <strong>pending confirmation</strong>.
+                        Our team will get back to you within <strong>24 hours</strong>.
                     </p>
                 @else
                     <h1 class="confirm-heading">Booking Received!</h1>
