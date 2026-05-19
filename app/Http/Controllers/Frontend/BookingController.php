@@ -1157,15 +1157,27 @@ class BookingController extends Controller
             $startDate = null;
             $endDate = null;
             if (!empty($cart)) {
-                $firstItem = $cart[0];
-                if ($firstItem['type'] === 'accommodation') {
-                    $startDate = $firstItem['check_in'] ?? null;
-                    $endDate = $firstItem['check_out'] ?? null;
-                } elseif ($firstItem['type'] === 'activity') {
-                    $startDate = $firstItem['check_in'] ?? $firstItem['activity_date'] ?? null;
-                    $endDate = $firstItem['check_out'] ?? $firstItem['activity_date'] ?? null;
+                $firstItem = reset($cart);
+                if (is_array($firstItem)) {
+                    if (($firstItem['type'] ?? null) === 'accommodation') {
+                        $startDate = $firstItem['check_in'] ?? null;
+                        $endDate = $firstItem['check_out'] ?? null;
+                    } elseif (($firstItem['type'] ?? null) === 'activity') {
+                        $startDate = $firstItem['check_in'] ?? $firstItem['activity_date'] ?? null;
+                        $endDate = $firstItem['check_out'] ?? $firstItem['activity_date'] ?? null;
+                    }
                 }
             }
+
+            \Illuminate\Support\Facades\Log::channel('payment_dates')->info('Againgency payment flow dates', [
+                'transaction_ref' => $transactionRef,
+                'order_id' => $orderId,
+                'guest_email' => $guestEmail,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'payment_amount' => $summary['net_payable'],
+                'currency' => $summary['currency'],
+            ]);
 
             try {
                 $paymentSession = AgaingencyPaymentService::createPaymentSession(
@@ -1276,6 +1288,12 @@ class BookingController extends Controller
 
         $status = AgaingencyPaymentService::resolveCallbackStatus($request->input('status', $request->input('payment_status', 'pending')));
         $paymentTransaction->status = $status;
+
+        $paymentId = AgaingencyPaymentService::parsePaymentId($request->json()->all() ?: $request->all());
+        if ($paymentId && empty($paymentTransaction->payment_id)) {
+            $paymentTransaction->payment_id = $paymentId;
+        }
+
         $paymentTransaction->save();
 
         // PaymentTransaction.booking relationship may point to Booking model or be null
@@ -1295,11 +1313,20 @@ class BookingController extends Controller
 
         if ($transactionRef) {
             $paymentTransaction = PaymentTransaction::where('transaction_ref', $transactionRef)->first();
-            if ($paymentTransaction && $status === 'paid') {
-                $paymentTransaction->status = 'paid';
+            if ($paymentTransaction) {
+                $paymentId = AgaingencyPaymentService::parsePaymentId($request->json()->all() ?: $request->all());
+                if ($paymentId && empty($paymentTransaction->payment_id)) {
+                    $paymentTransaction->payment_id = $paymentId;
+                }
+
+                if ($status === 'paid') {
+                    $paymentTransaction->status = 'paid';
+                }
+
                 $paymentTransaction->save();
+
                 $bookingRecord = Booking::find($paymentTransaction->booking_id);
-                if ($bookingRecord) {
+                if ($bookingRecord && $status === 'paid') {
                     Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'paid']);
                 }
             }

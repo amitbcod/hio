@@ -234,7 +234,7 @@ class AgaingencyPaymentService
             throw new \RuntimeException('Againgency payment response did not contain a redirect URL.');
         }
 
-        $paymentId = self::extractPaymentId($body);
+        $paymentId = self::parsePaymentId($body);
 
         $logger->info('Againgency Payment URL Generated Successfully', [
             'correlation_id' => $correlationId,
@@ -361,7 +361,7 @@ class AgaingencyPaymentService
         return $callbackData;
     }
 
-    private static function extractPaymentId(array $body): ?string
+    public static function parsePaymentId(array $body): ?string
     {
         $candidates = [
             data_get($body, 'payload.payments.0.id'),
@@ -372,11 +372,30 @@ class AgaingencyPaymentService
             data_get($body, 'data.payment.id'),
             data_get($body, 'payload.payment.id'),
             data_get($body, 'payment_id'),
+            data_get($body, 'id'),
         ];
 
         foreach ($candidates as $candidate) {
             if (!empty($candidate)) {
                 return (string) $candidate;
+            }
+        }
+
+        return self::findUuidInArray($body);
+    }
+
+    private static function findUuidInArray(array $data): ?string
+    {
+        foreach ($data as $value) {
+            if (is_array($value)) {
+                $found = self::findUuidInArray($value);
+                if (!empty($found)) {
+                    return $found;
+                }
+            } elseif (is_string($value)) {
+                if (preg_match('/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i', $value, $matches)) {
+                    return $matches[0];
+                }
             }
         }
 

@@ -135,6 +135,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'payment_dates' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payment_dates.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];
