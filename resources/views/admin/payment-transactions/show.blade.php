@@ -1,4 +1,4 @@
-@extends('admin.layout')
+@extends('layouts.admin')
 
 @section('title', 'Payment Transaction Details | Admin')
 
@@ -32,25 +32,37 @@
             </div>
 
             @if($transaction->booking)
-            <div class="admin-card">
-                <h3>Related Booking</h3>
-                <div class="row">
-                    <div class="col-md-6">
-                        <strong>Booking Reference:</strong> {{ $transaction->booking->booking_reference }}<br>
-                        <strong>Type:</strong> {{ ucfirst($transaction->booking->getTable() === 'accommodation_bookings' ? 'Accommodation' : 'Activity') }}<br>
-                        <strong>Guest Name:</strong> {{ $transaction->booking->guest_name }}<br>
-                        <strong>Guest Email:</strong> {{ $transaction->booking->guest_email }}<br>
+                @php
+                    $booking = $transaction->booking;
+                    $bookingRoute = null;
+                    if ($booking->getTable() === 'accommodation_bookings') {
+                        $bookingRoute = route('admin.accommodation.booking.details', $booking->id);
+                    } elseif ($booking->getTable() === 'activity_bookings') {
+                        $bookingRoute = route('admin.activity.booking.details', $booking->id);
+                    }
+                @endphp
+
+                <div class="admin-card">
+                    <h3>Related Booking</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Booking ID:</strong> {{ $booking->id }}<br>
+                            <strong>Trip ID:</strong> {{ $booking->trip_id ?? 'N/A' }}<br>
+                            <strong>Operator ID:</strong> {{ $booking->operator_id ?? 'N/A' }}<br>
+                            <strong>Total Amount:</strong> {{ $booking->total_amount ?? 'N/A' }}<br>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong> {{ ucfirst($booking->status ?? 'N/A') }}<br>
+                            <strong>Created:</strong> {{ optional($booking->created_at)->format('M d, Y H:i') ?? 'N/A' }}<br>
+                            <strong>Updated:</strong> {{ optional($booking->updated_at)->format('M d, Y H:i') ?? 'N/A' }}<br>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <strong>Total Amount:</strong> {{ $transaction->booking->total_amount }} {{ $transaction->booking->currency }}<br>
-                        <strong>Booking Status:</strong> {{ $transaction->booking->booking_status }}<br>
-                        <strong>Booked At:</strong> {{ $transaction->booking->booked_at->format('M d, Y H:i') }}<br>
-                    </div>
+                    @if($bookingRoute)
+                        <div class="mt-3">
+                            <a href="{{ $bookingRoute }}" class="btn btn-primary" target="_blank">View Booking Details</a>
+                        </div>
+                    @endif
                 </div>
-                <div class="mt-3">
-                    <a href="{{ route('admin.accommodation.booking.details', $transaction->booking->id) }}" class="btn btn-primary" target="_blank">View Booking Details</a>
-                </div>
-            </div>
             @endif
         </div>
 

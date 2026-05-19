@@ -1153,6 +1153,20 @@ class BookingController extends Controller
             $successUrl = route('frontend.booking.payment.return', ['status' => 'success', 'ref' => $primaryRef, 'transaction_ref' => $transactionRef]);
             $failureUrl = route('frontend.booking.payment.return', ['status' => 'failed', 'ref' => $primaryRef, 'transaction_ref' => $transactionRef]);
 
+            // Extract dates from the first cart item for Ecommpay compliance
+            $startDate = null;
+            $endDate = null;
+            if (!empty($cart)) {
+                $firstItem = $cart[0];
+                if ($firstItem['type'] === 'accommodation') {
+                    $startDate = $firstItem['check_in'] ?? null;
+                    $endDate = $firstItem['check_out'] ?? null;
+                } elseif ($firstItem['type'] === 'activity') {
+                    $startDate = $firstItem['check_in'] ?? $firstItem['activity_date'] ?? null;
+                    $endDate = $firstItem['check_out'] ?? $firstItem['activity_date'] ?? null;
+                }
+            }
+
             try {
                 $paymentUrl = AgaingencyPaymentService::createPaymentUrl(
                     $orderId,
@@ -1163,7 +1177,9 @@ class BookingController extends Controller
                     $summary['currency'],
                     $successUrl,
                     $failureUrl,
-                    $callbackUrl
+                    $callbackUrl,
+                    $startDate,
+                    $endDate
                 );
             } catch (\Exception $e) {
                 // Keep cart and preserve input when payment gateway fails

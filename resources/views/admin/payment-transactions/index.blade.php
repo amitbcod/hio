@@ -1,4 +1,4 @@
-@extends('admin.layout')
+@extends('layouts.admin')
 
 @section('title', 'Payment Transactions | Admin')
 
@@ -38,9 +38,7 @@
                             </td>
                             <td>
                                 @if($transaction->booking)
-                                    <a href="{{ route('admin.accommodation.booking.details', $transaction->booking->id) }}" target="_blank">
-                                        {{ $transaction->booking->booking_reference }}
-                                    </a>
+                                    {{ $transaction->booking->booking_reference ?? $transaction->booking->id }}
                                 @else
                                     N/A
                                 @endif

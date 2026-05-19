@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class AgaingencyPaymentService
 {
-    public static function createPaymentUrl(string $orderId, string $transactionRef, string $customerEmail, string $customerName, float $amount, string $currency, string $successUrl, string $failureUrl, string $callbackUrl): string
+    public static function createPaymentUrl(string $orderId, string $transactionRef, string $customerEmail, string $customerName, float $amount, string $currency, string $successUrl, string $failureUrl, string $callbackUrl, ?string $startDate = null, ?string $endDate = null): string
     {
         $startTime = microtime(true);
         $correlationId = Str::uuid();
@@ -59,19 +59,27 @@ class AgaingencyPaymentService
 
         if ($useNewApi) {
             $endpoint = $endpointBase . '/orders';
+            $position = [
+                'name' => 'Booking ' . $orderId,
+                'type' => 'OTHER',
+                'quantity' => 1,
+                'price' => number_format($amount, 2, '.', ''),
+                'amount' => number_format($amount, 2, '.', ''),
+            ];
+            
+            // Add start_date and end_date if provided (required by Ecommpay for hospitality)
+            if (!empty($startDate)) {
+                $position['start_date'] = $startDate;
+            }
+            if (!empty($endDate)) {
+                $position['end_date'] = $endDate;
+            }
+
             $payload = [
                 'external_id' => $orderId,
                 'currency_code' => strtoupper($currency),
                 'internal_description' => 'Booking ' . $orderId,
-                'positions' => [
-                    [
-                        'name' => 'Booking ' . $orderId,
-                        'type' => 'OTHER',
-                        'quantity' => 1,
-                        'price' => number_format($amount, 2, '.', ''),
-                        'amount' => number_format($amount, 2, '.', ''),
-                    ],
-                ],
+                'positions' => [$position],
                 'customer' => [
                     'first_name' => self::extractFirstName($customerName),
                     'last_name' => self::extractLastName($customerName),
