@@ -1282,6 +1282,7 @@ label.saved-guest-checkbox {
     flex-direction: column;
 }
 }
+
 </style>
 @endpush
 @endsection
