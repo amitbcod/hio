@@ -1319,10 +1319,7 @@ class BookingController extends Controller
                     $paymentTransaction->payment_id = $paymentId;
                 }
 
-                if ($status === 'paid') {
-                    $paymentTransaction->status = 'paid';
-                }
-
+                $paymentTransaction->status = $status;
                 $paymentTransaction->save();
 
                 $bookingRecord = Booking::find($paymentTransaction->booking_id);
