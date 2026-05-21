@@ -1069,6 +1069,7 @@ class BookingController extends Controller
                         'total_amount' => $item['net_amount'],
                         'status' => 'pending',
                     ]);
+                    $tripBookingIds[] = $tripBooking->id;
 
                     // Create BookingLineItem
                     $bliStartDate = $item['check_in'] ?? $item['activity_date'] ?? null;
