@@ -64,6 +64,15 @@ class AgaingencyPaymentService
         $endpointBase = rtrim(self::getApiBaseUrl(), '/');
         $useNewApi = !empty($config['api_key']);
 
+        $authMethod = strtoupper(trim($config['auth_method'] ?? 'CHARGE'));
+        if (strpos($authMethod, '=') !== false) {
+            $parts = explode('=', $authMethod);
+            $authMethod = trim(end($parts));
+        }
+        if (!in_array($authMethod, ['AUTH', 'CHARGE'], true)) {
+            $authMethod = 'CHARGE';
+        }
+
         // Format dates to ISO 8601 (YYYY-MM-DD) if provided
         $formattedStartDate = null;
         $formattedEndDate = null;
@@ -132,7 +141,7 @@ class AgaingencyPaymentService
                         'payment_methods' => $config['payment_methods'] ?? ['CARD'],
                         'amount' => number_format($amount, 2, '.', ''),
                         'skip_pp' => false,
-                        'auth_method' => strtoupper($config['auth_method'] ?? 'AUTH'),
+                        'auth_method' => $authMethod,
                         'customer_email' => $customerEmail,
                         'callback_url' => $callbackUrl,
                         'success_url' => $successUrl,
