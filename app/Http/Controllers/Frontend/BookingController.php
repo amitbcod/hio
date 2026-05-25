@@ -25,6 +25,7 @@ use App\Models\BliTravellerAllocation;
 use App\Models\GuestOtpToken;
 use App\Models\PaymentTransaction;
 use App\Services\AgaingencyPaymentService;
+use App\Services\PaymentLogger;
 use App\Services\TripService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -1149,6 +1150,19 @@ class BookingController extends Controller
                 'status' => 'pending',
                 'transaction_ref' => $transactionRef,
             ]);
+
+            // Log transaction state change
+            PaymentLogger::logTransactionState(
+                $transactionRef,
+                $transactionRef,
+                'initialized',
+                'pending',
+                [
+                    'booking_id' => $firstBookingId,
+                    'amount' => $summary['net_payable'],
+                    'currency' => $summary['currency'],
+                ]
+            );
 
             $callbackUrl = route('frontend.booking.payment.callback');
             $successUrl = route('frontend.booking.payment.return', ['status' => 'success', 'ref' => $primaryRef, 'transaction_ref' => $transactionRef]);

@@ -5,6 +5,8 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Services\PaymentLogger;
+use Carbon\Carbon;
 
 class AgaingencyPaymentService
 {
@@ -62,6 +64,34 @@ class AgaingencyPaymentService
         $endpointBase = rtrim(self::getApiBaseUrl(), '/');
         $useNewApi = !empty($config['api_key']);
 
+        // Format dates to ISO 8601 (YYYY-MM-DD) if provided
+        $formattedStartDate = null;
+        $formattedEndDate = null;
+        
+        if (!empty($startDate)) {
+            try {
+                $formattedStartDate = Carbon::parse($startDate)->format('Y-m-d');
+            } catch (\Exception $e) {
+                $logger->warning('Failed to parse start_date', [
+                    'correlation_id' => $correlationId,
+                    'provided_date' => $startDate,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+        
+        if (!empty($endDate)) {
+            try {
+                $formattedEndDate = Carbon::parse($endDate)->format('Y-m-d');
+            } catch (\Exception $e) {
+                $logger->warning('Failed to parse end_date', [
+                    'correlation_id' => $correlationId,
+                    'provided_date' => $endDate,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         if ($useNewApi) {
             $endpoint = $endpointBase . '/orders';
             $position = [
@@ -72,11 +102,11 @@ class AgaingencyPaymentService
                 'amount' => number_format($amount, 2, '.', ''),
             ];
 
-            if (!empty($startDate)) {
-                $position['start_date'] = $startDate;
+            if (!empty($formattedStartDate)) {
+                $position['start_date'] = $formattedStartDate;
             }
-            if (!empty($endDate)) {
-                $position['end_date'] = $endDate;
+            if (!empty($formattedEndDate)) {
+                $position['end_date'] = $formattedEndDate;
             }
 
             $payload = [
@@ -169,6 +199,18 @@ class AgaingencyPaymentService
                 'exception_class' => get_class($e),
                 'elapsed_time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms',
             ]);
+            
+            // Log to payment logger
+            PaymentLogger::logPaymentFlow(
+                'Againgency',
+                'create_payment_url',
+                $correlationId,
+                $payload,
+                [],
+                $e->getMessage(),
+                microtime(true) - $startTime
+            );
+            
             throw $e;
         }
 
@@ -196,6 +238,18 @@ class AgaingencyPaymentService
                 'parsed_json' => json_decode($errorBody, true),
                 'elapsed_time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms',
             ]);
+            
+            // Log to payment logger
+            PaymentLogger::logPaymentFlow(
+                'Againgency',
+                'create_payment_url',
+                $correlationId,
+                $payload,
+                json_decode($errorBody, true) ?? [],
+                'HTTP Error: ' . $response->status(),
+                microtime(true) - $startTime
+            );
+            
             throw new \RuntimeException('Againgency payment service returned an error: ' . $errorBody);
         }
 
@@ -243,6 +297,17 @@ class AgaingencyPaymentService
             'payment_id' => $paymentId,
             'elapsed_time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms',
         ]);
+
+        // Log successful payment session creation
+        PaymentLogger::logPaymentFlow(
+            'Againgency',
+            'create_payment_url',
+            $correlationId,
+            $payload,
+            $body,
+            null,
+            microtime(true) - $startTime
+        );
 
         return [
             'payment_url' => $paymentUrl,
