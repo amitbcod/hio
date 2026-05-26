@@ -8,6 +8,7 @@ use App\Models\ActivityPromotion;
 use App\Models\ActivitySeoSocial;
 use App\Models\Operator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Controller;
 
 class ActivityController extends Controller
@@ -1295,7 +1296,7 @@ class ActivityController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'variant_id' => 'required|exists:activity_variants,variant_id',
             'participant_equipment_id' => 'required|in:Per Person,Per Equipment',
             'capacity_per_slot' => 'required|integer|min:1',
@@ -1306,7 +1307,36 @@ class ActivityController extends Controller
             'recurring' => 'nullable|integer|min:1',
             'lead_time_minutes' => 'nullable|integer|min:1',
             'days_of_week' => 'nullable|array',
+            'discount_value' => 'nullable|numeric|min:0',
         ]);
+
+        $validator->after(function ($validator) use ($request, $activity) {
+            $variantId = $request->input('variant_id');
+            $startTime = $request->input('start_time');
+            $endTime = $request->input('end_time');
+
+            $existingTimeSlots = \App\Models\ActivitySchedulingTimeSlot::where('activity_id', $activity->id)
+                ->where('variant_id', $variantId)
+                ->get();
+
+            foreach ($existingTimeSlots as $slot) {
+                if ($slot->start_time === $startTime && $slot->end_time === $endTime) {
+                    $validator->errors()->add('start_time', 'An identical timeslot already exists for this variant.');
+                    break;
+                }
+
+                if ($startTime < $slot->end_time && $endTime > $slot->start_time) {
+                    $validator->errors()->add('start_time', 'This timeslot overlaps with an existing timeslot for the selected variant.');
+                    break;
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
 
         try {
             $variant = \App\Models\ActivityVariant::findOrFail($validated['variant_id']);
@@ -1326,6 +1356,7 @@ class ActivityController extends Controller
             $timeSlot->recurring = $validated['recurring'] ?? null;
             $timeSlot->lead_time_minutes = $validated['lead_time_minutes'] ?? null;
             $timeSlot->days_of_week = $validated['days_of_week'] ?? [];
+            $timeSlot->discount_value = $validated['discount_value'] ?? null;
             $timeSlot->save();
 
             // Reload activity and mark Step 8 as complete
@@ -1382,7 +1413,7 @@ class ActivityController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'variant_id' => 'required|exists:activity_variants,variant_id',
             'participant_equipment_id' => 'required|in:Per Person,Per Equipment',
             'capacity_per_slot' => 'required|integer|min:1',
@@ -1393,7 +1424,37 @@ class ActivityController extends Controller
             'recurring' => 'nullable|integer|min:1',
             'lead_time_minutes' => 'nullable|integer|min:1',
             'days_of_week' => 'nullable|array',
+            'discount_value' => 'nullable|numeric|min:0',
         ]);
+
+        $validator->after(function ($validator) use ($request, $activity, $timeslotId) {
+            $variantId = $request->input('variant_id');
+            $startTime = $request->input('start_time');
+            $endTime = $request->input('end_time');
+
+            $existingTimeSlots = \App\Models\ActivitySchedulingTimeSlot::where('activity_id', $activity->id)
+                ->where('variant_id', $variantId)
+                ->where('timeslot_id', '<>', $timeslotId)
+                ->get();
+
+            foreach ($existingTimeSlots as $slot) {
+                if ($slot->start_time === $startTime && $slot->end_time === $endTime) {
+                    $validator->errors()->add('start_time', 'An identical timeslot already exists for this variant.');
+                    break;
+                }
+
+                if ($startTime < $slot->end_time && $endTime > $slot->start_time) {
+                    $validator->errors()->add('start_time', 'This timeslot overlaps with an existing timeslot for the selected variant.');
+                    break;
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
 
         try {
             $timeSlot = \App\Models\ActivitySchedulingTimeSlot::findOrFail($timeslotId);
@@ -1416,6 +1477,7 @@ class ActivityController extends Controller
             $timeSlot->recurring = $validated['recurring'] ?? null;
             $timeSlot->lead_time_minutes = $validated['lead_time_minutes'] ?? null;
             $timeSlot->days_of_week = $validated['days_of_week'] ?? [];
+            $timeSlot->discount_value = $validated['discount_value'] ?? null;
             $timeSlot->save();
 
             return back()->with('success', 'TimeSlot updated successfully.');

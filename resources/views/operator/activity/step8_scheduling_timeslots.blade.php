@@ -58,6 +58,7 @@
                                 <th style="padding:12px;text-align:left;font-weight:600;border-right:1px solid #ddd;">Time Window</th>
                                 <th style="padding:12px;text-align:left;font-weight:600;border-right:1px solid #ddd;">Capacity</th>
                                 <th style="padding:12px;text-align:left;font-weight:600;border-right:1px solid #ddd;">Billing</th>
+                                <th style="padding:12px;text-align:left;font-weight:600;border-right:1px solid #ddd;">Discount</th>
                                 <th style="padding:12px;text-align:center;font-weight:600;">Actions</th>
                             </tr>
                         </thead>
@@ -88,6 +89,11 @@
                                 <td style="padding:12px;border-right:1px solid #ddd;">
                                     <span style="font-size:11px;">{{ $slot->participant_equipment_id }}</span>
                                 </td>
+                                <td style="padding:12px;border-right:1px solid #ddd;">
+                                    <span style="display:inline-block;background:#f0f0f0;padding:4px 8px;border-radius:4px;font-weight:600;">
+                                        {{ $slot->discount_value !== null ? number_format($slot->discount_value, 2) : '-' }}
+                                    </span>
+                                </td>
                                 <td style="padding:12px;text-align:center;">
                                     <button type="button" class="btn btn-sm editTimeSlotBtn" 
                                             data-timeslot-id="{{ $slot->timeslot_id }}"
@@ -100,6 +106,7 @@
                                             data-duration="{{ $slot->duration }}"
                                             data-recurring="{{ $slot->recurring ?? '' }}"
                                             data-lead-time="{{ $slot->lead_time_minutes ?? '' }}"
+                                            data-discount-value="{{ $slot->discount_value ?? '' }}"
                                             data-days='{!! json_encode($slot->days_of_week) !!}'
                                             style="background:#19b5b5;color:#fff;padding:4px 10px;border-radius:4px;border:none;font-size:11px;cursor:pointer;display:inline-block;">
                                         <i class="fas fa-edit"></i> Edit
@@ -148,7 +155,7 @@
                                 <option value="">Select variant</option>
                                 @if($variants && count($variants) > 0)
                                     @foreach($variants as $v)
-                                    <option value="{{ $v->variant_id }}">
+                                    <option value="{{ $v->variant_id }}" {{ old('variant_id') == $v->variant_id ? 'selected' : '' }}>
                                         {{ $v->variant_name }} ({{ $v->quality_tier }})
                                     </option>
                                     @endforeach
@@ -157,18 +164,13 @@
                             @error('variant_id')
                                 <div style="color:#dc3545;font-size:12px;">{{ $message }}</div>
                             @enderror
-                            <div id="duplicateTimeslotWarning" style="display:none;margin-top:8px;padding:10px;background:#fff3cd;border-radius:6px;border-left:4px solid #ffc107;">
-                                <i class="fas fa-exclamation-triangle" style="color:#d39e00;"></i> 
-                                <span style="color:#d39e00;"><strong>TimeSlot already exists</strong> for this variant. </span>
-                                <a href="#" id="editExistingTimeslotLink" onclick="handleExistingTimeslot(event)" style="color:#d39e00;text-decoration:underline;"><strong>Click here to edit</strong></a>
-                            </div>
                         </div>
                         <div class="col-md-6">
                             <label style="font-weight:600;">Participant / Equipment ID <span class="text-danger">*</span></label>
                             <select name="participant_equipment_id" class="form-control @error('participant_equipment_id') is-invalid @enderror" required>
                                 <option value="">Select type</option>
-                                <option value="Per Person">Per Person</option>
-                                <option value="Per Equipment">Per Equipment</option>
+                                <option value="Per Person" {{ old('participant_equipment_id') == 'Per Person' ? 'selected' : '' }}>Per Person</option>
+                                <option value="Per Equipment" {{ old('participant_equipment_id') == 'Per Equipment' ? 'selected' : '' }}>Per Equipment</option>
                             </select>
                             @error('participant_equipment_id')
                                 <div style="color:#dc3545;font-size:12px;">{{ $message }}</div>
@@ -185,6 +187,7 @@
                                    class="form-control @error('capacity_per_slot') is-invalid @enderror"
                                    placeholder="e.g., 4"
                                    min="1"
+                                   value="{{ old('capacity_per_slot') }}"
                                    required>
                             @error('capacity_per_slot')
                                 <div style="color:#dc3545;font-size:12px;">{{ $message }}</div>
@@ -194,10 +197,10 @@
                             <label style="font-weight:600;">Schedule Type <span class="text-danger">*</span></label>
                             <select name="schedule_type" class="form-control @error('schedule_type') is-invalid @enderror" required>
                                 <option value="">Select type</option>
-                                <option value="Fixed Slots">Fixed Slots</option>
-                                <option value="Interval-Based">Interval-Based</option>
-                                <option value="Open Booking">Open Booking (Walk-Ins)</option>
-                                <option value="Group Events">Group Events</option>
+                                <option value="Fixed Slots" {{ old('schedule_type') == 'Fixed Slots' ? 'selected' : '' }}>Fixed Slots</option>
+                                <option value="Interval-Based" {{ old('schedule_type') == 'Interval-Based' ? 'selected' : '' }}>Interval-Based</option>
+                                <option value="Open Booking" {{ old('schedule_type') == 'Open Booking' ? 'selected' : '' }}>Open Booking (Walk-Ins)</option>
+                                <option value="Group Events" {{ old('schedule_type') == 'Group Events' ? 'selected' : '' }}>Group Events</option>
                             </select>
                             @error('schedule_type')
                                 <div style="color:#dc3545;font-size:12px;">{{ $message }}</div>
@@ -212,6 +215,7 @@
                             <input type="time" 
                                    name="start_time" 
                                    class="form-control @error('start_time') is-invalid @enderror"
+                                   value="{{ old('start_time') }}"
                                    required>
                             @error('start_time')
                                 <div style="color:#dc3545;font-size:12px;">{{ $message }}</div>
@@ -222,6 +226,7 @@
                             <input type="time" 
                                    name="end_time" 
                                    class="form-control @error('end_time') is-invalid @enderror"
+                                   value="{{ old('end_time') }}"
                                    required>
                             @error('end_time')
                                 <div style="color:#dc3545;font-size:12px;">{{ $message }}</div>
@@ -237,8 +242,25 @@
                                    name="duration" 
                                    class="form-control @error('duration') is-invalid @enderror"
                                    placeholder="e.g., 2 Hours, 30 Minutes"
+                                   value="{{ old('duration') }}"
                                    required>
                             @error('duration')
+                                <div style="color:#dc3545;font-size:12px;">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label style="font-weight:600;">Discount (Optional)</label>
+                            <input type="number"
+                                   name="discount_value"
+                                   class="form-control @error('discount_value') is-invalid @enderror"
+                                   placeholder="e.g., 10.00"
+                                   min="0"
+                                   step="0.01"
+                                   value="{{ old('discount_value') }}">
+                            @error('discount_value')
                                 <div style="color:#dc3545;font-size:12px;">{{ $message }}</div>
                             @enderror
                         </div>
@@ -252,7 +274,8 @@
                                    name="recurring" 
                                    class="form-control @error('recurring') is-invalid @enderror"
                                    placeholder="e.g., 3"
-                                   min="1">
+                                   min="1"
+                                   value="{{ old('recurring') }}">
                             @error('recurring')
                                 <div style="color:#dc3545;font-size:12px;">{{ $message }}</div>
                             @enderror
@@ -263,7 +286,8 @@
                                    name="lead_time_minutes" 
                                    class="form-control @error('lead_time_minutes') is-invalid @enderror"
                                    placeholder="e.g., 30"
-                                   min="1">
+                                   min="1"
+                                   value="{{ old('lead_time_minutes') }}">
                             @error('lead_time_minutes')
                                 <div style="color:#dc3545;font-size:12px;">{{ $message }}</div>
                             @enderror
@@ -281,7 +305,8 @@
                                 @foreach($days as $day)
                                 <label style="display:flex;align-items:center;gap:8px;font-weight:normal;cursor:pointer;">
                                     <input type="checkbox" name="days_of_week[]" value="{{ $day }}" class="daysCheckbox"
-                                           style="cursor:pointer;transform:scale(1.2);">
+                                           style="cursor:pointer;transform:scale(1.2);"
+                                           {{ in_array($day, old('days_of_week', [])) ? 'checked' : '' }}>
                                     <span style="font-size:13px;">{{ $day }}</span>
                                 </label>
                                 @endforeach
@@ -310,27 +335,6 @@
 </div>
 
 <script>
-// Store existing timeslots organized by variant
-const existingTimeslotsByVariant = {
-    @if($timeSlots && count($timeSlots) > 0)
-        @foreach($timeSlots as $slot)
-            '{{ $slot->variant_id }}': {
-                timeslot_id: {{ $slot->timeslot_id }},
-                variant_id: {{ $slot->variant_id }},
-                participant_equipment: '{{ $slot->participant_equipment_id }}',
-                capacity: {{ $slot->capacity_per_slot }},
-                schedule_type: '{{ $slot->schedule_type }}',
-                start_time: '{{ substr($slot->start_time, 0, 5) }}',
-                end_time: '{{ substr($slot->end_time, 0, 5) }}',
-                duration: '{{ addslashes($slot->duration) }}',
-                recurring: {{ $slot->recurring ?? 'null' }},
-                lead_time: {{ $slot->lead_time_minutes ?? 'null' }},
-                days: {!! json_encode($slot->days_of_week) !!}
-            },
-        @endforeach
-    @endif
-};
-
 // Initialize event listeners on page load
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize edit button listeners
@@ -347,63 +351,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const duration = this.getAttribute('data-duration');
             const recurring = this.getAttribute('data-recurring');
             const leadTime = this.getAttribute('data-lead-time');
+            const discountValue = this.getAttribute('data-discount-value');
             const daysJson = this.getAttribute('data-days');
             
-            editTimeSlot(timeslotId, variantId, participantEquipment, capacity, scheduleType, startTime, endTime, duration, recurring, leadTime, daysJson);
+            editTimeSlot(timeslotId, variantId, participantEquipment, capacity, scheduleType, startTime, endTime, duration, recurring, leadTime, discountValue, daysJson);
         });
     });
-    
-    // Initialize variant select listener for duplicate check
-    const variantSelect = document.getElementById('variantSelect');
-    if (variantSelect) {
-        variantSelect.addEventListener('change', checkTimeslotDuplicate);
+
+    if (document.querySelectorAll('.is-invalid').length > 0) {
+        document.getElementById('timeSlotFormContainer').style.display = 'block';
     }
 });
-
-function checkTimeslotDuplicate() {
-    const variantSelect = document.getElementById('variantSelect');
-    const selectedVariantId = variantSelect.value;
-    const duplicateWarning = document.getElementById('duplicateTimeslotWarning');
-    const submitBtn = document.getElementById('timeSlotSubmitBtn');
-    
-    if (selectedVariantId && existingTimeslotsByVariant[selectedVariantId]) {
-        // Timeslot already exists for this variant
-        duplicateWarning.style.display = 'block';
-        submitBtn.disabled = true;
-        submitBtn.style.opacity = '0.5';
-        submitBtn.style.cursor = 'not-allowed';
-    } else {
-        // No timeslot exists or no variant selected
-        duplicateWarning.style.display = 'none';
-        submitBtn.disabled = false;
-        submitBtn.style.opacity = '1';
-        submitBtn.style.cursor = 'pointer';
-    }
-}
-
-function handleExistingTimeslot(e) {
-    e.preventDefault();
-    
-    const variantSelect = document.getElementById('variantSelect');
-    const selectedVariantId = variantSelect.value;
-    const existingData = existingTimeslotsByVariant[selectedVariantId];
-    
-    if (existingData) {
-        editTimeSlot(
-            existingData.timeslot_id,
-            existingData.variant_id,
-            existingData.participant_equipment,
-            existingData.capacity,
-            existingData.schedule_type,
-            existingData.start_time,
-            existingData.end_time,
-            existingData.duration,
-            existingData.recurring,
-            existingData.lead_time,
-            existingData.days
-        );
-    }
-}
 
 function showTimeSlotForm() {
     // Show the timeSlot form container
@@ -426,8 +384,8 @@ function showTimeSlotForm() {
     });
     
     // Hide duplicate warning and reset validation
-    document.getElementById('duplicateTimeslotWarning').style.display = 'none';
     document.getElementById('variantSelect').value = '';
+    document.querySelector('input[name="discount_value"]').value = '';
     document.getElementById('timeSlotSubmitBtn').disabled = false;
     document.getElementById('timeSlotSubmitBtn').style.opacity = '1';
     document.getElementById('timeSlotSubmitBtn').style.cursor = 'pointer';
@@ -444,9 +402,6 @@ function hideTimeSlotForm() {
     // Reset form
     document.getElementById('timeSlotForm').reset();
     
-    // Hide duplicate warning
-    document.getElementById('duplicateTimeslotWarning').style.display = 'none';
-    
     // Reset variant select and button state
     document.getElementById('variantSelect').value = '';
     document.getElementById('timeSlotSubmitBtn').disabled = false;
@@ -457,7 +412,7 @@ function hideTimeSlotForm() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function editTimeSlot(timeslotId, variantId, participantEquipmentId, capacityPerSlot, scheduleType, startTime, endTime, duration, recurring, leadTimeMinutes, daysOfWeek) {
+function editTimeSlot(timeslotId, variantId, participantEquipmentId, capacityPerSlot, scheduleType, startTime, endTime, duration, recurring, leadTimeMinutes, discountValue, daysOfWeek) {
     // Show the timeSlot form container
     const timeSlotFormContainer = document.getElementById('timeSlotFormContainer');
     timeSlotFormContainer.style.display = 'block';
@@ -482,6 +437,7 @@ function editTimeSlot(timeslotId, variantId, participantEquipmentId, capacityPer
     document.querySelector('input[name="start_time"]').value = startTime;
     document.querySelector('input[name="end_time"]').value = endTime;
     document.querySelector('input[name="duration"]').value = duration;
+    document.querySelector('input[name="discount_value"]').value = discountValue || '';
     document.querySelector('input[name="recurring"]').value = recurring || '';
     document.querySelector('input[name="lead_time_minutes"]').value = leadTimeMinutes || '';
     

@@ -245,6 +245,13 @@ class BookingController extends Controller
             }
         }
 
+        // If frontend supplied a timeslot-specific discount, prefer that (override promotions)
+        $timeslotDiscount = (float) $request->input('timeslot_discount_value', 0);
+        if ($timeslotDiscount > 0) {
+            $discountAmount = $timeslotDiscount;
+            $promotionId = null;
+        }
+
         $priceAfterDiscount = max(0, $totalPrice - $discountAmount);
         $netAmount          = $priceAfterDiscount + $taxAmount;
 
@@ -277,6 +284,7 @@ class BookingController extends Controller
             'total_price'      => $totalPrice,
             'currency'         => $currency,
             'discount_amount'  => $discountAmount,
+            'timeslot_discount_value' => $timeslotDiscount,
             'tax_amount'       => $taxAmount,
             'fee_amount'       => 0.0,
             'net_amount'       => $netAmount,

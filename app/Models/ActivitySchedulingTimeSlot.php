@@ -28,9 +28,11 @@ class ActivitySchedulingTimeSlot extends Model
         'recurring',
         'lead_time_minutes',
         'days_of_week',
+        'discount_value',
     ];
 
     protected $casts = [
+        'discount_value' => 'decimal:2',
         'days_of_week' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

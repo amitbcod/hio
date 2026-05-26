@@ -166,15 +166,19 @@
                                                                         {{ $room['currency'] }} {{ number_format((float) $room['total_price'], 2) }}
                                                                     </strong>
                                                                 </div>
+                                                                <div class="activity-option-summary__discount" style="display:none;margin-top:8px;color:#28a745;font-weight:600;">
+                                                                    Discount: <strong class="variant-discount"></strong>
+                                                                </div>
                                                                 <div class="activity-option-summary__error" aria-live="polite"></div>
                                                                 @if(!empty($room['time_slots']))
                                                                     <label class="activity-option-summary__label" for="activity_time_slot_id_{{ $room['room_id'] }}">Select Time Slot</label>
-                                                                    <select id="activity_time_slot_id_{{ $room['room_id'] }}" name="activity_time_slot_id" class="form-control" required>
+                                                                    <select id="activity_time_slot_id_{{ $room['room_id'] }}" name="activity_time_slot_id" class="form-control activity-time-slot-select" required>
                                                                         <option value="">Select a time slot</option>
                                                                         @foreach($room['time_slots'] as $slot)
-                                                                            <option value="{{ $slot['id'] }}">{{ $slot['display'] }}</option>
+                                                                            <option value="{{ $slot['id'] }}" data-discount="{{ isset($slot['discount_value']) ? number_format((float)$slot['discount_value'], 2, '.', '') : '' }}">{{ $slot['display'] }}</option>
                                                                         @endforeach
                                                                     </select>
+                                                                    <input type="hidden" name="timeslot_discount_value" class="timeslot-discount-input" value="">
                                                                     <button type="submit" class="btn-book-now">Book Now</button>
                                                                 @else
                                                                     <button type="button" class="btn-book-now" disabled>No time slot available</button>
@@ -608,13 +612,29 @@
                 const hiddenInfants = form.querySelector('.hidden-infants');
                 const participantsInput = form.querySelector('.participants-input');
                 const totalPriceInput = form.querySelector('.total-price-input');
+                const timeslotDiscountInput = form.querySelector('.timeslot-discount-input');
                 const totalDisplay = form.closest('tr')?.querySelector('.variant-total');
+                const discountDisplay = form.closest('tr')?.querySelector('.activity-option-summary__discount');
                 const timeSlotSelect = form.querySelector('select[name="activity_time_slot_id"]');
                 const errorContainer = form.querySelector('.activity-option-summary__error');
                 const bookNowButton = form.querySelector('.btn-book-now');
 
                 function getNumericValue(inputElement, fallback = 0) {
                     return Math.max(0, parseInt(inputElement?.value, 10) || fallback);
+                }
+
+                function getSelectedTimeslotDiscount() {
+                    if (!timeSlotSelect) {
+                        return 0;
+                    }
+
+                    const selectedOption = timeSlotSelect.options[timeSlotSelect.selectedIndex];
+                    if (!selectedOption) {
+                        return 0;
+                    }
+
+                    const discountValue = parseFloat(selectedOption.dataset.discount || '0');
+                    return Number.isFinite(discountValue) ? discountValue : 0;
                 }
 
                 function validateParticipants() {
@@ -660,21 +680,30 @@
                         total += privateExclusiveRate;
                     }
 
+                    const selectedDiscount = getSelectedTimeslotDiscount();
+                    const totalAfterDiscount = Math.max(0, total - selectedDiscount);
+
                     if (totalDisplay) {
-                        totalDisplay.textContent = `${currency} ${total.toFixed(2)}`;
+                        totalDisplay.textContent = `${currency} ${totalAfterDiscount.toFixed(2)}`;
                     }
                     if (totalPriceInput) {
                         totalPriceInput.value = total.toFixed(2);
                     }
+                    if (timeslotDiscountInput) {
+                        timeslotDiscountInput.value = selectedDiscount > 0 ? selectedDiscount.toFixed(2) : '';
+                    }
+                    if (discountDisplay) {
+                        if (selectedDiscount > 0) {
+                            discountDisplay.style.display = 'block';
+                            discountDisplay.querySelector('.variant-discount').textContent = `- ${currency} ${selectedDiscount.toFixed(2)}`;
+                        } else {
+                            discountDisplay.style.display = 'none';
+                        }
+                    }
                 }
 
                 if (timeSlotSelect) {
-                    timeSlotSelect.addEventListener('change', function() {
-                        if (!this.value) {
-                            return;
-                        }
-                        updateTotals();
-                    });
+                    timeSlotSelect.addEventListener('change', updateTotals);
                 }
 
                 form.addEventListener('submit', function(event) {

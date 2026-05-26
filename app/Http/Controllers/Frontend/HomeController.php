@@ -396,6 +396,7 @@ class HomeController extends Controller
                         'start_time' => $slot->start_time,
                         'end_time' => $slot->end_time,
                         'duration' => $slot->duration,
+                        'discount_value' => $slot->discount_value ? (float) $slot->discount_value : 0,
                         'display' => trim(($slot->start_time ?? '') . ' - ' . ($slot->end_time ?? '') . ($slot->duration ? ' (' . $slot->duration . ')' : '')),
                     ];
                 })->filter(fn ($slot) => !empty($slot['id']))->values()->all());
