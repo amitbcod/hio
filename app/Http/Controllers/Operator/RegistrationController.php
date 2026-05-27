@@ -538,6 +538,16 @@ class RegistrationController extends Controller
             \App\Models\Business::where('id', $operator->business_id)->update(['agreement_type' => $request->agreement_type]);
         }
 
+        // Also persist agreement type on the operator record so views/controllers can read it
+        try {
+            $operator->agreement_type = $request->agreement_type ?? null;
+            $operator->booking_registration_type = $request->agreement_type ?? null;
+            $operator->save();
+        } catch (\Exception $e) {
+            // Don't block the flow if this update fails, but log for debugging
+            \Log::warning('Failed to save agreement type on operator', ['error' => $e->getMessage()]);
+        }
+
         if (!empty($operator->business_id)) {
             OperatorRegistrationProgress::updateOrCreate(
                 ['business_id' => $operator->business_id],

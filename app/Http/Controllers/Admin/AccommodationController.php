@@ -787,6 +787,7 @@ class AccommodationController extends Controller
 
             'booking_confirmation_type' => $request->booking_confirmation_type,
             // preserve booking_registration_type from operator/business if set; do not allow arbitrary change here
+            'booking_registration_type' => $accommodation->booking_registration_type ?? ($operator->booking_registration_type ?? ($operator->agreement_type ?? null)),
         ]);
         
         // Mark step 2 as complete

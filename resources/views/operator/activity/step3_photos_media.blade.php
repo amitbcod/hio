@@ -103,6 +103,7 @@
                                         <label style="font-weight:600;display:block;margin-bottom:4px;">Vehicle/Equipment Type *</label>
                                         <select name="vehicle_types[]" class="form-control" required>
                                             <option value="">-- Select Type --</option>
+                                            <option value="Catamaran">Catamaran</option>
                                             <option value="Boat">Boat</option>
                                             <option value="Bus/Coach">Bus/Coach</option>
                                             <option value="4x4 Vehicle">4x4 Vehicle</option>
@@ -110,7 +111,13 @@
                                             <option value="Kayak/Canoe">Kayak/Canoe</option>
                                             <option value="Diving Equipment">Diving Equipment</option>
                                             <option value="Hiking Gear">Hiking Gear</option>
+                                            <option value="Quad Bike">Quad Bike</option>
+                                            <option value="Buggy">Buggy</option>
+                                            <option value="Abseiling Equipment">Abseiling Equipment</option>
+                                            <option value="Helmet">Helmet</option>
+                                            <option value="Harness">Harness</option>
                                             <option value="Safety Equipment">Safety Equipment</option>
+                                            <option value="Lanyarns">Lanyarns</option>
                                             <option value="Other Equipment">Other Equipment</option>
                                         </select>
                                     </div>

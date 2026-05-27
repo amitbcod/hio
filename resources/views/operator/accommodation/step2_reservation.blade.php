@@ -225,7 +225,7 @@
                                 <div class="col-md-6">
                                     <label style="font-weight: 600; display: block;">Listing / Registration Type</label>
                                     <select class="form-control" disabled>
-                                        <option>{{ $accommodation->booking_registration_type ?? ($operator->booking_registration_type ?? ($accommodation->booking_registration_type ?? 'Listing')) }}</option>
+                                        <option>{{ $accommodation->booking_registration_type ?? ($operator->agreement_type ?? ($operator->booking_registration_type ?? 'Listing Only')) }}</option>
                                     </select>
                                     <small style="color:#999;">Read-only, linked to Operator / Agreement</small>
                                 </div>

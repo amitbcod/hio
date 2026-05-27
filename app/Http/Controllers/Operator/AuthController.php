@@ -231,6 +231,8 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'full_name' => $request->full_name,
             'business_legal_name' => $request->business_legal_name,
+            'agreement_type' => $request->agreement_type ?? null,
+            'booking_registration_type' => $request->agreement_type ?? null,
             'account_status' => $verification_status,
             'owner_full_name' => $request->is_owner === 'no' ? $request->owner_full_name : null,
             'owner_email' => $request->is_owner === 'no' ? $request->owner_email : null,

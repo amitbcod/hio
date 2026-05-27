@@ -197,7 +197,7 @@
                                 <div class="col-md-6">
                                     <label style="font-weight:600;">Booking Registration Type</label>
                                     <select class="form-control" disabled>
-                                        <option>{{ $activity->booking_registration_type ?? ($operator->booking_registration_type ?? 'Listing') }}</option>
+                                        <option>{{ $activity->booking_registration_type ?? ($operator->agreement_type ?? ($operator->booking_registration_type ?? 'Listing Only')) }}</option>
                                     </select>
                                     <small style="color:#999;">Read-only, linked to Operator / HIO Agreement</small>
                                 </div>
