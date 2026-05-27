@@ -237,6 +237,33 @@
                             </div>
                         </div>
 
+                        {{-- Participant Types --}}
+                        <div style="background:#f9f9f9;padding:16px;border-radius:8px;margin-bottom:16px;">
+                            <h6 style="margin-top:0;font-weight:600;margin-bottom:12px;">Allowed Participant Types</h6>
+                            <small style="display:block;color:#666;margin-bottom:12px;">Specify which participant types are allowed for this activity</small>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                                        <input type="checkbox" name="allow_adults" value="1" {{ old('allow_adults', $activity->allow_adults ?? true) ? 'checked' : '' }}>
+                                        <span style="font-weight:600;">Adults Allowed</span>
+                                    </label>
+                                </div>
+                                <div class="col-md-4">
+                                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                                        <input type="checkbox" name="allow_children" value="1" {{ old('allow_children', $activity->allow_children ?? true) ? 'checked' : '' }}>
+                                        <span style="font-weight:600;">Children Allowed</span>
+                                    </label>
+                                </div>
+                                <div class="col-md-4">
+                                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                                        <input type="checkbox" name="allow_infants" value="1" {{ old('allow_infants', $activity->allow_infants ?? true) ? 'checked' : '' }}>
+                                        <span style="font-weight:600;">Infants Allowed</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- Options --}}
                         <div style="background:#f9f9f9;padding:16px;border-radius:8px;margin-bottom:16px;">
                             <h6 style="margin-top:0;font-weight:600;margin-bottom:12px;">Activity Options</h6>

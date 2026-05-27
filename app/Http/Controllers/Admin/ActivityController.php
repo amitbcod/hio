@@ -200,6 +200,9 @@ class ActivityController extends Controller
             'booking_confirmation_type' => 'required|in:' . implode(',', Activity::BOOKING_CONFIRMATION_TYPES),
             'add_ons_available' => 'nullable|boolean',
             'private_exclusive_option' => 'nullable|boolean',
+            'allow_adults' => 'nullable|boolean',
+            'allow_children' => 'nullable|boolean',
+            'allow_infants' => 'nullable|boolean',
         ]);
 
         try {
@@ -225,6 +228,9 @@ class ActivityController extends Controller
             $activity->booking_confirmation_type = $data['booking_confirmation_type'];
             $activity->add_ons_available = filter_var($data['add_ons_available'] ?? false, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
             $activity->private_exclusive_option = filter_var($data['private_exclusive_option'] ?? false, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+            $activity->allow_adults = isset($data['allow_adults']) && $data['allow_adults'] ? true : false;
+            $activity->allow_children = isset($data['allow_children']) && $data['allow_children'] ? true : false;
+            $activity->allow_infants = isset($data['allow_infants']) && $data['allow_infants'] ? true : false;
 
             // Mark step 1 as complete
             $activity->completeStep('step1_basic');

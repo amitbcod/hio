@@ -57,17 +57,17 @@
                             <label>Activity Date</label>
                             <input type="date" name="activity_date" value="{{ $booking['activity_date'] }}" class="booking-input" min="{{ date('Y-m-d') }}">
                         </div>
-                        <div class="booking-field">
-                            <label>Adults</label>
-                            <input type="number" name="adults" min="1" value="{{ $activity['booking']['adults'] ?? 1 }}" class="booking-input">
+                        <div class="booking-field" style="{{ !($activity['allow_adults'] ?? true) ? 'opacity:0.5;pointer-events:none;' : '' }}">
+                            <label>Adults{{ !($activity['allow_adults'] ?? true) ? ' (Not Allowed)' : '' }}</label>
+                            <input type="number" name="adults" min="1" value="{{ ($activity['allow_adults'] ?? true) ? ($activity['booking']['adults'] ?? 1) : 0 }}" class="booking-input" {{ !($activity['allow_adults'] ?? true) ? 'disabled' : '' }}>
                         </div>
-                        <div class="booking-field">
-                            <label>Children</label>
-                            <input type="number" name="children" min="0" value="{{ $activity['booking']['children'] ?? 0 }}" class="booking-input">
+                        <div class="booking-field" style="{{ !($activity['allow_children'] ?? true) ? 'opacity:0.5;pointer-events:none;' : '' }}">
+                            <label>Children{{ !($activity['allow_children'] ?? true) ? ' (Not Allowed)' : '' }}</label>
+                            <input type="number" name="children" min="0" value="{{ ($activity['allow_children'] ?? true) ? ($activity['booking']['children'] ?? 0) : 0 }}" class="booking-input" {{ !($activity['allow_children'] ?? true) ? 'disabled' : '' }}>
                         </div>
-                        <div class="booking-field">
-                            <label>Infants</label>
-                            <input type="number" name="infants" min="0" value="{{ $activity['booking']['infants'] ?? 0 }}" class="booking-input">
+                        <div class="booking-field" style="{{ !($activity['allow_infants'] ?? true) ? 'opacity:0.5;pointer-events:none;' : '' }}">
+                            <label>Infants{{ !($activity['allow_infants'] ?? true) ? ' (Not Allowed)' : '' }}</label>
+                            <input type="number" name="infants" min="0" value="{{ ($activity['allow_infants'] ?? true) ? ($activity['booking']['infants'] ?? 0) : 0 }}" class="booking-input" {{ !($activity['allow_infants'] ?? true) ? 'disabled' : '' }}>
                         </div>
 
                         <button type="submit" class="btn-primary booking-btn">Check Rates</button>
@@ -104,21 +104,45 @@
                                                             </div>
                                                         @else
                                                             <div class="activity-option-person-grid">
-                                                                <div class="person-block">
-                                                                    <div class="person-block__count">{{ $activity['booking']['adults'] }}</div>
-                                                                    <div class="person-block__label">Adult</div>
-                                                                    <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['adult_rate'] ?? 0, 2) }}/Adult</div>
-                                                                </div>
-                                                                <div class="person-block">
-                                                                    <div class="person-block__count">{{ $activity['booking']['children'] }}</div>
-                                                                    <div class="person-block__label">Children</div>
-                                                                    <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['children_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}/Child</div>
-                                                                </div>
-                                                                <div class="person-block">
-                                                                    <div class="person-block__count">{{ $activity['booking']['infants'] }}</div>
-                                                                    <div class="person-block__label">Infant</div>
-                                                                    <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['infant_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}/Infant</div>
-                                                                </div>
+                                                                @if($activity['allow_adults'] ?? true)
+                                                                    <div class="person-block">
+                                                                        <div class="person-block__count">{{ $activity['booking']['adults'] }}</div>
+                                                                        <div class="person-block__label">Adult</div>
+                                                                        <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['adult_rate'] ?? 0, 2) }}/Adult</div>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="person-block" style="opacity:0.4;pointer-events:none;">
+                                                                        <div class="person-block__count">0</div>
+                                                                        <div class="person-block__label">Adult</div>
+                                                                        <div class="person-block__rate" style="color:#999;">Not Allowed</div>
+                                                                    </div>
+                                                                @endif
+                                                                @if($activity['allow_children'] ?? true)
+                                                                    <div class="person-block">
+                                                                        <div class="person-block__count">{{ $activity['booking']['children'] }}</div>
+                                                                        <div class="person-block__label">Children</div>
+                                                                        <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['children_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}/Child</div>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="person-block" style="opacity:0.4;pointer-events:none;">
+                                                                        <div class="person-block__count">0</div>
+                                                                        <div class="person-block__label">Children</div>
+                                                                        <div class="person-block__rate" style="color:#999;">Not Allowed</div>
+                                                                    </div>
+                                                                @endif
+                                                                @if($activity['allow_infants'] ?? true)
+                                                                    <div class="person-block">
+                                                                        <div class="person-block__count">{{ $activity['booking']['infants'] }}</div>
+                                                                        <div class="person-block__label">Infant</div>
+                                                                        <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['infant_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}/Infant</div>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="person-block" style="opacity:0.4;pointer-events:none;">
+                                                                        <div class="person-block__count">0</div>
+                                                                        <div class="person-block__label">Infant</div>
+                                                                        <div class="person-block__rate" style="color:#999;">Not Allowed</div>
+                                                                    </div>
+                                                                @endif
                                                             </div>
                                                         @endif
 
@@ -597,6 +621,44 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Handle participant type restrictions in "Check Rates" section
+            const bookingForm = document.querySelector('.booking-form-grid');
+            if (bookingForm) {
+                const adultsInput = bookingForm.querySelector('input[name="adults"]');
+                const childrenInput = bookingForm.querySelector('input[name="children"]');
+                const infantsInput = bookingForm.querySelector('input[name="infants"]');
+                const activityAllowAdults = {{ ($activity['allow_adults'] ?? true) ? 'true' : 'false' }};
+                const activityAllowChildren = {{ ($activity['allow_children'] ?? true) ? 'true' : 'false' }};
+                const activityAllowInfants = {{ ($activity['allow_infants'] ?? true) ? 'true' : 'false' }};
+
+                // Enforce restrictions: reset to 0 if not allowed
+                if (!activityAllowAdults && adultsInput) {
+                    adultsInput.value = 0;
+                }
+                if (!activityAllowChildren && childrenInput) {
+                    childrenInput.value = 0;
+                }
+                if (!activityAllowInfants && infantsInput) {
+                    infantsInput.value = 0;
+                }
+
+                // Prevent modification of disabled inputs and validate on submit
+                if (bookingForm) {
+                    bookingForm.addEventListener('submit', function(event) {
+                        // If adults not allowed but input has value, reset and prevent
+                        if (!activityAllowAdults && adultsInput && parseInt(adultsInput.value) > 0) {
+                            adultsInput.value = 0;
+                        }
+                        if (!activityAllowChildren && childrenInput && parseInt(childrenInput.value) > 0) {
+                            childrenInput.value = 0;
+                        }
+                        if (!activityAllowInfants && infantsInput && parseInt(infantsInput.value) > 0) {
+                            infantsInput.value = 0;
+                        }
+                    });
+                }
+            }
+
             document.querySelectorAll('.variant-booking-form').forEach(form => {
                 const rateSpecificity = form.dataset.rateSpecificity;
                 const adultRate = parseFloat(form.dataset.adultRate) || 0;
