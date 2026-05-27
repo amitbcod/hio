@@ -473,6 +473,9 @@ class HomeController extends Controller
             'checkout_policy_text' => $checkoutPolicyText,
             'terms_conditions_text' => $termsConditionsText,
             'time_slots' => $timeSlots,
+            'allow_adults' => (bool) ($activity->allow_adults ?? true),
+            'allow_children' => (bool) ($activity->allow_children ?? true),
+            'allow_infants' => (bool) ($activity->allow_infants ?? true),
             'gallery' => $detailed
                 ? $galleryImages->merge($vehicleImages)->prepend($primaryImage)->unique()->values()->all()
                 : [],
