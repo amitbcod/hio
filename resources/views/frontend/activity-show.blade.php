@@ -191,7 +191,7 @@
                                                                     </strong>
                                                                 </div>
                                                                 <div class="activity-option-summary__message-group">
-                                                                    <div class="activity-option-summary__discount" style="display:none;margin-top:8px;color:#28a745;font-weight:600;">
+                                                                    <div class="activity-option-summary__discount" style="display:none;margin-top:0px;color:#28a745;font-weight:600;">
                                                                         Discount: <strong class="variant-discount"></strong>
                                                                     </div>
                                                                     <div class="activity-option-summary__error" aria-live="polite"></div>
@@ -515,7 +515,7 @@
         .activity-option-summary__label {
             font-size: 13px;
             color: #333;
-            margin-bottom: 6px;
+            margin-bottom: 0;
             display: block;
         }
 
@@ -607,7 +607,7 @@
 
         .activity-option-summary__discount {
             background: #f1f1f1;
-            padding: 9px;
+            padding: 5px 11px;
             border-radius: 13px;
         }
 
