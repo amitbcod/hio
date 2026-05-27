@@ -105,13 +105,13 @@
                                                         @else
                                                             <div class="activity-option-person-grid">
                                                                 @if($activity['allow_adults'] ?? true)
-                                                                    <div class="person-block">
+                                                                    <div class="person-block" style="border: 1px solid #006400;">
                                                                         <div class="person-block__count">{{ $activity['booking']['adults'] }}</div>
                                                                         <div class="person-block__label">Adult</div>
                                                                         <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['adult_rate'] ?? 0, 2) }}/Adult</div>
                                                                     </div>
                                                                 @else
-                                                                    <div class="person-block" style="opacity:0.4;pointer-events:none;">
+                                                                    <div class="person-block" style="opacity:0.4;pointer-events:none;border: 1px solid #a9a9a9;">
                                                                         <div class="person-block__count">0</div>
                                                                         <div class="person-block__label">Adult</div>
                                                                         <div class="person-block__rate" style="color:#999;">Not Allowed</div>
@@ -453,9 +453,10 @@
         .person-block {
             border-radius: 14px;
             background: #ffffff;
-            padding: 16px;
+            padding: 16px 10px;
             box-shadow: 0 8px 18px rgba(16, 34, 71, 0.06);
             text-align: center;
+            width: 110px; 
         }
 
         .person-block__count {
