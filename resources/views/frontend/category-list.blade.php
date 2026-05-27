@@ -85,7 +85,7 @@
 
               <div class="category-input-group">
                  <div class="category-input-group-inner">
-                        <div class="category-search-cell">
+                        <div class="category-search-cell category-search-cell--region" style="flex: 0 1 280px; min-width: 280px">
                             <h5>Region/Area ?</h5>
                             <select name="region" class="category-search-select" data-search-region data-selected="{{ $filters['region'] }}">
                                 <option value="all" {{ $filters['region'] === 'all' || $filters['region'] === '' ? 'selected' : '' }}>All</option>
@@ -96,14 +96,14 @@
                         </div>
 
                         <!-- Accommodation/Transport: Check-In and Check-Out -->
-                        <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-in" style="display: none;">
+                        <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-in" style="display: none; flex: 0">
                             <h5>Check-In</h5>
                             <div class="category-search-dates">
                                 <input type="date" name="check_in" class="category-search-input" value="{{ $filters['check_in'] }}">
                             </div>
                         </div>
 
-                        <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-out" style="display: none;">
+                        <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-out" style="display: none; flex: 0 ">
                             <h5>Check-Out</h5>
                             <div class="category-search-dates">
                                 <input type="date" name="check_out" class="category-search-input" value="{{ $filters['check_out'] }}">

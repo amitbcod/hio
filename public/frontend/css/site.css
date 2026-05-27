@@ -399,7 +399,7 @@ strong {
 }
 
 .category-search-cell {
-    padding: 12px 17px 5px;
+    padding: 12px 17px;
     /* min-height: 130px; */
     /* min-width: 200px; */
     flex:1;
@@ -548,7 +548,7 @@ strong {
     padding: 10px;
     border-radius: 10px;
     background: #fff;
-    margin-bottom: 8px;
+    margin-bottom: 0;
 }
 
 .guest-rooms-row {
@@ -2102,9 +2102,9 @@ label.saved-guest-checkbox {
 }
 
 .category-search-cell--transport .transport-row > div {
-    padding: 12px 17px 5px;
+    padding: 12px 17px;
     border-left: 2px solid rgba(255, 255, 255, 1);
-    margin-bottom: 7px;
+    margin-bottom: 0;
 }
 
 .category-search-cell--transport .transport-row > div:first-child {
