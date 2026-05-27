@@ -129,7 +129,7 @@
                             <div class="category-search-cell category-search-cell--guests" style="display: none;">
                                 <h5 id="guest-cell-heading">Guest & Rooms</h5>
                                 <div class="guest-rooms-summary">
-                                    <span id="guest-rooms-summary-text">{{ (int) request()->query('adults',2) }} Adults &middot; {{ (int) request()->query('children',0) }} Child &middot; {{ (int) request()->query('infants',0) }} Infant &middot; {{ (int) request()->query('rooms',1) }} Rooms</span>
+                                    <span id="guest-rooms-summary-text">{{ (int) request()->query('adults',2) }} Adults &middot; {{ (int) request()->query('children',0) }} Child &middot; {{ (int) request()->query('infants',0) }} Infant &middot; {{ (int) request()->query('rooms',1) }} Rooms</span> 
                                 </div>
                                 <div class="guest-rooms-selector">
                                     <div class="guest-rooms-row">

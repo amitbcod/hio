@@ -105,39 +105,39 @@
                                                         @else
                                                             <div class="activity-option-person-grid">
                                                                 @if($activity['allow_adults'] ?? true)
-                                                                    <div class="person-block">
+                                                                    <div class="person-block" style="border: 1px solid #006400;">
                                                                         <div class="person-block__count">{{ $activity['booking']['adults'] }}</div>
                                                                         <div class="person-block__label">Adult</div>
                                                                         <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['adult_rate'] ?? 0, 2) }}/Adult</div>
                                                                     </div>
                                                                 @else
-                                                                    <div class="person-block" style="opacity:0.4;pointer-events:none;">
+                                                                    <div class="person-block" style="opacity:0.4;pointer-events:none; border: 1px solid #a9a9a9;">
                                                                         <div class="person-block__count">0</div>
                                                                         <div class="person-block__label">Adult</div>
                                                                         <div class="person-block__rate" style="color:#999;">Not Allowed</div>
                                                                     </div>
                                                                 @endif
                                                                 @if($activity['allow_children'] ?? true)
-                                                                    <div class="person-block">
+                                                                    <div class="person-block" style="border: 1px solid #006400;">
                                                                         <div class="person-block__count">{{ $activity['booking']['children'] }}</div>
                                                                         <div class="person-block__label">Children</div>
                                                                         <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['children_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}/Child</div>
                                                                     </div>
                                                                 @else
-                                                                    <div class="person-block" style="opacity:0.4;pointer-events:none;">
+                                                                    <div class="person-block" style="opacity:0.4;pointer-events:none; border: 1px solid #a9a9a9;">
                                                                         <div class="person-block__count">0</div>
                                                                         <div class="person-block__label">Children</div>
                                                                         <div class="person-block__rate" style="color:#999;">Not Allowed</div>
                                                                     </div>
                                                                 @endif
                                                                 @if($activity['allow_infants'] ?? true)
-                                                                    <div class="person-block">
+                                                                    <div class="person-block" style="border: 1px solid #006400;">
                                                                         <div class="person-block__count">{{ $activity['booking']['infants'] }}</div>
                                                                         <div class="person-block__label">Infant</div>
                                                                         <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['infant_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}/Infant</div>
                                                                     </div>
                                                                 @else
-                                                                    <div class="person-block" style="opacity:0.4;pointer-events:none;">
+                                                                    <div class="person-block" style="opacity:0.4;pointer-events:none; border: 1px solid #a9a9a9;">
                                                                         <div class="person-block__count">0</div>
                                                                         <div class="person-block__label">Infant</div>
                                                                         <div class="person-block__rate" style="color:#999;">Not Allowed</div>
@@ -190,10 +190,12 @@
                                                                         {{ $room['currency'] }} {{ number_format((float) $room['total_price'], 2) }}
                                                                     </strong>
                                                                 </div>
-                                                                <div class="activity-option-summary__discount" style="display:none;margin-top:8px;color:#28a745;font-weight:600;">
-                                                                    Discount: <strong class="variant-discount"></strong>
+                                                                <div class="activity-option-summary__message-group">
+                                                                    <div class="activity-option-summary__discount" style="display:none;margin-top:0px;color:#28a745;font-weight:600;">
+                                                                        Discount: <strong class="variant-discount"></strong>
+                                                                    </div>
+                                                                    <div class="activity-option-summary__error" aria-live="polite"></div>
                                                                 </div>
-                                                                <div class="activity-option-summary__error" aria-live="polite"></div>
                                                                 @if(!empty($room['time_slots']))
                                                                     <label class="activity-option-summary__label" for="activity_time_slot_id_{{ $room['room_id'] }}">Select Time Slot</label>
                                                                     <select id="activity_time_slot_id_{{ $room['room_id'] }}" name="activity_time_slot_id" class="form-control activity-time-slot-select" required>
@@ -453,9 +455,10 @@
         .person-block {
             border-radius: 14px;
             background: #ffffff;
-            padding: 16px;
+            padding: 16px 10px;
             box-shadow: 0 8px 18px rgba(16, 34, 71, 0.06);
             text-align: center;
+            width: 110px; 
         }
 
         .person-block__count {
@@ -512,14 +515,18 @@
         .activity-option-summary__label {
             font-size: 13px;
             color: #333;
-            margin-bottom: 6px;
+            margin-bottom: 0;
             display: block;
         }
 
         .activity-option-summary__error {
             font-size: 13px;
             color: #c53030;
-            min-height: 18px;
+            /* min-height: 18px; */
+        }
+
+        .activity-option-summary__message-group {
+            min-height: 35px; 
         }
 
         .activity-option-summary select.form-control {
@@ -596,6 +603,12 @@
             border: 0;
             border-radius: 16px;
             margin-top: 14px;
+        }
+
+        .activity-option-summary__discount {
+            background: #f1f1f1;
+            padding: 5px 11px;
+            border-radius: 13px;
         }
 
         @media (max-width: 1080px) {
