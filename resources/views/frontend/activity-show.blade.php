@@ -289,7 +289,7 @@
         }
 
         .detail-thumb {
-            width: 80px;
+            width: 100%;
             height: 80px;
             border: 2px solid transparent;
             border-radius: 8px;
