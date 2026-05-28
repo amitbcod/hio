@@ -299,6 +299,51 @@
         </div>
     </header>
 
+    @php
+        $sharedCartToken = session('booking_shared_cart_token');
+        $sharedCartUrl = $sharedCartToken ? route('frontend.booking.shared', $sharedCartToken) : null;
+        $isOperatorOrAdmin = auth('operator')->check() || session('admin_id');
+    @endphp
+
+    @if($sharedCartToken && $sharedCartUrl && $isOperatorOrAdmin)
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div class="wrap" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                <div>
+                    <p style="margin: 0 0 4px 0; font-size: 13px; opacity: 0.9;">🔗 Building Shared Cart</p>
+                    <p style="margin: 0; font-size: 14px; font-weight: 600;">Add items below, then copy & send this link to your customer</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; min-width: 200px;">
+                    <input type="text" readonly value="{{ $sharedCartUrl }}" id="sharedCartUrlInput" 
+                        style="flex: 1; padding: 8px 12px; border: none; border-radius: 4px; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <button type="button" onclick="copySharedCartUrl(this)" 
+                        style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; white-space: nowrap;"
+                        onmouseover="this.style.background='rgba(255,255,255,0.3)'" 
+                        onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        📋 Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+        <script>
+            function copySharedCartUrl(btn) {
+                const input = document.getElementById('sharedCartUrlInput');
+                const url = input.value;
+                navigator.clipboard.writeText(url).then(() => {
+                    const originalText = btn.textContent;
+                    btn.textContent = '✓ Copied!';
+                    btn.style.background = 'rgba(76, 175, 80, 0.3)';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.background = 'rgba(255,255,255,0.2)';
+                    }, 2000);
+                }).catch((err) => {
+                    console.error('Copy failed:', err);
+                    alert('Failed to copy. Please copy manually from the input field.');
+                });
+            }
+        </script>
+    @endif
+
     <div id="miniCartOverlay" class="mini-cart-overlay" aria-hidden="true">
         <div class="mini-cart-panel" role="dialog" aria-modal="true" aria-labelledby="miniCartTitle">
             <div class="mini-cart-header">

@@ -27,6 +27,27 @@
     </li>
 </ul>
 
+<div class="dropdownToggle" 
+     style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; border-top: 1px solid rgba(255,255,255,0.2);">
+   Shared Trip Links
+    <span class="dropdownArrow" style="transition: transform 0.3s;">▼</span>
+</div>
+
+<ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: none;">
+    <li class="add-section" style="padding: 8px 36px;">
+        <a href="{{ route('operator.shared-carts.create') }}"
+           style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
+          + Create New Link
+        </a>
+    </li>
+    <li style="padding: 8px 36px;">
+        <a href="{{ route('operator.shared-carts.index') }}"
+           style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
+           View All Links
+        </a>
+    </li>
+</ul>
+
 
 
     {{-- Activity Management Section --}}

@@ -22,6 +22,8 @@ Route::get('/test', [TestController::class, 'test']);
 Route::post('/booking/cart/add',    [BookingController::class, 'addToCart'])->name('frontend.booking.cart.add');
 Route::get('/booking/cart',         [BookingController::class, 'viewCart'])->name('frontend.booking.cart');
 Route::post('/booking/cart/remove', [BookingController::class, 'removeFromCart'])->name('frontend.booking.cart.remove');
+Route::get('/booking/shared/{token}', [BookingController::class, 'viewSharedCart'])->name('frontend.booking.shared');
+Route::get('/booking/shared/init/{token}', [BookingController::class, 'initSharedCartBuilder'])->name('frontend.booking.shared.init');
 
 // Guest checkout (no auth required)
 Route::get('/booking/guest-checkout', [BookingController::class, 'guestCheckout'])->name('frontend.booking.guest-checkout');

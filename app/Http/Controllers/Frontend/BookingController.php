@@ -20,6 +20,7 @@ use App\Models\TravelerProfile;
 use App\Models\Trip;
 use App\Models\Booking;
 use App\Models\BookingLineItem;
+use App\Models\SharedCart;
 use App\Models\Traveller;
 use App\Models\BliTravellerAllocation;
 use App\Models\GuestOtpToken;
@@ -45,6 +46,10 @@ class BookingController extends Controller
     public function addToCart(Request $request)
     {
         $type = $request->input('type'); // 'accommodation' | 'activity'
+        $sharedCartToken = $request->input('shared_cart_token') ?? session('booking_shared_cart_token');
+        if ($sharedCartToken) {
+            session()->put('booking_shared_cart_token', $sharedCartToken);
+        }
 
         if ($type === 'activity') {
             Validator::make($request->all(), [
@@ -87,6 +92,18 @@ class BookingController extends Controller
 
         $cart[$item['cart_key']] = $item;
         $this->storeCart($cart);
+
+        if ($sharedCartToken) {
+            $sharedCart = SharedCart::where('token', $sharedCartToken)
+                ->where('status', 'Active')
+                ->first();
+            if ($sharedCart && $sharedCart->isActive()) {
+                $sharedCart->items = array_values(array_merge($sharedCart->items ?? [], [$item]));
+                $sharedCart->save();
+            } else {
+                session()->forget('booking_shared_cart_token');
+            }
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -345,6 +362,51 @@ class BookingController extends Controller
         }
 
         return back()->with('success', 'Item removed from cart.');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  VIEW SHARED CART
+    // ═══════════════════════════════════════════════════════════════════════
+
+    public function viewSharedCart(Request $request, string $token)
+    {
+        $sharedCart = SharedCart::where('token', $token)
+            ->where('status', 'Active')
+            ->first();
+
+        if (!$sharedCart || !$sharedCart->isActive()) {
+            return redirect()->route('frontend.home')->with('error', 'This shared cart link is invalid or has expired.');
+        }
+
+        session()->put('booking_shared_cart_token', $token);
+
+        $cart = is_array($sharedCart->items) ? $sharedCart->items : [];
+        if (empty($cart)) {
+            return redirect()->route('frontend.home')->with('error', 'This shared cart is empty.');
+        }
+
+        $this->storeCart($cart);
+
+        $summary = $this->buildCartSummary($cart);
+
+        return view('frontend.cart-review', compact('cart', 'summary'))
+            ->with('success', 'A shared cart has been loaded. Please review and proceed to checkout.');
+    }
+
+    public function initSharedCartBuilder(Request $request, string $token)
+    {
+        $sharedCart = SharedCart::where('token', $token)
+            ->where('status', 'Active')
+            ->first();
+
+        if (!$sharedCart || !$sharedCart->isActive()) {
+            return redirect()->route('frontend.home')->with('error', 'This shared cart link is invalid or has expired.');
+        }
+
+        session()->put('booking_shared_cart_token', $token);
+
+        return redirect()->route('frontend.home', ['shared_cart_token' => $token])
+            ->with('success', 'Shared cart created. Add items from the frontend and they will be saved for this link.');
     }
 
     // ═══════════════════════════════════════════════════════════════════════

@@ -6,6 +6,7 @@ use App\Http\Controllers\Operator\ProfileController;
 use App\Http\Controllers\Operator\RegistrationController;
 use App\Http\Controllers\Operator\AccommodationController;
 use App\Http\Controllers\Operator\ActivityController;
+use App\Http\Controllers\Operator\SharedCartController;
 
 Route::prefix('operator')->name('operator.')->group(function () {
     Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -220,6 +221,14 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::post('activity/{id}/submit-for-approval', [ActivityController::class, 'submitForApproval'])->name('activity.submit-approval');
         
         Route::delete('activity/{id}', [ActivityController::class, 'destroy'])->name('activity.destroy');
+
+        // Shared cart links
+        Route::get('shared-carts', [SharedCartController::class, 'index'])->name('shared-carts.index');
+        Route::get('shared-carts/create', [SharedCartController::class, 'create'])->name('shared-carts.create');
+        Route::post('shared-carts', [SharedCartController::class, 'store'])->name('shared-carts.store');
+        Route::get('shared-carts/{sharedCart}', [SharedCartController::class, 'show'])->name('shared-carts.show');
+        Route::post('shared-carts/{sharedCart}/items', [SharedCartController::class, 'storeItem'])->name('shared-carts.items.store');
+        Route::post('shared-carts/{sharedCart}/items/{itemKey}/remove', [SharedCartController::class, 'removeItem'])->name('shared-carts.items.remove');
 
         // Save accommodation fees
         Route::post('accommodation/{id}/fees', [AccommodationController::class, 'saveFees'])->name('accommodation.fees.save');

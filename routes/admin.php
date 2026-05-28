@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\SharedCartController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('login', [AdminAuthController::class, 'showLogin'])->name('login');
@@ -186,4 +187,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('payment-transactions', [\App\Http\Controllers\Admin\PaymentTransactionController::class, 'index'])->name('payment-transactions.index');
     Route::get('payment-transactions/{transaction}', [\App\Http\Controllers\Admin\PaymentTransactionController::class, 'show'])->name('payment-transactions.show');
     Route::post('payment-transactions/{transaction}/callbacks', [\App\Http\Controllers\Admin\PaymentTransactionController::class, 'getCallbacks'])->name('payment-transactions.callbacks');
+
+    Route::get('shared-carts', [SharedCartController::class, 'index'])->name('shared-carts.index');
+    Route::get('shared-carts/create', [SharedCartController::class, 'create'])->name('shared-carts.create');
+    Route::post('shared-carts', [SharedCartController::class, 'store'])->name('shared-carts.store');
+    Route::get('shared-carts/{sharedCart}', [SharedCartController::class, 'show'])->name('shared-carts.show');
+    Route::post('shared-carts/{sharedCart}/items', [SharedCartController::class, 'storeItem'])->name('shared-carts.items.store');
+    Route::post('shared-carts/{sharedCart}/items/{itemKey}/remove', [SharedCartController::class, 'removeItem'])->name('shared-carts.items.remove');
 });
