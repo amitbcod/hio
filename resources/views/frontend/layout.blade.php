@@ -378,19 +378,51 @@
             <div class="site-footer-grid">
                 <div>
                     <h4>Holidays.io </h4>
+                    <p>Wishes you all great Holidays and awesome Adventures</p>
                     <!-- <p>
                         This homepage now reads live activity and accommodation content entered by operators,
                         while keeping your operator and admin panels unchanged.
                     </p> -->
-                </div>
-                <div>
-                    <h4>Browse</h4>
-                    <ul>
-                        <li><a href="{{ url('/#activities-section') }}">Activities</a></li>
-                        <li><a href="{{ url('/#accommodations-section') }}">Holiday Rentals</a></li>
-                        <li><a href="{{ url('/#discover-mauritius') }}">Hotels</a></li>
+                    <ul class="social-footer">
+                        <li><a href="#"><i class="fa-brands fa-facebook"></i></a></li>
+                        <li><a href="#"><i class="fa-brands fa-youtube"></i></a></li>
+                        <li><a href="#"><i class="fa-brands fa-instagram"></i></a></li>
+                        <li><a href="#"><i class="fa-brands fa-x-twitter"></i></a></li>
                     </ul>
                 </div>
+
+                <div>
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url('/#accommodations-section') }}">Accommodation</a></li>
+                        <li><a href="{{ url('/#activities-section') }}">Activities</a></li>
+                        <li><a href="{{ url('/#discover-mauritius') }}">Discover Mauritius
+</a></li>
+                        <li><a href="{{ url('/operator/accommodation') }}">Operator</a></li>
+                        
+                    </ul>
+                </div>
+                <div>
+                    <h4>Links</h4>
+                    <ul>
+                        <li><a href="{{ url('/#accommodations-section') }}">About Us</a></li>
+                        <li><a href="{{ url('/#activities-section') }}">Contact</a></li>
+                        <li><a href="{{ url('/#discover-mauritius') }}">Travels Blogs</a></li>
+                        <li><a href="{{ url('#') }}">Terms of Use</a></li>
+                        <li><a href="{{ url('#') }}">Privacy Statement</a></li>
+                        <li><a href="{{ url('#') }}">Conditions</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4>Contacts</h4>
+                    <ul class="contact-footer">
+                        <li><i class="fa-solid fa-location-dot"></i><span>123, lorem ipsum, city, conutry 200002</span></li>
+                        <li><a href="#"><i class="fa-solid fa-phone"></i><span>+00 1234567890</span></a></li>
+                        <li><a href="mailto:info@holidays.io"><i class="fa-solid fa-envelope"></i><span>info@holidays.io</span></a></li>
+                    </ul>
+                </div>
+
                 <!-- <div>
                     <h4>Guest Orders</h4>
                     <ul>
@@ -420,7 +452,8 @@
                 </div>
             </div>
             <div class="site-footer-bottom">
-                <span>© {{ now()->year }} Holidays.io</span>
+                <span>© {{ now()->year }} Holidays.io All rights reserved. </span>
+                <span>No part of this site may be reproduced without our written permission</span>
                 <!-- <span>Dynamic public frontend powered by Laravel</span> -->
             </div>
         </div>
