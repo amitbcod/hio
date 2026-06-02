@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Accommodation;
 use App\Models\AccommodationRate;
 use App\Models\Activity;
+use App\Models\ActivityBooking;
 use App\Models\OperatorStatusReview;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -388,18 +389,47 @@ class HomeController extends Controller
 
         $timeSlots = [];
         if ($detailed && $activity->relationLoaded('schedulingTimeSlots')) {
+            $activityBookings = ActivityBooking::where('activity_id', $activity->id)
+                ->whereDate('activity_date', $bookingContext['activity_date'])
+                ->whereIn('booking_status', ['Pending', 'Confirmed'])
+                ->get();
+
+            $bookedParticipantsBySlot = [];
+            foreach ($activityBookings as $booking) {
+                $participantTimeSlots = $booking->participant_time_slots ?? [];
+                if (!is_array($participantTimeSlots)) {
+                    continue;
+                }
+                foreach ($participantTimeSlots as $slotId) {
+                    $slotKey = (int) $slotId;
+                    if ($slotKey <= 0) {
+                        continue;
+                    }
+                    $bookedParticipantsBySlot[$slotKey] = ($bookedParticipantsBySlot[$slotKey] ?? 0) + 1;
+                }
+            }
+
             $timeSlotsByVariant = collect($activity->schedulingTimeSlots)
                 ->groupBy(fn ($slot) => (int) ($slot->variant_id ?? 0))
-                ->map(fn ($slots) => $slots->map(function ($slot) {
-                    return [
-                        'id' => $slot->timeslot_id,
-                        'start_time' => $slot->start_time,
-                        'end_time' => $slot->end_time,
-                        'duration' => $slot->duration,
-                        'discount_value' => $slot->discount_value ? (float) $slot->discount_value : 0,
-                        'display' => trim(($slot->start_time ?? '') . ' - ' . ($slot->end_time ?? '') . ($slot->duration ? ' (' . $slot->duration . ')' : '')),
-                    ];
-                })->filter(fn ($slot) => !empty($slot['id']))->values()->all());
+                ->map(function ($slots) use ($bookedParticipantsBySlot) {
+                    return $slots->map(function ($slot) use ($bookedParticipantsBySlot) {
+                        $capacity = max(0, (int) ($slot->capacity_per_slot ?? 0));
+                        $booked = $bookedParticipantsBySlot[(int) $slot->timeslot_id] ?? 0;
+                        $available = max(0, $capacity - $booked);
+
+                        return [
+                            'id' => $slot->timeslot_id,
+                            'start_time' => $slot->start_time,
+                            'end_time' => $slot->end_time,
+                            'duration' => $slot->duration,
+                            'discount_value' => $slot->discount_value ? (float) $slot->discount_value : 0,
+                            'capacity_per_slot' => $capacity,
+                            'booked' => $booked,
+                            'available' => $available,
+                            'display' => trim(($slot->start_time ?? '') . ' - ' . ($slot->end_time ?? '') . ($slot->duration ? ' (' . $slot->duration . ')' : '')),
+                        ];
+                    })->filter(fn ($slot) => !empty($slot['id']))->values()->all();
+                });
 
             foreach ($availableRooms as &$availableRoom) {
                 $variantKey = (int) ($availableRoom['room_id'] ?? 0);

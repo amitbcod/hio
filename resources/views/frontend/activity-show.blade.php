@@ -201,9 +201,18 @@
                                                                     <select id="activity_time_slot_id_{{ $room['room_id'] }}" name="activity_time_slot_id" class="form-control activity-time-slot-select" required>
                                                                         <option value="">Select a time slot</option>
                                                                         @foreach($room['time_slots'] as $slot)
-                                                                            <option value="{{ $slot['id'] }}" data-discount="{{ isset($slot['discount_value']) ? number_format((float)$slot['discount_value'], 2, '.', '') : '' }}">{{ $slot['display'] }}</option>
+                                                                            <option value="{{ $slot['id'] }}" data-discount="{{ isset($slot['discount_value']) ? number_format((float)$slot['discount_value'], 2, '.', '') : '' }}" data-available="{{ $slot['available'] ?? 0 }}" data-capacity="{{ $slot['capacity_per_slot'] ?? 0 }}">
+                                                                                {{ $slot['display'] }}
+                                                                                @if(isset($slot['available']))
+                                                                                    ({{ $slot['available'] }} available)
+                                                                                @endif
+                                                                            </option>
                                                                         @endforeach
                                                                     </select>
+                                                                    <div class="activity-option-summary__availability">
+                                                                        Available: <strong class="available-count">--</strong>
+                                                                        <span class="availability-extra"></span>
+                                                                    </div>
                                                                     <input type="hidden" name="timeslot_discount_value" class="timeslot-discount-input" value="">
                                                                     <button type="submit" class="btn-book-now">Book Now</button>
                                                                 @else
@@ -693,6 +702,9 @@
                 const timeSlotSelect = form.querySelector('select[name="activity_time_slot_id"]');
                 const errorContainer = form.querySelector('.activity-option-summary__error');
                 const bookNowButton = form.querySelector('.btn-book-now');
+                const availabilityCount = form.querySelector('.available-count');
+                const availabilityWrapper = form.querySelector('.activity-option-summary__availability');
+                const availabilityExtra = form.querySelector('.availability-extra');
 
                 function getNumericValue(inputElement, fallback = 0) {
                     return Math.max(0, parseInt(inputElement?.value, 10) || fallback);
@@ -710,6 +722,44 @@
 
                     const discountValue = parseFloat(selectedOption.dataset.discount || '0');
                     return Number.isFinite(discountValue) ? discountValue : 0;
+                }
+
+                function updateAvailability() {
+                    if (!timeSlotSelect || !availabilityCount) {
+                        return;
+                    }
+
+                    const selectedOption = timeSlotSelect.options[timeSlotSelect.selectedIndex];
+                    const available = selectedOption ? parseInt(selectedOption.dataset.available || '0', 10) : 0;
+                    const capacity = selectedOption ? parseInt(selectedOption.dataset.capacity || '0', 10) : 0;
+
+                    if (!selectedOption || !timeSlotSelect.value) {
+                        availabilityCount.textContent = '--';
+                        if (availabilityWrapper) {
+                            availabilityWrapper.style.display = 'block';
+                        }
+                        return;
+                    }
+
+                    if (availabilityWrapper) {
+                        availabilityWrapper.style.display = 'block';
+                        if (available <= 0) {
+                            availabilityWrapper.style.color = '#d9534f';
+                            availabilityCount.textContent = 0;
+                            if (availabilityExtra) {
+                                availabilityExtra.textContent = ` — Fully booked · Capacity ${capacity}`;
+                            }
+                        } else {
+                            availabilityWrapper.style.color = '';
+                            availabilityCount.textContent = available;
+                            if (availabilityExtra) {
+                                availabilityExtra.textContent = '';
+                            }
+                        }
+                    }
+                    if (bookNowButton) {
+                        bookNowButton.disabled = available <= 0;
+                    }
                 }
 
                 function validateParticipants() {
@@ -778,7 +828,10 @@
                 }
 
                 if (timeSlotSelect) {
-                    timeSlotSelect.addEventListener('change', updateTotals);
+                    timeSlotSelect.addEventListener('change', function() {
+                        updateAvailability();
+                        updateTotals();
+                    });
                 }
 
                 form.addEventListener('submit', function(event) {
@@ -794,6 +847,7 @@
                     }
                 });
 
+                updateAvailability();
                 updateTotals();
                 validateParticipants();
             });

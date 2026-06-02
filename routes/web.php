@@ -44,3 +44,9 @@ Route::get('/booking/payment/return', [BookingController::class, 'paymentReturn'
 Route::post('/booking/save-guest', [BookingController::class, 'saveGuest'])->name('frontend.booking.save-guest');
 Route::post('/booking/remove-guest', [BookingController::class, 'removeGuest'])->name('frontend.booking.remove-guest');
 Route::get('/booking/confirmation/{ref}', [BookingController::class, 'confirmation'])->name('frontend.booking.confirmation');
+
+// Feedback routes
+use App\Http\Controllers\Frontend\FeedbackController;
+Route::get('/feedback/trip/{trip}', [FeedbackController::class, 'show'])->name('frontend.feedback.show');
+Route::post('/feedback/trip/{trip}', [FeedbackController::class, 'submit'])->name('frontend.feedback.submit');
+Route::get('/feedback/send/{trip}', [FeedbackController::class, 'sendRequest'])->name('frontend.feedback.send');
