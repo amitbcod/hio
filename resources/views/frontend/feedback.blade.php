@@ -198,8 +198,9 @@
             </div>
             <span class="rating-value">-</span>
           </div>
-          <input type="hidden" name="trip[{{ $fieldKey }}]" value="{{ $tripCriteria[$fieldKey] ?? '' }}">
+          
         </div>
+        <input type="hidden" name="trip[{{ $fieldKey }}]" value="{{ $tripCriteria[$fieldKey] ?? '' }}">
       @endforeach
 
       <div class="rating-row">
@@ -306,8 +307,9 @@
                   </div>
                   <span class="rating-value">-</span>
                 </div>
-                <input type="hidden" name="activities[{{ $act->id }}][{{ $fieldKey }}]" value="{{ $actCriteria[$fieldKey] ?? '' }}">
+                
               </div>
+              <input type="hidden" name="activities[{{ $act->id }}][{{ $fieldKey }}]" value="{{ $actCriteria[$fieldKey] ?? '' }}">
             @endforeach
 
             <div class="section-comment">
@@ -319,7 +321,7 @@
       </div>
     @endif
 
-    <div class="feedback-btn">
+    <div class="feedback-btn-div">
       <button class="btn btn-primary" type="submit">{{ $review ? 'Update feedback' : 'Submit feedback' }}</button>
     </div>
   </form>
