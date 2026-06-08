@@ -180,7 +180,8 @@
 
     @media (max-width:767px) {
       .rating-legend {
-        grid-template-columns: 110px repeat(6, minmax(auto, 1fr));
+        grid-template-columns: 110px repeat(6, minmax(30px, 1fr));
+        gap: 5px;
       }
       .rating-row {
         grid-template-columns: 100px 1fr;
@@ -188,7 +189,7 @@
       }
       .stars {
           gap: 5px;
-          grid-template-columns: repeat(5, minmax(auto, 1fr));
+          grid-template-columns: repeat(5, minmax(30px, 1fr));
       }
       .rating-label {
           font-size: 13px;
