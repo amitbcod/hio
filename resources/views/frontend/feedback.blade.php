@@ -177,6 +177,27 @@
     .rating-legend > div {
       text-align: center;
     }
+
+    @media (max-width:767px) {
+      .rating-legend {
+        grid-template-columns: 110px repeat(6, minmax(auto, 1fr));
+      }
+      .rating-row {
+        grid-template-columns: 100px 1fr;
+        gap: 5px;
+      }
+      .stars {
+          gap: 5px;
+          grid-template-columns: repeat(5, minmax(auto, 1fr));
+      }
+      .rating-label {
+          font-size: 13px;
+      }
+      .rating-legend > div {
+          text-align: center;
+          font-size: 11px;
+      }
+    }
   </style>
 
   <form method="post" action="{{ route('frontend.feedback.submit', [$trip->id]) }}">
