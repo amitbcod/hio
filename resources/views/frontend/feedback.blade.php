@@ -1,8 +1,22 @@
 @extends('layouts.app')
 
 @section('content')
+
+<style>
+     .container {
+        max-width: 1300px;
+        padding: 30px 0;
+    }
+    .feedback-head {
+          font-weight: bold;
+    margin-bottom: 28px;
+    }
+ </style>
+
+
+
 <div class="container">
-  <h1>Feedback for Trip #{{ $trip->id }}</h1>
+  <h2 class="feedback-head">Feedback for Trip #{{ $trip->id }}</h2>
 
   @if($review)
     <div class="alert alert-info">
@@ -83,6 +97,8 @@
       margin-bottom: 8px;
       padding: 8px 0;
       border-bottom: 1px solid #ccc;
+      background: #19b5b5;
+    color: #fff;
     }
 
     .star-rating {
@@ -135,6 +151,13 @@
       border: 1px solid #ccc;
       border-radius: 4px;
       resize: vertical;
+    }
+
+    .section-box h2 {
+      color: #19b5b5;
+      font-weight: bold;
+      font-size: 25px;
+      margin-bottom: 20px;
     }
   </style>
 
