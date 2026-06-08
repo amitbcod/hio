@@ -55,6 +55,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('trips/{trip}/edit', [\App\Http\Controllers\Admin\TripController::class, 'edit'])->name('trips.edit');
     Route::post('trips/{trip}', [\App\Http\Controllers\Admin\TripController::class, 'update'])->name('trips.update');
 
+    // Admin feedback management
+    Route::get('feedback', [\App\Http\Controllers\Admin\FeedbackController::class, 'index'])->name('feedback.index');
+    Route::get('feedback/{review}', [\App\Http\Controllers\Admin\FeedbackController::class, 'show'])->name('feedback.show');
+
     // Admin accommodation booking management (superadmin)
     Route::get('accommodation/bookings', [\App\Http\Controllers\Admin\AccommodationBookingController::class, 'index'])->name('accommodation.bookings');
     Route::get('accommodation/bookings/{booking}', [\App\Http\Controllers\Admin\AccommodationBookingController::class, 'show'])->name('accommodation.booking.details');

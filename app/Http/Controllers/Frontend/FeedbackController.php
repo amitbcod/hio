@@ -49,7 +49,7 @@ class FeedbackController extends Controller
 
     public function submit(Request $request, $tripId)
     {
-        $trip = Trip::with(['traveler'])->findOrFail($tripId);
+        $trip = Trip::with(['traveler', 'accommodationBookings.accommodation', 'activityBookings.activity'])->findOrFail($tripId);
 
         $payload = $request->all();
 

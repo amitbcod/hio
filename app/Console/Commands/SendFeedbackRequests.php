@@ -16,9 +16,16 @@ class SendFeedbackRequests extends Command
     {
         $date = now()->subDays(4)->toDateString();
 
-        $trips = Trip::whereDate('end_date', $date)
+        $trips = Trip::where(function ($query) use ($date) {
+            // For regular trips: check end_date = 4 days ago
+            $query->whereDate('end_date', $date)
+                // For activity trips: end_date is null, so check start_date = 4 days ago
+                ->orWhere(function ($q) use ($date) {
+                    $q->whereNull('end_date')
+                        ->whereDate('start_date', $date);
+                });
+        })
             ->whereNull('feedback_request_sent_at')
-            ->where('status', 'Completed')
             ->with('traveler')
             ->get();
 

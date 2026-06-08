@@ -18,7 +18,7 @@
 
   <div class="section">
     <h3>Traveler</h3>
-    <p class="small">Name: {{ optional($trip->traveler)->name ?? 'N/A' }} &nbsp; | &nbsp; Email: {{ optional($trip->traveler)->email ?? 'N/A' }}</p>
+    <p class="small">Name: {{ optional($trip->traveler)->full_name ?? optional($trip->traveler)->name ?? 'N/A' }} &nbsp; | &nbsp; Email: {{ optional($trip->traveler)->email ?? 'N/A' }}</p>
   </div>
 
   @if(!empty($payload['trip']) )
@@ -58,11 +58,11 @@
     <div class="section">
       <h3>Accommodation Reviews</h3>
       @foreach($payload['accommodations'] as $abId => $acc)
-        <h4 style="margin:8px 0 4px 0">Accommodation ID: {{ $abId }} @if(isset($acc['id']) && $acc['id']) ({{ $acc['id'] }}) @endif</h4>
+        <h4 style="margin:8px 0 4px 0">Accommodation: {{ $acc['name'] ?? ('Accommodation #' . $abId) }}</h4>
         <table>
           <tbody>
             @foreach($acc as $key => $val)
-              @if(in_array($key, ['id','review']))
+              @if(in_array($key, ['id','review','name']))
                 @continue
               @endif
               <tr>
@@ -84,11 +84,11 @@
     <div class="section">
       <h3>Activity Reviews</h3>
       @foreach($payload['activities'] as $actId => $act)
-        <h4 style="margin:8px 0 4px 0">Activity ID: {{ $actId }} @if(isset($act['id']) && $act['id']) ({{ $act['id'] }}) @endif</h4>
+        <h4 style="margin:8px 0 4px 0">Activity: {{ $act['name'] ?? ('Activity #' . $actId) }}</h4>
         <table>
           <tbody>
             @foreach($act as $key => $val)
-              @if(in_array($key, ['id','review']))
+              @if(in_array($key, ['id','review','name']))
                 @continue
               @endif
               <tr>

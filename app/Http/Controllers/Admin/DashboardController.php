@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Business;
 use App\Models\Accommodation;
 use App\Models\Activity;
+use App\Models\Review;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BusinessApproved;
 
@@ -47,7 +48,11 @@ class DashboardController extends Controller
             ->orderByRaw('COALESCE(submitted_for_approval_at, created_at) DESC')
             ->get();
 
-        return view('admin.dashboard.index', compact('businesses', 'pendingAccommodations', 'pendingActivities'));
+        $feedbacks = Review::with(['trip.traveler'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('admin.dashboard.index', compact('businesses', 'pendingAccommodations', 'pendingActivities', 'feedbacks'));
     }
 
     public function approveBusiness(Request $request, Business $business)

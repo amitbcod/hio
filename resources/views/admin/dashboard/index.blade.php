@@ -116,5 +116,39 @@
             @endforelse
         </tbody>
     </table>
+
+    <h5 class="mt-5">Feedback Submitted</h5>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Review ID</th>
+                <th>Trip ID</th>
+                <th>Traveler</th>
+                <th>Overall Rating</th>
+                <th>Submitted</th>
+                <th>Trip Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($feedbacks as $feedback)
+                <tr>
+                    <td>{{ $feedback->id }}</td>
+                    <td>{{ $feedback->trip_id }}</td>
+                    <td>{{ optional($feedback->trip->traveler)->full_name ?? optional($feedback->trip->traveler)->email ?? 'N/A' }}</td>
+                    <td>{{ $feedback->overall_rating ?? 'N/A' }}</td>
+                    <td>{{ $feedback->created_at ? $feedback->created_at->format('Y-m-d H:i') : 'N/A' }}</td>
+                    <td>
+                        @if($feedback->trip)
+                            <a href="{{ route('admin.trips.show', $feedback->trip) }}" class="btn btn-sm btn-primary">View Trip</a>
+                        @else
+                            N/A
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="6">No feedback has been submitted yet.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
 </div>
 @endsection

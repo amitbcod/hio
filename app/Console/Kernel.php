@@ -14,8 +14,8 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule)
     {
-        // Run daily to send feedback request emails for trips ended 4 days ago
-        $schedule->command('feedback:send-requests')->daily();
+        // Scheduling is registered in routes/console.php for this project.
+        // Keep this method present for compatibility; tasks are added in routes/console.php.
     }
 
     protected function commands()
