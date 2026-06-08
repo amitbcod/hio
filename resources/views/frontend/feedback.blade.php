@@ -189,43 +189,46 @@
         <div>Very Good (4)</div>
         <div>Excellent (5)</div>
       </div>
+      
+      <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;">
+        @foreach($tripRatingFields as $fieldKey => $fieldLabel)
+          <div class="rating-row">
+            <div class="rating-label">{{ $fieldLabel }}</div>
+            <div class="star-rating">
+              <div class="stars" data-rating-input="trip[{{ $fieldKey }}]">
+                @for($i = 1; $i <= 5; $i++)
+                  <span class="star" data-value="{{ $i }}">★</span>
+                @endfor
+              </div>
+              <span class="rating-value">-</span>
+            </div>
+            <input type="hidden" name="trip[{{ $fieldKey }}]" value="{{ $tripCriteria[$fieldKey] ?? '' }}">
+          </div>
+        @endforeach
+      
 
-      @foreach($tripRatingFields as $fieldKey => $fieldLabel)
         <div class="rating-row">
-          <div class="rating-label">{{ $fieldLabel }}</div>
+          <div class="rating-label">Overall tour experience</div>
           <div class="star-rating">
-            <div class="stars" data-rating-input="trip[{{ $fieldKey }}]">
+            <div class="stars" data-rating-input="overall_rating">
               @for($i = 1; $i <= 5; $i++)
                 <span class="star" data-value="{{ $i }}">★</span>
               @endfor
             </div>
-            <span class="rating-value">-</span>
+            <span class="rating-value" id="overall_rating_display">-</span>
           </div>
-          <input type="hidden" name="trip[{{ $fieldKey }}]" value="{{ $tripCriteria[$fieldKey] ?? '' }}">
+          <input type="hidden" name="overall_rating" id="overall_rating" value="{{ $review->overall_rating ?? '' }}">
         </div>
-      @endforeach
 
-      <div class="rating-row">
-        <div class="rating-label">Overall tour experience</div>
-        <div class="star-rating">
-          <div class="stars" data-rating-input="overall_rating">
-            @for($i = 1; $i <= 5; $i++)
-              <span class="star" data-value="{{ $i }}">★</span>
-            @endfor
-          </div>
-          <span class="rating-value" id="overall_rating_display">-</span>
+        <div class="section-comment">
+          <label><strong>How did you hear about us?</strong></label>
+          <textarea name="hear_about_us">{{ $tripReviewData['hear_about_us'] ?? '' }}</textarea>
         </div>
-        <input type="hidden" name="overall_rating" id="overall_rating" value="{{ $review->overall_rating ?? '' }}">
-      </div>
 
-      <div class="section-comment">
-        <label><strong>How did you hear about us?</strong></label>
-        <textarea name="hear_about_us">{{ $tripReviewData['hear_about_us'] ?? '' }}</textarea>
-      </div>
-
-      <div class="section-comment">
-        <label><strong>Any other feedback and comments:</strong></label>
-        <textarea name="trip_comments">{{ $tripReviewData['trip_comments'] ?? '' }}</textarea>
+        <div class="section-comment">
+          <label><strong>Any other feedback and comments:</strong></label>
+          <textarea name="trip_comments">{{ $tripReviewData['trip_comments'] ?? '' }}</textarea>
+        </div>
       </div>
     </div>
 
