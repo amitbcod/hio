@@ -5,11 +5,11 @@
 <style>
      .container {
         max-width: 1300px;
-        padding: 30px 0;
     }
     .feedback-head {
-          font-weight: bold;
-    margin-bottom: 28px;
+      font-weight: bold;
+      margin-bottom: 28px;
+      padding-top:30px
     }
  </style>
 
@@ -159,6 +159,17 @@
       font-size: 25px;
       margin-bottom: 20px;
     }
+
+    .feedback-btn-div {
+        margin-bottom: 30px;
+    }
+
+    .feedback-btn-div .btn-primary {
+        background: #139999;
+        color:#ffffff;
+        border-color: #139999;
+        font-weight: 600;
+    }
   </style>
 
   <form method="post" action="{{ route('frontend.feedback.submit', [$trip->id]) }}">
@@ -201,8 +212,8 @@
           </div>
           <span class="rating-value" id="overall_rating_display">-</span>
         </div>
-        <input type="hidden" name="overall_rating" id="overall_rating" value="{{ $review->overall_rating ?? '' }}">
       </div>
+      <input type="hidden" name="overall_rating" id="overall_rating" value="{{ $review->overall_rating ?? '' }}">
 
       <div class="section-comment">
         <label><strong>How did you hear about us?</strong></label>
@@ -248,8 +259,9 @@
                   </div>
                   <span class="rating-value">-</span>
                 </div>
-                <input type="hidden" name="accommodations[{{ $ab->id }}][{{ $fieldKey }}]" value="{{ $accCriteria[$fieldKey] ?? '' }}">
+                
               </div>
+              <input type="hidden" name="accommodations[{{ $ab->id }}][{{ $fieldKey }}]" value="{{ $accCriteria[$fieldKey] ?? '' }}">
             @endforeach
 
             <div class="section-comment">
@@ -307,7 +319,7 @@
       </div>
     @endif
 
-    <div>
+    <div class="feedback-btn">
       <button class="btn btn-primary" type="submit">{{ $review ? 'Update feedback' : 'Submit feedback' }}</button>
     </div>
   </form>
