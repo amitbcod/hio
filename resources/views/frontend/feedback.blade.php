@@ -73,7 +73,7 @@
 
     .rating-row {
       display: grid;
-      grid-template-columns: 200px 1fr;
+      grid-template-columns: 210px 1fr;
       align-items: center;
       gap: 12px;
       padding: 6px 0;
@@ -113,13 +113,14 @@
       display: grid;
       gap: 12px;
       cursor: pointer;
-      grid-template-columns: repeat(5, minmax(160px, 1fr));
+      grid-template-columns: repeat(5, minmax(158px, 1fr));
     }
 
     .star {
       font-size: 26px;
       color: #ddd;
       transition: color 0.2s ease;
+      text-align: center;
     }
 
     .star.filled {
@@ -173,6 +174,9 @@
         border-color: #139999;
         font-weight: 600;
     }
+    .rating-legend > div {
+      text-align: center;
+    }
   </style>
 
   <form method="post" action="{{ route('frontend.feedback.submit', [$trip->id]) }}">
@@ -190,7 +194,7 @@
         <div>Excellent (5)</div>
       </div>
       
-      <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;">
+      <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px; background: #f9f9f9;">
         @foreach($tripRatingFields as $fieldKey => $fieldLabel)
           <div class="rating-row">
             <div class="rating-label">{{ $fieldLabel }}</div>
@@ -250,7 +254,7 @@
             $accCriteria = optional($accReview)->criteria ?: [];
           @endphp
 
-          <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;">
+          <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;background: #f9f9f9;">
             <h3 style="margin-top: 0;">{{ $ab->property_name ?? ('Accommodation #' . $ab->id) }}</h3>
             <input type="hidden" name="accommodations[{{ $ab->id }}][id]" value="{{ $ab->id }}">
 
@@ -296,7 +300,7 @@
             $actCriteria = optional($actReview)->criteria ?: [];
           @endphp
 
-          <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;">
+          <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;background: #f9f9f9;">
             <h3 style="margin-top: 0;">{{ $act->activity_name ?? ('Activity #' . $act->id) }}</h3>
             <input type="hidden" name="activities[{{ $act->id }}][id]" value="{{ $act->id }}">
 
