@@ -73,7 +73,7 @@
 
     .rating-row {
       display: grid;
-      grid-template-columns: 220px 1fr 120px;
+      grid-template-columns: 200px 1fr;
       align-items: center;
       gap: 12px;
       padding: 6px 0;
@@ -90,7 +90,7 @@
 
     .rating-legend {
       display: grid;
-      grid-template-columns: 220px repeat(5, minmax(80px, 1fr));
+      grid-template-columns: 220px repeat(6, minmax(80px, 1fr));
       gap: 12px;
       font-size: 13px;
       font-weight: 700;
@@ -109,8 +109,11 @@
 
     .stars {
       display: flex;
-      gap: 5px;
       cursor: pointer;
+      display: grid;
+      gap: 12px;
+      cursor: pointer;
+      grid-template-columns: repeat(5, minmax(160px, 1fr));
     }
 
     .star {
@@ -198,9 +201,8 @@
             </div>
             <span class="rating-value">-</span>
           </div>
-          
+          <input type="hidden" name="trip[{{ $fieldKey }}]" value="{{ $tripCriteria[$fieldKey] ?? '' }}">
         </div>
-        <input type="hidden" name="trip[{{ $fieldKey }}]" value="{{ $tripCriteria[$fieldKey] ?? '' }}">
       @endforeach
 
       <div class="rating-row">
@@ -213,8 +215,8 @@
           </div>
           <span class="rating-value" id="overall_rating_display">-</span>
         </div>
+        <input type="hidden" name="overall_rating" id="overall_rating" value="{{ $review->overall_rating ?? '' }}">
       </div>
-      <input type="hidden" name="overall_rating" id="overall_rating" value="{{ $review->overall_rating ?? '' }}">
 
       <div class="section-comment">
         <label><strong>How did you hear about us?</strong></label>
@@ -260,9 +262,8 @@
                   </div>
                   <span class="rating-value">-</span>
                 </div>
-                
+                <input type="hidden" name="accommodations[{{ $ab->id }}][{{ $fieldKey }}]" value="{{ $accCriteria[$fieldKey] ?? '' }}">
               </div>
-              <input type="hidden" name="accommodations[{{ $ab->id }}][{{ $fieldKey }}]" value="{{ $accCriteria[$fieldKey] ?? '' }}">
             @endforeach
 
             <div class="section-comment">
@@ -307,9 +308,8 @@
                   </div>
                   <span class="rating-value">-</span>
                 </div>
-                
+                <input type="hidden" name="activities[{{ $act->id }}][{{ $fieldKey }}]" value="{{ $actCriteria[$fieldKey] ?? '' }}">
               </div>
-              <input type="hidden" name="activities[{{ $act->id }}][{{ $fieldKey }}]" value="{{ $actCriteria[$fieldKey] ?? '' }}">
             @endforeach
 
             <div class="section-comment">
