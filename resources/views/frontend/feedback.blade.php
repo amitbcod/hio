@@ -1,8 +1,22 @@
 @extends('layouts.app')
 
 @section('content')
+
+<style>
+     .container {
+        max-width: 1300px;
+    }
+    .feedback-head {
+      font-weight: bold;
+      margin-bottom: 28px;
+      padding-top:30px
+    }
+ </style>
+
+
+
 <div class="container">
-  <h1>Feedback for Trip #{{ $trip->id }}</h1>
+  <h2 class="feedback-head">Feedback for Trip #{{ $trip->id }}</h2>
 
   @if($review)
     <div class="alert alert-info">
@@ -59,7 +73,7 @@
 
     .rating-row {
       display: grid;
-      grid-template-columns: 220px 1fr 120px;
+      grid-template-columns: 210px 1fr;
       align-items: center;
       gap: 12px;
       padding: 6px 0;
@@ -76,13 +90,15 @@
 
     .rating-legend {
       display: grid;
-      grid-template-columns: 220px repeat(5, minmax(80px, 1fr));
+      grid-template-columns: 220px repeat(6, minmax(80px, 1fr));
       gap: 12px;
       font-size: 13px;
       font-weight: 700;
       margin-bottom: 8px;
       padding: 8px 0;
       border-bottom: 1px solid #ccc;
+      background: #19b5b5;
+    color: #fff;
     }
 
     .star-rating {
@@ -93,14 +109,18 @@
 
     .stars {
       display: flex;
-      gap: 5px;
       cursor: pointer;
+      display: grid;
+      gap: 12px;
+      cursor: pointer;
+      grid-template-columns: repeat(5, minmax(158px, 1fr));
     }
 
     .star {
       font-size: 26px;
       color: #ddd;
       transition: color 0.2s ease;
+      text-align: center;
     }
 
     .star.filled {
@@ -136,6 +156,49 @@
       border-radius: 4px;
       resize: vertical;
     }
+
+    .section-box h2 {
+      color: #19b5b5;
+      font-weight: bold;
+      font-size: 25px;
+      margin-bottom: 20px;
+    }
+
+    .feedback-btn-div {
+        margin-bottom: 30px;
+    }
+
+    .feedback-btn-div .btn-primary {
+        background: #139999;
+        color:#ffffff;
+        border-color: #139999;
+        font-weight: 600;
+    }
+    .rating-legend > div {
+      text-align: center;
+    }
+
+    @media (max-width:767px) {
+      .rating-legend {
+        grid-template-columns: 110px repeat(6, minmax(30px, 1fr));
+        gap: 5px;
+      }
+      .rating-row {
+        grid-template-columns: 100px 1fr;
+        gap: 5px;
+      }
+      .stars {
+          gap: 5px;
+          grid-template-columns: repeat(5, minmax(30px, 1fr));
+      }
+      .rating-label {
+          font-size: 13px;
+      }
+      .rating-legend > div {
+          text-align: center;
+          font-size: 11px;
+      }
+    }
   </style>
 
   <form method="post" action="{{ route('frontend.feedback.submit', [$trip->id]) }}">
@@ -152,43 +215,46 @@
         <div>Very Good (4)</div>
         <div>Excellent (5)</div>
       </div>
+      
+      <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px; background: #f9f9f9;">
+        @foreach($tripRatingFields as $fieldKey => $fieldLabel)
+          <div class="rating-row">
+            <div class="rating-label">{{ $fieldLabel }}</div>
+            <div class="star-rating">
+              <div class="stars" data-rating-input="trip[{{ $fieldKey }}]">
+                @for($i = 1; $i <= 5; $i++)
+                  <span class="star" data-value="{{ $i }}">★</span>
+                @endfor
+              </div>
+              <span class="rating-value">-</span>
+            </div>
+            <input type="hidden" name="trip[{{ $fieldKey }}]" value="{{ $tripCriteria[$fieldKey] ?? '' }}">
+          </div>
+        @endforeach
+      
 
-      @foreach($tripRatingFields as $fieldKey => $fieldLabel)
         <div class="rating-row">
-          <div class="rating-label">{{ $fieldLabel }}</div>
+          <div class="rating-label">Overall tour experience</div>
           <div class="star-rating">
-            <div class="stars" data-rating-input="trip[{{ $fieldKey }}]">
+            <div class="stars" data-rating-input="overall_rating">
               @for($i = 1; $i <= 5; $i++)
                 <span class="star" data-value="{{ $i }}">★</span>
               @endfor
             </div>
-            <span class="rating-value">-</span>
+            <span class="rating-value" id="overall_rating_display">-</span>
           </div>
-          <input type="hidden" name="trip[{{ $fieldKey }}]" value="{{ $tripCriteria[$fieldKey] ?? '' }}">
+          <input type="hidden" name="overall_rating" id="overall_rating" value="{{ $review->overall_rating ?? '' }}">
         </div>
-      @endforeach
 
-      <div class="rating-row">
-        <div class="rating-label">Overall tour experience</div>
-        <div class="star-rating">
-          <div class="stars" data-rating-input="overall_rating">
-            @for($i = 1; $i <= 5; $i++)
-              <span class="star" data-value="{{ $i }}">★</span>
-            @endfor
-          </div>
-          <span class="rating-value" id="overall_rating_display">-</span>
+        <div class="section-comment">
+          <label><strong>How did you hear about us?</strong></label>
+          <textarea name="hear_about_us">{{ $tripReviewData['hear_about_us'] ?? '' }}</textarea>
         </div>
-        <input type="hidden" name="overall_rating" id="overall_rating" value="{{ $review->overall_rating ?? '' }}">
-      </div>
 
-      <div class="section-comment">
-        <label><strong>How did you hear about us?</strong></label>
-        <textarea name="hear_about_us">{{ $tripReviewData['hear_about_us'] ?? '' }}</textarea>
-      </div>
-
-      <div class="section-comment">
-        <label><strong>Any other feedback and comments:</strong></label>
-        <textarea name="trip_comments">{{ $tripReviewData['trip_comments'] ?? '' }}</textarea>
+        <div class="section-comment">
+          <label><strong>Any other feedback and comments:</strong></label>
+          <textarea name="trip_comments">{{ $tripReviewData['trip_comments'] ?? '' }}</textarea>
+        </div>
       </div>
     </div>
 
@@ -210,7 +276,7 @@
             $accCriteria = optional($accReview)->criteria ?: [];
           @endphp
 
-          <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;">
+          <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;background: #f9f9f9;">
             <h3 style="margin-top: 0;">{{ $ab->property_name ?? ('Accommodation #' . $ab->id) }}</h3>
             <input type="hidden" name="accommodations[{{ $ab->id }}][id]" value="{{ $ab->id }}">
 
@@ -256,7 +322,7 @@
             $actCriteria = optional($actReview)->criteria ?: [];
           @endphp
 
-          <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;">
+          <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;background: #f9f9f9;">
             <h3 style="margin-top: 0;">{{ $act->activity_name ?? ('Activity #' . $act->id) }}</h3>
             <input type="hidden" name="activities[{{ $act->id }}][id]" value="{{ $act->id }}">
 
@@ -284,7 +350,7 @@
       </div>
     @endif
 
-    <div>
+    <div class="feedback-btn-div">
       <button class="btn btn-primary" type="submit">{{ $review ? 'Update feedback' : 'Submit feedback' }}</button>
     </div>
   </form>
