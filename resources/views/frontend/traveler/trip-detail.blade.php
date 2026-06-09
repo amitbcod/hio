@@ -13,6 +13,20 @@
             <div style="margin-top: 20px;">
                 <h1 style="margin: 10px 0; font-size: 2.5rem;">Trip ID: <strong>#100{{ $trip->id }}</h1>
                 <!-- <p style="color: #666; font-size: 1rem; margin: 5px 0; padding: 12px 16px; background: #fff3e0; border-left: 4px solid #ff9500; display: inline-block; border-radius: 4px;">Trip ID: <strong>#{{ $trip->id }}</strong></p> -->
+                
+                @php
+                    $tripHasEnded = $tripEndDate && \Carbon\Carbon::parse($tripEndDate)->isPast();
+                    $traveler = auth('traveler')->user();
+                    $canLeaveFeedback = $traveler && $trip->traveler_account_id === $traveler->id && $tripHasEnded;
+                @endphp
+                
+                @if($canLeaveFeedback)
+                <div style="margin-top: 15px;">
+                    <a href="{{ route('frontend.feedback.show', ['trip' => $trip->id]) }}" class="btn btn-primary" style="background: #ff9500; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; display: inline-block; font-weight: 600;">
+                        ⭐ Share Your Feedback
+                    </a>
+                </div>
+                @endif
             </div>
         </div>
 

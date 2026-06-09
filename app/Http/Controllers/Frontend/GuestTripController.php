@@ -302,46 +302,218 @@ class GuestTripController extends Controller
         }
         
         $guestRows = '';
+        $guestNames = [];
         foreach ($guestsForVoucher as $index => $guest) {
+            $fullName = trim($guest->first_name . ' ' . ($guest->last_name ?? ''));
+            $guestNames[] = $fullName;
             $guestRows .= '<tr>' .
-                '<td>' . e(trim($guest->first_name . ' ' . ($guest->last_name ?? ''))) . '</td>' .
+                '<td>' . e($fullName ?: '-') . '</td>' .
                 '<td>' . e($guest->nationality ?? '-') . '</td>' .
                 '<td>' . ($guest->dob ? e(optional($guest->dob)->format('d/m/Y')) : '-') . '</td>' .
                 '</tr>';
         }
 
-        $html = '<h1 style="font-size:18px;">' . e($isActivity ? 'Activity' : 'Accommodation') . ' Voucher</h1>' .
-            '<h2 style="font-size:14px; margin-top:12px; margin-bottom:12px;">Booking Details</h2>' .
-            '<table border="1" cellpadding="8" cellspacing="0" width="100%" style="border-collapse:collapse;">' .
-            '<tr style="background-color:#f0f0f0;"><td width="30%" style="font-weight:bold;">Booking Reference:</td><td>' . e($booking->booking_reference) . '</td></tr>' .
-            '<tr><td style="font-weight:bold;">Trip:</td><td>' . e($trip->id ? '100'.$trip->id : 'N/A') . '</td></tr>' .
-            '<tr style="background-color:#f0f0f0;"><td style="font-weight:bold;">' . e($isActivity ? 'Activity' : 'Accommodation') . ':</td><td>' . e($serviceName) . '</td></tr>' .
-            '<tr><td style="font-weight:bold;">Date:</td><td>' . e($voucherDate) . '</td></tr>' .
-            '<tr style="background-color:#f0f0f0;"><td style="font-weight:bold;">Variant:</td><td>' . e($variantName) . '</td></tr>' .
-            '<tr><td style="font-weight:bold;">Duration:</td><td>' . ($duration ? e($duration) : 'N/A') . '</td></tr>' .
-            ($isActivity ? '<tr style="background-color:#f0f0f0;"><td style="font-weight:bold;">Activity Time Slot:</td><td>' . $activityTimeSlotDisplay . '</td></tr>' : '') .
-            '</table>' .
-            '<h2 style="font-size:16px; margin-top:18px;">' . e($isActivity ? 'Activity' : 'Accommodation') . ' Details</h2>' .
-            '<p>' . $overview . '</p>' .
-            '<p><strong>' . e($isActivity ? 'Meeting Point' : 'Check-in/out Details') . ':</strong><br>' . $meetingPoint . '</p>' .
-            '<h2 style="font-size:16px; margin-top:18px;">Participant Details</h2>' .
-            '<table border="1" cellpadding="6" cellspacing="0" width="100%" style="border-collapse:collapse;">' .
-            '<thead><tr style="background-color:#f5f5f5;"><th>Name</th><th>Nationality</th><th>Date of Birth</th></tr></thead>' .
-            '<tbody>' . $guestRows . '</tbody></table>' .
-            '<h2 style="font-size:16px; margin-top:18px;">Contacts</h2>' .
-            '<p><strong>Reservation Contact</strong><br>' . (count($reservationContact) ? implode('<br>', array_map('e', $reservationContact)) : 'Not available') . '</p>' .
-            '<p><strong>Accounting Contact</strong><br>' . (count($accountingContact) ? implode('<br>', array_map('e', $accountingContact)) : 'Not available') . '</p>' .
-            '<p><strong>Management Contact</strong><br>' . (count($managementContact) ? implode('<br>', array_map('e', $managementContact)) : 'Not available') . '</p>' .
-            ($isActivity ? '<p><strong>Operations Contact</strong><br>' . (count($opsContact) ? implode('<br>', array_map('e', $opsContact)) : 'Not available') . '</p>' : '');
+        $issueDate = now()->format('d M Y');
+        $serviceDate = $isActivity ? optional($booking->activity_date)->format('d M Y') : (optional($booking->check_in_date)->format('d M Y') . ' - ' . optional($booking->check_out_date)->format('d M Y'));
+        $checkInDisplay = $isActivity ? optional($booking->activity_date)->format('d M Y') . ' • ' . ($booking->activity_time ?? '-') : optional($booking->check_in_date)->format('d M Y') . ' • From ' . ($booking->check_in_time ?? '14:00');
+        $checkOutDisplay = $isActivity ? ($activity->duration ? e($activity->duration) : '-') : optional($booking->check_out_date)->format('d M Y') . ' • By ' . ($booking->check_out_time ?? '11:00');
+        $nights = '-';
+        if ($isAccommodation && $booking->check_in_date && $booking->check_out_date) {
+            $diff = $booking->check_in_date->diffInDays($booking->check_out_date);
+            $nights = $diff . ' Night' . ($diff === 1 ? '' : 's');
+        }
 
-        $pdf = new \TCPDF();
+        $responsibleName = trim($guestsForVoucher[0]->first_name . ' ' . ($guestsForVoucher[0]->last_name ?? '')) ?: '-';
+        $responsibleMobile = $booking->guest_mobile ?? $booking->guest_phone ?? '-';
+        $responsibleEmail = $otpToken->email ?? $booking->guest_email ?? '-';
+        $adultCount = $booking->adults ?? $booking->adult_count ?? null;
+        $childCount = $booking->children ?? $booking->children_count ?? null;
+        $partySizeParts = [];
+        if ($adultCount !== null) {
+            $partySizeParts[] = (int) $adultCount . ' Adults';
+        }
+        if ($childCount !== null) {
+            $partySizeParts[] = (int) $childCount . ' Children';
+        }
+        if (empty($partySizeParts)) {
+            $partySizeParts[] = count($guestsForVoucher) . ' Traveller' . (count($guestsForVoucher) === 1 ? '' : 's');
+        }
+        $travelPartySize = implode(' • ', $partySizeParts);
+        $otherTravellers = count($guestNames) > 1 ? e(implode(', ', array_slice($guestNames, 1))) : '-';
+
+        $providerName = $accommodation->property_name ?? ($activity->activity_name ?? 'Service Provider');
+        $providerAddress = trim(implode(', ', array_filter([
+            $accommodation->address_line_1 ?? null,
+            $accommodation->address_line_2 ?? null,
+            $accommodation->city ?? null,
+            $accommodation->country ?? null,
+        ])), ', ');
+        $providerAddress = $providerAddress ?: '-';
+        $emergencyContact = $accommodation->emergency_contact_phone ?? $operator->emergency_contact_phone ?? '-';
+        $receptionContact = $accommodation->reception_contact_phone ?? $operator->reception_contact_phone ?? '-';
+
+        $roomType = $room->room_name ?? $booking->room_name ?? '-';
+        $occupancy = $adultCount !== null ? (int) $adultCount . ' Adults' . ($childCount ? ' • ' . (int) $childCount . ' Children' : '') : '-';
+        $mealPlan = $booking->meal_plan ?? $booking->package_name ?? 'N/A';
+        $specialRequests = $booking->special_request ?? $booking->special_requests ?? 'None';
+        $bookingNotes = $booking->notes ?? $booking->booking_notes ?? '-';
+
+        $operatorLabel = e($operator->business_name ?? $providerName);
+        $locationLabelSafe = e('Mauritius');
+        $voucherTitle = e($isActivity ? 'Activity Service Voucher' : 'Accommodation Service Voucher');
+        $bookingReferenceSafe = e($booking->booking_reference ?? '-');
+        $issueDateSafe = e($issueDate);
+        $serviceDateSafe = e($serviceDate);
+        $serviceTypeLabel = e($isActivity ? 'Activity' : 'Accommodation');
+        $responsibleNameSafe = e($responsibleName);
+        $responsibleMobileSafe = e($responsibleMobile);
+        $responsibleEmailSafe = e($responsibleEmail);
+        $travelPartySizeSafe = e($travelPartySize);
+        $otherTravellersSafe = e($otherTravellers);
+        $providerNameSafe = e($providerName);
+        $providerAddressSafe = e($providerAddress);
+        $emergencyContactSafe = e($emergencyContact);
+        $receptionContactSafe = e($receptionContact);
+        $serviceNameSafe = e($serviceName);
+        $checkInDisplaySafe = e($checkInDisplay);
+        $checkOutDisplaySafe = e($checkOutDisplay);
+        $nightsSafe = e($nights);
+        $roomTypeSafe = e($roomType);
+        $occupancySafe = e($occupancy);
+        $mealPlanSafe = e($mealPlan);
+        $specialRequestsSafe = e($specialRequests);
+        $bookingNotesSafe = e($bookingNotes);
+        $infoLabelCheckIn = e($isActivity ? 'Activity Date / Time' : 'Check-in Date / Time');
+        $infoLabelCheckOut = e($isActivity ? 'Finish / Duration' : 'Check-out Date / Time');
+        $infoLabelDaysNights = e($isActivity ? 'Number of Days' : 'Number of Nights');
+        $infoLabelType = e($isActivity ? 'Activity Type' : 'Room Type');
+
+        $html = <<<HTML
+<style>
+body{font-family:helvetica;color:#222; font-size:10px;}
+.section-title{font-size:13px;color:#0b2b51;margin:0 0 8px 0;font-weight:700;}
+.label{font-size:8px;color:#5f6d7a;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 4px 0;}
+.value{font-size:11px;font-weight:700;margin:0;}
+.info-card{border:1px solid #d7e4f0;border-radius:10px;background:#f7fafd;padding:10px;margin-bottom:8px;}
+.info-card strong{display:block;font-size:11px;color:#0b2b51;margin-bottom:4px;}
+.box{border:1px solid #d7e4f0;border-radius:12px;padding:14px;margin-bottom:12px;background:#fff;}
+.accent-box{border-left:4px solid #f7971e;}
+.small-text{font-size:9px;color:#5f6d7a;line-height:1.5;}
+.footer-box{border:1px solid #d7e4f0;background:#eef4fb;border-radius:12px;padding:12px;margin-top:14px;}
+.badge{display:inline-block;padding:5px 10px;border-radius:12px;font-size:9px;color:#1f3f61;background:#dceaf8;margin-right:6px;}
+.check-list{margin:0;padding-left:18px;color:#33475b;line-height:1.6;}
+.check-list li{margin-bottom:6px;}
+.info-row td{padding:4px;vertical-align:top;}
+.table-grid{width:100%;border-collapse:collapse;margin-top:8px;}
+.table-grid td,.table-grid th{border:1px solid #d7e4f0;padding:8px;vertical-align:top;}
+.table-grid th{background:#eef4fb;text-align:left;}
+.two-col{width:49%;display:inline-block;vertical-align:top;}
+.two-col + .two-col{margin-left:2%;}
+</style>
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td width="65%" style="vertical-align:top;">
+    <div style="border:1px dashed #cfd9e6;border-radius:12px;padding:16px;text-align:center;min-height:90px;">
+        <div style="font-size:16px;font-weight:700;color:#0b2b51;">MPO LOGO</div>
+        <div style="font-size:10px;color:#6a7b91;margin-top:6px;">{$operatorLabel}</div>
+    </div>
+</td>
+<td width="35%" style="text-align:right;vertical-align:top;">
+    <div style="display:inline-block;padding:10px 12px;border:1px solid #d7e4f0;border-radius:12px;background:#ffffff;">
+        <div style="font-size:11px;color:#5f6d7a;margin-bottom:6px;">Powered by</div>
+        <div style="font-size:18px;font-weight:700;color:#f7971e;">Holidays.io</div>
+    </div>
+</td>
+</tr>
+</table>
+<div style="margin-top:16px;">
+    <span class="badge">{$locationLabelSafe}</span>
+    <span class="badge" style="background:#c6e9ce;color:#1b5e20;">Confirmed</span>
+</div>
+<h1 style="font-size:22px;margin:12px 0 4px 0;color:#0b2b51;">{$voucherTitle}</h1>
+<div style="font-size:10px;color:#5f6d7a;margin-bottom:16px;">Voucher No: {$bookingReferenceSafe} | Issue Date: {$issueDateSafe}</div>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+<tr>
+<td width="16.66%" style="padding:4px;"><div class="info-card"><strong>Voucher No.</strong>{$bookingReferenceSafe}</div></td>
+<td width="16.66%" style="padding:4px;"><div class="info-card"><strong>Booking Ref.</strong>{$bookingReferenceSafe}</div></td>
+<td width="16.66%" style="padding:4px;"><div class="info-card"><strong>Issue Date</strong>{$issueDateSafe}</div></td>
+<td width="16.66%" style="padding:4px;"><div class="info-card"><strong>Service Date</strong>{$serviceDateSafe}</div></td>
+<td width="16.66%" style="padding:4px;"><div class="info-card"><strong>Service Type</strong>{$serviceTypeLabel}</div></td>
+<td width="16.66%" style="padding:4px;"><div class="info-card"><strong>Payment Status</strong>Paid</div></td>
+</tr>
+</table>
+
+<div class="box accent-box">
+    <div class="section-title">Responsible Traveller</div>
+    <table width="100%" class="info-row" cellpadding="0" cellspacing="0">
+        <tr>
+            <td width="33%"><div class="label">Full Name</div><div class="value">{$responsibleNameSafe}</div></td>
+            <td width="33%"><div class="label">Mobile / WhatsApp</div><div class="value">{$responsibleMobileSafe}</div></td>
+            <td width="33%"><div class="label">Email</div><div class="value">{$responsibleEmailSafe}</div></td>
+        </tr>
+    </table>
+    <div class="small-text" style="margin-top:10px;">
+        <strong>Travel Party Size:</strong> {$travelPartySizeSafe}<br>
+        <strong>Other Travellers:</strong> {$otherTravellersSafe}
+    </div>
+</div>
+
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td width="50%" style="padding-right:8px;vertical-align:top;">
+    <div class="box">
+        <div class="section-title">Service Provider / Property</div>
+        <div class="small-text"><strong>{$providerNameSafe}</strong><br>{$providerAddressSafe}</div>
+        <div style="margin-top:10px;"><strong>Emergency Contact (24/7)</strong><br>{$emergencyContactSafe}</div>
+        <div style="margin-top:6px;"><strong>Reception / Service Contact</strong><br>{$receptionContactSafe}</div>
+    </div>
+</td>
+<td width="50%" style="padding-left:8px;vertical-align:top;">
+    <div class="box">
+        <div class="section-title">Service Details</div>
+        <table width="100%" class="info-row" cellpadding="0" cellspacing="0">
+            <tr><td class="label" width="40%">Property Name</td><td>{$serviceNameSafe}</td></tr>
+            <tr><td class="label">{$infoLabelCheckIn}</td><td>{$checkInDisplaySafe}</td></tr>
+            <tr><td class="label">{$infoLabelCheckOut}</td><td>{$checkOutDisplaySafe}</td></tr>
+            <tr><td class="label">{$infoLabelDaysNights}</td><td>{$nightsSafe}</td></tr>
+            <tr><td class="label">{$infoLabelType}</td><td>{$roomTypeSafe}</td></tr>
+            <tr><td class="label">Occupancy</td><td>{$occupancySafe}</td></tr>
+            <tr><td class="label">Meal Plan</td><td>{$mealPlanSafe}</td></tr>
+            <tr><td class="label">Special Requests</td><td>{$specialRequestsSafe}</td></tr>
+            <tr><td class="label">Booking Notes</td><td>{$bookingNotesSafe}</td></tr>
+        </table>
+    </div>
+</td>
+</tr>
+</table>
+
+<div class="box">
+    <div class="section-title">Important Information / Conditions</div>
+    <ul class="check-list">
+        <li>Please present this voucher on arrival at the property.</li>
+        <li>All travellers must carry a valid passport or national ID.</li>
+        <li>Check-in time: From 14:00 • Check-out time: By 11:00.</li>
+        <li>Early check-in / late check-out are subject to availability.</li>
+        <li>All amendments and cancellations are subject to the property's booking conditions.</li>
+        <li>For any assistance during your stay, contact the MPO using the details below.</li>
+    </ul>
+    <div style="border:1px solid #d7e4f0;background:#eef4f...END
+HTML;
+
         $pdf->SetCreator('Holidaysio');
         $pdf->SetAuthor($otpToken->email ?? 'Guest');
         $pdf->SetTitle('Voucher - ' . ($booking->booking_reference ?? ($isActivity ? 'activity' : 'accommodation')));
         $pdf->SetMargins(15, 15, 15);
+        $pdf->SetAutoPageBreak(true, 15);
         $pdf->AddPage();
-        $pdf->SetFont('helvetica', '', 11);
+        $pdf->SetFont('helvetica', '', 10);
         $pdf->writeHTML($html, true, false, true, false, '');
+        if (method_exists($pdf, 'write2DBarcode')) {
+            $x = 150;
+            $y = 120;
+            $pdf->write2DBarcode($voucherUrl ?? '', 'QRCODE,H', $x, $y, 35, 35, [], 'N');
+        }
         $filename = ($isActivity ? 'activity' : 'accommodation') . '-voucher-' . preg_replace('/[^A-Za-z0-9_-]/', '', $booking->booking_reference) . '.pdf';
         $pdf->Output($filename, 'D');
         exit;

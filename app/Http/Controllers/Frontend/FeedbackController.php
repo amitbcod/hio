@@ -17,6 +17,12 @@ class FeedbackController extends Controller
     {
         $trip = Trip::with(['traveler', 'accommodationBookings', 'activityBookings'])->findOrFail($tripId);
         
+        // Check if user is authenticated and owns this trip
+        $traveler = auth('traveler')->user();
+        if (!$traveler || $trip->traveler_account_id !== $traveler->id) {
+            abort(403, 'You can only view feedback for your own trips.');
+        }
+        
         // Check if a review already exists for this trip
         $review = Review::with('items')->where('trip_id', $tripId)->first();
 
@@ -50,6 +56,12 @@ class FeedbackController extends Controller
     public function submit(Request $request, $tripId)
     {
         $trip = Trip::with(['traveler', 'accommodationBookings.accommodation', 'activityBookings.activity'])->findOrFail($tripId);
+        
+        // Check if user is authenticated and owns this trip
+        $traveler = auth('traveler')->user();
+        if (!$traveler || $trip->traveler_account_id !== $traveler->id) {
+            abort(403, 'You can only submit feedback for your own trips.');
+        }
 
         $payload = $request->all();
 
