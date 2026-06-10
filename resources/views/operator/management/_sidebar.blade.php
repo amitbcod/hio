@@ -79,6 +79,21 @@
     </li>
 </ul>
 
+<div class="dropdownToggle" 
+     style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+   Feedback
+    <span class="dropdownArrow" style="transition: transform 0.3s;">▼</span>
+</div>
+
+<ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: none;">
+    <li style="padding: 8px 36px;">
+        <a href="{{ route('operator.feedback.index') }}"
+           style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
+           Service Feedback
+        </a>
+    </li>
+</ul>
+
     <!-- <ul style="list-style: none; padding: 0; margin: 0;">
         @php
             $menuItems = [

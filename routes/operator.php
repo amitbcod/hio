@@ -6,6 +6,7 @@ use App\Http\Controllers\Operator\ProfileController;
 use App\Http\Controllers\Operator\RegistrationController;
 use App\Http\Controllers\Operator\AccommodationController;
 use App\Http\Controllers\Operator\ActivityController;
+use App\Http\Controllers\Operator\FeedbackController;
 use App\Http\Controllers\Operator\SharedCartController;
 
 Route::prefix('operator')->name('operator.')->group(function () {
@@ -140,6 +141,9 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::get('activity/bookings', [ActivityController::class, 'bookingList'])->name('activity.bookings');
         Route::get('activity/bookings/{booking}', [ActivityController::class, 'bookingDetails'])->name('activity.booking.details');
         Route::post('activity/bookings/{booking}/status', [ActivityController::class, 'updateBookingStatus'])->name('activity.booking.status');
+
+        Route::get('feedback', [FeedbackController::class, 'index'])->name('feedback.index');
+        Route::get('feedback/{service_type}/{service_id}', [FeedbackController::class, 'show'])->name('feedback.show');
 
         Route::get('activity/{id}', [ActivityController::class, 'show'])->name('activity.show');
         Route::patch('activity/{id}', [ActivityController::class, 'update'])->name('activity.update');

@@ -93,7 +93,39 @@
     </div>
 </section>
 
+<section class="page-section traveler-trips-help-section">
+    <div class="wrap">
+        <div class="traveler-trips-help-card">
+            <p>If you have any questions, concerns, or require assistance, please contact us at <a href="mailto:info@holidays.io">info@holidays.io</a>.</p>
+        </div>
+    </div>
+</section>
+
 <style>
+    .traveler-trips-help-card {
+        max-width: 880px;
+        margin: 0 auto 30px;
+        padding: 18px 22px;
+        background: #f9fbff;
+        border: 1px solid #dce7f5;
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(17, 74, 128, 0.04);
+        color: #1f3f66;
+        font-size: 0.98rem;
+        line-height: 1.75;
+        text-align: center;
+    }
+
+    .traveler-trips-help-card a {
+        color: #1659c2;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .traveler-trips-help-card a:hover {
+        text-decoration: underline;
+    }
+
     .traveler-trips-table-wrapper {
         overflow-x: auto;
         background: #fff;

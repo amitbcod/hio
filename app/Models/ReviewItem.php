@@ -12,8 +12,8 @@ class ReviewItem extends Model
         'criteria' => 'array',
     ];
 
-    public function review()
+    public function parentReview()
     {
-        return $this->belongsTo(Review::class);
+        return $this->belongsTo(Review::class, 'review_id');
     }
 }
