@@ -2270,6 +2270,7 @@ label.saved-guest-checkbox {
 
     .category-search-cell.category-search-cell--transport .transport-field {
         flex: 1 1 0% !important;
+        min-width: auto !important;
     }
 
     .top-right-mobill {
