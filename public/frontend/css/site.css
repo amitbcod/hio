@@ -2163,6 +2163,10 @@ label.saved-guest-checkbox {
     align-items: center;
 }
 
+.transport-row-date {
+    display: flex;
+}
+
 @media (max-width:767px) {
     .category-input-group-inner {
         flex-direction: column;
