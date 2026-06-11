@@ -2151,6 +2151,7 @@ label.saved-guest-checkbox {
     padding: 12px 17px;
     border-left: 2px solid rgba(255, 255, 255, 1);
     margin-bottom: 0;
+    gap: 10px;
 }
 
 .category-search-cell--transport .transport-row > div:first-child {
