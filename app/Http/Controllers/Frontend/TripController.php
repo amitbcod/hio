@@ -368,16 +368,36 @@ class TripController extends Controller
         $otherTravellers = count($guestNames) > 1 ? e(implode(', ', array_slice($guestNames, 1))) : '-';
 
         $providerName = $accommodation->property_name ?? ($activity->activity_name ?? 'Service Provider');
-        $providerAddress = trim(implode(', ', array_filter([
-            $accommodation->address_line_1 ?? null,
-            $accommodation->address_line_2 ?? null,
-            $accommodation->city ?? null,
-            $accommodation->country ?? null,
-        ])), ', ');
+        if ($isActivity) {
+            $providerAddress = trim(implode(', ', array_filter([
+                $activity->destination ?? null,
+                $activity->town ?? null,
+                $activity->region ?? null,
+                $operator->country ?? null,
+            ])), ', ');
+            $locationLabel = $activity->town ?: ($activity->region ?: ($operator->country ?? 'Mauritius'));
+            $emergencyContact = $activity->emergency_contact_phone ?? $operator->emergency_contact_phone ?? null;
+            $receptionContact = $activity->reception_contact_phone ?? $operator->reception_contact_phone ?? null;
+        } else {
+            $providerAddress = trim(implode(', ', array_filter([
+                $accommodation->address_line_1 ?? null,
+                $accommodation->address_line_2 ?? null,
+                $accommodation->city ?? null,
+                $accommodation->country ?? null,
+            ])), ', ');
+            $locationLabel = $accommodation->country ?? 'Mauritius';
+            $emergencyContact = $accommodation->emergency_contact_phone ?? $operator->emergency_contact_phone ?? null;
+            $receptionContact = $accommodation->reception_contact_phone ?? $operator->reception_contact_phone ?? null;
+        }
+        if (!$emergencyContact && !empty($reservationContact)) {
+            $emergencyContact = implode(' | ', $reservationContact);
+        }
+        if (!$receptionContact && !empty($reservationContact)) {
+            $receptionContact = implode(' | ', $reservationContact);
+        }
         $providerAddress = $providerAddress ?: '-';
-        $emergencyContact = $accommodation->emergency_contact_phone ?? $operator->emergency_contact_phone ?? '-';
-        $receptionContact = $accommodation->reception_contact_phone ?? $operator->reception_contact_phone ?? '-';
-        $locationLabel = $accommodation->country ?? 'Mauritius';
+        $emergencyContact = $emergencyContact ?: '-';
+        $receptionContact = $receptionContact ?: '-';
         $poweredLogoPath = public_path('images/holidays-io-logo.png');
         if (!file_exists($poweredLogoPath)) {
             $poweredLogoPath = '';
@@ -641,6 +661,335 @@ HTML;
         // Removed participant_time_slots update - timeslots are set from activity page and apply to all participants
 
         return redirect()->route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id])->with('success', 'Guests updated successfully.');
+    }
+
+    public function downloadInvoice(Trip $trip)
+    {
+        $traveler = auth('traveler')->user();
+        if ($trip->traveler_account_id !== $traveler->id) {
+            abort(403);
+        }
+
+        // Get all bookings for the trip
+        $accommodationBookings = $trip->accommodationBookings ?? collect();
+        $activityBookings = $trip->activityBookings ?? collect();
+        
+        $allBookings = $accommodationBookings->merge($activityBookings);
+        
+        if ($allBookings->isEmpty()) {
+            abort(404);
+        }
+
+        // Load logo
+        $poweredLogoPath = public_path('images/holidays-io-logo.png');
+        if (!file_exists($poweredLogoPath)) {
+            $poweredLogoPath = '';
+        } elseif (preg_match('/\.png$/i', $poweredLogoPath)) {
+            $poweredLogoPath = $this->getSanitizedPngForTcpdf($poweredLogoPath);
+        }
+
+        // Build invoice data
+        $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad($trip->id, 6, '0', STR_PAD_LEFT);
+        $invoiceDate = now()->format('d M Y');
+        $bookingRef = 'B' . str_pad($trip->id, 4, '0', STR_PAD_LEFT);
+
+        // Traveler details - safe escaping
+        $travelerName = e($traveler->name ?? $traveler->first_name ?? 'Guest');
+        $travelerPhone = e($traveler->phone ?? $traveler->mobile ?? 'N/A');
+        $travelerEmail = e($traveler->email ?? 'N/A');
+        $travelerAddress = trim(implode(', ', array_filter([
+            $traveler->address_line_1 ?? null,
+            $traveler->address_line_2 ?? null,
+            $traveler->city_region ?? null,
+            $traveler->country ?? null,
+        ])));
+        $travelerAddress = e($travelerAddress ?: 'Address not provided');
+        $accountId = 'TRV-' . str_pad($traveler->id, 6, '0', STR_PAD_LEFT);
+
+        // Build invoice items with proper data
+        $invoiceItems = [];
+        $subtotal = 0;
+
+        foreach ($accommodationBookings as $booking) {
+            $amount = (float) data_get($booking, 'total_amount', $booking->total_price ?? 0);
+            if ($booking->accommodation && $amount > 0) {
+                $nights = $booking->check_in_date && $booking->check_out_date
+                    ? (int) $booking->check_out_date->diffInDays($booking->check_in_date)
+                    : 1;
+                // Ensure nights is a positive integer (guard against swapped or invalid dates)
+                $nights = max(1, abs($nights));
+                $unitPrice = $amount;
+                $totalForLine = $unitPrice * $nights;
+
+                $item = [
+                    'type' => 'Accommodation',
+                    'name' => e($booking->accommodation->property_name ?? 'Accommodation'),
+                    'location' => e($booking->accommodation->city ?? 'Mauritius'),
+                    'checkIn' => $booking->check_in_date ? $booking->check_in_date->format('d M Y') : 'N/A',
+                    'checkOut' => $booking->check_out_date ? $booking->check_out_date->format('d M Y') : 'N/A',
+                    'description' => e(($booking->room->room_name ?? 'Room') . ' - ' . ($booking->meal_plan ?? 'Bed & Breakfast')),
+                    'notes' => e('Room: ' . ($booking->room->room_name ?? 'Standard') . ' | Meal: ' . ($booking->meal_plan ?? 'Bed & Breakfast')),
+                    'qty' => $nights,
+                    'unitPrice' => $unitPrice,
+                    'total' => $totalForLine,
+                ];
+                $invoiceItems[] = $item;
+                $subtotal += $totalForLine;
+            }
+        }
+
+        foreach ($activityBookings as $booking) {
+            $amount = (float) data_get($booking, 'total_amount', $booking->total_price ?? 0);
+            if ($booking->activity && $amount > 0) {
+                $item = [
+                    'type' => 'Activity',
+                    'name' => e($booking->activity->activity_name ?? 'Activity'),
+                    'location' => e($booking->activity->town ?? 'Mauritius'),
+                    'checkIn' => $booking->activity_date ? $booking->activity_date->format('d M Y') : 'N/A',
+                    'checkOut' => $booking->activity_date ? $booking->activity_date->format('d M Y') : 'N/A',
+                    'description' => e($booking->variant_name ?? ($booking->activity->service_type ?? 'Activity')),
+                    'notes' => e(($booking->variant_name ?? ($booking->activity->service_type ?? 'Activity')) . ' | ' . (($booking->guests ?? collect())->count() ?: 1) . ' pax'),
+                    'qty' => 1,
+                    'unitPrice' => $amount,
+                    'total' => $amount,
+                ];
+                $invoiceItems[] = $item;
+                $subtotal += $amount;
+            }
+        }
+
+        // Calculate totals
+        $discountPercent = 5;
+        $discountAmount = ($subtotal * $discountPercent) / 100;
+        $taxableAmount = $subtotal - $discountAmount;
+        $vatPercent = 15;
+        $vatAmount = ($taxableAmount * $vatPercent) / 100;
+        $serviceFee = 325;
+        $totalAmount = $taxableAmount + $vatAmount + $serviceFee;
+
+        $formattedSubtotal = number_format($subtotal, 2);
+        $formattedDiscountAmount = number_format($discountAmount, 2);
+        $formattedTaxableAmount = number_format($taxableAmount, 2);
+        $formattedVatAmount = number_format($vatAmount, 2);
+        $formattedServiceFee = number_format($serviceFee, 2);
+        $formattedTotalAmount = number_format($totalAmount, 2);
+
+        // Build service rows
+        $serviceRows = '';
+        foreach ($invoiceItems as $index => $item) {
+            $rowUnitPrice = number_format($item['unitPrice'], 2);
+            $rowTax = number_format($item['total'] * 0.15, 2);
+            $rowTotal = number_format($item['total'], 2);
+            $serviceRows .= '<tr>
+                <td style="width:4%;border-bottom:1px solid #dce7f5;padding:10px 6px;text-align:center;font-weight:600;">' . ($index + 1) . '</td>
+                <td style="width:22%;border-bottom:1px solid #dce7f5;padding:10px 6px;">
+                    <div style="font-weight:600;color:#0b2b51;margin-bottom:2px;">' . $item['type'] . '</div>
+                    <div style="font-size:9px;color:#4a5f7f;margin-bottom:2px;"><strong>' . $item['name'] . '</strong></div>
+                    <div style="font-size:9px;color:#7a8a9f;">' . $item['location'] . '</div>
+                </td>
+                <td style="width:18%;border-bottom:1px solid #dce7f5;padding:10px 6px;font-size:9px;">
+                    <div style="margin-bottom:4px;"><strong>' . $item['checkIn'] . '</strong></div>
+                    <div style="color:#7a8a9f;">' . $item['checkOut'] . '</div>
+                </td>
+                <td style="width:20%;border-bottom:1px solid #dce7f5;padding:10px 6px;font-size:9px;">
+                    <div style="font-weight:600;margin-bottom:4px;">' . $item['description'] . '</div>
+                    <div style="color:#7a8a9f;">' . $item['notes'] . '</div>
+                </td>
+                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px 6px;text-align:center;">' . $item['qty'] . '</td>
+                <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px 6px;text-align:right;font-weight:600;">MUR ' . $rowUnitPrice . '</td>
+                <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px 6px;text-align:right;font-weight:600;">MUR ' . $rowTax . '</td>
+                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px 6px;text-align:right;font-weight:600;color:#0b2b51;">MUR ' . $rowTotal . '</td>
+            </tr>';
+        }
+
+        $poweredLogoHtml = $poweredLogoPath
+            ? '<img src="' . $poweredLogoPath . '" style="max-width:100px; max-height:40px;" alt="Holidays.io">'
+            : '<span style="color:#f7971e;font-weight:700;font-size:14px;">HOLIDAYS.io</span>';
+
+        $html = <<<HTML
+<style>
+body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
+.header-box { border:2px solid #0b2b51; border-radius:8px; padding:12px; background:#f0f5ff; margin-bottom:12px; }
+.section-title { font-size:11px; font-weight:700; color:#0b2b51; margin:8px 0 6px 0; }
+.info-table { width:100%; border-collapse:collapse; margin-bottom:8px; }
+.info-table td { padding:4px; border-bottom:1px solid #dce7f5; font-size:9px; }
+.info-table .label { font-weight:600; color:#0b2b51; width:40%; }
+.info-table .value { color:#4a5f7f; }
+.service-table { width:100%; border-collapse:collapse; margin-bottom:8px; border:1px solid #dce7f5; border-radius:6px; overflow:hidden; }
+.service-table thead tr { background:#0b2b51; color:#fff; }
+.service-table th { padding:10px 6px; text-align:left; font-size:9px; font-weight:600; }
+.totals-box { width:100%; background:#f0f5ff; border:1px solid #dce7f5; border-radius:6px; padding:10px; }
+.totals-row { display:flex; justify-content:space-between; padding:4px 0; font-size:9px; }
+.totals-label { font-weight:600; color:#0b2b51; }
+.totals-amount { text-align:right; }
+.total-paid { background:#0b2b51; color:#fff; padding:8px; border-radius:4px; font-weight:700; display:flex; justify-content:space-between; margin-top:6px; }
+.thank-you { background:#e8f5e9; border:1px solid #66bb6a; border-radius:6px; padding:10px; margin-bottom:8px; color:#2e7d32; font-size:9px; }
+.notes-box { font-size:9px; color:#4a5f7f; margin-bottom:8px; }
+.notes-box ul { margin:4px 0; padding-left:16px; }
+.notes-box li { margin-bottom:2px; }
+.footer-row { display:flex; gap:20px; font-size:8px; color:#7a8a9f; }
+</style>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+<tr>
+<td width="50%" style="vertical-align:top; padding-right:8px;">
+    <div class="header-box">
+        <div style="font-size:16px; font-weight:700; color:#0b2b51; margin-bottom:2px;">LRT MAURITIUS LTD</div>
+        <div style="font-size:9px; color:#4a5f7f;">Local Receptive & Tourism (MPO)</div>
+        <div style="font-size:9px; color:#7a8a9f; line-height:1.5; margin-top:4px;">
+            <div>123 Coastal Rd, Grand Baie</div>
+            <div>+230 1234 5678 | info@lrt.mu</div>
+            <div>VAT: 12345678 | BRN: C12345678</div>
+        </div>
+    </div>
+</td>
+<td width="50%" style="vertical-align:top; padding-left:8px; text-align:right;">
+    <div style="padding:8px; background:#f0f5ff; border-radius:6px; display:inline-block;">
+        <div style="font-size:9px; color:#4a5f7f; margin-bottom:4px;">Powered by</div>
+        {$poweredLogoHtml}
+    </div>
+</td>
+</tr>
+</table>
+
+<div style="margin-bottom:10px;">
+    <div style="font-size:20px; font-weight:700; color:#0b2b51; margin-bottom:6px;">INVOICE</div>
+    <table class="info-table">
+        <tr><td class="label">Invoice Number:</td><td class="value">{$invoiceNumber}</td></tr>
+        <tr><td class="label">Invoice Date:</td><td class="value">{$invoiceDate}</td></tr>
+        <tr><td class="label">Booking Reference:</td><td class="value">{$bookingRef}</td></tr>
+    </table>
+</div>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+<tr>
+<td width="48%" style="padding-right:6px; vertical-align:top;">
+    <div class="header-box">
+        <div class="section-title">BILL TO</div>
+        <div style="font-weight:600; color:#0b2b51; font-size:10px; margin-bottom:4px;">{$travelerName}</div>
+        <table class="info-table" style="margin:0;">
+            <tr><td class="label">Address:</td><td class="value">{$travelerAddress}</td></tr>
+            <tr><td class="label">Phone:</td><td class="value">{$travelerPhone}</td></tr>
+            <tr><td class="label">Email:</td><td class="value">{$travelerEmail}</td></tr>
+        </table>
+        <div style="margin-top:10px; padding:10px; background:#eef4ff; border:1px solid #dce7f5; border-radius:6px; font-size:9px; color:#4a5f7f;">
+            <strong style="display:block; color:#0b2b51; margin-bottom:4px;">ACCOUNT HOLDER</strong>
+            This invoice has been issued to the account holder (Privileged Traveller).
+        </div>
+    </div>
+</td>
+<td width="52%" style="padding-left:6px; vertical-align:top;">
+    <div class="header-box" style="border:none;">
+        <div class="section-title">ACCOUNT DETAILS</div>
+        <table class="info-table" style="margin:0;">
+            <tr><td class="label">Traveller Account Type:</td><td class="value">Privileged Traveller</td></tr>
+            <tr><td class="label">Account ID:</td><td class="value">{$accountId}</td></tr>
+            <tr><td class="label">Currency:</td><td class="value">MUR (Mauritian Rupee)</td></tr>
+            <tr><td class="label">Payment Terms:</td><td class="value"><strong>Paid in Full</strong></td></tr>
+        </table>
+    </div>
+</td>
+</tr>
+</table>
+
+<table class="service-table">
+<thead>
+<tr>
+    <th style="width:4%;">#</th>
+    <th style="width:22%;">SERVICE</th>
+    <th style="width:18%;">SERVICE DATES</th>
+    <th style="width:20%;">DESCRIPTION</th>
+    <th style="width:8%;">QTY</th>
+    <th style="width:10%;">UNIT PRICE</th>
+    <th style="width:10%;">TAX (15%)</th>
+    <th style="width:8%;">TOTAL</th>
+</tr>
+</thead>
+<tbody>
+{$serviceRows}
+</tbody>
+</table>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+<tr>
+<td width="55%" style="vertical-align:top; padding-right:6px;">
+    <div class="thank-you" style="border:2px solid #2e7d32; background:#e8f5e9; border-radius:8px; padding:12px; margin-bottom:8px;">
+        <div style="text-align:center; font-size:11px; font-weight:700; color:#2e7d32; margin-bottom:8px;">THANK YOU!</div>
+        <div style="font-size:9px; color:#2e7d32; text-align:center; line-height:1.6;">
+            Your payment has been successfully received.<br><br>
+            We look forward to welcoming you to Mauritius<br>
+            and wish you a wonderful stay!
+        </div>
+    </div>
+</td>
+<td width="45%" style="vertical-align:top; padding-left:6px;">
+    <div class="totals-box" style="background:#fff3e0; border-radius:8px; padding:10px;">
+        <div class="totals-row"><span class="totals-label">Subtotal:</span><span class="totals-amount">MUR {$formattedSubtotal}</span></div>
+        <div class="totals-row" style="color:#d32f2f;"><span class="totals-label">Discount ({$discountPercent}%):</span><span class="totals-amount">-MUR {$formattedDiscountAmount}</span></div>
+        <div class="totals-row"><span class="totals-label">Taxable Amount:</span><span class="totals-amount">MUR {$formattedTaxableAmount}</span></div>
+        <div class="totals-row"><span class="totals-label">VAT ({$vatPercent}%):</span><span class="totals-amount">MUR {$formattedVatAmount}</span></div>
+        <div class="totals-row"><span class="totals-label">Service Fee:</span><span class="totals-amount">MUR {$formattedServiceFee}</span></div>
+        <div class="total-paid" style="background:#0b2b51; color:#fff; padding:8px; border-radius:4px; font-weight:700; display:flex; justify-content:space-between; margin-top:6px;"><span>TOTAL PAID</span><span>MUR {$formattedTotalAmount}</span></div>
+    </div>
+</td>
+</tr>
+</table>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+<tr>
+<td width="55%" style="padding-right:6px;">
+    <div class="notes-box" style="background:#eef4ff; border:1px solid #dce7f5; border-radius:6px; padding:10px; font-size:9px; color:#4a5f7f;">
+        <strong style="display:block; color:#0b2b51; margin-bottom:6px;">IMPORTANT NOTES</strong>
+        <ul style="margin:4px 0; padding-left:16px;">
+            <li style="margin-bottom:2px;">Please present this invoice and any requested voucher with a valid photo ID when required.</li>
+            <li style="margin-bottom:2px;">All services are subject to availability and terms & conditions of each service provider.</li>
+            <li style="margin-bottom:2px;">For amendments or cancellations, please refer to the booking terms or contact support.</li>
+        </ul>
+    </div>
+</td>
+<td width="45%" style="padding-left:6px;">
+    <div class="footer-assistance" style="background:#eef4ff; border:1px solid #dce7f5; border-radius:6px; padding:10px; font-size:9px;">
+        <strong style="display:block; color:#0b2b51; margin-bottom:6px;">NEED ASSISTANCE?</strong>
+        <div style="color:#4a5f7f; line-height:1.8;">
+            <strong style="color:#0b2b51;">+230 1234 5678</strong><br>
+            (08:00 - 18:00 IST)<br><br>
+            <strong style="color:#0b2b51;">support@lrt.mu</strong><br><br>
+            <strong style="color:#0b2b51;">+230 5251 1152</strong><br>
+            (WhatsApp)
+        </div>
+        <div style="margin-top:8px; padding-top:8px; border-top:1px solid #dce7f5; color:#4a5f7f; font-size:8px;">
+            We are here to help you before, during and after your trip.
+        </div>
+    </div>
+</td>
+</tr>
+</table>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px; padding-top:10px; border-top:1px solid #dce7f5;">
+<tr>
+<td width="100%" style="text-align:center; font-size:8px; color:#7a8a9f; padding:6px 0;">
+    <strong style="color:#0b2b51;">LRT Mauritius LTD (Local Receptive & Tourism)</strong><br>
+    Your Local Connection in Mauritius<br>
+    <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span>
+</td>
+</tr>
+</table>
+
+HTML;
+
+        $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->SetCreator('Holidaysio');
+        $pdf->SetAuthor(str_replace(['<', '>', '"', "'"], '', $traveler->name ?? 'Traveler'));
+        $pdf->SetTitle('Invoice ' . $invoiceNumber);
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->SetAutoPageBreak(true, 10);
+        $pdf->AddPage();
+        $pdf->SetFont('helvetica', '', 9);
+        $pdf->writeHTML($html, true, false, true, false, '');
+
+        $filename = 'invoice-' . $invoiceNumber . '.pdf';
+        $pdf->Output($filename, 'D');
+        exit;
     }
 
     protected function getSanitizedPngForTcpdf(string $pngPath): string

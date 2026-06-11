@@ -82,6 +82,7 @@
                                             <td>{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
                                             <td class="trip-actions-cell">
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
+                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>Invoice</a>
                                                 @if(!isset($guestMode) || !$guestMode)
                                                     <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display:inline-block; margin-left: 8px;">
                                                         @csrf
@@ -160,6 +161,7 @@
                                             <td>{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
                                             <td class="trip-actions-cell">
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
+                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>Invoice</a>
                                             </td>
                                         </tr>
                                     @endforeach
