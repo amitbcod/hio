@@ -2314,4 +2314,8 @@ label.saved-guest-checkbox {
         margin-top: 8px;
         margin-bottom: 10px;
     }
+
+    .mini-cart-actions {
+        flex-direction: column;
+    }
 }

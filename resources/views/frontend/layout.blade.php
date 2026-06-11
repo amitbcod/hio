@@ -56,7 +56,7 @@
         }
 
         .mini-cart-panel {
-            width: min(420px, 100%);
+            width: min(420px, 95%);
             background: #fff;
             box-shadow: -4px 0 30px rgba(0, 0, 0, 0.15);
             display: flex;
