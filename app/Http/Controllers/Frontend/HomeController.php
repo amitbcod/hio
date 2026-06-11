@@ -142,7 +142,7 @@ class HomeController extends Controller
                 },
                 'bookings' => function ($query) use ($filters) {
                     if (!empty($filters['check_in']) && !empty($filters['check_out'])) {
-                        $query->where('booking_status', 'Confirmed')
+                        $query->whereIn('booking_status', ['Pending', 'Confirmed'])
                             ->where(function ($bookingQuery) use ($filters) {
                                 $bookingQuery->where(function ($q) use ($filters) {
                                     $q->where('check_in_date', '<=', $filters['check_out'])
@@ -2079,13 +2079,24 @@ class HomeController extends Controller
             foreach ($stayDates as $date) {
                 $inventory = $accommodation->inventory->firstWhere('date', $date);
                 if ($inventory) {
-                    $availableForRoom = min($availableForRoom, $inventory->available_rooms ?? $roomQuantity);
+                    // Use per-day inventory available_units if provided, otherwise compute from sellable/sold
+                    if (isset($inventory->available_units) && $inventory->available_units !== null) {
+                        $perDayAvailable = (int) $inventory->available_units;
+                    } else {
+                        $sellable = (int) ($inventory->sellable_units ?? $roomQuantity);
+                        $sold = (int) ($inventory->sold_units ?? 0);
+                        $perDayAvailable = max(0, $sellable - $sold);
+                    }
+
+                    $availableForRoom = min($availableForRoom, $perDayAvailable);
+                    // Inventory rows already account for sold units, so skip subtracting bookings here
+                    continue;
                 }
 
-                // Check for conflicting bookings
+                // No inventory row for this date: subtract confirmed bookings overlapping the date
                 $conflictingBookings = $accommodation->bookings->filter(function ($booking) use ($date, $room) {
                     return $booking->room_id == $room->id &&
-                           $booking->booking_status === 'Confirmed' &&
+                           in_array($booking->booking_status, ['Confirmed', 'Pending']) &&
                            $booking->check_in_date <= $date &&
                            $booking->check_out_date > $date;
                 });
