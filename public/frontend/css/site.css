@@ -1400,7 +1400,20 @@ strong {
 
     .main-nav {
         justify-content: flex-start;
-        display:none;
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 93px;
+        left: 0;
+        width: 100%;
+        background: #fff;
+        padding: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        z-index: 999;
+    }
+
+    .main-nav.active {
+        display: flex;
     }
 
     .hero-content,
@@ -2167,6 +2180,11 @@ label.saved-guest-checkbox {
     display: flex;
 }
 
+.mobile-menu-icon {
+    display:none;
+}
+
+
 @media (max-width:767px) {
     .category-input-group-inner {
         flex-direction: column;
@@ -2186,7 +2204,7 @@ label.saved-guest-checkbox {
 
     .home-main-search {
         border: 0;
-        bottom: 20px;
+        top: 20px;
     }
 
     .category-radio-group span {
@@ -2223,5 +2241,14 @@ label.saved-guest-checkbox {
 
     .category-search-cell.category-search-cell--transport .transport-field {
         flex: 1 1 0% !important;
+    }
+
+    .mobile-menu-icon {
+        position: absolute;
+        right: 20px;
+        width: 40px;
+        top: 30px;
+        display:block;
+        cursor: pointer;
     }
 }

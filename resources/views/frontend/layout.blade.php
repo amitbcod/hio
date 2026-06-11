@@ -287,7 +287,11 @@
                     <strong>Holidays<span>.io</span></strong>
                 </div> -->
             </a>
-
+            <div class="mobile-menu-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+            </div>
             <nav class="main-nav">
                 <a href="{{ url('/') }}" class="is-active">Home</a>
                 <a href="{{ url('/#accommodations-section') }}">Accommodation</a>
@@ -298,6 +302,18 @@
             </nav>
         </div>
     </header>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const menuIcon = document.querySelector('.mobile-menu-icon');
+        const nav = document.querySelector('.main-nav');
+
+        menuIcon.addEventListener('click', function () {
+            nav.classList.toggle('active');
+        });
+    });
+    </script>
+    
 
     @php
         $sharedCartToken = session('booking_shared_cart_token');
