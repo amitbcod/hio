@@ -22,6 +22,11 @@ Route::prefix('traveler')->name('traveler.')->group(function () {
 
         Route::get('/login', [TravelerAuthController::class, 'showLoginForm'])->name('login');
         Route::post('/login', [TravelerAuthController::class, 'login'])->name('login.store');
+
+        Route::get('/password/reset', [TravelerAuthController::class, 'showForgotPasswordForm'])->name('password.request');
+        Route::post('/password/email', [TravelerAuthController::class, 'sendPasswordResetLink'])->name('password.email');
+        Route::get('/password/reset/{token}', [TravelerAuthController::class, 'showResetForm'])->name('password.reset');
+        Route::post('/password/reset', [TravelerAuthController::class, 'resetPassword'])->name('password.update');
     });
 
     Route::middleware('auth:traveler')->group(function () {

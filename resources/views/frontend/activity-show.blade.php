@@ -79,7 +79,7 @@
                     </form>
 
                     @if(!empty($availableRooms))
-                        <div class="available-options-section">
+                        <div id="available-options-section" class="available-options-section">
                             <h3>Available Options</h3>
                             <div class="availability-table-wrap">
                                 <table class="availability-table">
@@ -679,6 +679,20 @@
                         }
                     });
                 }
+            }
+
+            // If the page was loaded via the booking form (query params present),
+            // scroll to the available options section if it's rendered.
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('activity_date') || urlParams.has('adults') || urlParams.has('children') || urlParams.has('infants')) {
+                    const target = document.getElementById('available-options-section') || document.querySelector('.available-options-section');
+                    if (target) {
+                        setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+                    }
+                }
+            } catch (e) {
+                // ignore on older browsers
             }
 
             document.querySelectorAll('.variant-booking-form').forEach(form => {

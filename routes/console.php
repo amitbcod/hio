@@ -14,4 +14,7 @@ app()->booted(function () {
 
     // Send feedback request emails on the 4th day after trip completion at 10:00 daily
     $schedule->command('feedback:send-requests')->dailyAt('10:00');
+
+    // Update trip statuses based on booking dates at 12:01 AM daily
+    $schedule->command('trips:update-statuses')->dailyAt('00:01');
 });

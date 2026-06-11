@@ -1126,9 +1126,13 @@ class AccommodationController extends Controller
 
         $data = $request->validate($rules);
 
-        $effectiveOccupants = intval($data['occupancy_adults']) + intval($data['occupancy_children']) + max(0, intval($data['occupancy_infant'] ?? 0) - 1);
+        $effectiveOccupants = max(
+            intval($data['occupancy_adults']),
+            intval($data['occupancy_children']),
+            max(0, intval($data['occupancy_infant'] ?? 0) - 1)
+        );
         if (intval($data['max_person_capacity']) < $effectiveOccupants) {
-            return back()->withInput()->withErrors(['max_person_capacity' => 'Max person capacity must be at least adults + children + infants beyond the first.']);
+            return back()->withInput()->withErrors(['max_person_capacity' => 'Max person capacity must be at least the largest single occupancy type (adults, children, or infants beyond the first).']);
         }
 
         // Create unique room_id
@@ -1249,9 +1253,13 @@ class AccommodationController extends Controller
 
         $data = $request->validate($rules);
 
-        $effectiveOccupants = intval($data['occupancy_adults']) + intval($data['occupancy_children']) + max(0, intval($data['occupancy_infant'] ?? 0) - 1);
+        $effectiveOccupants = max(
+            intval($data['occupancy_adults']),
+            intval($data['occupancy_children']),
+            max(0, intval($data['occupancy_infant'] ?? 0) - 1)
+        );
         if (intval($data['max_person_capacity']) < $effectiveOccupants) {
-            return back()->withInput()->withErrors(['max_person_capacity' => 'Max person capacity must be at least adults + children + infants beyond the first.']);
+            return back()->withInput()->withErrors(['max_person_capacity' => 'Max person capacity must be at least the largest single occupancy type (adults, children, or infants beyond the first).']);
         }
 
         $room->update([

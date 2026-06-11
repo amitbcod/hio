@@ -12,77 +12,167 @@
                 <!-- <p>View and manage your holiday trips in a simple table format.</p> -->
             </div>
 
-            @if($trips->count() > 0)
-                <div class="traveler-trips-table-wrapper">
-                    <table class="traveler-trips-table">
-                        <thead>
-                            <tr>
-                                <th>Trip</th>
-                                <th>Service Type</th>
-                                <th>Dates</th>
-                                <th>Status</th>
-                                <th>Bookings</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($trips as $trip)
-                                @php
-                                    $serviceTypes = collect();
-                                    
-                                    // Collect booking types from accommodation bookings
-                                    if ($trip->accommodationBookings && $trip->accommodationBookings->isNotEmpty()) {
-                                        $serviceTypes->push('Accommodation');
-                                    }
-                                    
-                                    // Collect booking types from activity bookings
-                                    if ($trip->activityBookings && $trip->activityBookings->isNotEmpty()) {
-                                        $serviceTypes->push('Activity');
-                                    }
-                                    
-                                    if ($serviceTypes->isEmpty()) {
-                                        $serviceTypes->push('Travel');
-                                    }
-                                    
-                                    $serviceTypes = $serviceTypes->unique();
-                                @endphp
-                                <tr>
-                                    <td>
-                                        <div class="trip-name-cell">
-                                            <strong>Trip #100{{ $trip->id }}</strong>
-                                            <span>Trip</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="service-type-badges">
-                                            @foreach($serviceTypes as $type)
-                                                <span class="service-badge">{{ $type }}</span>
-                                            @endforeach
-                                        </div>
-                                    </td>
-                                    <td>
-                                        {{ $trip->start_date ? $trip->start_date->format('d M Y') : 'N/A' }}
-                                        -
-                                        {{ $trip->end_date ? $trip->end_date->format('d M Y') : 'N/A' }}
-                                    </td>
-                                    <td>
-                                        <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
-                                    </td>
-                                    <td>{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
-                                    <td class="trip-actions-cell">
-                                        <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
-                                        @if(!isset($guestMode) || !$guestMode)
-                                            <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display:inline-block; margin-left: 8px;">
-                                                @csrf
-                                                <button type="submit" class="btn btn-secondary">Add Service</button>
-                                            </form>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+            @if($ongoingTrips->count() > 0 || $pastTrips->count() > 0)
+                <!-- Tab Navigation -->
+                <div class="traveler-trips-tabs">
+                    <button class="traveler-trips-tab-btn active" data-tab="ongoing">
+                        Ongoing Trips {{ $ongoingTrips->count() > 0 ? '(' . $ongoingTrips->count() . ')' : '' }}
+                    </button>
+                    <button class="traveler-trips-tab-btn" data-tab="past">
+                        Past Trips {{ $pastTrips->count() > 0 ? '(' . $pastTrips->count() . ')' : '' }}
+                    </button>
                 </div>
+
+                <!-- Ongoing Trips Tab -->
+                <div id="ongoing" class="traveler-trips-tab-content active">
+                    @if($ongoingTrips->count() > 0)
+                        <div class="traveler-trips-table-wrapper">
+                            <table class="traveler-trips-table">
+                                <thead>
+                                    <tr>
+                                        <th>Trip</th>
+                                        <th>Service Type</th>
+                                        <th>Dates</th>
+                                        <th>Status</th>
+                                        <th>Bookings</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($ongoingTrips as $trip)
+                                        @php
+                                            $serviceTypes = collect();
+                                            
+                                            if ($trip->accommodationBookings && $trip->accommodationBookings->isNotEmpty()) {
+                                                $serviceTypes->push('Accommodation');
+                                            }
+                                            
+                                            if ($trip->activityBookings && $trip->activityBookings->isNotEmpty()) {
+                                                $serviceTypes->push('Activity');
+                                            }
+                                            
+                                            if ($serviceTypes->isEmpty()) {
+                                                $serviceTypes->push('Travel');
+                                            }
+                                            
+                                            $serviceTypes = $serviceTypes->unique();
+                                        @endphp
+                                        <tr>
+                                            <td>
+                                                <div class="trip-name-cell">
+                                                    <strong>Trip #100{{ $trip->id }}</strong>
+                                                    <span>Trip</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="service-type-badges">
+                                                    @foreach($serviceTypes as $type)
+                                                        <span class="service-badge">{{ $type }}</span>
+                                                    @endforeach
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {{ $trip->start_date ? $trip->start_date->format('d M Y') : 'N/A' }}
+                                                -
+                                                {{ $trip->end_date ? $trip->end_date->format('d M Y') : 'N/A' }}
+                                            </td>
+                                            <td>
+                                                <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
+                                            </td>
+                                            <td>{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
+                                            <td class="trip-actions-cell">
+                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
+                                                @if(!isset($guestMode) || !$guestMode)
+                                                    <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display:inline-block; margin-left: 8px;">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-secondary">Add Service</button>
+                                                    </form>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="traveler-empty-state-tab">
+                            <p>No ongoing trips. Your next adventure awaits!</p>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Past Trips Tab -->
+                <div id="past" class="traveler-trips-tab-content">
+                    @if($pastTrips->count() > 0)
+                        <div class="traveler-trips-table-wrapper">
+                            <table class="traveler-trips-table">
+                                <thead>
+                                    <tr>
+                                        <th>Trip</th>
+                                        <th>Service Type</th>
+                                        <th>Dates</th>
+                                        <th>Status</th>
+                                        <th>Bookings</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($pastTrips as $trip)
+                                        @php
+                                            $serviceTypes = collect();
+                                            
+                                            if ($trip->accommodationBookings && $trip->accommodationBookings->isNotEmpty()) {
+                                                $serviceTypes->push('Accommodation');
+                                            }
+                                            
+                                            if ($trip->activityBookings && $trip->activityBookings->isNotEmpty()) {
+                                                $serviceTypes->push('Activity');
+                                            }
+                                            
+                                            if ($serviceTypes->isEmpty()) {
+                                                $serviceTypes->push('Travel');
+                                            }
+                                            
+                                            $serviceTypes = $serviceTypes->unique();
+                                        @endphp
+                                        <tr>
+                                            <td>
+                                                <div class="trip-name-cell">
+                                                    <strong>Trip #100{{ $trip->id }}</strong>
+                                                    <span>Trip</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="service-type-badges">
+                                                    @foreach($serviceTypes as $type)
+                                                        <span class="service-badge">{{ $type }}</span>
+                                                    @endforeach
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {{ $trip->start_date ? $trip->start_date->format('d M Y') : 'N/A' }}
+                                                -
+                                                {{ $trip->end_date ? $trip->end_date->format('d M Y') : 'N/A' }}
+                                            </td>
+                                            <td>
+                                                <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
+                                            </td>
+                                            <td>{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
+                                            <td class="trip-actions-cell">
+                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="traveler-empty-state-tab">
+                            <p>No past trips yet. Start booking to create your travel history!</p>
+                        </div>
+                    @endif
+                </div>
+
             @else
                 <div class="traveler-empty-state">
                     <p>No trips found. Start planning your holiday!</p>
@@ -124,6 +214,59 @@
 
     .traveler-trips-help-card a:hover {
         text-decoration: underline;
+    }
+
+    .traveler-trips-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid #e0e0e0;
+        margin-bottom: 0;
+        background: #fff;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .traveler-trips-tab-btn {
+        padding: 14px 24px;
+        background: #f5f5f5;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        color: #666;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .traveler-trips-tab-btn:first-child {
+        border-radius: 10px 0 0 0;
+    }
+
+    .traveler-trips-tab-btn:hover {
+        background: #f0f0f0;
+        color: #333;
+    }
+
+    .traveler-trips-tab-btn.active {
+        background: #fff;
+        color: var(--brand);
+        border-bottom-color: var(--brand);
+    }
+
+    .traveler-trips-tab-content {
+        display: none;
+    }
+
+    .traveler-trips-tab-content.active {
+        display: block;
+    }
+
+    .traveler-empty-state-tab {
+        padding: 40px 20px;
+        text-align: center;
+        background: #f9f9f9;
+        border-radius: 0 0 10px 10px;
+        color: #666;
+        font-size: 16px;
     }
 
     .traveler-trips-table-wrapper {
@@ -275,4 +418,25 @@
         }
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabButtons = document.querySelectorAll('.traveler-trips-tab-btn');
+        const tabContents = document.querySelectorAll('.traveler-trips-tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                // Add active class to clicked button and corresponding content
+                this.classList.add('active');
+                document.getElementById(tabName).classList.add('active');
+            });
+        });
+    });
+</script>
 @endsection

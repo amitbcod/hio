@@ -59,6 +59,11 @@
                     </div>
 
                     <div class="traveler-form-group">
+                        <label>Email Address</label>
+                        <div class="traveler-static">{{ $account->email }}</div>
+                    </div>
+
+                    <div class="traveler-form-group">
                         <label for="gender">Gender / Title</label>
                         <select id="gender" name="gender">
                             <option value="">Select</option>
@@ -265,6 +270,18 @@
             font: inherit;
             color: var(--ink);
             background: #fff;
+        }
+
+        .traveler-static {
+            width: 100%;
+            min-height: 44px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            background: #fff;
+            color: var(--ink);
         }
 
         .traveler-form-group textarea {

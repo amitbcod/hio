@@ -31,7 +31,6 @@ class TravelerProfileController extends Controller
     public function updateProfile(Request $request)
     {
         $account = Auth::guard('traveler')->user();
-
         $request->validate([
             'gender' => ['nullable', 'in:Mr,Mrs,Miss,Ms,Mx,Other'],
             'first_name' => ['required', 'string', 'max:100'],

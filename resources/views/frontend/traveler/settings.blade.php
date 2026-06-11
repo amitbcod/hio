@@ -108,65 +108,41 @@
                         </div>
                     </div>
 
-                    <!-- Account Security Section -->
-                    <div class="traveler-form-section">
-                        <h3>Account Security</h3>
-                        <p class="section-note">Manage your account login and security settings.</p>
-
-                        <div class="traveler-form-group traveler-form-group--full">
-                            <label>Reset Account Login</label>
-                            <p class="section-helper">Request a password reset link to be sent to your email address.</p>
-                            <form method="POST" action="{{ route('traveler.settings.reset-password') }}" style="display: inline;">
-                                @csrf
-                                <button type="submit" class="btn-secondary">
-                                    <i class="fa-solid fa-key"></i> Request Password Reset
-                                </button>
-                            </form>
-                        </div>
-
-                        @if($account->password_reset_requested_at)
-                            <div class="traveler-info-row">
-                                <span class="info-label">Last Reset Requested:</span>
-                                <span class="info-value">{{ $account->password_reset_requested_at->format('d M Y, H:i') }}</span>
-                            </div>
-                        @endif
-                    </div>
-
-                    <!-- Account Suspension Section -->
-                    <div class="traveler-form-section traveler-form-section--danger">
-                        <h3>Account Status</h3>
-                        <p class="section-note">@if($account->account_suspended)Your account is currently suspended. You cannot login or make bookings.@else You can suspend your account at any time. While suspended, you won't be able to login or make bookings.@endif</p>
-
-                        <div class="traveler-form-group traveler-form-group--full">
-                            <form method="POST" action="{{ route('traveler.settings.toggle-suspension') }}" style="display: inline;">
-                                @csrf
-                                @if($account->account_suspended)
-                                    <button type="submit" class="btn-primary">
-                                        <i class="fa-solid fa-check-circle"></i> Reactivate Account
-                                    </button>
-                                @else
-                                    <button type="submit" class="btn-danger" onclick="return confirm('Are you sure you want to suspend your account? You will not be able to login until you reactivate it.');">
-                                        <i class="fa-solid fa-pause-circle"></i> Suspend Account
-                                    </button>
-                                @endif
-                            </form>
-                        </div>
-
-                        @if($account->account_suspended)
-                            <div class="traveler-status-badge traveler-status-badge--suspended">
-                                <i class="fa-solid fa-circle"></i> Suspended
-                            </div>
-                        @else
-                            <div class="traveler-status-badge traveler-status-badge--active">
-                                <i class="fa-solid fa-circle"></i> Active
-                            </div>
-                        @endif
-                    </div>
-
                     <div class="traveler-form-actions">
                         <button type="submit" class="btn-primary">Save Settings</button>
                     </div>
                 </form>
+
+                <!-- Account Suspension Section (separate form to avoid nested forms) -->
+                <div class="traveler-form-section traveler-form-section--danger" style="margin-top: 18px;">
+                    <h3>Account Status</h3>
+                    <p class="section-note">@if($account->account_suspended)Your account is currently suspended. You cannot login or make bookings.@else You can suspend your account at any time. While suspended, you won't be able to login or make bookings.@endif</p>
+
+                    <div class="traveler-form-group traveler-form-group--full">
+                        <form method="POST" action="{{ route('traveler.settings.toggle-suspension') }}" style="display: inline;">
+                            @csrf
+                            @if($account->account_suspended)
+                                <button type="submit" class="btn-primary">
+                                    <i class="fa-solid fa-check-circle"></i> Reactivate Account
+                                </button>
+                            @else
+                                <button type="submit" class="btn-danger" onclick="return confirm('Are you sure you want to suspend your account? You will not be able to login until you reactivate it.');">
+                                    <i class="fa-solid fa-pause-circle"></i> Suspend Account
+                                </button>
+                            @endif
+                        </form>
+                    </div>
+
+                    @if($account->account_suspended)
+                        <div class="traveler-status-badge traveler-status-badge--suspended">
+                            <i class="fa-solid fa-circle"></i> Suspended
+                        </div>
+                    @else
+                        <div class="traveler-status-badge traveler-status-badge--active">
+                            <i class="fa-solid fa-circle"></i> Active
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </section>

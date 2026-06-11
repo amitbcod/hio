@@ -190,7 +190,7 @@
         </div>
         @endif
 
-        @if(!isset($guestMode) || !$guestMode)
+        @if((!isset($guestMode) || !$guestMode) && !in_array($trip->status, ['completed', 'cancelled']))
         <!-- Add Services Section -->
         <div class="trip-actions-section" style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-top: 30px;">
             <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">Add More Services</h3>

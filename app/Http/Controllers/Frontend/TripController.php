@@ -7,6 +7,7 @@ use App\Models\SavedGuest;
 use App\Models\Trip;
 use App\Models\ActivityBooking;
 use App\Models\AccommodationBooking;
+use App\Services\TripStatusService;
 use Illuminate\Http\Request;
 
 class TripController extends Controller
@@ -19,7 +20,12 @@ class TripController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('frontend.traveler.trips', compact('trips'))->with('guestMode', false);
+        // Classify trips into ongoing and past
+        $classified = TripStatusService::classifyTrips($trips);
+        $ongoingTrips = $classified['ongoing'];
+        $pastTrips = $classified['past'];
+
+        return view('frontend.traveler.trips', compact('trips', 'ongoingTrips', 'pastTrips'))->with('guestMode', false);
     }
 
     public function show(Trip $trip)

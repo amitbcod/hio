@@ -3,13 +3,18 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Mail\TravelerPasswordResetMail;
+use App\Mail\TravelerWelcomeMail;
 use App\Models\TravelerAccount;
 use App\Models\TravelerCart;
 use App\Models\TravelerProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 
 class TravelerAuthController extends Controller
 {
@@ -74,6 +79,16 @@ class TravelerAuthController extends Controller
             'preferred_language' => 'EN',
         ]);
 
+        // Send welcome email
+        try {
+            Mail::to($account->email)->send(new TravelerWelcomeMail($account));
+        } catch (\Exception $e) {
+            \Log::error('Traveler welcome email failed', [
+                'email' => $account->email,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         Auth::guard('traveler')->login($account);
         $request->session()->regenerate();
         $this->syncCartAfterAuthentication($account->id, $request);
@@ -89,6 +104,92 @@ class TravelerAuthController extends Controller
         }
 
         return view('frontend.traveler.login');
+    }
+
+    public function showForgotPasswordForm()
+    {
+        if (Auth::guard('traveler')->check()) {
+            return redirect()->route('traveler.profile');
+        }
+
+        return view('frontend.traveler.passwords.email');
+    }
+
+    public function sendPasswordResetLink(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $email = strtolower(trim($request->input('email')));
+        $account = TravelerAccount::where('email', $email)->first();
+
+        if ($account) {
+            $token = Str::random(64);
+            DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $account->email],
+                ['token' => Hash::make($token), 'created_at' => now()]
+            );
+
+            try {
+                Mail::to($account->email)->send(new TravelerPasswordResetMail($account, $token));
+            } catch (\Exception $e) {
+                \Log::error('Traveler password reset email failed', [
+                    'email' => $email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return back()->with('status', 'If an account exists for that email, a password reset link has been sent.');
+    }
+
+    public function showResetForm(Request $request, $token = null)
+    {
+        return view('frontend.traveler.passwords.reset', [
+            'token' => $token,
+            'email' => $request->query('email'),
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => ['required'],
+            'email' => ['required', 'email'],
+            'password' => [
+                'required',
+                'confirmed',
+                'min:8',
+                'regex:/[A-Z]/',
+                'regex:/[a-z]/',
+                'regex:/[0-9]/',
+                'regex:/[@$!%*#?&^()_+\-=\[\]{};:"\\|,.<>\/\?]/',
+            ],
+        ], [
+            'password.regex' => 'Password must include uppercase, lowercase, number, and special character.',
+        ]);
+
+        $email = strtolower(trim($request->input('email')));
+        $token = $request->input('token');
+        $record = DB::table('password_reset_tokens')->where('email', $email)->first();
+        $expireMinutes = config('auth.passwords.travelers.expire', 60);
+
+        if (! $record || ! Hash::check($token, $record->token) || Carbon::parse($record->created_at)->addMinutes($expireMinutes)->isPast()) {
+            return back()->withErrors(['email' => 'Invalid or expired reset token.'])->withInput();
+        }
+
+        $account = TravelerAccount::where('email', $email)->first();
+        if (! $account) {
+            return back()->withErrors(['email' => 'Unable to find traveler account.'])->withInput();
+        }
+
+        $account->password_hash = Hash::make($request->input('password'));
+        $account->save();
+
+        DB::table('password_reset_tokens')->where('email', $email)->delete();
+
+        return redirect()->route('traveler.login')->with('success', 'Your password has been reset. Please sign in with your new password.');
     }
 
     public function login(Request $request)
