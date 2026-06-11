@@ -25,7 +25,6 @@
             overflow: hidden;
             max-width: 800px;
             width: 100%;
-            flex-direction: column;
         }
 
         .hamburger {
@@ -100,6 +99,12 @@
 
         .dropdown {
             display: none;
+        }
+
+        @media (max-width:767px){
+            .login-card {
+                flex-direction: column;
+            }
         }
     </style>
     <div class="login-container ">

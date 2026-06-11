@@ -2318,4 +2318,8 @@ label.saved-guest-checkbox {
     .mini-cart-actions {
         flex-direction: column;
     }
+
+    .person-block__rate {
+        font-size: 12px;
+    }
 }
