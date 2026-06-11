@@ -2284,4 +2284,29 @@ label.saved-guest-checkbox {
     .main-nav #headerCartToggle {
         display:none
     }
+
+    table.availability-table, .availability-table tbody, .availability-table tr, .availability-table td {
+        display: block;
+        width: 100%;
+    }
+
+    table.availability-table thead {
+        display: none;
+    }
+
+    .availability-table th, .availability-table td {
+        padding: 0 !important;
+    }
+
+    .activity-option-card {
+        padding: 0 !important;
+    }
+
+    .person-block {
+        width: 33% !important;
+    }
+
+    .detail-gallery-card {
+        position: static;   
+    }
 }
