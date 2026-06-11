@@ -1411,7 +1411,7 @@ strong {
 
     .main-nav {
         justify-content: flex-start;
-        display: none;
+        /* display: none; */
         flex-direction: column;
         position: absolute;
         top: 93px;
@@ -1425,6 +1425,23 @@ strong {
 
     .main-nav.active {
         display: flex;
+    }
+
+    .main-nav {
+        transform: scaleY(0);
+        transform-origin: top;
+        opacity: 0;
+        visibility: hidden;
+        transition:
+            transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.25s ease,
+            visibility 0.35s;
+    }
+
+    .main-nav.active {
+        transform: scaleY(1);
+        opacity: 1;
+        visibility: visible;
     }
 
     .hero-content,
@@ -2134,6 +2151,7 @@ label.saved-guest-checkbox {
     padding: 12px 17px;
     border-left: 2px solid rgba(255, 255, 255, 1);
     margin-bottom: 0;
+    gap: 10px;
 }
 
 .category-search-cell--transport .transport-row > div:first-child {

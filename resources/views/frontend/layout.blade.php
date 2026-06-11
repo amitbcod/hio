@@ -313,8 +313,15 @@
         const menuIcon = document.querySelector('.mobile-menu-icon');
         const nav = document.querySelector('.main-nav');
 
-        menuIcon.addEventListener('click', function () {
+        menuIcon.addEventListener('click', function (e) {
+            e.stopPropagation();
             nav.classList.toggle('active');
+        });
+        nav.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+        document.addEventListener('click', function () {
+            nav.classList.remove('active');
         });
     });
     </script>
