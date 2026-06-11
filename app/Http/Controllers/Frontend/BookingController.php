@@ -33,6 +33,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
+use App\Models\AccommodationInventory;
+use App\Models\AccommodationRoom;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -908,6 +911,7 @@ class BookingController extends Controller
                     'guest_email'       => $guestEmail,
                     'check_in_date'     => $item['check_in'],
                     'check_out_date'    => $item['check_out'],
+                    'rooms_booked'      => $item['rooms'] ?? 1,
                     'adults'            => $item['adults'],
                     'children'          => $item['children'],
                     'booking_status'    => 'Pending',
@@ -945,6 +949,55 @@ class BookingController extends Controller
                             'error' => $e->getMessage(),
                         ]);
                     }
+                }
+
+                // Persist per-day inventory impact for this new booking (decrement available by incrementing sold_units)
+                try {
+                    $roomsBooked = max(1, (int) ($item['rooms'] ?? 1));
+                    $start = Carbon::parse($booking->check_in_date)->startOfDay();
+                    $end = Carbon::parse($booking->check_out_date)->startOfDay()->subDay();
+                    if ($end->lt($start)) {
+                        $end = $start;
+                    }
+
+                    // Determine base sellable units fallback from room or accommodation
+                    $roomModel = $booking->room_id ? AccommodationRoom::find($booking->room_id) : null;
+                    $baseSellableFallback = $roomModel ? (int) ($roomModel->allotment ?? $roomModel->quantity ?? 0) : 0;
+
+                    DB::transaction(function () use ($booking, $start, $end, $roomsBooked, $baseSellableFallback) {
+                        $cursor = $start->copy();
+                        while ($cursor->lte($end)) {
+                            $dateKey = $cursor->toDateString();
+
+                            $inventory = AccommodationInventory::where('accommodation_id', $booking->accommodation_id)
+                                ->where('room_id', $booking->room_id)
+                                ->where('date', $dateKey)
+                                ->lockForUpdate()
+                                ->first();
+
+                            if (!$inventory) {
+                                $sellable = $baseSellableFallback;
+                                $sold = $roomsBooked;
+                                $available = max(0, $sellable - $sold);
+                                AccommodationInventory::create([
+                                    'accommodation_id' => $booking->accommodation_id,
+                                    'room_id' => $booking->room_id,
+                                    'date' => $dateKey,
+                                    'sellable_units' => $sellable,
+                                    'sold_units' => $sold,
+                                    'available_units' => $available,
+                                ]);
+                            } else {
+                                $inventory->sold_units = (int) ($inventory->sold_units ?? 0) + $roomsBooked;
+                                $inventory->available_units = max(0, (int) ($inventory->sellable_units ?? 0) - (int) $inventory->sold_units);
+                                $inventory->save();
+                            }
+
+                            $cursor->addDay();
+                        }
+                    });
+                } catch (\Exception $e) {
+                    Log::error('Failed to update inventory for booking creation', ['error' => $e->getMessage(), 'booking_id' => $booking->id]);
                 }
 
                 // Create Trip party members if Trip exists

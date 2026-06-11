@@ -15,6 +15,7 @@ Route::prefix('traveler')->name('traveler.')->group(function () {
     Route::post('/guest-trips/{otp}/trips/{trip}/booking/{booking}/manage-guests', [\App\Http\Controllers\Frontend\GuestTripController::class, 'updateGuests'])->name('guest-trip.trip.booking.update-guests');
     Route::post('/guest-trips/{otp}/trips/{trip}/add-service', [\App\Http\Controllers\Frontend\GuestTripController::class, 'confirmAddService'])->name('guest-trip.trip.add-service');
     Route::get('/guest-trips/{otp}/trips/{trip}/booking/{booking}/download-voucher/{guest?}', [\App\Http\Controllers\Frontend\GuestTripController::class, 'downloadVoucher'])->name('guest-trip.trip.booking.download-voucher');
+    Route::get('/guest-trips/{otp}/trips/{trip}/download-invoice', [\App\Http\Controllers\Frontend\GuestTripController::class, 'downloadInvoice'])->name('guest-trip.trip.download-invoice');
 
     Route::middleware('guest:traveler')->group(function () {
         Route::get('/register', [TravelerAuthController::class, 'showRegisterForm'])->name('register');
@@ -43,6 +44,7 @@ Route::prefix('traveler')->name('traveler.')->group(function () {
         Route::get('/trips/{trip}/booking/{booking}/manage-guests', [\App\Http\Controllers\Frontend\TripController::class, 'manageGuests'])->name('trip.booking.manage-guests');
         Route::post('/trips/{trip}/booking/{booking}/manage-guests', [\App\Http\Controllers\Frontend\TripController::class, 'updateGuests'])->name('trip.booking.update-guests');
         Route::get('/trips/{trip}/booking/{booking}/download-voucher/{guest?}', [\App\Http\Controllers\Frontend\TripController::class, 'downloadVoucher'])->name('trip.booking.download-voucher');
+        Route::get('/trips/{trip}/download-invoice', [\App\Http\Controllers\Frontend\TripController::class, 'downloadInvoice'])->name('trip.download-invoice');
         Route::post('/trips/{trip}/add-service', [\App\Http\Controllers\Frontend\TripManagementController::class, 'confirmAddService'])->name('trip.add-service');
 
         Route::post('/logout', [TravelerAuthController::class, 'logout'])->name('logout');
