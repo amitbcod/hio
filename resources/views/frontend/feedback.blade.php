@@ -198,6 +198,10 @@
           text-align: center;
           font-size: 11px;
       }
+      .section-box {
+        border: 0px solid #ddd;
+        padding: 0;
+      }
     }
   </style>
 

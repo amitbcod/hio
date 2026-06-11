@@ -2163,8 +2163,6 @@ label.saved-guest-checkbox {
     align-items: center;
 }
 
-
-
 @media (max-width:767px) {
     .category-input-group-inner {
         flex-direction: column;
@@ -2209,5 +2207,17 @@ label.saved-guest-checkbox {
 
     .item-guests-list .guest-item {
         width:100%;
+    }
+
+    .category-search-cell.category-search-cell--region {
+        flex:0 1 0% !important;
+    }
+
+    .category-search-cell.category-search-cell--transport .transport-row {
+        flex-direction: column;
+    }
+
+    .category-search-cell.category-search-cell--transport .transport-field {
+        flex: 1 1 0% !important;
     }
 }
