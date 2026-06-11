@@ -27,6 +27,10 @@
             width: 100%;
         }
 
+        .hamburger {
+            display: none;
+        }
+
         .login-form-section {
             flex: 1;
             padding: 40px 32px;
@@ -95,6 +99,12 @@
 
         .dropdown {
             display: none;
+        }
+
+        @media (max-width:767px){
+            .login-card {
+                flex-direction: column;
+            }
         }
     </style>
     <div class="login-container ">
