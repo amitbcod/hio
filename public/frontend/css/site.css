@@ -1398,6 +1398,17 @@ strong {
         align-items: flex-start;
     }
 
+    .top-bar-inner {
+        align-items: center;
+        font-size: 12px;
+        gap: 8px;
+    }
+
+    .top-links, .top-meta {
+        gap: 8px;
+        justify-content: center;
+     }
+
     .main-nav {
         justify-content: flex-start;
         display: none;
@@ -2180,7 +2191,7 @@ label.saved-guest-checkbox {
     display: flex;
 }
 
-.mobile-menu-icon {
+.top-right-mobill {
     display:none;
 }
 
@@ -2243,12 +2254,34 @@ label.saved-guest-checkbox {
         flex: 1 1 0% !important;
     }
 
-    .mobile-menu-icon {
+    .top-right-mobill {
         position: absolute;
         right: 20px;
-        width: 40px;
+        display:flex;
         top: 30px;
-        display:block;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .mobile-menu-icon {
+        width: 40px;
         cursor: pointer;
+    }
+
+    input.category-search-input {
+         text-align: left;
+    }
+
+    #headerCartToggle {
+        position: relative;
+    }
+
+    #headerCartToggle .header-cart-badge {
+        position: absolute;
+        top: -12px;
+        right: -12px;
+    }
+    .main-nav #headerCartToggle {
+        display:none
     }
 }
