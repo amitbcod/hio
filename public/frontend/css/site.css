@@ -2341,4 +2341,13 @@ label.saved-guest-checkbox {
     .person-block__rate {
         font-size: 12px;
     }
+
+    .quick-search-grid .quick-tile {
+        flex: auto;
+    }
+
+    .stat-pill {
+        flex: 1;
+        text-align: center;
+    }
 }
