@@ -573,4 +573,8 @@ main .container-fluid {
    
 }
 
+.col-md-9.my-pro > div {
+    padding:10px !important
+}
+
 }

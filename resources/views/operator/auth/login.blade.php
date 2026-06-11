@@ -25,6 +25,11 @@
             overflow: hidden;
             max-width: 800px;
             width: 100%;
+            flex-direction: column;
+        }
+
+        .hamburger {
+            display: none;
         }
 
         .login-form-section {
