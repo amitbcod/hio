@@ -2309,4 +2309,9 @@ label.saved-guest-checkbox {
     .detail-gallery-card {
         position: static;   
     }
+
+    .activity-option-card__meta {
+        margin-top: 8px;
+        margin-bottom: 10px;
+    }
 }
