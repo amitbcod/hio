@@ -434,7 +434,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="form-grid">
+                                    <div class="form-grid col-3">
                                         <div class="form-group">
                                             <label for="guests_0_first_name">First Name <span class="req">*</span></label>
                                             <input type="text" id="guests_0_first_name" name="guests[0][first_name]" value="{{ old('guests.0.first_name', $traveler?->profile->first_name ?? '') }}" class="form-input">
@@ -451,7 +451,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="form-grid">
+                                    <div class="form-grid col-3">
                                         <div class="form-group">
                                             <label for="guests_0_dob">Date of Birth <span class="req">*</span></label>
                                             <input type="date" id="guests_0_dob" name="guests[0][dob]" value="{{ old('guests.0.dob', $guestDefaults['dob'] ?? '') }}" class="form-input">
