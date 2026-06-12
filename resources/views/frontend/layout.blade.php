@@ -433,10 +433,10 @@
                 <div>
                     <h4>Links</h4>
                     <ul>
-                        <li><a href="{{ url('/#accommodations-section') }}">About Us</a></li>
+                        <li><a href="{{ url('/about-us') }}">About Us</a></li>
                         <li><a href="{{ url('/#activities-section') }}">Contact</a></li>
                         <li><a href="{{ url('/#discover-mauritius') }}">Travels Blogs</a></li>
-                        <li><a href="{{ url('#') }}">Terms of Use</a></li>
+                        <li><a href="{{ url('/terms-and-conditions') }}">Terms of Use</a></li>
                         <li><a href="{{ url('#') }}">Privacy Statement</a></li>
                         <li><a href="{{ url('#') }}">Conditions</a></li>
                     </ul>

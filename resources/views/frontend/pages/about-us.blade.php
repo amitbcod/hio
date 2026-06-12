@@ -4,6 +4,14 @@
 @section('meta_description', 'Learn more about Holidays.io and our travel services.')
 
 @section('content')
+
+    <section class="inner-page-hero">
+        <div class="inner-page-hero-media">
+            <img src="{{ $heroSlides[0]['image'] ?? asset('images/mauritius.jpg') }}"
+                        alt="">
+        </div>
+    </section>
+
     <section class="page-section">
         <div class="wrap">
             <h1>About Us - Lolotte Rental and Tours</h1>
@@ -29,7 +37,7 @@
                 </div>
                 <div class="highlight-card">
                     <img src="{{ $heroSlides[0]['image'] ?? asset('images/services-mauritius.jpg') }}"
-                        alt="Featured Mauritius experience">
+                        alt="">
                 </div>
             </div>
 
