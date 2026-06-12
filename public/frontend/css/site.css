@@ -2238,7 +2238,29 @@ label.saved-guest-checkbox {
     margin-top: 50px;
 }
 
+.lower-alpha{
+    list-style: lower-alpha;
+}
 
+ol > li {
+    font-weight: bold;
+}
+
+ol > ul {
+    margin: 15px 0 40px;
+}
+
+ol {
+    padding-left: 20px;
+}
+
+ol > ul > li {
+    margin-bottom: 20px;
+}
+
+::marker {
+    color: #ff8a00;
+}
 
 
 
