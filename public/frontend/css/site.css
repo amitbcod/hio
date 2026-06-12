@@ -2350,4 +2350,12 @@ label.saved-guest-checkbox {
         flex: 1;
         text-align: center;
     }
+
+    section#discover-mauritius {
+        padding: 0;
+    }
+
+    .tabs-shell, .highlight-copy, .detail-card, .detail-side {
+        padding: 12px;
+    }
 }
