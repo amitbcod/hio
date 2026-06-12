@@ -17,7 +17,7 @@
 
             <p>Effective Date: 01/10/2024<br>
                 MPO: Lolotte Rental and Tours (Mauritius) <br>
-                Website: [mauritius.holidays.io]</p>
+                Website: <a href="https://mauritius.holidays.io/">mauritius.holidays.io</a></p>
 
             <p>These Destination-Specific Terms and Conditions apply to all bookings made on Holidays.io (HIO) for services
                 in the Republic of Mauritius, managed by Lolotte Rental and Tours, the local Marketplace Operator (MPO) for

@@ -2373,6 +2373,7 @@ ol > ul > li {
 
     #headerCartToggle {
         position: relative;
+        color:#000000;
     }
 
     #headerCartToggle .header-cart-badge {
