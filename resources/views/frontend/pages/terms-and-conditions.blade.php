@@ -4,6 +4,12 @@
 @section('meta_description', 'Read the Holidays.io terms and conditions.')
 
 @section('content')
+<section class="inner-page-hero">
+        <div class="inner-page-hero-media">
+            <img src="{{ $heroSlides[0]['image'] ?? asset('images/mauritius.jpg') }}"
+                        alt="">
+        </div>
+    </section>
     <section class="page-section">
         <div class="wrap">
             <h1>Destination General Terms and Conditions</h1>
