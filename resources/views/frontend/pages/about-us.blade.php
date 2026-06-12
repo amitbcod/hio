@@ -13,25 +13,26 @@
                 preserving the unique cultural and environmental heritage of Mauritius are the cornerstones of her company.
                 LRT is your local connection!</p>
 
-                <div class="inner-section split-highlight">
-                    <div class="highlight-copy">
-                        <h3>Holidays Services</h3>
-                        <p>
-                            Transport Preferences: Choose your ideal ride and travel in style, your way!<br>
-Transfers: Enjoy seamless transfers from the airport to your hotel for a stress-free start to your holiday.<br>
-Accommodation: Relax in accommodations that offer luxury, comfort, and exceed your expectations.<br>
-Activities: Dive into a variety of fun activities designed for all ages and interests.<br>
-Packaging: Discover our exciting holiday packages that make your dream vacation come true.<br>
-Sustainable Holidays: Experience eco-friendly fun with The Rainbow IO's sustainable holiday options!
-                        </p>
+            <div class="inner-section split-highlight">
+                <div class="highlight-copy">
+                    <h3>Holidays Services</h3>
+                    <p>
+                        Transport Preferences: Choose your ideal ride and travel in style, your way!<br>
+                        Transfers: Enjoy seamless transfers from the airport to your hotel for a stress-free start to your
+                        holiday.<br>
+                        Accommodation: Relax in accommodations that offer luxury, comfort, and exceed your expectations.<br>
+                        Activities: Dive into a variety of fun activities designed for all ages and interests.<br>
+                        Packaging: Discover our exciting holiday packages that make your dream vacation come true.<br>
+                        Sustainable Holidays: Experience eco-friendly fun with The Rainbow IO's sustainable holiday options!
+                    </p>
 
-                    </div>
-                    <div class="highlight-card">
-                        <img src="{{ $heroSlides[0]['image'] ?? asset('images/services-mauritius.jpg') }}"
-                            alt="Featured Mauritius experience">
-                    </div>
                 </div>
-            
+                <div class="highlight-card">
+                    <img src="{{ $heroSlides[0]['image'] ?? asset('images/services-mauritius.jpg') }}"
+                        alt="Featured Mauritius experience">
+                </div>
+            </div>
+
 
             <h2>Our Story</h2>
             <p>Dominique, the owner and operator of LRT, grew up immersed in the natural beauty of Mauritius. Her intimate
@@ -85,6 +86,34 @@ Sustainable Holidays: Experience eco-friendly fun with The Rainbow IO's sustaina
                 we won’t rest until you’ve experienced the magic of Mauritius firsthand.</p>
 
             <p>Let Lolotte Rental and Tours can show you a side of Mauritius you have never seen before.</p>
+
+            <div class="bottom-content">
+                <img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXdL3Zo4ZwoGzzur47ign2kXFnMF1qEhIISlgd618Fvb2a6ffitbl1RnyhUnpZLHb_9viM-XWz8p4RKq0bj1oYqKFSwMm65P8M8JSd3eAfrNRyfJDbYsFkWcZHQh1oZ2AnfwxM39h1EWhgIPmaZu3Wco4LjC?key=yjeegoLMW3RrL677MKrfXw"
+                    style="
+        width: 55px;
+        height: auto;
+        float: left;
+        margin-right: 20px;
+    ">
+                <h1 class="h1-title" style="
+        padding-top: 10px;
+    ">Rainbow Holidays</h1>
+                <div class="intro_details home_page_s_rainbow_accommodation_short_description">
+                    <p>Explore a variety of services aimed at improving your Mauritius experience while keeping
+                        sustainability in
+                        mind. Whether you are looking for eco-friendly lodging, responsible travel experiences, or ethical
+                        business
+                        solutions, The Rainbow IO connects you with options that reflect your values. From sustainable
+                        hotels to
+                        customised activities, The Rainbow IO will help you plan a meaningful and unforgettable trip to
+                        Mauritius
+                        for leisure or business. <a
+                            href="https://holidaystest.mirackle.com/live/travel-info/the-rainbow-io-mauritius">Discover more
+                            at
+                            The Rainbow IO.&nbsp;</a>
+                    </p>
+                </div>
+            </div>
 
         </div>
     </section>
