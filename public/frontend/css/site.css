@@ -2230,6 +2230,20 @@ label.saved-guest-checkbox {
     grid-template-columns: 1fr 1fr 1fr;
 }
 
+.inner-section {
+    padding:30px 0;
+}
+
+
+
+
+
+
+
+
+
+
+
 @media (max-width:860px) {
     .form-grid.col-3 {
         grid-template-columns: 1fr;
