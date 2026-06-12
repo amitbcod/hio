@@ -1481,7 +1481,7 @@ strong {
     }
 
     .page-section {
-        padding: 56px 0;
+        padding: 16px 0;
     }
 }
 
@@ -2445,5 +2445,13 @@ ol > ul > li {
     .detail-card,
     .detail-side {
         padding: 12px;
+    }
+
+    h1 {
+        font-size: 28px;
+    }
+
+    .highlight-copy h3 {
+        font-size: 25px;
     }
 }
