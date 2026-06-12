@@ -40,6 +40,17 @@ class GuestBookingOtp extends Mailable
         $checkInDate = $this->booking->check_in_date ?? $this->booking->activity_date ?? null;
         $checkOutDate = $this->booking->check_out_date ?? $this->booking->activity_date ?? $checkInDate;
 
+        $firstName = trim((string) data_get($this->booking, 'traveler_first_name'));
+        if (empty($firstName)) {
+            $guestName = trim((string) data_get($this->booking, 'guest_name'));
+            if (!empty($guestName)) {
+                $firstName = explode(' ', $guestName)[0];
+            }
+        }
+        if (empty($firstName)) {
+            $firstName = 'Guest';
+        }
+
         return new Content(
             view: 'emails.guest-booking-otp',
             with: [
@@ -52,6 +63,7 @@ class GuestBookingOtp extends Mailable
                 'checkInDate' => $checkInDate ? Carbon::parse($checkInDate)->format('F d, Y') : 'N/A',
                 'checkOutDate' => $checkOutDate ? Carbon::parse($checkOutDate)->format('F d, Y') : 'N/A',
                 'bookingRef' => $this->booking->booking_reference,
+                'firstName' => $firstName,
             ],
         );
     }

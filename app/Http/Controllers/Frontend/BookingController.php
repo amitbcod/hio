@@ -824,6 +824,8 @@ class BookingController extends Controller
         $bookingRefs = [];
         $guestOtp = null;
         $tripBookingIds = [];
+        $firstNotificationBooking = null;
+        $operatorNotificationBookings = []; // operator email => booking
 
         // Get or create Trip ID
         $travelerAccount = Auth::guard('traveler')->user();
@@ -924,31 +926,22 @@ class BookingController extends Controller
                     'is_guest'          => $isGuestCheckout ? 1 : 0,
                 ]);
 
-                if ($isGuestCheckout && !$guestOtp) {
+                if (!$guestOtp) {
                     $guestOtp = GuestOtpToken::createForGuest($guestEmail, $booking->id);
                 }
 
-                if ($isGuestCheckout && $guestOtp) {
+                if ($guestOtp) {
                     $booking->guest_otp_token_id = $guestOtp->id;
                     $booking->save();
                 }
 
-                if ($isGuestCheckout && $guestOtp && !$guestOtp->wasRecentlyCreated) {
-                    // no-op, already created earlier
+                if (!$firstNotificationBooking) {
+                    $firstNotificationBooking = $booking;
                 }
 
-                if ($isGuestCheckout && $guestOtp && $guestOtp->wasRecentlyCreated) {
-                    // Send OTP email to guest once after first booking creation
-                    try {
-                        $tripUrl = url('/') . '/traveler/guest-trips/' . $guestOtp->otp_code;
-                        Mail::to($guestEmail)->send(new \App\Mail\GuestBookingOtp($booking, $guestOtp, $tripUrl));
-                    } catch (\Exception $e) {
-                        \Log::error('Failed to send guest booking OTP email', [
-                            'email' => $guestEmail,
-                            'booking_id' => $booking->id,
-                            'error' => $e->getMessage(),
-                        ]);
-                    }
+                $operatorEmail = optional($booking->accommodation->operator)->email;
+                if ($operatorEmail) {
+                    $operatorNotificationBookings[$operatorEmail] = $booking;
                 }
 
                 // Persist per-day inventory impact for this new booking (decrement available by incrementing sold_units)
@@ -1136,26 +1129,22 @@ class BookingController extends Controller
                     'is_guest'          => $isGuestCheckout ? 1 : 0,
                 ]);
 
-                if ($isGuestCheckout && !$guestOtp) {
+                if (!$guestOtp) {
                     $guestOtp = GuestOtpToken::createForGuest($guestEmail, $booking->id);
                 }
 
-                if ($isGuestCheckout && $guestOtp) {
+                if ($guestOtp) {
                     $booking->guest_otp_token_id = $guestOtp->id;
                     $booking->save();
                 }
 
-                if ($isGuestCheckout && $guestOtp && $guestOtp->wasRecentlyCreated) {
-                    try {
-                        $tripUrl = url('/') . '/traveler/guest-trips/' . $guestOtp->otp_code;
-                        Mail::to($guestEmail)->send(new \App\Mail\GuestBookingOtp($booking, $guestOtp, $tripUrl));
-                    } catch (\Exception $e) {
-                        \Log::error('Failed to send guest booking OTP email', [
-                            'email' => $guestEmail,
-                            'booking_id' => $booking->id,
-                            'error' => $e->getMessage(),
-                        ]);
-                    }
+                if (!$firstNotificationBooking) {
+                    $firstNotificationBooking = $booking;
+                }
+
+                $operatorEmail = optional($booking->activity->operator)->email;
+                if ($operatorEmail) {
+                    $operatorNotificationBookings[$operatorEmail] = $booking;
                 }
 
                 // Create Trip party members if Trip exists
@@ -1252,6 +1241,57 @@ class BookingController extends Controller
             }
 
             $bookingRefs[] = $ref;
+        }
+
+        if ($guestOtp && $firstNotificationBooking) {
+            $tripUrl = url('/') . '/traveler/guest-trips/' . $guestOtp->otp_code;
+            $guestMail = new \App\Mail\GuestBookingOtp($firstNotificationBooking, $guestOtp, $tripUrl);
+
+            try {
+                Mail::to($guestEmail)->send($guestMail);
+            } catch (\Exception $e) {
+                Log::error('Failed to send guest booking OTP email', [
+                    'email' => $guestEmail,
+                    'booking_id' => $firstNotificationBooking->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            foreach ($operatorNotificationBookings as $operatorEmail => $operatorBooking) {
+                try {
+                    Mail::to($operatorEmail)->send(new \App\Mail\GuestBookingOtp($operatorBooking, $guestOtp, $tripUrl));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send booking notification email to operator', [
+                        'email' => $operatorEmail,
+                        'booking_id' => $operatorBooking->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            $adminEmails = \App\Models\AdminUser::where('status', 'active')
+                ->pluck('email')
+                ->filter()
+                ->unique()
+                ->toArray();
+
+            $adminFrom = config('mail.from.address');
+            if ($adminFrom) {
+                $adminEmails[] = $adminFrom;
+                $adminEmails = array_unique($adminEmails);
+            }
+
+            foreach ($adminEmails as $adminEmail) {
+                try {
+                    Mail::to($adminEmail)->send(new \App\Mail\GuestBookingOtp($firstNotificationBooking, $guestOtp, $tripUrl));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send booking notification email to admin', [
+                        'email' => $adminEmail,
+                        'booking_id' => $firstNotificationBooking->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
         }
 
         $primaryRef = $bookingRefs[0] ?? 'UNKNOWN';

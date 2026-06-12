@@ -72,7 +72,7 @@
         <div class="content">
             <h1>Booking Confirmation</h1>
 
-            <p>Hello Guest,</p>
+            <p>Hello {{ $firstName }},</p>
 
             <p>Thank you for your booking! Your reservation has been confirmed.</p>
 

@@ -12,6 +12,7 @@ use App\Models\AccommodationPromotion;
 use App\Models\AccommodationInventory;
 use App\Models\AccommodationBooking;
 use App\Models\Business;
+use App\Services\OperatorBookingNotificationService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -3136,6 +3137,12 @@ class AccommodationController extends Controller
 
         $booking->booking_status = $request->input('booking_status');
         $booking->save();
+
+        (new OperatorBookingNotificationService())->notifyBookingStatusChanged(
+            $booking,
+            'accommodation',
+            $booking->booking_status
+        );
 
         return back()->with('success', 'Booking status updated to ' . $booking->booking_status . '.');
     }

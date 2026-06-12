@@ -3,6 +3,7 @@
 
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\BookingController;
+use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 require base_path('routes/operator.php');
@@ -11,6 +12,9 @@ require base_path('routes/login_fallback.php');
 // Admin routes
 require base_path('routes/admin.php');
 Route::get('/', [HomeController::class, 'index'])->name('frontend.home');
+Route::get('/about-us', [PageController::class, 'aboutUs'])->name('frontend.about-us');
+Route::get('/terms-and-conditions', [PageController::class, 'termsAndConditions'])->name('frontend.terms-and-conditions');
+Route::get('/privacy-policy', [PageController::class, 'privacyPolicy'])->name('frontend.privacy-policy');
 Route::get('/category-list', [HomeController::class, 'categoryList'])->name('frontend.category.list');
 Route::get('/activities/{activity}', [HomeController::class, 'showActivity'])->name('frontend.activities.show');
 Route::get('/accommodations/{accommodation}', [HomeController::class, 'showAccommodation'])->name('frontend.accommodations.show');

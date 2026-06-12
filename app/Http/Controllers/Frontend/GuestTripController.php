@@ -939,49 +939,50 @@ HTML;
             $rowTax = number_format($item['total'] * 0.15, 2);
             $rowTotal = number_format($item['total'], 2);
             $serviceRows .= '<tr>
-                <td style="width:4%;border-bottom:1px solid #dce7f5;padding:10px 6px;text-align:center;font-weight:600;">' . ($index + 1) . '</td>
-                <td style="width:22%;border-bottom:1px solid #dce7f5;padding:10px 6px;">
+                <td style="width:4%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;font-weight:600;">' . ($index + 1) . '</td>
+                <td style="width:22%;border-bottom:1px solid #dce7f5;padding:10px;">
                     <div style="font-weight:600;color:#0b2b51;margin-bottom:2px;">' . $item['type'] . '</div>
                     <div style="font-size:9px;color:#4a5f7f;margin-bottom:2px;"><strong>' . $item['name'] . '</strong></div>
                     <div style="font-size:9px;color:#7a8a9f;">' . $item['location'] . '</div>
                 </td>
-                <td style="width:18%;border-bottom:1px solid #dce7f5;padding:10px 6px;font-size:9px;">
+                <td style="width:18%;border-bottom:1px solid #dce7f5;padding:10px;font-size:9px;">
                     <div style="margin-bottom:4px;"><strong>' . $item['checkIn'] . '</strong></div>
                     <div style="color:#7a8a9f;">' . $item['checkOut'] . '</div>
                 </td>
-                <td style="width:20%;border-bottom:1px solid #dce7f5;padding:10px 6px;font-size:9px;">
+                <td style="width:20%;border-bottom:1px solid #dce7f5;padding:10px;font-size:9px;">
                     <div style="font-weight:600;margin-bottom:4px;">' . $item['description'] . '</div>
                     <div style="color:#7a8a9f;">' . $item['notes'] . '</div>
                 </td>
-                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px 6px;text-align:center;">' . $item['qty'] . '</td>
-                <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px 6px;text-align:right;font-weight:600;">MUR ' . $rowUnitPrice . '</td>
-                <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px 6px;text-align:right;font-weight:600;">MUR ' . $rowTax . '</td>
-                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px 6px;text-align:right;font-weight:600;color:#0b2b51;">MUR ' . $rowTotal . '</td>
+                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;">' . $item['qty'] . '</td>
+                <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px;text-align:right;font-weight:600;">MUR ' . $rowUnitPrice . '</td>
+                <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px;text-align:right;font-weight:600;">MUR ' . $rowTax . '</td>
+                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:right;font-weight:600;color:#0b2b51;">MUR ' . $rowTotal . '</td>
             </tr>';
         }
 
         $poweredLogoHtml = $poweredLogoPath
-            ? '<img src="' . $poweredLogoPath . '" style="max-width:100px; max-height:40px;" alt="Holidays.io">'
+            ? '<img src="' . $poweredLogoPath . '" width="100" height="40" style="width:100px; height:auto; display:block;" alt="Holidays.io">'
             : '<span style="color:#f7971e;font-weight:700;font-size:14px;">HOLIDAYS.io</span>';
 
         $html = <<<HTML
 <style>
 body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
-.header-box { border:2px solid #0b2b51; border-radius:8px; padding:12px; background:#f0f5ff; margin-bottom:12px; }
+.header-box { border:none; border-radius:8px; padding:12px; background:#f0f5ff; margin-bottom:12px; }
 .section-title { font-size:11px; font-weight:700; color:#0b2b51; margin:8px 0 6px 0; }
 .info-table { width:100%; border-collapse:collapse; margin-bottom:8px; }
 .info-table td { padding:4px; border-bottom:1px solid #dce7f5; font-size:9px; }
 .info-table .label { font-weight:600; color:#0b2b51; width:40%; }
 .info-table .value { color:#4a5f7f; }
-.service-table { width:100%; border-collapse:collapse; margin-bottom:8px; border:1px solid #dce7f5; border-radius:6px; overflow:hidden; }
+.service-table { width:100%; border-collapse:collapse; margin-bottom:8px; border:none; border-radius:6px; overflow:hidden; }
 .service-table thead tr { background:#0b2b51; color:#fff; }
-.service-table th { padding:10px 6px; text-align:left; font-size:9px; font-weight:600; }
-.totals-box { width:100%; background:#f0f5ff; border:1px solid #dce7f5; border-radius:6px; padding:10px; }
+.service-table th { padding:10px; text-align:left; font-size:9px; font-weight:600; }
+.service-table td { padding:10px; }
+.totals-box { width:100%; background:#f0f5ff; border:none; border-radius:6px; padding:10px; }
 .totals-row { display:flex; justify-content:space-between; padding:4px 0; font-size:9px; }
 .totals-label { font-weight:600; color:#0b2b51; }
 .totals-amount { text-align:right; }
 .total-paid { background:#0b2b51; color:#fff; padding:8px; border-radius:4px; font-weight:700; display:flex; justify-content:space-between; margin-top:6px; }
-.thank-you { background:#e8f5e9; border:1px solid #66bb6a; border-radius:6px; padding:10px; margin-bottom:8px; color:#2e7d32; font-size:9px; }
+.thank-you { background:#e8f5e9; border:none; border-radius:6px; padding:10px; margin-bottom:8px; color:#2e7d32; font-size:9px; }
 .notes-box { font-size:9px; color:#4a5f7f; margin-bottom:8px; }
 .notes-box ul { margin:4px 0; padding-left:16px; }
 .notes-box li { margin-bottom:2px; }
@@ -1071,7 +1072,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
 <tr>
 <td width="55%" style="vertical-align:top; padding-right:6px;">
-    <div class="thank-you" style="border:2px solid #2e7d32; background:#e8f5e9; border-radius:8px; padding:12px; margin-bottom:8px;">
+    <div class="thank-you" style="background:#e8f5e9; border-radius:8px; padding:12px; margin-bottom:8px;">
         <div style="text-align:center; font-size:11px; font-weight:700; color:#2e7d32; margin-bottom:8px;">THANK YOU!</div>
         <div style="font-size:9px; color:#2e7d32; text-align:center; line-height:1.6;">
             Your payment has been successfully received.<br><br>

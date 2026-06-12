@@ -7,6 +7,7 @@ use App\Models\ActivityVariant;
 use App\Models\ActivityPromotion;
 use App\Models\ActivitySeoSocial;
 use App\Models\Operator;
+use App\Services\OperatorBookingNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Controller;
@@ -2608,6 +2609,12 @@ class ActivityController extends Controller
 
         $booking->booking_status = $request->input('booking_status');
         $booking->save();
+
+        (new OperatorBookingNotificationService())->notifyBookingStatusChanged(
+            $booking,
+            'activity',
+            $booking->booking_status
+        );
 
         return back()->with('success', 'Booking status updated to ' . $booking->booking_status . '.');
     }
