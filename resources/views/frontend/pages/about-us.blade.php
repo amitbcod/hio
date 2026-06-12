@@ -15,22 +15,19 @@
 
                 <div class="inner-section split-highlight">
                     <div class="highlight-copy">
-                        <h3>Mauritius Holiday Destination</h3>
+                        <h3>Holidays Services</h3>
                         <p>
-                            Discover the beauty of a tropical paradise known for its stunning beaches,
-                            vibrant culture, and year-round pleasant climate. Whether you're a visitor or a local
-                            resident</br>
-                            Mauritius offers perfect experiences from relaxation to adventure.</br>
-                            The island is safe and tourist-friendly, with modern infrastructure and welcoming communities.
-                            </br>
-                            Basic healthcare facilities and pharmacies are easily accessible across the country. Enjoy your
-                            holiday with peace of mind by following simple safety practices and staying protected under the
-                            tropical sun.
+                            Transport Preferences: Choose your ideal ride and travel in style, your way!<br>
+Transfers: Enjoy seamless transfers from the airport to your hotel for a stress-free start to your holiday.<br>
+Accommodation: Relax in accommodations that offer luxury, comfort, and exceed your expectations.<br>
+Activities: Dive into a variety of fun activities designed for all ages and interests.<br>
+Packaging: Discover our exciting holiday packages that make your dream vacation come true.<br>
+Sustainable Holidays: Experience eco-friendly fun with The Rainbow IO's sustainable holiday options!
                         </p>
 
                     </div>
                     <div class="highlight-card">
-                        <img src="{{ $heroSlides[0]['image'] ?? asset('images/holidays-io-logo.png') }}"
+                        <img src="{{ $heroSlides[0]['image'] ?? asset('images/services-mauritius.jpg') }}"
                             alt="Featured Mauritius experience">
                     </div>
                 </div>
