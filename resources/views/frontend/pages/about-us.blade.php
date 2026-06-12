@@ -27,20 +27,7 @@
                             holiday with peace of mind by following simple safety practices and staying protected under the
                             tropical sun.
                         </p>
-                        <div class="stats-bar">
-                            <div class="stat-pill">
-                                <strong>{{ $stats['activities'] }}</strong>
-                                <span>Activities loaded</span>
-                            </div>
-                            <div class="stat-pill">
-                                <strong>{{ $stats['holidayRentals'] }}</strong>
-                                <span>Holiday rentals loaded</span>
-                            </div>
-                            <div class="stat-pill">
-                                <strong>{{ $stats['hotels'] }}</strong>
-                                <span>Hotels loaded</span>
-                            </div>
-                        </div>
+
                     </div>
                     <div class="highlight-card">
                         <img src="{{ $heroSlides[0]['image'] ?? asset('images/holidays-io-logo.png') }}"
