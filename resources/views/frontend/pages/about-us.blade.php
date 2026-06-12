@@ -7,8 +7,7 @@
 
     <section class="inner-page-hero">
         <div class="inner-page-hero-media">
-            <img src="{{ $heroSlides[0]['image'] ?? asset('images/mauritius.jpg') }}"
-                        alt="">
+            <img src="{{ $heroSlides[0]['image'] ?? asset('images/mauritius.jpg') }}" alt="">
         </div>
     </section>
 
@@ -36,8 +35,7 @@
 
                 </div>
                 <div class="highlight-card">
-                    <img src="{{ $heroSlides[0]['image'] ?? asset('images/services-mauritius.jpg') }}"
-                        alt="">
+                    <img src="{{ $heroSlides[0]['image'] ?? asset('images/services-mauritius.jpg') }}" alt="">
                 </div>
             </div>
 
@@ -98,14 +96,14 @@
             <div class="bottom-content">
                 <img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXdL3Zo4ZwoGzzur47ign2kXFnMF1qEhIISlgd618Fvb2a6ffitbl1RnyhUnpZLHb_9viM-XWz8p4RKq0bj1oYqKFSwMm65P8M8JSd3eAfrNRyfJDbYsFkWcZHQh1oZ2AnfwxM39h1EWhgIPmaZu3Wco4LjC?key=yjeegoLMW3RrL677MKrfXw"
                     style="
-        width: 55px;
-        height: auto;
-        float: left;
-        margin-right: 20px;
-    ">
+            width: 55px;
+            height: auto;
+            float: left;
+            margin-right: 20px;
+        ">
                 <h1 class="h1-title" style="
-        padding-top: 10px;
-    ">Rainbow Holidays</h1>
+            padding-top: 10px;
+        ">Rainbow Holidays</h1>
                 <div class="intro_details home_page_s_rainbow_accommodation_short_description">
                     <p>Explore a variety of services aimed at improving your Mauritius experience while keeping
                         sustainability in
@@ -122,6 +120,43 @@
                     </p>
                 </div>
             </div>
+
+            <section class="page-section">
+                <div class="wrap split-highlight">
+                    <div class="highlight-copy">
+                        <h3>Mauritius Holiday Destination</h3>
+                        <p>
+                            Discover the beauty of a tropical paradise known for its stunning beaches,
+                            vibrant culture, and year-round pleasant climate. Whether you're a visitor or a local
+                            resident</br>
+                            Mauritius offers perfect experiences from relaxation to adventure.</br>
+                            The island is safe and tourist-friendly, with modern infrastructure and welcoming communities.
+                            </br>
+                            Basic healthcare facilities and pharmacies are easily accessible across the country. Enjoy your
+                            holiday with peace of mind by following simple safety practices and staying protected under the
+                            tropical sun.
+                        </p>
+                        <div class="stats-bar">
+                            <div class="stat-pill">
+                                <!-- <strong>{{ $stats['activities'] }}</strong> -->
+                                <span>Activities loaded</span>
+                            </div>
+                            <div class="stat-pill">
+                                <!-- <strong>{{ $stats['holidayRentals'] }}</strong> -->
+                                <span>Holiday rentals loaded</span>
+                            </div>
+                            <div class="stat-pill">
+                                <!-- <strong>{{ $stats['hotels'] }}</strong> -->
+                                <span>Hotels loaded</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="highlight-card">
+                        <img src="{{ $heroSlides[0]['image'] ?? asset('images/holidays-io-logo.png') }}"
+                            alt="Featured Mauritius experience">
+                    </div>
+                </div>
+            </section>
 
         </div>
     </section>
