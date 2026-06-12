@@ -11,7 +11,7 @@
         <div class="trip-detail-header-section" style="margin-bottom: 40px;">
             <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.show', ['otp' => $otp]) : route('traveler.trips') }}" class="btn btn-secondary-outline">&larr; Back to Trips</a>
             <div style="margin-top: 20px;">
-                <h1 style="margin: 10px 0; font-size: 2.5rem;">Trip ID: <strong>#100{{ $trip->id }}</h1>
+                <h1 style="margin: 10px 0; font-size: 2.5rem;">Trip ID: <strong>#00{{ $trip->id }}</h1>
                 <!-- <p style="color: #666; font-size: 1rem; margin: 5px 0; padding: 12px 16px; background: #fff3e0; border-left: 4px solid #ff9500; display: inline-block; border-radius: 4px;">Trip ID: <strong>#{{ $trip->id }}</strong></p> -->
                 
                 @php
