@@ -134,7 +134,7 @@
                                     </div>
                                 </div>
                                 <div class="guest-rooms-row">
-                                    <label for="category-children-field">Children <span>(0-17 yr)</span></label>
+                                    <label for="category-children-field">Children <span>(3-17 yr)</span></label>
                                     <div class="guest-rooms-counter">
                                         <button type="button" class="count-btn decrement" data-target="children">−</button>
                                         <input id="category-children-field" type="text" name="children" value="{{ (int) $filters['children'] }}" readonly>

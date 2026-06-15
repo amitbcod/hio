@@ -140,14 +140,19 @@
                             <div class="col-md-4 mb-3">
                                 <label style="font-weight:600;">Occupancy – Adults *</label>
                                 <input type="number" name="occupancy_adults" class="form-control" min="1" required value="{{ old('occupancy_adults', $room->capacity ?? 1) }}">
+                                <small style="display:block;color:#666;margin-top:4px;">Adults are aged 17+ years.</small>
                             </div>
+                            
                             <div class="col-md-4 mb-3">
                                 <label style="font-weight:600;">Occupancy – Children *</label>
                                 <input type="number" name="occupancy_children" class="form-control" min="0" required value="{{ old('occupancy_children', $room->children_capacity ?? 0) }}">
+                                <small style="display:block;color:#666;margin-top:4px;">Children are aged 3-17 years. </small>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label style="font-weight:600;">Occupancy – Infant</label>
                                 <input type="number" name="occupancy_infant" class="form-control" min="0" value="{{ old('occupancy_infant', $room->infant_capacity ?? '') }}">
+                                <small style="display:block;color:#666;margin-top:4px;">Infants are aged 0-2 years.</small>
+                            </div>
                             </div>
                         </div>
 

@@ -262,6 +262,11 @@
                                     </label>
                                 </div>
                             </div>
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <small style="display:block;color:#666;">Age guidelines: Adults 17+ yr • Children 3-17 yr • Infants 0-2 yr</small>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Options --}}
