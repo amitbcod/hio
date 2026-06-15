@@ -281,7 +281,7 @@
           @endphp
 
           <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;background: #f9f9f9;">
-            <h3 style="margin-top: 0;">{{ $ab->property_name ?? ('Accommodation #' . $ab->id) }}</h3>
+            <h3 style="margin-top: 0;">Accommodation: {{ $ab->accommodation?->property_name ?? ('Accommodation #' . $ab->id) }}</h3>
             <input type="hidden" name="accommodations[{{ $ab->id }}][id]" value="{{ $ab->id }}">
 
             @foreach($accommodationRatingFields as $fieldKey => $fieldLabel)
@@ -327,7 +327,7 @@
           @endphp
 
           <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;background: #f9f9f9;">
-            <h3 style="margin-top: 0;">{{ $act->activity_name ?? ('Activity #' . $act->id) }}</h3>
+            <h3 style="margin-top: 0;">Activity: {{ $act->activity?->activity_name ?? ('Activity #' . $act->id) }}</h3>
             <input type="hidden" name="activities[{{ $act->id }}][id]" value="{{ $act->id }}">
 
             @foreach($activityRatingFields as $fieldKey => $fieldLabel)

@@ -15,7 +15,7 @@ class FeedbackController extends Controller
 {
     public function show($tripId)
     {
-        $trip = Trip::with(['traveler', 'accommodationBookings', 'activityBookings'])->findOrFail($tripId);
+        $trip = Trip::with(['traveler', 'accommodationBookings.accommodation', 'activityBookings.activity'])->findOrFail($tripId);
         
         // Check if user is authenticated and owns this trip
         $traveler = auth('traveler')->user();
