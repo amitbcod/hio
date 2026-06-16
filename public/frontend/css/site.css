@@ -2411,7 +2411,13 @@ ol>ul>li {
     }
 
     .person-block {
+        flex: 1;
+        padding: 3px !important;
         width: 33% !important;
+    }
+
+    .person-block__rate {
+        font-size: 12px;
     }
 
     .detail-gallery-card {
