@@ -422,7 +422,8 @@
             document
             .querySelector(".category-filter-form")
             .classList.toggle("show");
-            arrow.classList.toggle("up");
+
+            this.querySelector(".arrow").classList.toggle("up");
         });
         }
     </script>
