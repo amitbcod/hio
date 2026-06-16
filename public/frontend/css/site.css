@@ -2477,8 +2477,4 @@ ol > ul > li {
     .category-filter-form.show {
         display: block;
     }
-
-    .toggle {
-        cursor: pointer;
-    }
 }
