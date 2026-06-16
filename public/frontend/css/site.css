@@ -2458,4 +2458,27 @@ ol > ul > li {
     .highlight-copy h3 {
         font-size: 25px;
     }
+
+    .category-filters h3 {
+        margin: 0;
+        font-size: 18px;
+        padding: 0;
+        line-height: 2px;
+    }
+
+    .category-filter-form {
+        margin-top: 20px;
+    }
+
+    .category-filter-form {
+        display: none;
+    }
+
+    .category-filter-form.show {
+        display: block;
+    }
+
+    .toggle {
+        cursor: pointer;
+    }
 }

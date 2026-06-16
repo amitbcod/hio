@@ -174,7 +174,7 @@
     <section class="page-section category-listing-section">
         <div class="wrap category-layout">
             <aside class="category-filters">
-                <h3>Filter by</h3>
+                <h3 class="toggle">Filter by</h3>
                 @if(empty($sidebarDefinitions))
                     <p class="filter-note">No extra filters are available for this category yet.</p>
                 @else
@@ -414,5 +414,15 @@
             updateCategoryFields();
             updateGuestSummary();
         });
+    </script>
+
+    <script>
+        if (window.innerWidth <= 768) {
+        document.querySelector(".toggle").addEventListener("click", function () {
+            document
+            .querySelector(".category-filter-form")
+            .classList.toggle("show");
+        });
+        }
     </script>
 @endsection
