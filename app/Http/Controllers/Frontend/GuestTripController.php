@@ -42,7 +42,11 @@ class GuestTripController extends Controller
                 ->orderBy('start_date', 'desc')
                 ->get();
 
-            return view('frontend.traveler.trips', compact('trips', 'otp'))
+            $classified = \App\Services\TripStatusService::classifyTrips($trips);
+            $ongoingTrips = $classified['ongoing'];
+            $pastTrips = $classified['past'];
+
+            return view('frontend.traveler.trips', compact('trips', 'ongoingTrips', 'pastTrips', 'otp'))
                 ->with('guestMode', true);
         }
 
@@ -543,14 +547,12 @@ HTML;
     protected function getGuestTripIds(GuestOtpToken $otpToken)
     {
         $accommodationTripIds = AccommodationBooking::where('guest_email', $otpToken->email)
-            ->where('is_guest', 1)
             ->pluck('trip_id')
             ->filter()
             ->unique()
             ->toArray();
 
         $activityTripIds = ActivityBooking::where('guest_email', $otpToken->email)
-            ->where('is_guest', 1)
             ->pluck('trip_id')
             ->filter()
             ->unique()
@@ -579,8 +581,7 @@ HTML;
     protected function getGuestBookings(GuestOtpToken $otpToken)
     {
         $accommodationBookings = AccommodationBooking::where(function ($query) use ($otpToken) {
-                $query->where('guest_email', $otpToken->email)
-                      ->where('is_guest', 1);
+                $query->where('guest_email', $otpToken->email);
             })
             ->orWhere('guest_otp_token_id', $otpToken->id)
             ->with(['accommodation', 'room', 'guests'])
@@ -588,8 +589,7 @@ HTML;
             ->get();
 
         $activityBookings = ActivityBooking::where(function ($query) use ($otpToken) {
-                $query->where('guest_email', $otpToken->email)
-                      ->where('is_guest', 1);
+                $query->where('guest_email', $otpToken->email);
             })
             ->orWhere('guest_otp_token_id', $otpToken->id)
             ->with(['activity', 'guests'])
@@ -605,8 +605,7 @@ HTML;
             ->where(function ($query) use ($otpToken) {
                 $query->where('guest_otp_token_id', $otpToken->id)
                       ->orWhere(function ($subQuery) use ($otpToken) {
-                          $subQuery->where('guest_email', $otpToken->email)
-                                   ->where('is_guest', 1);
+                          $subQuery->where('guest_email', $otpToken->email);
                       });
             })
             ->get();
@@ -615,8 +614,7 @@ HTML;
             ->where(function ($query) use ($otpToken) {
                 $query->where('guest_otp_token_id', $otpToken->id)
                       ->orWhere(function ($subQuery) use ($otpToken) {
-                          $subQuery->where('guest_email', $otpToken->email)
-                                   ->where('is_guest', 1);
+                          $subQuery->where('guest_email', $otpToken->email);
                       });
             })
             ->get();
@@ -684,14 +682,12 @@ HTML;
 
         if (!$tripId) {
             $booking = AccommodationBooking::where('guest_email', $otpToken->email)
-                ->where('is_guest', 1)
                 ->first();
             $tripId = $booking?->trip_id;
         }
 
         if (!$tripId) {
             $booking = ActivityBooking::where('guest_email', $otpToken->email)
-                ->where('is_guest', 1)
                 ->first();
             $tripId = $booking?->trip_id;
         }
