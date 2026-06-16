@@ -194,6 +194,11 @@
 </section>
 
 <style>
+    .a-font {
+        font-size: 16px;
+        font-family: 'Open Sans', Arial, sans-serif;
+    }
+    
     .traveler-trips-help-card {
         max-width: 880px;
         margin: 0 auto 30px;
