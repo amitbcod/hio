@@ -1243,55 +1243,8 @@ class BookingController extends Controller
             $bookingRefs[] = $ref;
         }
 
-        if ($guestOtp && $firstNotificationBooking) {
-            $tripUrl = url('/') . '/traveler/guest-trips/' . $guestOtp->otp_code;
-            $guestMail = new \App\Mail\GuestBookingOtp($firstNotificationBooking, $guestOtp, $tripUrl);
-
-            try {
-                Mail::to($guestEmail)->send($guestMail);
-            } catch (\Exception $e) {
-                Log::error('Failed to send guest booking OTP email', [
-                    'email' => $guestEmail,
-                    'booking_id' => $firstNotificationBooking->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-
-            foreach ($operatorNotificationBookings as $operatorEmail => $operatorBooking) {
-                try {
-                    Mail::to($operatorEmail)->send(new \App\Mail\GuestBookingOtp($operatorBooking, $guestOtp, $tripUrl));
-                } catch (\Exception $e) {
-                    Log::error('Failed to send booking notification email to operator', [
-                        'email' => $operatorEmail,
-                        'booking_id' => $operatorBooking->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
-
-            $adminEmails = \App\Models\AdminUser::where('status', 'active')
-                ->pluck('email')
-                ->filter()
-                ->unique()
-                ->toArray();
-
-            $adminFrom = config('mail.from.address');
-            if ($adminFrom) {
-                $adminEmails[] = $adminFrom;
-                $adminEmails = array_unique($adminEmails);
-            }
-
-            foreach ($adminEmails as $adminEmail) {
-                try {
-                    Mail::to($adminEmail)->send(new \App\Mail\GuestBookingOtp($firstNotificationBooking, $guestOtp, $tripUrl));
-                } catch (\Exception $e) {
-                    Log::error('Failed to send booking notification email to admin', [
-                        'email' => $adminEmail,
-                        'booking_id' => $firstNotificationBooking->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
+        if ($guestOtp && $firstNotificationBooking && $paymentMethod !== 'againgency') {
+            $this->sendGuestBookingOtpNotificationsForBooking($guestOtp, $firstNotificationBooking);
         }
 
         $primaryRef = $bookingRefs[0] ?? 'UNKNOWN';
@@ -1465,6 +1418,7 @@ class BookingController extends Controller
         }
 
         $status = AgaingencyPaymentService::resolveCallbackStatus($request->input('status', $request->input('payment_status', 'pending')));
+        $previousStatus = $paymentTransaction->status;
         $paymentTransaction->status = $status;
 
         $paymentId = AgaingencyPaymentService::parsePaymentId($request->json()->all() ?: $request->all());
@@ -1482,6 +1436,10 @@ class BookingController extends Controller
                 // Update per-item booking_status fields for accommodation/activity
                 AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
                 ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
+
+                if ($previousStatus !== 'paid') {
+                    $this->sendGuestBookingOtpNotificationsForTrip($bookingRecord->trip_id);
+                }
             } elseif ($status === 'failed') {
                 // If payment failed, mark related bookings as Cancelled
                 AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
@@ -1508,21 +1466,26 @@ class BookingController extends Controller
                     $paymentTransaction->payment_id = $paymentId;
                 }
 
+                $previousStatus = $paymentTransaction->status;
                 $paymentTransaction->status = $status;
                 $paymentTransaction->save();
 
-                    $bookingRecord = Booking::find($paymentTransaction->booking_id);
-                    if ($bookingRecord) {
-                        if ($status === 'paid') {
-                            Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'confirmed']);
-                            AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
-                            ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
-                        } elseif ($status === 'failed') {
-                            AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
-                            ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
-                            Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'cancelled']);
+                $bookingRecord = Booking::find($paymentTransaction->booking_id);
+                if ($bookingRecord) {
+                    if ($status === 'paid') {
+                        Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'confirmed']);
+                        AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
+                        ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
+
+                        if ($previousStatus !== 'paid') {
+                            $this->sendGuestBookingOtpNotificationsForTrip($bookingRecord->trip_id);
                         }
+                    } elseif ($status === 'failed') {
+                        AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
+                        ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
+                        Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'cancelled']);
                     }
+                }
             }
         }
 
@@ -1540,6 +1503,102 @@ class BookingController extends Controller
     // ═══════════════════════════════════════════════════════════════════════
     //  PRIVATE HELPERS
     // ═══════════════════════════════════════════════════════════════════════
+
+    private function sendGuestBookingOtpNotificationsForTrip(int $tripId): void
+    {
+        $booking = AccommodationBooking::where('trip_id', $tripId)
+            ->whereNotNull('guest_otp_token_id')
+            ->first()
+            ?? ActivityBooking::where('trip_id', $tripId)
+                ->whereNotNull('guest_otp_token_id')
+                ->first();
+
+        if (!$booking || empty($booking->guest_otp_token_id)) {
+            return;
+        }
+
+        $guestOtp = GuestOtpToken::find($booking->guest_otp_token_id);
+        if (!$guestOtp) {
+            return;
+        }
+
+        $this->sendGuestBookingOtpNotificationsForBooking($guestOtp, $booking);
+    }
+
+    private function sendGuestBookingOtpNotificationsForBooking(GuestOtpToken $guestOtp, $booking): void
+    {
+        $guestEmail = $guestOtp->email;
+        $tripUrl = route('traveler.guest-trip.show', ['otp' => $guestOtp->otp_code]);
+
+        try {
+            Mail::to($guestEmail)->send(new \App\Mail\GuestBookingOtp($booking, $guestOtp, $tripUrl));
+        } catch (\Exception $e) {
+            Log::error('Failed to send guest booking OTP email', [
+                'email' => $guestEmail,
+                'booking_id' => $booking->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $operatorEmails = [];
+        if (!empty($booking->trip_id)) {
+            $activityBookings = ActivityBooking::where('trip_id', $booking->trip_id)
+                ->with('activity.operator')
+                ->get();
+            $accommodationBookings = AccommodationBooking::where('trip_id', $booking->trip_id)
+                ->with('accommodation.operator')
+                ->get();
+
+            foreach ($activityBookings->concat($accommodationBookings) as $operatorBooking) {
+                $operator = null;
+                if ($operatorBooking instanceof ActivityBooking) {
+                    $operator = $operatorBooking->activity?->operator;
+                } else {
+                    $operator = $operatorBooking->accommodation?->operator;
+                }
+
+                if ($operator && !empty($operator->email)) {
+                    $operatorEmails[$operator->email] = $operatorBooking;
+                }
+            }
+        }
+
+        foreach ($operatorEmails as $operatorEmail => $operatorBooking) {
+            try {
+                Mail::to($operatorEmail)->send(new \App\Mail\GuestBookingOtp($operatorBooking, $guestOtp, $tripUrl));
+            } catch (\Exception $e) {
+                Log::error('Failed to send booking notification email to operator', [
+                    'email' => $operatorEmail,
+                    'booking_id' => $operatorBooking->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $adminEmails = \App\Models\AdminUser::where('status', 'active')
+            ->pluck('email')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $adminFrom = config('mail.from.address');
+        if ($adminFrom) {
+            $adminEmails[] = $adminFrom;
+            $adminEmails = array_unique($adminEmails);
+        }
+
+        foreach ($adminEmails as $adminEmail) {
+            try {
+                Mail::to($adminEmail)->send(new \App\Mail\GuestBookingOtp($booking, $guestOtp, $tripUrl));
+            } catch (\Exception $e) {
+                Log::error('Failed to send booking notification email to admin', [
+                    'email' => $adminEmail,
+                    'booking_id' => $booking->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
 
     private function buildCartSummary(array $cart): array
     {
