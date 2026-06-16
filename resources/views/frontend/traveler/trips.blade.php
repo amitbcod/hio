@@ -86,7 +86,7 @@
                                                 @if(!isset($guestMode) || !$guestMode)
                                                     <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display:inline-block; margin-left: 0px;">
                                                         @csrf
-                                                        <button type="submit" class="btn btn-secondary">Add Service</button>
+                                                        <button type="submit" class="btn btn-secondary a-font">Add Service</button>
                                                     </form>
                                                 @endif
                                             </td>
