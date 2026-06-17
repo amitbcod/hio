@@ -84,9 +84,9 @@
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>Invoice</a>
                                                 @if(!isset($guestMode) || !$guestMode)
-                                                    <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display:inline-block; margin-left: 8px;">
+                                                    <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display:inline-block; margin-left: 0px;">
                                                         @csrf
-                                                        <button type="submit" class="btn btn-secondary">Add Service</button>
+                                                        <button type="submit" class="btn btn-secondary a-font">Add Service</button>
                                                     </form>
                                                 @endif
                                             </td>
@@ -194,6 +194,11 @@
 </section>
 
 <style>
+    .a-font {
+        font-size: 16px;
+        font-family: 'Open Sans', Arial, sans-serif;
+    }
+    
     .traveler-trips-help-card {
         max-width: 880px;
         margin: 0 auto 30px;

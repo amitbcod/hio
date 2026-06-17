@@ -183,21 +183,21 @@
                                         <input type="number" name="passengers" class="category-search-input" min="1" value="{{ request()->query('passengers', 2) }}">
                                     </div>
                                     <div class="transport-row-date">
-                                        <div class="transport-field" style="flex: 1 1 160px; min-width: 160px;">
+                                        <div class="transport-field" style="flex: 1 1 160px;">
                                             <h5>Arrival date and time</h5>
                                             <input type="date" name="arrival_date" class="category-search-input" value="{{ request()->query('arrival_date', date('Y-m-d')) }}" min="{{ date('Y-m-d') }}">
                                         </div>
-                                        <div class="transport-field" style="flex: 1 1 120px; min-width: 120px;">
+                                        <div class="transport-field" style="flex: 1 1 120px;">
                                             <h5>&nbsp;</h5>
                                             <input type="time" name="arrival_time" class="category-search-input" value="{{ request()->query('arrival_time', '') }}">
                                         </div>
                                     </div>
                                     <div class="transport-row-date"> 
-                                        <div class="transport-field" style="flex: 1 1 160px; min-width: 160px;">
+                                        <div class="transport-field" style="flex: 1 1 160px;">
                                             <h5>Return date and time</h5>
                                             <input type="date" name="return_date" class="category-search-input" value="{{ request()->query('return_date', '') }}" min="{{ date('Y-m-d') }}">
                                         </div>
-                                        <div class="transport-field" style="flex: 1 1 120px; min-width: 120px;">
+                                        <div class="transport-field" style="flex: 1 1 120px">
                                             <h5>&nbsp;</h5>
                                             <input type="time" name="return_time" class="category-search-input" value="{{ request()->query('return_time', '') }}">
                                         </div>
