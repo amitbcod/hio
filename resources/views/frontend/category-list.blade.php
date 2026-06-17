@@ -257,7 +257,13 @@
                                 </a>
                                 <div class="category-result-body">
                                     <span class="listing-location"><i class="fa-solid fa-location-dot"></i> {{ $item['location'] }}</span>
-                                    <h3><a href="{{ $iteUSDl }}">{{ $item['title'] }}</a></h3>
+                                    <div class="category-result-title-row">
+                                        <h3><a href="{{ $iteUSDl }}">{{ $item['title'] }}</a></h3>
+                                        @if(!empty($item['rating_display']))
+                                            @php $itemRating = (int) round($item['rating_display']); @endphp
+                                            <span class="listing-rating-badge" aria-label="{{ $itemRating }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $itemRating))) !!}</span>
+                                        @endif
+                                    </div>
                                     <p>{{ $item['excerpt'] }}</p>
                                     <div class="category-result-footer">
                                         <span class="chip">{{ $metaLabel }}</span>

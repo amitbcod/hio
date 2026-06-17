@@ -54,11 +54,18 @@
                     <span class="hero-chip">{{ $accommodation['booking_confirmation_type'] }} booking</span>
                 @endif
                 @if(!empty($ratingSummary['score_display']))
-                    <span class="hero-chip">{{ $ratingSummary['score_display'] }}/5 · {{ number_format((int) ($ratingSummary['count'] ?? 0)) }} reviews</span>
+                    @php $accommodationStars = (int) round($ratingSummary['score_display']); @endphp
+                    <span class="hero-chip" aria-label="{{ $accommodationStars }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $accommodationStars))) !!}</span>
                 @endif
             </div>
 
-            <h1>{{ $accommodation['title'] }}</h1>
+            <h1>
+                {{ $accommodation['title'] }}
+                @if(!empty($accommodation['rating_display']))
+                    @php $titleAccommodationStars = (int) round($accommodation['rating_display']); @endphp
+                    <span class="detail-title-rating" aria-label="{{ $titleAccommodationStars }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $titleAccommodationStars))) !!}</span>
+                @endif
+            </h1>
             <p>
                 {{ $accommodation['address'] ?: $accommodation['location'] }}
                 @if($startingRate)
@@ -275,62 +282,59 @@
             <div class="detail-section-card" id="reviews">
                 <h2>Guest Reviews &amp; Rating</h2>
                 @if(!empty($ratingSummary['score_display']))
+                    @php $summaryStars = (int) round($ratingSummary['score_display']); @endphp
                     <div class="rating-overview">
-                        <div class="rating-score">{{ $ratingSummary['score_display'] }}</div>
+                        <div class="rating-score" aria-label="{{ $summaryStars }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $summaryStars))) !!}</div>
                         <div>
                             <strong>Very Good</strong>
                             <p>{{ number_format((int) ($ratingSummary['count'] ?? 0)) }} review{{ (int) ($ratingSummary['count'] ?? 0) !== 1 ? 's' : '' }} from operator profile data.</p>
                         </div>
                     </div>
-                @else
+                @elseif(empty($approvedAccommodationReviews) || count($approvedAccommodationReviews) === 0)
                     <p class="detail-empty">No guest reviews available yet for this property.</p>
                 @endif
 
                 @if($approvedAccommodationReviews && count($approvedAccommodationReviews) > 0)
-                    <div style="margin-top: 30px;">
-                        <h3 style="font-size: 18px; margin-bottom: 20px;">Guest Feedback</h3>
+                    <div class="review-listing" style="margin-top: 30px;">
+                        <h3>Guest Reviews</h3>
                         @foreach($approvedAccommodationReviews as $review)
                             @php
                                 $travelerName = optional($review->parentReview->trip->traveler)->full_name 
                                     ?? optional($review->parentReview->trip->traveler)->email 
                                     ?? 'Guest';
                                 $criteria = is_array($review->criteria) ? $review->criteria : [];
+                                $numericRatings = collect($criteria)->filter(fn($value) => is_numeric($value) && $value !== null && $value !== '');
+                                $avgRating = $numericRatings->count() ? number_format($numericRatings->avg(), 1) : null;
                             @endphp
-                            <div class="border rounded p-4 mb-3" style="border-left: 4px solid #28a745;">
-                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <div class="review-card">
+                                <div class="review-card__header">
                                     <div>
-                                        <h4 style="margin: 0 0 4px 0; font-size: 16px;">{{ $travelerName }}</h4>
-                                        <p style="margin: 0; color: #666; font-size: 14px;">
-                                            {{ $review->parentReview->created_at->format('M d, Y') }}
-                                        </p>
+                                        <h4>{{ $travelerName }}</h4>
+                                        <p>{{ $review->parentReview->created_at->format('M d, Y') }}</p>
                                     </div>
+                                    @if($avgRating)
+                                        @php $reviewStars = (int) round($avgRating); @endphp
+                                        <div class="review-card__score">
+                                            <span class="review-score-badge" aria-label="{{ $reviewStars }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $reviewStars))) !!}</span>
+                                        </div>
+                                    @endif
                                 </div>
 
                                 @if(count($criteria) > 0)
-                                    <table style="width: 100%; font-size: 14px; margin-bottom: 12px;">
-                                        <tbody>
-                                            @foreach($criteria as $key => $value)
-                                                @if($value)
-                                                    <tr>
-                                                        <td style="padding: 6px 0; color: #555; font-weight: 500;">{{ ucwords(str_replace(['_','-'], ' ', $key)) }}:</td>
-                                                        <td style="padding: 6px 0; padding-left: 12px; text-align: right;">
-                                                            @if(is_numeric($value))
-                                                                <span style="display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-weight: 600;">
-                                                                    {{ $value }}/5
-                                                                </span>
-                                                            @else
-                                                                {{ $value }}
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                @endif
-                                            @endforeach
-                                        </tbody>
-                                    </table>
+                                    <div class="review-card__criteria-grid">
+                                        @foreach($criteria as $key => $value)
+                                            @if($value !== null && $value !== '')
+                                                <div class="review-card__criteria-item">
+                                                    <span>{{ ucwords(str_replace(['_','-'], ' ', $key)) }}</span>
+                                                    <strong>{{ is_numeric($value) ? $value . '/5' : $value }}</strong>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
                                 @endif
 
                                 @if($review->review)
-                                    <p style="margin: 0; color: #333; line-height: 1.6; font-size: 14px;">{{ $review->review }}</p>
+                                    <p class="review-card__text">{{ $review->review }}</p>
                                 @endif
                             </div>
                         @endforeach
@@ -475,6 +479,20 @@
             font-weight: 700;
             letter-spacing: 0.04em;
             text-transform: uppercase;
+        }
+
+        .detail-title-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 12px;
+            font-size: 1rem;
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .detail-title-rating i {
+            color: #f59e0b;
         }
 
         .detail-page-shell {
@@ -778,6 +796,82 @@
             border-radius: 16px;
             padding: 14px;
             margin-bottom: 14px;
+        }
+
+        .review-card {
+            border: 1px solid rgba(25, 181, 85, 0.14);
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 18px 45px rgba(16, 34, 71, 0.06);
+            margin-bottom: 18px;
+        }
+
+        .review-card__header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .review-card__header h4 {
+            margin: 0 0 6px;
+            font-size: 18px;
+            color: var(--ink);
+        }
+
+        .review-card__header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .review-card__score {
+            text-align: right;
+        }
+
+        .review-score-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #155724;
+            background: #e6ffed;
+            border-radius: 999px;
+            padding: 10px 14px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .review-card__criteria-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .review-card__criteria-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 14px;
+            background: #f8fbf9;
+            color: var(--ink);
+            font-size: 14px;
+        }
+
+        .review-card__criteria-item span {
+            color: #4b5563;
+            font-weight: 600;
+        }
+
+        .review-card__text {
+            margin: 0;
+            color: #334155;
+            line-height: 1.85;
+            font-size: 15px;
         }
 
         .rating-score {

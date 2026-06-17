@@ -18,6 +18,8 @@ use Illuminate\Support\Str;
 
 class HomeController extends Controller
 {
+    private array $operatorRatingCache = [];
+
     public function index(Request $request)
     {
    
@@ -25,7 +27,7 @@ class HomeController extends Controller
         $filters = $this->collectSearchFilters($request);
         $searchOptions = $this->buildSearchOptions();
 
-        $activities = $this->approvedActivityQuery()->with('seoSocial')
+        $activities = $this->approvedActivityQuery()->with(['seoSocial', 'operator'])
             ->whereNotNull('activity_name')
             ->latest('updated_at')
             ->take(8)
@@ -34,7 +36,7 @@ class HomeController extends Controller
 
         $accommodations = $this->approvedAccommodationQuery()->with(['media' => function ($query) {
                 $query->orderBy('order')->orderBy('id');
-            }])
+            }, 'operator'])
             ->whereNotNull('property_name')
             ->latest('updated_at')
             ->take(12)
@@ -153,6 +155,7 @@ class HomeController extends Controller
                             });
                     }
                 },
+                'operator',
             ])
             ->whereNotNull('property_name')
             ->latest('updated_at')
@@ -178,6 +181,7 @@ class HomeController extends Controller
                 'rates' => function ($query) {
                     $query->orderBy('adult_rate')->orderBy('equipment_rate')->orderBy('private_exclusive_rate');
                 },
+                'operator',
             ])
             ->whereNotNull('activity_name')
             ->latest('updated_at')
@@ -258,6 +262,7 @@ class HomeController extends Controller
                         ->orderBy('private_exclusive_rate');
                 },
                 'schedulingTimeSlots',
+                'operator',
             ]), true, $bookingContext),
             'approvedActivityReviews' => $approvedActivityReviews,
         ]);
@@ -407,6 +412,7 @@ class HomeController extends Controller
             ? $this->buildActivityAvailability($variants, $rates, $allotments, $bookingContext)
             : [];
 
+        $operatorRating = $this->resolveAccommodationRating($activity->operator?->operator_id);
         $timeSlots = [];
         if ($detailed && $activity->relationLoaded('schedulingTimeSlots')) {
             $activityBookings = ActivityBooking::where('activity_id', $activity->id)
@@ -513,6 +519,9 @@ class HomeController extends Controller
             'starting_rate_of_adult' => $startingRateofadult,
             'overview_text' => $overviewText,
             'included_text' => $includedText,
+            'rating_score' => $operatorRating['score'],
+            'rating_display' => $operatorRating['score_display'],
+            'rating_count' => $operatorRating['count'],
             'itinerary_text' => $itineraryText,
             'meeting_point' => $meetingPoint,
             'booking' => $detailed ? $bookingContext : [],
@@ -540,6 +549,7 @@ class HomeController extends Controller
         $inventoryRows = collect($accommodation->relationLoaded('inventory') ? $accommodation->inventory : []);
         $bookings = collect($accommodation->relationLoaded('bookings') ? $accommodation->bookings : []);
         $bookingContext = $bookingContext ?? $this->defaultDetailBookingContext();
+        $operatorRating = $this->resolveAccommodationRating($accommodation->operator?->operator_id);
 
         $heroMedia = $media->firstWhere('media_type', 'hero');
         $primaryImage = $this->storageAsset($heroMedia->path ?? null);
@@ -731,6 +741,9 @@ class HomeController extends Controller
             'starting_rate' => $startingRate,
             'budget_range' => $this->mapAccommodationBudgetRange($startingRate),
             'description_text' => $fullDescription,
+            'rating_score' => $operatorRating['score'],
+            'rating_display' => $operatorRating['score_display'],
+            'rating_count' => $operatorRating['count'],
             'booking' => $detailed ? $bookingContext : [],
             'available_rooms' => $availableRooms,
             'checkin_time' => $accommodation->checkin_time ? substr((string) $accommodation->checkin_time, 0, 5) : null,
@@ -823,12 +836,17 @@ class HomeController extends Controller
             ];
         }
 
+        if (array_key_exists($operatorExternalId, $this->operatorRatingCache)) {
+            return $this->operatorRatingCache[$operatorExternalId];
+        }
+
         $review = OperatorStatusReview::query()
             ->where('operator_id', $operatorExternalId)
+            ->latest('created_at')
             ->first();
 
         if (!$review) {
-            return [
+            return $this->operatorRatingCache[$operatorExternalId] = [
                 'score' => null,
                 'score_display' => null,
                 'count' => 0,
@@ -838,7 +856,7 @@ class HomeController extends Controller
         $score = (float) ($review->average_rating ?: $review->operator_rating ?: 0);
         $score = $score > 0 ? $score : null;
 
-        return [
+        return $this->operatorRatingCache[$operatorExternalId] = [
             'score' => $score,
             'score_display' => $score !== null ? number_format($score, 1) : null,
             'count' => (int) ($review->testimonials_count ?? 0),

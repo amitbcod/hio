@@ -312,7 +312,13 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                                     <div class="listing-body">
                                         <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
                                             {{ $activity['location'] }}</span>
-                                        <h3><a href="{{ $activity['url'] }}">{{ $activity['title'] }}</a></h3>
+                                        <div class="listing-title-row">
+                                            <h3><a href="{{ $activity['url'] }}">{{ $activity['title'] }}</a></h3>
+                                            @if(!empty($activity['rating_display']))
+                                                @php $activityRating = (int) round($activity['rating_display']); @endphp
+                                                <span class="listing-rating-badge" aria-label="{{ $activityRating }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $activityRating))) !!}</span>
+                                            @endif
+                                        </div>
                                         <p>{{ $activity['excerpt'] }}</p>
                                         <div class="listing-footer">
                                             <strong>{{ $activity['booking_confirmation_type'] ?: 'Operator listing' }}</strong>
@@ -339,7 +345,13 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                                     <div class="listing-body">
                                         <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
                                             {{ $accommodation['location'] }}</span>
-                                        <h3><a href="{{ $accommodation['url'] }}">{{ $accommodation['title'] }}</a></h3>
+                                        <div class="listing-title-row">
+                                            <h3><a href="{{ $accommodation['url'] }}">{{ $accommodation['title'] }}</a></h3>
+                                            @if(!empty($accommodation['rating_display']))
+                                                @php $accommodationRating = (int) round($accommodation['rating_display']); @endphp
+                                                <span class="listing-rating-badge" aria-label="{{ $accommodationRating }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $accommodationRating))) !!}</span>
+                                            @endif
+                                        </div>
                                         <p>{{ $accommodation['excerpt'] }}</p>
                                         <div class="listing-footer">
                                             <a href="{{ $accommodation['url'] }}">View details</a>
@@ -365,7 +377,13 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                                     <div class="listing-body">
                                         <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
                                             {{ $accommodation['location'] }}</span>
-                                        <h3><a href="{{ $accommodation['url'] }}">{{ $accommodation['title'] }}</a></h3>
+                                        <div class="listing-title-row">
+                                            <h3><a href="{{ $accommodation['url'] }}">{{ $accommodation['title'] }}</a></h3>
+                                            @if(!empty($accommodation['rating_display']))
+                                                @php $accommodationRating = (int) round($accommodation['rating_display']); @endphp
+                                                <span class="listing-rating-badge" aria-label="{{ $accommodationRating }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $accommodationRating))) !!}</span>
+                                            @endif
+                                        </div>
                                         <p>{{ $accommodation['excerpt'] }}</p>
                                         <div class="listing-footer">
                                             <a href="{{ $accommodation['url'] }}">View details</a>
@@ -663,4 +681,43 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
             handleCategoryScroll();
         });
     </script>
+
+    @push('styles')
+        <style>
+            .listing-title-row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+
+            .listing-rating-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 10px;
+                border-radius: 999px;
+                background: rgba(255, 210, 95, 0.16);
+                color: #92400e;
+                font-size: 0.9rem;
+                font-weight: 700;
+                border: 1px solid rgba(245, 158, 11, 0.22);
+            }
+
+            .category-result-title-row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+
+            .listing-rating-badge i {
+                color: #f59e0b;
+            }
+        </style>
+    @endpush
 @endsection
