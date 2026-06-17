@@ -12,8 +12,8 @@
     </section>
     <section class="page-section">
         <div class="wrap">
-            <h1>Destination General Terms and Conditions</h1>
-            <p>Destination-Specific Terms And Conditions For Mauritius</p>
+            <!-- <h1>Destination General Terms and Conditions</h1> -->
+            <h1>Destination-Specific Terms And Conditions For Mauritius</h1>
 
             <p>Effective Date: 01/10/2024<br>
                 MPO: Lolotte Rental and Tours (Mauritius) <br>
