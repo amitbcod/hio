@@ -108,8 +108,9 @@
                                     {{ $booking->booking_status }}
                                 </span>
                             </td>
-                            <td style="padding: 12px; text-align: center;">
+                            <td style="padding: 12px; text-align: center; display:flex; justify-content:center; gap: 8px; flex-wrap:wrap;">
                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
+                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">Download Voucher</a>
                             </td>
                         </tr>
                         @endforeach
@@ -172,8 +173,11 @@
                                     {{ $booking->booking_status }}
                                 </span>
                             </td>
-                            <td style="padding: 12px; text-align: center;">
-                             <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
+                            <td style="padding: 12px; text-align: center; display:flex; justify-content:center; gap: 8px; flex-wrap:wrap;">
+                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
+                                @if($booking->guests->count() > 0)
+                                    <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}#download-voucher-section" class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">Download Voucher</a>
+                                @endif
                             </td>
                             </tr>
                         @endforeach

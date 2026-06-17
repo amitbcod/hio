@@ -42,10 +42,14 @@
                         $booking = optional($review->trip->accommodationBookings)->firstWhere('id', $item->service_id);
                         $serviceName = optional(optional($booking)->accommodation)->property_name ?? ('Accommodation #' . $item->service_id);
                         $criteria = is_array($item->criteria) ? $item->criteria : [];
+                        $statusColor = $item->status === 'approved' ? 'success' : ($item->status === 'rejected' ? 'danger' : 'warning');
                     @endphp
                     <div class="border rounded p-3 mb-3">
-                        <h6>Accommodation: {{ $serviceName }}</h6>
-                        <table class="table table-sm mb-2">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6>Accommodation: {{ $serviceName }}</h6>
+                            <span class="badge badge-{{ $statusColor }}">{{ ucfirst($item->status) }}</span>
+                        </div>
+                        <table class="table table-sm mb-3">
                             <tbody>
                                 @foreach($criteria as $key => $value)
                                     <tr>
@@ -59,6 +63,29 @@
                                 </tr>
                             </tbody>
                         </table>
+                        <div class="btn-group" role="group">
+                            @if($item->status !== 'approved')
+                                <form action="{{ route('admin.feedback.item.update-status', $item) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    <input type="hidden" name="status" value="approved">
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                            @endif
+                            @if($item->status !== 'rejected')
+                                <form action="{{ route('admin.feedback.item.update-status', $item) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    <input type="hidden" name="status" value="rejected">
+                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                            @endif
+                            @if($item->status !== 'pending')
+                                <form action="{{ route('admin.feedback.item.update-status', $item) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    <input type="hidden" name="status" value="pending">
+                                    <button type="submit" class="btn btn-sm btn-secondary">Mark Pending</button>
+                                </form>
+                            @endif
+                        </div>
                     </div>
                 @endforeach
             @endif
@@ -79,10 +106,14 @@
                         $booking = optional($review->trip->activityBookings)->firstWhere('id', $item->service_id);
                         $serviceName = optional(optional($booking)->activity)->activity_name ?? ('Activity #' . $item->service_id);
                         $criteria = is_array($item->criteria) ? $item->criteria : [];
+                        $statusColor = $item->status === 'approved' ? 'success' : ($item->status === 'rejected' ? 'danger' : 'warning');
                     @endphp
                     <div class="border rounded p-3 mb-3">
-                        <h6>Activity: {{ $serviceName }}</h6>
-                        <table class="table table-sm mb-2">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6>Activity: {{ $serviceName }}</h6>
+                            <span class="badge badge-{{ $statusColor }}">{{ ucfirst($item->status) }}</span>
+                        </div>
+                        <table class="table table-sm mb-3">
                             <tbody>
                                 @foreach($criteria as $key => $value)
                                     <tr>
@@ -96,6 +127,29 @@
                                 </tr>
                             </tbody>
                         </table>
+                        <div class="btn-group" role="group">
+                            @if($item->status !== 'approved')
+                                <form action="{{ route('admin.feedback.item.update-status', $item) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    <input type="hidden" name="status" value="approved">
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                            @endif
+                            @if($item->status !== 'rejected')
+                                <form action="{{ route('admin.feedback.item.update-status', $item) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    <input type="hidden" name="status" value="rejected">
+                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                            @endif
+                            @if($item->status !== 'pending')
+                                <form action="{{ route('admin.feedback.item.update-status', $item) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    <input type="hidden" name="status" value="pending">
+                                    <button type="submit" class="btn btn-sm btn-secondary">Mark Pending</button>
+                                </form>
+                            @endif
+                        </div>
                     </div>
                 @endforeach
             @endif

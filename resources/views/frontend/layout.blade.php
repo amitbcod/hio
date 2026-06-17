@@ -298,9 +298,9 @@
                 </div>
             </div>
             <nav class="main-nav">
-                <a href="{{ url('/') }}" class="is-active">Home</a>
-                <a href="{{ url('/#accommodations-section') }}">Accommodation</a>
-                <a href="{{ url('/#activities-section') }}">Activities</a>
+                <a href="{{ route('frontend.home') }}" class="is-active">Home</a>
+                <a href="{{ route('frontend.home', ['category' => 'accommodation']) }}">Accommodation</a>
+                <a href="{{ route('frontend.home', ['category' => 'tours']) }}">Activities</a>
                 <a href="{{ url('/#discover-mauritius') }}">Discover Mauritius</a>
                 <a href="{{ url('/operator/accommodation') }}">Operator</a>
                 <a href="{{ route('frontend.booking.cart') }}" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> Cart <span id="headerCartCount" class="header-cart-badge">{{ count(session('booking_cart', [])) }}</span></a>

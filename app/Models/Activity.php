@@ -121,6 +121,11 @@ class Activity extends Model
         return $this->hasOne(ActivitySeoSocial::class, 'activity_id');
     }
 
+    public function bookings()
+    {
+        return $this->hasMany(ActivityBooking::class, 'activity_id');
+    }
+
     /**
      * Generate unique service ID
      */

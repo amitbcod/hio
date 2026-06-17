@@ -411,6 +411,59 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
             const toursActivityDateCell = document.querySelector('.category-search-cell--activity-date');
             const roomsRow = document.getElementById('rooms-row');
             const categoryRadios = document.querySelectorAll('input[name="category"]');
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+
+            const activateTab = function (tabName) {
+                if (!tabName) return;
+
+                tabButtons.forEach((button) => {
+                    button.classList.toggle('is-active', button.dataset.tabTarget === tabName);
+                });
+
+                tabPanels.forEach((panel) => {
+                    panel.classList.toggle('is-active', panel.dataset.tabPanel === tabName);
+                });
+            };
+
+            const handleHashTab = function () {
+                const hash = window.location.hash;
+                if (!hash) return;
+
+                const targetPanel = document.querySelector(hash);
+                if (!targetPanel || !targetPanel.dataset.tabPanel) return;
+
+                activateTab(targetPanel.dataset.tabPanel);
+                setTimeout(() => {
+                    targetPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+            };
+
+            const handleCategoryScroll = function () {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (!urlParams.has('category') || window.location.hash) {
+                    return;
+                }
+
+                const target = document.getElementById('home-category-search-form');
+                if (!target) {
+                    return;
+                }
+
+                const rect = target.getBoundingClientRect();
+                const offsetTop = window.pageYOffset + rect.top - (window.innerHeight / 2) + (rect.height / 2);
+                window.scrollTo({ top: Math.max(0, offsetTop), behavior: 'smooth' });
+            };
+
+            tabButtons.forEach((button) => {
+                button.addEventListener('click', function () {
+                    activateTab(this.dataset.tabTarget);
+                });
+            });
+
+            window.addEventListener('hashchange', function () {
+                handleHashTab();
+            });
 
             const showDateError = function (message) {
                 let errorNode = document.getElementById('date-validation-error');
@@ -606,6 +659,8 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
             updateGuestSummary();
             updateCheckOutMinDate();
             validateCheckInOut();
+            handleHashTab();
+            handleCategoryScroll();
         });
     </script>
 @endsection

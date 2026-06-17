@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReviewItem extends Model
 {
-    protected $fillable = ['review_id', 'service_type', 'service_id', 'criteria', 'review'];
+    protected $fillable = ['review_id', 'service_type', 'service_id', 'criteria', 'review', 'status'];
 
     protected $casts = [
         'criteria' => 'array',

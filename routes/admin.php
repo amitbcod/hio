@@ -58,6 +58,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Admin feedback management
     Route::get('feedback', [\App\Http\Controllers\Admin\FeedbackController::class, 'index'])->name('feedback.index');
     Route::get('feedback/{review}', [\App\Http\Controllers\Admin\FeedbackController::class, 'show'])->name('feedback.show');
+    Route::post('feedback/item/{item}/status', [\App\Http\Controllers\Admin\FeedbackController::class, 'updateItemStatus'])->name('feedback.item.update-status');
 
     // Admin accommodation booking management (superadmin)
     Route::get('accommodation/bookings', [\App\Http\Controllers\Admin\AccommodationBookingController::class, 'index'])->name('accommodation.bookings');

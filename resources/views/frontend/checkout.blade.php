@@ -563,7 +563,7 @@
                                         <input type="radio" name="payment_method" value="againgency" hidden {{ old('payment_method') === 'againgency' ? 'checked' : '' }}>
                                         <div class="payment-option-icon"><i class="fa-solid fa-credit-card"></i></div>
                                         <div>
-                                            <strong>Againgency Online Payment</strong>
+                                            <strong>Online Payment and Pay Now</strong>
                                             <p>Pay securely now through our payment gateway.</p>
                                         </div>
                                         <i class="fa-solid fa-circle-check payment-tick"></i>

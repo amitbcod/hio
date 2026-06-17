@@ -8,6 +8,8 @@ use App\Models\AccommodationRate;
 use App\Models\Activity;
 use App\Models\ActivityBooking;
 use App\Models\OperatorStatusReview;
+use App\Models\Review;
+use App\Models\ReviewItem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -231,6 +233,14 @@ class HomeController extends Controller
 
         $bookingContext = $this->buildActivityBookingContext($request);
 
+        // Fetch approved reviews for this activity
+        $activityBookingIds = $activity->bookings()->pluck('id')->toArray();
+        $approvedActivityReviews = ReviewItem::where('service_type', 'activity')
+            ->whereIn('service_id', $activityBookingIds)
+            ->where('status', 'approved')
+            ->with('parentReview.trip.traveler')
+            ->get();
+
         return view('frontend.activity-show', [
             'activity' => $this->mapActivity($activity->load([
                 'seoSocial',
@@ -249,6 +259,7 @@ class HomeController extends Controller
                 },
                 'schedulingTimeSlots',
             ]), true, $bookingContext),
+            'approvedActivityReviews' => $approvedActivityReviews,
         ]);
     }
 
@@ -294,10 +305,19 @@ class HomeController extends Controller
 
         $similarAccommodations = $this->buildSimilarAccommodations($accommodation);
 
+        // Fetch approved reviews for this accommodation
+        $accommodationBookingIds = $accommodation->bookings()->pluck('id')->toArray();
+        $approvedAccommodationReviews = ReviewItem::where('service_type', 'accommodation')
+            ->whereIn('service_id', $accommodationBookingIds)
+            ->where('status', 'approved')
+            ->with('parentReview.trip.traveler')
+            ->get();
+
         return view('frontend.accommodation-show', [
             'accommodation' => $this->mapAccommodation($accommodation, true, $bookingContext),
             'ratingSummary' => $ratingSummary,
             'similarAccommodations' => $similarAccommodations,
+            'approvedAccommodationReviews' => $approvedAccommodationReviews,
         ]);
     }
 

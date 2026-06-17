@@ -240,6 +240,57 @@
                     <div class="detail-text">{!! $activity['overview_text'] ?: $activity['excerpt'] !!}</div>
                 </div>
 
+                @if($approvedActivityReviews && count($approvedActivityReviews) > 0)
+                    <div class="detail-card">
+                        <h2>Guest Reviews</h2>
+                        @foreach($approvedActivityReviews as $review)
+                            @php
+                                $travelerName = optional($review->parentReview->trip->traveler)->full_name 
+                                    ?? optional($review->parentReview->trip->traveler)->email 
+                                    ?? 'Guest';
+                                $criteria = is_array($review->criteria) ? $review->criteria : [];
+                            @endphp
+                            <div class="border rounded p-4 mb-3" style="border-left: 4px solid #28a745;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                    <div>
+                                        <h4 style="margin: 0 0 4px 0; font-size: 16px;">{{ $travelerName }}</h4>
+                                        <p style="margin: 0; color: #666; font-size: 14px;">
+                                            {{ $review->parentReview->created_at->format('M d, Y') }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                @if(count($criteria) > 0)
+                                    <table style="width: 100%; font-size: 14px; margin-bottom: 12px;">
+                                        <tbody>
+                                            @foreach($criteria as $key => $value)
+                                                @if($value)
+                                                    <tr>
+                                                        <td style="padding: 6px 0; color: #555; font-weight: 500;">{{ ucwords(str_replace(['_','-'], ' ', $key)) }}:</td>
+                                                        <td style="padding: 6px 0; padding-left: 12px; text-align: right;">
+                                                            @if(is_numeric($value))
+                                                                <span style="display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-weight: 600;">
+                                                                    {{ $value }}/5
+                                                                </span>
+                                                            @else
+                                                                {{ $value }}
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endif
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                @endif
+
+                                @if($review->review)
+                                    <p style="margin: 0; color: #333; line-height: 1.6; font-size: 14px;">{{ $review->review }}</p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
                 <div class="detail-card">
                     <h2>Location And Map</h2>
                     <div class="detail-text">
