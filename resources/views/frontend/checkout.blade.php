@@ -550,20 +550,20 @@
                             </button>
                             <div class="accordion-panel">
                                 <div class="payment-options">
-                                    <label class="payment-option {{ old('payment_method', 'cod') === 'cod' ? 'selected' : '' }}">
+                                    <!-- <label class="payment-option {{ old('payment_method', 'cod') === 'cod' ? 'selected' : '' }}">
                                         <input type="radio" name="payment_method" value="cod" hidden {{ old('payment_method', 'cod') === 'cod' ? 'checked' : '' }}>
                                         <div class="payment-option-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
                                         <div>
                                             <strong>Testing Payment</strong>
-                                            <!-- <p>Pay when you check in. No advance payment required.</p> -->
+                                       
                                         </div>
                                         <i class="fa-solid fa-circle-check payment-tick"></i>
-                                    </label>
+                                    </label> -->
                                     <label class="payment-option {{ old('payment_method') === 'againgency' ? 'selected' : '' }}">
-                                        <input type="radio" name="payment_method" value="againgency" hidden {{ old('payment_method') === 'againgency' ? 'checked' : '' }}>
+                                        <input type="radio" name="payment_method" value="againgency" hidden checked>
                                         <div class="payment-option-icon"><i class="fa-solid fa-credit-card"></i></div>
                                         <div>
-                                            <strong>Online Payment and Pay Now</strong>
+                                            <strong>Online Payment</strong>
                                             <p>Pay securely now through our payment gateway.</p>
                                         </div>
                                         <i class="fa-solid fa-circle-check payment-tick"></i>
@@ -1898,7 +1898,7 @@ label.saved-guest-checkbox {
 
             function refreshPaymentSelection() {
                 const selectedInput = document.querySelector('input[name="payment_method"]:checked');
-                const selectedMethod = selectedInput ? selectedInput.value : 'cod';
+                const selectedMethod = selectedInput ? selectedInput.value : 'againgency';
                 document.querySelectorAll('.payment-option').forEach(option => {
                     const optionInput = option.querySelector('input[name="payment_method"]');
                     option.classList.toggle('selected', optionInput ? optionInput.checked : false);
@@ -1907,7 +1907,7 @@ label.saved-guest-checkbox {
                 const checkoutButton = document.querySelector('.btn-checkout');
                 if (checkoutButton) {
                     checkoutButton.innerHTML = selectedMethod === 'againgency'
-                        ? '<i class="fa-solid fa-credit-card"></i> Online Payment and Pay Now'
+                        ? '<i class="fa-solid fa-credit-card"></i> Pay Now'
                         : '<i class="fa-solid fa-lock"></i> Confirm Booking (COD)';
                 }
             }
