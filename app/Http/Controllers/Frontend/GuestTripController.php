@@ -935,7 +935,7 @@ HTML;
             $rowTax = number_format($item['total'] * 0.15, 2);
             $rowTotal = number_format($item['total'], 2);
             $serviceRows .= '<tr>
-                <td style="width:4%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;font-weight:600;">' . ($index + 1) . '</td>
+               
                 <td style="width:22%;border-bottom:1px solid #dce7f5;padding:10px;">
                     <div style="font-weight:600;color:#0b2b51;margin-bottom:2px;">' . $item['type'] . '</div>
                     <div style="font-size:9px;color:#4a5f7f;margin-bottom:2px;"><strong>' . $item['name'] . '</strong></div>
@@ -951,7 +951,6 @@ HTML;
                 </td>
                 <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;">' . $item['qty'] . '</td>
                 <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px;text-align:right;font-weight:600;">MUR ' . $rowUnitPrice . '</td>
-                <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px;text-align:right;font-weight:600;">MUR ' . $rowTax . '</td>
                 <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:right;font-weight:600;color:#0b2b51;">MUR ' . $rowTotal . '</td>
             </tr>';
         }
@@ -959,7 +958,13 @@ HTML;
         $poweredLogoHtml = $poweredLogoPath
             ? '<img src="' . $poweredLogoPath . '" width="100" height="40" style="width:100px; height:auto; display:block;" alt="Holidays.io">'
             : '<span style="color:#f7971e;font-weight:700;font-size:14px;">HOLIDAYS.io</span>';
-
+if ($discountAmount > 0) {
+    $discountRow = '<div class="totals-row">
+                        <span class="totals-label">Discount (' . $discountPercent . '%): </span>
+                        <span class="totals-amount">-USD ' . $formattedDiscountAmount . '</span>
+                    </div>';
+                    $discountRow = trim($discountRow);
+}
         $html = <<<HTML
 <style>
 body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
@@ -990,8 +995,8 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 <td width="50%" style="vertical-align:top; padding-right:8px;">
     <div class="header-box">
         <div style="font-size:16px; font-weight:700; color:#0b2b51; margin-bottom:2px;">LRT MAURITIUS LTD</div>
-        <div style="font-size:9px; color:#4a5f7f;">Local Receptive & Tourism (MPO)</div>
-        <div style="font-size:9px; color:#7a8a9f; line-height:1.5; margin-top:4px;">
+        <div style="font-size:9px; color:#4a5f7f;">Your Local Connection - Mauritius</div>
+        <div style="font-size:9px; color:#7a8a9f; margin-top:4px;">
             <div>123 Coastal Rd, Grand Baie</div>
             <div>+230 1234 5678 | info@lrt.mu</div>
             <div>VAT: 12345678 | BRN: C12345678</div>
@@ -1017,46 +1022,50 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 </div>
 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
-<tr>
-<td width="48%" style="padding-right:6px; vertical-align:top;">
-    <div class="header-box">
-        <div class="section-title">BILL TO</div>
-        <div style="font-weight:600; color:#0b2b51; font-size:10px; margin-bottom:4px;">{$travelerName}</div>
-        <table class="info-table" style="margin:0;">
-            <tr><td class="label">Address:</td><td class="value">{$travelerAddress}</td></tr>
-            <tr><td class="label">Phone:</td><td class="value">{$travelerPhone}</td></tr>
-            <tr><td class="label">Email:</td><td class="value">{$travelerEmail}</td></tr>
-        </table>
-        <div style="margin-top:10px; padding:10px; background:#eef4ff; border:1px solid #dce7f5; border-radius:6px; font-size:9px; color:#4a5f7f;">
-            <strong style="display:block; color:#0b2b51; margin-bottom:4px;">ACCOUNT HOLDER</strong>
-            This invoice has been issued to the account holder (Guest Traveller).
-        </div>
-    </div>
-</td>
-<td width="52%" style="padding-left:6px; vertical-align:top;">
-    <div class="header-box" style="border:none;">
-        <div class="section-title">ACCOUNT DETAILS</div>
-        <table class="info-table" style="margin:0;">
-            <tr><td class="label">Traveller Account Type:</td><td class="value">Guest Traveller</td></tr>
-            <tr><td class="label">Account ID:</td><td class="value">{$accountId}</td></tr>
-            <tr><td class="label">Currency:</td><td class="value">MUR (Mauritian Rupee)</td></tr>
-            <tr><td class="label">Payment Terms:</td><td class="value"><strong>Paid in Full</strong></td></tr>
-        </table>
-    </div>
-</td>
-</tr>
-</table>
+    <tr>
+        <td width="48%" style="padding-right:6px; vertical-align:top;">
+            <div class="header-box">
+                <div class="section-title">BILL TO</div>
+                <div style="font-weight:600; color:#0b2b51; font-size:10px; margin-bottom:4px;">{$travelerName}</div>
+                <table class="info-table" style="margin:0;">
+                    <tr><td class="label">Address:</td><td class="value">{$travelerAddress}</td></tr>
+                    <tr><td class="label">Phone:</td><td class="value">{$travelerPhone}</td></tr>
+                    <tr><td class="label">Email:</td><td class="value">{$travelerEmail}</td></tr>
+                </table>
+            </div>
+        </td>
 
+        <td width="52%" style="padding-left:6px; vertical-align:top;">
+            <div class="header-box" style="border:none;">
+                <div class="section-title">ACCOUNT DETAILS</div>
+                <table class="info-table" style="margin-top:6px;margin-bottom:4px;">
+                    <tr><td class="label">Traveller Account Type:</td><td class="value">Guest Traveller</td></tr>
+                    <tr><td class="label">Account ID:</td><td class="value">{$accountId}</td></tr>
+                    <tr><td class="label">Currency:</td><td class="value">USD (US Dollar)</td></tr>
+                    <tr><td class="label">Payment Terms:</td><td class="value"><strong>Paid in Full</strong></td></tr>
+                </table>
+            </div>
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="2" align="center" style="padding-top:10px; padding-bottom:10px;">
+            <div style="padding:8px; background:#eef4ff; border:1px solid #dce7f5; border-radius:6px; font-size:9px; color:#4a5f7f; text-align:center;">
+                <strong style="color:#0b2b51;">ACCOUNT HOLDER:</strong>
+                This invoice has been issued to the account holder (Guest Traveller).
+            </div>
+        </td>
+    </tr>
+</table>
 <table class="service-table">
 <thead>
 <tr>
-    <th style="width:4%;">#</th>
+    
     <th style="width:22%;">SERVICE</th>
     <th style="width:18%;">SERVICE DATES</th>
     <th style="width:20%;">DESCRIPTION</th>
-    <th style="width:8%;">QTY</th>
+    <th style="width:8%;text-align:center;">QTY</th>
     <th style="width:10%;">UNIT PRICE</th>
-    <th style="width:10%;">TAX (15%)</th>
     <th style="width:8%;">TOTAL</th>
 </tr>
 </thead>
@@ -1071,20 +1080,21 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
     <div class="thank-you" style="background:#e8f5e9; border-radius:8px; padding:12px; margin-bottom:8px;">
         <div style="text-align:center; font-size:11px; font-weight:700; color:#2e7d32; margin-bottom:8px;">THANK YOU!</div>
         <div style="font-size:9px; color:#2e7d32; text-align:center; line-height:1.6;">
-            Your payment has been successfully received.<br><br>
+            You will receive payment confirmation by email.<br>
+            Download Voucher from your account/manage trip<br><br>
             We look forward to welcoming you to Mauritius<br>
             and wish you a wonderful stay!
         </div>
     </div>
 </td>
-<td width="45%" style="vertical-align:top; padding-left:6px;">
+<td width="45%" style="vertical-align:top; padding-left:80px;">
     <div class="totals-box" style="background:#fff3e0; border-radius:8px; padding:10px;">
-        <div class="totals-row"><span class="totals-label">Subtotal:</span><span class="totals-amount">MUR {$formattedSubtotal}</span></div>
-        <div class="totals-row" style="color:#d32f2f;"><span class="totals-label">Discount ({$discountPercent}%):</span><span class="totals-amount">-MUR {$formattedDiscountAmount}</span></div>
-        <div class="totals-row"><span class="totals-label">Taxable Amount:</span><span class="totals-amount">MUR {$formattedTaxableAmount}</span></div>
-        <div class="totals-row"><span class="totals-label">VAT ({$vatPercent}%):</span><span class="totals-amount">MUR {$formattedVatAmount}</span></div>
-        <div class="totals-row"><span class="totals-label">Service Fee:</span><span class="totals-amount">MUR {$formattedServiceFee}</span></div>
-        <div class="total-paid" style="background:#0b2b51; color:#fff; padding:8px; border-radius:4px; font-weight:700; display:flex; justify-content:space-between; margin-top:6px;"><span>TOTAL PAID</span><span>MUR {$formattedTotalAmount}</span></div>
+        <div class="totals-row"><span class="totals-label">Subtotal: </span><span class="totals-amount">USD {$formattedSubtotal}</span></div>
+        {$discountRow}
+        <div class="totals-row"><span class="totals-label">Taxable Amount: </span><span class="totals-amount">USD {$formattedTaxableAmount}</span></div>
+        <div class="totals-row"><span class="totals-label">VAT ({$vatPercent}%): </span><span class="totals-amount">USD {$formattedVatAmount}</span></div>
+        <div class="totals-row"><span class="totals-label"><strong>Service Fee: </strong></span><span class="totals-amount"><strong>USD {$formattedServiceFee}</strong></span></div>
+        <div class="total-paid" style="background:#0b2b51; color:#fff; padding:8px; border-radius:4px; font-weight:700; display:flex; justify-content:space-between; margin-top:6px;"><span>TOTAL PAID</span> <span>USD {$formattedTotalAmount}</span></div>
     </div>
 </td>
 </tr>
@@ -1096,7 +1106,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
     <div class="notes-box" style="background:#eef4ff; border:1px solid #dce7f5; border-radius:6px; padding:10px; font-size:9px; color:#4a5f7f;">
         <strong style="display:block; color:#0b2b51; margin-bottom:6px;">IMPORTANT NOTES</strong>
         <ul style="margin:4px 0; padding-left:16px;">
-            <li style="margin-bottom:2px;">Please present this invoice and any requested voucher with a valid photo ID when required.</li>
+                       <li style="margin-bottom:2px;">Please present voucher and passport when required.</li>
             <li style="margin-bottom:2px;">All services are subject to availability and terms & conditions of each service provider.</li>
             <li style="margin-bottom:2px;">For amendments or cancellations, please refer to the booking terms or contact support.</li>
         </ul>
@@ -1106,11 +1116,8 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
     <div class="footer-assistance" style="background:#eef4ff; border:1px solid #dce7f5; border-radius:6px; padding:10px; font-size:9px;">
         <strong style="display:block; color:#0b2b51; margin-bottom:6px;">NEED ASSISTANCE?</strong>
         <div style="color:#4a5f7f; line-height:1.8;">
-            <strong style="color:#0b2b51;">+230 1234 5678</strong><br>
-            (08:00 - 18:00 IST)<br><br>
-            <strong style="color:#0b2b51;">support@lrt.mu</strong><br><br>
-            <strong style="color:#0b2b51;">+230 5251 1152</strong><br>
-            (WhatsApp)
+           support Ticket within your account<br>
+           Office Hours: 09:00 - 17:30 <br><br>
         </div>
         <div style="margin-top:8px; padding-top:8px; border-top:1px solid #dce7f5; color:#4a5f7f; font-size:8px;">
             We are here to help you before, during and after your trip.
@@ -1123,7 +1130,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px; padding-top:10px; border-top:1px solid #dce7f5;">
 <tr>
 <td width="100%" style="text-align:center; font-size:8px; color:#7a8a9f; padding:6px 0;">
-    <strong style="color:#0b2b51;">LRT Mauritius LTD (Local Receptive & Tourism)</strong><br>
+    <strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
     Your Local Connection in Mauritius<br>
     <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span>
 </td>
