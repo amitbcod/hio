@@ -1907,7 +1907,7 @@ label.saved-guest-checkbox {
                 const checkoutButton = document.querySelector('.btn-checkout');
                 if (checkoutButton) {
                     checkoutButton.innerHTML = selectedMethod === 'againgency'
-                        ? '<i class="fa-solid fa-credit-card"></i> Pay Securely with Againgency'
+                        ? '<i class="fa-solid fa-credit-card"></i> Online Payment and Pay Now'
                         : '<i class="fa-solid fa-lock"></i> Confirm Booking (COD)';
                 }
             }
