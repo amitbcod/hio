@@ -327,9 +327,10 @@ class GuestTripController extends Controller
             $nights = $diff . ' Night' . ($diff === 1 ? '' : 's');
         }
 
-        $responsibleName = trim($guestsForVoucher[0]->first_name . ' ' . ($guestsForVoucher[0]->last_name ?? '')) ?: '-';
-        $responsibleMobile = $booking->guest_mobile ?? $booking->guest_phone ?? '-';
-        $responsibleEmail = $otpToken->email ?? $booking->guest_email ?? '-';
+        $firstGuestGuest = isset($guestsForVoucher[0]) ? $guestsForVoucher[0] : null;
+        $responsibleName = $firstGuestGuest ? trim(($firstGuestGuest->first_name ?? '') . ' ' . ($firstGuestGuest->last_name ?? '')) ?: '-' : '-';
+        $responsibleMobile = $booking->guest_mobile ?? $booking->guest_phone ?? ($firstGuestGuest->phone ?? '-') ?? '-';
+        $responsibleEmail = $otpToken->email ?? $booking->guest_email ?? ($firstGuestGuest->email ?? '-') ?? '-';
         $adultCount = $booking->adults ?? $booking->adult_count ?? null;
         $childCount = $booking->children ?? $booking->children_count ?? null;
         $partySizeParts = [];
@@ -438,76 +439,127 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <table width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td width="65%" style="vertical-align:top;">
-    <div style="border:1px dashed #cfd9e6;border-radius:12px;padding:16px;text-align:center;min-height:90px;">
+    <div style="padding:16px;text-align:center;min-height:90px;">
         <div style="font-size:16px;font-weight:700;color:#0b2b51;">MPO LOGO</div>
         <div style="font-size:10px;color:#6a7b91;margin-top:6px;">{$operatorLabel}</div>
     </div>
 </td>
-<td width="35%" style="text-align:right;vertical-align:top;">
-    <div style="display:inline-block;padding:10px 12px;border:1px solid #d7e4f0;border-radius:12px;background:#ffffff;">
+<td width="35%" style="text-align:left;vertical-align:top;">
+    <div style="display:inline-block;padding:10px 12px;background:#ffffff;">
         <div style="font-size:11px;color:#5f6d7a;margin-bottom:6px;">Powered by</div>
         <div style="font-size:18px;font-weight:700;color:#f7971e;">Holidays.io</div>
     </div>
 </td>
 </tr>
 </table>
-<div style="margin-top:16px;">
-    <span class="badge">{$locationLabelSafe}</span>
-    <span class="badge" style="background:#c6e9ce;color:#1b5e20;">Confirmed</span>
-</div>
-<h1 style="font-size:22px;margin:12px 0 4px 0;color:#0b2b51;">{$voucherTitle}</h1>
-<div style="font-size:10px;color:#5f6d7a;margin-bottom:16px;">Voucher No: {$bookingReferenceSafe} | Issue Date: {$issueDateSafe}</div>
 
+<h1 style="font-size:22px;margin:12px 0 4px 0;color:#0b2b51;">{$voucherTitle}</h1>
+<div style="font-size:10px;color:#5f6d7a;margin-bottom:16px;">Voucher No: {$bookingReferenceSafe} | Issue Date: {$issueDateSafe} |  Status: <span style="color:#28a745;font-weight:bold;">Confirmed</span></div>
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
-<tr>
-<td width="16.66%" style="padding:4px;"><div class="info-card"><strong>Voucher No.</strong>{$bookingReferenceSafe}</div></td>
-<td width="16.66%" style="padding:4px;"><div class="info-card"><strong>Booking Ref.</strong>{$bookingReferenceSafe}</div></td>
-<td width="16.66%" style="padding:4px;"><div class="info-card"><strong>Issue Date</strong>{$issueDateSafe}</div></td>
-<td width="16.66%" style="padding:4px;"><div class="info-card"><strong>Service Date</strong>{$serviceDateSafe}</div></td>
-<td width="16.66%" style="padding:4px;"><div class="info-card"><strong>Service Type</strong>{$serviceTypeLabel}</div></td>
-<td width="16.66%" style="padding:4px;"><div class="info-card"><strong>Payment Status</strong>Paid</div></td>
-</tr>
+    <tr>
+        <td width="50%" style="padding:4px;">
+            <div class="info-card">
+                <strong>Booking Ref.</strong><br>
+                {$bookingReferenceSafe}
+            </div>
+        </td>
+
+        <td width="50%" style="padding:4px;">
+            <div class="info-card">
+                <strong>Service Date</strong><br>
+                {$serviceDateSafe}
+            </div>
+        </td>
+    </tr>
 </table>
 
-<div class="box accent-box">
-    <div class="section-title">Responsible Traveller</div>
-    <table width="100%" class="info-row" cellpadding="0" cellspacing="0">
+<div  style="margin-bottom:20px;">
+    <div class="section-title" style="margin-bottom:12px;">Responsible Traveller</div>
+    <table width="100%" class="info-row" cellpadding="6" cellspacing="0">
         <tr>
-            <td width="33%"><div class="label">Full Name</div><div class="value">{$responsibleNameSafe}</div></td>
-            <td width="33%"><div class="label">Mobile / WhatsApp</div><div class="value">{$responsibleMobileSafe}</div></td>
-            <td width="33%"><div class="label">Email</div><div class="value">{$responsibleEmailSafe}</div></td>
+            <td width="50%" style="padding-bottom:8px;"><div class="label">Full Name</div><div class="value" style="margin-top:4px;">{$responsibleNameSafe}</div></td>
+            <td width="50%" style="padding-bottom:8px;"><div class="label">Other Travellers</div><div class="value" style="margin-top:4px;">{$otherTravellersSafe}</div></td>
         </tr>
     </table>
-    <div class="small-text" style="margin-top:10px;">
-        <strong>Travel Party Size:</strong> {$travelPartySizeSafe}<br>
-        <strong>Other Travellers:</strong> {$otherTravellersSafe}
-    </div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
+        <tr><td><div class="small-text" style="margin:0;"><strong>Travel Party Size:</strong> {$travelPartySizeSafe}</div></td></tr>
+    </table>
 </div>
-
 <table width="100%" cellpadding="0" cellspacing="0">
 <tr>
+
+<td width="50%" style="padding:8px;vertical-align:top;">
+    <div class="box" style="background:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
+        <div class="section-title" style="font-size:12px; font-weight:bold; color:#0b2b51; margin-bottom:8px; border-bottom:1px solid #dce7f5; padding-bottom:5px;">
+            Service Details
+        </div>
+
+        <table width="100%" class="info-row" cellpadding="4" cellspacing="0">
+            <tr>
+                <td class="label" width="40%"><strong>Property Name</strong></td>
+                <td><strong style="color:#0b2b51;">{$serviceNameSafe}</strong></td>
+            </tr>
+
+            <tr>
+                <td class="label">{$infoLabelCheckIn}</td>
+                <td><strong>{$checkInDisplaySafe}</strong></td>
+            </tr>
+
+            <tr>
+                <td class="label">{$infoLabelCheckOut}</td>
+                <td><strong>{$checkOutDisplaySafe}</strong></td>
+            </tr>
+
+            <tr>
+                <td class="label">{$infoLabelDaysNights}</td>
+                <td>{$nightsSafe}</td>
+            </tr>
+
+            <tr>
+                <td class="label">{$infoLabelType}</td>
+                <td>{$roomTypeSafe}</td>
+            </tr>
+
+            <tr>
+                <td class="label">Occupancy</td>
+                <td>{$occupancySafe}</td>
+            </tr>
+
+            <tr>
+                <td class="label">Meal Plan</td>
+                <td>{$mealPlanSafe}</td>
+            </tr>
+
+            <tr>
+                <td class="label">Special Requests</td>
+                <td>{$specialRequestsSafe}</td>
+            </tr>
+
+            <tr>
+                <td class="label">Booking Notes</td>
+                <td>{$bookingNotesSafe}</td>
+            </tr>
+        </table>
+    </div>
+</td>
 <td width="50%" style="padding-right:8px;vertical-align:top;">
     <div class="box">
         <div class="section-title">Service Provider / Property</div>
-        <div class="small-text"><strong>{$providerNameSafe}</strong><br>{$providerAddressSafe}</div>
-        <div style="margin-top:10px;"><strong>Emergency Contact (24/7)</strong><br>{$emergencyContactSafe}</div>
-        <div style="margin-top:6px;"><strong>Reception / Service Contact</strong><br>{$receptionContactSafe}</div>
-    </div>
-</td>
-<td width="50%" style="padding-left:8px;vertical-align:top;">
-    <div class="box">
-        <div class="section-title">Service Details</div>
-        <table width="100%" class="info-row" cellpadding="0" cellspacing="0">
-            <tr><td class="label" width="40%">Property Name</td><td>{$serviceNameSafe}</td></tr>
-            <tr><td class="label">{$infoLabelCheckIn}</td><td>{$checkInDisplaySafe}</td></tr>
-            <tr><td class="label">{$infoLabelCheckOut}</td><td>{$checkOutDisplaySafe}</td></tr>
-            <tr><td class="label">{$infoLabelDaysNights}</td><td>{$nightsSafe}</td></tr>
-            <tr><td class="label">{$infoLabelType}</td><td>{$roomTypeSafe}</td></tr>
-            <tr><td class="label">Occupancy</td><td>{$occupancySafe}</td></tr>
-            <tr><td class="label">Meal Plan</td><td>{$mealPlanSafe}</td></tr>
-            <tr><td class="label">Special Requests</td><td>{$specialRequestsSafe}</td></tr>
-            <tr><td class="label">Booking Notes</td><td>{$bookingNotesSafe}</td></tr>
-        </table>
+
+        <div class="small-text" style="font-size:8px;">
+            {$providerNameSafe}<br>
+            {$providerAddressSafe}
+        </div>
+
+        <div style="margin-top:10px; font-size:8px;">
+            Emergency Contact (24/7)<br>
+            {$emergencyContactSafe}
+        </div>
+
+        <div style="margin-top:6px; font-size:8px;">
+            Reception / Service Contact<br>
+            {$receptionContactSafe}
+        </div>
     </div>
 </td>
 </tr>
@@ -515,15 +567,44 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
 <div class="box">
     <div class="section-title">Important Information / Conditions</div>
-    <ul class="check-list">
+    <ul class="check-list" style="font-size:8px; line-height:1.3; margin:0; padding-left:15px;">
         <li>Please present this voucher on arrival at the property.</li>
         <li>All travellers must carry a valid passport or national ID.</li>
-        <li>Check-in time: From 14:00 • Check-out time: By 11:00.</li>
         <li>Early check-in / late check-out are subject to availability.</li>
         <li>All amendments and cancellations are subject to the property's booking conditions.</li>
         <li>For any assistance during your stay, contact the MPO using the details below.</li>
-    </ul>
-    <div style="border:1px solid #d7e4f0;background:#eef4f...END
+    </ul><div style="border:1px solid #d7e4f0;background:#eef4fb;border-radius:10px;padding:10px;margin-top:10px;" class="small-text">
+        <strong>Your Local Connection</strong> – We are here to support you. For enquiries or assistance during your trip, please contact us.
+    </div>
+</div>
+
+<div class="footer-box">
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td width="60%" style="vertical-align:top;">
+    <div style="font-size:13px;font-weight:700;color:#0b2b51;">MPO Support and Emergency</div>
+   
+        <div style="color:#4a5f7f; line-height:1.5;">
+            support Ticket within your account<br>
+            Office Hours: 09:00 - 17:30 <br><br>
+        </div>
+        <div style="border-top:1px solid #dce7f5; color:#4a5f7f; font-size:8px;">
+            We are here to help you before, during and after your trip.
+        </div>
+</td>
+
+</tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px; padding-top:10px; border-top:1px solid #dce7f5;">
+<tr>
+<td width="100%" style="text-align:center; font-size:8px; color:#7a8a9f; padding:6px 0;">
+    <strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
+    Your Local Connection in Mauritius<br>
+    <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span>
+</td>
+</tr>
+</table>
+</div>
 HTML;
 
         $pdf->SetCreator('Holidaysio');
@@ -537,7 +618,7 @@ HTML;
         if (method_exists($pdf, 'write2DBarcode')) {
             $x = 150;
             $y = 120;
-            $pdf->write2DBarcode($voucherUrl ?? '', 'QRCODE,H', $x, $y, 35, 35, [], 'N');
+           // $pdf->write2DBarcode($voucherUrl ?? '', 'QRCODE,H', $x, $y, 35, 35, [], 'N');
         }
         $filename = ($isActivity ? 'activity' : 'accommodation') . '-voucher-' . preg_replace('/[^A-Za-z0-9_-]/', '', $booking->booking_reference) . '.pdf';
         $pdf->Output($filename, 'D');
@@ -1003,7 +1084,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
         </div>
     </div>
 </td>
-<td width="50%" style="vertical-align:top; padding-left:8px; text-align:right;">
+<td width="50%" style="vertical-align:top; padding-left:8px; text-align:left;">
     <div style="padding:8px; background:#f0f5ff; border-radius:6px; display:inline-block;">
         <div style="font-size:9px; color:#4a5f7f; margin-bottom:4px;">Powered by</div>
         {$poweredLogoHtml}
