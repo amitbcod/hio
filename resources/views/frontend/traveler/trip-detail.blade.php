@@ -438,14 +438,6 @@
                 border-right:none;
             }
 
-            .detail-title{
-                display:flex;
-                align-items:center;
-                gap:10px;
-                color:#666;
-                margin-bottom:10px;
-            }
-
             .detail-value{
                 font-size:16px;
                 font-weight:600;
@@ -578,7 +570,6 @@
                 }
             }
             </style>
-
             <div class="activity-card" style="display:none">
 
                 <div class="activity-card-body">
@@ -596,7 +587,7 @@
 
                             <img
                                 src="https://images.unsplash.com/photo-1528127269322-539801943592?w=500"
-                                class="activity-img"
+                                class="property-img"
                                 alt="Sea Kayaking">
 
                             <div>
@@ -613,10 +604,11 @@
                                     <div class="detail-item">
                                         <div class="detail-title">
                                             <i class="fa-regular fa-calendar"></i>
-                                            Activity Date
-                                            <div class="detail-value">
-                                                19 Jun 2026
-                                            </div>
+                                            <span>Activity Date
+                                                <div class="detail-value">
+                                                    19 Jun 2026
+                                                </div>
+                                            </span>
                                         </div>
                                         
                                     </div>
@@ -624,33 +616,36 @@
                                     <div class="detail-item">
                                         <div class="detail-title">
                                             <i class="fa-solid fa-users"></i>
-                                            Participants
-                                            <div class="detail-value">
-                                                1 Booked<br>
-                                                0 Added
-                                            </div>
+                                            <span>Participants
+                                                <div class="detail-value">
+                                                    1 Booked<br>
+                                                    0 Added
+                                                </div>
+                                            </span>
                                         </div>
                                     </div>
 
                                     <div class="detail-item">
                                         <div class="detail-title">
                                             <i class="fa-regular fa-clock"></i>
-                                            Time Slot
-                                            <div class="detail-value">
-                                                08:45 - 12:00
-                                            </div>
-                                            <div class="detail-small">
-                                                Duration: 3h 15m
-                                            </div>
+                                            <span>Time Slot
+                                                <div class="detail-value">
+                                                    08:45 - 12:00
+                                                </div>
+                                                <div class="detail-small">
+                                                    Duration: 3h 15m
+                                                </div>
+                                            </span>
                                         </div>
                                     </div>
 
                                     <div class="detail-item">
                                         <div class="detail-title">
-                                            Amount
-                                            <div class="amount">
-                                                USD 60.00
-                                            </div>
+                                            <span>Amount
+                                                <div class="amount">
+                                                    USD 60.00
+                                                </div>
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -678,14 +673,14 @@
                         <div>
                             <div class="timeslot-title">
                                 <i class="fa-solid fa-circle-info"></i>
-                                Time Slot Details
+                                <span>Time Slot Details
                                 <p>
                                     <strong>8:45 AM</strong> - Meet & briefing at the beach
                                 </p>
 
                                 <p>
                                     <strong>12:00 PM</strong> - Activity ends
-                                </p>
+                                </p></span>
                             </div>
                         </div>
                         <div class="kayak-icon">
