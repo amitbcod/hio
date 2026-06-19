@@ -433,7 +433,7 @@
                 padding-right:25px;
                 border-right:1px solid #e5e5e5;
             }
-
+ 
             .detail-item:last-child{
                 border-right:none;
             }
@@ -504,6 +504,7 @@
                 color:#0058c8;
                 font-weight:700;
                 margin-bottom:12px;
+                display: flex;
             }
 
             .timeslot-title i{
@@ -511,8 +512,8 @@
             }
 
             .timeslot-box p{
-                margin-bottom:8px;
                 color:#222;
+                    margin: 5px 0;
             }
 
             .timeslot-box strong{
@@ -543,9 +544,23 @@
                 margin-left:8px;
             }
 
+            @media (min-width:768px) and (max-width:900px){
+                .activity-card .detail-item {
+                    min-width: 190px;
+                }
+
+                .activity-card .booking-details {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    margin-top: 25px;
+                    border-top: 1px solid #eee;
+                    padding-top: 20px;
+                }
+            }
+
             /* Responsive */
 
-            @media(max-width:900px){
+            @media(max-width:767px){
 
                 .booking-content{
                     flex-direction:column;
