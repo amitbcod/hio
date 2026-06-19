@@ -426,9 +426,10 @@
             margin-right: 8px;
         }
 
-        .trip-actions-cell {
-            flex-direction: column;
-            align-items: flex-start;
+        .traveler-trips-table td.trip-actions-cell {
+            /* flex-direction: column; */
+            /* align-items: flex-start; */
+            justify-content: center;
         }
     }
 </style>
