@@ -687,7 +687,6 @@
                                     <strong>12:00 PM</strong> - Activity ends
                                 </p>
                             </div>
-                           
                         </div>
 
                         <div class="kayak-icon">
