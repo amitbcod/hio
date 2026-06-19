@@ -140,7 +140,7 @@
                                             <td>
                                                 <div class="trip-name-cell">
                                                     <strong>Trip #00{{ $trip->id }}</strong>
-                                                    <span>Trip</span>
+                                                    <!-- <span>Trip</span> -->
                                                 </div>
                                             </td>
                                             <td>
@@ -365,8 +365,13 @@
 
     .trip-actions-cell {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 8px;
+    }
+
+    .trip-actions-cell a, .trip-actions-cell button {
+        padding: 8px 10px !important;
+        font-size: 15px;
     }
 
     @media (max-width: 900px) {
