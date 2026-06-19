@@ -189,13 +189,13 @@
 
                 .detail-title {
                     display: flex;
-                    align-items: center;
+                    align-items: start;
                     gap: 10px;
                     color: #666;
                     margin-bottom: 10px;
                 }
 
-                ..detail-title i {
+                .detail-title i {
                     font-size:20px
                 }
 
@@ -231,9 +231,10 @@
                 .btn-download {
                     background: #0057d9;
                     color: #fff;
+                    flex-basis: 20%;
                 }
 
-                @media(max-width:768px) {
+                @media(max-width:767px) {
 
                     .booking-content {
                         flex-direction: column;
@@ -263,6 +264,17 @@
 
                     .property-info .type {
                         font-size: 18px;
+                    }
+
+                    .booking-header h2 {
+                        font-size: 22px;
+                    }
+                }
+
+                @media (max-width:440px){
+                    .property-img {
+                        width: 100%;
+                        height: auto;
                     }
                 }
             </style>
@@ -562,9 +574,9 @@
 
     <style>
         .wrap {
-            max-width: 1200px;
+            /* max-width: 1200px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 20px; */
         }
 
         .page-section {
