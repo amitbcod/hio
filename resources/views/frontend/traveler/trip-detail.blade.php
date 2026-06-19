@@ -688,7 +688,6 @@
                                 </p>
                             </div>
                         </div>
-
                         <div class="kayak-icon">
                             <i class="fa-solid fa-water"></i>
                         </div>
