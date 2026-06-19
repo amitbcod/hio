@@ -151,6 +151,7 @@
                 <div class="confirm-next">
                     <h3>What happens next?</h3>
                     <ol class="confirm-steps">
+                        @if(($paymentStatus ?? 'pending') === 'paid')
                         <li>
                             <i class="fa-solid fa-envelope"></i>
                             <div>
@@ -158,6 +159,7 @@
                                 <p>We'll send booking details to your email address.</p>
                             </div>
                         </li>
+                        @endif
                         <li>
                             <i class="fa-solid fa-phone"></i>
                             <div>
