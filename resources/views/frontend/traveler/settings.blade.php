@@ -184,7 +184,7 @@
         }
 
         .traveler-submenu-link {
-            padding: 12px 16px;
+            padding: 8px 6px;
             font-size: 14px;
             font-weight: 600;
             color: var(--muted);

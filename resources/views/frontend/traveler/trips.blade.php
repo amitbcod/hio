@@ -58,28 +58,28 @@
                                             $serviceTypes = $serviceTypes->unique();
                                         @endphp
                                         <tr>
-                                            <td>
+                                            <td data-label="Trip">
                                                 <div class="trip-name-cell">
                                                     <strong>Trip #00{{ $trip->id }}</strong>
-                                                    <span>Trip</span>
+                                                    <!-- <span>Trip</span> -->
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Service Type">
                                                 <div class="service-type-badges">
                                                     @foreach($serviceTypes as $type)
                                                         <span class="service-badge">{{ $type }}</span>
                                                     @endforeach
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Dates">
                                                 {{ $trip->start_date ? $trip->start_date->format('d M Y') : 'N/A' }}
                                                 -
                                                 {{ $trip->end_date ? $trip->end_date->format('d M Y') : 'N/A' }}
                                             </td>
-                                            <td>
+                                            <td data-label="Status">
                                                 <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
                                             </td>
-                                            <td>{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
+                                            <td data-label="Bookings">{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
                                             <td class="trip-actions-cell">
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>Invoice</a>
@@ -137,28 +137,28 @@
                                             $serviceTypes = $serviceTypes->unique();
                                         @endphp
                                         <tr>
-                                            <td>
+                                            <td data-label="Trip">
                                                 <div class="trip-name-cell">
                                                     <strong>Trip #00{{ $trip->id }}</strong>
-                                                    <span>Trip</span>
+                                                    <!-- <span>Trip</span> -->
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Service Type">
                                                 <div class="service-type-badges">
                                                     @foreach($serviceTypes as $type)
                                                         <span class="service-badge">{{ $type }}</span>
                                                     @endforeach
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Dates">
                                                 {{ $trip->start_date ? $trip->start_date->format('d M Y') : 'N/A' }}
                                                 -
                                                 {{ $trip->end_date ? $trip->end_date->format('d M Y') : 'N/A' }}
                                             </td>
-                                            <td>
+                                            <td data-label="Status">
                                                 <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
                                             </td>
-                                            <td>{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
+                                            <td data-label="Bookings">{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
                                             <td class="trip-actions-cell">
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>Invoice</a>
@@ -365,13 +365,20 @@
 
     .trip-actions-cell {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 8px;
+    }
+
+    .trip-actions-cell a, .trip-actions-cell button {
+        padding: 8px 10px !important;
+        font-size: 15px;
+        cursor: pointer;
     }
 
     @media (max-width: 900px) {
         .traveler-trips-table {
-            min-width: 600px;
+            /* min-width: 600px; */
+            min-width: auto;
         }
     }
 
@@ -419,9 +426,21 @@
             margin-right: 8px;
         }
 
-        .trip-actions-cell {
-            flex-direction: column;
-            align-items: flex-start;
+        .traveler-trips-table td.trip-actions-cell {
+            /* flex-direction: column; */
+            /* align-items: flex-start; */
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .traveler-trips-table .trip-actions-cell form {
+            flex: 1;
+            flex-basis: 100%;
+            text-align: center;
+        }
+
+        .traveler-trips-table td.trip-actions-cell::before {
+            display:none;
         }
     }
 </style>
