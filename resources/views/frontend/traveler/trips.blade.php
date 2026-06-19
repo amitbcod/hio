@@ -430,6 +430,17 @@
             /* flex-direction: column; */
             /* align-items: flex-start; */
             justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .traveler-trips-table .trip-actions-cell form {
+            flex: 1;
+            flex-basis: 100%;
+            text-align: center;
+        }
+
+        .traveler-trips-table td.trip-actions-cell::before {
+            display:none;
         }
     }
 </style>
