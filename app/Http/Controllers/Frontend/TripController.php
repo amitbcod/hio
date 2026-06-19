@@ -858,9 +858,9 @@ HTML;
                     <div style="color:#7a8a9f;">' . $item['notes'] . '</div>
                 </td>
                 <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;">' . $item['qty'] . '</td>
-                <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px;text-align:right;font-weight:600;">MUR ' . $rowUnitPrice . '</td>
+                <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px;text-align:right;font-weight:600;">USD ' . $rowUnitPrice . '</td>
       
-                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:right;font-weight:600;color:#0b2b51;">MUR ' . $rowTotal . '</td>
+                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:right;font-weight:600;color:#0b2b51;">USD ' . $rowTotal . '</td>
             </tr>';
         }
 
