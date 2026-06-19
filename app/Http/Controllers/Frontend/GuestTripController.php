@@ -439,9 +439,10 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <table width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td width="65%" style="vertical-align:top;">
-    <div style="padding:16px;text-align:center;min-height:90px;">
-        <div style="font-size:16px;font-weight:700;color:#0b2b51;">MPO LOGO</div>
-        <div style="font-size:10px;color:#6a7b91;margin-top:6px;">{$operatorLabel}</div>
+    <div style="padding:16px;text-align:left;min-height:90px;">
+        {$companyLogoHtml}
+        <div style="font-size:10px;color:#6a7b91;margin-top:6px;">{$companyBusinessAddressSafe}</div>
+        <div style="font-size:10px;color:#6a7b91;margin-top:4px;">{$companyPhoneSafe} | {$companyEmailSafe}</div>
     </div>
 </td>
 <td width="35%" style="text-align:left;vertical-align:top;">
@@ -929,6 +930,15 @@ HTML;
             $poweredLogoPath = $this->getSanitizedPngForTcpdf($poweredLogoPath);
         }
 
+        $company = $this->getAdminCompanyData();
+        $companyBusinessNameSafe = e($company['business_name']);
+        $companyBusinessAddressSafe = e($company['business_address']);
+        $companyEmailSafe = e($company['business_email']);
+        $companyPhoneSafe = e($company['business_phone']);
+        $companyVatSafe = e($company['vat_number']);
+        $companyBrnSafe = e($company['brn_number']);
+        $companyLogoHtml = $this->renderAdminCompanyLogoHtml($company['logo_path'], $company['business_name']);
+
         // Build invoice data
         $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad($trip->id, 6, '0', STR_PAD_LEFT);
         $invoiceDate = now()->format('d M Y');
@@ -1075,12 +1085,11 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 <tr>
 <td width="50%" style="vertical-align:top; padding-right:8px;">
     <div class="header-box">
-        <div style="font-size:16px; font-weight:700; color:#0b2b51; margin-bottom:2px;">LRT MAURITIUS LTD</div>
-        <div style="font-size:9px; color:#4a5f7f;">Your Local Connection - Mauritius</div>
+        <div style="font-size:16px; font-weight:700; color:#0b2b51; margin-bottom:2px;">{$companyBusinessNameSafe}</div>
+        <div style="font-size:9px; color:#4a5f7f;">{$companyBusinessAddressSafe}</div>
         <div style="font-size:9px; color:#7a8a9f; margin-top:4px;">
-            <div>123 Coastal Rd, Grand Baie</div>
-            <div>+230 1234 5678 | info@lrt.mu</div>
-            <div>VAT: 12345678 | BRN: C12345678</div>
+            <div>{$companyPhoneSafe} | {$companyEmailSafe}</div>
+            <div>VAT: {$companyVatSafe} | BRN: {$companyBrnSafe}</div>
         </div>
     </div>
 </td>

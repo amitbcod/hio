@@ -311,7 +311,6 @@
                                 <div class="detail-value">19 Jun 2026</div>
                             </span>
                         </div>
-                        
                     </div>
 
                     <div class="detail-item">
