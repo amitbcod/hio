@@ -699,7 +699,7 @@
                             </div>
                         </div>
                         <div class="kayak-icon">
-                            <i class="fa-solid fa-water"></i>
+                            <img src="{{ asset('images/boat.png') }}" >
                         </div>
 
                     </div>
@@ -715,6 +715,118 @@
 
             </div>
 
+            <!-- add more services section -->
+             <style>
+.services-card{
+    width:100%;
+    background:#fff;
+    border:1px solid #e5e5e5;
+    border-radius:12px;
+    padding:22px;
+}
+
+.services-header{
+    position:relative;
+    padding-bottom:18px;
+    margin-bottom: 20px;
+}
+
+.services-header h2{
+        font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    margin-top: 0;
+    margin-left: 20px;
+    border-bottom: 3px solid #e7a628;
+    display: block;
+    flex: 1;
+    padding-bottom: 10px;
+}
+
+
+.services-description{
+    font-size:16px;
+    color:#333;
+    font-weight:500;
+    margin-bottom:20px;
+}
+
+.services-actions{
+    display:flex;
+    gap:70px;
+    justify-content:space-between;
+}
+
+.service-btn{
+    flex:1;
+    border:none;
+    border-radius:8px;
+    padding:16px 24px;
+    font-size:18px;
+    font-weight:500;
+    color:#fff;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    transition:0.2s ease;
+}
+
+.service-btn:hover{
+    opacity:.9;
+}
+
+.accommodation-btn{
+    background:#ff9f00;
+}
+
+.activity-btn{
+    background:#0d6efd;
+}
+
+.service-btn i{
+    font-size:18px;
+}
+
+@media (max-width:768px){
+
+    .services-actions{
+        flex-direction:column;
+        gap:15px;
+    }
+
+    .service-btn{
+        width:100%;
+    }
+}
+</style>
+
+<div class="services-card">
+
+    <div class="services-header">
+        <h2>Add More Services</h2>
+    </div>
+
+    <p class="services-description">
+        Enhance your trip by adding more accommodations or activities.
+    </p>
+
+    <div class="services-actions">
+
+        <button class="service-btn accommodation-btn">
+            <i class="fa-solid fa-building"></i>
+            + Add Accommodation
+        </button>
+
+        <button class="service-btn activity-btn">
+            <i class="fa-solid fa-sailboat"></i>
+            + Add Activity
+        </button>
+
+    </div>
+
+</div>
 
 
 
