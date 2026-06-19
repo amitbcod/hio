@@ -82,14 +82,14 @@
 
             <style>
                 .booking-card {
-                    max-width: 900px;
+                    width:100%;
                     background: #fff;
                     border-radius: 12px;
                     padding: 25px;
                     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
                 }
 
-                .header {
+                .booking-header {
                     display: flex;
                     align-items: center;
                     gap: 12px;
@@ -97,19 +97,9 @@
                     position: relative;
                 }
 
-                .header::after {
-                    content: "";
-                    position: absolute;
-                    left: 50px;
-                    right: 0;
-                    bottom: -10px;
-                    height: 3px;
-                    background: #e7a628;
-                }
-
                 .header-icon {
-                    width: 42px;
-                    height: 42px;
+                    width: 55px;
+                    height: 55px;
                     border-radius: 50%;
                     background: #f7efe0;
                     display: flex;
@@ -118,9 +108,16 @@
                     color: #1f2a44;
                 }
 
-                .header h2 {
+                .booking-header h2 {
                     font-size: 28px;
                     font-weight: 700;
+                    margin-bottom: 5px;
+                    margin-top: 0;
+                    margin-left: 20px;
+                    border-bottom: 3px solid #e7a628;
+                    display: block;
+                    flex: 1;
+                    padding-bottom: 10px;
                 }
 
                 .booking-content {
@@ -136,21 +133,22 @@
                 }
 
                 .property-img {
-                    width: 170px;
-                    height: 135px;
+                    width: 180px;
+                    height: 145px;
                     border-radius: 10px;
                     object-fit: cover;
                 }
 
                 .property-info h3 {
-                    font-size: 32px;
+                    font-size: 22px;
                     margin-bottom: 6px;
+                    margin-top: 0;
                 }
 
                 .property-info .type {
                     color: #333;
-                    font-size: 24px;
-                    margin-bottom: 30px;
+                    font-size: 22px;
+                    margin-bottom: 28px;
                 }
 
                 .ref-label {
@@ -172,7 +170,7 @@
                     font-weight: 600;
                 }
 
-                .details {
+                .booking-details {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
                     margin-top: 25px;
@@ -197,10 +195,15 @@
                     margin-bottom: 10px;
                 }
 
+                ..detail-title i {
+                    font-size:20px
+                }
+
                 .detail-value {
                     font-weight: 600;
                     color: #1e293b;
                     line-height: 1.6;
+                    margin-top: 7px;
                 }
 
                 .actions {
@@ -241,7 +244,7 @@
                         flex-direction: column;
                     }
 
-                    .details {
+                    .booking-details {
                         grid-template-columns: 1fr 1fr;
                         gap: 20px;
                     }
@@ -265,7 +268,7 @@
             </style>
 
             <div class="booking-card" style="display:none">
-                <div class="header">
+                <div class="booking-header">
                     <div class="header-icon">
                         <i class="fa-solid fa-bed"></i>
                     </div>
@@ -288,42 +291,54 @@
                         Confirmed
                     </div>
                 </div>
-                <div class="details">
+                <div class="booking-details">
                     <div class="detail-item">
                         <div class="detail-title">
                             <i class="fa-regular fa-calendar"></i>
-                            <span>Check-in</span>
+                            <span>
+                                Check-in
+                                <div class="detail-value">19 Jun 2026</div>
+                            </span>
                         </div>
-                        <div class="detail-value">19 Jun 2026</div>
+                        
                     </div>
 
                     <div class="detail-item">
                         <div class="detail-title">
                             <i class="fa-regular fa-calendar"></i>
-                            <span>Check-out</span>
+                            <span>
+                                Check-out
+                                <div class="detail-value">21 Jun 2026</div>
+                            </span>
                         </div>
-                        <div class="detail-value">21 Jun 2026</div>
+                        
                     </div>
 
                     <div class="detail-item">
                         <div class="detail-title">
                             <i class="fa-solid fa-users"></i>
-                            <span>Guests</span>
+                            <span>
+                                Guests
+                                <div class="detail-value">
+                                    2 Booked<br>
+                                    0 Added
+                                </div>
+                            </span>
                         </div>
-                        <div class="detail-value">
-                            2 Booked<br>
-                            0 Added
-                        </div>
+                        
                     </div>
 
                     <div class="detail-item">
                         <div class="detail-title">
                             <i class="fa-regular fa-credit-card"></i>
-                            <span>Amount</span>
+                            <span>
+                                Amount
+                                <div class="detail-value">
+                                    USD 185.40
+                                </div>
+                            </span>
                         </div>
-                        <div class="detail-value">
-                            USD 185.40
-                        </div>
+                        
                     </div>
 
                 </div>
