@@ -946,7 +946,7 @@ HTML;
 
         // Guest details - safe escaping
         $travelerName = e($otpToken->name ?? 'Guest Traveller');
-        $travelerPhone = e($otpToken->phone ?? $otpToken->mobile ?? 'N/A');
+        $travelerPhone = e($otpToken->phone ?? $otpToken->mobile ?? $otpToken->mobile_phone ?? $otpToken->phone_number ?? $otpToken->contact_number ?? $otpToken->contact_phone ?? 'N/A');
         $travelerEmail = e($otpToken->email ?? 'N/A');
         $travelerAddress = e($otpToken->address ?? 'Address not provided');
         $accountId = 'GUEST-' . str_pad($trip->id, 6, '0', STR_PAD_LEFT);

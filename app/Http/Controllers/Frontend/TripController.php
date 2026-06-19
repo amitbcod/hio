@@ -778,7 +778,7 @@ HTML;
 
         // Traveler details - safe escaping
         $travelerName = e($traveler->name ?? $traveler->first_name ?? 'Guest');
-        $travelerPhone = e($traveler->phone ?? $traveler->mobile ?? 'N/A');
+        $travelerPhone = e($traveler->phone ?? $traveler->mobile ?? $traveler->mobile_phone ?? $traveler->phone_number ?? $traveler->contact_number ?? $traveler->contact_phone ?? 'N/A');
         $travelerEmail = e($traveler->email ?? 'N/A');
         $travelerAddress = trim(implode(', ', array_filter([
             $traveler->address_line_1 ?? null,
