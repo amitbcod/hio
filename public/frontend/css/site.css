@@ -2288,6 +2288,41 @@ ol>ul>li {
     font-family: 'Open Sans', Arial, sans-serif;
 }
 
+.trip-id {
+    display: flex;
+    justify-content: space-between;
+}
+
+.summary-card {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+    align-items: self-start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+}
+
+.summary-card p {
+    font-size: 22px;
+    margin-bottom: 0;
+    font-weight: 600;
+    margin-top: 15px;
+}
+
+.summary-card label {
+    font-size: 18px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #999;
+}
+
+.summary-card svg {
+    width: 28px;
+    vertical-align: bottom;
+    color: #646464;
+}
+
 
 
 @media (max-width:860px) {
