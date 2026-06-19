@@ -78,8 +78,6 @@
             </div>
 
             <!-- New Accommodation Bookings Section -->
-
-
             <style>
                 .booking-card {
                     width:100%;
@@ -87,6 +85,7 @@
                     border-radius: 12px;
                     padding: 25px;
                     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+                    margin-bottom: 20px;
                 }
 
                 .booking-header {
@@ -368,6 +367,344 @@
                 </div>
             </div>
 
+
+            <!-- New activity bookings Section -->
+
+            
+
+            <style>
+
+            .activity-card{
+                max-width:1000px;
+                background:#fff;
+                border:1px solid #e5e5e5;
+                border-radius:12px;
+                overflow:hidden;
+                margin-bottom:20px
+            }
+
+            .activity-card-body{
+                padding:20px;
+            }
+
+            /* Content */
+
+            .booking-content{
+                display:flex;
+                justify-content:space-between;
+                gap:20px;
+            }
+
+            .left-section{
+                display:flex;
+                gap:20px;
+                flex:1;
+            }
+
+            .activity-img{
+                width:110px;
+                height:120px;
+                border-radius:8px;
+                object-fit:cover;
+            }
+
+            .activity-info h3{
+                font-size:18px;
+                margin-bottom:5px;
+                color:#111827;
+            }
+
+            .activity-info .subtitle{
+                font-size:16px;
+                font-weight:600;
+                margin-bottom:20px;
+            }
+
+            /* Details */
+
+            .details{
+                display:flex;
+                gap:30px;
+            }
+
+            .detail-item{
+                min-width:130px;
+                padding-right:25px;
+                border-right:1px solid #e5e5e5;
+            }
+
+            .detail-item:last-child{
+                border-right:none;
+            }
+
+            .detail-title{
+                display:flex;
+                align-items:center;
+                gap:10px;
+                color:#666;
+                margin-bottom:10px;
+            }
+
+            .detail-value{
+                font-size:16px;
+                font-weight:600;
+                color:#111827;
+                line-height:1.5;
+            }
+
+            .detail-small{
+                color:#777;
+                font-size:14px;
+                margin-top:4px;
+            }
+
+            /* Right Side */
+
+            .right-section{
+                text-align:right;
+                min-width:150px;
+            }
+
+            .status{
+                display:inline-block;
+                background:#e8f7e8;
+                color:#2e8b3c;
+                padding:10px 16px;
+                border-radius:8px;
+                font-weight:600;
+                margin-bottom:20px;
+            }
+
+            .manage-link{
+                color:#e49a18;
+                font-weight:600;
+                font-size:16px;
+                text-decoration:none;
+                display:block;
+                margin-bottom:30px;
+            }
+
+            .amount-label{
+                color:#777;
+                margin-bottom:8px;
+            }
+
+            .amount{
+                font-size:18px;
+                font-weight:700;
+            }
+
+            /* Time Slot Box */
+
+            .timeslot-box{
+                margin-top:25px;
+                border:1px solid #d7e5f7;
+                background:#f7fbff;
+                border-radius:10px;
+                padding:20px;
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+            }
+
+            .timeslot-title{
+                color:#0058c8;
+                font-weight:700;
+                margin-bottom:12px;
+            }
+
+            .timeslot-title i{
+                margin-right:8px;
+            }
+
+            .timeslot-box p{
+                margin-bottom:8px;
+                color:#222;
+            }
+
+            .timeslot-box strong{
+                font-weight:700;
+            }
+
+            .kayak-icon{
+                font-size:55px;
+                color:#c8ddf6;
+            }
+
+            /* Footer */
+
+            .activity-footer{
+                border-top:1px solid #ececec;
+                padding:16px;
+                text-align:center;
+            }
+
+            .activity-footer a{
+                color:#0058c8;
+                font-weight:600;
+                text-decoration:none;
+                font-size:18px;
+            }
+
+            .activity-footer i{
+                margin-left:8px;
+            }
+
+            /* Responsive */
+
+            @media(max-width:900px){
+
+                .booking-content{
+                    flex-direction:column;
+                }
+
+                .left-section{
+                    flex-direction:column;
+                }
+
+                .details{
+                    flex-wrap:wrap;
+                }
+
+                .right-section{
+                    text-align:left;
+                }
+
+                .timeslot-box{
+                    flex-direction:column;
+                    align-items:flex-start;
+                    gap:15px;
+                }
+            }
+            </style>
+
+            <div class="activity-card" style="display:none">
+
+                <div class="activity-card-body">
+
+                    <div class="booking-header">
+                        <div class="header-icon">
+                            <i class="fa-solid fa-person-hiking"></i>
+                        </div>
+                        <h2>Activity Bookings</h2>
+                    </div>
+
+                    <div class="booking-content">
+
+                        <div class="left-section">
+
+                            <img
+                                src="https://images.unsplash.com/photo-1528127269322-539801943592?w=500"
+                                class="activity-img"
+                                alt="Sea Kayaking">
+
+                            <div>
+
+                                <div class="activity-info">
+                                    <h3>Sea Kayaking Ile D'Ambre</h3>
+                                    <div class="subtitle">
+                                        Sea Kayak Morning Session
+                                    </div>
+                                </div>
+
+                                <div class="details">
+
+                                    <div class="detail-item">
+                                        <div class="detail-title">
+                                            <i class="fa-regular fa-calendar"></i>
+                                            Activity Date
+                                        </div>
+                                        <div class="detail-value">
+                                            19 Jun 2026
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-item">
+                                        <div class="detail-title">
+                                            <i class="fa-solid fa-users"></i>
+                                            Participants
+                                        </div>
+                                        <div class="detail-value">
+                                            1 Booked<br>
+                                            0 Added
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-item">
+                                        <div class="detail-title">
+                                            <i class="fa-regular fa-clock"></i>
+                                            Time Slot
+                                        </div>
+                                        <div class="detail-value">
+                                            08:45 - 12:00
+                                        </div>
+                                        <div class="detail-small">
+                                            Duration: 3h 15m
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="right-section">
+
+                            <div class="status">
+                                Confirmed
+                            </div>
+
+                            <a href="#" class="manage-link">
+                                Manage
+                                <i class="fa-solid fa-angle-right"></i>
+                            </a>
+
+                            <div class="amount-label">
+                                Amount
+                            </div>
+
+                            <div class="amount">
+                                USD 60.00
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="timeslot-box">
+
+                        <div>
+                            <div class="timeslot-title">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Time Slot Details
+                            </div>
+
+                            <p>
+                                <strong>8:45 AM</strong> - Meet & briefing at the beach
+                            </p>
+
+                            <p>
+                                <strong>12:00 PM</strong> - Activity ends
+                            </p>
+                        </div>
+
+                        <div class="kayak-icon">
+                            <i class="fa-solid fa-water"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="activity-footer">
+                    <a href="#">
+                        View All Activities (1)
+                        <i class="fa-solid fa-angle-down"></i>
+                    </a>
+                </div>
+
+            </div>
 
 
 
