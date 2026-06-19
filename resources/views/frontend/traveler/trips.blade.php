@@ -58,28 +58,28 @@
                                             $serviceTypes = $serviceTypes->unique();
                                         @endphp
                                         <tr>
-                                            <td>
+                                            <td data-label="Trip">
                                                 <div class="trip-name-cell">
                                                     <strong>Trip #00{{ $trip->id }}</strong>
                                                     <!-- <span>Trip</span> -->
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Service Type">
                                                 <div class="service-type-badges">
                                                     @foreach($serviceTypes as $type)
                                                         <span class="service-badge">{{ $type }}</span>
                                                     @endforeach
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Dates">
                                                 {{ $trip->start_date ? $trip->start_date->format('d M Y') : 'N/A' }}
                                                 -
                                                 {{ $trip->end_date ? $trip->end_date->format('d M Y') : 'N/A' }}
                                             </td>
-                                            <td>
+                                            <td data-label="Status">
                                                 <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
                                             </td>
-                                            <td>{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
+                                            <td data-label="Bookings">{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
                                             <td class="trip-actions-cell">
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>Invoice</a>
@@ -159,7 +159,7 @@
                                                 <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
                                             </td>
                                             <td data-label="Bookings">{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
-                                            <td data-label="Actions" class="trip-actions-cell">
+                                            <td class="trip-actions-cell">
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>Invoice</a>
                                             </td>
