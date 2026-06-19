@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SharedCartController;
+use App\Http\Controllers\Admin\AdminSettingsController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('login', [AdminAuthController::class, 'showLogin'])->name('login');
@@ -12,6 +13,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // simple session-based guard (controller checks session before actions)
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('settings', [AdminSettingsController::class, 'edit'])->name('settings.edit');
+    Route::post('settings', [AdminSettingsController::class, 'update'])->name('settings.update');
     Route::post('businesses/{business}/approve', [DashboardController::class, 'approveBusiness'])->name('business.approve');
     Route::post('businesses/{business}/reject', [DashboardController::class, 'rejectBusiness'])->name('business.reject');
     Route::post('accommodations/{accommodation}/approve', [DashboardController::class, 'approveAccommodation'])->name('accommodation.approve');
