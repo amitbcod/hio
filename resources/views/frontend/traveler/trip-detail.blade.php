@@ -802,7 +802,7 @@
 }
 </style>
 
-<div class="services-card">
+<div class="services-card" style="display:none">
 
     <div class="services-header">
         <h2>Add More Services</h2>
