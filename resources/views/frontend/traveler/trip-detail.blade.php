@@ -159,7 +159,7 @@
                         Manage
                     </button>
 
-                    <button class="btn btn-download">
+                    <button class="btn btn-sm btn-secondary btn-download">
                         <i class="fa-solid fa-download"></i>
                         Download Voucher
                     </button>
@@ -316,15 +316,12 @@
                         + Add Accommodation
                     </button>
 
-                    <button class="service-btn activity-btn">
+                    <button class="btn btn-sm btn-secondary service-btn activity-btn">
                         <i class="fa-solid fa-sailboat"></i>
                         + Add Activity
                     </button>
-
                 </div>
-
             </div>
-
 
 
 
@@ -675,8 +672,6 @@
                 }
 
                 .btn-download {
-                    background: #0057d9;
-                    color: #fff;
                     flex-basis: 20%;
                 }
 
@@ -1003,7 +998,7 @@
             }
 
             .activity-btn{
-                background:#0d6efd;
+         
             }
 
             .service-btn i{
