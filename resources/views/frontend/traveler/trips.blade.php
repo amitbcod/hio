@@ -61,7 +61,7 @@
                                             <td>
                                                 <div class="trip-name-cell">
                                                     <strong>Trip #00{{ $trip->id }}</strong>
-                                                    <span>Trip</span>
+                                                    <!-- <span>Trip</span> -->
                                                 </div>
                                             </td>
                                             <td>
@@ -372,11 +372,13 @@
     .trip-actions-cell a, .trip-actions-cell button {
         padding: 8px 10px !important;
         font-size: 15px;
+        cursor: pointer;
     }
 
     @media (max-width: 900px) {
         .traveler-trips-table {
-            min-width: 600px;
+            /* min-width: 600px; */
+            min-width: auto;
         }
     }
 
