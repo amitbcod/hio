@@ -78,7 +78,453 @@
             </div>
 
             <!-- New Accommodation Bookings Section -->
-            <style>
+            <div class="booking-card" style="display:none">
+                <div class="booking-header">
+                    <div class="header-icon">
+                        <i class="fa-solid fa-bed"></i>
+                    </div>
+                    <h2>Accommodation Bookings</h2>
+                </div>
+
+                <div class="booking-content">
+                    <div class="left-section">
+                        <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600" alt="Villa"
+                            class="property-img">
+                        <div class="property-info">
+                            <h3>Sandy Cove Villa</h3>
+                            <div class="type">Duplex - Two bedrooms</div>
+
+                            <div class="ref-label">Booking Ref</div>
+                            <div class="ref-no">ACC-100108-20260619-2</div>
+                        </div>
+                    </div>
+                    <div class="status">
+                        Confirmed
+                    </div>
+                </div>
+                <div class="booking-details">
+                    <div class="detail-item">
+                        <div class="detail-title">
+                            <i class="fa-regular fa-calendar"></i>
+                            <span>
+                                Check-in
+                                <div class="detail-value">19 Jun 2026</div>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-title">
+                            <i class="fa-regular fa-calendar"></i>
+                            <span>
+                                Check-out
+                                <div class="detail-value">21 Jun 2026</div>
+                            </span>
+                        </div>
+                        
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-title">
+                            <i class="fa-solid fa-users"></i>
+                            <span>
+                                Guests
+                                <div class="detail-value">
+                                    2 Booked<br>
+                                    0 Added
+                                </div>
+                            </span>
+                        </div>
+                        
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-title">
+                            <i class="fa-regular fa-credit-card"></i>
+                            <span>
+                                Amount
+                                <div class="detail-value">
+                                    USD 185.40
+                                </div>
+                            </span>
+                        </div>
+                        
+                    </div>
+
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-manage">
+                        <i class="fa-solid fa-gear"></i>
+                        Manage
+                    </button>
+
+                    <button class="btn btn-download">
+                        <i class="fa-solid fa-download"></i>
+                        Download Voucher
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- New activity bookings Section -->
+            <div class="activity-card" style="display:none">
+
+                <div class="activity-card-body">
+
+                    <div class="booking-header">
+                        <div class="header-icon">
+                            <i class="fa-solid fa-person-hiking"></i>
+                        </div>
+                        <h2>Activity Bookings</h2>
+                    </div>
+
+                    <div class="booking-content">
+
+                        <div class="left-section">
+
+                            <img
+                                src="https://images.unsplash.com/photo-1528127269322-539801943592?w=500"
+                                class="property-img"
+                                alt="Sea Kayaking">
+
+                            <div>
+
+                                <div class="activity-info">
+                                    <h3>Sea Kayaking Ile D'Ambre</h3>
+                                    <div class="subtitle">
+                                        Sea Kayak Morning Session
+                                    </div>
+                                </div>
+
+                                <div class="booking-details">
+
+                                    <div class="detail-item">
+                                        <div class="detail-title">
+                                            <i class="fa-regular fa-calendar"></i>
+                                            <span>Activity Date
+                                                <div class="detail-value">
+                                                    19 Jun 2026
+                                                </div>
+                                            </span>
+                                        </div>
+                                        
+                                    </div>
+
+                                    <div class="detail-item">
+                                        <div class="detail-title">
+                                            <i class="fa-solid fa-users"></i>
+                                            <span>Participants
+                                                <div class="detail-value">
+                                                    1 Booked<br>
+                                                    0 Added
+                                                </div>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-item">
+                                        <div class="detail-title">
+                                            <i class="fa-regular fa-clock"></i>
+                                            <span>Time Slot
+                                                <div class="detail-value">
+                                                    08:45 - 12:00
+                                                </div>
+                                                <div class="detail-small">
+                                                    Duration: 3h 15m
+                                                </div>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-item">
+                                        <div class="detail-title">
+                                            <span>Amount
+                                                <div class="amount">
+                                                    USD 60.00
+                                                </div>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="right-section">
+
+                            <div class="status">
+                                Confirmed
+                            </div>
+
+                            <a href="#" class="manage-link">
+                                Manage
+                                <i class="fa-solid fa-angle-right"></i>
+                            </a>
+                        </div>
+
+                    </div>
+
+                    <div class="timeslot-box">
+
+                        <div>
+                            <div class="timeslot-title">
+                                <i class="fa-solid fa-circle-info"></i>
+                                <span>Time Slot Details
+                                <p>
+                                    <strong>8:45 AM</strong> - Meet & briefing at the beach
+                                </p>
+
+                                <p>
+                                    <strong>12:00 PM</strong> - Activity ends
+                                </p></span>
+                            </div>
+                        </div>
+                        <div class="kayak-icon">
+                            <img src="{{ asset('images/boat.png') }}" >
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="activity-footer">
+                    <a href="#">
+                        View All Activities (1)
+                        <i class="fa-solid fa-angle-down"></i>
+                    </a>
+                </div>
+
+            </div>
+
+            <!-- add more services section -->
+            <div class="services-card" style="display:none">
+
+                <div class="services-header">
+                    <h2>Add More Services</h2>
+                </div>
+
+                <p class="services-description">
+                    Enhance your trip by adding more accommodations or activities.
+                </p>
+
+                <div class="services-actions">
+
+                    <button class="service-btn accommodation-btn">
+                        <i class="fa-solid fa-building"></i>
+                        + Add Accommodation
+                    </button>
+
+                    <button class="service-btn activity-btn">
+                        <i class="fa-solid fa-sailboat"></i>
+                        + Add Activity
+                    </button>
+
+                </div>
+
+            </div>
+
+
+
+
+
+            <!-- Accommodation Bookings Section -->
+            @if($accommodationBookings->count() > 0)
+                <div class="bookings-section"
+                    style="margin-bottom: 40px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px;">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
+                        Accommodation Bookings</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                            <thead>
+                                <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Booking Ref</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Accommodation</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Room</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Check-in</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Check-out</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Guests</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600;">Amount</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Status</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($accommodationBookings as $booking)
+                                    <tr style="border-bottom: 1px solid #e0e0e0; transition: background 0.2s;">
+                                        <td style="padding: 12px; font-weight: 600; color: #ff9500;">
+                                            {{ $booking->booking_reference }}</td>
+                                        <td style="padding: 12px;">
+                                            {{ $booking->accommodation ? $booking->accommodation->property_name : 'N/A' }}
+                                        </td>
+                                        <td style="padding: 12px;">
+                                            {{ $booking->room ? $booking->room->room_name : 'N/A' }}
+                                        </td>
+                                        <td style="padding: 12px;">
+                                            {{ $booking->check_in_date->format('d M Y') }}
+                                        </td>
+                                        <td style="padding: 12px;">
+                                            {{ $booking->check_out_date->format('d M Y') }}
+                                        </td>
+                                        <td style="padding: 12px; text-align: center;">
+                                            @php
+                                                $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
+                                                $addedCount = $booking->guests->count();
+                                            @endphp
+                                            <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
+                                            <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
+
+                                        </td>
+                                        <td style="padding: 12px; text-align: right; font-weight: 600;">
+                                            {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
+                                        </td>
+                                        <td style="padding: 12px; text-align: center;">
+                                            <span
+                                                style="display: inline-block; padding: 4px 10px; background: {{ $booking->booking_status === 'Confirmed' ? '#e8f5e9' : ($booking->booking_status === 'Pending' ? '#fff3e0' : '#ffebee') }}; color: {{ $booking->booking_status === 'Confirmed' ? '#2e7d32' : ($booking->booking_status === 'Pending' ? '#e65100' : '#c62828') }}; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
+                                                {{ $booking->booking_status }}
+                                            </span>
+                                        </td>
+                                        <td
+                                            style="padding: 12px; text-align: center; display:flex; justify-content:center; gap: 8px; flex-wrap:wrap;">
+                                            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
+                                                class="btn btn-sm btn-outline-primary"
+                                                style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
+                                            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
+                                                class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">Download
+                                                Voucher</a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Activity Bookings Section -->
+            @if($activityBookings->count() > 0)
+                <div class="bookings-section"
+                    style="margin-bottom: 40px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px;">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
+                        Activity Bookings</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                            <thead>
+                                <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Booking Ref</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Activity</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Variant</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Activity Date</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Participants</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600;">Amount</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Status</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($activityBookings as $booking)
+                                    <tr style="border-bottom: 1px solid #e0e0e0; transition: background 0.2s;">
+                                        <td style="padding: 12px; font-weight: 600; color: #ff9500;">
+                                            {{ $booking->booking_reference }}</td>
+                                        <td style="padding: 12px;">
+                                            {{ $booking->activity ? $booking->activity->activity_name : 'N/A' }}
+                                        </td>
+                                        <td style="padding: 12px;">
+                                            {{ $booking->variant_name ?? 'Standard' }}
+                                        </td>
+                                        <td style="padding: 12px;">
+                                            {{ $booking->activity_date->format('d M Y') }}
+                                        </td>
+                                        <td style="padding: 12px; text-align: center;">
+                                            @php
+                                                $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
+                                                $addedCount = $booking->guests->count();
+                                            @endphp
+                                            <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
+                                            <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
+                                            @if($booking->participant_time_slots)
+                                                @php
+                                                    $timeSlotsCount = count(array_filter($booking->participant_time_slots));
+                                                @endphp
+                                                <div style="font-size: 0.8rem; color: #666;">Time slots:
+                                                    {{ $timeSlotsCount }}/{{ $addedCount }}</div>
+                                            @endif
+                                        </td>
+                                        <td style="padding: 12px; text-align: right; font-weight: 600;">
+                                            {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
+                                        </td>
+                                        <td style="padding: 12px; text-align: center;">
+                                            <span
+                                                style="display: inline-block; padding: 4px 10px; background: {{ $booking->booking_status === 'Confirmed' ? '#e8f5e9' : ($booking->booking_status === 'Pending' ? '#fff3e0' : '#ffebee') }}; color: {{ $booking->booking_status === 'Confirmed' ? '#2e7d32' : ($booking->booking_status === 'Pending' ? '#e65100' : '#c62828') }}; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
+                                                {{ $booking->booking_status }}
+                                            </span>
+                                        </td>
+                                        <td
+                                            style="padding: 12px; text-align: center; display:flex; justify-content:center; gap: 8px; flex-wrap:wrap;">
+                                            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
+                                                class="btn btn-sm btn-outline-primary"
+                                                style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
+                                            @if($booking->guests->count() > 0)
+                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}#download-voucher-section"
+                                                    class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">Download
+                                                    Voucher</a>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+
+            <!-- No Bookings Message -->
+            @if($accommodationBookings->count() === 0 && $activityBookings->count() === 0)
+                <div style="background: #f9f9f9; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 30px;">
+                    <p style="color: #999; font-size: 1.1rem; margin: 0;">No bookings added to this trip yet.</p>
+                </div>
+            @endif
+
+            @if((!isset($guestMode) || !$guestMode) && !in_array($trip->status, ['completed', 'cancelled']))
+                <!-- Add Services Section -->
+                <div class="trip-actions-section"
+                    style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-top: 30px;">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
+                        Add More Services</h3>
+                    <p style="color: #666; margin-bottom: 20px;">Expand your trip by adding more accommodations or activities.
+                    </p>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="btn btn-primary" name="service_type" value="accommodation"
+                                style="padding: 12px 24px; background: #ff9500; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.3s;">
+                                + Add Accommodation
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="btn btn-primary" name="service_type" value="activity"
+                                style="padding: 12px 24px; background: #2196F3; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.3s;">
+                                + Add Activity
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Back to Trips -->
+            <div style="margin-top: 30px; text-align: center;">
+                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.show', ['otp' => $otp]) : route('traveler.trips') }}"
+                    class="btn btn-secondary"
+                    style="padding: 12px 30px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block; transition: background 0.3s;">
+                    &larr; Back to All Trips
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <style>
                 .booking-card {
                     width:100%;
                     background: #fff;
@@ -277,104 +723,9 @@
                         height: auto;
                     }
                 }
-            </style>
-
-            <div class="booking-card" style="display:none">
-                <div class="booking-header">
-                    <div class="header-icon">
-                        <i class="fa-solid fa-bed"></i>
-                    </div>
-                    <h2>Accommodation Bookings</h2>
-                </div>
-
-                <div class="booking-content">
-                    <div class="left-section">
-                        <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600" alt="Villa"
-                            class="property-img">
-                        <div class="property-info">
-                            <h3>Sandy Cove Villa</h3>
-                            <div class="type">Duplex - Two bedrooms</div>
-
-                            <div class="ref-label">Booking Ref</div>
-                            <div class="ref-no">ACC-100108-20260619-2</div>
-                        </div>
-                    </div>
-                    <div class="status">
-                        Confirmed
-                    </div>
-                </div>
-                <div class="booking-details">
-                    <div class="detail-item">
-                        <div class="detail-title">
-                            <i class="fa-regular fa-calendar"></i>
-                            <span>
-                                Check-in
-                                <div class="detail-value">19 Jun 2026</div>
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="detail-item">
-                        <div class="detail-title">
-                            <i class="fa-regular fa-calendar"></i>
-                            <span>
-                                Check-out
-                                <div class="detail-value">21 Jun 2026</div>
-                            </span>
-                        </div>
-                        
-                    </div>
-
-                    <div class="detail-item">
-                        <div class="detail-title">
-                            <i class="fa-solid fa-users"></i>
-                            <span>
-                                Guests
-                                <div class="detail-value">
-                                    2 Booked<br>
-                                    0 Added
-                                </div>
-                            </span>
-                        </div>
-                        
-                    </div>
-
-                    <div class="detail-item">
-                        <div class="detail-title">
-                            <i class="fa-regular fa-credit-card"></i>
-                            <span>
-                                Amount
-                                <div class="detail-value">
-                                    USD 185.40
-                                </div>
-                            </span>
-                        </div>
-                        
-                    </div>
-
-                </div>
-
-                <div class="actions">
-                    <button class="btn btn-manage">
-                        <i class="fa-solid fa-gear"></i>
-                        Manage
-                    </button>
-
-                    <button class="btn btn-download">
-                        <i class="fa-solid fa-download"></i>
-                        Download Voucher
-                    </button>
-                </div>
-            </div>
 
 
-            <!-- New activity bookings Section -->
-
-            
-
-            <style>
-
-            .activity-card{
+           .activity-card{
                 width:100%;
                 background:#fff;
                 border:1px solid #e5e5e5;
@@ -584,453 +935,94 @@
                     gap:15px;
                 }
             }
-            </style>
-            <div class="activity-card" style="display:none">
-
-                <div class="activity-card-body">
-
-                    <div class="booking-header">
-                        <div class="header-icon">
-                            <i class="fa-solid fa-person-hiking"></i>
-                        </div>
-                        <h2>Activity Bookings</h2>
-                    </div>
-
-                    <div class="booking-content">
-
-                        <div class="left-section">
-
-                            <img
-                                src="https://images.unsplash.com/photo-1528127269322-539801943592?w=500"
-                                class="property-img"
-                                alt="Sea Kayaking">
-
-                            <div>
-
-                                <div class="activity-info">
-                                    <h3>Sea Kayaking Ile D'Ambre</h3>
-                                    <div class="subtitle">
-                                        Sea Kayak Morning Session
-                                    </div>
-                                </div>
-
-                                <div class="booking-details">
-
-                                    <div class="detail-item">
-                                        <div class="detail-title">
-                                            <i class="fa-regular fa-calendar"></i>
-                                            <span>Activity Date
-                                                <div class="detail-value">
-                                                    19 Jun 2026
-                                                </div>
-                                            </span>
-                                        </div>
-                                        
-                                    </div>
-
-                                    <div class="detail-item">
-                                        <div class="detail-title">
-                                            <i class="fa-solid fa-users"></i>
-                                            <span>Participants
-                                                <div class="detail-value">
-                                                    1 Booked<br>
-                                                    0 Added
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div class="detail-item">
-                                        <div class="detail-title">
-                                            <i class="fa-regular fa-clock"></i>
-                                            <span>Time Slot
-                                                <div class="detail-value">
-                                                    08:45 - 12:00
-                                                </div>
-                                                <div class="detail-small">
-                                                    Duration: 3h 15m
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div class="detail-item">
-                                        <div class="detail-title">
-                                            <span>Amount
-                                                <div class="amount">
-                                                    USD 60.00
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="right-section">
-
-                            <div class="status">
-                                Confirmed
-                            </div>
-
-                            <a href="#" class="manage-link">
-                                Manage
-                                <i class="fa-solid fa-angle-right"></i>
-                            </a>
-                        </div>
-
-                    </div>
-
-                    <div class="timeslot-box">
-
-                        <div>
-                            <div class="timeslot-title">
-                                <i class="fa-solid fa-circle-info"></i>
-                                <span>Time Slot Details
-                                <p>
-                                    <strong>8:45 AM</strong> - Meet & briefing at the beach
-                                </p>
-
-                                <p>
-                                    <strong>12:00 PM</strong> - Activity ends
-                                </p></span>
-                            </div>
-                        </div>
-                        <div class="kayak-icon">
-                            <img src="{{ asset('images/boat.png') }}" >
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="activity-footer">
-                    <a href="#">
-                        View All Activities (1)
-                        <i class="fa-solid fa-angle-down"></i>
-                    </a>
-                </div>
-
-            </div>
-
-            <!-- add more services section -->
-             <style>
-.services-card{
-    width:100%;
-    background:#fff;
-    border:1px solid #e5e5e5;
-    border-radius:12px;
-    padding:22px;
-}
-
-.services-header{
-    position:relative;
-    padding-bottom:18px;
-    margin-bottom: 20px;
-}
-
-.services-header h2{
-        font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 5px;
-    margin-top: 0;
-    margin-left: 20px;
-    border-bottom: 3px solid #e7a628;
-    display: block;
-    flex: 1;
-    padding-bottom: 10px;
-}
 
 
-.services-description{
-    font-size:16px;
-    color:#333;
-    font-weight:500;
-    margin-bottom:20px;
-}
+            .services-card{
+                width:100%;
+                background:#fff;
+                border:1px solid #e5e5e5;
+                border-radius:12px;
+                padding:22px;
+                margin-bottom: 20px;
+            }
 
-.services-actions{
-    display:flex;
-    gap:70px;
-    justify-content:space-between;
-}
+            .services-header{
+                position:relative;
+                padding-bottom:18px;
+                margin-bottom: 0;
+            }
 
-.service-btn{
-    flex:1;
-    border:none;
-    border-radius:8px;
-    padding:16px 24px;
-    font-size:18px;
-    font-weight:500;
-    color:#fff;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:12px;
-    transition:0.2s ease;
-}
-
-.service-btn:hover{
-    opacity:.9;
-}
-
-.accommodation-btn{
-    background:#ff9f00;
-}
-
-.activity-btn{
-    background:#0d6efd;
-}
-
-.service-btn i{
-    font-size:18px;
-}
-
-@media (max-width:768px){
-
-    .services-actions{
-        flex-direction:column;
-        gap:15px;
-    }
-
-    .service-btn{
-        width:100%;
-    }
-}
-</style>
-
-<div class="services-card" style="display:none">
-
-    <div class="services-header">
-        <h2>Add More Services</h2>
-    </div>
-
-    <p class="services-description">
-        Enhance your trip by adding more accommodations or activities.
-    </p>
-
-    <div class="services-actions">
-
-        <button class="service-btn accommodation-btn">
-            <i class="fa-solid fa-building"></i>
-            + Add Accommodation
-        </button>
-
-        <button class="service-btn activity-btn">
-            <i class="fa-solid fa-sailboat"></i>
-            + Add Activity
-        </button>
-
-    </div>
-
-</div>
+            .services-header h2{
+                    font-size: 28px;
+                font-weight: 700;
+                margin-bottom: 0px;
+                margin-top: 0;
+                margin-left: 0;
+                border-bottom: 3px solid #e7a628;
+                display: block;
+                flex: 1;
+                padding-bottom: 10px;
+            }
 
 
+            .services-description{
+                font-size:16px;
+                color:#333;
+                font-weight:500;
+                margin-bottom:20px;
+            }
 
+            .services-actions{
+                display:flex;
+                gap:70px;
+                justify-content:space-between;
+            }
 
+            .service-btn{
+                flex:1;
+                border:none;
+                border-radius:8px;
+                padding:16px 24px;
+                font-size:18px;
+                font-weight:500;
+                color:#fff;
+                cursor:pointer;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                gap:12px;
+                transition:0.2s ease;
+            }
 
+            .service-btn:hover{
+                opacity:.9;
+            }
 
+            .accommodation-btn{
+                background:#ff9f00;
+            }
 
+            .activity-btn{
+                background:#0d6efd;
+            }
 
-            <!-- Accommodation Bookings Section -->
-            @if($accommodationBookings->count() > 0)
-                <div class="bookings-section"
-                    style="margin-bottom: 40px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px;">
-                    <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
-                        Accommodation Bookings</h3>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
-                            <thead>
-                                <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Booking Ref</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Accommodation</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Room</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Check-in</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Check-out</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Guests</th>
-                                    <th style="padding: 12px; text-align: right; font-weight: 600;">Amount</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Status</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($accommodationBookings as $booking)
-                                    <tr style="border-bottom: 1px solid #e0e0e0; transition: background 0.2s;">
-                                        <td style="padding: 12px; font-weight: 600; color: #ff9500;">
-                                            {{ $booking->booking_reference }}</td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->accommodation ? $booking->accommodation->property_name : 'N/A' }}
-                                        </td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->room ? $booking->room->room_name : 'N/A' }}
-                                        </td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->check_in_date->format('d M Y') }}
-                                        </td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->check_out_date->format('d M Y') }}
-                                        </td>
-                                        <td style="padding: 12px; text-align: center;">
-                                            @php
-                                                $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
-                                                $addedCount = $booking->guests->count();
-                                            @endphp
-                                            <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
-                                            <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
+            .service-btn i{
+                font-size:18px;
+            }
 
-                                        </td>
-                                        <td style="padding: 12px; text-align: right; font-weight: 600;">
-                                            {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
-                                        </td>
-                                        <td style="padding: 12px; text-align: center;">
-                                            <span
-                                                style="display: inline-block; padding: 4px 10px; background: {{ $booking->booking_status === 'Confirmed' ? '#e8f5e9' : ($booking->booking_status === 'Pending' ? '#fff3e0' : '#ffebee') }}; color: {{ $booking->booking_status === 'Confirmed' ? '#2e7d32' : ($booking->booking_status === 'Pending' ? '#e65100' : '#c62828') }}; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
-                                                {{ $booking->booking_status }}
-                                            </span>
-                                        </td>
-                                        <td
-                                            style="padding: 12px; text-align: center; display:flex; justify-content:center; gap: 8px; flex-wrap:wrap;">
-                                            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
-                                                class="btn btn-sm btn-outline-primary"
-                                                style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
-                                            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
-                                                class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">Download
-                                                Voucher</a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            @endif
+            @media (max-width:768px){
 
-            <!-- Activity Bookings Section -->
-            @if($activityBookings->count() > 0)
-                <div class="bookings-section"
-                    style="margin-bottom: 40px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px;">
-                    <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
-                        Activity Bookings</h3>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
-                            <thead>
-                                <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Booking Ref</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Activity</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Variant</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Activity Date</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Participants</th>
-                                    <th style="padding: 12px; text-align: right; font-weight: 600;">Amount</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Status</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($activityBookings as $booking)
-                                    <tr style="border-bottom: 1px solid #e0e0e0; transition: background 0.2s;">
-                                        <td style="padding: 12px; font-weight: 600; color: #ff9500;">
-                                            {{ $booking->booking_reference }}</td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->activity ? $booking->activity->activity_name : 'N/A' }}
-                                        </td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->variant_name ?? 'Standard' }}
-                                        </td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->activity_date->format('d M Y') }}
-                                        </td>
-                                        <td style="padding: 12px; text-align: center;">
-                                            @php
-                                                $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
-                                                $addedCount = $booking->guests->count();
-                                            @endphp
-                                            <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
-                                            <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
-                                            @if($booking->participant_time_slots)
-                                                @php
-                                                    $timeSlotsCount = count(array_filter($booking->participant_time_slots));
-                                                @endphp
-                                                <div style="font-size: 0.8rem; color: #666;">Time slots:
-                                                    {{ $timeSlotsCount }}/{{ $addedCount }}</div>
-                                            @endif
-                                        </td>
-                                        <td style="padding: 12px; text-align: right; font-weight: 600;">
-                                            {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
-                                        </td>
-                                        <td style="padding: 12px; text-align: center;">
-                                            <span
-                                                style="display: inline-block; padding: 4px 10px; background: {{ $booking->booking_status === 'Confirmed' ? '#e8f5e9' : ($booking->booking_status === 'Pending' ? '#fff3e0' : '#ffebee') }}; color: {{ $booking->booking_status === 'Confirmed' ? '#2e7d32' : ($booking->booking_status === 'Pending' ? '#e65100' : '#c62828') }}; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
-                                                {{ $booking->booking_status }}
-                                            </span>
-                                        </td>
-                                        <td
-                                            style="padding: 12px; text-align: center; display:flex; justify-content:center; gap: 8px; flex-wrap:wrap;">
-                                            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
-                                                class="btn btn-sm btn-outline-primary"
-                                                style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
-                                            @if($booking->guests->count() > 0)
-                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}#download-voucher-section"
-                                                    class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">Download
-                                                    Voucher</a>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            @endif
+                .services-actions{
+                    flex-direction:column;
+                    gap:15px;
+                }
 
-            <!-- No Bookings Message -->
-            @if($accommodationBookings->count() === 0 && $activityBookings->count() === 0)
-                <div style="background: #f9f9f9; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 30px;">
-                    <p style="color: #999; font-size: 1.1rem; margin: 0;">No bookings added to this trip yet.</p>
-                </div>
-            @endif
-
-            @if((!isset($guestMode) || !$guestMode) && !in_array($trip->status, ['completed', 'cancelled']))
-                <!-- Add Services Section -->
-                <div class="trip-actions-section"
-                    style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-top: 30px;">
-                    <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
-                        Add More Services</h3>
-                    <p style="color: #666; margin-bottom: 20px;">Expand your trip by adding more accommodations or activities.
-                    </p>
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                        <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display: inline;">
-                            @csrf
-                            <button type="submit" class="btn btn-primary" name="service_type" value="accommodation"
-                                style="padding: 12px 24px; background: #ff9500; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.3s;">
-                                + Add Accommodation
-                            </button>
-                        </form>
-                        <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display: inline;">
-                            @csrf
-                            <button type="submit" class="btn btn-primary" name="service_type" value="activity"
-                                style="padding: 12px 24px; background: #2196F3; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.3s;">
-                                + Add Activity
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            @endif
-
-            <!-- Back to Trips -->
-            <div style="margin-top: 30px; text-align: center;">
-                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.show', ['otp' => $otp]) : route('traveler.trips') }}"
-                    class="btn btn-secondary"
-                    style="padding: 12px 30px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block; transition: background 0.3s;">
-                    &larr; Back to All Trips
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <style>
+                .service-btn{
+                    width:100%;
+                }
+            }
+            
+            
         .wrap {
             /* max-width: 1200px;
             margin: 0 auto;
@@ -1067,4 +1059,8 @@
             }
         }
     </style>
+
+
+
+
 @endsection
