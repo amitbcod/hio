@@ -142,6 +142,7 @@
                     font-size: 22px;
                     margin-bottom: 6px;
                     margin-top: 0;
+                    color:#333;
                 }
 
                 .property-info .type {
@@ -374,7 +375,7 @@
             <style>
 
             .activity-card{
-                max-width:1000px;
+                width:100%;
                 background:#fff;
                 border:1px solid #e5e5e5;
                 border-radius:12px;
@@ -408,9 +409,10 @@
             }
 
             .activity-info h3{
-                font-size:18px;
-                margin-bottom:5px;
-                color:#111827;
+                font-size:22px;
+                margin-bottom:6px;
+                color:#333;
+                margin-top:0;
             }
 
             .activity-info .subtitle{
@@ -606,26 +608,27 @@
                                     </div>
                                 </div>
 
-                                <div class="details">
+                                <div class="booking-details">
 
                                     <div class="detail-item">
                                         <div class="detail-title">
                                             <i class="fa-regular fa-calendar"></i>
                                             Activity Date
+                                            <div class="detail-value">
+                                                19 Jun 2026
+                                            </div>
                                         </div>
-                                        <div class="detail-value">
-                                            19 Jun 2026
-                                        </div>
+                                        
                                     </div>
 
                                     <div class="detail-item">
                                         <div class="detail-title">
                                             <i class="fa-solid fa-users"></i>
                                             Participants
-                                        </div>
-                                        <div class="detail-value">
-                                            1 Booked<br>
-                                            0 Added
+                                            <div class="detail-value">
+                                                1 Booked<br>
+                                                0 Added
+                                            </div>
                                         </div>
                                     </div>
 
@@ -633,15 +636,23 @@
                                         <div class="detail-title">
                                             <i class="fa-regular fa-clock"></i>
                                             Time Slot
-                                        </div>
-                                        <div class="detail-value">
-                                            08:45 - 12:00
-                                        </div>
-                                        <div class="detail-small">
-                                            Duration: 3h 15m
+                                            <div class="detail-value">
+                                                08:45 - 12:00
+                                            </div>
+                                            <div class="detail-small">
+                                                Duration: 3h 15m
+                                            </div>
                                         </div>
                                     </div>
 
+                                    <div class="detail-item">
+                                        <div class="detail-title">
+                                            Amount
+                                            <div class="amount">
+                                                USD 60.00
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                             </div>
@@ -658,15 +669,6 @@
                                 Manage
                                 <i class="fa-solid fa-angle-right"></i>
                             </a>
-
-                            <div class="amount-label">
-                                Amount
-                            </div>
-
-                            <div class="amount">
-                                USD 60.00
-                            </div>
-
                         </div>
 
                     </div>
@@ -677,15 +679,15 @@
                             <div class="timeslot-title">
                                 <i class="fa-solid fa-circle-info"></i>
                                 Time Slot Details
+                                <p>
+                                    <strong>8:45 AM</strong> - Meet & briefing at the beach
+                                </p>
+
+                                <p>
+                                    <strong>12:00 PM</strong> - Activity ends
+                                </p>
                             </div>
-
-                            <p>
-                                <strong>8:45 AM</strong> - Meet & briefing at the beach
-                            </p>
-
-                            <p>
-                                <strong>12:00 PM</strong> - Activity ends
-                            </p>
+                           
                         </div>
 
                         <div class="kayak-icon">
