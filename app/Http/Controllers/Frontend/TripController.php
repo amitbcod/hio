@@ -507,16 +507,13 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
     <tr>
         <td width="49%" style="padding:10px; background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
-    
-                <strong>Booking Ref.</strong><br>
-                {$bookingReferenceSafe}<br>
-        </td>
+                <strong style="display:block;padding:5px">Booking Ref.</strong><br>
+                <span style="display:block;padding:5px">{$bookingReferenceSafe}</span>
+        </td> 
         <td style="width:2%">&nbsp;&nbsp;</td>
         <td width="49%" style="padding:10px; background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
-    
-                <strong>Service Date</strong><br>
-                {$serviceDateSafe}<br>
-    
+                <strong style="display:block;padding:5px">Service Date</strong><br>
+                <span style="display:block;padding:5px">{$serviceDateSafe}</span>
         </td>
     </tr>
 </table>
@@ -537,7 +534,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <table width="100%" cellpadding="0" cellspacing="0">
 <tr>
 
-<td width="50%" style="padding:8px;vertical-align:top;">
+<td width="49%" style="padding:8px;vertical-align:top;">
     <div class="box" style="background:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
         <div class="section-title" style="font-size:12px; font-weight:bold; color:#0b2b51; margin-bottom:8px; border-bottom:1px solid #dce7f5; padding-bottom:5px;">
             Service Details
@@ -591,7 +588,8 @@ body{font-family:helvetica;color:#222; font-size:10px;}
         </table>
     </div>
 </td>
-<td width="50%" style="padding-right:8px;vertical-align:top;">
+<td style="width:2%">&nbsp;&nbsp;</td>
+<td width="49%" style="padding-right:8px;vertical-align:top;">
     <div class="box">
         <div class="section-title">Service Provider / Property</div>
 
