@@ -677,7 +677,7 @@
                     padding: 15px;
                     border-radius: 8px;
                     font-size: 18px;
-                    font-weight: 600;
+                    font-weight: 500;
                     cursor: pointer;
                     border: none;
                 }
@@ -965,7 +965,7 @@
             }
 
             .services-header h2{
-                    font-size: 28px;
+                    font-size: 25px;
                 font-weight: 700;
                 margin-bottom: 0px;
                 margin-top: 0;
