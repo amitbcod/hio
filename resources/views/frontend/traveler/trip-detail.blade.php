@@ -551,7 +551,7 @@
                 }
 
                 .booking-header h2 {
-                    font-size: 28px;
+                    font-size: 25px;
                     font-weight: 700;
                     margin-bottom: 5px;
                     margin-top: 0;
@@ -582,7 +582,7 @@
                 }
 
                 .property-info h3 {
-                    font-size: 22px;
+                    font-size: 20px;
                     margin-bottom: 6px;
                     margin-top: 0;
                     color:#333;
@@ -590,7 +590,7 @@
 
                 .property-info .type {
                     color: #333;
-                    font-size: 22px;
+                    font-size: 20px;
                     margin-bottom: 28px;
                 }
 
@@ -755,7 +755,7 @@
             }
 
             .activity-info h3{
-                font-size:22px;
+                font-size:20px;
                 margin-bottom:6px;
                 color:#333;
                 margin-top:0;
