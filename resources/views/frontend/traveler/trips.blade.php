@@ -60,7 +60,7 @@
                                         <tr>
                                             <td data-label="Trip">
                                                 <div class="trip-name-cell">
-                                                    <strong>Trip #00{{ $trip->id }}</strong>
+                                                    <strong>#{{ $trip->id }}</strong>
                                                     <!-- <span>Trip</span> -->
                                                 </div>
                                             </td>
@@ -79,7 +79,7 @@
                                             <td data-label="Status">
                                                 <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
                                             </td>
-                                            <td data-label="Bookings">{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
+                                            <td data-label="Bookings" style="text-align: center;">{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
                                             <td class="trip-actions-cell">
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>Invoice</a>
@@ -139,7 +139,7 @@
                                         <tr>
                                             <td data-label="Trip">
                                                 <div class="trip-name-cell">
-                                                    <strong>Trip #00{{ $trip->id }}</strong>
+                                                    <strong> #{{ $trip->id }}</strong>
                                                     <!-- <span>Trip</span> -->
                                                 </div>
                                             </td>
@@ -155,10 +155,12 @@
                                                 -
                                                 {{ $trip->end_date ? $trip->end_date->format('d M Y') : 'N/A' }}
                                             </td>
-                                            <td data-label="Status">
+                                            <td data-label="Status" align="center">
                                                 <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
                                             </td>
-                                            <td data-label="Bookings">{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
+                                            <td data-label="Bookings" style="text-align: center;">
+                                                {{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}
+                                            </td>
                                             <td class="trip-actions-cell">
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>Invoice</a>
