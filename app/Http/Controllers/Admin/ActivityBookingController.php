@@ -31,7 +31,7 @@ class ActivityBookingController extends Controller
     {
         if ($redirect = $this->ensureAdmin()) return $redirect;
 
-        $booking = ActivityBooking::with(['activity.operator', 'guests'])
+        $booking = ActivityBooking::with(['activity.operator', 'activity.schedulingTimeSlots', 'guests'])
             ->findOrFail($bookingId);
 
         return view('admin.activity.bookings.show', compact('booking'));

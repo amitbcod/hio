@@ -48,6 +48,24 @@
             </ul>
             @endif
 
+            @if($booking->activity_time_slot_id && optional($booking->activity)->schedulingTimeSlots)
+                @php
+                    $slot = $booking->activity->schedulingTimeSlots->firstWhere('timeslot_id', $booking->activity_time_slot_id);
+                @endphp
+                @if($slot)
+                <hr>
+                <h5>Activity Schedule</h5>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8"><strong>Time Slot:</strong></div>
+                            <div class="col-md-4">{{ $slot->start_time }} - {{ $slot->end_time }} @if($slot->duration) ({{ $slot->duration }}) @endif</div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+            @endif
+
             @if($booking->special_requests)
             <hr>
             <h5>Special Requests</h5>
