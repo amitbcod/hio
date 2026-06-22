@@ -486,6 +486,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <td width="65%" style="vertical-align:top;">
     <div style="padding:16px;text-align:left;min-height:90px;">
         {$companyLogoHtml}
+         <div style="font-size:12px;font-weight:700;color:#0b2b51;margin-top:6px;">Your Local Connection - Mauritius</div>
         <div style="font-size:12px;font-weight:700;color:#0b2b51;margin-top:8px;">{$companyBusinessNameSafe}</div>
         <div style="font-size:10px;color:#6a7b91;margin-top:6px;">{$companyBusinessAddressSafe}</div>
         <div style="font-size:10px;color:#6a7b91;margin-top:4px;">{$companyPhoneSafe} | {$companyEmailSafe}</div>
@@ -619,7 +620,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
     <ul class="check-list">
         <li>Please present this voucher on arrival at the property.</li>
         <li>All travellers must carry a valid passport or national ID.</li>
-        <li>Early check-in / late check-out are subject to availability.</li>
+        <li>Early check-in / late check-out are subject to availability and at a servicee fee.</li>
         <li>All amendments and cancellations are subject to the property's booking conditions.</li>
         <li>For any assistance during your stay, contact the MPO using the details below.</li>
     </ul>
@@ -637,8 +638,11 @@ body{font-family:helvetica;color:#222; font-size:10px;}
         <div style="color:#4a5f7f; line-height:1.5;">
             support Ticket within your account<br>
             Office Hours: 09:00 - 17:30 <br><br>
+            Office : +230 427 10 60<br>
+            WhatsApp: +230 52 51 11 53 <br>
+            (After hours Emergency only)<br><br>
         </div>
-        <div style="margin-top:2px;  border-top:1px solid #dce7f5; color:#4a5f7f; font-size:8px;">
+        <div style="margin-top:2px; color:#4a5f7f; font-size:8px;">
             We are here to help you before, during and after your trip.
         </div>
 </td>
@@ -928,6 +932,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 <td width="50%" style="vertical-align:top; padding-right:8px;">
     <div class="header-box">
         {$companyLogoHtml}
+        <div style="font-size:16px; font-weight:700; color:#0b2b51; margin-top:8px; margin-bottom:2px;">Your Local Connection - Mauritius</div>
         <div style="font-size:16px; font-weight:700; color:#0b2b51; margin-top:8px; margin-bottom:2px;">{$companyBusinessNameSafe}</div>
         <div style="font-size:9px; color:#4a5f7f;">{$companyBusinessAddressSafe}</div>
         <div style="font-size:9px; color:#7a8a9f;  margin-top:4px;">
@@ -1053,6 +1058,9 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
         <div style="color:#4a5f7f; line-height:1.8;">
             support Ticket within your account<br>
             Office Hours: 09:00 - 17:30 <br><br>
+            Office : +230 427 10 60<br>
+            WhatsApp: +230 52 51 11 53 <br>
+           (After hours Emergency only)<br><br>
         </div>
         <div style="margin-top:8px; padding-top:8px; border-top:1px solid #dce7f5; color:#4a5f7f; font-size:8px;">
             We are here to help you before, during and after your trip.
