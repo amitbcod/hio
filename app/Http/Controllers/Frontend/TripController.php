@@ -506,18 +506,14 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <br />
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
     <tr>
-        <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
-            <div style="padding:10px">
+        <td width="49%" style="padding:10px; background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
                 <strong style="display:block;padding:5px">Booking Ref.</strong><br>
                 <span style="display:block;padding:5px">{$bookingReferenceSafe}</span>
-            </div>
         </td> 
         <td style="width:2%">&nbsp;&nbsp;</td>
-        <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
-            <div style="padding:10px">
+        <td width="49%" style="padding:10px; background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
                 <strong style="display:block;padding:5px">Service Date</strong><br>
                 <span style="display:block;padding:5px">{$serviceDateSafe}</span>
-            </div>
         </td>
     </tr>
 </table>
