@@ -883,9 +883,9 @@ HTML;
                     <div style="color:#7a8a9f;">' . $item['notes'] . '</div>
                 </td>
                 <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;">' . $item['qty'] . '</td>
-                <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px;text-align:right;font-weight:600;">USD ' . $rowUnitPrice . '</td>
+                <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;font-weight:600;">' . $rowUnitPrice . '</td>
       
-                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:right;font-weight:600;color:#0b2b51;">USD ' . $rowTotal . '</td>
+                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;font-weight:600;color:#0b2b51;">' . $rowTotal . '</td>
             </tr>';
         }
 
@@ -976,6 +976,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
         <td width="52%" style="padding-left:6px; vertical-align:top;">
             <div class="header-box" style="border:none;">
                 <div class="section-title">ACCOUNT DETAILS</div>
+                    <div style="font-weight:600; color:#0b2b51; font-size:10px; margin-bottom:4px;"></div>
                 <table class="info-table" style="margin-top:6px;">
                     <tr><td class="label">Traveller Account Type:</td><td class="value">Guest Traveller</td></tr>
                     <tr><td class="label">Account ID:</td><td class="value">{$accountId}</td></tr>
@@ -1004,9 +1005,9 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
     <th style="width:18%;">SERVICE DATES</th>
     <th style="width:20%;">DESCRIPTION</th>
      <th style="width:8%;text-align:center;">QTY</th>
-    <th style="width:10%;">UNIT PRICE</th>
+    <th style="width:10%;text-align:center;">UNIT PRICE</th>
     
-    <th style="width:8%;">TOTAL</th>
+    <th style="width:8%;text-align:center;">TOTAL</th>
 </tr>
 </thead>
 <tbody>
