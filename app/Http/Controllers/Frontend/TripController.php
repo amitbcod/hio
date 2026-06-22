@@ -512,7 +512,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
                 {$bookingReferenceSafe}
             </div>
         </td>
-        <td style="width:2%">&nbsp</td>
+        <td style="width:2%">&nbsp;&nbsp;</td>
         <td width="49%" style="padding:10px; background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
             <div class="info-card2">
                 <strong>Service Date</strong><br>
