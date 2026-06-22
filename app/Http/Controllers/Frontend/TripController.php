@@ -506,15 +506,23 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
     <tr>
-        <td width="50%" style="padding:4px;">
-            <div class="info-card">
+        <td width="50%" style="padding:0px;">
+            <div class="info-card" style="border: 1px solid #d7e4f0;
+    border-radius: 10px;
+    background: #f7fafd;
+    padding: 10px;
+    margin-bottom: 8px; margin-right: 10px;">
                 <strong>Booking Ref.</strong><br>
                 {$bookingReferenceSafe}
             </div>
         </td>
 
-        <td width="50%" style="padding:4px;">
-            <div class="info-card">
+        <td width="50%" style="padding:0px;">
+            <div class="info-card" style="border: 1px solid #d7e4f0;
+    border-radius: 10px;
+    background: #f7fafd;
+    padding: 10px;
+    margin-bottom: 8px; margin-left: 10px;">
                 <strong>Service Date</strong><br>
                 {$serviceDateSafe}
             </div>
