@@ -245,12 +245,9 @@
                         <div class="guest-item-info">
                             <span class="guest-item-name" style="font-weight: 500; color: #333; display: block;">{{ trim($guest->first_name . ' ' . ($guest->last_name ?? '')) }}</span>
                             <span class="guest-item-age" style="font-size: 12px; color: #666; display: block;">{{ $guest->nationality ?? 'Unknown' }} · {{ $guest->dob ? \Carbon\Carbon::parse($guest->dob)->format('d/m/Y') : 'No DOB' }}</span>
-                            @if($booking instanceof \App\Models\ActivityBooking && isset($booking->participant_time_slots) && !empty($booking->participant_time_slots))
+                            @if($booking instanceof \App\Models\ActivityBooking && isset($booking->activity_time_slot_id) && !empty($booking->activity_time_slot_id))
                                 @php
-                                    // Since timeslots are now the same for all participants, show the first one
-                                    $participantTimeSlots = $booking->participant_time_slots;
-                                    $timeSlotId = reset($participantTimeSlots);
-                                    $timeSlot = $activityTimeSlots->where('timeslot_id', $timeSlotId)->first();
+                                    $timeSlot = $activityTimeSlots->where('timeslot_id', $booking->activity_time_slot_id)->first();
                                 @endphp
                                 @if($timeSlot)
                                     <span class="guest-item-timeslot" style="font-size: 12px; color: #007bff; display: block;">Time Slot: {{ $timeSlot->start_time }} - {{ $timeSlot->end_time }}</span>
@@ -262,17 +259,9 @@
                                 <i class="fa-solid fa-pencil"></i> Edit
                             </button> -->
                             @if ($booking instanceof \App\Models\ActivityBooking && isset($guest->id) && $canDownload)
-                                @php
-                                    // Timeslots are now set at booking level, so check if booking has any time slots
-                                    $hasTimeSlot = isset($booking->participant_time_slots) && !empty($booking->participant_time_slots);
-                                @endphp
-                                @if($hasTimeSlot)
-                                    <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) }}" target="_blank" style="font-size: 14px; color: #007bff; text-decoration: none; display: inline-flex; align-items: center;">
-                                        <i class="fa-solid fa-download"></i> Download Voucher
-                                    </a>
-                                @else
-                                    <span style="font-size: 12px; color: #dc3545;">Time slot required for voucher</span>
-                                @endif
+                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) }}" target="_blank" style="font-size: 14px; color: #007bff; text-decoration: none; display: inline-flex; align-items: center;">
+                                    <i class="fa-solid fa-download"></i> Download Voucher
+                                </a>
                             @endif
                             <button type="button" class="btn-remove-guest" data-index="{{ $index }}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #dc3545; padding: 0;">
                                 <i class="fa-solid fa-trash"></i> Delete

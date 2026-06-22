@@ -134,6 +134,17 @@
                                     <strong>Total:</strong> {{ $booking->adults + $booking->children + ($booking->infants ?? 0) }}
                                 </div>
                             </div>
+                            @if($booking->activity_time_slot_id && optional($booking->activity)->schedulingTimeSlots)
+                                @php
+                                    $slot = $booking->activity->schedulingTimeSlots->firstWhere('timeslot_id', $booking->activity_time_slot_id);
+                                @endphp
+                                @if($slot)
+                                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                                    <strong>Time Slot:</strong><br>
+                                    {{ $slot->start_time }} - {{ $slot->end_time }} @if($slot->duration) ({{ $slot->duration }}) @endif
+                                </div>
+                                @endif
+                            @endif
                         </div>
                     </div>
 

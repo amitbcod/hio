@@ -1085,17 +1085,6 @@ class BookingController extends Controller
                     ]);
                 }
             } elseif ($item['type'] === 'activity') {
-                // Build participant time slots for this activity booking
-                $itemTimeSlotsMap = [];
-                if (isset($participantTimeSlots[$item['cart_key']])) {
-                    $itemTimeSlotsMap = $participantTimeSlots[$item['cart_key']];
-                } elseif (!empty($item['activity_time_slot_id'])) {
-                    $crewCount = max(1, ($item['adults'] ?? 0) + ($item['children'] ?? 0) + ($item['infants'] ?? 0));
-                    for ($guestNumber = 1; $guestNumber <= $crewCount; $guestNumber++) {
-                        $itemTimeSlotsMap[$guestNumber] = $item['activity_time_slot_id'];
-                    }
-                }
-
                 $booking = ActivityBooking::create([
                     'booking_reference' => $ref,
                     'activity_id'       => $item['activity_id'],
@@ -1123,7 +1112,7 @@ class BookingController extends Controller
                     'payment_method'    => $paymentMethod === 'againgency' ? 'Againgency' : 'COD',
                     'source_channel'    => 'Direct',
                     'special_requests'  => $special,
-                    'participant_time_slots' => !empty($itemTimeSlotsMap) ? $itemTimeSlotsMap : null,
+                    'activity_time_slot_id' => $item['activity_time_slot_id'] ?? null,
                     'booked_at'         => now(),
                     'trip_id'           => $tripId,
                     'is_guest'          => $isGuestCheckout ? 1 : 0,
@@ -1739,7 +1728,7 @@ class BookingController extends Controller
                            ActivityBooking::where('trip_id', $tripId)->count();
 
             $sequenceNumber = $existingCount + 1;
-            $tripTag = '100' . $tripId;
+            $tripTag = $tripId;
 
             $baseRef = sprintf('%s-%s-%s-%d', $prefix, $tripTag, $datePart, $sequenceNumber);
 

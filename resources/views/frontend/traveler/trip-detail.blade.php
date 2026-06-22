@@ -242,16 +242,12 @@
                                                     <span>Time Slot
                                                         <div class="detail-value">
                                                             @php
-                                                                $participantTimeSlots = $booking->participant_time_slots ?? [];
+                                                                $slot = $booking->activity_time_slot_id && $booking->activity && $booking->activity->schedulingTimeSlots 
+                                                                    ? $booking->activity->schedulingTimeSlots->firstWhere('timeslot_id', $booking->activity_time_slot_id) 
+                                                                    : null;
                                                             @endphp
-                                                            @if(!empty($participantTimeSlots) && $booking->guests && $booking->guests->count() > 0)
-                                                                @foreach($booking->guests as $gIndex => $guest)
-                                                                    @php
-                                                                        $slotId = $participantTimeSlots[$guest->guest_number ?? ($gIndex + 1)] ?? null;
-                                                                        $slot = $booking->activity && $booking->activity->schedulingTimeSlots ? $booking->activity->schedulingTimeSlots->where('timeslot_id', $slotId)->first() : null;
-                                                                    @endphp
-                                                                    <div style="margin-bottom:6px;">{{ $guest->first_name }}: {{ $slot ? ($slot->start_time . ' - ' . $slot->end_time) : '-' }}</div>
-                                                                @endforeach
+                                                            @if($slot)
+                                                                {{ $slot->start_time }} - {{ $slot->end_time }}
                                                             @else
                                                                 {{ $booking->time_slot ?? ($booking->start_time && $booking->end_time ? $booking->start_time . ' - ' . $booking->end_time : '-') }}
                                                             @endif
@@ -457,13 +453,6 @@
                                             @endphp
                                             <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
                                             <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
-                                            @if($booking->participant_time_slots)
-                                                @php
-                                                    $timeSlotsCount = count(array_filter($booking->participant_time_slots));
-                                                @endphp
-                                                <div style="font-size: 0.8rem; color: #666;">Time slots:
-                                                    {{ $timeSlotsCount }}/{{ $addedCount }}</div>
-                                            @endif
                                         </td>
                                         <td style="padding: 12px; text-align: right; font-weight: 600;">
                                             {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}

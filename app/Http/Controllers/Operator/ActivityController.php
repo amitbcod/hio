@@ -2576,10 +2576,10 @@ class ActivityController extends Controller
         $activityIds = \App\Models\Activity::where('operator_id', $operator->id)
             ->pluck('id');
 
-        // Get the booking with relationships
+        // Get the booking with relationships (include activity timeslots)
         $booking = \App\Models\ActivityBooking::whereIn('activity_id', $activityIds)
             ->where('id', $bookingId)
-            ->with(['activity', 'guests'])
+            ->with(['activity.schedulingTimeSlots', 'guests'])
             ->firstOrFail();
 
         return view('operator.activity.booking_details', compact('booking'));
