@@ -539,10 +539,8 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
         <table width="100%" class="info-row" cellpadding="4" cellspacing="0">
             <tr>
-                <td>
-                    <div class="section-title2" style="font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5; ">
+                <td style="font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">
                         Service Details
-                    </div>
                 </td>
             </tr>
             <tr>
