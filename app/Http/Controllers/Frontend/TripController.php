@@ -537,12 +537,12 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <td width="49%" style="padding:8px;vertical-align:top;">
     <div class="box" style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
 
-        <table width="100%" class="info-row" cellpadding="2" cellspacing="0">
+        <table width="100%" class="info-row" cellpadding="0" cellspacing="0">
             <tr>
-                <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">Service Details</td>
+                  <td><strong style="color:#0b2b51;">Service Details</strong></td>
             </tr>
             <tr>
-                <td class="label" width="40%"><strong>Property Name</strong></td>
+                <td class="label" width="40%">Property Name</td>
                 <td><strong style="color:#0b2b51;">{$serviceNameSafe}</strong></td>
             </tr>
 
