@@ -539,9 +539,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
         <table width="100%" class="info-row" cellpadding="2" cellspacing="0">
             <tr>
-                <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">
-                        Service Details
-                </td>
+                <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">Service Details</td>
             </tr>
             <tr>
                 <td class="label" width="40%"><strong>Property Name</strong></td>
@@ -596,9 +594,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
         <table width="100%" class="info-row" cellpadding="2" cellspacing="0">
             <tr>
-                <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">
-                        Service Provider / Property
-                </td>
+                <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">Service Provider / Property</td>
             </tr>
             <tr>
                 <td>{$providerNameSafe}</td>
