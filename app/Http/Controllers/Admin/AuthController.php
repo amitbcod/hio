@@ -22,10 +22,12 @@ class AuthController extends Controller
 
         $admin = AdminUser::where('email', $request->email)->first();
         if ($admin && \Illuminate\Support\Facades\Hash::check($request->password, $admin->password_hash)) {
+            session()->regenerate();
             session(['admin_id' => $admin->id]);
-            return redirect()->route('admin.dashboard');
+            return redirect()->intended(route('admin.dashboard'));
         }
-        return back()->withErrors(['email' => 'Invalid credentials']);
+
+        return back()->withErrors(['email' => 'Invalid credentials'])->withInput();
     }
 
     public function logout()

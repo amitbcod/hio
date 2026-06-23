@@ -15,9 +15,22 @@
     <h3 class="mt-0 text-center">Admin Login</h3>
     <form method="POST" action="{{ route('admin.login') }}">
         @csrf
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @elseif(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
         <div class="mb-3">
             <label>Email</label>
-            <input type="email" name="email" class="form-control" required>
+            <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
         </div>
         <div class="mb-3">
             <label>Password</label>
