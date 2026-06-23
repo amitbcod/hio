@@ -535,7 +535,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <tr>
 
 <td width="49%" style="padding:8px;vertical-align:top;">
-    <div class="box" style="background:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
+    <div class="box" style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
         <div class="section-title" style="font-size:12px; font-weight:bold; color:#0b2b51; margin-bottom:8px; border-bottom:1px solid #dce7f5; padding-bottom:5px;">
             Service Details
         </div>
