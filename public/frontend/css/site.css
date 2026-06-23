@@ -2210,7 +2210,9 @@ label.saved-guest-checkbox {
 .contact-footer li {
     display: flex;
     gap: 5px;
-    align-items: center;
+    align-items: baseline;
+    line-height: normal;
+    margin-bottom: 10px;
 }
 
 .contact-footer li a {
