@@ -598,7 +598,6 @@ body{font-family:helvetica;color:#222; font-size:10px;}
             <tr>
                 <td style="font-size:15px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">
                         Service Provider / Property
-                    </div>
                 </td>
             </tr>
             <tr>
