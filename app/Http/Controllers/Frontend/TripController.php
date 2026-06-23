@@ -462,7 +462,7 @@ class TripController extends Controller
         $html = <<<HTML
 <style>
 body{font-family:helvetica;color:#222; font-size:10px;}
-.section-title{font-size:13px;color:#0b2b51;margin:0 0 8px 0;font-weight:700;}
+.section-title{font-size:13px;color:#0b2b51;margin:0 0 0px 0;font-weight:700;}
 .label{font-size:8px;color:#5f6d7a;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 4px 0;}
 .value{font-size:11px;font-weight:700;margin:0;}
 .info-card{border:1px solid #d7e4f0;border-radius:10px;background:#f7fafd;padding:10px;margin-bottom:8px;}
@@ -539,7 +539,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
         <table width="100%" class="info-row" cellpadding="4" cellspacing="0">
             <tr>
-                <td style="font-size:15px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">
+                <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">
                         Service Details
                 </td>
             </tr>
@@ -596,7 +596,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
         <table width="100%" class="info-row" cellpadding="4" cellspacing="0">
             <tr>
-                <td style="font-size:15px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">
+                <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">
                         Service Provider / Property
                 </td>
             </tr>
@@ -921,7 +921,7 @@ if ($discountAmount > 0) {
 <style>
 body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 .header-box { border:none; border-radius:8px; padding:12px; background:#f0f5ff; margin-bottom:12px; }
-.section-title { font-size:11px; font-weight:700; color:#0b2b51; margin:8px 0 6px 0; }
+.section-title { font-size:11px; font-weight:700; color:#0b2b51; margin:5px 0 0 0; }
 .info-table { width:100%; border-collapse:collapse; margin-bottom:8px; }
 .info-table td { padding:4px; border-bottom:1px solid #dce7f5; font-size:9px; }
 .info-table .label { font-weight:600; color:#0b2b51; width:40%; }
