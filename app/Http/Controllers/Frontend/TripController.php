@@ -504,7 +504,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <h1 style="font-size:22px;margin:12px 0 4px 0;color:#0b2b51;">{$voucherTitle}</h1>
 <div style="font-size:10px;color:#5f6d7a;margin-bottom:16px;">Voucher No: {$bookingReferenceSafe} | Issue Date: {$issueDateSafe} |  Status: <span style="color:#28a745;font-weight:bold;">Confirmed</span></div>
 <br />
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+<table width="100%" cellpadding="3" cellspacing="0" style="margin-bottom:16px;">
     <tr>
         <td width="49%" style="padding:10px; background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
                 <strong style="display:block;padding:5px">Booking Ref.</strong><br>
