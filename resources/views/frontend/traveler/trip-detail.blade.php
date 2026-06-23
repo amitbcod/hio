@@ -675,6 +675,7 @@
                     background: #fff;
                     border: 1px solid #ddd;
                     color: #e69b18;
+                    text-align: center;
                 }
 
                 .btn-download {
