@@ -539,7 +539,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
         <table width="100%" class="info-row" cellpadding="0" cellspacing="0">
             <tr>
-                  <td><strong style="color:#0b2b51;">Service Details</strong></td>
+                  <td><strong style="color:#0b2b51;">Service Details -</strong></td>
             </tr>
             <tr>
                 <td class="label" width="40%">Property Name</td>
