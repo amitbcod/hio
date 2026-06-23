@@ -536,11 +536,15 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
 <td width="49%" style="padding:8px;vertical-align:top;">
     <div class="box" style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
-        <div class="section-title" style="font-size:12px; font-weight:bold; color:#0b2b51; margin-bottom:8px; border-bottom:1px solid #dce7f5; padding-bottom:5px;">
-            Service Details
-        </div>
 
         <table width="100%" class="info-row" cellpadding="4" cellspacing="0">
+            <tr>
+                <td>
+                    <div class="section-title" style="font-size:12px; font-weight:bold; color:#0b2b51; margin-bottom:8px; border-bottom:1px solid #dce7f5; padding-bottom:5px;">
+                        Service Details
+                    </div>
+                </td>
+            </tr>
             <tr>
                 <td class="label" width="40%"><strong>Property Name</strong></td>
                 <td><strong style="color:#0b2b51;">{$serviceNameSafe}</strong></td>
@@ -591,11 +595,15 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <td style="width:2%">&nbsp;&nbsp;</td>
 <td width="49%" style="padding-right:8px;vertical-align:top;">
     <div class="box" style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
-        <div class="section-title" style="font-size:12px; font-weight:bold; color:#0b2b51; margin-bottom:8px; border-bottom:1px solid #dce7f5; padding-bottom:5px;">
-            Service Provider / Property
-        </div>
 
         <table width="100%" class="info-row" cellpadding="4" cellspacing="0">
+            <tr>
+                <td>
+                    <div class="section-title" style="font-size:12px; font-weight:bold; color:#0b2b51; margin-bottom:8px; border-bottom:1px solid #dce7f5; padding-bottom:5px;">
+                        Service Provider / Property
+                    </div>
+                </td>
+            </tr>
             <tr>
                 <td>{$providerNameSafe}</td>
             </tr>
