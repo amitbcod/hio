@@ -225,10 +225,10 @@
                                 <i class="fa-solid fa-arrow-right"></i>
                             </button>
 
-                            <p class="summary-note">
+                            <!-- <p class="summary-note">
                                 <i class="fa-solid fa-shield-halved"></i>
                                 Cash on Delivery — Pay when your booking is confirmed.
-                            </p>
+                            </p> -->
                         </div>
                     </aside>
 

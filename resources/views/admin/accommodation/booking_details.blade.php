@@ -235,8 +235,14 @@
                                 </div>
                                 <div class="col-md-6">
                                     <strong>Payment Status:</strong><br>
-                                    <span class="badge" style="background: #17a2b8;">Pending Payment</span>
-                                    <br><small style="color: #666;">Payment processing details not available</small>
+                                    @php
+                                        $bookingStatus = $booking->booking_status ?? 'Pending';
+                                        $statusColor = $bookingStatus === 'Confirmed' ? '#28a745' : ($bookingStatus === 'Cancelled' ? '#dc3545' : '#17a2b8');
+                                    @endphp
+                                    <span class="badge" style="background: {{ $statusColor }};">{{ $bookingStatus }}</span>
+                                    <br><small style="color: #666;">
+                                        {{ $bookingStatus === 'Confirmed' ? 'Payment completed successfully' : ($bookingStatus === 'Cancelled' ? 'Booking has been cancelled' : 'Payment processing details not available') }}
+                                    </small>
                                 </div>
                             </div>
                         </div>

@@ -712,8 +712,7 @@
 
                         <p class="summary-note">
                             <i class="fa-solid fa-shield-halved"></i>
-                            Secure booking · No advance payment
-                        </p>
+                            Secure booking                        </p>
 
                         <a href="{{ url('/') }}" class="back-to-cart">
                             <i class="fa-solid fa-arrow-left"></i> Back to search
