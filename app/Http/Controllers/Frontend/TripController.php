@@ -631,8 +631,8 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 </table>
 
 <div class="box">
-    <div class="section-title">Important Information / Conditions</div>
-    <ul class="check-list" style="margin-top:-10px">
+    <div class="section-title" style="margin-bottom:-10px">Important Information / Conditions</div>
+    <ul class="check-list">
         <li>Please present this voucher on arrival at the property.</li>
         <li>All travellers must carry a valid passport or national ID.</li>
         <li>Early check-in / late check-out are subject to availability and at a servicee fee.</li>
