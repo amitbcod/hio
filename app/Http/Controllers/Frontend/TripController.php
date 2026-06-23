@@ -675,7 +675,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
     </td>
 </tr>
 <tr>
-    <td style="margin-top:2px; color:#4a5f7f; font-size:8px;">
+    <td style="color:#4a5f7f; font-size:8px;">
             We are here to help you before, during and after your trip.
     </td>
 </tr>
@@ -684,7 +684,8 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px; padding-top:10px; border-top:1px solid #dce7f5;">
 <tr>
 <td width="100%" style="text-align:center; font-size:8px; color:#7a8a9f; padding:6px 0;">
-    <br><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
+    <br><br>
+    <strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
     Your Local Connection in Mauritius<br>
     <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span>
 </td>
