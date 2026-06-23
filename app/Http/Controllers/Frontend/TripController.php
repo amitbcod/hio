@@ -472,7 +472,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 .small-text{font-size:9px;color:#5f6d7a;line-height:1.5;}
 .footer-box{border:1px solid #d7e4f0;background:#eef4fb;border-radius:12px;padding:12px;margin-top:14px;}
 .badge{display:inline-block;padding:5px 10px;border-radius:12px;font-size:9px;color:#1f3f61;background:#dceaf8;margin-right:6px;}
-.check-list{margin:0;padding-left:18px;color:#33475b;line-height:1.6;}
+.check-list{margin:0;padding-left:10px;color:#33475b;line-height:1.6;}
 .check-list li{margin-bottom:6px;}
 .info-row td{padding:4px;vertical-align:top;}
 .table-grid{width:100%;border-collapse:collapse;margin-top:8px;}
@@ -632,7 +632,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
 <div class="box">
     <div class="section-title">Important Information / Conditions</div>
-    <ul class="check-list">
+    <ul class="check-list" style="margin-top:-10px">
         <li>Please present this voucher on arrival at the property.</li>
         <li>All travellers must carry a valid passport or national ID.</li>
         <li>Early check-in / late check-out are subject to availability and at a servicee fee.</li>
