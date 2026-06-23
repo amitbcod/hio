@@ -537,7 +537,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <td width="49%" style="padding:8px;vertical-align:top;">
     <div class="box" style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
 
-        <table width="100%" class="info-row" cellpadding="4" cellspacing="0">
+        <table width="100%" class="info-row" cellpadding="2" cellspacing="0">
             <tr>
                 <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">
                         Service Details
@@ -594,7 +594,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <td width="49%" style="padding-right:8px;vertical-align:top;">
     <div class="box" style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
 
-        <table width="100%" class="info-row" cellpadding="4" cellspacing="0">
+        <table width="100%" class="info-row" cellpadding="2" cellspacing="0">
             <tr>
                 <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">
                         Service Provider / Property
@@ -632,7 +632,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
 
 <div class="box">
-<table>
+<table width="100%" cellpadding="2" cellspacing="0">
     <tr>    
         <td>
             <div class="section-title">Important Information / Conditions</div>
