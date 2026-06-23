@@ -590,23 +590,37 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 </td>
 <td style="width:2%">&nbsp;&nbsp;</td>
 <td width="49%" style="padding-right:8px;vertical-align:top;">
-    <div class="box">
-        <div class="section-title">Service Provider / Property</div>
-
-        <div class="small-text" style="font-size:8px;">
-            {$providerNameSafe}<br>
-            {$providerAddressSafe}
+    <div class="box" style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
+        <div class="section-title" style="font-size:12px; font-weight:bold; color:#0b2b51; margin-bottom:8px; border-bottom:1px solid #dce7f5; padding-bottom:5px;">
+            Service Provider / Property
         </div>
 
-        <div style="margin-top:10px; font-size:8px;">
-            Emergency Contact (24/7)<br>
-            {$emergencyContactSafe}
-        </div>
-
-        <div style="margin-top:6px; font-size:8px;">
-            Reception / Service Contact<br>
-            {$receptionContactSafe}
-        </div>
+        <table width="100%" class="info-row" cellpadding="4" cellspacing="0">
+            <tr>
+                <td>{$providerNameSafe}</td>
+            </tr>
+            <tr>
+                <td>{$providerAddressSafe}</td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact (24/7)</td>
+            </tr>
+            <tr>
+                <td>{$emergencyContactSafe}</td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td>Reception / Service Contact</td>
+            </tr>
+            <tr>
+                <td>{$receptionContactSafe}</td>
+            </tr>
+        </table>
     </div>
 </td>
 </tr>
