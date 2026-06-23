@@ -630,19 +630,33 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 </tr>
 </table>
 
+
 <div class="box">
-    <div class="section-title" style="margin-bottom:-10px">Important Information / Conditions</div>
-    <ul class="check-list">
-        <li>Please present this voucher on arrival at the property.</li>
-        <li>All travellers must carry a valid passport or national ID.</li>
-        <li>Early check-in / late check-out are subject to availability and at a servicee fee.</li>
-        <li>All amendments and cancellations are subject to the property's booking conditions.</li>
-        <li>For any assistance during your stay, contact the MPO using the details below.</li>
-    </ul>
-   <br>
-        <strong>Your Local Connection</strong> – We are here to support you. For enquiries or assistance during your trip, please contact us.
-    
+<table>
+    <tr>    
+        <td>
+            <div class="section-title">Important Information / Conditions</div>
+        </td>
+    </tr>
+    <tr>
+        <td>
+        <ul class="check-list">
+            <li>Please present this voucher on arrival at the property.</li>
+            <li>All travellers must carry a valid passport or national ID.</li>
+            <li>Early check-in / late check-out are subject to availability and at a servicee fee.</li>
+            <li>All amendments and cancellations are subject to the property's booking conditions.</li>
+            <li>For any assistance during your stay, contact the MPO using the details below.</li>
+        </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <strong>Your Local Connection</strong> – We are here to support you. For enquiries or assistance during your trip, please contact us.
+        </td>
+    </tr>
+</table>
 </div>
+
 
 <div class="footer-box">
 <table width="100%" cellpadding="0" cellspacing="0">
