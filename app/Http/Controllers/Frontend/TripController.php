@@ -632,7 +632,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
 
 <div class="box">
-<table width="100%" cellpadding="2" cellspacing="0">
+<table width="100%" cellpadding="3" cellspacing="0">
     <tr>    
         <td>
             <div class="section-title">Important Information / Conditions</div>
@@ -659,11 +659,14 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
 
 <div class="footer-box">
-<table width="100%" cellpadding="0" cellspacing="0">
+<table width="100%" cellpadding="3" cellspacing="0">
 <tr>
-<td width="60%" style="vertical-align:top;">
-    <div style="font-size:13px;font-weight:700;color:#0b2b51;">MPO Support and Emergency</div>
-   
+    <td>
+        <div class="section-title">MPO Support and Emergency</div>
+    </td>
+</tr>
+<tr>
+    <td>
         <div style="color:#4a5f7f; line-height:1.5;">
             support Ticket within your account<br>
             Office Hours: 09:00 - 17:30 <br><br>
@@ -671,13 +674,17 @@ body{font-family:helvetica;color:#222; font-size:10px;}
             WhatsApp: +230 52 51 11 53 <br>
             (After hours Emergency only)<br><br>
         </div>
+    </td>
+</tr>
+<tr>
+    <td>
         <div style="margin-top:2px; color:#4a5f7f; font-size:8px;">
             We are here to help you before, during and after your trip.
         </div>
-</td>
-
+    </td>
 </tr>
 </table>
+
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px; padding-top:10px; border-top:1px solid #dce7f5;">
 <tr>
 <td width="100%" style="text-align:center; font-size:8px; color:#7a8a9f; padding:6px 0;">
