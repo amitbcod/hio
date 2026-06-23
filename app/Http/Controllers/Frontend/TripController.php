@@ -666,14 +666,12 @@ body{font-family:helvetica;color:#222; font-size:10px;}
     </td>
 </tr>
 <tr>
-    <td>
-        <div style="color:#4a5f7f; line-height:1.5;">
+    <td style="color:#4a5f7f; line-height:1.5;">
             support Ticket within your account<br>
             Office Hours: 09:00 - 17:30 <br><br>
             Office : +230 427 10 60<br>
             WhatsApp: +230 52 51 11 53 <br>
             (After hours Emergency only)<br><br>
-        </div>
     </td>
 </tr>
 <tr>
