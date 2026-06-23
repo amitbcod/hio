@@ -507,13 +507,27 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <table width="100%" cellpadding="3" cellspacing="0" style="margin-bottom:16px;">
     <tr>
         <td width="49%" style="padding:10px; background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
-                <strong style="display:block;padding:5px">Booking Ref.</strong><br>
-                <span style="display:block;padding:5px">{$bookingReferenceSafe}</span>
+                <table width="100%" cellpadding="3" cellspacing="0">
+                    <tr>
+                        <td><strong style="display:block;padding:5px">Booking Ref.</strong></td>
+                    </tr>
+                    <tr>
+                        <td><span style="display:block;padding:5px">{$bookingReferenceSafe}</span></td>
+                    </tr>
+                </table>
         </td> 
         <td style="width:2%">&nbsp;&nbsp;</td>
         <td width="49%" style="padding:10px; background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
-                <strong style="display:block;padding:5px">Service Date</strong><br>
-                <span style="display:block;padding:5px">{$serviceDateSafe}</span>
+            <table width="100%" cellpadding="3" cellspacing="0">
+                    <tr>
+                        <td><strong style="display:block;padding:5px">Service Date</strong></td>
+                    </tr>
+                    <tr>
+                        <td><span style="display:block;padding:5px">{$serviceDateSafe}</span></td>
+                    </tr>
+                </table>
+                
+                
         </td>
     </tr>
 </table>
