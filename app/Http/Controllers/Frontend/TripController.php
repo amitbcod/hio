@@ -601,20 +601,22 @@ body{font-family:helvetica;color:#222; font-size:10px;}
                 </td>
             </tr>
             <tr>
-                <td>
-                    {$providerNameSafe}
-                </td>
+                <td>{$providerNameSafe}</td>
             </tr>
             <tr>
-                <td>
-                    {$providerAddressSafe}
-                </td>
+                <td>{$providerAddressSafe}</td>
+            </tr>
+            <tr>
+                <td></td>
             </tr>
             <tr>
                 <td style="color:#0b2b51;">Emergency Contact (24/7)</td>
             </tr>
             <tr>
                 <td>{$emergencyContactSafe}</td>
+            </tr>
+            <tr>
+                <td></td>
             </tr>
             <tr>
                 <td style="color:#0b2b51;">Reception / Service Contact</td>
