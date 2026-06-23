@@ -539,7 +539,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
         <table width="100%" class="info-row" cellpadding="4" cellspacing="0">
             <tr>
-                <td style="font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">
+                <td style="font-size:15px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">
                         Service Details
                 </td>
             </tr>
@@ -596,8 +596,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 
         <table width="100%" class="info-row" cellpadding="4" cellspacing="0">
             <tr>
-                <td>
-                    <div class="section-title" style="font-size:12px; font-weight:bold; color:#0b2b51; margin-bottom:8px; border-bottom:1px solid #dce7f5; padding-bottom:5px;">
+                <td style="font-size:15px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">
                         Service Provider / Property
                     </div>
                 </td>

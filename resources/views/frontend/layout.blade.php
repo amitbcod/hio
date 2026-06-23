@@ -445,8 +445,8 @@
                 <div>
                     <h4>Contacts</h4>
                     <ul class="contact-footer">
-                        <li><i class="fa-solid fa-location-dot"></i><span>123, lorem ipsum, city, conutry 200002</span></li>
-                        <li><a href="#"><i class="fa-solid fa-phone"></i><span>+00 1234567890</span></a></li>
+                        <li><i class="fa-solid fa-location-dot"></i><span>14, Sodnac Avenue Quatre Bornes, Mauritius</span></li>
+                        <li><a href="tel:+23052511153"><i class="fa-solid fa-phone"></i><span>+230 52511153</span></a></li>
                         <li><a href="mailto:info@holidays.io"><i class="fa-solid fa-envelope"></i><span>info@holidays.io</span></a></li>
                     </ul>
                 </div>
