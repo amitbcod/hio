@@ -993,6 +993,11 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 .footer-row { display:flex; gap:20px; font-size:8px; color:#7a8a9f; }
 </style>
 
+<table width="100%" border="0" style="color:#0b2b51;">
+  <tbody>
+    <tr>
+      <td valign="top">
+
 <table width="100%" border="0">
         <tbody>
           <tr>
@@ -1031,7 +1036,10 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
           </tr>
         </tbody>
       </table>
-
+ </td>
+    </tr>
+  </tbody>
+</table>
 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
 <tr>
