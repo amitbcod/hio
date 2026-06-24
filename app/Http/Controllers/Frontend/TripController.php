@@ -460,33 +460,39 @@ class TripController extends Controller
         $infoLabelDaysNights = e($isActivity ? 'Number of Days' : 'Number of Nights');
         $infoLabelType = e($isActivity ? 'Activity Type' : 'Room Type');
         $html = <<<HTML
-<table width="100%" border="0">
+
+<table width="100%" border="0" style="color:#0b2b51;">
   <tbody>
     <tr>
       <td valign="top"><table width="100%" border="0">
         <tbody>
           <tr>
-            <td><table width="100%" border="0" cellpadding="0" cellspacing="0">
+            <td width="68%" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
               <tbody>
                 <tr>
                   <td>{$companyLogoHtml}</td>
                 </tr>
                 <tr>
-                  <td>Your Local Connection - Mauritius</td>
+                  <td style="font-size:12px">Your Local Connection - Mauritius</td>
                 </tr>
                 <tr>
-                  <td>{$companyBusinessNameSafe}</td>
+                  <td style="color:#6a7b91;font-size:10px">{$companyBusinessNameSafe}</td>
+                </tr>
+               <tr>
+                  <td>&nbsp;</td>
                 </tr>
                 <tr>
-                  <td>{$companyBusinessAddressSafe}<br>
-                    {$companyPhoneSafe} | {$companyEmailSafe}</td>
+                  <td style="color:#6a7b91;font-size:10px">{$companyBusinessAddressSafe}</td>
+                </tr>
+                <tr>
+                  <td style="color:#6a7b91;font-size:10px">{$companyPhoneSafe} | {$companyEmailSafe}</td>
                 </tr>
               </tbody>
             </table></td>
-            <td valign="top"><table width="100%" border="0">
+            <td width="32%" valign="top"><table width="100%" border="0">
               <tbody>
                 <tr>
-                  <td style="font-size:12px">Powered by</td>
+                  <td style="font-size:8px;color:#5f6d7a;">Powered by</td>
                 </tr>
                 <tr>
                   <td>{$poweredLogoHtml}</td>
