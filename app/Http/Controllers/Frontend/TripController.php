@@ -1064,7 +1064,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
+      <td><table width="100%" border="0" cellpadding="0" cellspacing="0">
         <tbody>
           <tr>
             <td><span class="section-title">BILL TO</span></td>
@@ -1075,7 +1075,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
             <td>&nbsp;</td>
           </tr>
           <tr>
-            <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0">
+            <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
                 <td class="label">Address:</td>
                 <td class="value">{$travelerAddress}</td>
@@ -1089,7 +1089,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
                 <td class="value">{$travelerEmail}</td>
               </tr>
             </table></td>
-            <td valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
+            <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
                 <td class="label">Traveller Account Type:</td>
                 <td class="value">Guest Traveller</td>
@@ -1120,28 +1120,27 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
     <tr>
       <td align="center">&nbsp;</td>
     </tr>
+    <tr>
+      <td><table width="100%" border="0" cellpadding="0" cellspacing="0" class="service-table">
+    <thead>
+    <tr>
+        <th style="width:22%;">SERVICE</th>
+        <th style="width:18%;">SERVICE DATES</th>
+        <th style="width:20%;">DESCRIPTION</th>
+        <th style="width:8%;text-align:center;">QTY</th>
+        <th style="width:10%;text-align:center;">UNIT PRICE</th>
+        <th style="width:8%;text-align:center;">TOTAL</th>
+    </tr>
+    </thead>
+    <tbody>
+    {$serviceRows}
+    </tbody>
+    </table></td>
+        </tr>
 
   </tbody>
 </table>
 
-
-<table class="service-table">
-<thead>
-<tr>
-  
-    <th style="width:22%;">SERVICE</th>
-    <th style="width:18%;">SERVICE DATES</th>
-    <th style="width:20%;">DESCRIPTION</th>
-     <th style="width:8%;text-align:center;">QTY</th>
-    <th style="width:10%;text-align:center;">UNIT PRICE</th>
-    
-    <th style="width:8%;text-align:center;">TOTAL</th>
-</tr>
-</thead>
-<tbody>
-{$serviceRows}
-</tbody>
-</table>
 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
 <tr>
