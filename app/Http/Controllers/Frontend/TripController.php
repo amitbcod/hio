@@ -521,7 +521,7 @@ class TripController extends Controller
     <tr>
       <td><table width="100%" cellpadding="0" cellspacing="0">
         <tr>
-          <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="5" cellspacing="0">
+          <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="3" cellspacing="0">
             <tr>
               <td><strong>Booking Ref.</strong></td>
             </tr>
@@ -530,7 +530,7 @@ class TripController extends Controller
             </tr>
           </table></td>
           <td style="width:2%">&nbsp;&nbsp;</td>
-          <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="5" cellspacing="0">
+          <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="3" cellspacing="0">
             <tr>
               <td><strong>Service Date</strong></td>
             </tr>
@@ -621,18 +621,7 @@ class TripController extends Controller
                 <td style="border-bottom:1px solid #dce7f5;"><strong style="font-size:12px">Service Provider / Property</strong></td>
               </tr>
               <tr>
-                <td>
-                    <table width="100%" border="0" cellpadding="0" cellspacing="0">
-                    <tbody>
-                        <tr>
-                        <td>{$providerNameSafe}</td>
-                        </tr>
-                        <tr>
-                        <td>{$providerAddressSafe}</td>
-                        </tr>
-                    </tbody>
-                    </table>
-                </td>
+                <td>{$providerNameSafe}<br>{$providerAddressSafe}</td>
               </tr>
               <tr>
                 <td>&nbsp;</td>
