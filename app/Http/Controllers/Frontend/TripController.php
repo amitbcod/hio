@@ -1045,7 +1045,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
       <td><h1 style="font-size:22px">INVOICE</h1></td>
     </tr>
     <tr>
-      <td><table width="30%" border="0" cellpadding="2" cellspacing="0">
+      <td><table width="50%" border="0" cellpadding="2" cellspacing="0" class="info-table">
         <tr>
           <td class="label">Invoice Number:</td>
           <td class="value">{$invoiceNumber}</td>
@@ -1063,48 +1063,67 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
     <tr>
       <td>&nbsp;</td>
     </tr>
+    <tr>
+      <td><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
+        <tbody>
+          <tr>
+            <td><span class="section-title">BILL TO</span></td>
+            <td><span class="section-title">ACCOUNT DETAILS</span></td>
+          </tr>
+          <tr>
+            <td>{$travelerName}</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0">
+              <tr>
+                <td class="label">Address:</td>
+                <td class="value">{$travelerAddress}</td>
+              </tr>
+              <tr>
+                <td class="label">Phone:</td>
+                <td class="value">{$travelerPhone}</td>
+              </tr>
+              <tr>
+                <td class="label">Email:</td>
+                <td class="value">{$travelerEmail}</td>
+              </tr>
+            </table></td>
+            <td valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
+              <tr>
+                <td class="label">Traveller Account Type:</td>
+                <td class="value">Guest Traveller</td>
+              </tr>
+              <tr>
+                <td class="label">Account ID:</td>
+                <td class="value">{$accountId}</td>
+              </tr>
+              <tr>
+                <td class="label">Currency:</td>
+                <td class="value">USD (US Dollar)</td>
+              </tr>
+              <tr>
+                <td class="label">Payment Terms:</td>
+                <td class="value"><strong>Paid in Full</strong></td>
+              </tr>
+            </table></td>
+          </tr>
+        </tbody>
+      </table></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+    </tr>
+     <tr>
+      <td align="center"><strong style="color:#0b2b51;">ACCOUNT HOLDER:</strong> This invoice has been issued to the account holder (Privileged Traveller).</td>
+    </tr>
+    <tr>
+      <td align="center">&nbsp;</td>
+    </tr>
+
   </tbody>
 </table>
 
-
-
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
-    <tr>
-        <td width="48%" style="padding-right:6px; vertical-align:top;">
-            <div class="header-box">
-                <div class="section-title">BILL TO</div>
-                <div style="font-weight:600; color:#0b2b51; font-size:10px; margin-bottom:4px;">{$travelerName}</div>
-                <table class="info-table" style="margin:0;">
-                    <tr><td class="label">Address:</td><td class="value">{$travelerAddress}</td></tr>
-                    <tr><td class="label">Phone:</td><td class="value">{$travelerPhone}</td></tr>
-                    <tr><td class="label">Email:</td><td class="value">{$travelerEmail}</td></tr>
-                </table>
-            </div>
-        </td>
-
-        <td width="52%" style="padding-left:6px; vertical-align:top;">
-            <div class="header-box" style="border:none;">
-                <div class="section-title">ACCOUNT DETAILS</div>
-                    <div style="font-weight:600; color:#0b2b51; font-size:10px; margin-bottom:4px;"></div>
-                <table class="info-table" style="margin-top:6px;">
-                    <tr><td class="label">Traveller Account Type:</td><td class="value">Guest Traveller</td></tr>
-                    <tr><td class="label">Account ID:</td><td class="value">{$accountId}</td></tr>
-                    <tr><td class="label">Currency:</td><td class="value">USD (US Dollar)</td></tr>
-                    <tr><td class="label">Payment Terms:</td><td class="value"><strong>Paid in Full</strong></td></tr>
-                </table>
-            </div>
-        </td>
-    </tr>
-
-    <tr>
-        <td colspan="2" align="center" style="padding-top:10px; padding-bottom:10px;">
-            <div style="padding:8px; background:#eef4ff; border:1px solid #dce7f5; border-radius:6px; font-size:9px; color:#4a5f7f; text-align:center;">
-                <strong style="color:#0b2b51;">ACCOUNT HOLDER:</strong>
-                This invoice has been issued to the account holder (Privileged Traveller).
-            </div>
-        </td>
-    </tr>
-</table>
 
 <table class="service-table">
 <thead>
