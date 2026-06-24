@@ -460,7 +460,9 @@ class TripController extends Controller
         $infoLabelDaysNights = e($isActivity ? 'Number of Days' : 'Number of Nights');
         $infoLabelType = e($isActivity ? 'Activity Type' : 'Room Type');
         $html = <<<HTML
-
+<style>
+    .label{font-size:8px;color:#5f6d7a;letter-spacing:0.5px;}
+</style>
 <table width="100%" border="0" style="color:#0b2b51;">
   <tbody>
     <tr>
@@ -572,10 +574,10 @@ class TripController extends Controller
     <tr>
       <td><table width="100%" cellpadding="0" cellspacing="0">
         <tr>
-          <td width="49%"><div style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px;">
-            <table width="100%" cellpadding="5" cellspacing="0">
+          <td width="49%" valign="top" style="background-color: #f7fafd;border: 1px solid #d7e4f0;">
+            <table width="100%" cellpadding="2" cellspacing="0">
               <tr>
-                <td colspan="2" style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">Service Details</td>
+                <td colspan="2" style="border-bottom:1px solid #dce7f5;"><strong style="font-size:12px">Service Details</strong></td>
 				  </tr>
               <tr>
                 <td class="label" width="40%"><strong>Property Name</strong></td>
@@ -614,12 +616,12 @@ class TripController extends Controller
                 <td>{$bookingNotesSafe}</td>
               </tr>
             </table>
-          </div></td>
+          </td>
           <td style="width:2%">&nbsp;&nbsp;</td>
-          <td width="49%" valign="top" style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px;">
-            <table width="100%" cellpadding="5" cellspacing="0">
+          <td width="49%" valign="top" style="background-color: #f7fafd;border: 1px solid #d7e4f0;">
+            <table width="100%" cellpadding="2" cellspacing="0">
               <tr>
-                <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">Service Provider / Property</td>
+                <td style="border-bottom:1px solid #dce7f5;"><strong style="font-size:12px">Service Provider / Property</strong></td>
               </tr>
               <tr>
                 <td>{$providerNameSafe}</td>
@@ -628,19 +630,19 @@ class TripController extends Controller
                 <td>{$providerAddressSafe}</td>
               </tr>
               <tr>
-                <td></td>
+                <td>&nbsp;</td>
               </tr>
               <tr>
-                <td style="color:#0b2b51;">Emergency Contact (24/7)</td>
+                <td class="label">Emergency Contact (24/7)</td>
               </tr>
               <tr>
                 <td>{$emergencyContactSafe}</td>
               </tr>
               <tr>
-                <td></td>
+                <td>&nbsp;</td>
               </tr>
               <tr>
-                <td style="color:#0b2b51;">Reception / Service Contact</td>
+                <td class="label">Reception / Service Contact</td>
               </tr>
               <tr>
                 <td>{$receptionContactSafe}</td>
