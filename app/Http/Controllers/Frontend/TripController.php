@@ -656,7 +656,7 @@ class TripController extends Controller
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td><span class="section-title">Important Information / Conditions</span></td>
+      <td style="font-size:13px">Important Information / Conditions</td>
     </tr>
     <tr>
       <td><ul class="check-list">
@@ -668,27 +668,54 @@ class TripController extends Controller
         </ul></td>
     </tr>
     <tr>
-      <td>&lt;strong&gt;Your Local Connection&lt;/strong&gt; – We are here to support you. For enquiries or assistance during your trip, please contact us.</td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td><strong>Your Local Connection</strong> We are here to support you. For enquiries or assistance during your trip, please contact us.</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td><span class="section-title">MPO Support and Emergency</span></td>
+      <td style="font-size:13px">MPO Support and Emergency</td>
     </tr>
     <tr>
-      <td>support Ticket within your account<br>
-            Office Hours: 09:00 - 17:30 <br><br>
-            Office : +230 427 10 60<br>
-            WhatsApp: +230 52 51 11 53 <br>
-            (After hours Emergency only)<br><br>
-            <span style="color:#4a5f7f; font-size:8px;">We are here to help you before, during and after your trip.</span></td>
+      <td>
+      <table width="100%" border="0">
+        <tbody>
+          <tr>
+            <td>support Ticket within your account</td>
+          </tr>
+          <tr>
+            <td>Office Hours: 09:00 - 17:30 </td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>Office : +230 427 10 60</td>
+          </tr>
+          <tr>
+            <td>WhatsApp: +230 52 51 11 53 </td>
+          </tr>
+          <tr>
+            <td>(After hours Emergency only)</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td><span style="color:#4a5f7f; font-size:8px;">We are here to help you before, during and after your trip.</span></td>
+          </tr>
+        </tbody>
+      </table>  
+      </td>
     </tr>
     <tr>
       <td align="center">&nbsp;</td>
     </tr>
     <tr>
-      <td align="center"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
+      <td align="center" style="font-size:8px; color:#7a8a9f;"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
     Your Local Connection in Mauritius<br>
     <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span></td>
     </tr>
