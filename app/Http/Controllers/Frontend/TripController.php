@@ -1139,53 +1139,37 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
         </tr>
 
         <tr>
-        <td valign="top"><table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
-    <tr>
-    <td width="49%" valign="top"><table width="100%" border="0">
-            <tbody>
-            <tr>
-                <td align="center">THANK YOU!</td>
-                </tr>
-            <tr>
-	        <td align="center">You will receive payment confirmation by email.<br>
+            <td>
+                
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+<tr>
+<td width="55%" style="vertical-align:top; padding-right:6px;">
+    <div class="thank-you" style="background:#e8f5e9; border-radius:8px; padding:12px; margin-bottom:8px;">
+        <div style="text-align:center; font-size:11px; font-weight:700; color:#2e7d32; margin-bottom:8px;">THANK YOU!</div>
+        <div style="font-size:9px; color:#2e7d32; text-align:center; line-height:1.6;">
+               You will receive payment confirmation by email.<br>
             Download Voucher from your account/manage trip<br><br>
             We look forward to welcoming you to Mauritius<br>
-            and wish you a wonderful stay!</td>
-	        </tr>
-	      </tbody>
-	    </table></td>
-	<td style="width:2%">&nbsp;&nbsp;</td>
-	
-    <td width="49%" valign="top" >
-        <table width="100%" border="0">
-            <tbody>
-	      <tr>
-	        <td><span class="totals-label">Subtotal: </span><span class="totals-amount">USD {$formattedSubtotal}</td>
-	        </tr>
-	      <tr>
-	        <td>{$discountRow}</td>
-	        </tr>
-	      <tr>
-	        <td><span class="totals-row"><span class="totals-label">Taxable Amount: </span><span class="totals-amount">USD {$formattedTaxableAmount}</span></span></td>
-	        </tr>
-	      <tr>
-	        <td><span class="totals-row"><span class="totals-label">VAT ({$vatPercent}%): </span><span class="totals-amount">USD {$formattedVatAmount}</span></span></td>
-	        </tr>
-	      <tr>
-	        <td><span class="totals-row"><span class="totals-label"><strong>Service Fee: </strong></span><span class="totals-amount"><strong>USD {$formattedServiceFee}</strong></span></span></td>
-	        </tr>
-	      <tr>
-	        <td><span class="total-paid"><span>TOTAL PAID</span> <span>USD {$formattedTotalAmount}</span></span></td>
-	        </tr>
-	      </tbody>
-	    </table>
-        </td>
+            and wish you a wonderful stay!
+        </div>
+    </div>
+</td>
+<td width="45%" style="vertical-align:top; padding-left:80px;">
+    <div class="totals-box" style="background:#fff3e0; border-radius:8px; padding:10px;">
+        <div class="totals-row"><span class="totals-label">Subtotal: </span><span class="totals-amount">USD {$formattedSubtotal}</span></div>
+        {$discountRow}
+        <div class="totals-row"><span class="totals-label">Taxable Amount: </span><span class="totals-amount">USD {$formattedTaxableAmount}</span></div>
+        <div class="totals-row"><span class="totals-label">VAT ({$vatPercent}%): </span><span class="totals-amount">USD {$formattedVatAmount}</span></div>
+        <div class="totals-row"><span class="totals-label"><strong>Service Fee: </strong></span><span class="totals-amount"><strong>USD {$formattedServiceFee}</strong></span></div>
+        <div class="total-paid" style="background:#0b2b51; color:#fff; padding:8px; border-radius:4px; font-weight:700; display:flex; justify-content:space-between; margin-top:6px;"><span>TOTAL PAID</span> <span>USD {$formattedTotalAmount}</span></div>
+    </div>
+</td>
+</tr>
+</table>
+
+            </td>
         </tr>
-        </table></td>
-            </tr>
-            <tr>
-            <td>&nbsp;</td>
-            </tr>
+        
 
   </tbody>
 </table>
