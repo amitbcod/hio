@@ -1,7 +1,7 @@
 @extends('frontend.layout')
 
-@section('title', $categoryTitle . ' Listings | Holidays.io')
-@section('meta_description', 'Browse ' . $categoryTitle . ' listings on Holidays.io.')
+@section('title', __('category.page_title', ['category' => $categoryTitle]))
+@section('meta_description', __('category.meta_description', ['category' => $categoryTitle]))
 
 @section('content')
     @php
@@ -38,13 +38,13 @@
         </div>
         <div class="wrap page-hero-content">
             <div class="breadcrumbs">
-                <a href="{{ route('frontend.home') }}">Home</a>
+                <a href="{{ route('frontend.home') }}">{{ __('site.home') }}</a>
                 <span>/</span>
-                <span>{{ $categoryTitle }} listings</span>
+                <span>{{ $categoryTitle }} {{ __('category.listings') }}</span>
             </div>
-            <h1>{{ $categoryTitle }} Listings</h1>
+            <h1>{{ $categoryTitle }} {{ __('category.listings') }}</h1>
             <p>
-                Browse listings by category and open each card to view full details.
+                {{ __('category.hero_description') }}
             </p>
         </div>
     </section>
@@ -63,21 +63,21 @@
                             <input type="radio" name="category" value="accommodation" {{ $category === 'accommodation' ? 'checked' : '' }}>
                             <div class="cat-radio-tab">
                             <div class="main-icon accommodation"><img src="images/accommodation.svg"></div>
-                            <span>Accommodation</span>
+                            <span>{{ __('home.search.accommodation') }}</span>
                             </div>
                         </label>
                         <label class="category-radio-item">
                             <input type="radio" name="category" value="tours" {{ $category === 'tours' ? 'checked' : '' }}>
                             <div class="cat-radio-tab">
                             <div class="main-icon activity"><img src="images/activity.svg"></div>
-                            <span>Tours - Activity</span>
+                            <span>{{ __('home.search.tours_activity') }}</span>
                             </div>
                         </label>
                         <label class="category-radio-item">
                             <input type="radio" name="category" value="transport" {{ $category === 'transport' ? 'checked' : '' }}>
                             <div class="cat-radio-tab">
                             <div class="main-icon transport"><img src="images/transport.svg"></div>
-                            <span>Transport</span>
+                            <span>{{ __('home.search.transport') }}</span>
                             </div> 
                         </label>
                     </div>
@@ -86,9 +86,9 @@
               <div class="category-input-group">
                  <div class="category-input-group-inner">
                         <div class="category-search-cell category-search-cell--region" style="flex: 0 1 280px; min-width: 280px">
-                            <h5>Region/Area ?</h5>
+                            <h5>{{ __('home.search.region_area') }}</h5>
                             <select name="region" class="category-search-select" data-search-region data-selected="{{ $filters['region'] }}">
-                                <option value="all" {{ $filters['region'] === 'all' || $filters['region'] === '' ? 'selected' : '' }}>All</option>
+                                <option value="all" {{ $filters['region'] === 'all' || $filters['region'] === '' ? 'selected' : '' }}>{{ __('home.search.all') }}</option>
                                 @foreach($searchOptions[$category]['regions'] ?? [] as $region)
                                     <option value="{{ $region }}" {{ $filters['region'] === $region ? 'selected' : '' }}>{{ $region }}</option>
                                 @endforeach
@@ -97,14 +97,14 @@
 
                         <!-- Accommodation/Transport: Check-In and Check-Out -->
                         <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-in" style="display: none; flex: 0">
-                            <h5>Check-In</h5>
+                            <h5>{{ __('home.search.check_in') }}</h5>
                             <div class="category-search-dates">
                                 <input type="date" name="check_in" class="category-search-input" value="{{ $filters['check_in'] }}">
                             </div>
                         </div>
 
                         <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-out" style="display: none; flex: 0 ">
-                            <h5>Check-Out</h5>
+                            <h5>{{ __('home.search.check_out') }}</h5>
                             <div class="category-search-dates">
                                 <input type="date" name="check_out" class="category-search-input" value="{{ $filters['check_out'] }}">
                             </div>
@@ -112,7 +112,7 @@
 
                         <!-- Tours/Activity: Activity Date -->
                         <div class="category-search-cell category-search-cell--tours category-search-cell--activity-date" style="display: none;">
-                            <h5>Select Date</h5>
+                            <h5>{{ __('home.search.select_date') }}</h5>
                             <div class="category-search-dates">
                                 <input type="date" name="activity_date" class="category-search-input" value="{{ $filters['activity_date'] }}">
                             </div>
@@ -120,13 +120,13 @@
 
                         <!-- Accommodation/Transport/Activity: Guest details -->
                         <div class="category-search-cell category-search-cell--guests" style="display: none;">
-                            <h5 id="guest-cell-heading">Guest & Rooms</h5>
+                            <h5 id="guest-cell-heading">{{ __('home.search.guest_rooms') }}</h5>
                             <div class="guest-rooms-summary">
-                                <span id="guest-rooms-summary-text">{{ (int) $filters['adults'] }} Adults · {{ (int) $filters['children'] }} Child{{ (int) $filters['children'] === 1 ? '' : 'ren' }} · {{ (int) $filters['infants'] ?? 0 }} Infant{{ ((int) $filters['infants'] ?? 0) === 1 ? '' : 's' }} · {{ (int) $filters['rooms'] }} Room{{ (int) $filters['rooms'] === 1 ? '' : 's' }}</span>
+                                <span id="guest-rooms-summary-text">{{ (int) $filters['adults'] }} {{ __('home.search.adults') }} · {{ (int) $filters['children'] }} {{ __('home.search.children') }} · {{ (int) $filters['infants'] ?? 0 }} {{ __('home.search.infants') }} · {{ (int) $filters['rooms'] }} {{ __('home.search.rooms') }}</span>
                             </div>
                             <div class="guest-rooms-selector">
                                 <div class="guest-rooms-row">
-                                    <label for="category-adults-field">Adults <span>(17+ yr)</span></label>
+                                    <label for="category-adults-field">{{ __('home.search.adults') }} <span>({{ __('home.search.adult_age_label') }})</span></label>
                                     <div class="guest-rooms-counter">
                                         <button type="button" class="count-btn decrement" data-target="adults">−</button>
                                         <input id="category-adults-field" type="text" name="adults" value="{{ (int) $filters['adults'] }}" readonly>
@@ -134,7 +134,7 @@
                                     </div>
                                 </div>
                                 <div class="guest-rooms-row">
-                                    <label for="category-children-field">Children <span>(3-17 yr)</span></label>
+                                    <label for="category-children-field">{{ __('home.search.children') }} <span>({{ __('home.search.children_age_label') }})</span></label>
                                     <div class="guest-rooms-counter">
                                         <button type="button" class="count-btn decrement" data-target="children">−</button>
                                         <input id="category-children-field" type="text" name="children" value="{{ (int) $filters['children'] }}" readonly>
@@ -142,7 +142,7 @@
                                     </div>
                                 </div>
                                 <div class="guest-rooms-row">
-                                    <label for="category-infants-field">Infants <span>(0-2 yr)</span></label>
+                                    <label for="category-infants-field">{{ __('home.search.infants') }} <span>({{ __('home.search.infants_age_label') }})</span></label>
                                     <div class="guest-rooms-counter">
                                         <button type="button" class="count-btn decrement" data-target="infants">−</button>
                                         <input id="category-infants-field" type="text" name="infants" value="{{ (int) $filters['infants'] ?? 0 }}" readonly>
@@ -150,7 +150,7 @@
                                     </div>
                                 </div>
                                 <div class="guest-rooms-row" id="rooms-row">
-                                    <label for="category-rooms-field">Rooms <span>(Max 20)</span></label>
+                                    <label for="category-rooms-field">{{ __('home.search.rooms') }} <span>({{ __('home.search.rooms_limit_label') }})</span></label>
                                     <div class="guest-rooms-counter">
                                         <button type="button" class="count-btn decrement" data-target="rooms">−</button>
                                         <input id="category-rooms-field" type="text" name="rooms" value="{{ (int) $filters['rooms'] }}" readonly>
@@ -161,7 +161,7 @@
                         </div>
 
                         <div class="category-search-submit">
-                            <button type="submit" class="btn-primary">Proceed</button>
+                            <button type="submit" class="btn-primary">{{ __('home.search.proceed') }}</button>
                         </div>
                     </div>
                 </div>
@@ -174,9 +174,9 @@
     <section class="page-section category-listing-section">
         <div class="wrap category-layout">
             <aside class="category-filters">
-                <h3 class="toggle">Filter by <span class="arrow"></span></h3>
+                <h3 class="toggle">{{ __('filters.by') }} <span class="arrow"></span></h3>
                 @if(empty($sidebarDefinitions))
-                    <p class="filter-note">No extra filters are available for this category yet.</p>
+                    <p class="filter-note">{{ __('filters.none_available') }}</p>
                 @else
                     <form method="GET" action="{{ route('frontend.category.list') }}" class="category-filter-form">
                         <input type="hidden" name="category" value="{{ $category }}">
@@ -212,8 +212,8 @@
                         @endforeach
 
                         <div class="filter-actions">
-                            <button type="submit" class="btn-primary">Apply filters</button>
-                            <a href="{{ route('frontend.category.list', $clearFilterQuery) }}" class="filter-clear-link">Clear filters</a>
+                            <button type="submit" class="btn-primary">{{ __('filters.apply') }}</button>
+                            <a href="{{ route('frontend.category.list', $clearFilterQuery) }}" class="filter-clear-link">{{ __('filters.clear') }}</a>
                         </div>
                     </form>
                 @endif
@@ -223,12 +223,12 @@
                 <div class="section-header category-results-head">
                     <div>
                         <h2>{{ $categoryTitle }}</h2>
-                        <p>{{ $results->total() }} listing(s) found.</p>
+                        <p>{{ trans_choice('category.results_count', $results->total(), ['count' => $results->total()]) }}</p>
                     </div>
                 </div>
 
                 @if($results->isEmpty())
-                    <div class="empty-state">No {{ strtolower($categoryTitle) }} listings matched the selected search and filter options.</div>
+                    <div class="empty-state">{{ __('category.no_results', ['category' => strtolower($categoryTitle)]) }}</div>
                 @else
                     <div class="category-result-list">
                         @foreach($results as $item)
@@ -273,7 +273,7 @@
                                         @if($startingRate !== null)
                                             <span class="listing-price">From USD {{ number_format((float) $startingRate, 0) }} {{ $priceUnit }}</span>
                                         @endif
-                                        <a href="{{ $iteUSDl }}">View details</a>
+                                        <a href="{{ $iteUSDl }}">{{ __('home.view_details') }}</a>
                                     </div>
                                 </div>
                             </article>

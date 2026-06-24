@@ -41,9 +41,9 @@
         </div>
         <div class="wrap page-hero-content">
             <div class="breadcrumbs">
-                <a href="{{ url('/') }}">Home</a>
+                <a href="{{ url('/') }}">{{ __('site.home') }}</a>
                 <span>/</span>
-                <a href="{{ url('/#stays-section') }}">Stays</a>
+                <a href="{{ url('/#stays-section') }}">{{ __('site.accommodation') }}</a>
                 <span>/</span>
                 <span>{{ $accommodation['title'] }}</span>
             </div>
@@ -95,27 +95,27 @@
                 <aside class="detail-booking-card">
                     <form method="GET" action="{{ route('frontend.accommodations.show', $accommodation['id']) }}" class="booking-form-grid">
                         <div class="booking-field">
-                            <label>Check-in</label>
+                            <label>{{ __('accommodation.form.check_in') }}</label>
                             <input type="date" name="check_in" value="{{ $booking['check_in'] }}" class="booking-input">
                         </div>
                         <div class="booking-field">
-                            <label>Check-out</label>
+                            <label>{{ __('accommodation.form.check_out') }}</label>
                             <input type="date" name="check_out" value="{{ $booking['check_out'] }}" class="booking-input">
                         </div>
                         <div class="booking-field">
-                            <label>Adults</label>
+                            <label>{{ __('accommodation.form.adults') }}</label>
                             <input type="number" name="adults" min="1" value="{{ $booking['adults'] }}" class="booking-input">
                         </div>
                         <div class="booking-field">
-                            <label>Children</label>
+                            <label>{{ __('accommodation.form.children') }}</label>
                             <input type="number" name="children" min="0" value="{{ $booking['children'] }}" class="booking-input">
                         </div>
                         <div class="booking-field">
-                            <label>Infants</label>
+                            <label>{{ __('accommodation.form.infants') }}</label>
                             <input type="number" name="infants" min="0" value="{{ $booking['infants'] }}" class="booking-input">
                         </div>
 
-                        <button type="submit" class="btn-primary booking-btn">Update Search</button>
+                        <button type="submit" class="btn-primary booking-btn">{{ __('accommodation.form.update_search') }}</button>
                     </form>
 
                     <div class="booking-summary-line">
@@ -128,33 +128,33 @@
                     </div>
                     @if($startingRate)
                         <div class="booking-starting-rate">
-                            <span>Starting from</span>
+                            <span>{{ __('accommodation.starting_from') }}</span>
                             <strong>{{ $startingCurrency }} {{ number_format((float) $startingRate, 2) }}</strong>
                         </div>
                     @endif
                     <div class="booking-quick-links">
-                        <a href="#room-options">View room options</a>
+                        <a href="#room-options">{{ __('accommodation.view_room_options') }}</a>
                         @if(!empty($accommodation['map_link']))
-                            <a href="{{ $accommodation['map_link'] }}" target="_blank" rel="noopener">Get directions</a>
+                            <a href="{{ $accommodation['map_link'] }}" target="_blank" rel="noopener">{{ __('accommodation.get_directions') }}</a>
                         @endif
                         @if(!empty($accommodation['contact_phone']))
-                            <a href="tel:{{ preg_replace('/\s+/', '', $accommodation['contact_phone']) }}">Call hotel</a>
+                            <a href="tel:{{ preg_replace('/\s+/', '', $accommodation['contact_phone']) }}">{{ __('accommodation.call_hotel') }}</a>
                         @endif
                     </div>
                 </aside>
             </div>
 
             <nav class="detail-anchor-nav">
-                <a href="#room-options">Room Options</a>
-                <a href="#amenities">Amenities</a>
-                <a href="#reviews">Reviews</a>
-                <a href="#policies">Policies</a>
-                <a href="#location-map">Location</a>
+                <a href="#room-options">{{ __('accommodation.room_options') }}</a>
+                <a href="#amenities">{{ __('accommodation.amenities') }}</a>
+                <a href="#reviews">{{ __('accommodation.reviews') }}</a>
+                <a href="#policies">{{ __('accommodation.policies') }}</a>
+                <a href="#location-map">{{ __('accommodation.location') }}</a>
                 <a href="#similar-properties">Similar Properties</a>
             </nav>
 
             <div class="detail-section-card" id="room-options">
-                <h2>Room Options</h2>
+                <h2>{{ __('accommodation.room_options') }}</h2>
                 @if(empty($availableRooms))
                     <p class="detail-empty">No room availability is currently configured for the selected dates.</p>
                 @else
@@ -267,9 +267,9 @@
             </div>
 
             <div class="detail-section-card" id="amenities">
-                <h2>Amenities</h2>
+                <h2>{{ __('accommodation.amenities') }}</h2>
                 @if(empty($amenityList))
-                    <p class="detail-empty">Amenities have not been configured yet for this property.</p>
+                    <p class="detail-empty">{{ __('accommodation.amenities_not_configured') }}</p>
                 @else
                     <div class="amenity-chip-grid">
                         @foreach($amenityList as $amenity)
@@ -280,23 +280,23 @@
             </div>
 
             <div class="detail-section-card" id="reviews">
-                <h2>Guest Reviews &amp; Rating</h2>
+                <h2>{{ __('accommodation.guest_reviews_rating') }}</h2>
                 @if(!empty($ratingSummary['score_display']))
                     @php $summaryStars = (int) round($ratingSummary['score_display']); @endphp
                     <div class="rating-overview">
                         <div class="rating-score" aria-label="{{ $summaryStars }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $summaryStars))) !!}</div>
                         <div>
-                            <strong>Very Good</strong>
-                            <p>{{ number_format((int) ($ratingSummary['count'] ?? 0)) }} review{{ (int) ($ratingSummary['count'] ?? 0) !== 1 ? 's' : '' }} from operator profile data.</p>
+                            <strong>{{ __('accommodation.rating_summary_label') }}</strong>
+                            <p>{{ trans_choice('accommodation.review_count', (int) ($ratingSummary['count'] ?? 0), ['count' => number_format((int) ($ratingSummary['count'] ?? 0))]) }}</p>
                         </div>
                     </div>
                 @elseif(empty($approvedAccommodationReviews) || count($approvedAccommodationReviews) === 0)
-                    <p class="detail-empty">No guest reviews available yet for this property.</p>
+                    <p class="detail-empty">{{ __('accommodation.no_guest_reviews') }}</p>
                 @endif
 
                 @if($approvedAccommodationReviews && count($approvedAccommodationReviews) > 0)
                     <div class="review-listing" style="margin-top: 30px;">
-                        <h3>Guest Reviews</h3>
+                        <h3>{{ __('accommodation.guest_reviews') }}</h3>
                         @foreach($approvedAccommodationReviews as $review)
                             @php
                                 $travelerName = optional($review->parentReview->trip->traveler)->full_name 
@@ -345,11 +345,11 @@
             </div>
 
             <div class="detail-section-card" id="policies">
-                <h2>Property Policies</h2>
+                <h2>{{ __('accommodation.property_policies') }}</h2>
 
                 <div class="policy-top-grid">
                     <div>
-                        <h3>Check-in / Check-out</h3>
+                        <h3>{{ __('accommodation.check_in_out') }}</h3>
                         <p>
                             Check-in: {{ $accommodation['checkin_time'] ?: 'As per booking confirmation' }}
                             <br>
@@ -357,7 +357,7 @@
                         </p>
                     </div>
                     <div>
-                        <h3>Booking Type</h3>
+                        <h3>{{ __('accommodation.booking_type') }}</h3>
                         <p>{{ $accommodation['booking_confirmation_type'] ?: 'On Request' }}</p>
                     </div>
                 </div>
@@ -371,23 +371,23 @@
                 @endif
 
                 <div class="policy-block">
-                    <h3>Booking Notes</h3>
+                    <h3>{{ __('accommodation.booking_notes') }}</h3>
                     <div class="detail-text">{{ $accommodation['booking_notes_text'] ?: 'Booking notes will be shared by the operator during confirmation.' }}</div>
                 </div>
 
                 <div class="policy-block">
-                    <h3>Checkout Policy</h3>
+                    <h3>{{ __('accommodation.checkout_policy') }}</h3>
                     <div class="detail-text">{{ $accommodation['checkout_policy_text'] ?: 'Checkout policy is not available yet.' }}</div>
                 </div>
 
                 <div class="policy-block">
-                    <h3>Terms &amp; Conditions</h3>
+                    <h3>{{ __('accommodation.terms_conditions') }}</h3>
                     <div class="detail-text">{{ $accommodation['terms_conditions_text'] ?: 'Terms and conditions are not available yet.' }}</div>
                 </div>
             </div>
 
             <div class="detail-section-card" id="location-map">
-                <h2>Location</h2>
+                <h2>{{ __('accommodation.location') }}</h2>
                 <p class="detail-text">{{ $accommodation['address'] ?: $accommodation['location'] }}</p>
                 @if(!empty($accommodation['map_embed_url']))
                     <div class="location-map">
@@ -401,21 +401,21 @@
                 @endif
                 <div class="location-quick-links">
                     @if(!empty($accommodation['map_link']))
-                        <a href="{{ $accommodation['map_link'] }}" target="_blank" rel="noopener">Get directions</a>
+                        <a href="{{ $accommodation['map_link'] }}" target="_blank" rel="noopener">{{ __('accommodation.get_directions') }}</a>
                     @endif
                     @if(!empty($accommodation['contact_phone']))
-                        <a href="tel:{{ preg_replace('/\s+/', '', $accommodation['contact_phone']) }}">Call hotel</a>
+                        <a href="tel:{{ preg_replace('/\s+/', '', $accommodation['contact_phone']) }}">{{ __('accommodation.call_hotel') }}</a>
                     @endif
                     @if(!empty($accommodation['contact_email']))
-                        <a href="mailto:{{ $accommodation['contact_email'] }}">Email hotel</a>
+                        <a href="mailto:{{ $accommodation['contact_email'] }}">{{ __('accommodation.email_hotel') }}</a>
                     @endif
                 </div>
             </div>
 
             <div class="detail-section-card" id="similar-properties">
-                <h2>Similar Properties</h2>
+                <h2>{{ __('accommodation.similar_properties') }}</h2>
                 @if(empty($similarAccommodations))
-                    <p class="detail-empty">No similar properties available at the moment.</p>
+                    <p class="detail-empty">{{ __('accommodation.no_similar_properties') }}</p>
                 @else
                     <div class="similar-grid">
                         @foreach($similarAccommodations as $item)
@@ -447,7 +447,7 @@
 
             @if(!empty($gallery))
                 <div class="detail-section-card">
-                    <h2>Photo Gallery</h2>
+                    <h2>{{ __('accommodation.photo_gallery') }}</h2>
                     <div class="gallery-grid detail-gallery-grid">
                         @foreach($gallery as $image)
                             <img src="{{ $image }}" alt="{{ $accommodation['title'] }} gallery image">

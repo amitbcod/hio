@@ -37,28 +37,25 @@
                 </div>
 
                 @if($isFailed)
-                    <h1 class="confirm-heading">Payment {{ $statusLabel }}</h1>
+                    <h1 class="confirm-heading">{{ __('booking.payment_failed_heading', ['status' => $statusLabel]) }}</h1>
                     <p class="confirm-sub">
-                        Sorry{{ $guestName ? ', ' . $guestName : '' }}. Your payment status is <strong>{{ $statusLabel }}</strong>.
-                        Please try again or contact support if you need help.
+                        {{ __('booking.payment_failed_message', ['guestName' => $guestName ? ', ' . $guestName : '', 'statusLabel' => $statusLabel]) }}
                     </p>
                 @elseif($isPaid)
-                    <h1 class="confirm-heading">Booking Received!</h1>
+                    <h1 class="confirm-heading">{{ __('booking.booking_received') }}</h1>
                     <p class="confirm-sub">
-                        Thank you{{ $guestName ? ', ' . $guestName : '' }}. Your booking is <strong>pending confirmation</strong>.
-                        Our team will get back to you within <strong>24 hours</strong>.
+                        {{ __('booking.pending_confirmation_message', ['guestName' => $guestName ? ', ' . $guestName : '']) }}
                     </p>
                 @else
-                    <h1 class="confirm-heading">Booking Received!</h1>
+                    <h1 class="confirm-heading">{{ __('booking.booking_received') }}</h1>
                     <p class="confirm-sub">
-                        Thank you{{ $guestName ? ', ' . $guestName : '' }}. Your booking is <strong>pending confirmation</strong>.
-                        Our team will get back to you within <strong>24 hours</strong>.
+                        {{ __('booking.pending_confirmation_message', ['guestName' => $guestName ? ', ' . $guestName : '']) }}
                     </p>
                 @endif
 
                 {{-- Booking Reference(s) --}}
                 <div class="confirm-refs">
-                    <p class="ref-label">Booking Reference{{ count($bookingRefs) > 1 ? 's' : '' }}</p>
+                    <p class="ref-label">{{ trans_choice('booking.reference_label', count($bookingRefs), ['count' => count($bookingRefs)]) }}</p>
                     @foreach($bookingRefs as $bref)
                         <div class="ref-chip">{{ $bref }}</div>
                     @endforeach
@@ -68,32 +65,32 @@
                 @if(!empty($summary) && ($summary['net_payable'] ?? 0) > 0)
                     <div class="confirm-summary">
                         <div class="confirm-summary-row">
-                            <span>Subtotal</span>
+                            <span>{{ __('booking.subtotal') }}</span>
                             <span>{{ $summary['currency'] }} {{ number_format($summary['subtotal'], 2) }}</span>
                         </div>
                         @if(($summary['total_discount'] ?? 0) > 0)
                             <div class="confirm-summary-row confirm-summary-row--green">
-                                <span>Discounts</span>
+                                <span>{{ __('booking.discounts') }}</span>
                                 <span>−{{ $summary['currency'] }} {{ number_format($summary['total_discount'], 2) }}</span>
                             </div>
                         @endif
                         @if(($summary['total_tax'] ?? 0) > 0)
                             <div class="confirm-summary-row">
-                                <span>Taxes &amp; Charges</span>
+                                <span>{{ __('booking.taxes_charges') }}</span>
                                 <span>{{ $summary['currency'] }} {{ number_format($summary['total_tax'], 2) }}</span>
                             </div>
                         @endif
                         <div class="confirm-summary-divider"></div>
                         <div class="confirm-summary-row confirm-summary-row--total">
-                            <span>Net Amount Payable</span>
+                            <span>{{ __('booking.net_amount_payable') }}</span>
                             <span>{{ $summary['currency'] }} {{ number_format($summary['net_payable'], 2) }}</span>
                         </div>
                         <div class="confirm-summary-row">
-                            <span>Payment Method</span>
+                            <span>{{ __('booking.payment_method_label') }}</span>
                             @if(($paymentMethod ?? 'cod') === 'againgency')
-                                <span class="cod-badge"><i class="fa-solid fa-credit-card"></i> Againgency Online Payment</span>
+                                <span class="cod-badge"><i class="fa-solid fa-credit-card"></i> {{ __('booking.online_payment_received') }}</span>
                             @else
-                                <span class="cod-badge"><i class="fa-solid fa-money-bill-wave"></i> Cash on Delivery</span>
+                                <span class="cod-badge"><i class="fa-solid fa-money-bill-wave"></i> {{ __('booking.cash_on_delivery') }}</span>
                             @endif
                         </div>
                     </div>
@@ -102,44 +99,44 @@
                 {{-- Booking Details (from DB) --}}
                 @if($booking)
                     <div class="confirm-details">
-                        <h2 class="confirm-details-title">Booking Details</h2>
+                        <h2 class="confirm-details-title">{{ __('booking.details_title') }}</h2>
                         <div class="confirm-details-grid">
                             @if($type === 'accommodation')
                                 @if($booking->check_in_date)
                                     <div class="confirm-detail-item">
-                                        <span class="detail-key">Check-in</span>
+                                        <span class="detail-key">{{ __('booking.check_in') }}</span>
                                         <span class="detail-val">{{ $booking->check_in_date->format('d M Y') }}</span>
                                     </div>
                                     <div class="confirm-detail-item">
-                                        <span class="detail-key">Check-out</span>
+                                        <span class="detail-key">{{ __('booking.check_out') }}</span>
                                         <span class="detail-val">{{ $booking->check_out_date->format('d M Y') }}</span>
                                     </div>
                                 @endif
                             @else
                                 @if($booking->activity_date)
                                     <div class="confirm-detail-item">
-                                        <span class="detail-key">Activity Date</span>
+                                        <span class="detail-key">{{ __('booking.activity_date') }}</span>
                                         <span class="detail-val">{{ $booking->activity_date->format('d M Y') }}</span>
                                     </div>
                                 @endif
                             @endif
                             <div class="confirm-detail-item">
-                                <span class="detail-key">Guests</span>
-                                <span class="detail-val">{{ $booking->adults }} Adult{{ $booking->adults != 1 ? 's' : '' }}
+                                <span class="detail-key">{{ __('booking.guests') }}</span>
+                                <span class="detail-val">{{ $booking->adults }} {{ trans_choice('booking.adults_label', $booking->adults, ['count' => $booking->adults]) }}
                                     @if($booking->children > 0)
-                                        , {{ $booking->children }} Child{{ $booking->children != 1 ? 'ren' : '' }}
+                                        , {{ $booking->children }} {{ trans_choice('booking.children_label', $booking->children, ['count' => $booking->children]) }}
                                     @endif
                                 </span>
                             </div>
                             <div class="confirm-detail-item">
-                                <span class="detail-key">Status</span>
+                                <span class="detail-key">{{ __('booking.status') }}</span>
                                 <span class="detail-val status-badge status-{{ strtolower($displayBookingStatus ?? ($booking->booking_status ?? 'pending')) }}">
                                     {{ $displayBookingStatus ?? ($booking->booking_status ?? 'Pending') }}
                                 </span>
                             </div>
                             @if($booking->guest_email)
                                 <div class="confirm-detail-item">
-                                    <span class="detail-key">Email</span>
+                                    <span class="detail-key">{{ __('booking.email') }}</span>
                                     <span class="detail-val">{{ $booking->guest_email }}</span>
                                 </div>
                             @endif
@@ -149,22 +146,22 @@
 
                 {{-- What's next --}}
                 <div class="confirm-next">
-                    <h3>What happens next?</h3>
+                    <h3>{{ __('booking.what_happens_next') }}</h3>
                     <ol class="confirm-steps">
                         @if(($paymentStatus ?? 'pending') === 'paid')
                         <li>
                             <i class="fa-solid fa-envelope"></i>
                             <div>
-                                <strong>Confirmation Email</strong>
-                                <p>We'll send booking details to your email address.</p>
+                                <strong>{{ __('booking.confirmation_email') }}</strong>
+                                <p>{{ __('booking.confirmation_email_message') }}</p>
                             </div>
                         </li>
                         @endif
                         <li>
                             <i class="fa-solid fa-phone"></i>
                             <div>
-                                <strong>Operator Contact</strong>
-                                <p>The property / activity operator may call to confirm.</p>
+                                <strong>{{ __('booking.operator_contact') }}</strong>
+                                <p>{{ __('booking.operator_contact_message') }}</p>
                             </div>
                         </li>
                         <li>
@@ -172,18 +169,18 @@
                             <div>
                                 @if(($paymentMethod ?? 'cod') === 'againgency')
                                     @if(($paymentStatus ?? 'pending') === 'paid')
-                                        <strong>Online Payment Received</strong>
-                                        <p>Your payment was processed with Againgency.</p>
+                                        <strong>{{ __('booking.online_payment_received') }}</strong>
+                                        <p>{{ __('booking.online_payment_received_message') }}</p>
                                     @elseif(($paymentStatus ?? 'pending') === 'failed')
-                                        <strong style="color:#e53e3e">Payment Failed</strong>
-                                        <p>Your payment was declined. The booking was not completed. Please try paying again or contact support.</p>
+                                        <strong style="color:#e53e3e">{{ __('booking.payment_failed') }}</strong>
+                                        <p>{{ __('booking.payment_failed_detail') }}</p>
                                     @else
-                                        <strong>Payment Pending</strong>
-                                        <p>Your payment is being processed. We will update your booking once confirmation is received.</p>
+                                        <strong>{{ __('booking.payment_pending') }}</strong>
+                                        <p>{{ __('booking.payment_pending_detail') }}</p>
                                     @endif
                                 @else
-                                    <strong>Pay on Arrival</strong>
-                                    <p>Cash on Delivery — settle payment when you check in.</p>
+                                    <strong>{{ __('booking.pay_on_arrival') }}</strong>
+                                    <p>{{ __('booking.pay_on_arrival_message') }}</p>
                                 @endif
                             </div>
                         </li>
@@ -193,16 +190,16 @@
                 {{-- CTA Buttons --}}
                 <div class="confirm-actions">
                     <a href="{{ url('/') }}" class="btn-primary">
-                        <i class="fa-solid fa-house"></i> Back to Home
+                        <i class="fa-solid fa-house"></i> {{ __('booking.back_to_home') }}
                     </a>
                     <a href="{{ url('/category-list') }}" class="btn-outline">
-                        <i class="fa-solid fa-magnifying-glass"></i> Continue Browsing
+                        <i class="fa-solid fa-magnifying-glass"></i> {{ __('booking.continue_browsing') }}
                     </a>
                 </div>
 
                 {{-- Support --}}
                 <p class="confirm-support">
-                    Need help? Call us: <a href="tel:+23052511153">+230 5251 11 53</a>
+                    {{ __('booking.need_help') }} <a href="tel:+23052511153">+230 5251 11 53</a>
                 </p>
 
             </div>

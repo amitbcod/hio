@@ -1,27 +1,27 @@
 @extends('frontend.layout')
 
-@section('title', 'Traveller Profile | Holidays.io')
-@section('meta_description', 'Manage your traveler profile on Holidays.io.')
+@section('title', __('profile.title') . ' | Holidays.io')
+@section('meta_description', __('profile.description'))
 
 @section('content')
     <section class="page-section traveler-profile-section">
         <div class="wrap">
             <div class="traveler-profile-card">
                 <div class="traveler-profile-head">
-                    <h1>Traveller Profile</h1>
-                    <p>Complete and maintain your customer profile details.</p>
+                    <h1>{{ __('profile.title') }}</h1>
+                    <p>{{ __('profile.description') }}</p>
                 </div>
 
                 <!-- Submenu Navigation -->
                 <div class="traveler-submenu">
                     <a href="{{ route('traveler.profile') }}" class="traveler-submenu-link is-active">
-                        <i class="fa-solid fa-user"></i> Profile
+                        <i class="fa-solid fa-user"></i> {{ __('profile.menu.profile') }}
                     </a>
                     <a href="{{ route('traveler.settings') }}" class="traveler-submenu-link">
-                        <i class="fa-solid fa-gear"></i> Settings
+                        <i class="fa-solid fa-gear"></i> {{ __('profile.menu.settings') }}
                     </a>
                     <a href="{{ route('traveler.trips') }}" class="traveler-submenu-link">
-                        <i class="fa-solid fa-plane"></i> My Trips
+                        <i class="fa-solid fa-plane"></i> {{ __('profile.menu.my_trips') }}
                     </a>
                 </div>
 
@@ -44,27 +44,27 @@
 
                     
                     <div class="traveler-form-group">
-                        <label for="first_name">First Name *</label>
+                        <label for="first_name">{{ __('profile.first_name') }}</label>
                         <input id="first_name" type="text" name="first_name" value="{{ old('first_name', $profile->first_name) }}" required>
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="middle_name">Middle Name</label>
+                        <label for="middle_name">{{ __('profile.middle_name') }}</label>
                         <input id="middle_name" type="text" name="middle_name" value="{{ old('middle_name', $profile->middle_name) }}">
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="last_name">Last Name *</label>
+                        <label for="last_name">{{ __('profile.last_name') }}</label>
                         <input id="last_name" type="text" name="last_name" value="{{ old('last_name', $profile->last_name) }}" required>
                     </div>
 
                     <div class="traveler-form-group">
-                        <label>Email Address</label>
+                        <label>{{ __('profile.email_address') }}</label>
                         <div class="traveler-static">{{ $account->email }}</div>
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="gender">Gender / Title</label>
+                        <label for="gender">{{ __('profile.gender') }}</label>
                         <select id="gender" name="gender">
                             <option value="">Select</option>
                             @foreach($titleOptions as $title)
@@ -75,15 +75,15 @@
 
 
                     <div class="traveler-form-group">
-                        <label for="date_of_birth">Date of Birth *</label>
+                        <label for="date_of_birth">{{ __('profile.date_of_birth') }}</label>
                         <input id="date_of_birth" type="date" name="date_of_birth" value="{{ old('date_of_birth', optional($profile->date_of_birth)->format('Y-m-d')) }}" required>
-                        <small>Traveller must be 18+ years.</small>
+                        <small>{{ __('profile.traveller_must_be_18') }}</small>
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="country">Country *</label>
+                        <label for="country">{{ __('profile.country') }}</label>
                         <select id="country" name="country" required>
-                            <option value="">Select country</option>
+                            <option value="">{{ __('profile.select_country') }}</option>
                             @foreach($countries as $country)
                                 <option value="{{ $country }}" {{ old('country', $profile->country ?: $account->country) === $country ? 'selected' : '' }}>{{ $country }}</option>
                             @endforeach
@@ -91,9 +91,9 @@
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="nationality">Nationality *</label>
+                        <label for="nationality">{{ __('profile.nationality') }}</label>
                         <select id="nationality" name="nationality" required>
-                            <option value="">Select nationality</option>
+                            <option value="">{{ __('profile.select_nationality') }}</option>
                             @foreach($countries as $country)
                                 <option value="{{ $country }}" {{ old('nationality', $profile->nationality) === $country ? 'selected' : '' }}>{{ $country }}</option>
                             @endforeach
@@ -101,37 +101,37 @@
                     </div>
 
                     <div class="traveler-form-group traveler-form-group--full">
-                        <label for="address_line_1">Address Line 1 *</label>
+                        <label for="address_line_1">{{ __('profile.address_line_1') }}</label>
                         <input id="address_line_1" type="text" name="address_line_1" value="{{ old('address_line_1', $profile->address_line_1) }}" required>
                     </div>
 
                     <div class="traveler-form-group traveler-form-group--full">
-                        <label for="address_line_2">Address Line 2</label>
+                        <label for="address_line_2">{{ __('profile.address_line_2') }}</label>
                         <input id="address_line_2" type="text" name="address_line_2" value="{{ old('address_line_2', $profile->address_line_2) }}">
                     </div>
 
                     <div class="traveler-form-group traveler-form-group--full">
-                        <label for="city_region">City / Region</label>
+                        <label for="city_region">{{ __('profile.city_region') }}</label>
                         <input id="city_region" type="text" name="city_region" value="{{ old('city_region', $profile->city_region) }}">
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="emergency_contact_name">Emergency Contact Name</label>
+                        <label for="emergency_contact_name">{{ __('profile.emergency_contact_name') }}</label>
                         <input id="emergency_contact_name" type="text" name="emergency_contact_name" value="{{ old('emergency_contact_name', $profile->emergency_contact_name) }}">
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="emergency_contact_phone">Emergency Contact Phone</label>
+                        <label for="emergency_contact_phone">{{ __('profile.emergency_contact_phone') }}</label>
                         <input id="emergency_contact_phone" type="text" name="emergency_contact_phone" value="{{ old('emergency_contact_phone', $profile->emergency_contact_phone) }}" placeholder="+23052511153">
                     </div>
 
                     <div class="traveler-form-group traveler-form-group--full">
-                        <label for="special_notes">Special Notes</label>
+                        <label for="special_notes">{{ __('profile.special_notes') }}</label>
                         <textarea id="special_notes" name="special_notes" rows="4">{{ old('special_notes', $profile->special_notes) }}</textarea>
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="preferred_language">Preferred Language *</label>
+                        <label for="preferred_language">{{ __('profile.preferred_language') }}</label>
                         <select id="preferred_language" name="preferred_language" required>
                             @foreach($preferredLanguages as $code => $label)
                                 <option value="{{ $code }}" {{ old('preferred_language', $profile->preferred_language) === $code ? 'selected' : '' }}>{{ $label }} ({{ $code }})</option>
@@ -145,7 +145,7 @@
                     </div> -->
 
                     <div class="traveler-form-group traveler-form-group--full traveler-form-actions">
-                        <button type="submit" class="btn-primary">Save Profile</button>
+                        <button type="submit" class="btn-primary">{{ __('profile.save_profile') }}</button>
                     </div>
                 </form>
             </div>

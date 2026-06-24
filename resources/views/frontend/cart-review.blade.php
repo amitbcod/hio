@@ -19,12 +19,12 @@
             {{-- ── Page Header ─────────────────────────────────────────────── --}}
             <div class="cart-page-header">
                 <div class="breadcrumbs">
-                    <a href="{{ url('/') }}">Home</a>
+                    <a href="{{ url('/') }}">{{ __('site.home') }}</a>
                     <span>/</span>
-                    <span>Booking Cart</span>
+                    <span>{{ __('cart.booking_cart') }}</span>
                 </div>
                 <h1 class="cart-title">
-                    Review Your Items
+                    {{ __('cart.review_title') }}
                     @if(!empty($cart))
                         <span class="cart-badge">{{ count($cart) }}</span>
                     @endif
@@ -35,9 +35,9 @@
                 {{-- ── Empty State ──────────────────────────────────────────── --}}
                 <div class="cart-empty">
                     <div class="cart-empty-icon"><i class="fa-solid fa-cart-shopping"></i></div>
-                    <h2>Your cart is empty</h2>
-                    <p>Browse our <a href="{{ url('/#accommodations-section') }}">accommodations</a> or <a href="{{ url('/#activities-section') }}">activities</a> and add items to get started.</p>
-                    <a href="{{ url('/') }}" class="btn-primary">Explore Now</a>
+                    <h2>{{ __('cart.empty_title') }}</h2>
+                    <p>{{ __('cart.empty_paragraph') }}</p>
+                    <a href="{{ url('/') }}" class="btn-primary">{{ __('cart.explore_now') }}</a>
                 </div>
             @else
                 <div class="cart-layout">
@@ -76,7 +76,7 @@
                                 <div class="cart-item-body">
                                     <div class="cart-item-top">
                                         <div>
-                                            <span class="cart-item-badge">{{ $isAccom ? 'Stay' : 'Activity' }}</span>
+                                            <span class="cart-item-badge">{{ $isAccom ? __('cart.type.stay') : __('cart.type.activity') }}</span>
                                             <h3 class="cart-item-title">{{ $item['title'] }}</h3>
                                             @if($isAccom && !empty($item['plan_label']))
                                                 <p class="cart-item-sub" style="color: #19b5b5; font-weight: 500;">{{ $item['plan_label'] }} • {{ $item['pricing_setting'] ?? 'Per Room/Night' }}</p>
@@ -112,9 +112,9 @@
                                     @if($item['discount_amount'] > 0)
                                         <div class="cart-item-promo">
                                             <i class="fa-solid fa-tag"></i>
-                                            Discount applied: −{{ $item['currency'] }} {{ number_format($item['discount_amount'], 2) }}
+                                            {{ __('cart.discount_applied') }} −{{ $item['currency'] }} {{ number_format($item['discount_amount'], 2) }}
                                             @if($item['is_non_refundable'])
-                                                <span class="non-refundable-badge">Non-refundable</span>
+                                                <span class="non-refundable-badge">{{ __('cart.non_refundable') }}</span>
                                             @endif
                                         </div>
                                     @endif
@@ -124,23 +124,23 @@
                                             ? route('frontend.accommodations.show', $item['accommodation_id'])
                                             : route('frontend.activities.show', $item['activity_id']) }}"
                                            class="cart-link">
-                                            <i class="fa-solid fa-eye"></i> View Rules
+                                            <i class="fa-solid fa-eye"></i> {{ __('cart.view_rules') }}
                                         </a>
                                         @if($isAccom && !empty($item['accommodation_id']))
                                             <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($item['title']) }}"
                                                target="_blank" rel="noopener" class="cart-link">
-                                                <i class="fa-solid fa-location-dot"></i> Get Directions
+                                                <i class="fa-solid fa-location-dot"></i> {{ __('cart.get_directions') }}
                                             </a>
                                         @endif
                                         <a href="tel:+23052511153" class="cart-link">
-                                            <i class="fa-solid fa-phone"></i> Call Us
+                                            <i class="fa-solid fa-phone"></i> {{ __('cart.call_us') }}
                                         </a>
 
                                         {{-- Remove --}}
                                         <form method="POST" action="{{ route('frontend.booking.cart.remove') }}" class="cart-remove-form">
                                             @csrf
                                             <input type="hidden" name="cart_key" value="{{ $cartKey }}">
-                                            <button type="submit" class="cart-remove-btn" title="Remove item">
+                                            <button type="submit" class="cart-remove-btn" title="{{ __('cart.remove_item') }}">
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </button>
                                         </form>
@@ -156,7 +156,7 @@
                     ═══════════════════════════════════════════════════════════ --}}
                     <aside class="checkout-summary">
                         <div class="summary-card">
-                            <h2 class="summary-heading">Checkout Summary</h2>
+                            <h2 class="summary-heading">{{ __('cart.checkout_summary') }}</h2>
 
                             {{-- Promo Code --}}
                             <!-- <div class="promo-box">
@@ -170,7 +170,7 @@
                             <div class="summary-divider"></div>
 
                             {{-- Fare Summary --}}
-                            <h3 class="fare-heading">Fare Summary</h3>
+                            <h3 class="fare-heading">{{ __('cart.fare_summary') }}</h3>
 
                             <div class="fare-rows">
                                 @foreach($cart as $item)
@@ -189,25 +189,25 @@
 
                                 @if($summary['total_discount'] > 0)
                                     <div class="fare-row fare-row--discount">
-                                        <span><i class="fa-solid fa-tag"></i> Discounts</span>
+                                        <span><i class="fa-solid fa-tag"></i> {{ __('cart.discounts') }}</span>
                                         <span>−{{ $summary['currency'] }} {{ number_format($summary['total_discount'], 2) }}</span>
                                     </div>
                                     <div class="fare-row">
-                                        <span>Price After Discount</span>
+                                        <span>{{ __('cart.price_after_discount') }}</span>
                                         <span>{{ $summary['currency'] }} {{ number_format($summary['price_after_discount'], 2) }}</span>
                                     </div>
                                 @endif
 
                                 @if($summary['total_tax'] > 0)
                                     <div class="fare-row">
-                                        <span>Taxes &amp; Charges</span>
+                                        <span>{{ __('cart.taxes_charges') }}</span>
                                         <span>{{ $summary['currency'] }} {{ number_format($summary['total_tax'], 2) }}</span>
                                     </div>
                                 @endif
 
                                 @if($summary['total_fees'] > 0)
                                     <div class="fare-row">
-                                        <span>Fees (Cleaning / Resort)</span>
+                                        <span>{{ __('cart.fees') }}</span>
                                         <span>{{ $summary['currency'] }} {{ number_format($summary['total_fees'], 2) }}</span>
                                     </div>
                                 @endif
@@ -216,12 +216,12 @@
                             <div class="summary-divider"></div>
 
                             <div class="fare-row fare-row--total">
-                                <span>Net Amount Payable</span>
+                                <span>{{ __('cart.net_amount_payable') }}</span>
                                 <span>{{ $summary['currency'] }} {{ number_format($summary['net_payable'], 2) }}</span>
                             </div>
 
                             <button type="button" class="btn-checkout" id="proceedCheckoutBtn">
-                                Proceed to Checkout
+                                {{ __('cart.proceed_to_checkout') }}
                                 <i class="fa-solid fa-arrow-right"></i>
                             </button>
 
@@ -242,7 +242,7 @@
                 <div class="modal-overlay"></div>
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2>How would you like to proceed?</h2>
+                        <h2>{{ __('cart.checkout_modal.title') }}</h2>
                         <button type="button" class="modal-close" onclick="closeCheckoutModal()">
                             <i class="fa-solid fa-times"></i>
                         </button>
@@ -255,10 +255,10 @@
                                 <div class="option-icon">
                                     <i class="fa-solid fa-user-plus"></i>
                                 </div>
-                                <h3>Guest Checkout</h3>
-                                <p>Book without creating an account. You'll receive an email with a link to access your booking details.</p>
+                                <h3>{{ __('cart.checkout_modal.guest_title') }}</h3>
+                                <p>{{ __('cart.checkout_modal.guest_desc') }}</p>
                                 <button type="button" class="btn-option-primary" onclick="proceedGuestCheckout()">
-                                    Continue as Guest
+                                    {{ __('cart.checkout_modal.guest_button') }}
                                 </button>
                             </div>
 
@@ -267,10 +267,10 @@
                                 <div class="option-icon">
                                     <i class="fa-solid fa-sign-in-alt"></i>
                                 </div>
-                                <h3>Existing Customer</h3>
-                                <p>Sign in to your account to save your bookings, manage preferences, and track trips easily.</p>
+                                <h3>{{ __('cart.checkout_modal.login_title') }}</h3>
+                                <p>{{ __('cart.checkout_modal.login_desc') }}</p>
                                 <button type="button" class="btn-option-primary" onclick="proceedLogin()">
-                                    Sign In
+                                    {{ __('cart.checkout_modal.login_button') }}
                                 </button>
                             </div>
                         </div>
@@ -279,7 +279,7 @@
                     <div class="modal-footer">
                         <p class="option-note">
                             <i class="fa-solid fa-lock-open"></i>
-                            Your information is secure. We never share your details with third parties.
+                            {{ __('cart.checkout_modal.footer_note') }}
                         </p>
                     </div>
                 </div>

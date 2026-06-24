@@ -350,15 +350,15 @@
 
             <div class="checkout-page-header">
                 <div class="breadcrumbs">
-                    <a href="{{ url('/') }}">Home</a>
+                    <a href="{{ url('/') }}">{{ __('site.home') }}</a>
                     <span>/</span>
-                    <span>Checkout</span>
+                    <span>{{ __('checkout.title') }}</span>
                 </div>
-                <h1>Complete Your Booking</h1>
-                <p class="checkout-subtitle">Choose your guest details and payment method to complete the booking.</p>
+                <h1>{{ __('checkout.complete_booking') }}</h1>
+                <p class="checkout-subtitle">{{ __('checkout.subtitle') }}</p>
                     @if(!auth('traveler')->check())
                         <p class="checkout-login-link">
-                            Already have an account? <a href="{{ route('traveler.login') . '?redirect=' . urlencode(route('frontend.booking.checkout')) }}">Login</a>
+                            {{ __('checkout.already_have_account') }} <a href="{{ route('traveler.login') . '?redirect=' . urlencode(route('frontend.booking.checkout')) }}">{{ __('checkout.login') }}</a>
                         </p>
                     @endif
 
@@ -386,7 +386,7 @@
                         <div class="form-card accordion-card">
                             <button type="button" class="accordion-header" aria-expanded="true">
                                 <h2 class="form-section-title">
-                                    <span class="step-num">1</span> Guest Details
+                                    <span class="step-num">1</span> {{ __('checkout.step.guest_details') }}
                                 </h2>
                                 <span class="accordion-toggle">−</span>
                             </button>
@@ -398,11 +398,11 @@
                                             <label style="display: flex; gap: 20px;">
                                                 <span>
                                                     <input type="radio" name="guest_type" value="myself" checked>
-                                                    <strong>Myself</strong>
+                                                    <strong>{{ __('checkout.choice.myself') }}</strong>
                                                 </span>
                                                 <span>
                                                     <input type="radio" name="guest_type" value="someone_else">
-                                                    <strong>Someone Else</strong>
+                                                    <strong>{{ __('checkout.choice.someone_else') }}</strong>
                                                 </span>
                                             </label>
                                         </div>
@@ -412,55 +412,55 @@
                                         <div class="form-group">
                                             <label for="guests_0_relation">Relationship <span class="req">*</span></label>
                                             <select id="guests_0_relation" name="guests[0][relation]" class="form-input">
-                                                <option value="">Choose relation</option>
-                                                <option value="self" {{ old('guests.0.relation') === 'self' ? 'selected' : '' }}>Self</option>
-                                                <option value="spouse" {{ old('guests.0.relation') === 'spouse' ? 'selected' : '' }}>Spouse</option>
-                                                <option value="child" {{ old('guests.0.relation') === 'child' ? 'selected' : '' }}>Child</option>
-                                                <option value="friend" {{ old('guests.0.relation') === 'friend' ? 'selected' : '' }}>Friend</option>
-                                                <option value="colleague" {{ old('guests.0.relation') === 'colleague' ? 'selected' : '' }}>Colleague</option>
-                                                <option value="other" {{ old('guests.0.relation') === 'other' ? 'selected' : '' }}>Other</option>
+                                                <option value="">{{ __('checkout.relation.choose') }}</option>
+                                                <option value="self" {{ old('guests.0.relation') === 'self' ? 'selected' : '' }}>{{ __('checkout.relation.self') }}</option>
+                                                <option value="spouse" {{ old('guests.0.relation') === 'spouse' ? 'selected' : '' }}>{{ __('checkout.relation.spouse') }}</option>
+                                                <option value="child" {{ old('guests.0.relation') === 'child' ? 'selected' : '' }}>{{ __('checkout.relation.child') }}</option>
+                                                <option value="friend" {{ old('guests.0.relation') === 'friend' ? 'selected' : '' }}>{{ __('checkout.relation.friend') }}</option>
+                                                <option value="colleague" {{ old('guests.0.relation') === 'colleague' ? 'selected' : '' }}>{{ __('checkout.relation.colleague') }}</option>
+                                                <option value="other" {{ old('guests.0.relation') === 'other' ? 'selected' : '' }}>{{ __('checkout.relation.other') }}</option>
                                             </select>
                                         </div>
 
                                         <div class="form-group">
                                             <label for="guests_0_gender">Gender</label>
                                             <select id="guests_0_gender" name="guests[0][gender]" class="form-input">
-                                                <option value="">Select</option>
-                                                <option value="male" {{ old('guests.0.gender') === 'male' ? 'selected' : '' }}>Male</option>
-                                                <option value="female" {{ old('guests.0.gender') === 'female' ? 'selected' : '' }}>Female</option>
-                                                <option value="non_binary" {{ old('guests.0.gender') === 'non_binary' ? 'selected' : '' }}>Non-binary</option>
-                                                <option value="other" {{ old('guests.0.gender') === 'other' ? 'selected' : '' }}>Other</option>
+                                                <option value="">{{ __('checkout.gender.select') }}</option>
+                                                <option value="male" {{ old('guests.0.gender') === 'male' ? 'selected' : '' }}>{{ __('checkout.gender.male') }}</option>
+                                                <option value="female" {{ old('guests.0.gender') === 'female' ? 'selected' : '' }}>{{ __('checkout.gender.female') }}</option>
+                                                <option value="non_binary" {{ old('guests.0.gender') === 'non_binary' ? 'selected' : '' }}>{{ __('checkout.gender.non_binary') }}</option>
+                                                <option value="other" {{ old('guests.0.gender') === 'other' ? 'selected' : '' }}>{{ __('checkout.gender.other') }}</option>
                                             </select>
                                         </div>
                                     </div>
 
                                     <div class="form-grid col-3">
                                         <div class="form-group">
-                                            <label for="guests_0_first_name">First Name <span class="req">*</span></label>
+                                            <label for="guests_0_first_name">{{ __('profile.first_name') }} <span class="req">*</span></label>
                                             <input type="text" id="guests_0_first_name" name="guests[0][first_name]" value="{{ old('guests.0.first_name', $traveler?->profile->first_name ?? '') }}" class="form-input">
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="guests_0_middle_name">Middle Name</label>
+                                            <label for="guests_0_middle_name">{{ __('profile.middle_name') }}</label>
                                             <input type="text" id="guests_0_middle_name" name="guests[0][middle_name]" value="{{ old('guests.0.middle_name', $traveler?->profile->middle_name ?? '') }}" class="form-input">
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="guests_0_last_name">Last Name <span class="req">*</span></label>
+                                            <label for="guests_0_last_name">{{ __('profile.last_name') }} <span class="req">*</span></label>
                                             <input type="text" id="guests_0_last_name" name="guests[0][last_name]" value="{{ old('guests.0.last_name', $traveler?->profile->last_name ?? '') }}" class="form-input">
                                         </div>
                                     </div>
 
                                     <div class="form-grid col-3">
                                         <div class="form-group">
-                                            <label for="guests_0_dob">Date of Birth <span class="req">*</span></label>
+                                            <label for="guests_0_dob">{{ __('profile.date_of_birth') }} <span class="req">*</span></label>
                                             <input type="date" id="guests_0_dob" name="guests[0][dob]" value="{{ old('guests.0.dob', $guestDefaults['dob'] ?? '') }}" class="form-input">
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="guests_0_nationality">Nationality <span class="req">*</span></label>
+                                            <label for="guests_0_nationality">{{ __('profile.nationality') }} <span class="req">*</span></label>
                                             <select id="guests_0_nationality" name="guests[0][nationality]" class="form-input">
-                                                <option value="">Select nationality</option>
+                                                <option value="">{{ __('checkout.select_nationality') }}</option>
                                                 @foreach($countries as $country)
                                                     <option value="{{ $country }}" {{ old('guests.0.nationality', $traveler?->profile->country ?? '') === $country ? 'selected' : '' }}>{{ $country }}</option>
                                                 @endforeach
@@ -482,13 +482,13 @@
                                 <div class="form-grid" style="margin-top: 20px;">
                                     <div class="form-group">
                                         <label for="guest_email">Email Address <span class="req">*</span></label>
-                                        <input type="email" id="guest_email" name="guest_email" value="{{ old('guest_email', $guestDefaults['guest_email'] ?? $traveler?->email ?? '') }}" placeholder="you@example.com" class="form-input" required>
+                                        <input type="email" id="guest_email" name="guest_email" value="{{ old('guest_email', $guestDefaults['guest_email'] ?? $traveler?->email ?? '') }}" placeholder="{{ __('checkout.email_placeholder') }}" class="form-input" required>
                                         <p class="form-hint">Booking confirmation will be sent here.</p>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="guest_phone">Phone Number</label>
-                                        <input type="tel" id="guest_phone" name="guest_phone" value="{{ old('guest_phone', $guestDefaults['guest_phone'] ?? $traveler?->mobile_phone ?? '') }}" placeholder="+230 5xxx xxxx" class="form-input">
+                                        <label for="guest_phone">{{ __('checkout.phone_number') }}</label>
+                                        <input type="tel" id="guest_phone" name="guest_phone" value="{{ old('guest_phone', $guestDefaults['guest_phone'] ?? $traveler?->mobile_phone ?? '') }}" placeholder="{{ __('checkout.phone_placeholder') }}" class="form-input">
                                     </div>
                                 </div>
 
@@ -497,27 +497,27 @@
                                 <div class="form-group" style="margin-top: 20px;">
                                     <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                                         <input type="checkbox" id="createAccountCheckbox" name="create_account" value="1" class="form-input" style="width: auto; margin: 0;">
-                                        <span style="font-size: 14px; color: #333;">Create an account for exclusive member privileges.</span>
+                                        <span style="font-size: 14px; color: #333;">{{ __('checkout.create_account_label') }}</span>
                                     </label>
                                 </div>
 
                                 {{-- Account Creation Fields (Hidden by Default) --}}
                                 <div id="accountCreationSection" style="display: none; margin-top: 20px; padding: 16px; background: #f8f9fa; border-radius: 10px; border: 1px solid #e8e8ef;">
                                     <div class="form-group">
-                                        <label for="account_password">Password <span class="req">*</span></label>
-                                        <input type="password" id="account_password" name="account_password" class="form-input" placeholder="Enter password">
+                                        <label for="account_password">{{ __('checkout.password') }} <span class="req">*</span></label>
+                                        <input type="password" id="account_password" name="account_password" class="form-input" placeholder="{{ __('checkout.password') }}">
                                         <p class="form-hint" style="color: #666; margin-top: 6px;">
-                                            <i class="fa-solid fa-info-circle"></i> Minimum 8 characters with uppercase, lowercase, number, and special character.
+                                            <i class="fa-solid fa-info-circle"></i> {{ __('checkout.password_hint') }}
                                         </p>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="account_password_confirm">Confirm Password <span class="req">*</span></label>
-                                        <input type="password" id="account_password_confirm" name="account_password_confirm" class="form-input" placeholder="Confirm password">
+                                        <label for="account_password_confirm">{{ __('checkout.password_confirm') }} <span class="req">*</span></label>
+                                        <input type="password" id="account_password_confirm" name="account_password_confirm" class="form-input" placeholder="{{ __('checkout.password_confirm') }}">
                                     </div>
 
                                     <button type="button" id="createAccountBtn" class="btn-create-account" onclick="createGuestAccount()">
-                                        <i class="fa-solid fa-user-plus"></i> Create Account and Proceed
+                                        <i class="fa-solid fa-user-plus"></i> {{ __('checkout.create_account_and_proceed') }}
                                     </button>
                                 </div>
                                 @endif
@@ -527,15 +527,15 @@
                         <div class="form-card accordion-card">
                             <button type="button" class="accordion-header" aria-expanded="true">
                                 <h2 class="form-section-title">
-                                    <span class="step-num">2</span> Special Requests
+                                    <span class="step-num">2</span> {{ __('checkout.step.special_requests') }}
                                 </h2>
                                 <span class="accordion-toggle">−</span>
                             </button>
                             <div class="accordion-panel">
                                 <div class="form-group form-group--full">
-                                    <label for="special_requests">Special Requests (Optional)</label>
+                                    <label for="special_requests">{{ __('checkout.special_requests_optional') }}</label>
                                     <textarea id="special_requests" name="special_requests"
-                                            rows="3" placeholder="Any special requirements, diet preferences, accessibility needs…"
+                                            rows="3" placeholder="{{ __('checkout.special_request_placeholder') }}"
                                             class="form-input form-textarea">{{ old('special_requests') }}</textarea>
                                 </div>
                             </div>
@@ -544,7 +544,7 @@
                         <div class="form-card accordion-card">
                             <button type="button" class="accordion-header" aria-expanded="true">
                                 <h2 class="form-section-title">
-                                    <span class="step-num">3</span> Payment Method
+                                    <span class="step-num">3</span> {{ __('checkout.step.payment_method') }}
                                 </h2>
                                 <span class="accordion-toggle">−</span>
                             </button>
@@ -563,14 +563,14 @@
                                         <input type="radio" name="payment_method" value="againgency" hidden checked>
                                         <div class="payment-option-icon"><i class="fa-solid fa-credit-card"></i></div>
                                         <div>
-                                            <strong>Online Payment</strong>
-                                            <p>Pay securely now through our payment gateway.</p>
+                                            <strong>{{ __('checkout.online_payment') }}</strong>
+                                            <p>{{ __('checkout.pay_securely') }}</p>
                                         </div>
                                         <i class="fa-solid fa-circle-check payment-tick"></i>
                                     </label>
                                 </div>
                                 <p class="form-hint" style="margin-top:10px;">
-                                    Select Cash on Delivery or pay securely with Againgency.
+                                    {{ __('checkout.payment_method_hint') }}
                                 </p>
                             </div>
                         </div>
@@ -579,7 +579,7 @@
                         <div class="form-card accordion-card">
                             <button type="button" class="accordion-header" aria-expanded="true">
                                 <h2 class="form-section-title">
-                                    <span class="step-num">4</span> Your Items
+                                    <span class="step-num">4</span> {{ __('checkout.step.your_items') }}
                                 </h2>
                                 <span class="accordion-toggle">−</span>
                             </button>
@@ -620,27 +620,27 @@
                                             </div>
                                             <div class="item-panel-actions">
                                                 <button type="button" class="btn toggle-guest-form" data-item="{{ $key }}">
-                                                    <i class="fa-solid fa-plus"></i> Add {{ $item['type'] === 'accommodation' ? 'Guest' : 'Participant' }} Details
+                                                    <i class="fa-solid fa-plus"></i> {{ __('checkout.add_guest_details', ['type' => $item['type'] === 'accommodation' ? __('checkout.guest') : __('checkout.participant')]) }}
                                                 </button>
                                             </div>
                                             <div class="item-guest-form" id="guest-form-{{ $key }}" style="display: none; margin-top: 15px;">
                                                 <h4 style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">{{ $item['type'] === 'accommodation' ? 'Guest' : 'Participant' }} Details for {{ $item['title'] }}</h4>
                                                 <div class="item-saved-guests-panel" id="item-saved-guests-panel-{{ $key }}" style="margin-bottom: 14px;">
-                                                    <p class="item-saved-guests-title">Select saved guest details or add a new guest</p>
+                                                    <p class="item-saved-guests-title">{{ __('checkout.select_saved_guests') }}</p>
                                                     <div class="item-saved-guests-list" id="item-saved-guests-list-{{ $key }}"></div>
                                                     <button type="button" class="btn btn-secondary btn-apply-saved-guests" data-item="{{ $key }}" style="margin-top: 10px;">
-                                                        <i class="fa-solid fa-check"></i> Add selected saved guests
+                                                        <i class="fa-solid fa-check"></i> {{ __('checkout.add_selected_saved_guests') }}
                                                     </button>
                                                 </div>
                                                 <div class="item-guests-list" id="item-guests-{{ $key }}">
-                                                    {{-- Guests will be added here --}}
+                                                    {{-- {{ __('checkout.guests_added_here') }} --}}
                                                 </div>
                                                 <button type="button" class="btn-add-item-guest" data-item="{{ $key }}" style="margin-top: 10px;">
-                                                    <i class="fa-solid fa-plus"></i> Add New {{ $item['type'] === 'accommodation' ? 'Guest' : 'Participant' }}
+                                                    <i class="fa-solid fa-plus"></i> {{ __('checkout.add_new', ['type' => $item['type'] === 'accommodation' ? __('checkout.guest') : __('checkout.participant')]) }}
                                                 </button>
                                             </div>
                                             <p style="margin-top: 12px; font-size: 13px; color: #555;">
-                                                Add {{ $item['type'] === 'accommodation' ? 'guest names' : 'participant details' }} for this item. This is optional; you can complete details later from your trip summary.
+                                                {{ __('checkout.optional_details_text', ['type' => $item['type'] === 'accommodation' ? __('checkout.guest_names') : __('checkout.participant_details')]) }}
                                             </p>
                                         </div>
                                     </div>
@@ -655,8 +655,7 @@
                 {{-- ════════ RIGHT — Summary Sidebar ════════ --}}
                 <aside class="checkout-summary">
                     <div class="summary-card">
-                        <h2 class="summary-heading">Order Summary</h2>
-
+                            <h2 class="summary-heading">{{ __('checkout.order_summary') }}</h2>
                         <div class="fare-rows">
                             @foreach($cart as $item)
                                 @php
@@ -674,13 +673,11 @@
 
                             @if($summary['total_discount'] > 0)
                                 <div class="fare-row fare-row--discount">
-                                    <span><i class="fa-solid fa-tag"></i> Discounts</span>
+                                    <span><i class="fa-solid fa-tag"></i> {{ __('cart.discounts') }}</span>
                                     <span>−{{ $summary['currency'] }} {{ number_format($summary['total_discount'], 2) }}</span>
                                 </div>
                                 <div class="fare-row">
-                                    <span>After Discount</span>
-                                    <span>{{ $summary['currency'] }} {{ number_format($summary['price_after_discount'], 2) }}</span>
-                                </div>
+                                    <span>{{ __('cart.price_after_discount') }}</span>
                             @endif
 
                             @if($summary['total_tax'] > 0)
@@ -701,21 +698,21 @@
                         <div class="summary-divider"></div>
 
                         <div class="fare-row fare-row--total">
-                            <span>Net Amount Payable</span>
+                            <span>{{ __('cart.net_amount_payable') }}</span>
                             <span>{{ $summary['currency'] }} {{ number_format($summary['net_payable'], 2) }}</span>
                         </div>
 
                         <button type="submit" form="checkoutForm" class="btn-checkout">
                             <i class="fa-solid fa-lock"></i>
-                            Confirm Booking (COD)
+                            {{ __('checkout.confirm_booking_cod') }}
                         </button>
 
                         <p class="summary-note">
                             <i class="fa-solid fa-shield-halved"></i>
-                            Secure booking                        </p>
+                            {{ __('checkout.secure_booking') }}                        </p>
 
                         <a href="{{ url('/') }}" class="back-to-cart">
-                            <i class="fa-solid fa-arrow-left"></i> Back to search
+                            <i class="fa-solid fa-arrow-left"></i> {{ __('checkout.back_to_search') }}
                         </a>
                     </div>
                 </aside>
@@ -729,64 +726,64 @@
         <div id="addGuestModal" class="guest-modal-wrapper">
             <div class="guest-modal-box">
                 <div class="guest-modal-header">
-                    <h2>Add Guest</h2>
+                    <h2>{{ __('checkout.add_guest') }}</h2>
                     <button type="button" class="guest-modal-close" id="closeModalBtn">&times;</button>
                 </div>
                 <div class="guest-modal-body">
                     <form id="addGuestForm">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="modal_relation">Relationship <span class="req">*</span></label>
+                                <label for="modal_relation">{{ __('checkout.relation.choose') }} <span class="req">*</span></label>
                                 <select id="modal_relation" name="relation" required class="form-input">
-                                    <option value="">Select</option>
-                                    <option value="self">Self</option>
-                                    <option value="spouse">Spouse</option>
-                                    <option value="child">Child</option>
-                                    <option value="friend">Friend</option>
-                                    <option value="colleague">Colleague</option>
-                                    <option value="other">Other</option>
+                                    <option value="">{{ __('checkout.relation.choose') }}</option>
+                                    <option value="self">{{ __('checkout.relation.self') }}</option>
+                                    <option value="spouse">{{ __('checkout.relation.spouse') }}</option>
+                                    <option value="child">{{ __('checkout.relation.child') }}</option>
+                                    <option value="friend">{{ __('checkout.relation.friend') }}</option>
+                                    <option value="colleague">{{ __('checkout.relation.colleague') }}</option>
+                                    <option value="other">{{ __('checkout.relation.other') }}</option>
                                 </select>
                             </div>
 
                             <div class="form-group">
                                 <label for="modal_gender">Gender</label>
                                 <select id="modal_gender" name="gender" class="form-input">
-                                    <option value="">Select</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="non_binary">Non-binary</option>
-                                    <option value="other">Other</option>
+                                    <option value="">{{ __('checkout.gender.select') }}</option>
+                                    <option value="male">{{ __('checkout.gender.male') }}</option>
+                                    <option value="female">{{ __('checkout.gender.female') }}</option>
+                                    <option value="non_binary">{{ __('checkout.gender.non_binary') }}</option>
+                                    <option value="other">{{ __('checkout.gender.other') }}</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="modal_first_name">First Name <span class="req">*</span></label>
+                                <label for="modal_first_name">{{ __('profile.first_name') }} <span class="req">*</span></label>
                                 <input type="text" id="modal_first_name" name="first_name" required class="form-input">
                             </div>
 
                             <div class="form-group">
-                                <label for="modal_middle_name">Middle Name</label>
+                                <label for="modal_middle_name">{{ __('profile.middle_name') }}</label>
                                 <input type="text" id="modal_middle_name" name="middle_name" class="form-input">
                             </div>
 
                             <div class="form-group">
-                                <label for="modal_last_name">Last Name <span class="req">*</span></label>
+                                <label for="modal_last_name">{{ __('profile.last_name') }} <span class="req">*</span></label>
                                 <input type="text" id="modal_last_name" name="last_name" required class="form-input">
                             </div>
                         </div>
 
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="modal_dob">Date of Birth <span class="req">*</span></label>
+                                <label for="modal_dob">{{ __('profile.date_of_birth') }} <span class="req">*</span></label>
                                 <input type="date" id="modal_dob" name="dob" required class="form-input">
                             </div>
 
                             <div class="form-group">
-                                <label for="modal_nationality">Nationality <span class="req">*</span></label>
+                                <label for="modal_nationality">{{ __('profile.nationality') }} <span class="req">*</span></label>
                                 <select id="modal_nationality" name="nationality" required class="form-input">
-                                    <option value="">Select nationality</option>
+                                    <option value="">{{ __('checkout.select_nationality') }}</option>
                                     @foreach($countries as $country)
                                         <option value="{{ $country }}">{{ $country }}</option>
                                     @endforeach
@@ -1288,6 +1285,17 @@ label.saved-guest-checkbox {
 
 @push('scripts')
 <script>
+    const checkoutLocale = {
+        emailRequired: @json(__('checkout.error.email_required')),
+        passwordMismatch: @json(__('checkout.error.password_mismatch')),
+        passwordStrength: @json(__('checkout.error.password_strength')),
+        accountCreationFailed: @json(__('checkout.error.create_account_failed')),
+        genericRetry: @json(__('checkout.error.generic_retry')),
+        createAccountAndProceed: @json(__('checkout.create_account_and_proceed')),
+        payNow: @json(__('checkout.pay_now')),
+        confirmBookingCod: @json(__('checkout.confirm_booking_cod')),
+    };
+
     // Account Creation Helper Functions
     function validatePassword(password) {
         const regex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*#?&^()_+\-=\[\]{};:"\\|,.<>\/?]).{8,}$/;
@@ -1359,19 +1367,19 @@ label.saved-guest-checkbox {
 
         // Validate email
         if (!email) {
-            showAccountCreationError('Email Address is required.');
+            showAccountCreationError(checkoutLocale.emailRequired);
             return;
         }
 
         // Validate passwords match
         if (password !== confirmPassword) {
-            showAccountCreationError('Password and Confirm Password do not match.');
+            showAccountCreationError(checkoutLocale.passwordMismatch);
             return;
         }
 
         // Validate password strength
         if (!validatePassword(password)) {
-            showAccountCreationError('Password must contain at least 8 characters with uppercase, lowercase, number, and special character.');
+            showAccountCreationError(checkoutLocale.passwordStrength);
             return;
         }
 
@@ -1408,16 +1416,16 @@ label.saved-guest-checkbox {
                 window.location.href = '{{ route("frontend.booking.checkout") }}';
             } else {
                 // Show error message
-                showAccountCreationError(data.error || 'Failed to create account. Please try again.');
+                showAccountCreationError(data.error || checkoutLocale.accountCreationFailed);
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Create Account and Proceed';
+                btn.innerHTML = `<i class="fa-solid fa-user-plus"></i> ${checkoutLocale.createAccountAndProceed}`;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showAccountCreationError('An error occurred. Please try again.');
+            showAccountCreationError(checkoutLocale.genericRetry);
             btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Create Account and Proceed';
+            btn.innerHTML = `<i class="fa-solid fa-user-plus"></i> ${checkoutLocale.createAccountAndProceed}`;
         });
     }
 
@@ -1906,8 +1914,8 @@ label.saved-guest-checkbox {
                 const checkoutButton = document.querySelector('.btn-checkout');
                 if (checkoutButton) {
                     checkoutButton.innerHTML = selectedMethod === 'againgency'
-                        ? '<i class="fa-solid fa-credit-card"></i> Pay Now'
-                        : '<i class="fa-solid fa-lock"></i> Confirm Booking (COD)';
+                        ? `<i class="fa-solid fa-credit-card"></i> ${checkoutLocale.payNow}`
+                        : `<i class="fa-solid fa-lock"></i> ${checkoutLocale.confirmBookingCod}`;
                 }
             }
 

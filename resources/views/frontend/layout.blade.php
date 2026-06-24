@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -34,6 +34,25 @@
             color: #fff;
             background: #ff5a5f;
             border-radius: 999px;
+        }
+        .language-switcher {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 16px;
+            font-size: 13px;
+            color: #111;
+        }
+        .language-switcher a {
+            color: #111;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .language-switcher a.active {
+            color: #0f6cb6;
+        }
+        .language-switcher span {
+            opacity: 0.8;
         }
         .mini-cart-overlay {
             position: fixed;
@@ -257,22 +276,25 @@
     <div class="top-bar">
         <div class="wrap top-bar-inner">
             <div class="top-meta">
-                <span><i class="fa-solid fa-phone"></i> +230 52 51 11 53</span>
-                <span><i class="fa-solid fa-globe"></i> Your Local Connection - Mauritius</span>
+                <span><i class="fa-solid fa-phone"></i> {{ __('topbar.phone') }}</span>
+                <span><i class="fa-solid fa-globe"></i> {{ __('topbar.local_connection') }}</span>
             </div>
             <div class="top-links">
+                <div class="language-switcher">
+                    <span>{{ __('site.language') }}:</span>
+                    <a href="{{ route('frontend.lang.switch', 'en') }}" class="{{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
+                    <a href="{{ route('frontend.lang.switch', 'fr') }}" class="{{ app()->getLocale() === 'fr' ? 'active' : '' }}">FR</a>
+                </div>
                 @if(auth('traveler')->check())
-                    <a href="{{ route('traveler.profile') }}">My Profile</a>
+                    <a href="{{ route('traveler.profile') }}">{{ __('profile.menu.profile') }}</a>
                     <form method="POST" action="{{ route('traveler.logout') }}" class="top-inline-form">
                         @csrf
-                        <button type="submit" class="top-link-button">Traveller Logout</button>
-                    </form> 
+                        <button type="submit" class="top-link-button">{{ __('auth.traveler_logout') }}</button>
+                    </form>
                 @else
-                 <a href="{{ route('traveler.login') }}">Traveller Login</a>
-                    <a href="{{ route('traveler.register') }}">Traveller Register</a> 
+                    <a href="{{ route('traveler.login') }}">{{ __('auth.traveler_login') }}</a>
+                    <a href="{{ route('traveler.register') }}">{{ __('auth.traveler_register') }}</a>
                 @endif
-                <!-- <a href="{{ route('operator.login') }}">Operator Login</a>
-                <a href="{{ route('operator.register') }}">Operator Register</a> -->
             </div>
         </div>
     </div>
@@ -298,12 +320,12 @@
                 </div>
             </div>
             <nav class="main-nav">
-                <a href="{{ route('frontend.home') }}" class="is-active">Home</a>
-                <a href="{{ route('frontend.home', ['category' => 'accommodation']) }}">Accommodation</a>
-                <a href="{{ route('frontend.home', ['category' => 'tours']) }}">Activities</a>
-                <a href="{{ url('/#discover-mauritius') }}">Discover Mauritius</a>
-                <a href="{{ url('/operator/accommodation') }}">Operator</a>
-                <a href="{{ route('frontend.booking.cart') }}" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> Cart <span id="headerCartCount" class="header-cart-badge">{{ count(session('booking_cart', [])) }}</span></a>
+                <a href="{{ route('frontend.home') }}" class="is-active">{{ __('site.home') }}</a>
+                <a href="{{ route('frontend.home', ['category' => 'accommodation']) }}">{{ __('site.accommodation') }}</a>
+                <a href="{{ route('frontend.home', ['category' => 'tours']) }}">{{ __('site.activities') }}</a>
+                <a href="{{ url('/#discover-mauritius') }}">{{ __('site.discover_mauritius') }}</a>
+                <a href="{{ url('/operator/accommodation') }}">{{ __('site.operator') }}</a>
+                <a href="{{ route('frontend.booking.cart') }}" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> {{ __('site.cart') }} <span id="headerCartCount" class="header-cart-badge">{{ count(session('booking_cart', [])) }}</span></a>
             </nav>
         </div>
     </header>
@@ -376,15 +398,15 @@
         <div class="mini-cart-panel" role="dialog" aria-modal="true" aria-labelledby="miniCartTitle">
             <div class="mini-cart-header">
                 <div>
-                    <h2 id="miniCartTitle">Booking Cart</h2>
-                    <p id="miniCartCountText" style="margin: 6px 0 0; color: #666; font-size: 13px;">0 items in cart</p>
+                    <h2 id="miniCartTitle">{{ __('site.booking_cart') }}</h2>
+                    <p id="miniCartCountText" style="margin: 6px 0 0; color: #666; font-size: 13px;">{{ trans_choice('cart.items_in_cart', count(session('booking_cart', [])), ['count' => count(session('booking_cart', []))]) }}</p>
                 </div>
-                <button id="closeMiniCartBtn" type="button" class="mini-cart-close" aria-label="Close cart">×</button>
+                <button id="closeMiniCartBtn" type="button" class="mini-cart-close" aria-label="{{ __('site.booking_cart') }}">×</button>
             </div>
             <div class="mini-cart-body">
                 <div id="miniCartMessage" class="mini-cart-message"></div>
                 <div id="miniCartItems"></div>
-                <div id="miniCartEmpty" class="mini-cart-empty" style="display:none;">Your cart is empty. Add a booking to see it here.</div>
+                <div id="miniCartEmpty" class="mini-cart-empty" style="display:none;">{{ __('cart.empty') }}</div>
             </div>
             <div class="mini-cart-summary" id="miniCartSummary">
                 <div class="mini-cart-summary-row"><span>Subtotal</span><span id="miniCartSubtotal">USD 0.00</span></div>
@@ -393,8 +415,8 @@
                 <div class="mini-cart-summary-row total"><span>Total</span><span id="miniCartTotal">USD 0.00</span></div>
             </div>
             <div class="mini-cart-actions">
-                <a href="{{ route('frontend.booking.cart') }}" class="mini-cart-link">View Cart</a>
-                <a href="{{ auth('traveler')->check() ? route('frontend.booking.checkout') : route('frontend.booking.guest-checkout') }}" class="mini-cart-checkout-btn">Proceed to Checkout</a>
+                <a href="{{ route('frontend.booking.cart') }}" class="mini-cart-link">{{ __('cart.view') }}</a>
+                <a href="{{ auth('traveler')->check() ? route('frontend.booking.checkout') : route('frontend.booking.guest-checkout') }}" class="mini-cart-checkout-btn">{{ __('cart.proceed_to_checkout') }}</a>
             </div>
         </div>
     </div>
