@@ -1157,7 +1157,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 <td width="45%" style="vertical-align:top; padding-left:80px;">
     <div class="totals-box" style="background:#fff3e0; border-radius:8px; padding:10px;">
         <div class="totals-row"><span class="totals-label">Subtotal: </span><span class="totals-amount">USD {$formattedSubtotal}</span></div>
-        {$discountRow}
+        <div class="totals-row">{$discountRow}</div>
         <div class="totals-row"><span class="totals-label">Taxable Amount: </span><span class="totals-amount">USD {$formattedTaxableAmount}</span></div>
         <div class="totals-row"><span class="totals-label">VAT ({$vatPercent}%): </span><span class="totals-amount">USD {$formattedVatAmount}</span></div>
         <div class="totals-row"><span class="totals-label"><strong>Service Fee: </strong></span><span class="totals-amount"><strong>USD {$formattedServiceFee}</strong></span></div>
@@ -1172,11 +1172,11 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td style="font-size:13px"><table width="100%" border="0" cellpadding="2" cellspacing="0">
+      <td><table width="100%" border="0" cellpadding="2" cellspacing="0">
         <tbody>
             <tr>
-              <td><strong>IMPORTANT NOTES</strong></td>
-              <td><strong>NEED ASSISTANCE?</strong></td>
+              <td style="font-size:13px"><strong>IMPORTANT NOTES</strong></td>
+              <td style="font-size:13px"><strong>NEED ASSISTANCE?</strong></td>
             </tr>
             <tr>
               <td valign="top"><ul class="check-list">
