@@ -63,7 +63,7 @@ abstract class Controller extends BaseController
     protected function renderAdminCompanyLogoHtml(string $logoPath, string $fallbackName = 'Holidays.io'): string
     {
         if ($logoPath && file_exists($logoPath)) {
-            return '<img src="' . $logoPath . '" width="100" height="40" style="width:100px; height:auto; display:block;" alt="' . e($fallbackName) . '">';
+            return '<img src="' . $logoPath . '" width="100" style="width:100px; height:auto; display:block;" alt="' . e($fallbackName) . '">';
         }
 
         return '<div style="font-size:18px;font-weight:700;color:#f7971e;">' . e($fallbackName) . '</div>';
