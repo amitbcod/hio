@@ -480,9 +480,6 @@ class TripController extends Controller
                 <tr>
                   <td style="font-size:12px">{$companyBusinessNameSafe}</td>
                 </tr>
-               <tr>
-                  <td>&nbsp;</td>
-                </tr>
                 <tr>
                   <td style="color:#6a7b91;font-size:10px">{$companyBusinessAddressSafe}</td>
                 </tr>
@@ -580,7 +577,7 @@ class TripController extends Controller
                 <td colspan="2" style="border-bottom:1px solid #dce7f5;"><strong style="font-size:12px">Service Details</strong></td>
 				  </tr>
               <tr>
-                <td class="label" width="40%"><strong>Property Name</strong></td>
+                <td class="label" width="40%">Property Name</td>
                 <td><strong>{$serviceNameSafe}</strong></td>
               </tr>
               <tr>
@@ -624,10 +621,18 @@ class TripController extends Controller
                 <td style="border-bottom:1px solid #dce7f5;"><strong style="font-size:12px">Service Provider / Property</strong></td>
               </tr>
               <tr>
-                <td>{$providerNameSafe}</td>
-              </tr>
-              <tr>
-                <td>{$providerAddressSafe}</td>
+                <td>
+                    <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                    <tbody>
+                        <tr>
+                        <td>{$providerNameSafe}</td>
+                        </tr>
+                        <tr>
+                        <td>{$providerAddressSafe}</td>
+                        </tr>
+                    </tbody>
+                    </table>
+                </td>
               </tr>
               <tr>
                 <td>&nbsp;</td>
@@ -656,7 +661,10 @@ class TripController extends Controller
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td style="font-size:13px">Important Information / Conditions</td>
+      <td style="font-size:13px"><strong>Important Information / Conditions</strong></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
     </tr>
     <tr>
       <td><ul class="check-list">
@@ -677,20 +685,20 @@ class TripController extends Controller
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td style="font-size:13px">MPO Support and Emergency</td>
+      <td style="font-size:13px"><strong>MPO Support and Emergency</strong></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
     </tr>
     <tr>
       <td>
       <table width="100%" border="0">
         <tbody>
           <tr>
-            <td>support Ticket within your account</td>
+            <td>Support Ticket within your account</td>
           </tr>
           <tr>
             <td>Office Hours: 09:00 - 17:30 </td>
-          </tr>
-          <tr>
-            <td>&nbsp;</td>
           </tr>
           <tr>
             <td>Office : +230 427 10 60</td>
@@ -715,9 +723,19 @@ class TripController extends Controller
       <td align="center">&nbsp;</td>
     </tr>
     <tr>
-      <td align="center" style="font-size:8px; color:#7a8a9f;"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
-    Your Local Connection in Mauritius<br>
-    <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span></td>
+      <td align="center" style="font-size:8px; color:#7a8a9f; border-top:1px solid #e1ecfa">
+        
+      <table width="100%" border="0" cellpadding="5" cellspacing="0">
+        <tbody>
+          <tr>
+            <td align="center"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
+                Your Local Connection in Mauritius<br>
+                <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+        </td>
     </tr>
   </tbody>
 </table>
