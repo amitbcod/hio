@@ -476,7 +476,7 @@ class TripController extends Controller
                   <td style="font-size:12px">Your Local Connection - Mauritius</td>
                 </tr>
                 <tr>
-                  <td style="color:#6a7b91;font-size:10px">{$companyBusinessNameSafe}</td>
+                  <td style="font-size:12px">{$companyBusinessNameSafe}</td>
                 </tr>
                <tr>
                   <td>&nbsp;</td>
@@ -508,10 +508,16 @@ class TripController extends Controller
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td>{$voucherTitle}</td>
+      <td><h1 style="font-size:22px">{$voucherTitle}</h1></td>
     </tr>
     <tr>
-      <td>Voucher No: {$bookingReferenceSafe} | Issue Date: {$issueDateSafe} |  Status: <span style="color:#28a745;font-weight:bold;">Confirmed</span></td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td style="color:#5f6d7a">Voucher No: {$bookingReferenceSafe} | Issue Date: {$issueDateSafe} |  Status: <span style="color:#28a745;font-weight:bold;">Confirmed</span></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
     </tr>
     <tr>
       <td><table width="100%" cellpadding="0" cellspacing="0">
@@ -540,22 +546,28 @@ class TripController extends Controller
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td><span class="section-title" style="margin-bottom:12px;">Responsible Traveller</span></td>
+      <td style="font-size:13px;">Responsible Traveller</td>
     </tr>
     <tr>
       <td><table width="100%" cellpadding="0" cellspacing="0">
         <tr>
-          <td width="50%">Full Name</td>
-          <td width="50%">Other Travellers</td>
+          <td width="50%" style="color:#5f6d7a">Full Name</td>
+          <td width="50%" style="color:#5f6d7a">Other Travellers</td>
         </tr>
         <tr>
-          <td >{$responsibleNameSafe}</td>
-          <td style="padding-bottom:8px;">{$otherTravellersSafe}</td>
+          <td style="color:#5f6d7a">{$responsibleNameSafe}</td>
+          <td style="color:#5f6d7a">{$otherTravellersSafe}</td>
         </tr>
       </table></td>
     </tr>
     <tr>
-      <td><span class="small-text" style="margin:0;"><strong>Travel Party Size:</strong> {$travelPartySizeSafe}</span></td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td><strong>Travel Party Size:</strong> {$travelPartySizeSafe}</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
     </tr>
     <tr>
       <td><table width="100%" cellpadding="0" cellspacing="0">
