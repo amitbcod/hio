@@ -460,224 +460,222 @@ class TripController extends Controller
         $infoLabelDaysNights = e($isActivity ? 'Number of Days' : 'Number of Nights');
         $infoLabelType = e($isActivity ? 'Activity Type' : 'Room Type');
         $html = <<<HTML
-<style>
-body{font-family:helvetica;color:#222; font-size:10px;}
-.section-title{font-size:13px;color:#0b2b51;margin:0 0 8px 0;font-weight:700;}
-.label{font-size:8px;color:#5f6d7a;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 4px 0;}
-.value{font-size:11px;font-weight:700;margin:0;}
-.info-card{border:1px solid #d7e4f0;border-radius:10px;background:#f7fafd;padding:10px;margin-bottom:8px;}
-.info-card strong{display:block;font-size:11px;color:#0b2b51;margin-bottom:4px;}
-.box{border:1px solid #d7e4f0;border-radius:12px;padding:14px;margin-bottom:12px;background:#fff;}
-.accent-box{border-left:4px solid #f7971e;}
-.small-text{font-size:9px;color:#5f6d7a;line-height:1.5;}
-.footer-box{border:1px solid #d7e4f0;background:#eef4fb;border-radius:12px;padding:12px;margin-top:14px;}
-.badge{display:inline-block;padding:5px 10px;border-radius:12px;font-size:9px;color:#1f3f61;background:#dceaf8;margin-right:6px;}
-.check-list{margin:0;padding-left:18px;color:#33475b;line-height:1.6;}
-.check-list li{margin-bottom:6px;}
-.info-row td{padding:4px;vertical-align:top;}
-.table-grid{width:100%;border-collapse:collapse;margin-top:8px;}
-.table-grid td,.table-grid th{border:1px solid #d7e4f0;padding:8px;vertical-align:top;}
-.table-grid th{background:#eef4fb;text-align:left;}
-.two-col{width:49%;display:inline-block;vertical-align:top;}
-.two-col + .two-col{margin-left:2%;}
-</style>
-<table width="100%" cellpadding="0" cellspacing="0">
-<tr>
-<td width="65%" style="vertical-align:top;">
-    <div style="padding:16px;text-align:left;min-height:90px;">
-        {$companyLogoHtml}
-         <div style="font-size:12px;font-weight:700;color:#0b2b51;margin-top:6px;">Your Local Connection - Mauritius</div>
-        <div style="font-size:12px;font-weight:700;color:#0b2b51;margin-top:8px;">{$companyBusinessNameSafe}</div>
-        <div style="font-size:10px;color:#6a7b91;margin-top:6px;">{$companyBusinessAddressSafe}</div>
-        <div style="font-size:10px;color:#6a7b91;margin-top:4px;">{$companyPhoneSafe} | {$companyEmailSafe}</div>
-    </div>
-</td>
-<td width="35%" style="text-align:left;vertical-align:top;">
-    <div style="display:inline-block;padding:10px 12px;background:#ffffff;">
-        <div style="font-size:11px;color:#5f6d7a;margin-bottom:6px;">Powered by</div>
-        {$poweredLogoHtml}
-    </div>
-</td>
-</tr>
-</table>
 
-<h1 style="font-size:22px;margin:12px 0 4px 0;color:#0b2b51;">{$voucherTitle}</h1>
-<div style="font-size:10px;color:#5f6d7a;margin-bottom:16px;">Voucher No: {$bookingReferenceSafe} | Issue Date: {$issueDateSafe} |  Status: <span style="color:#28a745;font-weight:bold;">Confirmed</span></div>
-<br />
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+
+<table width="100%" border="0">
+  <tbody>
     <tr>
-        <td width="49%" style="padding:10px; background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
-                <strong style="display:block;padding:5px">Booking Ref.</strong><br>
-                <span style="display:block;padding:5px">{$bookingReferenceSafe}</span>
-        </td> 
-        <td style="width:2%">&nbsp;&nbsp;</td>
-        <td width="49%" style="padding:10px; background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
-                <strong style="display:block;padding:5px">Service Date</strong><br>
-                <span style="display:block;padding:5px">{$serviceDateSafe}</span>
-        </td>
+      <td valign="top"><table width="100%" border="0">
+        <tbody>
+          <tr>
+            <td><table width="100%" border="0" cellpadding="0" cellspacing="0">
+              <tbody>
+                <tr>
+                  <td>{$companyLogoHtml}</td>
+                </tr>
+                <tr>
+                  <td>Your Local Connection - Mauritius</td>
+                </tr>
+                <tr>
+                  <td>{$companyBusinessNameSafe}</td>
+                </tr>
+                <tr>
+                  <td>{$companyBusinessAddressSafe}<br>
+                    {$companyPhoneSafe} | {$companyEmailSafe}</td>
+                </tr>
+              </tbody>
+            </table></td>
+            <td valign="top"><table width="100%" border="0">
+              <tbody>
+                <tr>
+                  <td style="font-size:12px">Powered by</td>
+                </tr>
+                <tr>
+                  <td>{$poweredLogoHtml}</td>
+                </tr>
+              </tbody>
+            </table></td>
+          </tr>
+        </tbody>
+      </table>
+      </td>
     </tr>
-</table>
-
-<div  style="margin-bottom:20px;">
-    <div class="section-title" style="margin-bottom:12px;">Responsible Traveller</div>
-    <table width="100%" class="info-row" cellpadding="6" cellspacing="0">
+    <tr>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td>{$voucherTitle}</td>
+    </tr>
+    <tr>
+      <td>Voucher No: {$bookingReferenceSafe} | Issue Date: {$issueDateSafe} |  Status: <span style="color:#28a745;font-weight:bold;">Confirmed</span></td>
+    </tr>
+    <tr>
+      <td><table width="100%" cellpadding="0" cellspacing="0">
         <tr>
-            <td width="50%" style="padding-bottom:8px;"><div class="label">Full Name</div><div class="value" style="margin-top:4px;">{$responsibleNameSafe}</div></td>
-            <td width="50%" style="padding-bottom:8px;"><div class="label">Other Travellers</div><div class="value" style="margin-top:4px;">{$otherTravellersSafe}</div></td>
+          <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="5" cellspacing="0">
+            <tr>
+              <td><strong>Booking Ref.</strong></td>
+            </tr>
+            <tr>
+              <td>{$bookingReferenceSafe}</td>
+            </tr>
+          </table></td>
+          <td style="width:2%">&nbsp;&nbsp;</td>
+          <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="5" cellspacing="0">
+            <tr>
+              <td><strong>Service Date</strong></td>
+            </tr>
+            <tr>
+              <td>{$serviceDateSafe}</td>
+            </tr>
+          </table></td>
         </tr>
-    </table>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
-        <tr><td><div class="small-text" style="margin:0;"><strong>Travel Party Size:</strong> {$travelPartySizeSafe}</div></td></tr>
-    </table>
-</div>
-
-<table width="100%" cellpadding="0" cellspacing="0">
-<tr>
-
-<td width="49%" style="padding:8px;vertical-align:top;">
-    <div class="box" style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
-
-        <table width="100%" class="info-row" cellpadding="4" cellspacing="0">
-            <tr>
-                <td>
-                    <div class="section-title2" style="font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5; ">
-                        Service Details
-                    </div>
-                </td>
-            </tr>
-            <tr>
+      </table></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td><span class="section-title" style="margin-bottom:12px;">Responsible Traveller</span></td>
+    </tr>
+    <tr>
+      <td><table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="50%">Full Name</td>
+          <td width="50%">Other Travellers</td>
+        </tr>
+        <tr>
+          <td >{$responsibleNameSafe}</td>
+          <td style="padding-bottom:8px;">{$otherTravellersSafe}</td>
+        </tr>
+      </table></td>
+    </tr>
+    <tr>
+      <td><span class="small-text" style="margin:0;"><strong>Travel Party Size:</strong> {$travelPartySizeSafe}</span></td>
+    </tr>
+    <tr>
+      <td><table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="49%"><div style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px;">
+            <table width="100%" cellpadding="5" cellspacing="0">
+              <tr>
+                <td colspan="2" style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">Service Details</td>
+				  </tr>
+              <tr>
                 <td class="label" width="40%"><strong>Property Name</strong></td>
-                <td><strong style="color:#0b2b51;">{$serviceNameSafe}</strong></td>
-            </tr>
-
-            <tr>
+                <td><strong>{$serviceNameSafe}</strong></td>
+              </tr>
+              <tr>
                 <td class="label">{$infoLabelCheckIn}</td>
                 <td><strong>{$checkInDisplaySafe}</strong></td>
-            </tr>
-
-            <tr>
+              </tr>
+              <tr>
                 <td class="label">{$infoLabelCheckOut}</td>
                 <td><strong>{$checkOutDisplaySafe}</strong></td>
-            </tr>
-
-            <tr>
+              </tr>
+              <tr>
                 <td class="label">{$infoLabelDaysNights}</td>
                 <td>{$nightsSafe}</td>
-            </tr>
-
-            <tr>
+              </tr>
+              <tr>
                 <td class="label">{$infoLabelType}</td>
                 <td>{$roomTypeSafe}</td>
-            </tr>
-
-            <tr>
+              </tr>
+              <tr>
                 <td class="label">Occupancy</td>
                 <td>{$occupancySafe}</td>
-            </tr>
-
-            <tr>
+              </tr>
+              <tr>
                 <td class="label">Meal Plan</td>
                 <td>{$mealPlanSafe}</td>
-            </tr>
-
-            <tr>
+              </tr>
+              <tr>
                 <td class="label">Special Requests</td>
                 <td>{$specialRequestsSafe}</td>
-            </tr>
-
-            <tr>
+              </tr>
+              <tr>
                 <td class="label">Booking Notes</td>
                 <td>{$bookingNotesSafe}</td>
-            </tr>
-        </table>
-    </div>
-</td>
-<td style="width:2%">&nbsp;&nbsp;</td>
-<td width="49%" style="padding-right:8px;vertical-align:top;">
-    <div class="box" style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
-
-        <table width="100%" class="info-row" cellpadding="4" cellspacing="0">
-            <tr>
-                <td>
-                    <div class="section-title" style="font-size:12px; font-weight:bold; color:#0b2b51; margin-bottom:8px; border-bottom:1px solid #dce7f5; padding-bottom:5px;">
-                        Service Provider / Property
-                    </div>
-                </td>
-            </tr>
-            <tr>
+              </tr>
+            </table>
+          </div></td>
+          <td style="width:2%">&nbsp;&nbsp;</td>
+          <td width="49%" valign="top" style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px;">
+            <table width="100%" cellpadding="5" cellspacing="0">
+              <tr>
+                <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">Service Provider / Property</td>
+              </tr>
+              <tr>
                 <td>{$providerNameSafe}</td>
-            </tr>
-            <tr>
+              </tr>
+              <tr>
                 <td>{$providerAddressSafe}</td>
-            </tr>
-            <tr>
-                <td>&nbsp;</td>
-            </tr>
-            <tr>
-                <td>Emergency Contact (24/7)</td>
-            </tr>
-            <tr>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <td style="color:#0b2b51;">Emergency Contact (24/7)</td>
+              </tr>
+              <tr>
                 <td>{$emergencyContactSafe}</td>
-            </tr>
-            <tr>
-                <td>&nbsp;</td>
-            </tr>
-            <tr>
-                <td>Reception / Service Contact</td>
-            </tr>
-            <tr>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <td style="color:#0b2b51;">Reception / Service Contact</td>
+              </tr>
+              <tr>
                 <td>{$receptionContactSafe}</td>
-            </tr>
-        </table>
-    </div>
-</td>
-</tr>
-</table>
-
-<div class="box">
-    <div class="section-title">Important Information / Conditions</div>
-    <ul class="check-list">
-        <li>Please present this voucher on arrival at the property.</li>
-        <li>All travellers must carry a valid passport or national ID.</li>
-        <li>Early check-in / late check-out are subject to availability and at a servicee fee.</li>
-        <li>All amendments and cancellations are subject to the property's booking conditions.</li>
-        <li>For any assistance during your stay, contact the MPO using the details below.</li>
-    </ul>
-   <br>
-        <strong>Your Local Connection</strong> – We are here to support you. For enquiries or assistance during your trip, please contact us.
-    
-</div>
-
-<div class="footer-box">
-<table width="100%" cellpadding="0" cellspacing="0">
-<tr>
-<td width="60%" style="vertical-align:top;">
-    <div style="font-size:13px;font-weight:700;color:#0b2b51;">MPO Support and Emergency</div>
-   
-        <div style="color:#4a5f7f; line-height:1.5;">
-            support Ticket within your account<br>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td><span class="section-title">Important Information / Conditions</span></td>
+    </tr>
+    <tr>
+      <td><ul class="check-list">
+            <li>Please present this voucher on arrival at the property.</li>
+            <li>All travellers must carry a valid passport or national ID.</li>
+            <li>Early check-in / late check-out are subject to availability and at a servicee fee.</li>
+            <li>All amendments and cancellations are subject to the property's booking conditions.</li>
+            <li>For any assistance during your stay, contact the MPO using the details below.</li>
+        </ul></td>
+    </tr>
+    <tr>
+      <td>&lt;strong&gt;Your Local Connection&lt;/strong&gt; – We are here to support you. For enquiries or assistance during your trip, please contact us.</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td><span class="section-title">MPO Support and Emergency</span></td>
+    </tr>
+    <tr>
+      <td>support Ticket within your account<br>
             Office Hours: 09:00 - 17:30 <br><br>
             Office : +230 427 10 60<br>
             WhatsApp: +230 52 51 11 53 <br>
             (After hours Emergency only)<br><br>
-        </div>
-        <div style="margin-top:2px; color:#4a5f7f; font-size:8px;">
-            We are here to help you before, during and after your trip.
-        </div>
-</td>
-
-</tr>
-</table>
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px; padding-top:10px; border-top:1px solid #dce7f5;">
-<tr>
-<td width="100%" style="text-align:center; font-size:8px; color:#7a8a9f; padding:6px 0;">
-    <strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
+            <span style="color:#4a5f7f; font-size:8px;">We are here to help you before, during and after your trip.</span></td>
+    </tr>
+    <tr>
+      <td align="center">&nbsp;</td>
+    </tr>
+    <tr>
+      <td align="center"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
     Your Local Connection in Mauritius<br>
-    <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span>
-</td>
-</tr>
+    <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span></td>
+    </tr>
+  </tbody>
 </table>
-</div>
 HTML;
 
         $pdf = new \TCPDF();
