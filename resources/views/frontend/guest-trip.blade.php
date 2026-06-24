@@ -1,8 +1,8 @@
 @extends('frontend.layout')
 
-@section('title', 'My Bookings')
+@section('title', __('guest_trip.title'))
 
-@section('meta_description', 'View and manage your guest bookings')
+@section('meta_description', __('guest_trip.meta_description'))
 
 @section('content')
 
@@ -12,12 +12,9 @@
         <div class="page-header">
             <h1 class="page-title">
                 <i class="fa-solid fa-ticket"></i>
-                My Bookings
-            </h1>
-            <p class="page-subtitle">Guest Booking Details</p>
-        </div>
-
-        <!-- Flash Messages -->
+                    {{ __('guest_trip.title') }}
+                </h1>
+                <p class="page-subtitle">{{ __('guest_trip.subtitle') }}</p>
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul>
@@ -43,8 +40,8 @@
         <!-- Guest Email Info -->
         <div class="guest-info-card">
             <i class="fa-solid fa-envelope"></i>
-            <p>Viewing bookings for: <strong>{{ $otpToken->email }}</strong></p>
-            <a href="{{ route('traveler.guest-trip.logout') }}" class="btn-logout">Sign Out</a>
+            <p>{{ __('guest_trip.viewing_bookings_for', ['email' => $otpToken->email]) }}</p>
+            <a href="{{ route('traveler.guest-trip.logout') }}" class="btn-logout">{{ __('guest_trip.sign_out') }}</a>
         </div>
 
         <!-- Accommodations -->
@@ -52,16 +49,13 @@
             <div class="bookings-section">
                 <h2 class="section-title">
                     <i class="fa-solid fa-bed"></i>
-                    Accommodation Bookings
-                </h2>
-
-                <div class="bookings-grid">
+                        {{ __('guest_trip.accommodation_bookings') }}
                     @foreach ($accommodationBookings as $booking)
                         <div class="booking-card">
                             <div class="booking-header">
                                 <div>
-                                    <h3 class="booking-title">{{ $booking->accommodation->property_name ?? 'Accommodation' }}</h3>
-                                    <p class="booking-ref">Booking Reference: <strong>{{ $booking->booking_reference }}</strong></p>
+                                    <h3 class="booking-title">{{ $booking->accommodation->property_name ?? __('guest_trip.accommodation_fallback') }}</h3>
+                                    <p class="booking-ref">{{ __('guest_trip.booking_reference') }} <strong>{{ $booking->booking_reference }}</strong></p>
                                 </div>
                                 <span class="booking-status {{ strtolower($booking->booking_status) }}">
                                     {{ $booking->booking_status }}
@@ -78,11 +72,11 @@
                                     <span class="detail-value">{{ $booking->check_out_date->format('F d, Y') }}</span>
                                 </div>
                                 <div class="detail-item">
-                                    <span class="detail-label">Guests:</span>
+                                    <span class="detail-label">{{ __('guest_trip.guests_label') }}</span>
                                     <span class="detail-value">{{ $booking->adults }} Adult(s), {{ $booking->children }} Child(ren)</span>
                                 </div>
                                 <div class="detail-item">
-                                    <span class="detail-label">Total Amount:</span>
+                                    <span class="detail-label">{{ __('guest_trip.total_amount_label') }}</span>
                                     <span class="detail-value font-bold">{{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}</span>
                                 </div>
                             </div>
@@ -93,8 +87,8 @@
                             @endphp
 
                             <div class="booking-actions">
-                                <a href="{{ $tripDetailUrl }}" class="btn-secondary btn-sm">View Details</a>
-                                <a href="{{ $voucherUrl }}" class="btn-secondary btn-sm">Download Voucher</a>
+                                <a href="{{ $tripDetailUrl }}" class="btn-secondary btn-sm">{{ __('guest_trip.view_details') }}</a>
+                                <a href="{{ $voucherUrl }}" class="btn-secondary btn-sm">{{ __('guest_trip.download_voucher') }}</a>
                             </div>
                         </div>
                     @endforeach
@@ -107,7 +101,7 @@
             <div class="bookings-section">
                 <h2 class="section-title">
                     <i class="fa-solid fa-ticket"></i>
-                    Activity Bookings
+                    {{ __('guest_trip.activity_bookings') }}
                 </h2>
 
                 <div class="bookings-grid">
@@ -115,8 +109,8 @@
                         <div class="booking-card">
                             <div class="booking-header">
                                 <div>
-                                    <h3 class="booking-title">{{ $booking->activity->activity_name ?? 'Activity' }}</h3>
-                                    <p class="booking-ref">Booking Reference: <strong>{{ $booking->booking_reference }}</strong></p>
+                                    <h3 class="booking-title">{{ $booking->activity->activity_name ?? __('guest_trip.activity_fallback') }}</h3>
+                                    <p class="booking-ref">{{ __('guest_trip.booking_reference') }} <strong>{{ $booking->booking_reference }}</strong></p>
                                 </div>
                                 <span class="booking-status {{ strtolower($booking->booking_status) }}">
                                     {{ $booking->booking_status }}
@@ -129,11 +123,11 @@
                                     <span class="detail-value">{{ $booking->activity_date->format('F d, Y') }}</span>
                                 </div>
                                 <div class="detail-item">
-                                    <span class="detail-label">Participants:</span>
+                                    <span class="detail-label">{{ __('guest_trip.participants_label') }}</span>
                                     <span class="detail-value">{{ $booking->participants ?? $booking->adults }}</span>
                                 </div>
                                 <div class="detail-item">
-                                    <span class="detail-label">Total Amount:</span>
+                                    <span class="detail-label">{{ __('guest_trip.total_amount_label') }}</span>
                                     <span class="detail-value font-bold">{{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}</span>
                                 </div>
                             </div>
@@ -144,8 +138,8 @@
                             @endphp
 
                             <div class="booking-actions">
-                                <a href="{{ $tripDetailUrl }}" class="btn-secondary btn-sm">View Details</a>
-                                <a href="{{ $voucherUrl }}" class="btn-secondary btn-sm">Download Voucher</a>
+                                <a href="{{ $tripDetailUrl }}" class="btn-secondary btn-sm">{{ __('guest_trip.view_details') }}</a>
+                                <a href="{{ $voucherUrl }}" class="btn-secondary btn-sm">{{ __('guest_trip.download_voucher') }}</a>
                             </div>
                         </div>
                     @endforeach
@@ -157,9 +151,9 @@
         @if ($accommodationBookings->isEmpty() && $activityBookings->isEmpty())
             <div class="empty-state">
                 <i class="fa-solid fa-inbox"></i>
-                <h3>No Bookings Found</h3>
-                <p>You don't have any bookings yet.</p>
-                <a href="{{ url('/') }}" class="btn-primary">Browse Accommodations & Activities</a>
+                <h3>{{ __('guest_trip.empty_title') }}</h3>
+                <p>{{ __('guest_trip.empty_paragraph') }}</p>
+                <a href="{{ url('/') }}" class="btn-primary">{{ __('guest_trip.browse_accommodations_activities') }}</a>
             </div>
         @endif
     </div>

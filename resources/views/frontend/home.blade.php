@@ -39,13 +39,13 @@
         <div class="hero-overlay"></div>
 
         <div class="wrap hero-content">
-            <span class="hero-badge">Explore</span>
-            <h1>Discover Mauritius</h1>
-            <p>Experience beaches, resorts, and unforgettable holidays</p>
+            <span class="hero-badge">{{ __('home.hero.badge') }}</span>
+            <h1>{{ __('home.hero.title') }}</h1>
+            <p>{{ __('home.hero.subtitle') }}</p>
 
             <div class="hero-actions">
-                <a href="#" class="btn-primary">Explore now</a>
-                <a href="#discover-mauritius" class="btn-outline">Browse homepage listings</a>
+                <a href="#" class="btn-primary">{{ __('home.hero.explore_now') }}</a>
+                <a href="#discover-mauritius" class="btn-outline">{{ __('home.hero.browse_listings') }}</a>
             </div>
         </div>
     </article>
@@ -64,21 +64,21 @@
                                 <input type="radio" name="category" value="accommodation" {{ $selectedCategory === 'accommodation' ? 'checked' : '' }}>
                                 <div class="cat-radio-tab">
                                     <div class="main-icon accommodation"><img src="images/accommodation.svg"></div>
-                                    <span>Accommodation</span>
+                                    <span>{{ __('home.search.accommodation') }}</span>
                                 </div>
                             </label>
                             <label class="category-radio-item">
                                 <input type="radio" name="category" value="tours" {{ $selectedCategory === 'tours' ? 'checked' : '' }}>
                                 <div class="cat-radio-tab">
                                     <div class="main-icon activity"><img src="images/activity.svg"></div>
-                                    <span>Tours - Activity</span>
+                                    <span>{{ __('home.search.tours_activity') }}</span>
                                 </div>
                             </label>
                             <label class="category-radio-item">
                                 <input type="radio" name="category" value="transport" {{ $selectedCategory === 'transport' ? 'checked' : '' }}>
                                 <div class="cat-radio-tab">
                                     <div class="main-icon transport"><img src="images/transport.svg"></div>
-                                    <span>Transport</span>
+                                    <span>{{ __('home.search.transport') }}</span>
                                 </div>
                             </label>
                         </div>
@@ -87,7 +87,7 @@
                     <div class="category-input-group">
                         <div class="category-input-group-inner">
                             <div class="category-search-cell category-search-cell--region" style="{{ $selectedCategory === 'transport' ? 'display:none;' : '' }}; flex: 0 1 280px; min-width: 280px">
-                                <h5>Region/Area ?</h5>
+                                <h5>{{ __('home.search.region_area') }}</h5>
                                 <select name="region" class="category-search-select" data-search-region
                                     data-selected="{{ $filters['region'] }}">
                                     <option value="all" {{ $filters['region'] === 'all' || $filters['region'] === '' ? 'selected' : '' }}>All</option>
@@ -101,7 +101,7 @@
 
                             <!-- Accommodation/Transport: Check-In and Check-Out -->
                             <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-in" style="display: none; flex: 0">
-                                <h5>Check-In</h5>
+                                <h5>{{ __('home.search.check_in') }}</h5>
                                 <div class="category-search-dates">
                                     <input type="date" name="check_in" class="category-search-input"
                                         value="{{ $filters['check_in'] }}" min="{{ date('Y-m-d') }}">
@@ -109,7 +109,7 @@
                             </div>
 
                             <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-out" style="display: none; flex: 0">
-                                <h5>Check-Out</h5>
+                                <h5>{{ __('home.search.check_out') }}</h5>
                                 <div class="category-search-dates">
                                     <input type="date" name="check_out" class="category-search-input"
                                         value="{{ $filters['check_out'] }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}">
@@ -118,7 +118,7 @@
 
                             <!-- Tours/Activity: Activity Date -->
                             <div class="category-search-cell category-search-cell--tours category-search-cell--activity-date" style="display: none;">
-                                <h5>Select Date</h5>
+                                <h5>{{ __('home.search.select_date') }}</h5>
                                 <div class="category-search-dates">
                                     <input type="date" name="activity_date" class="category-search-input"
                                         value="{{ request()->query('activity_date', date('Y-m-d')) }}" min="{{ date('Y-m-d') }}">
@@ -127,13 +127,13 @@
 
                             <!-- Accommodation/Transport/Activity: Guest details -->
                             <div class="category-search-cell category-search-cell--guests" style="display: none;">
-                                <h5 id="guest-cell-heading">Guest & Rooms</h5>
+                                <h5 id="guest-cell-heading">{{ __('home.search.guest_rooms') }}</h5>
                                 <div class="guest-rooms-summary">
-                                    <span id="guest-rooms-summary-text">{{ (int) request()->query('adults',2) }} Adults &middot; {{ (int) request()->query('children',0) }} Child &middot; {{ (int) request()->query('infants',0) }} Infant &middot; {{ (int) request()->query('rooms',1) }} Rooms</span> 
+                                    <span id="guest-rooms-summary-text">{{ (int) request()->query('adults',2) }} {{ __('home.search.adults') }} &middot; {{ (int) request()->query('children',0) }} {{ __('home.search.children') }} &middot; {{ (int) request()->query('infants',0) }} {{ __('home.search.infants') }} &middot; {{ (int) request()->query('rooms',1) }} {{ __('home.search.rooms') }}</span> 
                                 </div>
                                 <div class="guest-rooms-selector">
                                     <div class="guest-rooms-row">
-                                        <label for="adults-field">Adults <span>(17+ yr)</span></label>
+                                        <label for="adults-field">{{ __('home.search.adults') }} <span>({{ __('home.search.adult_age_label') }})</span></label>
                                         <div class="guest-rooms-counter">
                                             <button type="button" class="count-btn decrement" data-target="adults">−</button>
                                             <input id="adults-field" type="text" name="adults" value="{{ request()->query('adults', 2) }}" readonly>
@@ -141,7 +141,7 @@
                                         </div>
                                     </div>
                                     <div class="guest-rooms-row">
-                                        <label for="children-field">Children <span>(3-17 yr)</span></label>
+                                        <label for="children-field">{{ __('home.search.children') }} <span>({{ __('home.search.children_age_label') }})</span></label>
                                         <div class="guest-rooms-counter">
                                             <button type="button" class="count-btn decrement" data-target="children">−</button>
                                             <input id="children-field" type="text" name="children" value="{{ request()->query('children', 0) }}" readonly>
@@ -149,7 +149,7 @@
                                         </div>
                                     </div>
                                     <div class="guest-rooms-row">
-                                        <label for="infants-field">Infants <span>(0-2 yr)</span></label>
+                                        <label for="infants-field">{{ __('home.search.infants') }} <span>({{ __('home.search.infants_age_label') }})</span></label>
                                         <div class="guest-rooms-counter">
                                             <button type="button" class="count-btn decrement" data-target="infants">−</button>
                                             <input id="infants-field" type="text" name="infants" value="{{ request()->query('infants', 0) }}" readonly>
@@ -157,7 +157,7 @@
                                         </div>
                                     </div>
                                     <div class="guest-rooms-row" id="rooms-row">
-                                        <label for="rooms-field">Rooms <span>(Max 20)</span></label>
+                                        <label for="rooms-field">{{ __('home.search.rooms') }} <span>({{ __('home.search.rooms_limit_label') }})</span></label>
                                         <div class="guest-rooms-counter">
                                             <button type="button" class="count-btn decrement" data-target="rooms">−</button>
                                             <input id="rooms-field" type="text" name="rooms" value="{{ request()->query('rooms', 1) }}" readonly>
@@ -171,20 +171,20 @@
                             <div class="category-search-cell category-search-cell--transport" style="display: none;">
                                 <div class="transport-row" style="">
                                     <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
-                                        <h5>From</h5>
-                                        <input type="text" name="transport_from" class="category-search-input" value="{{ request()->query('transport_from', '') }}" placeholder="Departure location">
+                                        <h5>{{ __('home.search.from') }}</h5>
+                                        <input type="text" name="transport_from" class="category-search-input" value="{{ request()->query('transport_from', '') }}" placeholder="{{ __('home.search.departure_location') }}">
                                     </div>
                                     <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
-                                        <h5>To</h5>
-                                        <input type="text" name="transport_to" class="category-search-input" value="{{ request()->query('transport_to', '') }}" placeholder="Destination">
+                                        <h5>{{ __('home.search.to') }}</h5>
+                                        <input type="text" name="transport_to" class="category-search-input" value="{{ request()->query('transport_to', '') }}" placeholder="{{ __('home.search.destination') }}">
                                     </div>
                                     <div class="transport-field" style="flex: 0 1 110px; min-width: 110px;">
-                                        <h5>Passengers</h5>
+                                        <h5>{{ __('home.search.passengers') }}</h5>
                                         <input type="number" name="passengers" class="category-search-input" min="1" value="{{ request()->query('passengers', 2) }}">
                                     </div>
                                     <div class="transport-row-date">
                                         <div class="transport-field" style="flex: 1 1 160px;">
-                                            <h5>Arrival date and time</h5>
+                                            <h5>{{ __('home.search.arrival_date_time') }}</h5>
                                             <input type="date" name="arrival_date" class="category-search-input" value="{{ request()->query('arrival_date', date('Y-m-d')) }}" min="{{ date('Y-m-d') }}">
                                         </div>
                                         <div class="transport-field" style="flex: 1 1 120px;">
@@ -194,7 +194,7 @@
                                     </div>
                                     <div class="transport-row-date"> 
                                         <div class="transport-field" style="flex: 1 1 160px;">
-                                            <h5>Return date and time</h5>
+                                            <h5>{{ __('home.search.return_date_time') }}</h5>
                                             <input type="date" name="return_date" class="category-search-input" value="{{ request()->query('return_date', '') }}" min="{{ date('Y-m-d') }}">
                                         </div>
                                         <div class="transport-field" style="flex: 1 1 120px">
@@ -206,7 +206,7 @@
                             </div>
 
                         <div class="category-search-submit">
-                                <button type="submit" class="btn-primary">Proceed</button>
+                                <button type="submit" class="btn-primary">{{ __('home.search.proceed') }}</button>
                             </div>
                         </div>
                     </div>
@@ -221,19 +221,19 @@
     <section class="quick-search">
         <div class="wrap quick-search-grid">
             <div class="quick-tile">
-                <strong>Activities</strong>
-                <p>Adventure tours, ocean trips, guided experiences, and operator-created activities.</p>
-                <a href="#activities-section" class="btn-primary">Browse activities</a>
+                <strong>{{ __('home.quick.activities') }}</strong>
+                <p>{{ __('home.quick.activities_desc') }}</p>
+                <a href="#activities-section" class="btn-primary">{{ __('home.quick.activities_cta') }}</a>
             </div>
             <div class="quick-tile">
-                <strong>Holiday Rentals</strong>
-                <p>Discover villas, apartments, cottages, and holiday rentals entered by accommodation operators.</p>
-                <a href="#accommodations-section" class="btn-primary">See rentals</a>
+                <strong>{{ __('home.quick.holiday_rentals') }}</strong>
+                <p>{{ __('home.quick.holiday_rentals_desc') }}</p>
+                <a href="#accommodations-section" class="btn-primary">{{ __('home.quick.holiday_rentals_cta') }}</a>
             </div>
             <div class="quick-tile">
-                <strong>Hotels</strong>
-                <p>Explore hotel and resort stays using the same public-facing homepage design.</p>
-                <a href="#discover-mauritius" class="btn-primary">See hotels</a>
+                <strong>{{ __('home.quick.hotels') }}</strong>
+                <p>{{ __('home.quick.hotels_desc') }}</p>
+                <a href="#discover-mauritius" class="btn-primary">{{ __('home.quick.hotels_cta') }}</a>
             </div>
             <!-- <div class="quick-tile">
                 <strong>Operator Data Live</strong>
@@ -257,15 +257,15 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                 <div class="stats-bar">
                     <div class="stat-pill">
                         <strong>{{ $stats['activities'] }}</strong>
-                        <span>Activities loaded</span>
+                        <span>{{ __('home.stats.activities_loaded') }}</span>
                     </div>
                     <div class="stat-pill">
                         <strong>{{ $stats['holidayRentals'] }}</strong>
-                        <span>Holiday rentals loaded</span>
+                        <span>{{ __('home.stats.holiday_rentals_loaded') }}</span>
                     </div>
                     <div class="stat-pill">
                         <strong>{{ $stats['hotels'] }}</strong>
-                        <span>Hotels loaded</span>
+                        <span>{{ __('home.stats.hotels_loaded') }}</span>
                     </div>
                 </div>
             </div>
@@ -280,22 +280,21 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
         <div class="wrap">
             <div class="section-header">
                 <div>
-                    <h2>Your Holiday in Mauritius</h2>
+                    <h2>{{ __('home.section.title') }}</h2>
                     <p>
-                        The homepage tabs below use live data entered by operators for activities and accommodation.
-                        Services, transport, and wedding tabs are kept ready for later frontend expansion.
+                        {{ __('home.section.description') }}
                     </p>
                 </div>
             </div>
 
             <div class="tabs-shell">
                 <div class="tab-buttons">
-                    <button type="button" class="tab-button is-active" data-tab-target="activities">Activities</button>
-                    <button type="button" class="tab-button" data-tab-target="holiday-rentals">Holiday Rentals</button>
-                    <button type="button" class="tab-button" data-tab-target="hotels">Hotels</button>
-                    <button type="button" class="tab-button" data-tab-target="services">Services</button>
-                    <button type="button" class="tab-button" data-tab-target="transport">Transport</button>
-                    <button type="button" class="tab-button" data-tab-target="wedding">Wedding</button>
+                    <button type="button" class="tab-button is-active" data-tab-target="activities">{{ __('home.tabs.activities') }}</button>
+                    <button type="button" class="tab-button" data-tab-target="holiday-rentals">{{ __('home.tabs.holiday_rentals') }}</button>
+                    <button type="button" class="tab-button" data-tab-target="hotels">{{ __('home.tabs.hotels') }}</button>
+                    <button type="button" class="tab-button" data-tab-target="services">{{ __('home.tabs.services') }}</button>
+                    <button type="button" class="tab-button" data-tab-target="transport">{{ __('home.tabs.transport') }}</button>
+                    <button type="button" class="tab-button" data-tab-target="wedding">{{ __('home.tabs.wedding') }}</button>
                 </div>
 
                 <div class="tab-panel is-active" data-tab-panel="activities" id="activities-section">
@@ -322,7 +321,7 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                                         <p>{{ $activity['excerpt'] }}</p>
                                         <div class="listing-footer">
                                             <strong>{{ $activity['booking_confirmation_type'] ?: 'Operator listing' }}</strong>
-                                            <a href="{{ $activity['url'] }}">View details</a>
+                                            <a href="{{ $activity['url'] }}">{{ __('home.view_details') }}</a>
                                         </div>
                                     </div>
                                 </article>
@@ -354,7 +353,7 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                                         </div>
                                         <p>{{ $accommodation['excerpt'] }}</p>
                                         <div class="listing-footer">
-                                            <a href="{{ $accommodation['url'] }}">View details</a>
+                                            <a href="{{ $accommodation['url'] }}">{{ __('home.view_details') }}</a>
                                         </div>
                                     </div>
                                 </article>
@@ -386,7 +385,7 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                                         </div>
                                         <p>{{ $accommodation['excerpt'] }}</p>
                                         <div class="listing-footer">
-                                            <a href="{{ $accommodation['url'] }}">View details</a>
+                                            <a href="{{ $accommodation['url'] }}">{{ __('home.view_details') }}</a>
                                         </div>
                                     </div>
                                 </article>

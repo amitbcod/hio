@@ -11,6 +11,16 @@ require base_path('routes/traveler.php');
 require base_path('routes/login_fallback.php');
 // Admin routes
 require base_path('routes/admin.php');
+Route::get('/lang/{locale}', function ($locale) {
+    $allowedLocales = ['en', 'fr'];
+    if (!in_array($locale, $allowedLocales)) {
+        abort(404);
+    }
+
+    session(['locale' => $locale]);
+    return redirect()->back();
+})->name('frontend.lang.switch');
+
 Route::get('/', [HomeController::class, 'index'])->name('frontend.home');
 Route::get('/about-us', [PageController::class, 'aboutUs'])->name('frontend.about-us');
 Route::get('/terms-and-conditions', [PageController::class, 'termsAndConditions'])->name('frontend.terms-and-conditions');
