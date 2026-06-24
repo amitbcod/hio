@@ -998,7 +998,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 <td width="50%" style="vertical-align:top; padding-right:8px;">
     <div class="header-box">
         {$companyLogoHtml}
-        <div style="font-size:16px; font-weight:700; color:#0b2b51; margin-top:8px; margin-bottom:2px;">Your Local Connection - Mauritius</div>
+        <div style="font-size:16px; font-weight:700; color:#0b2b51; margin-top:8px; margin-bottom:2px;">Your Local Connection - Mauritius  -  invoice</div>
         <div style="font-size:16px; font-weight:700; color:#0b2b51; margin-top:8px; margin-bottom:2px;">{$companyBusinessNameSafe}</div>
         <div style="font-size:9px; color:#4a5f7f;">{$companyBusinessAddressSafe}</div>
         <div style="font-size:9px; color:#7a8a9f;  margin-top:4px;">
