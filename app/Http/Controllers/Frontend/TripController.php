@@ -685,7 +685,7 @@ class TripController extends Controller
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td style="font-size:13px"><strong>MPO Support and Emergency</strong></td>
+      <td style="font-size:13px;"><strong>MPO Support and Emergency</strong></td>
     </tr>
     <tr>
       <td>&nbsp;</td>
