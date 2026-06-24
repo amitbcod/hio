@@ -1166,54 +1166,69 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 </td>
 </tr>
 </table>
-
             </td>
         </tr>
+<tr>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td style="font-size:13px"><table width="100%" border="0" cellpadding="2" cellspacing="0">
+        <tbody>
+            <tr>
+              <td><strong>IMPORTANT NOTES</strong></td>
+              <td><strong>NEED ASSISTANCE?</strong></td>
+            </tr>
+            <tr>
+              <td valign="top"><ul class="check-list">
+            <li>Please present voucher and passport when required.</li>
+            <li>All services are subject to availability and terms & conditions of each service provider.</li>
+            <li>For amendments or cancellations, please refer to the booking terms or contact support.</li>
+        </ul></td>
+              <td valign="top"><table width="100%" border="0">
+                <tbody>
+                  <tr>
+                    <td>Support Ticket within your account</td>
+                  </tr>
+                  <tr>
+                    <td>Office Hours: 09:00 - 17:30, Office: +230 427 10 60, WhatsApp: +230 52 51 11 53,</td>
+                  </tr>
+                  <tr>
+                    <td>(After hours Emergency only)</td>
+                  </tr>
+                  <tr>
+                    <td>&nbsp;</td>
+                  </tr>
+                  <tr>
+                    <td><span style="color:#4a5f7f; font-size:8px;">We are here to help you before, during and after your trip.</span></td>
+                  </tr>
+                </tbody>
+              </table></td>
+            </tr>
+        </tbody>
+      </table></td>
+    </tr>
+    <tr>
+      <td align="center">&nbsp;</td>
+    </tr>
+    <tr>
+      <td align="center" style="font-size:8px; color:#7a8a9f; border-top:1px solid #e1ecfa">
         
+      <table width="100%" border="0" cellpadding="5" cellspacing="0">
+        <tbody>
+          <tr>
+            <td align="center"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
+                Your Local Connection in Mauritius<br>
+                <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+        </td>
+    </tr>        
 
   </tbody>
 </table>
 
-
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
-<tr>
-<td width="55%" style="padding-right:6px;">
-    <div class="notes-box" style="background:#eef4ff; border:1px solid #dce7f5; border-radius:6px; padding:10px; font-size:9px; color:#4a5f7f;">
-        <strong style="display:block; color:#0b2b51; margin-bottom:6px;">IMPORTANT NOTES</strong>
-        <ul style="margin:4px 0; padding-left:16px;">
-            <li style="margin-bottom:2px;">Please present voucher and passport when required.</li>
-            <li style="margin-bottom:2px;">All services are subject to availability and terms & conditions of each service provider.</li>
-            <li style="margin-bottom:2px;">For amendments or cancellations, please refer to the booking terms or contact support.</li>
-        </ul>
-    </div>
-</td>
-<td width="45%" style="padding-left:6px;">
-    <div class="footer-assistance" style="background:#eef4ff; border:1px solid #dce7f5; border-radius:6px; padding:10px; font-size:9px;">
-        <strong style="display:block; color:#0b2b51; margin-bottom:6px;">NEED ASSISTANCE?</strong>
-        <div style="color:#4a5f7f; line-height:1.8;">
-            support Ticket within your account<br>
-            Office Hours: 09:00 - 17:30 <br><br>
-            Office : +230 427 10 60<br>
-            WhatsApp: +230 52 51 11 53 <br>
-           (After hours Emergency only)<br><br>
-        </div>
-        <div style="margin-top:8px; padding-top:8px; border-top:1px solid #dce7f5; color:#4a5f7f; font-size:8px;">
-            We are here to help you before, during and after your trip.
-        </div>
-    </div>
-</td>
-</tr>
-</table>
-
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px; padding-top:10px; border-top:1px solid #dce7f5;">
-<tr>
-<td width="100%" style="text-align:center; font-size:8px; color:#7a8a9f; padding:6px 0;">
-    <strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
-    Your Local Connection in Mauritius<br>
-    <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span>
-</td>
-</tr>
-</table>
 
 HTML;
 
