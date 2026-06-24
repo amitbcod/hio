@@ -472,7 +472,7 @@ class TripController extends Controller
             <td width="68%" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
               <tbody>
                 <tr>
-                  <td style="background-color:#333">{$companyLogoHtml}</td>
+                  <td valign="top">{$companyLogoHtml}</td>
                 </tr>
                 <tr>
                   <td style="font-size:12px">Your Local Connection - Mauritius</td>
@@ -690,13 +690,7 @@ class TripController extends Controller
             <td>Support Ticket within your account</td>
           </tr>
           <tr>
-            <td>Office Hours: 09:00 - 17:30 </td>
-          </tr>
-          <tr>
-            <td>Office : +230 427 10 60</td>
-          </tr>
-          <tr>
-            <td>WhatsApp: +230 52 51 11 53 </td>
+            <td>Office Hours: 09:00 - 17:30, Office: +230 427 10 60, WhatsApp: +230 52 51 11 53,</td>
           </tr>
           <tr>
             <td>(After hours Emergency only)</td>
