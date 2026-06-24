@@ -472,7 +472,7 @@ class TripController extends Controller
             <td width="68%" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
               <tbody>
                 <tr>
-                  <td>{$companyLogoHtml}</td>
+                  <td style="background-color:#333">{$companyLogoHtml}</td>
                 </tr>
                 <tr>
                   <td style="font-size:12px">Your Local Connection - Mauritius</td>
@@ -621,7 +621,10 @@ class TripController extends Controller
                 <td style="border-bottom:1px solid #dce7f5;"><strong style="font-size:12px">Service Provider / Property</strong></td>
               </tr>
               <tr>
-                <td>{$providerNameSafe}<br>{$providerAddressSafe}</td>
+                <td>{$providerNameSafe}</td>
+              </tr>
+              <tr>
+                <td>{$providerAddressSafe}</td>
               </tr>
               <tr>
                 <td>&nbsp;</td>
