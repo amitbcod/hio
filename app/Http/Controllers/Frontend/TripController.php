@@ -460,79 +460,6 @@ class TripController extends Controller
         $infoLabelDaysNights = e($isActivity ? 'Number of Days' : 'Number of Nights');
         $infoLabelType = e($isActivity ? 'Activity Type' : 'Room Type');
         $html = <<<HTML
-<<<<<<< HEAD
-<style>
-body{font-family:helvetica;color:#222; font-size:10px;}
-.section-title{font-size:13px;color:#0b2b51;margin:0 0 0px 0;font-weight:700;}
-.label{font-size:8px;color:#5f6d7a;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 4px 0;}
-.value{font-size:11px;font-weight:700;margin:0;}
-.info-card{border:1px solid #d7e4f0;border-radius:10px;background:#f7fafd;padding:10px;margin-bottom:8px;}
-.info-card strong{display:block;font-size:11px;color:#0b2b51;margin-bottom:4px;}
-.box{border:1px solid #d7e4f0;border-radius:12px;padding:14px;margin-bottom:12px;background:#fff;}
-.accent-box{border-left:4px solid #f7971e;}
-.small-text{font-size:9px;color:#5f6d7a;line-height:1.5;}
-.footer-box{border:1px solid #d7e4f0;background:#eef4fb;border-radius:12px;padding:12px;margin-top:14px;}
-.badge{display:inline-block;padding:5px 10px;border-radius:12px;font-size:9px;color:#1f3f61;background:#dceaf8;margin-right:6px;}
-.check-list{margin:0;padding-left:10px;color:#33475b;line-height:1.6;}
-.check-list li{margin-bottom:6px;}
-.info-row td{padding:4px;vertical-align:top;}
-.table-grid{width:100%;border-collapse:collapse;margin-top:8px;}
-.table-grid td,.table-grid th{border:1px solid #d7e4f0;padding:8px;vertical-align:top;}
-.table-grid th{background:#eef4fb;text-align:left;}
-.two-col{width:49%;display:inline-block;vertical-align:top;}
-.two-col + .two-col{margin-left:2%;}
-</style>
-<table width="100%" cellpadding="0" cellspacing="0">
-<tr>
-<td width="65%" style="vertical-align:top;">
-    <div style="padding:16px;text-align:left;min-height:90px;">
-        {$companyLogoHtml}
-         <div style="font-size:12px;font-weight:700;color:#0b2b51;margin-top:6px;">Your Local Connection - Mauritius</div>
-        <div style="font-size:12px;font-weight:700;color:#0b2b51;margin-top:8px;">{$companyBusinessNameSafe}</div>
-        <div style="font-size:10px;color:#6a7b91;margin-top:6px;">{$companyBusinessAddressSafe}</div>
-        <div style="font-size:10px;color:#6a7b91;margin-top:4px;">{$companyPhoneSafe} | {$companyEmailSafe}</div>
-    </div>
-</td>
-<td width="35%" style="text-align:left;vertical-align:top;">
-    <div style="display:inline-block;padding:10px 12px;background:#ffffff;">
-        <div style="font-size:11px;color:#5f6d7a;margin-bottom:6px;">Powered by</div>
-        {$poweredLogoHtml}
-    </div>
-</td>
-</tr>
-</table>
-
-<h1 style="font-size:22px;margin:12px 0 4px 0;color:#0b2b51;">{$voucherTitle}</h1>
-<div style="font-size:10px;color:#5f6d7a;margin-bottom:16px;">Voucher No: {$bookingReferenceSafe} | Issue Date: {$issueDateSafe} |  Status: <span style="color:#28a745;font-weight:bold;">Confirmed</span></div>
-<br />
-<table width="100%" cellpadding="3" cellspacing="0" style="margin-bottom:16px;">
-    <tr>
-        <td width="49%" style="padding:10px; background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
-                <table width="100%" cellpadding="3" cellspacing="0">
-                    <tr>
-                        <td><strong style="display:block;padding:5px">Booking Ref.</strong></td>
-                    </tr>
-                    <tr>
-                        <td><span style="display:block;padding:5px">{$bookingReferenceSafe}</span></td>
-                    </tr>
-                </table>
-        </td> 
-        <td style="width:2%">&nbsp;&nbsp;</td>
-        <td width="49%" style="padding:10px; background-color: #f7fafd;border: 1px solid #d7e4f0;border-radius: 10px;">
-            <table width="100%" cellpadding="3" cellspacing="0">
-                    <tr>
-                        <td><strong style="display:block;padding:5px">Service Date</strong></td>
-                    </tr>
-                    <tr>
-                        <td><span style="display:block;padding:5px">{$serviceDateSafe}</span></td>
-                    </tr>
-                </table>
-                
-                
-        </td>
-=======
-
-
 <table width="100%" border="0">
   <tbody>
     <tr>
@@ -570,7 +497,6 @@ body{font-family:helvetica;color:#222; font-size:10px;}
         </tbody>
       </table>
       </td>
->>>>>>> mehul
     </tr>
     <tr>
       <td>&nbsp;</td>
@@ -602,25 +528,6 @@ body{font-family:helvetica;color:#222; font-size:10px;}
             </tr>
           </table></td>
         </tr>
-<<<<<<< HEAD
-    </table>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
-        <tr><td><div class="small-text" style="margin:0;"><strong>Travel Party Size:</strong> {$travelPartySizeSafe}</div></td></tr>
-    </table>
-</div>
-
-<table width="100%" cellpadding="0" cellspacing="0">
-<tr>
-
-<td width="49%" style="padding:8px;vertical-align:top;">
-    <div class="box" style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
-
-        <table width="100%" class="info-row" cellpadding="2" cellspacing="0">
-            <tr>
-                <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">Service Details</td>
-            </tr>
-            <tr>
-=======
       </table></td>
     </tr>
     <tr>
@@ -653,7 +560,6 @@ body{font-family:helvetica;color:#222; font-size:10px;}
                 <td colspan="2" style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">Service Details</td>
 				  </tr>
               <tr>
->>>>>>> mehul
                 <td class="label" width="40%"><strong>Property Name</strong></td>
                 <td><strong>{$serviceNameSafe}</strong></td>
               </tr>
@@ -688,21 +594,6 @@ body{font-family:helvetica;color:#222; font-size:10px;}
               <tr>
                 <td class="label">Booking Notes</td>
                 <td>{$bookingNotesSafe}</td>
-<<<<<<< HEAD
-            </tr>
-        </table>
-    </div>
-</td>
-<td style="width:2%">&nbsp;&nbsp;</td>
-<td width="49%" style="padding-right:8px;vertical-align:top;">
-    <div class="box" style="background-color:#f8fbff; border:1px solid #11335e; border-radius:2px; padding:10px;">
-
-        <table width="100%" class="info-row" cellpadding="2" cellspacing="0">
-            <tr>
-                <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">Service Provider / Property</td>
-            </tr>
-            <tr>
-=======
               </tr>
             </table>
           </div></td>
@@ -713,49 +604,10 @@ body{font-family:helvetica;color:#222; font-size:10px;}
                 <td style="font-size:12px;font-weight:bold; color:#0b2b51;  border-bottom:1px solid #dce7f5;">Service Provider / Property</td>
               </tr>
               <tr>
->>>>>>> mehul
                 <td>{$providerNameSafe}</td>
               </tr>
               <tr>
                 <td>{$providerAddressSafe}</td>
-<<<<<<< HEAD
-            </tr>
-            <tr>
-                <td></td>
-            </tr>
-            <tr>
-                <td style="color:#0b2b51;">Emergency Contact (24/7)</td>
-            </tr>
-            <tr>
-                <td>{$emergencyContactSafe}</td>
-            </tr>
-            <tr>
-                <td></td>
-            </tr>
-            <tr>
-                <td style="color:#0b2b51;">Reception / Service Contact</td>
-            </tr>
-            <tr>
-                <td>{$receptionContactSafe}</td>
-            </tr>
-        </table>
-    </div>
-</td>
-</tr>
-</table>
-
-
-<div class="box">
-<table width="100%" cellpadding="3" cellspacing="0">
-    <tr>    
-        <td>
-            <div class="section-title">Important Information / Conditions</div>
-        </td>
-    </tr>
-    <tr>
-        <td>
-        <ul class="check-list">
-=======
               </tr>
               <tr>
                 <td></td>
@@ -788,36 +640,11 @@ body{font-family:helvetica;color:#222; font-size:10px;}
     </tr>
     <tr>
       <td><ul class="check-list">
->>>>>>> mehul
             <li>Please present this voucher on arrival at the property.</li>
             <li>All travellers must carry a valid passport or national ID.</li>
             <li>Early check-in / late check-out are subject to availability and at a servicee fee.</li>
             <li>All amendments and cancellations are subject to the property's booking conditions.</li>
             <li>For any assistance during your stay, contact the MPO using the details below.</li>
-<<<<<<< HEAD
-        </ul>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <strong>Your Local Connection</strong> – We are here to support you. For enquiries or assistance during your trip, please contact us.
-        </td>
-    </tr>
-</table>
-</div>
-
-
-<div class="footer-box">
-<table width="100%" cellpadding="3" cellspacing="0">
-<tr>
-    <td>
-        <div class="section-title">MPO Support and Emergency</div>
-    </td>
-</tr>
-<tr>
-    <td style="color:#4a5f7f; line-height:1.5;">
-            support Ticket within your account<br>
-=======
         </ul></td>
     </tr>
     <tr>
@@ -831,24 +658,10 @@ body{font-family:helvetica;color:#222; font-size:10px;}
     </tr>
     <tr>
       <td>support Ticket within your account<br>
->>>>>>> mehul
             Office Hours: 09:00 - 17:30 <br><br>
             Office : +230 427 10 60<br>
             WhatsApp: +230 52 51 11 53 <br>
             (After hours Emergency only)<br><br>
-<<<<<<< HEAD
-            <span style="color:#4a5f7f; font-size:8px;">We are here to help you before, during and after your trip.</span>
-
-    </td>
-</tr>
-</table>
-
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px; padding-top:10px; border-top:1px solid #dce7f5;">
-<tr>
-<td width="100%" style="text-align:center; font-size:8px; color:#7a8a9f; padding:6px 0;">
-    <br><br>
-    <strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
-=======
             <span style="color:#4a5f7f; font-size:8px;">We are here to help you before, during and after your trip.</span></td>
     </tr>
     <tr>
@@ -856,7 +669,6 @@ body{font-family:helvetica;color:#222; font-size:10px;}
     </tr>
     <tr>
       <td align="center"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
->>>>>>> mehul
     Your Local Connection in Mauritius<br>
     <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span></td>
     </tr>
