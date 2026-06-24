@@ -1038,40 +1038,35 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
       </table>
  </td>
     </tr>
+    <tr>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td><h1 style="font-size:22px">INVOICE</h1></td>
+    </tr>
+    <tr>
+      <td><table width="30%" border="0" cellpadding="2" cellspacing="0">
+        <tr>
+          <td class="label">Invoice Number:</td>
+          <td class="value">{$invoiceNumber}</td>
+        </tr>
+        <tr>
+          <td class="label">Invoice Date:</td>
+          <td class="value">{$invoiceDate}</td>
+        </tr>
+        <tr>
+          <td class="label">Booking Reference:</td>
+          <td class="value">{$bookingRef}</td>
+        </tr>
+      </table></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+    </tr>
   </tbody>
 </table>
 
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
-<tr>
-<td width="50%" style="vertical-align:top; padding-right:8px;">
-    <div class="header-box">
-        {$companyLogoHtml}
-        <div style="font-size:16px; font-weight:700; color:#0b2b51; margin-top:8px; margin-bottom:2px;">Your Local Connection - Mauritius  -  invoice</div>
-        <div style="font-size:16px; font-weight:700; color:#0b2b51; margin-top:8px; margin-bottom:2px;">{$companyBusinessNameSafe}</div>
-        <div style="font-size:9px; color:#4a5f7f;">{$companyBusinessAddressSafe}</div>
-        <div style="font-size:9px; color:#7a8a9f;  margin-top:4px;">
-            <div>{$companyPhoneSafe} | {$companyEmailSafe}</div>
-            <div>VAT: {$companyVatSafe} | BRN: {$companyBrnSafe}</div>
-        </div>
-    </div>
-</td>
-<td width="50%" style="vertical-align:top; padding-left:8px; text-align:left;">
-    <div style="padding:8px; background:#f0f5ff; border-radius:6px; display:inline-block;">
-        <div style="font-size:9px; color:#4a5f7f; margin-bottom:4px;">Powered by</div>
-        {$poweredLogoHtml}
-    </div>
-</td>
-</tr>
-</table>
 
-<div style="margin-bottom:10px;">
-    <div style="font-size:20px; font-weight:700; color:#0b2b51; margin-bottom:6px;">INVOICE</div>
-    <table class="info-table">
-        <tr><td class="label">Invoice Number:</td><td class="value">{$invoiceNumber}</td></tr>
-        <tr><td class="label">Invoice Date:</td><td class="value">{$invoiceDate}</td></tr>
-        <tr><td class="label">Booking Reference:</td><td class="value">{$bookingRef}</td></tr>
-    </table>
-</div>
 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
     <tr>
