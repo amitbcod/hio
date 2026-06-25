@@ -934,25 +934,29 @@ HTML;
             $rowTax = number_format($item['total'] * 0.15, 2);
             $rowTotal = number_format($item['total'], 2);
             $serviceRows .= '<tr>
-
-                <td style="width:22%;border-bottom:1px solid #dce7f5;padding:10px;">
-                    <div style="font-weight:600;color:#0b2b51;margin-bottom:2px;">' . $item['type'] . '</div>
-                    <div style="font-size:9px;color:#4a5f7f;margin-bottom:2px;"><strong>' . $item['name'] . '</strong></div>
-                    <div style="font-size:9px;color:#7a8a9f;">' . $item['location'] . '</div>
-                </td>
-                <td style="width:18%;border-bottom:1px solid #dce7f5;padding:10px;font-size:9px;">
-                    <div style="margin-bottom:4px;"><strong>' . $item['checkIn'] . '</strong></div>
-                    <div style="color:#7a8a9f;">' . $item['checkOut'] . '</div>
-                </td>
-                <td style="width:20%;border-bottom:1px solid #dce7f5;padding:10px;font-size:9px;">
-                    <div style="font-weight:600;margin-bottom:4px;">' . $item['description'] . '</div>
-                    <div style="color:#7a8a9f;">' . $item['notes'] . '</div>
-                </td>
-                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;">' . $item['qty'] . '</td>
-                <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;font-weight:600;">' . $rowUnitPrice . '</td>
-      
-                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;font-weight:600;color:#0b2b51;">' . $rowTotal . '</td>
-            </tr>';
+                            <td>' . $item['type'] . '</td>
+                            <td>' . $item['checkIn'] . '</td>
+                            <td>' . $item['description'] . '</td>
+                            <td style="text-align:center;">' . $item['qty'] . '</td>
+                            <td style="text-align:center;">' . $rowUnitPrice . '</td>
+                            <td style="text-align:center;">' . $rowTotal . '</td>
+                            </tr>
+                            <tr>
+                            <td>' . $item['name'] . '</td>
+                            <td>' . $item['checkOut'] . '</td>
+                            <td>' . $item['notes'] . '</td>
+                            <td style="text-align:center;">&nbsp;</td>
+                            <td style="text-align:center;">&nbsp;</td>
+                            <td style="text-align:center;">&nbsp;</td>
+                            </tr>
+                            <tr>
+                            <td>' . $item['location'] . '</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td style="text-align:center;">&nbsp;</td>
+                            <td style="text-align:center;">&nbsp;</td>
+                            <td style="text-align:center;">&nbsp;</td>
+                            </tr>';
         }
 
         $poweredLogoHtml = $poweredLogoPath
