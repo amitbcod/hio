@@ -737,6 +737,7 @@ HTML;
         $pdf->SetMargins(15, 15, 15);
         $pdf->SetAutoPageBreak(true, 15);
         $pdf->SetHeaderData('', 0, '', '');
+        $pdf->setPrintHeader(false);
         $pdf->AddPage();
         $pdf->SetFont('helvetica', '', 10);
         $pdf->writeHTML($html, true, false, true, false, '');
