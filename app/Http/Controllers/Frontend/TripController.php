@@ -1064,11 +1064,11 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td><table width="100%" border="0" cellpadding="0" cellspacing="0">
+      <td><table width="100%" border="0" cellpadding="3" cellspacing="0">
         <tbody>
           <tr>
-            <td><span class="section-title">BILL TO</span></td>
-            <td><span class="section-title">ACCOUNT DETAILS</span></td>
+            <td style="font-size:12px"><strong>BILL TO</strong></td>
+            <td style="font-size:12px"><strong>ACCOUNT DETAILS</strong></td>
           </tr>
           <tr>
             <td>{$travelerName}</td>
@@ -1115,7 +1115,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
       <td>&nbsp;</td>
     </tr>
      <tr>
-      <td align="center"><strong style="color:#0b2b51;">ACCOUNT HOLDER:</strong> This invoice has been issued to the account holder (Privileged Traveller).</td>
+      <td align="center"><strong style="color:#0b2b51;">ACCOUNT HOLDER:</strong> This invoice has been issued to the account holder.</td>
     </tr>
     <tr>
       <td align="center">&nbsp;</td>
@@ -1128,7 +1128,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
         <th style="width:18%;">SERVICE DATES</th>
         <th style="width:20%;">DESCRIPTION</th>
         <th style="width:8%;text-align:center;">QTY</th>
-        <th style="width:10%;text-align:center;">UNIT PRICE</th>
+        <th style="width:10%;text-align:center;">UNIT</th>
         <th style="width:8%;text-align:center;">TOTAL</th>
     </tr>
     </thead>
@@ -1175,8 +1175,8 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
       <td><table width="100%" border="0" cellpadding="2" cellspacing="0">
         <tbody>
             <tr>
-              <td style="font-size:13px"><strong>IMPORTANT NOTES</strong></td>
-              <td style="font-size:13px"><strong>NEED ASSISTANCE?</strong></td>
+              <td style="font-size:12px"><strong>IMPORTANT NOTES</strong></td>
+              <td style="font-size:12px"><strong>NEED ASSISTANCE?</strong></td>
             </tr>
             <tr>
               <td valign="top"><ul class="check-list">
