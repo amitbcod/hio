@@ -984,7 +984,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 .service-table { width:100%; border-collapse:collapse; margin-bottom:8px; border:none; border-radius:6px; overflow:hidden; }
 .service-table thead tr { background:#0b2b51; color:#fff; }
 .service-table th {  text-align:left; font-size:9px; font-weight:700; border-bottom:1px solid #dce7f5 }
-.service-table td {  }
+.service-table td { text-align:left; border-bottom:1px solid #dce7f5; font-size:9px; }
 .totals-box { width:100%; background:#f0f5ff; border:none; border-radius:6px; padding:10px; }
 .totals-row { display:flex; justify-content:space-between; padding:4px 0; font-size:9px; }
 .totals-label { font-weight:600; color:#0b2b51; }
@@ -1125,7 +1125,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
       <td align="center">&nbsp;</td>
     </tr>
     <tr>
-      <td><table width="100%" border="0" cellpadding="0" cellspacing="0" class="service-table">
+      <td><table width="100%" border="0" cellpadding="2" cellspacing="0" class="service-table">
     <thead>
     <tr>
         <th style="width:22%;">SERVICE</th>
