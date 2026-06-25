@@ -462,6 +462,9 @@ class TripController extends Controller
         $html = <<<HTML
 <style>
     .label{font-size:8px;color:#5f6d7a;letter-spacing:0.5px;}
+    @media print {
+    * { border-top: none !important;}
+    }
 </style>
 <table width="100%" border="0" style="color:#0b2b51;">
   <tbody>
