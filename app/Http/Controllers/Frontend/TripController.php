@@ -1053,7 +1053,7 @@ if ($discountAmount > 0) {
       <td><h1 style="font-size:22px">INVOICE</h1></td>
     </tr>
     <tr>
-      <td><table width="50%" border="0" cellpadding="2" cellspacing="0" class="info-table">
+      <td><table width="49%" border="0" cellpadding="2" cellspacing="0" class="info-table">
         <tr>
           <td class="label">Invoice Number:</td>
           <td class="value">{$invoiceNumber}</td>
@@ -1083,7 +1083,7 @@ if ($discountAmount > 0) {
             <td>&nbsp;</td>
           </tr>
           <tr>
-            <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
+            <td valign="top"><table width="99%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
                 <td class="label">Address:</td>
                 <td class="value">{$travelerAddress}</td>
