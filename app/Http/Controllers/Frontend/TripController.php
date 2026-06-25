@@ -1158,8 +1158,13 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 <td width="45%" style="vertical-align:top; padding-left:80px;">
   <table>
     <tr>
-      <td>Subtotal:</td>
-      <td>USD {$formattedSubtotal}</td>
+      <td align="right">Subtotal: USD {$formattedSubtotal}</td>
+    </tr>
+    <tr>
+      <td align="right">{$discountRow}</td>
+    </tr>
+    <tr>
+      <td align="right">Taxable Amount: USD {$formattedTaxableAmount}</td>
     </tr>
   </table>
     <div class="totals-box" style="background:#fff3e0; border-radius:8px; padding:10px;">
