@@ -1,25 +1,25 @@
 @extends('frontend.layout')
 
-@section('title', 'My Trips | Holidays.io')
-@section('meta_description', 'Manage your travel trips on Holidays.io.')
+@section('title', __('traveler.trips.page_title'))
+@section('meta_description', __('traveler.trips.meta_description'))
 
 @section('content')
 <section class="page-section traveler-trips-section">
     <div class="wrap">
         <div class="traveler-trips-card">
             <div class="traveler-trips-head">
-                <h1>My Trips</h1>
-                <!-- <p>View and manage your holiday trips in a simple table format.</p> -->
+                <h1>{{ __('traveler.trips.heading') }}</h1>
+                <!-- <p>{{ __('traveler.trips.description') }}</p> -->
             </div>
 
             @if($ongoingTrips->count() > 0 || $pastTrips->count() > 0)
                 <!-- Tab Navigation -->
                 <div class="traveler-trips-tabs">
                     <button class="traveler-trips-tab-btn active" data-tab="ongoing">
-                        Ongoing Trips {{ $ongoingTrips->count() > 0 ? '(' . $ongoingTrips->count() . ')' : '' }}
+                        {{ __('traveler.trips.ongoing_trips') }} {{ $ongoingTrips->count() > 0 ? '(' . $ongoingTrips->count() . ')' : '' }}
                     </button>
                     <button class="traveler-trips-tab-btn" data-tab="past">
-                        Past Trips {{ $pastTrips->count() > 0 ? '(' . $pastTrips->count() . ')' : '' }}
+                        {{ __('traveler.trips.past_trips') }} {{ $pastTrips->count() > 0 ? '(' . $pastTrips->count() . ')' : '' }}
                     </button>
                 </div>
 
@@ -30,12 +30,12 @@
                             <table class="traveler-trips-table">
                                 <thead>
                                     <tr>
-                                        <th>Trip</th>
-                                        <th>Service Type</th>
-                                        <th>Dates</th>
-                                        <th>Status</th>
-                                        <th>Bookings</th>
-                                        <th>Actions</th>
+                                        <th>{{ __('traveler.trips.trip_label') }}</th>
+                                        <th>{{ __('traveler.trips.service_type') }}</th>
+                                        <th>{{ __('traveler.trips.dates') }}</th>
+                                        <th>{{ __('traveler.trips.status') }}</th>
+                                        <th>{{ __('traveler.trips.bookings') }}</th>
+                                        <th>{{ __('traveler.trips.actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -58,35 +58,43 @@
                                             $serviceTypes = $serviceTypes->unique();
                                         @endphp
                                         <tr>
-                                            <td data-label="Trip">
+                                            <td data-label="{{ __('traveler.trips.trip_label') }}">
                                                 <div class="trip-name-cell">
                                                     <strong>#{{ $trip->id }}</strong>
-                                                    <!-- <span>Trip</span> -->
+                                                    <!-- <span>{{ __('traveler.trips.trip_label') }}</span> -->
                                                 </div>
                                             </td>
-                                            <td data-label="Service Type">
+                                            <td data-label="{{ __('traveler.trips.service_type') }}">
                                                 <div class="service-type-badges">
                                                     @foreach($serviceTypes as $type)
-                                                        <span class="service-badge">{{ $type }}</span>
+                                                        <span class="service-badge">
+                                                            @if($type === 'Accommodation')
+                                                                {{ __('traveler.trips.service_type_accommodation') }}
+                                                            @elseif($type === 'Activity')
+                                                                {{ __('traveler.trips.service_type_activity') }}
+                                                            @else
+                                                                {{ __('traveler.trips.service_type_travel') }}
+                                                            @endif
+                                                        </span>
                                                     @endforeach
                                                 </div>
                                             </td>
-                                            <td data-label="Dates">
-                                                {{ $trip->start_date ? $trip->start_date->format('d M Y') : 'N/A' }}
+                                            <td data-label="{{ __('traveler.trips.dates') }}">
+                                                {{ $trip->start_date ? $trip->start_date->format('d M Y') : __('traveler.trip_detail.not_set') }}
                                                 -
-                                                {{ $trip->end_date ? $trip->end_date->format('d M Y') : 'N/A' }}
+                                                {{ $trip->end_date ? $trip->end_date->format('d M Y') : __('traveler.trip_detail.not_set') }}
                                             </td>
-                                            <td data-label="Status">
+                                            <td data-label="{{ __('traveler.trips.status') }}">
                                                 <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
                                             </td>
-                                            <td data-label="Bookings" style="text-align: center;">{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
+                                            <td data-label="{{ __('traveler.trips.bookings') }}" style="text-align: center;">{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
                                             <td class="trip-actions-cell">
-                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
-                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>Invoice</a>
+                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">{{ __('traveler.trips.details') }}</a>
+                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>{{ __('traveler.trips.invoice') }}</a>
                                                 @if(!isset($guestMode) || !$guestMode)
                                                     <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display:inline-block; margin-left: 0px;">
                                                         @csrf
-                                                        <button type="submit" class="btn btn-secondary a-font">Add Service</button>
+                                                        <button type="submit" class="btn btn-secondary a-font">{{ __('traveler.trips.add_service') }}</button>
                                                     </form>
                                                 @endif
                                             </td>
@@ -97,7 +105,7 @@
                         </div>
                     @else
                         <div class="traveler-empty-state-tab">
-                            <p>No ongoing trips. Your next adventure awaits!</p>
+                            <p>{{ __('traveler.trips.no_ongoing') }}</p>
                         </div>
                     @endif
                 </div>
@@ -109,12 +117,12 @@
                             <table class="traveler-trips-table">
                                 <thead>
                                     <tr>
-                                        <th>Trip</th>
-                                        <th>Service Type</th>
-                                        <th>Dates</th>
-                                        <th>Status</th>
-                                        <th>Bookings</th>
-                                        <th>Actions</th>
+                                        <th>{{ __('traveler.trips.trip_label') }}</th>
+                                        <th>{{ __('traveler.trips.service_type') }}</th>
+                                        <th>{{ __('traveler.trips.dates') }}</th>
+                                        <th>{{ __('traveler.trips.status') }}</th>
+                                        <th>{{ __('traveler.trips.bookings') }}</th>
+                                        <th>{{ __('traveler.trips.actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -137,33 +145,41 @@
                                             $serviceTypes = $serviceTypes->unique();
                                         @endphp
                                         <tr>
-                                            <td data-label="Trip">
+                                            <td data-label="{{ __('traveler.trips.trip_label') }}">
                                                 <div class="trip-name-cell">
                                                     <strong> #{{ $trip->id }}</strong>
-                                                    <!-- <span>Trip</span> -->
+                                                    <!-- <span>{{ __('traveler.trips.trip_label') }}</span> -->
                                                 </div>
                                             </td>
-                                            <td data-label="Service Type">
+                                            <td data-label="{{ __('traveler.trips.service_type') }}">
                                                 <div class="service-type-badges">
                                                     @foreach($serviceTypes as $type)
-                                                        <span class="service-badge">{{ $type }}</span>
+                                                        <span class="service-badge">
+                                                            @if($type === 'Accommodation')
+                                                                {{ __('traveler.trips.service_type_accommodation') }}
+                                                            @elseif($type === 'Activity')
+                                                                {{ __('traveler.trips.service_type_activity') }}
+                                                            @else
+                                                                {{ __('traveler.trips.service_type_travel') }}
+                                                            @endif
+                                                        </span>
                                                     @endforeach
                                                 </div>
                                             </td>
-                                            <td data-label="Dates">
-                                                {{ $trip->start_date ? $trip->start_date->format('d M Y') : 'N/A' }}
+                                            <td data-label="{{ __('traveler.trips.dates') }}">
+                                                {{ $trip->start_date ? $trip->start_date->format('d M Y') : __('traveler.trip_detail.not_set') }}
                                                 -
-                                                {{ $trip->end_date ? $trip->end_date->format('d M Y') : 'N/A' }}
+                                                {{ $trip->end_date ? $trip->end_date->format('d M Y') : __('traveler.trip_detail.not_set') }}
                                             </td>
-                                            <td data-label="Status" align="center">
+                                            <td data-label="{{ __('traveler.trips.status') }}" align="center">
                                                 <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
                                             </td>
-                                            <td data-label="Bookings" style="text-align: center;">
+                                            <td data-label="{{ __('traveler.trips.bookings') }}" style="text-align: center;">
                                                 {{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}
                                             </td>
                                             <td class="trip-actions-cell">
-                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">Details</a>
-                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>Invoice</a>
+                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">{{ __('traveler.trips.details') }}</a>
+                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>{{ __('traveler.trips.invoice') }}</a>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -172,15 +188,15 @@
                         </div>
                     @else
                         <div class="traveler-empty-state-tab">
-                            <p>No past trips yet. Start booking to create your travel history!</p>
+                            <p>{{ __('traveler.trips.no_past') }}</p>
                         </div>
                     @endif
                 </div>
 
             @else
                 <div class="traveler-empty-state">
-                    <p>No trips found. Start planning your holiday!</p>
-                    <a href="/" class="btn btn-primary">Browse Accommodations</a>
+                    <p>{{ __('traveler.trips.no_trips') }}</p>
+                    <a href="/" class="btn btn-primary">{{ __('traveler.trips.browse_accommodations') }}</a>
                 </div>
             @endif
         </div>
@@ -190,7 +206,7 @@
 <section class="page-section traveler-trips-help-section">
     <div class="wrap">
         <div class="traveler-trips-help-card">
-            <p>If you have any questions, concerns, or require assistance, please contact us at <a href="mailto:info@holidays.io">info@holidays.io</a>.</p>
+            <p>{{ __('traveler.trips.help_contact', ['email' => 'info@holidays.io']) }}</p>
         </div>
     </div>
 </section>

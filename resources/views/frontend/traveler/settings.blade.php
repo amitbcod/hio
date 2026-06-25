@@ -1,24 +1,24 @@
 @extends('frontend.layout')
 
-@section('title', 'Traveller Settings | Holidays.io')
-@section('meta_description', 'Manage your traveler account settings on Holidays.io.')
+@section('title', __('traveler.settings.page_title'))
+@section('meta_description', __('traveler.settings.meta_description'))
 
 @section('content')
     <section class="page-section traveler-profile-section">
         <div class="wrap">
             <div class="traveler-profile-card">
                 <div class="traveler-profile-head">
-                    <h1>Traveller Account</h1>
-                    <p>Manage your account settings and preferences.</p>
+                    <h1>{{ __('traveler.settings.heading') }}</h1>
+                    <p>{{ __('traveler.settings.subheading') }}</p>
                 </div>
 
                 <!-- Submenu Navigation -->
                 <div class="traveler-submenu">
                     <a href="{{ route('traveler.profile') }}" class="traveler-submenu-link">
-                        <i class="fa-solid fa-user"></i> Profile
+                        <i class="fa-solid fa-user"></i> {{ __('profile.menu.profile') }}
                     </a>
                     <a href="{{ route('traveler.settings') }}" class="traveler-submenu-link is-active">
-                        <i class="fa-solid fa-gear"></i> Settings
+                        <i class="fa-solid fa-gear"></i> {{ __('profile.menu.settings') }}
                     </a>
                 </div>
 
@@ -41,8 +41,8 @@
 
                     <!-- 2FA Section -->
                     <div class="traveler-form-section">
-                        <h3>Two-Factor Authentication (2FA)</h3>
-                        <p class="section-note">Add an extra layer of security to your account.</p>
+                        <h3>{{ __('traveler.settings.two_factor_authentication') }}</h3>
+                        <p class="section-note">{{ __('traveler.settings.two_factor_description') }}</p>
 
                         <div class="traveler-form-group traveler-form-group--toggle">
                             <label for="2fa_enabled" class="toggle-label">
@@ -54,26 +54,26 @@
                                     {{ old('2fa_enabled', $account->{'2fa_enabled'}) ? 'checked' : '' }}
                                     class="toggle-checkbox"
                                 > 
-                                <span>Enable Two-Factor Authentication</span>
+                                <span>{{ __('traveler.settings.enable_two_factor') }}</span>
                             </label>
                         </div>
 
                         <div id="2fa-method-group" class="traveler-form-group traveler-form-group--hidden" style="display: {{ old('2fa_enabled', $account->{'2fa_enabled'}) ? 'block' : 'none' }};">
-                            <label for="2fa_method">2FA Method *</label>
+                            <label for="2fa_method">{{ __('traveler.settings.select_method') }} *</label>
                             <select id="2fa_method" name="2fa_method" class="traveler-form-control">
-                                <option value="">Select method</option>
-                                <option value="email" {{ old('2fa_method', $account->{'2fa_method'}) === 'email' ? 'selected' : '' }}>Email</option>
-                                <option value="sms" {{ old('2fa_method', $account->{'2fa_method'}) === 'sms' ? 'selected' : '' }}>SMS</option>
-                                <option value="auth_app" {{ old('2fa_method', $account->{'2fa_method'}) === 'auth_app' ? 'selected' : '' }}>Authenticator App</option>
+                                <option value="">{{ __('traveler.settings.select_method') }}</option>
+                                <option value="email" {{ old('2fa_method', $account->{'2fa_method'}) === 'email' ? 'selected' : '' }}>{{ __('traveler.settings.method.email') }}</option>
+                                <option value="sms" {{ old('2fa_method', $account->{'2fa_method'}) === 'sms' ? 'selected' : '' }}>{{ __('traveler.settings.method.sms') }}</option>
+                                <option value="auth_app" {{ old('2fa_method', $account->{'2fa_method'}) === 'auth_app' ? 'selected' : '' }}>{{ __('traveler.settings.method.auth_app') }}</option>
                             </select>
-                            <small>Choose how you'd like to verify your login.</small>
+                            <small>{{ __('traveler.settings.two_factor_description') }}</small>
                         </div>
                     </div>
 
                     <!-- Communication Preferences Section -->
                     <div class="traveler-form-section">
-                        <h3>Communication Preferences</h3>
-                        <p class="section-note">Choose how you'd like to receive notifications from us.</p>
+                        <h3>{{ __('traveler.settings.communication_preferences') }}</h3>
+                        <p class="section-note">{{ __('traveler.settings.communication_description') }}</p>
 
                         <div class="traveler-form-group">
                             <div class="checkbox-group">
@@ -84,7 +84,7 @@
                                         value="email"
                                         {{ in_array('email', old('communication_preference', $account->communication_preference ?? [])) ? 'checked' : '' }}
                                     >
-                                    <span><i class="fa-solid fa-envelope"></i> Email</span>
+                                    <span><i class="fa-solid fa-envelope"></i> {{ __('traveler.settings.notifications.email') }}</span>
                                 </label>
                                 <label class="checkbox-label">
                                     <input 
@@ -93,7 +93,7 @@
                                         value="sms"
                                         {{ in_array('sms', old('communication_preference', $account->communication_preference ?? [])) ? 'checked' : '' }}
                                     >
-                                    <span><i class="fa-solid fa-message"></i> SMS</span>
+                                    <span><i class="fa-solid fa-message"></i> {{ __('traveler.settings.notifications.sms') }}</span>
                                 </label>
                                 <label class="checkbox-label">
                                     <input 
@@ -102,32 +102,32 @@
                                         value="whatsapp"
                                         {{ in_array('whatsapp', old('communication_preference', $account->communication_preference ?? [])) ? 'checked' : '' }}
                                     >
-                                    <span><i class="fa-brands fa-whatsapp"></i> WhatsApp</span>
+                                    <span><i class="fa-brands fa-whatsapp"></i> {{ __('traveler.settings.notifications.whatsapp') }}</span>
                                 </label>
                             </div>
                         </div>
                     </div>
 
                     <div class="traveler-form-actions">
-                        <button type="submit" class="btn-primary">Save Settings</button>
+                        <button type="submit" class="btn-primary">{{ __('traveler.settings.save_settings') }}</button>
                     </div>
                 </form>
 
                 <!-- Account Suspension Section (separate form to avoid nested forms) -->
                 <div class="traveler-form-section traveler-form-section--danger" style="margin-top: 18px;">
-                    <h3>Account Status</h3>
-                    <p class="section-note">@if($account->account_suspended)Your account is currently suspended. You cannot login or make bookings.@else You can suspend your account at any time. While suspended, you won't be able to login or make bookings.@endif</p>
+<h3>{{ __('traveler.settings.account_status') }}</h3>
+                    <p class="section-note">@if($account->account_suspended){{ __('traveler.settings.suspended_description') }}@else {{ __('traveler.settings.active_description') }}@endif</p>
 
                     <div class="traveler-form-group traveler-form-group--full">
                         <form method="POST" action="{{ route('traveler.settings.toggle-suspension') }}" style="display: inline;">
                             @csrf
-                            @if($account->account_suspended)
+                                @if($account->account_suspended)
                                 <button type="submit" class="btn-primary">
-                                    <i class="fa-solid fa-check-circle"></i> Reactivate Account
+                                    <i class="fa-solid fa-check-circle"></i> {{ __('traveler.settings.reactivate_account') }}
                                 </button>
                             @else
-                                <button type="submit" class="btn-danger" onclick="return confirm('Are you sure you want to suspend your account? You will not be able to login until you reactivate it.');">
-                                    <i class="fa-solid fa-pause-circle"></i> Suspend Account
+                                <button type="submit" class="btn-danger" onclick="return confirm('{{ __('traveler.settings.suspend_confirm') }}');">
+                                    <i class="fa-solid fa-pause-circle"></i> {{ __('traveler.settings.suspend_account') }}
                                 </button>
                             @endif
                         </form>
@@ -135,11 +135,11 @@
 
                     @if($account->account_suspended)
                         <div class="traveler-status-badge traveler-status-badge--suspended">
-                            <i class="fa-solid fa-circle"></i> Suspended
+                            <i class="fa-solid fa-circle"></i> {{ __('traveler.settings.status.suspended') }}
                         </div>
                     @else
                         <div class="traveler-status-badge traveler-status-badge--active">
-                            <i class="fa-solid fa-circle"></i> Active
+                            <i class="fa-solid fa-circle"></i> {{ __('traveler.settings.status.active') }}
                         </div>
                     @endif
                 </div>

@@ -200,7 +200,7 @@
 
                                 @if($summary['total_tax'] > 0)
                                     <div class="fare-row">
-                                        <span>{{ __('cart.taxes_charges') }}</span>
+                                        <span>{{ __('booking.taxes_charges') }}</span>
                                         <span>{{ $summary['currency'] }} {{ number_format($summary['total_tax'], 2) }}</span>
                                     </div>
                                 @endif

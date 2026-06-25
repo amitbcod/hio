@@ -1,15 +1,15 @@
 @extends('frontend.layout')
 
-@section('title', 'Traveller Register | Holidays.io')
-@section('meta_description', 'Create your traveller account on Holidays.io.')
+@section('title', __('auth.traveler_register_page_title'))
+@section('meta_description', __('auth.traveler_register_meta_description'))
 
 @section('content')
     <section class="page-section traveler-auth-section">
         <div class="wrap">
             <div class="traveler-auth-card">
                 <div class="traveler-auth-head">
-                    <h1>Traveller Registration</h1>
-                    <p>Create your customer account to manage bookings and profile details.</p>
+                    <h1>{{ __('auth.traveler_register_heading') }}</h1>
+                    <p>{{ __('auth.traveler_register_subtitle') }}</p>
                 </div>
 
                 @if($errors->any())
@@ -26,14 +26,14 @@
                     @csrf
 
                     <div class="traveler-form-group traveler-form-group--full">
-                        <label for="full_name">Full Name *</label>
+                        <label for="full_name">{{ __('auth.traveler_register_full_name') }}</label>
                         <input id="full_name" type="text" name="full_name" value="{{ old('full_name') }}" required>
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="country">Country</label>
+                        <label for="country">{{ __('auth.traveler_register_country_label') }}</label>
                         <select id="country" name="country">
-                            <option value="">Select country (optional)</option>
+                            <option value="">{{ __('auth.traveler_register_country_select') }}</option>
                             @foreach($countries as $country)
                                 <option value="{{ $country }}" {{ old('country') === $country ? 'selected' : '' }}>{{ $country }}</option>
                             @endforeach
@@ -41,45 +41,45 @@
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="email">Email *</label>
+                        <label for="email">{{ __('auth.traveler_register_email_label') }}</label>
                         <input id="email" type="email" name="email" value="{{ old('email') }}" required>
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="mobile_phone">Mobile Phone / WhatsApp *</label>
+                        <label for="mobile_phone">{{ __('auth.traveler_register_mobile_label') }}</label>
                         <input id="mobile_phone" type="text" name="mobile_phone" value="{{ old('mobile_phone') }}" placeholder="+23052511153" required>
-                        <small>E.164 format required.</small>
+                        <small>{{ __('auth.traveler_register_mobile_hint') }}</small>
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="password">Password *</label>
+                        <label for="password">{{ __('auth.traveler_register_password_label') }}</label>
                         <input id="password" type="password" name="password" required>
-                        <small>Minimum 8 chars with uppercase, lowercase, number, special character.</small>
+                        <small>{{ __('auth.traveler_register_password_hint') }}</small>
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="password_confirmation">Confirm Password *</label>
+                        <label for="password_confirmation">{{ __('auth.traveler_register_confirm_password_label') }}</label>
                         <input id="password_confirmation" type="password" name="password_confirmation" required>
                     </div>
 
                     <div class="traveler-form-group traveler-form-group--full traveler-consent-block">
                         <label class="traveler-check-row">
                             <input type="checkbox" name="consent_terms" value="1" {{ old('consent_terms') ? 'checked' : '' }} required>
-                            <span>Consent: I accept the Terms and Conditions *</span>
+                            <span>{{ __('auth.traveler_register_consent_terms') }}</span>
                         </label>
                         <label class="traveler-check-row">
                             <input type="checkbox" name="consent_privacy" value="1" {{ old('consent_privacy') ? 'checked' : '' }} required>
-                            <span>Consent: I accept the Privacy Policy *</span>
+                            <span>{{ __('auth.traveler_register_consent_privacy') }}</span>
                         </label>
                         <label class="traveler-check-row">
                             <input type="checkbox" name="marketing_opt_in" value="1" {{ old('marketing_opt_in') ? 'checked' : '' }}>
-                            <span>Marketing Opt-In: allow marketing communications</span>
+                            <span>{{ __('auth.traveler_register_marketing_opt_in') }}</span>
                         </label>
                     </div>
 
                     <div class="traveler-form-group traveler-form-group--full traveler-form-actions">
-                        <button type="submit" class="btn-primary">Create Traveller Account</button>
-                        <a href="{{ route('traveler.login') }}" class="traveler-inline-link">Already have an account? Sign in</a>
+                        <button type="submit" class="btn-primary">{{ __('auth.traveler_register_button') }}</button>
+                        <a href="{{ route('traveler.login') }}" class="traveler-inline-link">{{ __('auth.traveler_register_have_account') }}</a>
                     </div>
                 </form>
             </div>

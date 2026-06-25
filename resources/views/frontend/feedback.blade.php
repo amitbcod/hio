@@ -16,11 +16,11 @@
 
 
 <div class="container">
-  <h2 class="feedback-head">Feedback for Trip #{{ $trip->id }}</h2>
+  <h2 class="feedback-head">{{ __('feedback.heading', ['id' => $trip->id]) }}</h2>
 
   @if($review)
     <div class="alert alert-info">
-      You have previously submitted feedback for this trip. You can update it below.
+      {{ __('feedback.previous_submitted') }}
     </div>
   @endif
 
@@ -40,27 +40,27 @@
     }
 
     $tripRatingFields = [
-      'communication' => 'Communication',
-      'booking_service' => 'Booking Service',
-      'travel_consulting' => 'Travel Consulting',
-      'on_destination' => 'On Destination',
-      'post_booking' => 'Post Booking',
+      'communication' => __('feedback.rating.communication'),
+      'booking_service' => __('feedback.rating.booking_service'),
+      'travel_consulting' => __('feedback.rating.travel_consulting'),
+      'on_destination' => __('feedback.rating.on_destination'),
+      'post_booking' => __('feedback.rating.post_booking'),
     ];
 
     $accommodationRatingFields = [
-      'service_quality' => 'Service Quality',
-      'cleanliness' => 'Cleanliness',
-      'food' => 'Food',
-      'staff' => 'Staff',
-      'overall_tour_experience' => 'Overall tour experience',
+      'service_quality' => __('feedback.rating.service_quality'),
+      'cleanliness' => __('feedback.rating.cleanliness'),
+      'food' => __('feedback.rating.food'),
+      'staff' => __('feedback.rating.staff'),
+      'overall_tour_experience' => __('feedback.rating.overall_experience'),
     ];
 
     $activityRatingFields = [
-      'equipment' => 'Equipment',
-      'tour_guide' => 'Tour Guide',
-      'safety' => 'Safety',
-      'staff' => 'Staff',
-      'overall_tour_experience' => 'Overall tour experience',
+      'equipment' => __('feedback.rating.equipment'),
+      'tour_guide' => __('feedback.rating.tour_guide'),
+      'safety' => __('feedback.rating.safety'),
+      'staff' => __('feedback.rating.staff'),
+      'overall_tour_experience' => __('feedback.rating.overall_experience'),
     ];
   @endphp
 
@@ -209,21 +209,21 @@
     @csrf
 
     <div class="section-box">
-      <h2>Overall Trip Review</h2>
+      <h2>{{ __('feedback.overall_review') }}</h2>
 
       <div class="rating-legend">
         <div></div>
-        <div>Poor (1)</div>
-        <div>Average (2)</div>
-        <div>Good (3)</div>
-        <div>Very Good (4)</div>
-        <div>Excellent (5)</div>
+        <div>{{ __('feedback.rating.poor') }}</div>
+        <div>{{ __('feedback.rating.average') }}</div>
+        <div>{{ __('feedback.rating.good') }}</div>
+        <div>{{ __('feedback.rating.very_good') }}</div>
+        <div>{{ __('feedback.rating.excellent') }}</div>
       </div>
       
       <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px; background: #f9f9f9;">
-        @foreach($tripRatingFields as $fieldKey => $fieldLabel)
-          <div class="rating-row">
-            <div class="rating-label">{{ $fieldLabel }}</div>
+          @foreach($tripRatingFields as $fieldKey => $fieldLabel)
+            <div class="rating-row">
+              <div class="rating-label">{{ $fieldLabel }}</div>
             <div class="star-rating">
               <div class="stars" data-rating-input="trip[{{ $fieldKey }}]">
                 @for($i = 1; $i <= 5; $i++)
@@ -238,7 +238,7 @@
       
 
         <div class="rating-row">
-          <div class="rating-label">Overall tour experience</div>
+          <div class="rating-label">{{ __('feedback.rating.overall_experience') }}</div>
           <div class="star-rating">
             <div class="stars" data-rating-input="overall_rating">
               @for($i = 1; $i <= 5; $i++)
@@ -251,12 +251,12 @@
         </div>
 
         <div class="section-comment">
-          <label><strong>How did you hear about us?</strong></label>
+          <label><strong>{{ __('feedback.hear_about_us') }}</strong></label>
           <textarea name="hear_about_us">{{ $tripReviewData['hear_about_us'] ?? '' }}</textarea>
         </div>
 
         <div class="section-comment">
-          <label><strong>Any other feedback and comments:</strong></label>
+          <label><strong>{{ __('feedback.other_comments') }}</strong></label>
           <textarea name="trip_comments">{{ $tripReviewData['trip_comments'] ?? '' }}</textarea>
         </div>
       </div>
@@ -264,14 +264,14 @@
 
     @if($trip->accommodationBookings && $trip->accommodationBookings->count())
       <div class="section-box">
-        <h2>Accommodation Reviews</h2>
+        <h2>{{ __('feedback.accommodation_reviews') }}</h2>
         <div class="rating-legend">
           <div></div>
-          <div>Poor (1)</div>
-          <div>Average (2)</div>
-          <div>Good (3)</div>
-          <div>Very Good (4)</div>
-          <div>Excellent (5)</div>
+          <div>{{ __('feedback.rating.poor') }}</div>
+          <div>{{ __('feedback.rating.average') }}</div>
+          <div>{{ __('feedback.rating.good') }}</div>
+          <div>{{ __('feedback.rating.very_good') }}</div>
+          <div>{{ __('feedback.rating.excellent') }}</div>
         </div>
 
         @foreach($trip->accommodationBookings as $ab)
@@ -281,7 +281,7 @@
           @endphp
 
           <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;background: #f9f9f9;">
-            <h3 style="margin-top: 0;">Accommodation: {{ $ab->accommodation?->property_name ?? ('Accommodation #' . $ab->id) }}</h3>
+            <h3 style="margin-top: 0;">{{ __('feedback.accommodation_label') }} {{ $ab->accommodation?->property_name ?? ('Accommodation #' . $ab->id) }}</h3>
             <input type="hidden" name="accommodations[{{ $ab->id }}][id]" value="{{ $ab->id }}">
 
             @foreach($accommodationRatingFields as $fieldKey => $fieldLabel)
@@ -300,7 +300,7 @@
             @endforeach
 
             <div class="section-comment">
-              <label><strong>Any other feedback and comments:</strong></label>
+              <label><strong>{{ __('feedback.other_comments') }}</strong></label>
               <textarea name="accommodations[{{ $ab->id }}][review]">{{ $accReview->review ?? '' }}</textarea>
             </div>
           </div>
@@ -310,14 +310,14 @@
 
     @if($trip->activityBookings && $trip->activityBookings->count())
       <div class="section-box">
-        <h2>Activity Reviews</h2>
+        <h2>{{ __('feedback.activity_reviews') }}</h2>
         <div class="rating-legend">
           <div></div>
-          <div>Poor (1)</div>
-          <div>Average (2)</div>
-          <div>Good (3)</div>
-          <div>Very Good (4)</div>
-          <div>Excellent (5)</div>
+          <div>{{ __('feedback.rating.poor') }}</div>
+          <div>{{ __('feedback.rating.average') }}</div>
+          <div>{{ __('feedback.rating.good') }}</div>
+          <div>{{ __('feedback.rating.very_good') }}</div>
+          <div>{{ __('feedback.rating.excellent') }}</div>
         </div>
 
         @foreach($trip->activityBookings as $act)
@@ -327,7 +327,7 @@
           @endphp
 
           <div style="border: 1px solid #eee; padding: 12px; margin-bottom: 18px;background: #f9f9f9;">
-            <h3 style="margin-top: 0;">Activity: {{ $act->activity?->activity_name ?? ('Activity #' . $act->id) }}</h3>
+            <h3 style="margin-top: 0;">{{ __('feedback.activity_label') }} {{ $act->activity?->activity_name ?? ('Activity #' . $act->id) }}</h3>
             <input type="hidden" name="activities[{{ $act->id }}][id]" value="{{ $act->id }}">
 
             @foreach($activityRatingFields as $fieldKey => $fieldLabel)
@@ -346,7 +346,7 @@
             @endforeach
 
             <div class="section-comment">
-              <label><strong>Any other feedback and comments:</strong></label>
+              <label><strong>{{ __('feedback.other_comments') }}</strong></label>
               <textarea name="activities[{{ $act->id }}][review]">{{ $actReview->review ?? '' }}</textarea>
             </div>
           </div>
@@ -355,7 +355,7 @@
     @endif
 
     <div class="feedback-btn-div">
-      <button class="btn btn-primary" type="submit">{{ $review ? 'Update feedback' : 'Submit feedback' }}</button>
+      <button class="btn btn-primary" type="submit">{{ $review ? __('feedback.update') : __('feedback.submit') }}</button>
     </div>
   </form>
 

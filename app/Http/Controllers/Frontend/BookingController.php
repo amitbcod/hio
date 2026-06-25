@@ -111,14 +111,14 @@ class BookingController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Item added to cart.',
+                'message' => __('cart.item_added'),
                 'cart' => array_values($cart),
                 'summary' => $this->buildCartSummary($cart),
             ]);
         }
 
         return redirect()->route('frontend.booking.cart')
-            ->with('success', 'Item added. Please proceed to checkout.');
+            ->with('success', __('cart.item_added'));
     }
 
     private function buildAccommodationCartItem(Request $request): array
@@ -358,13 +358,13 @@ class BookingController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Item removed from cart.',
+                'message' => __('cart.item_removed'),
                 'cart' => array_values($cart),
                 'summary' => $this->buildCartSummary($cart),
             ]);
         }
 
-        return back()->with('success', 'Item removed from cart.');
+        return back()->with('success', __('cart.item_removed'));
     }
 
     // ═══════════════════════════════════════════════════════════════════════

@@ -1,6 +1,6 @@
 @extends('frontend.layout')
 
-@section('title', 'Manage Guests | ' . $trip->trip_name)
+@section('title', __('traveler.manage_guests.page_title', ['trip' => $trip->trip_name]))
 @section('meta_description', 'Manage guest details for your booking.')
 
 @push('styles')
@@ -187,14 +187,14 @@
     <div class="wrap">
         <div class="page-header">
             <div class="breadcrumbs">
-                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.show', ['otp' => $otp]) : route('traveler.trips') }}">Trips</a>
+                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.show', ['otp' => $otp]) : route('traveler.trips') }}">{{ __('traveler.manage_guests.breadcrumb_trips') }}</a>
                 <span>/</span>
                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip]) : route('traveler.trip.detail', $trip) }}">{{ $trip->trip_name }}</a>
                 <span>/</span>
-                <span>Manage Guests</span>
+                <span>{{ __('traveler.manage_guests.heading_short') }}</span>
             </div>
-            <h1>Manage Guests for {{ $booking->booking_reference }}</h1>
-            <p class="page-subtitle">Update guest details for this booking.</p>
+            <h1>{{ __('traveler.manage_guests.heading') }} {{ $booking->booking_reference }}</h1>
+            <p class="page-subtitle">{{ __('traveler.manage_guests.subtitle') }}</p>
         </div>
 
         @php $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0); $addedCount = $booking->guests->count(); $canDownload = $bookedCount == $addedCount; @endphp
@@ -202,7 +202,7 @@
             <form id="manageGuestsForm" method="POST" action="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.update-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.update-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}">
                 @csrf
                 <div id="download-voucher-section"></div>
-                <p style="margin-bottom: 20px; font-weight: 600;margin-right:100px;">Booked: {{ $bookedCount }} &nbsp;|&nbsp; Added: <span id="added-count">{{ $booking->guests->count() }}</span></p>
+                <p style="margin-bottom: 20px; font-weight: 600;margin-right:100px;">{{ __('traveler.manage_guests.booked') }}: {{ $bookedCount }} &nbsp;|&nbsp; {{ __('traveler.manage_guests.added') }}: <span id="added-count">{{ $booking->guests->count() }}</span></p>
 @if ($canDownload && ($booking instanceof \App\Models\AccommodationBooking))
     <div style="margin-bottom: 10px;">
         <a href="{{ isset($guestMode) && $guestMode 
@@ -218,9 +218,9 @@
     </div>
 @endif
                 <div class="saved-guests-panel" style="border: 1px solid #dcdcdc; border-radius: 10px; padding: 18px; margin-bottom: 20px; background: #fafafa;">
-                    <h3 style="margin-top: 0;">Use Saved Guest Details</h3>
+                    <h3 style="margin-top: 0;">{{ __('traveler.manage_guests.use_saved_details') }}</h3>
                     @if($savedGuests->isEmpty())
-                        <p style="margin: 0 0 10px; color: #555;">No saved guest profiles found. Add a new guest below.</p>
+                        <p style="margin: 0 0 10px; color: #555;">{{ __('traveler.manage_guests.no_saved_profiles') }}</p>
                     @else
                         <div class="saved-guest-list" style="display: grid; gap: 10px;">
                             @foreach($savedGuests as $guest)
@@ -235,7 +235,7 @@
                                 </div>
                             @endforeach
                         </div>
-                        <button type="button" id="add-saved-guests-btn" class="btn btn-primary" style="margin-top: 12px;">Add selected saved guests</button>
+                        <button type="button" id="add-saved-guests-btn" class="btn btn-primary" style="margin-top: 12px;">{{ __('traveler.manage_guests.add_selected_saved_guests') }}</button>
                     @endif
                 </div>
 
@@ -275,15 +275,15 @@
                     <!-- Guest forms will be generated here by JavaScript when needed -->
                 </div>
 
-                <button type="button" id="add-guest-btn" class="btn btn-secondary" style="margin-right: 10px;">+ Add New Guest</button>
-                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <button type="button" id="add-guest-btn" class="btn btn-secondary" style="margin-right: 10px;">+ {{ __('traveler.manage_guests.add_new_guest') }}</button>
+                <button type="submit" class="btn btn-primary">{{ __('traveler.manage_guests.save_changes') }}</button>
             </form>
 
             
            
         </div>
 
-        <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip]) : route('traveler.trip.detail', $trip) }}" class="btn btn-secondary">&larr; Back to Trip</a>
+        <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip]) : route('traveler.trip.detail', $trip) }}" class="btn btn-secondary">&larr; {{ __('traveler.manage_guests.back_to_trip') }}</a>
     </div>
 </section>
 
@@ -291,32 +291,32 @@
 <div id="addGuestModal" class="guest-modal-wrapper" style="display:none; position: fixed; inset: 0; z-index: 99999; align-items: center; justify-content: center; transform: none;">
     <div class="guest-modal-box">
         <div class="guest-modal-header">
-            <h2>Add Guest</h2>
+            <h2>{{ __('traveler.manage_guests.modal.add_guest') }}</h2>
             <button type="button" class="guest-modal-close" id="closeModalBtn">&times;</button>
         </div>
         <div class="guest-modal-body">
             <form id="addGuestForm">
                 <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px;">
                     <div class="form-group">
-                        <label for="modal_relation">Relationship <span class="req">*</span></label>
+                        <label for="modal_relation">{{ __('traveler.manage_guests.modal.relationship') }} <span class="req">*</span></label>
                         <select id="modal_relation" name="relation" required class="form-input">
-                            <option value="">Select</option>
-                            <option value="self">Self</option>
-                            <option value="spouse">Spouse</option>
-                            <option value="child">Child</option>
-                            <option value="friend">Friend</option>
-                            <option value="colleague">Colleague</option>
-                            <option value="other">Other</option>
+                            <option value="">{{ __('traveler.manage_guests.modal.select') }}</option>
+                            <option value="self">{{ __('traveler.manage_guests.modal.relation.self') }}</option>
+                            <option value="spouse">{{ __('traveler.manage_guests.modal.relation.spouse') }}</option>
+                            <option value="child">{{ __('traveler.manage_guests.modal.relation.child') }}</option>
+                            <option value="friend">{{ __('traveler.manage_guests.modal.relation.friend') }}</option>
+                            <option value="colleague">{{ __('traveler.manage_guests.modal.relation.colleague') }}</option>
+                            <option value="other">{{ __('traveler.manage_guests.modal.relation.other') }}</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="modal_gender">Gender</label>
+                        <label for="modal_gender">{{ __('traveler.manage_guests.modal.gender') }}</label>
                         <select id="modal_gender" name="gender" class="form-input">
-                            <option value="">Select</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="non_binary">Non-binary</option>
-                            <option value="other">Other</option>
+                            <option value="">{{ __('traveler.manage_guests.modal.select') }}</option>
+                            <option value="male">{{ __('traveler.manage_guests.modal.gender.male') }}</option>
+                            <option value="female">{{ __('traveler.manage_guests.modal.gender.female') }}</option>
+                            <option value="non_binary">{{ __('traveler.manage_guests.modal.gender.non_binary') }}</option>
+                            <option value="other">{{ __('traveler.manage_guests.modal.gender.other') }}</option>
                         </select>
                     </div>
                 </div>

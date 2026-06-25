@@ -394,7 +394,16 @@
         </script>
     @endif
 
-    <div id="miniCartOverlay" class="mini-cart-overlay" aria-hidden="true">
+        <div id="miniCartOverlay" class="mini-cart-overlay" aria-hidden="true"
+            data-msg-item-added="{{ __('cart.item_added') }}"
+            data-msg-item-removed="{{ __('cart.item_removed') }}"
+            data-msg-cart-empty="{{ __('cart.minicart_empty') }}"
+            data-msg-unable-load="{{ __('cart.unable_load') }}"
+            data-msg-unable-add="{{ __('cart.unable_add') }}"
+            data-msg-unable-remove="{{ __('cart.unable_remove') }}"
+            data-cart-items-zero="{{ __('cart.items_in_cart_zero') }}"
+            data-cart-items-one="{{ __('cart.items_in_cart_one') }}"
+            data-cart-items-many="{{ __('cart.items_in_cart_many') }}">
         <div class="mini-cart-panel" role="dialog" aria-modal="true" aria-labelledby="miniCartTitle">
             <div class="mini-cart-header">
                 <div>
@@ -408,11 +417,11 @@
                 <div id="miniCartItems"></div>
                 <div id="miniCartEmpty" class="mini-cart-empty" style="display:none;">{{ __('cart.empty') }}</div>
             </div>
-            <div class="mini-cart-summary" id="miniCartSummary">
-                <div class="mini-cart-summary-row"><span>Subtotal</span><span id="miniCartSubtotal">USD 0.00</span></div>
-                <div class="mini-cart-summary-row"><span>Discount</span><span id="miniCartDiscount">USD 0.00</span></div>
-                <div class="mini-cart-summary-row"><span>Tax / Fees</span><span id="miniCartTaxFees">USD 0.00</span></div>
-                <div class="mini-cart-summary-row total"><span>Total</span><span id="miniCartTotal">USD 0.00</span></div>
+                <div class="mini-cart-summary" id="miniCartSummary">
+                <div class="mini-cart-summary-row"><span>{{ __('booking.subtotal') }}</span><span id="miniCartSubtotal">USD 0.00</span></div>
+                <div class="mini-cart-summary-row"><span>{{ __('booking.discounts') }}</span><span id="miniCartDiscount">USD 0.00</span></div>
+                <div class="mini-cart-summary-row"><span>{{ __('booking.taxes_charges') }}</span><span id="miniCartTaxFees">USD 0.00</span></div>
+                <div class="mini-cart-summary-row total"><span>{{ __('booking.net_amount_payable') }}</span><span id="miniCartTotal">USD 0.00</span></div>
             </div>
             <div class="mini-cart-actions">
                 <a href="{{ route('frontend.booking.cart') }}" class="mini-cart-link">{{ __('cart.view') }}</a>

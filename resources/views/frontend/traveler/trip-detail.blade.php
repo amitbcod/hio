@@ -1,8 +1,8 @@
 @extends('frontend.layout')
 
-@section('title', 'Trip Details | Holidays.io')
+@section('title', __('traveler.trip_detail.page_title'))
 
-@section('meta_description', 'View your trip details on Holidays.io.')
+@section('meta_description', __('traveler.trip_detail.meta_description'))
 
 @section('content')
     <section class="page-section traveler-trip-detail-section">
@@ -10,9 +10,9 @@
             <!-- Header -->
             <div class="trip-detail-header-section">
                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.show', ['otp' => $otp]) : route('traveler.trips') }}"
-                    class="btn btn-secondary-outline">&larr; Back to Trips</a>
+                    class="btn btn-secondary-outline">&larr; {{ __('traveler.trip_detail.back_to_trips') }}</a>
                 <div class="trip-id">
-                    <h1>Trip ID: <strong>#{{ $trip->id }}</strong></h1>
+                    <h1>{{ __('traveler.trip_detail.heading') }} <strong>#{{ $trip->id }}</strong></h1>
                     <!-- <p style="color: #666; font-size: 1rem; margin: 5px 0; padding: 12px 16px; background: #fff3e0; border-left: 4px solid #ff9500; display: inline-block; border-radius: 4px;">Trip ID: <strong>#{{ $trip->id }}</strong></p> -->
 
                     @php
@@ -25,7 +25,7 @@
                         <div style="margin-top: 15px;">
                             <a href="{{ route('frontend.feedback.show', ['trip' => $trip->id]) }}" class="btn btn-primary"
                                 style="background: #ff9500; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; display: inline-block; font-weight: 600;">
-                                ⭐ Share Your Feedback
+                                ⭐ {{ __('traveler.trip.share_feedback') }}
                             </a>
                         </div>
                     @endif
@@ -36,7 +36,7 @@
             <div class="trip-summary-grid"
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px;">
                 <div class="summary-card">
-                    <label>Status</label>
+                    <label>{{ __('traveler.trip_detail.status') }}</label>
                     <p>
                         <span class="trip-status trip-status--{{ $trip->status }}"
                             style="display: inline-block; padding: 6px 12px; border-radius: 4px; background: {{ $trip->status === 'planned' ? '#e3f2fd' : ($trip->status === 'active' ? '#e8f5e9' : '#f3e5f5') }}; color: {{ $trip->status === 'planned' ? '#1976d2' : ($trip->status === 'active' ? '#388e3c' : '#7b1fa2') }};">
@@ -51,14 +51,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                         </svg>
-                        Start Date</label>
+                        {{ __('traveler.trip_detail.start_date') }}</label>
                     <p><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                             stroke="currentColor" class="size-6">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                         </svg>
-                        {{ $tripStartDate ? \Carbon\Carbon::parse($tripStartDate)->format('d M Y') : 'Not set' }}
-                    </p>
+                        {{ $tripStartDate ? \Carbon\Carbon::parse($tripStartDate)->format('d M Y') : __('traveler.trip_detail.not_set') }}</p>
                 </div>
 
                 <div class="summary-card">
@@ -66,13 +65,13 @@
                             stroke="currentColor" class="size-6">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
-                        </svg> End Date</label>
+                        </svg> {{ __('traveler.trip_detail.end_date') }}</label>
                     <p><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                             stroke="currentColor" class="size-6">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                         </svg>
-                        {{ $tripEndDate ? \Carbon\Carbon::parse($tripEndDate)->format('d M Y') : 'Not set' }}
+                        {{ $tripEndDate ? \Carbon\Carbon::parse($tripEndDate)->format('d M Y') : __('traveler.trip_detail.not_set') }}
                     </p>
                 </div>
             </div>
@@ -85,7 +84,7 @@
                             <div class="header-icon">
                                 <i class="fa-solid fa-bed"></i>
                             </div>
-                            <h2>Accommodation Booking</h2>
+                            <h2>{{ __('traveler.trip_detail.accommodation_booking') }}</h2>
                         </div>
 
                         <div class="booking-content">
@@ -94,12 +93,12 @@
                                     $heroMedia = $booking->accommodation && $booking->accommodation->media ? $booking->accommodation->media->firstWhere('media_type', 'hero') : null;
                                     $img = $heroMedia && $heroMedia->path ? asset('storage/' . $heroMedia->path) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600';
                                 @endphp
-                                <img src="{{ $img }}" alt="{{ $booking->accommodation->property_name ?? 'Accommodation' }}" class="property-img">
+                                <img src="{{ $img }}" alt="{{ $booking->accommodation->property_name ?? __('traveler.trip_detail.accommodation') }}" class="property-img">
                                 <div class="property-info">
-                                    <h3>{{ $booking->accommodation ? $booking->accommodation->property_name : 'N/A' }}</h3>
+                                    <h3>{{ $booking->accommodation ? $booking->accommodation->property_name : __('traveler.trip_detail.not_set') }}</h3>
                                     <div class="type">{{ $booking->room ? $booking->room->room_name : '' }}</div>
 
-                                    <div class="ref-label">Booking Ref</div>
+                                    <div class="ref-label">{{ __('traveler.trip_detail.booking_ref') }}</div>
                                     <div class="ref-no">{{ $booking->booking_reference }}</div>
                                 </div>
                             </div>
@@ -112,8 +111,8 @@
                                 <div class="detail-title">
                                     <i class="fa-regular fa-calendar"></i>
                                     <span>
-                                        Check-in
-                                        <div class="detail-value">{{ $booking->check_in_date ? $booking->check_in_date->format('d M Y') : 'TBD' }}</div>
+                                        {{ __('traveler.trip_detail.check_in') }}
+                                        <div class="detail-value">{{ $booking->check_in_date ? $booking->check_in_date->format('d M Y') : __('traveler.trip_detail.not_set') }}</div>
                                     </span>
                                 </div>
                             </div>
@@ -122,8 +121,8 @@
                                 <div class="detail-title">
                                     <i class="fa-regular fa-calendar"></i>
                                     <span>
-                                        Check-out
-                                        <div class="detail-value">{{ $booking->check_out_date ? $booking->check_out_date->format('d M Y') : 'TBD' }}</div>
+                                        {{ __('traveler.trip_detail.check_out') }}
+                                        <div class="detail-value">{{ $booking->check_out_date ? $booking->check_out_date->format('d M Y') : __('traveler.trip_detail.not_set') }}</div>
                                     </span>
                                 </div>
                             </div>
@@ -132,14 +131,14 @@
                                 <div class="detail-title">
                                     <i class="fa-solid fa-users"></i>
                                     <span>
-                                        Guests
+                                        {{ __('traveler.trip_detail.guests') }}
                                         <div class="detail-value">
                                             @php
                                                 $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
                                                 $addedCount = $booking->guests->count();
                                             @endphp
-                                            {{ $bookedCount }} Booked<br>
-                                            {{ $addedCount }} Added
+                                            {{ __('traveler.trip_detail.booked') }}: {{ $bookedCount }}<br>
+                                            {{ __('traveler.trip_detail.added') }}: {{ $addedCount }}
                                         </div>
                                     </span>
                                 </div>
@@ -149,7 +148,7 @@
                                 <div class="detail-title">
                                     <i class="fa-regular fa-credit-card"></i>
                                     <span>
-                                        Amount
+                                        {{ __('traveler.trip_detail.amount') }}
                                         <div class="detail-value">
                                             {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
                                         </div>
@@ -162,12 +161,12 @@
                         <div class="actions">
                             <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-manage">
                                 <i class="fa-solid fa-gear"></i>
-                                Manage
+                                {{ __('traveler.trip_detail.manage') }}
                             </a>
 
                             <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-secondary btn-download">
                                 <i class="fa-solid fa-download"></i>
-                                Download Voucher
+                                {{ __('traveler.trip_detail.download_voucher') }}
                             </a>
                         </div>
                     </div>
@@ -184,7 +183,7 @@
                                 <div class="header-icon">
                                     <i class="fa-solid fa-person-hiking"></i>
                                 </div>
-                                <h2>{{ $booking->activity ? $booking->activity->activity_name : 'Activity Booking' }}</h2>
+                                <h2>{{ $booking->activity ? $booking->activity->activity_name : __('traveler.trip_detail.activity_booking') }}</h2>
                             </div>
 
                             <div class="booking-content">
@@ -204,7 +203,7 @@
 
                                     <div>
                                         <div class="activity-info">
-                                            <h3>{{ $booking->activity ? $booking->activity->activity_name : 'N/A' }}</h3>
+                                            <h3>{{ $booking->activity ? $booking->activity->activity_name : __('traveler.trip_detail.not_set') }}</h3>
                                             <div class="subtitle">{{ $booking->variant_name ?? '' }}</div>
                                         </div>
 
@@ -212,9 +211,9 @@
                                             <div class="detail-item">
                                                 <div class="detail-title">
                                                     <i class="fa-regular fa-calendar"></i>
-                                                    <span>Activity Date
+                                                    <span>{{ __('traveler.trip_detail.activity_date') }}
                                                         <div class="detail-value">
-                                                            {{ $booking->activity_date ? $booking->activity_date->format('d M Y') : 'TBD' }}
+                                                            {{ $booking->activity_date ? $booking->activity_date->format('d M Y') : __('traveler.trip_detail.not_set') }}
                                                         </div>
                                                     </span>
                                                 </div>
@@ -223,14 +222,14 @@
                                             <div class="detail-item">
                                                 <div class="detail-title">
                                                     <i class="fa-solid fa-users"></i>
-                                                    <span>Participants
+                                                    <span>{{ __('traveler.trip_detail.participants') }}
                                                         <div class="detail-value">
                                                             @php
                                                                 $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
                                                                 $addedCount = $booking->guests->count();
                                                             @endphp
-                                                            {{ $bookedCount }} Booked<br>
-                                                            {{ $addedCount }} Added
+                                                            {{ __('traveler.trip_detail.booked') }}: {{ $bookedCount }}<br>
+                                                            {{ __('traveler.trip_detail.added') }}: {{ $addedCount }}
                                                         </div>
                                                     </span>
                                                 </div>
@@ -239,7 +238,7 @@
                                             <div class="detail-item">
                                                 <div class="detail-title">
                                                     <i class="fa-regular fa-clock"></i>
-                                                    <span>Time Slot
+                                                    <span>{{ __('traveler.trip_detail.time_slot') }}
                                                         <div class="detail-value">
                                                             @php
                                                                 $slot = $booking->activity_time_slot_id && $booking->activity && $booking->activity->schedulingTimeSlots 
@@ -253,7 +252,7 @@
                                                             @endif
                                                         </div>
                                                         @if(!empty($booking->duration))
-                                                            <div class="detail-small">Duration: {{ $booking->duration }}</div>
+                                                            <div class="detail-small">{{ __('traveler.trip_detail.duration') }}: {{ $booking->duration }}</div>
                                                         @endif
                                                     </span>
                                                 </div>
@@ -261,7 +260,7 @@
 
                                             <div class="detail-item">
                                                 <div class="detail-title">
-                                                    <span>Amount
+                                                    <span>{{ __('traveler.trip_detail.amount') }}
                                                         <div class="amount">
                                                             {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
                                                         </div>
@@ -273,9 +272,9 @@
                                 </div>
 
                                 <div class="right-section">
-                                    <div class="status">{{ $booking->booking_status ?? 'Pending' }}</div>
+                                    <div class="status">{{ $booking->booking_status ?? __('traveler.trip_detail.not_set') }}</div>
                                     <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="manage-link">
-                                        Manage
+                                        {{ __('traveler.trip_detail.manage') }}
                                         <i class="fa-solid fa-angle-right"></i>
                                     </a>
                                 </div>
@@ -285,7 +284,7 @@
                                 <div>
                                     <div class="timeslot-title">
                                         <i class="fa-solid fa-circle-info"></i>
-                                        <span>Time Slot Details
+                                        <span>{{ __('traveler.trip_detail.time_slot_details') }}
                                             @if(!empty($booking->time_slot_notes))
                                                 <p>{!! nl2br(e($booking->time_slot_notes)) !!}</p>
                                             @endif
@@ -299,7 +298,7 @@
                         </div>
 
                         <div class="activity-footer">
-                            <a href="#">View All Activities ({{ $activityBookings->count() }}) <i class="fa-solid fa-angle-down"></i></a>
+                            <a href="#">{{ __('traveler.trip_detail.view_all_activities', ['count' => $activityBookings->count()]) }} <i class="fa-solid fa-angle-down"></i></a>
                         </div>
                     </div>
                 @endforeach
@@ -308,18 +307,16 @@
             <!-- add more services section (uses same forms as legacy) -->
             <div class="services-card dynamic-card">
                 <div class="services-header">
-                    <h2>Add More Services</h2>
-                </div>
+                        <h2>{{ __('traveler.trip_detail.add_more_services') }}</h2>
+                    </div>
 
-                <p class="services-description">Enhance your trip by adding more accommodations or activities.</p>
-
-                <div class="services-actions">
+                    <p class="services-description">{{ __('traveler.trip_detail.add_more_services_description') }}</p>
                     @if((!isset($guestMode) || !$guestMode) && !in_array($trip->status, ['completed', 'cancelled']))
                         <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display:inline-block; width:48%;">
                             @csrf
                             <button type="submit" name="service_type" value="accommodation" class="service-btn accommodation-btn">
                                 <i class="fa-solid fa-building"></i>
-                                + Add Accommodation
+                                {{ __('traveler.trip_detail.add_accommodation') }}
                             </button>
                         </form>
 
@@ -327,11 +324,11 @@
                             @csrf
                             <button type="submit" name="service_type" value="activity" class="btn btn-sm btn-secondary service-btn activity-btn">
                                 <i class="fa-solid fa-sailboat"></i>
-                                + Add Activity
+                                {{ __('traveler.trip_detail.add_activity') }}
                             </button>
                         </form>
                     @else
-                        <div style="color:#666;">Adding services is not available for this trip.</div>
+                        <div style="color:#666;">{{ __('traveler.trip_detail.services_unavailable') }}</div>
                     @endif
                 </div>
             </div>
@@ -344,20 +341,20 @@
                 <div class="bookings-section legacy-hidden"
                     style="margin-bottom: 40px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px;">
                     <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
-                        Accommodation Bookings</h3>
+                        {{ __('traveler.trip_detail.accommodation_bookings') }}</h3>
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
                             <thead>
                                 <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Booking Ref</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Accommodation</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Room</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Check-in</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Check-out</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Guests</th>
-                                    <th style="padding: 12px; text-align: right; font-weight: 600;">Amount</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Status</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Action</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.booking_ref') }}</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.accommodation') }}</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.room') }}</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.check_in') }}</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.check_out') }}</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.guests') }}</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600;">{{ __('traveler.trip_detail.amount') }}</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.status') }}</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.action') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -366,10 +363,10 @@
                                         <td style="padding: 12px; font-weight: 600; color: #ff9500;">
                                             {{ $booking->booking_reference }}</td>
                                         <td style="padding: 12px;">
-                                            {{ $booking->accommodation ? $booking->accommodation->property_name : 'N/A' }}
+                                            {{ $booking->accommodation ? $booking->accommodation->property_name : __('traveler.trip_detail.not_set') }}
                                         </td>
                                         <td style="padding: 12px;">
-                                            {{ $booking->room ? $booking->room->room_name : 'N/A' }}
+                                            {{ $booking->room ? $booking->room->room_name : __('traveler.trip_detail.not_set') }}
                                         </td>
                                         <td style="padding: 12px;">
                                             {{ $booking->check_in_date->format('d M Y') }}
@@ -399,10 +396,9 @@
                                             style="padding: 12px; text-align: center; display:flex; justify-content:center; gap: 8px; flex-wrap:wrap;">
                                             <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
                                                 class="btn btn-sm btn-outline-primary"
-                                                style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
+                                                style="margin-top: 5px;font-weight: 600; color: #ff9500;">{{ __('traveler.trip_detail.manage') }}</a>
                                             <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
-                                                class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">Download
-                                                Voucher</a>
+                                                class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">{{ __('traveler.trip_detail.download_voucher') }}</a>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -417,19 +413,19 @@
                 <div class="bookings-section legacy-hidden"
                     style="margin-bottom: 40px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px;">
                     <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
-                        Activity Bookings</h3>
+                        {{ __('traveler.trip_detail.activity_bookings') }}</h3>
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
                             <thead>
                                 <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Booking Ref</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Activity</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Variant</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Activity Date</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Participants</th>
-                                    <th style="padding: 12px; text-align: right; font-weight: 600;">Amount</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Status</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Action</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.booking_ref') }}</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.activity') }}</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.variant') }}</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.activity_date') }}</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.participants') }}</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600;">{{ __('traveler.trip_detail.amount') }}</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.status') }}</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.action') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -438,10 +434,10 @@
                                         <td style="padding: 12px; font-weight: 600; color: #ff9500;">
                                             {{ $booking->booking_reference }}</td>
                                         <td style="padding: 12px;">
-                                            {{ $booking->activity ? $booking->activity->activity_name : 'N/A' }}
+                                            {{ $booking->activity ? $booking->activity->activity_name : __('traveler.trip_detail.not_set') }}
                                         </td>
                                         <td style="padding: 12px;">
-                                            {{ $booking->variant_name ?? 'Standard' }}
+                                            {{ $booking->variant_name ?? __('traveler.trip_detail.standard') }}
                                         </td>
                                         <td style="padding: 12px;">
                                             {{ $booking->activity_date->format('d M Y') }}
@@ -467,11 +463,10 @@
                                             style="padding: 12px; text-align: center; display:flex; justify-content:center; gap: 8px; flex-wrap:wrap;">
                                             <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
                                                 class="btn btn-sm btn-outline-primary"
-                                                style="margin-top: 5px;font-weight: 600; color: #ff9500;">Manage</a>
+                                                style="margin-top: 5px;font-weight: 600; color: #ff9500;">{{ __('traveler.trip_detail.manage') }}</a>
                                             @if($booking->guests->count() > 0)
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}#download-voucher-section"
-                                                    class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">Download
-                                                    Voucher</a>
+                                                    class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">{{ __('traveler.trip_detail.download_voucher') }}</a>
                                             @endif
                                         </td>
                                     </tr>
@@ -485,7 +480,7 @@
             <!-- No Bookings Message -->
             @if($accommodationBookings->count() === 0 && $activityBookings->count() === 0)
                 <div style="background: #f9f9f9; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 30px;">
-                    <p style="color: #999; font-size: 1.1rem; margin: 0;">No bookings added to this trip yet.</p>
+                    <p style="color: #999; font-size: 1.1rem; margin: 0;">{{ __('traveler.trip_detail.no_bookings') }}</p>
                 </div>
             @endif
 
@@ -494,22 +489,22 @@
                 <div class="trip-actions-section legacy-hidden"
                     style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-top: 30px;">
                     <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
-                        Add More Services</h3>
-                    <p style="color: #666; margin-bottom: 20px;">Expand your trip by adding more accommodations or activities.
+                        {{ __('traveler.trip_detail.add_more_services') }}</h3>
+                    <p style="color: #666; margin-bottom: 20px;">{{ __('traveler.trip_detail.add_more_services_description') }}
                     </p>
                     <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                         <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display: inline;">
                             @csrf
                             <button type="submit" class="btn btn-primary" name="service_type" value="accommodation"
                                 style="padding: 12px 24px; background: #ff9500; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.3s;">
-                                + Add Accommodation
+                                {{ __('traveler.trip_detail.add_accommodation') }}
                             </button>
                         </form>
                         <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display: inline;">
                             @csrf
                             <button type="submit" class="btn btn-primary" name="service_type" value="activity"
                                 style="padding: 12px 24px; background: #2196F3; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.3s;">
-                                + Add Activity
+                                {{ __('traveler.trip_detail.add_activity') }}
                             </button>
                         </form>
                     </div>
@@ -521,7 +516,7 @@
                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.show', ['otp' => $otp]) : route('traveler.trips') }}"
                     class="btn btn-secondary"
                     style="padding: 12px 30px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block; transition: background 0.3s;">
-                    &larr; Back to All Trips
+                    &larr; {{ __('traveler.trip_detail.back_to_all_trips') }}
                 </a>
             </div>
         </div>

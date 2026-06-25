@@ -174,6 +174,16 @@ function initMiniCart() {
     const headerCartToggle = document.getElementById('headerCartToggle');
     const closeMiniCartBtn = document.getElementById('closeMiniCartBtn');
 
+    // Localised messages provided via data attributes on the mini cart overlay
+    const messages = {
+        itemAdded: miniCartOverlay?.dataset.msgItemAdded || 'Item added to cart.',
+        itemRemoved: miniCartOverlay?.dataset.msgItemRemoved || 'Item removed from cart.',
+        cartEmpty: miniCartOverlay?.dataset.msgCartEmpty || 'Your cart is empty',
+        unableLoad: miniCartOverlay?.dataset.msgUnableLoad || 'Item added to cart. Unable to load cart details.',
+        unableAdd: miniCartOverlay?.dataset.msgUnableAdd || 'Unable to add item to cart.',
+        unableRemove: miniCartOverlay?.dataset.msgUnableRemove || 'Unable to remove item from cart.'
+    };
+
     function formatMoney(amount, currency = 'USD') {
         return currency + ' ' + Number(amount || 0).toFixed(2);
     }
@@ -246,7 +256,18 @@ function initMiniCart() {
 
         if (miniCartCountText) {
             const itemCount = Number(count || 0);
-            miniCartCountText.textContent = itemCount === 1 ? '1 item in cart' : itemCount + ' items in cart';
+            // Use localized strings provided by the server via data attributes
+            const zeroText = miniCartOverlay?.dataset.cartItemsZero || 'No items in cart';
+            const oneText = miniCartOverlay?.dataset.cartItemsOne || '1 item in cart';
+            const manyText = miniCartOverlay?.dataset.cartItemsMany || ':count items in cart';
+
+            if (itemCount === 0) {
+                miniCartCountText.textContent = zeroText;
+            } else if (itemCount === 1) {
+                miniCartCountText.textContent = oneText;
+            } else {
+                miniCartCountText.textContent = manyText.replace(':count', itemCount);
+            }
         }
     }
 
@@ -392,16 +413,16 @@ function initMiniCart() {
             
             if (showPopup) {
                 const cartItems = Array.isArray(data?.cart) ? data.cart : [];
-                if (cartItems.length === 0) {
-                    showMiniCart('Your cart is empty');
-                } else {
-                    showMiniCart(message || '');
-                }
+                    if (cartItems.length === 0) {
+                        showMiniCart(messages.cartEmpty);
+                    } else {
+                        showMiniCart(message || '');
+                    }
             }
         } catch (error) {
             console.error(error);
             if (showPopup) {
-                showMiniCart('Item added to cart. Unable to load cart details.', 'error');
+                showMiniCart(messages.unableLoad, 'error');
             }
         }
     }
@@ -428,9 +449,9 @@ function initMiniCart() {
             }
 
             renderMiniCart(payload);
-            showMiniCart(payload.message || 'Item added to cart.');
+            showMiniCart(payload.message || messages.itemAdded);
         } catch (error) {
-            showMiniCart(error.message || 'Unable to add item to cart.', 'error');
+            showMiniCart(error.message || messages.unableAdd, 'error');
         }
     }
 
@@ -454,9 +475,9 @@ function initMiniCart() {
             }
 
             renderMiniCart(payload);
-            showMiniCart(payload.message || 'Item removed from cart.');
+            showMiniCart(payload.message || messages.itemRemoved);
         } catch (error) {
-            showMiniCart(error.message || 'Unable to remove item from cart.', 'error');
+            showMiniCart(error.message || messages.unableRemove, 'error');
         }
     }
 

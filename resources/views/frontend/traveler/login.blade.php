@@ -1,15 +1,15 @@
 @extends('frontend.layout')
 
-@section('title', 'Traveller Login | Holidays.io')
-@section('meta_description', 'Sign in to your traveller account on Holidays.io.')
+@section('title', __('auth.traveler_login_page_title'))
+@section('meta_description', __('auth.traveler_login_meta_description'))
 
 @section('content')
     <section class="page-section traveler-auth-section">
         <div class="wrap">
             <div class="traveler-login-card">
                 <div class="traveler-auth-head">
-                    <h1>Traveller Login</h1>
-                    <p>Access your customer profile and manage your bookings.</p>
+                    <h1>{{ __('auth.traveler_login_heading') }}</h1>
+                    <p>{{ __('auth.traveler_login_subtitle') }}</p>
                 </div>
 
                 @if(session('success'))
@@ -31,29 +31,29 @@
                     @endif
 
                     <div class="traveler-form-group">
-                        <label for="email">Email</label>
+                        <label for="email">{{ __('auth.traveler_login_email_label') }}</label>
                         <input id="email" type="email" name="email" value="{{ old('email') }}" required>
                     </div>
 
                     <div class="traveler-form-group">
-                        <label for="password">Password</label>
+                        <label for="password">{{ __('auth.traveler_login_password_label') }}</label>
                         <input id="password" type="password" name="password" required>
                     </div>
 
                     <label class="traveler-check-row">
                         <input type="checkbox" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
-                        <span>Remember me</span>
+                        <span>{{ __('auth.traveler_login_remember_me') }}</span>
                     </label>
 
                     <p class="traveler-forgot-link">
-                        <a href="{{ route('traveler.password.request') }}">Forgot Password / Reset Password?</a>
+                        <a href="{{ route('traveler.password.request') }}">{{ __('auth.traveler_login_forgot_password') }}</a>
                     </p>
 
-                    <button type="submit" class="btn-primary traveler-login-btn">Sign In</button>
+                    <button type="submit" class="btn-primary traveler-login-btn">{{ __('auth.traveler_login_button') }}</button>
                 </form>
 
                 <p class="traveler-inline-note">
-                    New traveller? <a href="{{ route('traveler.register') }}">Create account</a>
+                    {{ __('auth.traveler_login_new_account') }} <a href="{{ route('traveler.register') }}">{{ __('auth.traveler_login_register_link') }}</a>
                 </p>
             </div>
         </div>

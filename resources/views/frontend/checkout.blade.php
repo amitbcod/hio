@@ -410,7 +410,7 @@
 
                                     <div class="form-grid">
                                         <div class="form-group">
-                                            <label for="guests_0_relation">Relationship <span class="req">*</span></label>
+                                            <label for="guests_0_relation">{{ __('checkout.relationship') }}</label>
                                             <select id="guests_0_relation" name="guests[0][relation]" class="form-input">
                                                 <option value="">{{ __('checkout.relation.choose') }}</option>
                                                 <option value="self" {{ old('guests.0.relation') === 'self' ? 'selected' : '' }}>{{ __('checkout.relation.self') }}</option>
@@ -423,7 +423,7 @@
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="guests_0_gender">Gender</label>
+                                            <label for="guests_0_gender">{{ __('checkout.gender_label') }}</label>
                                             <select id="guests_0_gender" name="guests[0][gender]" class="form-input">
                                                 <option value="">{{ __('checkout.gender.select') }}</option>
                                                 <option value="male" {{ old('guests.0.gender') === 'male' ? 'selected' : '' }}>{{ __('checkout.gender.male') }}</option>
@@ -468,22 +468,22 @@
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="guests_0_passport_number">Passport No.</label>
+                                            <label for="guests_0_passport_number">{{ __('checkout.passport_number') }}</label>
                                             <input type="text" id="guests_0_passport_number" name="guests[0][passport_number]" value="{{ old('guests.0.passport_number') }}" class="form-input">
                                         </div>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="guests_0_notes">Notes</label>
+                                        <label for="guests_0_notes">{{ __('checkout.notes') }}</label>
                                         <textarea id="guests_0_notes" name="guests[0][notes]" class="form-input" rows="2">{{ old('guests.0.notes') }}</textarea>
                                     </div>
                                 </div>
 
                                 <div class="form-grid" style="margin-top: 20px;">
                                     <div class="form-group">
-                                        <label for="guest_email">Email Address <span class="req">*</span></label>
+                                        <label for="guest_email">{{ __('checkout.email_address') }}</label>
                                         <input type="email" id="guest_email" name="guest_email" value="{{ old('guest_email', $guestDefaults['guest_email'] ?? $traveler?->email ?? '') }}" placeholder="{{ __('checkout.email_placeholder') }}" class="form-input" required>
-                                        <p class="form-hint">Booking confirmation will be sent here.</p>
+                                        <p class="form-hint">{{ __('checkout.booking_confirmation_note') }}</p>
                                     </div>
 
                                     <div class="form-group">
@@ -682,14 +682,14 @@
 
                             @if($summary['total_tax'] > 0)
                                 <div class="fare-row">
-                                    <span>Taxes &amp; Charges</span>
+                                    <span>{{ __('checkout.taxes_charges') }}</span>
                                     <span>{{ $summary['currency'] }} {{ number_format($summary['total_tax'], 2) }}</span>
                                 </div>
                             @endif
 
                             @if($summary['total_fees'] > 0)
                                 <div class="fare-row">
-                                    <span>Fees</span>
+                                    <span>{{ __('checkout.fees') }}</span>
                                     <span>{{ $summary['currency'] }} {{ number_format($summary['total_fees'], 2) }}</span>
                                 </div>
                             @endif
@@ -746,7 +746,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="modal_gender">Gender</label>
+                                <label for="modal_gender">{{ __('checkout.gender_label') }}</label>
                                 <select id="modal_gender" name="gender" class="form-input">
                                     <option value="">{{ __('checkout.gender.select') }}</option>
                                     <option value="male">{{ __('checkout.gender.male') }}</option>
@@ -791,13 +791,13 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="modal_passport_number">Passport No.</label>
+                                <label for="modal_passport_number">{{ __('checkout.passport_number') }}</label>
                                 <input type="text" id="modal_passport_number" name="passport_number" class="form-input">
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label for="modal_notes">Notes</label>
+                            <label for="modal_notes">{{ __('checkout.notes') }}</label>
                             <textarea id="modal_notes" name="notes" class="form-input" rows="2"></textarea>
                         </div>
 
