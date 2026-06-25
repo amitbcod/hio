@@ -3105,7 +3105,6 @@ class AccommodationController extends Controller
             'step8_rates' => 'Step 8: Rate Plans',
             'step9_pricing' => 'Step 9: Season and Pricing',
             'step10_inventory_allotment' => 'Step 10: Inventory & Allotment',
-            'step11_promotions_offers' => 'Step 11: Promotions & Offers',
             'step12_review' => 'Step 12: SEO & Social'
         ];
 

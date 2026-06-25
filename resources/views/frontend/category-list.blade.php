@@ -249,7 +249,7 @@
                                 @if(isset($item['available_rooms_count']) && $item['available_rooms_count'] !== null)
                                     <div class="category-result-availability-badge">
                                         <div class="availability-count">{{ $item['available_rooms_count'] }}</div>
-                                        <div class="availability-label">available</div>
+                                        <div class="availability-label">{{ trans_choice('category.available_label', $item['available_rooms_count']) }}</div>
                                     </div>
                                 @endif
                                 <a href="{{ $iteUSDl }}" class="category-result-media">
@@ -325,6 +325,14 @@
             const accommodationCheckOutCell = document.querySelector('.category-search-cell--check-out');
             const toursActivityDateCell = document.querySelector('.category-search-cell--activity-date');
             const categoryRadios = document.querySelectorAll('input[name="category"]');
+            const guestTexts = {
+                participants: {!! json_encode(__('home.search.participants')) !!},
+                guestRooms: {!! json_encode(__('home.search.guest_rooms')) !!},
+                adults: {!! json_encode(__('home.search.adults_label')) !!},
+                children: {!! json_encode(__('home.search.children_label')) !!},
+                infants: {!! json_encode(__('home.search.infants_label')) !!},
+                rooms: {!! json_encode(__('home.search.rooms_label')) !!}
+            };
 
             // Update guest rooms summary text
             const updateGuestSummary = function () {
@@ -336,13 +344,13 @@
                 if (guestSummary) {
                     const selectedCategory = document.querySelector('input[name="category"]:checked')?.value;
                     const parts = [
-                        `${adults} Adults`,
-                        `${children} Child${children === 1 ? '' : 'ren'}`,
-                        `${infants} Infant${infants === 1 ? '' : 's'}`,
+                        `${adults} ${guestTexts.adults}`,
+                        `${children} ${guestTexts.children}`,
+                        `${infants} ${guestTexts.infants}`,
                     ];
 
                     if (selectedCategory !== 'tours') {
-                        parts.push(`${rooms} Room${rooms === 1 ? '' : 's'}`);
+                        parts.push(`${rooms} ${guestTexts.rooms}`);
                     }
 
                     guestSummary.textContent = parts.join(' · ');
@@ -358,14 +366,14 @@
                     accommodationCheckOutCell.style.display = 'none';
                     guestCell.style.display = 'block';
                     toursActivityDateCell.style.display = 'block';
-                    if (guestCellHeading) guestCellHeading.textContent = 'Participants';
+                    if (guestCellHeading) guestCellHeading.textContent = guestTexts.participants;
                     if (roomsRow) roomsRow.style.display = 'none';
                 } else {
                     accommodationCheckInCell.style.display = 'block';
                     accommodationCheckOutCell.style.display = 'block';
                     guestCell.style.display = 'block';
                     toursActivityDateCell.style.display = 'none';
-                    if (guestCellHeading) guestCellHeading.textContent = 'Guest & Rooms';
+                    if (guestCellHeading) guestCellHeading.textContent = guestTexts.guestRooms;
                     if (roomsRow) roomsRow.style.display = 'flex';
                 }
             };

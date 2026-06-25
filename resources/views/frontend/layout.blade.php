@@ -427,12 +427,8 @@
         <div class="wrap">
             <div class="site-footer-grid">
                 <div>
-                    <h4>Holidays.io </h4>
-                    <p>Wishes you all great Holidays and awesome Adventures</p>
-                    <!-- <p>
-                        This homepage now reads live activity and accommodation content entered by operators,
-                        while keeping your operator and admin panels unchanged.
-                    </p> -->
+                    <h4>{{ __('footer.about_title') }}</h4>
+                    <p>{{ __('footer.about_text') }}</p>
                     <ul class="social-footer">
                         <li><a href="#"><i class="fa-brands fa-facebook"></i></a></li>
                         <li><a href="#"><i class="fa-brands fa-youtube"></i></a></li>
@@ -442,30 +438,28 @@
                 </div>
 
                 <div>
-                    <h4>Quick Links</h4>
+                    <h4>{{ __('footer.quick_links') }}</h4>
                     <ul>
-                        <li><a href="{{ url('/#accommodations-section') }}">Accommodation</a></li>
-                        <li><a href="{{ url('/#activities-section') }}">Activities</a></li>
-                        <li><a href="{{ url('/#discover-mauritius') }}">Discover Mauritius
-</a></li>
-                        <li><a href="{{ url('/operator/accommodation') }}">Operator</a></li>
-                        
+                        <li><a href="{{ url('/#accommodations-section') }}">{{ __('footer.accommodation') }}</a></li>
+                        <li><a href="{{ url('/#activities-section') }}">{{ __('footer.activities') }}</a></li>
+                        <li><a href="{{ url('/#discover-mauritius') }}">{{ __('footer.discover_mauritius') }}</a></li>
+                        <li><a href="{{ url('/operator/accommodation') }}">{{ __('footer.operator') }}</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4>Links</h4>
+                    <h4>{{ __('footer.links') }}</h4>
                     <ul>
-                        <li><a href="{{ url('/about-us') }}">About Us</a></li>
-                        <li><a href="{{ url('/#activities-section') }}">Contact</a></li>
-                        <li><a href="{{ url('/#discover-mauritius') }}">Travels Blogs</a></li>
-                        <li><a href="{{ url('/terms-and-conditions') }}">Terms of Use</a></li>
-                        <li><a href="{{ url('#') }}">Privacy Statement</a></li>
-                        <li><a href="{{ url('#') }}">Conditions</a></li>
+                        <li><a href="{{ url('/about-us') }}">{{ __('footer.about_us') }}</a></li>
+                        <li><a href="{{ url('/#activities-section') }}">{{ __('footer.contact') }}</a></li>
+                        <li><a href="{{ url('/#discover-mauritius') }}">{{ __('footer.travel_blogs') }}</a></li>
+                        <li><a href="{{ url('/terms-and-conditions') }}">{{ __('footer.terms_of_use') }}</a></li>
+                        <li><a href="{{ url('#') }}">{{ __('footer.privacy_statement') }}</a></li>
+                        <li><a href="{{ url('#') }}">{{ __('footer.conditions') }}</a></li>
                     </ul>
                 </div>
 
                 <div>
-                    <h4>Contacts</h4>
+                    <h4>{{ __('footer.contacts') }}</h4>
                     <ul class="contact-footer">
                         <li><i class="fa-solid fa-location-dot"></i><span>14, Sodnac Avenue Quatre Bornes, Mauritius</span></li>
                         <li><a href="tel:+23052511153"><i class="fa-solid fa-phone"></i><span>+230 52511153</span></a></li>

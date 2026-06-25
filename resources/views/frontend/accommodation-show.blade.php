@@ -120,11 +120,11 @@
 
                     <div class="booking-summary-line">
                         <span>
-                            {{ $booking['adults'] }} Adults
-                            {{ $booking['children'] > 0 ? ', ' . $booking['children'] . ' Children' : '' }}
-                            {{ $booking['infants'] > 0 ? ', ' . $booking['infants'] . ' Infants' : '' }}
+                            {{ $booking['adults'] }} {{ trans_choice('accommodation.summary.adults', $booking['adults']) }}
+                            @if($booking['children'] > 0), {{ $booking['children'] }} {{ trans_choice('accommodation.summary.children', $booking['children']) }}@endif
+                            @if($booking['infants'] > 0), {{ $booking['infants'] }} {{ trans_choice('accommodation.summary.infants', $booking['infants']) }}@endif
                         </span>
-                        <strong>{{ max(1, (int) ($booking['nights'] ?? 1)) }} Night{{ ((int) ($booking['nights'] ?? 1)) !== 1 ? 's' : '' }}</strong>
+                        <strong>{{ max(1, (int) ($booking['nights'] ?? 1)) }} {{ trans_choice('accommodation.summary.night', max(1, (int) ($booking['nights'] ?? 1))) }}</strong>
                     </div>
                     @if($startingRate)
                         <div class="booking-starting-rate">
@@ -150,13 +150,13 @@
                 <a href="#reviews">{{ __('accommodation.reviews') }}</a>
                 <a href="#policies">{{ __('accommodation.policies') }}</a>
                 <a href="#location-map">{{ __('accommodation.location') }}</a>
-                <a href="#similar-properties">Similar Properties</a>
+                <a href="#similar-properties">{{ __('accommodation.similar_properties') }}</a>
             </nav>
 
             <div class="detail-section-card" id="room-options">
                 <h2>{{ __('accommodation.room_options') }}</h2>
                 @if(empty($availableRooms))
-                    <p class="detail-empty">No room availability is currently configured for the selected dates.</p>
+                    <p class="detail-empty">{{ __('accommodation.no_room_availability') }}</p>
                 @else
                     <div class="room-option-list">
                         @php
@@ -179,7 +179,7 @@
                                     <p class="room-option-sub">
                                         {{ $firstVariant['room_type'] ?: ($roomDetail['room_type'] ?? 'Room') }}
                                         @if(!empty($roomDetail['size_sqm'])) • {{ rtrim(rtrim(number_format((float) $roomDetail['size_sqm'], 2, '.', ''), '0'), '.') }} sqm @endif
-                                        @if(!empty($roomDetail['view'])) • {{ $roomDetail['view'] }} view @endif
+                                        @if(!empty($roomDetail['view'])) • {{ __('accommodation.view_type', ['view' => $roomDetail['view']]) }} @endif
                                     </p>
 
                                     @if(!empty($roomDetail['description']))
@@ -219,12 +219,12 @@
                                                         <span style="background: #f0f7f7; color: #19b5b5; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">{{ $room['plan_label'] }}</span>
                                                     @endif
                                                 </div>
-                                                <small>{{ $nights }} night{{ $nights !== 1 ? 's' : '' }} total</small>
+                                                <small>{{ trans_choice('accommodation.total_nights', $nights, ['count' => $nights]) }}</small>
                                                 @if(!empty($room['pricing_setting']))
                                                     <small style="display: block; color: #666; margin-top: 4px; font-size: 11px;">{{ $room['pricing_setting'] }}</small>
                                                 @endif
                                             @else
-                                                <strong>On request</strong>
+                                                <strong>{{ __('accommodation.on_request') }}</strong>
                                             @endif
                                         </div>
 
@@ -249,7 +249,7 @@
                                                 <input type="hidden" name="currency" value="{{ $room['currency'] }}">
                                                 <input type="hidden" name="pricing_setting" value="{{ $room['pricing_setting'] ?? 'Per Room/Night' }}">
                                                 <input type="hidden" name="plan_label" value="{{ $room['plan_label'] ?? '' }}">
-                                                <button type="submit" class="btn-primary room-book-btn">{{ !empty($room['plan_label']) ? 'Select (' . $room['plan_label'] . ')' : 'Select Room' }}</button>
+                                                <button type="submit" class="btn-primary room-book-btn">{{ !empty($room['plan_label']) ? __('accommodation.select_plan', ['plan' => $room['plan_label']]) : __('accommodation.select_room') }}</button>
                                             </form>
                                         @endif
                                     @endforeach
@@ -258,7 +258,7 @@
                                         <a href="tel:+23052511153" class="room-request-link">Request quote</a>
                                     @endif
 
-                                    <a href="#policies" class="room-policy-link">View cancellation details &amp; policies</a>
+                                    <a href="#policies" class="room-policy-link">{{ __('accommodation.view_cancellation_policies') }}</a>
                                 </div>
                             </div>
                         @endforeach
@@ -351,14 +351,14 @@
                     <div>
                         <h3>{{ __('accommodation.check_in_out') }}</h3>
                         <p>
-                            Check-in: {{ $accommodation['checkin_time'] ?: 'As per booking confirmation' }}
+                            {{ __('accommodation.check_in') }}: {{ $accommodation['checkin_time'] ?: __('accommodation.checkin_as_booking_confirmation') }}
                             <br>
-                            Check-out: {{ $accommodation['checkout_time'] ?: 'As per booking confirmation' }}
+                            {{ __('accommodation.check_out') }}: {{ $accommodation['checkout_time'] ?: __('accommodation.checkin_as_booking_confirmation') }}
                         </p>
                     </div>
                     <div>
                         <h3>{{ __('accommodation.booking_type') }}</h3>
-                        <p>{{ $accommodation['booking_confirmation_type'] ?: 'On Request' }}</p>
+                        <p>{{ $accommodation['booking_confirmation_type'] ?: __('accommodation.booking_type_on_request') }}</p>
                     </div>
                 </div>
 
@@ -372,17 +372,17 @@
 
                 <div class="policy-block">
                     <h3>{{ __('accommodation.booking_notes') }}</h3>
-                    <div class="detail-text">{{ $accommodation['booking_notes_text'] ?: 'Booking notes will be shared by the operator during confirmation.' }}</div>
+                    <div class="detail-text">{{ $accommodation['booking_notes_text'] ?: __('accommodation.booking_notes_fallback') }}</div>
                 </div>
 
                 <div class="policy-block">
                     <h3>{{ __('accommodation.checkout_policy') }}</h3>
-                    <div class="detail-text">{{ $accommodation['checkout_policy_text'] ?: 'Checkout policy is not available yet.' }}</div>
+                    <div class="detail-text">{{ $accommodation['checkout_policy_text'] ?: __('accommodation.checkout_policy_fallback') }}</div>
                 </div>
 
                 <div class="policy-block">
                     <h3>{{ __('accommodation.terms_conditions') }}</h3>
-                    <div class="detail-text">{{ $accommodation['terms_conditions_text'] ?: 'Terms and conditions are not available yet.' }}</div>
+                    <div class="detail-text">{{ $accommodation['terms_conditions_text'] ?: __('accommodation.terms_conditions_fallback') }}</div>
                 </div>
             </div>
 
@@ -433,10 +433,10 @@
                                             @if(!empty($item['starting_rate']))
                                                 USD {{ number_format((float) $item['starting_rate'], 2) }} / night
                                             @else
-                                                On request
+                                                {{ __('accommodation.on_request') }}
                                             @endif
                                         </strong>
-                                        <a href="{{ $item['url'] . ($detailQuery ? ('?' . $detailQuery) : '') }}" class="btn-secondary">View</a>
+                                        <a href="{{ $item['url'] . ($detailQuery ? ('?' . $detailQuery) : '') }}" class="btn-secondary">{{ __('home.view_details') }}</a>
                                     </div>
                                 </div>
                             </article>
@@ -1125,6 +1125,8 @@
                 return Number.isNaN(value) ? fallback : value;
             };
 
+            const capacityWarningText = {!! json_encode(__('accommodation.capacity_warning')) !!};
+
             const updateRoomCapacityWarnings = () => {
                 const adults = Math.max(1, parseCount(adultsInput, 1));
                 const children = Math.max(0, parseCount(childrenInput, 0));
@@ -1146,7 +1148,7 @@
 
                     if (!isValid) {
                         if (warning) {
-                            warning.textContent = 'This room cannot accommodate your selected number of guests. Please update your search or choose another room.';
+                            warning.textContent = capacityWarningText;
                             warning.style.display = 'block';
                         }
                         bookButtons.forEach((button) => {

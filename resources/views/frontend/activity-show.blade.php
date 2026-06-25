@@ -1,7 +1,7 @@
 @extends('frontend.layout')
 
-@section('title', $activity['title'] . ' | Activity | Holidays.io')
-@section('meta_description', $activity['excerpt'])
+@section('title', __('activity.page_title', ['activity' => $activity['title']]))
+@section('meta_description', __('activity.meta_description', ['excerpt' => $activity['excerpt']]))
 
 @section('content')
     @php
@@ -19,9 +19,9 @@
         </div>
         <div class="wrap page-hero-content">
             <div class="breadcrumbs">
-                <a href="{{ url('/') }}">Home</a>
+                <a href="{{ url('/') }}">{{ __('site.home') }}</a>
                 <span>/</span>
-                <a href="{{ url('/#activities-section') }}">Activities</a>
+                <a href="{{ url('/#activities-section') }}">{{ __('site.activities') }}</a>
                 <span>/</span>
                 <span>{{ $activity['title'] }}</span>
             </div>
@@ -60,39 +60,39 @@
                 <aside class="detail-booking-card">
                     <form method="GET" action="{{ route('frontend.activities.show', $activity['id']) }}" class="booking-form-grid">
                         <div class="booking-field">
-                            <label>Activity Date</label>
+                            <label>{{ __('activity.form.activity_date') }}</label>
                             <input type="date" name="activity_date" value="{{ $booking['activity_date'] }}" class="booking-input" min="{{ date('Y-m-d') }}">
                         </div>
                         <div class="booking-field" style="{{ !($activity['allow_adults'] ?? true) ? 'opacity:0.5;pointer-events:none;' : '' }}">
-                            <label>Adults{{ !($activity['allow_adults'] ?? true) ? ' (Not Allowed)' : '' }}</label>
+                            <label>{{ __('activity.form.adults') }}{{ !($activity['allow_adults'] ?? true) ? ' (' . __('activity.not_allowed') . ')' : '' }}</label>
                             <input type="number" name="adults" min="1" value="{{ ($activity['allow_adults'] ?? true) ? ($activity['booking']['adults'] ?? 1) : 0 }}" class="booking-input" {{ !($activity['allow_adults'] ?? true) ? 'disabled' : '' }}>
                         </div>
                         <div class="booking-field" style="{{ !($activity['allow_children'] ?? true) ? 'opacity:0.5;pointer-events:none;' : '' }}">
-                            <label>Children{{ !($activity['allow_children'] ?? true) ? ' (Not Allowed)' : '' }}</label>
+                            <label>{{ __('activity.form.children') }}{{ !($activity['allow_children'] ?? true) ? ' (' . __('activity.not_allowed') . ')' : '' }}</label>
                             <input type="number" name="children" min="0" value="{{ ($activity['allow_children'] ?? true) ? ($activity['booking']['children'] ?? 0) : 0 }}" class="booking-input" {{ !($activity['allow_children'] ?? true) ? 'disabled' : '' }}>
                         </div>
                         <div class="booking-field" style="{{ !($activity['allow_infants'] ?? true) ? 'opacity:0.5;pointer-events:none;' : '' }}">
-                            <label>Infants{{ !($activity['allow_infants'] ?? true) ? ' (Not Allowed)' : '' }}</label>
+                            <label>{{ __('activity.form.infants') }}{{ !($activity['allow_infants'] ?? true) ? ' (' . __('activity.not_allowed') . ')' : '' }}</label>
                             <input type="number" name="infants" min="0" value="{{ ($activity['allow_infants'] ?? true) ? ($activity['booking']['infants'] ?? 0) : 0 }}" class="booking-input" {{ !($activity['allow_infants'] ?? true) ? 'disabled' : '' }}>
                         </div>
 
-                        <button type="submit" class="btn-primary booking-btn">Check Rates</button>
+                        <button type="submit" class="btn-primary booking-btn">{{ __('activity.form.check_rates') }}</button>
                         @if(empty($activity['time_slots']))
-                            <p class="booking-note">This activity requires a time slot and none are available for the selected date.</p>
+                            <p class="booking-note">{{ __('activity.form.requires_timeslot') }}</p>
                         @endif
-                        <p class="booking-note">Book for more than 20 people, please contact us directly.</p>
-                        <p class="booking-note">On Request Booking (we will get back within 24 hours)</p>
+                        <p class="booking-note">{{ __('activity.form.group_booking_note') }}</p>
+                        <p class="booking-note">{{ __('activity.form.on_request_booking') }}</p>
                     </form>
 
                     @if(!empty($availableRooms))
                         <div id="available-options-section" class="available-options-section">
-                            <h3>Available Options</h3>
+                            <h3>{{ __('activity.available_options') }}</h3>
                             <div class="availability-table-wrap">
                                 <table class="availability-table">
                                     <thead>
                                         <tr>
-                                            <th>Option / Variant</th>
-                                            <th>Total Price</th>
+                                            <th>{{ __('activity.option_variant') }}</th>
+                                            <th>{{ __('activity.total_price') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -106,15 +106,15 @@
 
                                                         @if($room['rate_specificity'] === 'Per Equipment')
                                                             <div class="activity-option-card__equipment">
-                                                                Equipment Rate: <strong>{{ $room['currency'] }} {{ number_format((float) $room['equipment_rate'] ?? 0, 2) }}</strong>
+                                                                {{ __('activity.equipment_rate') }}: <strong>{{ $room['currency'] }} {{ number_format((float) $room['equipment_rate'] ?? 0, 2) }}</strong>
                                                             </div>
                                                         @else
                                                             <div class="activity-option-person-grid">
                                                                 @if($activity['allow_adults'] ?? true)
                                                                     <div class="person-block" style="border: 1px solid #006400;">
                                                                         <div class="person-block__count">{{ $activity['booking']['adults'] }}</div>
-                                                                        <div class="person-block__label">Adult</div>
-                                                                        <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['adult_rate'] ?? 0, 2) }}/Adult</div>
+                                                                        <div class="person-block__label">{{ __('activity.form.adults') }}</div>
+                                                                        <div class="person-block__rate">{{ __('activity.per_person', ['rate' => $room['currency'] . ' ' . number_format((float) $room['adult_rate'] ?? 0, 2), 'person' => __('activity.form.adults')]) }}</div>
                                                                     </div>
                                                                 @else
                                                                     <div class="person-block" style="opacity:0.4;pointer-events:none; border: 1px solid #a9a9a9;">
@@ -126,8 +126,8 @@
                                                                 @if($activity['allow_children'] ?? true)
                                                                     <div class="person-block" style="border: 1px solid #006400;">
                                                                         <div class="person-block__count">{{ $activity['booking']['children'] }}</div>
-                                                                        <div class="person-block__label">Children</div>
-                                                                        <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['children_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}/Child</div>
+                                                                        <div class="person-block__label">{{ __('activity.form.children') }}</div>
+                                                                        <div class="person-block__rate">{{ __('activity.per_person', ['rate' => $room['currency'] . ' ' . number_format((float) $room['children_rate'] ?? ($room['adult_rate'] ?? 0), 2), 'person' => __('activity.form.children')]) }}</div>
                                                                     </div>
                                                                 @else
                                                                     <div class="person-block" style="opacity:0.4;pointer-events:none; border: 1px solid #a9a9a9;">
@@ -139,8 +139,8 @@
                                                                 @if($activity['allow_infants'] ?? true)
                                                                     <div class="person-block" style="border: 1px solid #006400;">
                                                                         <div class="person-block__count">{{ $activity['booking']['infants'] }}</div>
-                                                                        <div class="person-block__label">Infant</div>
-                                                                        <div class="person-block__rate">{{ $room['currency'] }} {{ number_format((float) $room['infant_rate'] ?? ($room['adult_rate'] ?? 0), 2) }}/Infant</div>
+                                                                        <div class="person-block__label">{{ __('activity.form.infants') }}</div>
+                                                                        <div class="person-block__rate">{{ __('activity.per_person', ['rate' => $room['currency'] . ' ' . number_format((float) $room['infant_rate'] ?? ($room['adult_rate'] ?? 0), 2), 'person' => __('activity.form.infants')]) }}</div>
                                                                     </div>
                                                                 @else
                                                                     <div class="person-block" style="opacity:0.4;pointer-events:none; border: 1px solid #a9a9a9;">
@@ -203,9 +203,9 @@
                                                                     <div class="activity-option-summary__error" aria-live="polite"></div>
                                                                 </div>
                                                                 @if(!empty($room['time_slots']))
-                                                                    <label class="activity-option-summary__label" for="activity_time_slot_id_{{ $room['room_id'] }}">Select Time Slot</label>
+                                                                    <label class="activity-option-summary__label" for="activity_time_slot_id_{{ $room['room_id'] }}">{{ __('activity.select_time_slot') }}</label>
                                                                     <select id="activity_time_slot_id_{{ $room['room_id'] }}" name="activity_time_slot_id" class="form-control activity-time-slot-select" required>
-                                                                        <option value="">Select a time slot</option>
+                                                                        <option value="">{{ __('activity.select_a_time_slot') }}</option>
                                                                         @foreach($room['time_slots'] as $slot)
                                                                             <option value="{{ $slot['id'] }}" data-discount="{{ isset($slot['discount_value']) ? number_format((float)$slot['discount_value'], 2, '.', '') : '' }}" data-available="{{ $slot['available'] ?? 0 }}" data-capacity="{{ $slot['capacity_per_slot'] ?? 0 }}">
                                                                                 {{ $slot['display'] }}
@@ -220,9 +220,9 @@
                                                                         <span class="availability-extra"></span>
                                                                     </div>
                                                                     <input type="hidden" name="timeslot_discount_value" class="timeslot-discount-input" value="">
-                                                                    <button type="submit" class="btn-book-now">Book Now</button>
+                                                                    <button type="submit" class="btn-book-now">{{ __('home.view_details') }}</button>
                                                                 @else
-                                                                    <button type="button" class="btn-book-now" disabled>No time slot available</button>
+                                                                    <button type="button" class="btn-book-now" disabled>{{ __('activity.no_time_slot_available') }}</button>
                                                                 @endif
                                                             </div>
                                                         </form>

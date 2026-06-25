@@ -246,14 +246,8 @@
     <section class="page-section">
         <div class="wrap split-highlight">
             <div class="highlight-copy">
-                <h3>Mauritius Holiday Destination</h3>
-              <p>
-Discover the beauty of a tropical paradise known for its stunning beaches, 
-vibrant culture, and year-round pleasant climate. Whether you're a visitor or a local resident</br> 
-    Mauritius offers perfect experiences from relaxation to adventure.</br> 
-    The island is safe and tourist-friendly, with modern infrastructure and welcoming communities. </br> 
-Basic healthcare facilities and pharmacies are easily accessible across the country. Enjoy your holiday with peace of mind by following simple safety practices and staying protected under the tropical sun.
-</p>
+                <h3>{{ __('home.about.title') }}</h3>
+                <p>{{ __('home.about.description') }}</p>
                 <div class="stats-bar">
                     <div class="stat-pill">
                         <strong>{{ $stats['activities'] }}</strong>
@@ -299,7 +293,7 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
 
                 <div class="tab-panel is-active" data-tab-panel="activities" id="activities-section">
                     @if($activities->isEmpty())
-                        <div class="empty-state">No activity data is available yet.</div>
+                        <div class="empty-state">{{ __('home.empty.activity_data') }}</div>
                     @else
                         <div class="cards-grid">
                             @foreach($activities as $activity)
@@ -332,7 +326,7 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
 
                 <div class="tab-panel" data-tab-panel="holiday-rentals" id="accommodations-section">
                     @if($holidayRentals->isEmpty())
-                        <div class="empty-state">No holiday rental data is available yet.</div>
+                        <div class="empty-state">{{ __('home.empty.holiday_rentals_data') }}</div>
                     @else
                         <div class="cards-grid">
                             @foreach($holidayRentals as $accommodation)
@@ -364,7 +358,7 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
 
                 <div class="tab-panel" data-tab-panel="hotels">
                     @if($hotels->isEmpty())
-                        <div class="empty-state">No hotel data is available yet.</div>
+                        <div class="empty-state">{{ __('home.empty.hotel_data') }}</div>
                     @else
                         <div class="cards-grid">
                             @foreach($hotels as $accommodation)
@@ -395,16 +389,13 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                 </div>
 
                 <div class="tab-panel" data-tab-panel="services">
-                    <div class="empty-state">Frontend service cards are ready to be connected when service data becomes
-                        available.</div>
+                    <div class="empty-state">{{ __('home.empty.service_data') }}</div>
                 </div>
                 <div class="tab-panel" data-tab-panel="transport">
-                    <div class="empty-state">Frontend transport cards are ready to be connected when transport data becomes
-                        available.</div>
+                    <div class="empty-state">{{ __('home.empty.transport_data') }}</div>
                 </div>
                 <div class="tab-panel" data-tab-panel="wedding">
-                    <div class="empty-state">Frontend wedding cards are ready to be connected when wedding data becomes
-                        available.</div>
+                    <div class="empty-state">{{ __('home.empty.wedding_data') }}</div>
                 </div>
             </div>
         </div>
@@ -428,6 +419,14 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
             const toursActivityDateCell = document.querySelector('.category-search-cell--activity-date');
             const roomsRow = document.getElementById('rooms-row');
             const categoryRadios = document.querySelectorAll('input[name="category"]');
+            const guestTexts = {
+                participants: {!! json_encode(__('home.search.participants')) !!},
+                guestRooms: {!! json_encode(__('home.search.guest_rooms')) !!},
+                adults: {!! json_encode(__('home.search.adults_label')) !!},
+                children: {!! json_encode(__('home.search.children_label')) !!},
+                infants: {!! json_encode(__('home.search.infants_label')) !!},
+                rooms: {!! json_encode(__('home.search.rooms_label')) !!}
+            };
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabPanels = document.querySelectorAll('.tab-panel');
 
@@ -591,7 +590,17 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                 const rooms = parseInt(findInput('rooms')?.value || 0, 10);
                 const selectedCategory = document.querySelector('input[name="category"]:checked')?.value;
                 if (guestSummary) {
-                    guestSummary.textContent = `${adults} Adults · ${children} Child${children === 1 ? '' : 'ren'} · ${infants} Infant${infants === 1 ? '' : 's'}` + (selectedCategory === 'accommodation' ? ` · ${rooms} Room${rooms === 1 ? '' : 's'}` : '');
+                    const parts = [
+                        `${adults} ${guestTexts.adults}`,
+                        `${children} ${guestTexts.children}`,
+                        `${infants} ${guestTexts.infants}`,
+                    ];
+
+                    if (selectedCategory === 'accommodation') {
+                        parts.push(`${rooms} ${guestTexts.rooms}`);
+                    }
+
+                    guestSummary.textContent = parts.join(' · ');
                 }
             };
 
@@ -603,7 +612,7 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                     accommodationCheckInCell.style.display = 'none';
                     accommodationCheckOutCell.style.display = 'none';
                     guestCell.style.display = 'block';
-                    if (guestCellHeading) guestCellHeading.textContent = 'Participants';
+                    if (guestCellHeading) guestCellHeading.textContent = guestTexts.participants;
                     if (roomsRow) roomsRow.style.display = 'none';
                     toursActivityDateCell.style.display = 'block';
                     transportCells.forEach(el => el.style.display = 'none');
@@ -619,7 +628,7 @@ Basic healthcare facilities and pharmacies are easily accessible across the coun
                     accommodationCheckInCell.style.display = 'block';
                     accommodationCheckOutCell.style.display = 'block';
                     guestCell.style.display = 'block';
-                    if (guestCellHeading) guestCellHeading.textContent = 'Guest & Rooms';
+                    if (guestCellHeading) guestCellHeading.textContent = guestTexts.guestRooms;
                     if (roomsRow) roomsRow.style.display = 'flex';
                     toursActivityDateCell.style.display = 'none';
                     transportCells.forEach(el => el.style.display = 'none');
