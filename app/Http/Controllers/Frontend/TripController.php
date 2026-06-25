@@ -1143,9 +1143,9 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
         <tr>
             <td>
                 
-<table width="100%" cellpadding="0" cellspacing="0"">
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
 <tr>
-<td width="55%" style="vertical-align:top;">
+<td width="55%" style="vertical-align:top; padding-right:6px;">
     <table width="100%" cellpadding="2" cellspacing="0" border="0" class="thank-you" style="color:#2e7d32;">
 	    <tbody>
 	      <tr><td align="center">THANK YOU!</td></tr>
