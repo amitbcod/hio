@@ -1166,15 +1166,17 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
     <tr>
       <td align="right">Taxable Amount: USD {$formattedTaxableAmount}</td>
     </tr>
+    <tr>
+      <td align="right">VAT ({$vatPercent}%): USD {$formattedVatAmount}</td>
+    </tr>
+    <tr>
+      <td align="right">Service Fee: USD {$formattedServiceFee}</td>
+    </tr>
+    <tr>
+      <td align="right"><strong>TOTAL PAID: USD {$formattedTotalAmount}</strong></td>
+    </tr>
   </table>
-    <div class="totals-box" style="background:#fff3e0; border-radius:8px; padding:10px;">
-        <div class="totals-row"><span class="totals-label">Subtotal: </span><span class="totals-amount">USD {$formattedSubtotal}</span></div>
-        <div class="totals-row">{$discountRow}</div>
-        <div class="totals-row"><span class="totals-label">Taxable Amount: </span><span class="totals-amount">USD {$formattedTaxableAmount}</span></div>
-        <div class="totals-row"><span class="totals-label">VAT ({$vatPercent}%): </span><span class="totals-amount">USD {$formattedVatAmount}</span></div>
-        <div class="totals-row"><span class="totals-label"><strong>Service Fee: </strong></span><span class="totals-amount"><strong>USD {$formattedServiceFee}</strong></span></div>
-        <div class="total-paid" style="background:#0b2b51; color:#fff; padding:8px; border-radius:4px; font-weight:700; display:flex; justify-content:space-between; margin-top:6px;"><span>TOTAL PAID</span> <span>USD {$formattedTotalAmount}</span></div>
-    </div>
+    
 </td>
 </tr>
 </table>
