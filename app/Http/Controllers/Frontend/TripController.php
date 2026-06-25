@@ -979,7 +979,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 .info-table .value { color:#4a5f7f; }
 .service-table { width:100%; border-collapse:collapse; margin-bottom:8px; border:none; border-radius:6px; overflow:hidden; }
 .service-table thead tr { background:#0b2b51; color:#fff; }
-.service-table th { padding:10px; text-align:left; font-size:9px; font-weight:600; }
+.service-table th { padding:10px; text-align:left; font-size:9px; font-weight:700; border-bottom:1px solid #dce7f5 }
 .service-table td { padding:10px; }
 .totals-box { width:100%; background:#f0f5ff; border:none; border-radius:6px; padding:10px; }
 .totals-row { display:flex; justify-content:space-between; padding:4px 0; font-size:9px; }
@@ -1064,7 +1064,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td><table width="100%" border="0" cellpadding="3" cellspacing="0">
+      <td><table width="100%" border="0" cellpadding="2" cellspacing="0">
         <tbody>
           <tr>
             <td style="font-size:12px"><strong>BILL TO</strong></td>
@@ -1154,7 +1154,14 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
         </div>
     </div>
 </td>
+
 <td width="45%" style="vertical-align:top; padding-left:80px;">
+  <table>
+    <tr>
+      <td>Subtotal:</td>
+      <td>USD {$formattedSubtotal}</td>
+    </tr>
+  </table>
     <div class="totals-box" style="background:#fff3e0; border-radius:8px; padding:10px;">
         <div class="totals-row"><span class="totals-label">Subtotal: </span><span class="totals-amount">USD {$formattedSubtotal}</span></div>
         <div class="totals-row">{$discountRow}</div>
