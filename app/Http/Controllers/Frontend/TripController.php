@@ -427,7 +427,7 @@ class TripController extends Controller
 
         $operatorBusinessName = e($operator->business_name ?? $providerName);
         $poweredLogoHtml = $poweredLogoPath
-            ? '<img src="' . $poweredLogoPath . '" width="100" height="40" style="width:100px; height:auto; display:block;" alt="Holidays.io logo">'
+            ? '<img src="' . $poweredLogoPath . '" width="70" style="width:70px; height:auto; display:block;" alt="Holidays.io logo">'
             : '<div style="font-size:18px;font-weight:700;color:#f7971e;">Holidays.io</div>';
         $locationLabelSafe = e($locationLabel ?? 'Mauritius');
         $voucherTitle = e($isActivity ? 'Activity Service Voucher' : 'Accommodation Service Voucher');
@@ -462,6 +462,9 @@ class TripController extends Controller
         $html = <<<HTML
 <style>
     .label{font-size:8px;color:#5f6d7a;letter-spacing:0.5px;}
+    @media print {
+    * { border-top: none !important;}
+    }
 </style>
 <table width="100%" border="0" style="color:#0b2b51;">
   <tbody>
@@ -733,6 +736,11 @@ HTML;
         $pdf->SetTitle('Voucher - ' . ($booking->booking_reference ?? ($isActivity ? 'activity' : 'accommodation')));
         $pdf->SetMargins(15, 15, 15);
         $pdf->SetAutoPageBreak(true, 15);
+        
+        $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        
         $pdf->AddPage();
         $pdf->SetFont('helvetica', '', 10);
         $pdf->writeHTML($html, true, false, true, false, '');
@@ -934,33 +942,50 @@ HTML;
             $rowTax = number_format($item['total'] * 0.15, 2);
             $rowTotal = number_format($item['total'], 2);
             $serviceRows .= '<tr>
-                            <td>' . $item['type'] . '</td>
-                            <td>' . $item['checkIn'] . '</td>
-                            <td>' . $item['description'] . '</td>
+                            <td valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="2">
+                            <tbody>
+                              <tr>
+                                <td>' . $item['type'] . '</td>
+                                </tr>
+                              <tr>
+                                <td>' . $item['name'] . '</td>
+                                </tr>
+                              <tr>
+                                <td>' . $item['location'] . '</td>
+                                </tr>
+                              </tbody>
+                            </table></td>
+            
+                            <td valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="2">
+                            <tbody>
+                              <tr>
+                                <td>' . $item['checkIn'] . '</td>
+                                </tr>
+                              <tr>
+                                <td>' . $item['checkOut'] . '</td>
+                                </tr>
+                              </tbody>
+                            </table></td>
+            
+                            <td valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="2">
+                            <tbody>
+                              <tr>
+                                <td>' . $item['description'] . '</td>
+                                </tr>
+                              <tr>
+                                <td>' . $item['notes'] . '</td>
+                                </tr>
+                              </tbody>
+                            </table></td>
+
                             <td style="text-align:center;">' . $item['qty'] . '</td>
                             <td style="text-align:center;">' . $rowUnitPrice . '</td>
                             <td style="text-align:center;">' . $rowTotal . '</td>
-                            </tr>
-                            <tr>
-                            <td>' . $item['name'] . '</td>
-                            <td>' . $item['checkOut'] . '</td>
-                            <td>' . $item['notes'] . '</td>
-                            <td style="text-align:center;">&nbsp;</td>
-                            <td style="text-align:center;">&nbsp;</td>
-                            <td style="text-align:center;">&nbsp;</td>
-                            </tr>
-                            <tr>
-                            <td>' . $item['location'] . '</td>
-                            <td>&nbsp;</td>
-                            <td>&nbsp;</td>
-                            <td style="text-align:center;">&nbsp;</td>
-                            <td style="text-align:center;">&nbsp;</td>
-                            <td style="text-align:center;">&nbsp;</td>
                             </tr>';
         }
 
         $poweredLogoHtml = $poweredLogoPath
-            ? '<img src="' . $poweredLogoPath . '" width="100" height="40" style="width:100px; height:auto; display:block;" alt="Holidays.io">'
+            ? '<img src="' . $poweredLogoPath . '" width="70" style="width:70px; height:auto; display:block;" alt="Holidays.io">'
             : '<span style="color:#f7971e;font-weight:700;font-size:14px;">HOLIDAYS.io</span>';
 
             $discountRow = '';
@@ -974,13 +999,17 @@ if ($discountAmount > 0) {
 }
         $html = <<<HTML
 <style>
-body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
+ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 .header-box { border:none; border-radius:8px; padding:12px; background:#f0f5ff; margin-bottom:12px; }
 .section-title { font-size:11px; font-weight:700; color:#0b2b51; margin:5px 0 0 0; }
 .info-table { width:100%; border-collapse:collapse; margin-bottom:8px; }
 .info-table td { border-bottom:1px solid #dce7f5; font-size:9px; }
 .info-table .label { font-weight:600; color:#0b2b51;  }
 .info-table .value { color:#4a5f7f; }
+
+.service-table2 th {  text-align:left; font-size:9px; font-weight:700; border-bottom:1px solid #dce7f5 }
+.service-table2 td { text-align:left; border-bottom:1px solid #dce7f5; font-size:9px; }
+
 .service-table { width:100%; border-collapse:collapse; margin-bottom:8px; border:none; border-radius:6px; overflow:hidden; }
 .service-table thead tr { background:#0b2b51; color:#fff; }
 .service-table th {  text-align:left; font-size:9px; font-weight:700; border-bottom:1px solid #dce7f5 }
@@ -1049,7 +1078,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
       <td><h1 style="font-size:22px">INVOICE</h1></td>
     </tr>
     <tr>
-      <td><table width="50%" border="0" cellpadding="2" cellspacing="0" class="info-table">
+      <td><table width="49%" border="0" cellpadding="2" cellspacing="0" class="info-table">
         <tr>
           <td class="label">Invoice Number:</td>
           <td class="value">{$invoiceNumber}</td>
@@ -1079,7 +1108,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
             <td>&nbsp;</td>
           </tr>
           <tr>
-            <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
+            <td valign="top"><table width="99%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
                 <td class="label">Address:</td>
                 <td class="value">{$travelerAddress}</td>
@@ -1092,11 +1121,15 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
                 <td class="label">Email:</td>
                 <td class="value">{$travelerEmail}</td>
               </tr>
+              <tr>
+                <td class="label">Meal Plan:</td>
+                <td class="value">Half Board</td>
+              </tr>
             </table></td>
             <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
-                <td class="label">Traveller Account Type:</td>
-                <td class="value">Guest Traveller</td>
+                <td class="label">Name:</td>
+                <td class="value">Traveller Name</td>
               </tr>
               <tr>
                 <td class="label">Account ID:</td>
@@ -1125,15 +1158,15 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
       <td align="center">&nbsp;</td>
     </tr>
     <tr>
-      <td><table width="100%" border="0" cellpadding="2" cellspacing="0" class="service-table">
+      <td><table width="100%" border="0" cellpadding="2" cellspacing="0" class="service-table2">
     <thead>
     <tr>
-        <th style="width:25%;">SERVICE</th>
-        <th style="width:25%;">SERVICE DATES</th>
-        <th style="width:25%;">DESCRIPTION</th>
-        <th style="width:5%;text-align:center;">QTY</th>
-        <th style="width:5%;text-align:center;">UNIT</th>
-        <th style="width:5%;text-align:center;">TOTAL</th>
+        <th style="width:21%;">SERVICE</th>
+        <th style="width:18%;">SERVICE DATES</th>
+        <th style="width:21%;">DESCRIPTION</th>
+        <th style="width:13%;text-align:center;">QTY</th>
+        <th style="width:14%;text-align:center;">UNIT</th>
+        <th style="width:13%;text-align:center">TOTAL</th>
     </tr>
     </thead>
     <tbody>
@@ -1259,6 +1292,12 @@ HTML;
         $pdf->SetTitle('Invoice ' . $invoiceNumber);
         $pdf->SetMargins(10, 10, 10);
         $pdf->SetAutoPageBreak(true, 10);
+
+        $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+
         $pdf->AddPage();
         $pdf->SetFont('helvetica', '', 9);
         $pdf->writeHTML($html, true, false, true, false, '');
