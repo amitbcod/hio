@@ -1075,8 +1075,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
             <td>&nbsp;</td>
           </tr>
           <tr>
-            <td valign="top">
-              <table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
+            <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
                 <td class="label">Address:</td>
                 <td class="value">{$travelerAddress}</td>
@@ -1089,10 +1088,8 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
                 <td class="label">Email:</td>
                 <td class="value">{$travelerEmail}</td>
               </tr>
-            </table>
-            </td>
-            <td valign="top">
-              <table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
+            </table></td>
+            <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
                 <td class="label">Traveller Account Type:</td>
                 <td class="value">Guest Traveller</td>
