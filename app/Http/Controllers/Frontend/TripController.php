@@ -960,7 +960,7 @@ HTML;
         }
 
         $poweredLogoHtml = $poweredLogoPath
-            ? '<img src="' . $poweredLogoPath . '" width="100" height="40" style="width:100px; height:auto; display:block;" alt="Holidays.io">'
+            ? '<img src="' . $poweredLogoPath . '" width="80" style="width:100px; height:auto; display:block;" alt="Holidays.io">'
             : '<span style="color:#f7971e;font-weight:700;font-size:14px;">HOLIDAYS.io</span>';
 
             $discountRow = '';
@@ -974,7 +974,7 @@ if ($discountAmount > 0) {
 }
         $html = <<<HTML
 <style>
-body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
+ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 .header-box { border:none; border-radius:8px; padding:12px; background:#f0f5ff; margin-bottom:12px; }
 .section-title { font-size:11px; font-weight:700; color:#0b2b51; margin:5px 0 0 0; }
 .info-table { width:100%; border-collapse:collapse; margin-bottom:8px; }
@@ -1099,8 +1099,8 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
             </table></td>
             <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
-                <td class="label">Traveller Account Type:</td>
-                <td class="value">Guest Traveller</td>
+                <td class="label">Name:</td>
+                <td class="value">Traveller Name:</td>
               </tr>
               <tr>
                 <td class="label">Account ID:</td>
