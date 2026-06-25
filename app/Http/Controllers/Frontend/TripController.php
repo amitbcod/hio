@@ -934,28 +934,45 @@ HTML;
             $rowTax = number_format($item['total'] * 0.15, 2);
             $rowTotal = number_format($item['total'], 2);
             $serviceRows .= '<tr>
-                            <td>' . $item['type'] . '</td>
-                            <td>' . $item['checkIn'] . '</td>
-                            <td>' . $item['description'] . '</td>
+                            <td valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="2">
+                            <tbody>
+                              <tr>
+                                <td>' . $item['type'] . '</td>
+                                </tr>
+                              <tr>
+                                <td>' . $item['name'] . '</td>
+                                </tr>
+                              <tr>
+                                <td>' . $item['location'] . '</td>
+                                </tr>
+                              </tbody>
+                            </table></td>
+            
+                            <td valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="2">
+                            <tbody>
+                              <tr>
+                                <td>' . $item['checkIn'] . '</td>
+                                </tr>
+                              <tr>
+                                <td>' . $item['checkOut'] . '</td>
+                                </tr>
+                              </tbody>
+                            </table></td>
+            
+                            <td valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="2">
+                            <tbody>
+                              <tr>
+                                <td>' . $item['description'] . '</td>
+                                </tr>
+                              <tr>
+                                <td>' . $item['notes'] . '</td>
+                                </tr>
+                              </tbody>
+                            </table></td>
+
                             <td style="text-align:center;">' . $item['qty'] . '</td>
                             <td style="text-align:center;">' . $rowUnitPrice . '</td>
                             <td style="text-align:center;">' . $rowTotal . '</td>
-                            </tr>
-                            <tr>
-                            <td>' . $item['name'] . '</td>
-                            <td>' . $item['checkOut'] . '</td>
-                            <td>' . $item['notes'] . '</td>
-                            <td style="text-align:center;">&nbsp;</td>
-                            <td style="text-align:center;">&nbsp;</td>
-                            <td style="text-align:center;">&nbsp;</td>
-                            </tr>
-                            <tr>
-                            <td>' . $item['location'] . '</td>
-                            <td>&nbsp;</td>
-                            <td>&nbsp;</td>
-                            <td style="text-align:center;">&nbsp;</td>
-                            <td style="text-align:center;">&nbsp;</td>
-                            <td style="text-align:center;">&nbsp;</td>
                             </tr>';
         }
 
