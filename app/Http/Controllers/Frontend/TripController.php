@@ -472,16 +472,13 @@ class TripController extends Controller
             <td width="68%" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
               <tbody>
                 <tr>
-                  <td>{$companyLogoHtml}</td>
+                  <td valign="top">{$companyLogoHtml}</td>
                 </tr>
                 <tr>
                   <td style="font-size:12px">Your Local Connection - Mauritius</td>
                 </tr>
                 <tr>
                   <td style="font-size:12px">{$companyBusinessNameSafe}</td>
-                </tr>
-               <tr>
-                  <td>&nbsp;</td>
                 </tr>
                 <tr>
                   <td style="color:#6a7b91;font-size:10px">{$companyBusinessAddressSafe}</td>
@@ -524,7 +521,7 @@ class TripController extends Controller
     <tr>
       <td><table width="100%" cellpadding="0" cellspacing="0">
         <tr>
-          <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="5" cellspacing="0">
+          <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="3" cellspacing="0">
             <tr>
               <td><strong>Booking Ref.</strong></td>
             </tr>
@@ -533,7 +530,7 @@ class TripController extends Controller
             </tr>
           </table></td>
           <td style="width:2%">&nbsp;&nbsp;</td>
-          <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="5" cellspacing="0">
+          <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="3" cellspacing="0">
             <tr>
               <td><strong>Service Date</strong></td>
             </tr>
@@ -580,7 +577,7 @@ class TripController extends Controller
                 <td colspan="2" style="border-bottom:1px solid #dce7f5;"><strong style="font-size:12px">Service Details</strong></td>
 				  </tr>
               <tr>
-                <td class="label" width="40%"><strong>Property Name</strong></td>
+                <td class="label" width="40%">Property Name</td>
                 <td><strong>{$serviceNameSafe}</strong></td>
               </tr>
               <tr>
@@ -656,7 +653,10 @@ class TripController extends Controller
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td style="font-size:13px">Important Information / Conditions</td>
+      <td style="font-size:13px"><strong>Important Information / Conditions</strong></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
     </tr>
     <tr>
       <td><ul class="check-list">
@@ -677,26 +677,20 @@ class TripController extends Controller
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td style="font-size:13px">MPO Support and Emergency</td>
+      <td style="font-size:13px;"><strong>MPO Support and Emergency</strong></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
     </tr>
     <tr>
       <td>
       <table width="100%" border="0">
         <tbody>
           <tr>
-            <td>support Ticket within your account</td>
+            <td>Support Ticket within your account</td>
           </tr>
           <tr>
-            <td>Office Hours: 09:00 - 17:30 </td>
-          </tr>
-          <tr>
-            <td>&nbsp;</td>
-          </tr>
-          <tr>
-            <td>Office : +230 427 10 60</td>
-          </tr>
-          <tr>
-            <td>WhatsApp: +230 52 51 11 53 </td>
+            <td>Office Hours: 09:00 - 17:30, Office: +230 427 10 60, WhatsApp: +230 52 51 11 53,</td>
           </tr>
           <tr>
             <td>(After hours Emergency only)</td>
@@ -715,9 +709,19 @@ class TripController extends Controller
       <td align="center">&nbsp;</td>
     </tr>
     <tr>
-      <td align="center" style="font-size:8px; color:#7a8a9f;"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
-    Your Local Connection in Mauritius<br>
-    <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span></td>
+      <td align="center" style="font-size:8px; color:#7a8a9f; border-top:1px solid #e1ecfa">
+        
+      <table width="100%" border="0" cellpadding="5" cellspacing="0">
+        <tbody>
+          <tr>
+            <td align="center"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
+                Your Local Connection in Mauritius<br>
+                <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+        </td>
     </tr>
   </tbody>
 </table>
@@ -930,25 +934,29 @@ HTML;
             $rowTax = number_format($item['total'] * 0.15, 2);
             $rowTotal = number_format($item['total'], 2);
             $serviceRows .= '<tr>
-
-                <td style="width:22%;border-bottom:1px solid #dce7f5;padding:10px;">
-                    <div style="font-weight:600;color:#0b2b51;margin-bottom:2px;">' . $item['type'] . '</div>
-                    <div style="font-size:9px;color:#4a5f7f;margin-bottom:2px;"><strong>' . $item['name'] . '</strong></div>
-                    <div style="font-size:9px;color:#7a8a9f;">' . $item['location'] . '</div>
-                </td>
-                <td style="width:18%;border-bottom:1px solid #dce7f5;padding:10px;font-size:9px;">
-                    <div style="margin-bottom:4px;"><strong>' . $item['checkIn'] . '</strong></div>
-                    <div style="color:#7a8a9f;">' . $item['checkOut'] . '</div>
-                </td>
-                <td style="width:20%;border-bottom:1px solid #dce7f5;padding:10px;font-size:9px;">
-                    <div style="font-weight:600;margin-bottom:4px;">' . $item['description'] . '</div>
-                    <div style="color:#7a8a9f;">' . $item['notes'] . '</div>
-                </td>
-                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;">' . $item['qty'] . '</td>
-                <td style="width:10%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;font-weight:600;">' . $rowUnitPrice . '</td>
-      
-                <td style="width:8%;border-bottom:1px solid #dce7f5;padding:10px;text-align:center;font-weight:600;color:#0b2b51;">' . $rowTotal . '</td>
-            </tr>';
+                            <td>' . $item['type'] . '</td>
+                            <td>' . $item['checkIn'] . '</td>
+                            <td>' . $item['description'] . '</td>
+                            <td style="text-align:center;">' . $item['qty'] . '</td>
+                            <td style="text-align:center;">' . $rowUnitPrice . '</td>
+                            <td style="text-align:center;">' . $rowTotal . '</td>
+                            </tr>
+                            <tr>
+                            <td>' . $item['name'] . '</td>
+                            <td>' . $item['checkOut'] . '</td>
+                            <td>' . $item['notes'] . '</td>
+                            <td style="text-align:center;">&nbsp;</td>
+                            <td style="text-align:center;">&nbsp;</td>
+                            <td style="text-align:center;">&nbsp;</td>
+                            </tr>
+                            <tr>
+                            <td>' . $item['location'] . '</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td style="text-align:center;">&nbsp;</td>
+                            <td style="text-align:center;">&nbsp;</td>
+                            <td style="text-align:center;">&nbsp;</td>
+                            </tr>';
         }
 
         $poweredLogoHtml = $poweredLogoPath
@@ -970,13 +978,13 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 .header-box { border:none; border-radius:8px; padding:12px; background:#f0f5ff; margin-bottom:12px; }
 .section-title { font-size:11px; font-weight:700; color:#0b2b51; margin:5px 0 0 0; }
 .info-table { width:100%; border-collapse:collapse; margin-bottom:8px; }
-.info-table td { padding:4px; border-bottom:1px solid #dce7f5; font-size:9px; }
-.info-table .label { font-weight:600; color:#0b2b51; width:40%; }
+.info-table td { border-bottom:1px solid #dce7f5; font-size:9px; }
+.info-table .label { font-weight:600; color:#0b2b51;  }
 .info-table .value { color:#4a5f7f; }
 .service-table { width:100%; border-collapse:collapse; margin-bottom:8px; border:none; border-radius:6px; overflow:hidden; }
 .service-table thead tr { background:#0b2b51; color:#fff; }
-.service-table th { padding:10px; text-align:left; font-size:9px; font-weight:600; }
-.service-table td { padding:10px; }
+.service-table th {  text-align:left; font-size:9px; font-weight:700; border-bottom:1px solid #dce7f5 }
+.service-table td { text-align:left; border-bottom:1px solid #dce7f5; font-size:9px; }
 .totals-box { width:100%; background:#f0f5ff; border:none; border-radius:6px; padding:10px; }
 .totals-row { display:flex; justify-content:space-between; padding:4px 0; font-size:9px; }
 .totals-label { font-weight:600; color:#0b2b51; }
@@ -989,159 +997,259 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 .footer-row { display:flex; gap:20px; font-size:8px; color:#7a8a9f; }
 </style>
 
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
-<tr>
-<td width="50%" style="vertical-align:top; padding-right:8px;">
-    <div class="header-box">
-        {$companyLogoHtml}
-        <div style="font-size:16px; font-weight:700; color:#0b2b51; margin-top:8px; margin-bottom:2px;">Your Local Connection - Mauritius</div>
-        <div style="font-size:16px; font-weight:700; color:#0b2b51; margin-top:8px; margin-bottom:2px;">{$companyBusinessNameSafe}</div>
-        <div style="font-size:9px; color:#4a5f7f;">{$companyBusinessAddressSafe}</div>
-        <div style="font-size:9px; color:#7a8a9f;  margin-top:4px;">
-            <div>{$companyPhoneSafe} | {$companyEmailSafe}</div>
-            <div>VAT: {$companyVatSafe} | BRN: {$companyBrnSafe}</div>
-        </div>
-    </div>
-</td>
-<td width="50%" style="vertical-align:top; padding-left:8px; text-align:left;">
-    <div style="padding:8px; background:#f0f5ff; border-radius:6px; display:inline-block;">
-        <div style="font-size:9px; color:#4a5f7f; margin-bottom:4px;">Powered by</div>
-        {$poweredLogoHtml}
-    </div>
-</td>
-</tr>
-</table>
-
-<div style="margin-bottom:10px;">
-    <div style="font-size:20px; font-weight:700; color:#0b2b51; margin-bottom:6px;">INVOICE</div>
-    <table class="info-table">
-        <tr><td class="label">Invoice Number:</td><td class="value">{$invoiceNumber}</td></tr>
-        <tr><td class="label">Invoice Date:</td><td class="value">{$invoiceDate}</td></tr>
-        <tr><td class="label">Booking Reference:</td><td class="value">{$bookingRef}</td></tr>
-    </table>
-</div>
-
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+<table width="100%" border="0" style="color:#0b2b51;">
+  <tbody>
     <tr>
-        <td width="48%" style="padding-right:6px; vertical-align:top;">
-            <div class="header-box">
-                <div class="section-title">BILL TO</div>
-                <div style="font-weight:600; color:#0b2b51; font-size:10px; margin-bottom:4px;">{$travelerName}</div>
-                <table class="info-table" style="margin:0;">
-                    <tr><td class="label">Address:</td><td class="value">{$travelerAddress}</td></tr>
-                    <tr><td class="label">Phone:</td><td class="value">{$travelerPhone}</td></tr>
-                    <tr><td class="label">Email:</td><td class="value">{$travelerEmail}</td></tr>
-                </table>
-            </div>
-        </td>
+      <td valign="top">
 
-        <td width="52%" style="padding-left:6px; vertical-align:top;">
-            <div class="header-box" style="border:none;">
-                <div class="section-title">ACCOUNT DETAILS</div>
-                    <div style="font-weight:600; color:#0b2b51; font-size:10px; margin-bottom:4px;"></div>
-                <table class="info-table" style="margin-top:6px;">
-                    <tr><td class="label">Traveller Account Type:</td><td class="value">Guest Traveller</td></tr>
-                    <tr><td class="label">Account ID:</td><td class="value">{$accountId}</td></tr>
-                    <tr><td class="label">Currency:</td><td class="value">USD (US Dollar)</td></tr>
-                    <tr><td class="label">Payment Terms:</td><td class="value"><strong>Paid in Full</strong></td></tr>
-                </table>
-            </div>
-        </td>
+<table width="100%" border="0">
+        <tbody>
+          <tr>
+            <td width="68%" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
+              <tbody>
+                <tr>
+                  <td valign="top">{$companyLogoHtml}</td>
+                </tr>
+                <tr>
+                  <td style="font-size:12px">Your Local Connection - Mauritius</td>
+                </tr>
+                <tr>
+                  <td style="font-size:12px">{$companyBusinessNameSafe}</td>
+                </tr>
+                <tr>
+                  <td style="color:#6a7b91;font-size:10px">{$companyBusinessAddressSafe}</td>
+                </tr>
+                <tr>
+                  <td style="color:#6a7b91;font-size:10px">{$companyPhoneSafe} | {$companyEmailSafe}</td>
+                </tr>
+                <tr>
+                  <td style="color:#6a7b91;font-size:10px">VAT: {$companyVatSafe} | BRN: {$companyBrnSafe}</td>
+                </tr>
+              </tbody>
+            </table></td>
+            <td width="32%" valign="top"><table width="100%" border="0">
+              <tbody>
+                <tr>
+                  <td style="font-size:8px;color:#5f6d7a;">Powered by</td>
+                </tr>
+                <tr>
+                  <td>{$poweredLogoHtml}</td>
+                </tr>
+              </tbody>
+            </table></td>
+          </tr>
+        </tbody>
+      </table>
+ </td>
     </tr>
-
     <tr>
-        <td colspan="2" align="center" style="padding-top:10px; padding-bottom:10px;">
-            <div style="padding:8px; background:#eef4ff; border:1px solid #dce7f5; border-radius:6px; font-size:9px; color:#4a5f7f; text-align:center;">
-                <strong style="color:#0b2b51;">ACCOUNT HOLDER:</strong>
-                This invoice has been issued to the account holder (Privileged Traveller).
-            </div>
-        </td>
+      <td>&nbsp;</td>
     </tr>
-</table>
-
-<table class="service-table">
-<thead>
-<tr>
-  
-    <th style="width:22%;">SERVICE</th>
-    <th style="width:18%;">SERVICE DATES</th>
-    <th style="width:20%;">DESCRIPTION</th>
-     <th style="width:8%;text-align:center;">QTY</th>
-    <th style="width:10%;text-align:center;">UNIT PRICE</th>
-    
-    <th style="width:8%;text-align:center;">TOTAL</th>
-</tr>
-</thead>
-<tbody>
-{$serviceRows}
-</tbody>
-</table>
-
+    <tr>
+      <td><h1 style="font-size:22px">INVOICE</h1></td>
+    </tr>
+    <tr>
+      <td><table width="50%" border="0" cellpadding="2" cellspacing="0" class="info-table">
+        <tr>
+          <td class="label">Invoice Number:</td>
+          <td class="value">{$invoiceNumber}</td>
+        </tr>
+        <tr>
+          <td class="label">Invoice Date:</td>
+          <td class="value">{$invoiceDate}</td>
+        </tr>
+        <tr>
+          <td class="label">Booking Reference:</td>
+          <td class="value">{$bookingRef}</td>
+        </tr>
+      </table></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td><table width="100%" border="0" cellpadding="2" cellspacing="0">
+        <tbody>
+          <tr>
+            <td style="font-size:12px"><strong>BILL TO</strong></td>
+            <td style="font-size:12px"><strong>ACCOUNT DETAILS</strong></td>
+          </tr>
+          <tr>
+            <td>{$travelerName}</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
+              <tr>
+                <td class="label">Address:</td>
+                <td class="value">{$travelerAddress}</td>
+              </tr>
+              <tr>
+                <td class="label">Phone:</td>
+                <td class="value">{$travelerPhone}</td>
+              </tr>
+              <tr>
+                <td class="label">Email:</td>
+                <td class="value">{$travelerEmail}</td>
+              </tr>
+            </table></td>
+            <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
+              <tr>
+                <td class="label">Traveller Account Type:</td>
+                <td class="value">Guest Traveller</td>
+              </tr>
+              <tr>
+                <td class="label">Account ID:</td>
+                <td class="value">{$accountId}</td>
+              </tr>
+              <tr>
+                <td class="label">Currency:</td>
+                <td class="value">USD (US Dollar)</td>
+              </tr>
+              <tr>
+                <td class="label">Payment Terms:</td>
+                <td class="value"><strong>Paid in Full</strong></td>
+              </tr>
+            </table></td>
+          </tr>
+        </tbody>
+      </table></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+    </tr>
+     <tr>
+      <td align="center"><strong style="color:#0b2b51;">ACCOUNT HOLDER:</strong> This invoice has been issued to the account holder.</td>
+    </tr>
+    <tr>
+      <td align="center">&nbsp;</td>
+    </tr>
+    <tr>
+      <td><table width="100%" border="0" cellpadding="2" cellspacing="0" class="service-table">
+    <thead>
+    <tr>
+        <th style="width:25%;">SERVICE</th>
+        <th style="width:25%;">SERVICE DATES</th>
+        <th style="width:25%;">DESCRIPTION</th>
+        <th style="width:5%;text-align:center;">QTY</th>
+        <th style="width:5%;text-align:center;">UNIT</th>
+        <th style="width:5%;text-align:center;">TOTAL</th>
+    </tr>
+    </thead>
+    <tbody>
+    {$serviceRows}
+    </tbody>
+    </table></td>
+        </tr>
+        <tr>
+        <td>&nbsp;</td>
+      </tr>
+        <tr>
+            <td>
+                
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
 <tr>
 <td width="55%" style="vertical-align:top; padding-right:6px;">
-    <div class="thank-you" style="background:#e8f5e9; border-radius:8px; padding:12px; margin-bottom:8px;">
-        <div style="text-align:center; font-size:11px; font-weight:700; color:#2e7d32; margin-bottom:8px;">THANK YOU!</div>
-        <div style="font-size:9px; color:#2e7d32; text-align:center; line-height:1.6;">
-               You will receive payment confirmation by email.<br>
+    <table width="100%" cellpadding="2" cellspacing="0" border="0" class="thank-you" style="color:#2e7d32;">
+	    <tbody>
+	      <tr><td align="center">THANK YOU!</td></tr>
+	      <tr><td align="center">You will receive payment confirmation by email.<br>
             Download Voucher from your account/manage trip<br><br>
             We look forward to welcoming you to Mauritius<br>
-            and wish you a wonderful stay!
-        </div>
-    </div>
+            and wish you a wonderful stay!</td>
+	        </tr>
+	      </tbody>
+	    </table>
 </td>
-<td width="45%" style="vertical-align:top; padding-left:80px;">
-    <div class="totals-box" style="background:#fff3e0; border-radius:8px; padding:10px;">
-        <div class="totals-row"><span class="totals-label">Subtotal: </span><span class="totals-amount">USD {$formattedSubtotal}</span></div>
-        {$discountRow}
-        <div class="totals-row"><span class="totals-label">Taxable Amount: </span><span class="totals-amount">USD {$formattedTaxableAmount}</span></div>
-        <div class="totals-row"><span class="totals-label">VAT ({$vatPercent}%): </span><span class="totals-amount">USD {$formattedVatAmount}</span></div>
-        <div class="totals-row"><span class="totals-label"><strong>Service Fee: </strong></span><span class="totals-amount"><strong>USD {$formattedServiceFee}</strong></span></div>
-        <div class="total-paid" style="background:#0b2b51; color:#fff; padding:8px; border-radius:4px; font-weight:700; display:flex; justify-content:space-between; margin-top:6px;"><span>TOTAL PAID</span> <span>USD {$formattedTotalAmount}</span></div>
-    </div>
+
+<td width="45%" style="vertical-align:top;">
+  <table width="100%" cellpadding="2" cellspacing="0">
+    <tr>
+      <td align="right">Subtotal: USD {$formattedSubtotal}</td>
+    </tr>
+    <tr>
+      <td align="right">{$discountRow}</td>
+    </tr>
+    <tr>
+      <td align="right">Taxable Amount: USD {$formattedTaxableAmount}</td>
+    </tr>
+    <tr>
+      <td align="right">VAT ({$vatPercent}%): USD {$formattedVatAmount}</td>
+    </tr>
+    <tr>
+      <td align="right">Service Fee: USD {$formattedServiceFee}</td>
+    </tr>
+    <tr>
+      <td align="right"><strong>TOTAL PAID: USD {$formattedTotalAmount}</strong></td>
+    </tr>
+  </table>
+    
 </td>
 </tr>
+</table>
+            </td>
+        </tr>
+<tr>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td><table width="100%" border="0" cellpadding="2" cellspacing="0">
+        <tbody>
+            <tr>
+              <td style="font-size:12px"><strong>IMPORTANT NOTES</strong></td>
+              <td style="font-size:12px"><strong>NEED ASSISTANCE?</strong></td>
+            </tr>
+            <tr>
+              <td valign="top"><ul class="check-list">
+            <li>Please present voucher and passport when required.</li>
+            <li>All services are subject to availability and terms & conditions of each service provider.</li>
+            <li>For amendments or cancellations, please refer to the booking terms or contact support.</li>
+        </ul></td>
+              <td valign="top"><table width="100%" border="0">
+                <tbody>
+                  <tr>
+                    <td>Support Ticket within your account</td>
+                  </tr>
+                  <tr>
+                    <td>Office Hours: 09:00 - 17:30, Office: +230 427 10 60, WhatsApp: +230 52 51 11 53,</td>
+                  </tr>
+                  <tr>
+                    <td>(After hours Emergency only)</td>
+                  </tr>
+                  <tr>
+                    <td>&nbsp;</td>
+                  </tr>
+                  <tr>
+                    <td><span style="color:#4a5f7f; font-size:8px;">We are here to help you before, during and after your trip.</span></td>
+                  </tr>
+                </tbody>
+              </table></td>
+            </tr>
+        </tbody>
+      </table></td>
+    </tr>
+    <tr>
+      <td align="center">&nbsp;</td>
+    </tr>
+    <tr>
+      <td align="center" style="font-size:8px; color:#7a8a9f; border-top:1px solid #e1ecfa">
+        
+      <table width="100%" border="0" cellpadding="5" cellspacing="0">
+        <tbody>
+          <tr>
+            <td align="center"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
+                Your Local Connection in Mauritius<br>
+                <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+        </td>
+    </tr>        
+
+  </tbody>
 </table>
 
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
-<tr>
-<td width="55%" style="padding-right:6px;">
-    <div class="notes-box" style="background:#eef4ff; border:1px solid #dce7f5; border-radius:6px; padding:10px; font-size:9px; color:#4a5f7f;">
-        <strong style="display:block; color:#0b2b51; margin-bottom:6px;">IMPORTANT NOTES</strong>
-        <ul style="margin:4px 0; padding-left:16px;">
-            <li style="margin-bottom:2px;">Please present voucher and passport when required.</li>
-            <li style="margin-bottom:2px;">All services are subject to availability and terms & conditions of each service provider.</li>
-            <li style="margin-bottom:2px;">For amendments or cancellations, please refer to the booking terms or contact support.</li>
-        </ul>
-    </div>
-</td>
-<td width="45%" style="padding-left:6px;">
-    <div class="footer-assistance" style="background:#eef4ff; border:1px solid #dce7f5; border-radius:6px; padding:10px; font-size:9px;">
-        <strong style="display:block; color:#0b2b51; margin-bottom:6px;">NEED ASSISTANCE?</strong>
-        <div style="color:#4a5f7f; line-height:1.8;">
-            support Ticket within your account<br>
-            Office Hours: 09:00 - 17:30 <br><br>
-            Office : +230 427 10 60<br>
-            WhatsApp: +230 52 51 11 53 <br>
-           (After hours Emergency only)<br><br>
-        </div>
-        <div style="margin-top:8px; padding-top:8px; border-top:1px solid #dce7f5; color:#4a5f7f; font-size:8px;">
-            We are here to help you before, during and after your trip.
-        </div>
-    </div>
-</td>
-</tr>
-</table>
-
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px; padding-top:10px; border-top:1px solid #dce7f5;">
-<tr>
-<td width="100%" style="text-align:center; font-size:8px; color:#7a8a9f; padding:6px 0;">
-    <strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
-    Your Local Connection in Mauritius<br>
-    <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span>
-</td>
-</tr>
-</table>
 
 HTML;
 
