@@ -1125,7 +1125,7 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
       <td align="center">&nbsp;</td>
     </tr>
     <tr>
-      <td><table width="100%" border="0" cellpadding="2" cellspacing="0" class="">
+      <td><table width="100%" border="0" cellpadding="2" cellspacing="0" class="service-2">
     <thead>
     <tr>
         <th style="width:22%;">SERVICE</th>

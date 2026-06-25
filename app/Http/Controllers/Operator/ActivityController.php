@@ -2394,12 +2394,6 @@ class ActivityController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Check if Step 11 is complete
-        if (!$activity->step11_promotions_offers) {
-            return redirect()->route('operator.activity.step11.show', $activity->id)
-                ->with('error', 'Please complete Step 11: Promotions & Offers first.');
-        }
-
         $seoSocial = $activity->seoSocial;
 
         // Get keywords as array or empty array
@@ -2514,7 +2508,7 @@ class ActivityController extends Controller
             'step1_basic', 'step2_management_communication', 'step3_photos_media',
             'step4_legal_compliance', 'step5_accounting_transaction', 'step6_policies_rules',
             'step7_variants_equipment', 'step8_scheduling_timeslots', 'step9_rates',
-            'step10_allotment', 'step11_promotions_offers', 'step12_seo_social'
+            'step10_allotment', 'step12_seo_social'
         ];
 
         $incompleteSteps = [];

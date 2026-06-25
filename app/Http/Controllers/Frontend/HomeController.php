@@ -201,9 +201,9 @@ class HomeController extends Controller
         $items = $this->applySidebarFilters($items, $category, $sidebarSelections);
 
         $categoryTitle = match ($category) {
-            'tours' => 'Tours - Activity',
-            'transport' => 'Transport',
-            default => 'Accommodation',
+            'tours' => __('category.title.tours_activity'),
+            'transport' => __('category.title.transport'),
+            default => __('category.title.accommodation'),
         };
 
         $currentPage = max(1, (int) $request->query('page', 1));
@@ -1946,18 +1946,18 @@ class HomeController extends Controller
             return array_values(array_filter([
                 [
                     'key' => 'property_type',
-                    'label' => 'Property Type',
-                    'options' => $this->buildCountOptions($items->pluck('property_type'), Accommodation::TYPES),
+                    'label' => $this->translateFilterLabel('property_type', 'Property Type'),
+                    'options' => $this->buildCountOptions($items->pluck('property_type'), Accommodation::TYPES, 'property_type'),
                 ],
                 [
                     'key' => 'meal_plan',
-                    'label' => 'Meal Plan',
-                    'options' => $this->buildCountOptions($items->pluck('meal_plans'), AccommodationRate::MEAL_PLANS),
+                    'label' => $this->translateFilterLabel('meal_plan', 'Meal Plan'),
+                    'options' => $this->buildCountOptions($items->pluck('meal_plans'), AccommodationRate::MEAL_PLANS, 'meal_plan'),
                 ],
                 [
                     'key' => 'budget',
-                    'label' => 'Budget Range',
-                    'options' => $this->buildCountOptions($items->pluck('budget_range'), ['Budget', 'Mid Range', 'Top End']),
+                    'label' => $this->translateFilterLabel('budget', 'Budget Range'),
+                    'options' => $this->buildCountOptions($items->pluck('budget_range'), ['Budget', 'Mid Range', 'Top End'], 'budget'),
                 ],
             ], fn (array $definition) => !empty($definition['options'])));
         }
@@ -1966,33 +1966,33 @@ class HomeController extends Controller
             return array_values(array_filter([
                 [
                     'key' => 'service_type',
-                    'label' => 'Service Type',
-                    'options' => $this->buildCountOptions($items->pluck('service_type'), Activity::SERVICE_TYPES),
+                    'label' => $this->translateFilterLabel('service_type', 'Service Type'),
+                    'options' => $this->buildCountOptions($items->pluck('service_type'), Activity::SERVICE_TYPES, 'service_type'),
                 ],
                 [
                     'key' => 'physical_level',
-                    'label' => 'Physical Level',
-                    'options' => $this->buildCountOptions($items->pluck('physical_level'), Activity::PHYSICAL_LEVELS),
+                    'label' => $this->translateFilterLabel('physical_level', 'Physical Level'),
+                    'options' => $this->buildCountOptions($items->pluck('physical_level'), Activity::PHYSICAL_LEVELS, 'physical_level'),
                 ],
                 [
                     'key' => 'price_range',
-                    'label' => 'Price Range',
-                    'options' => $this->buildCountOptions($items->pluck('price_range'), Activity::PRICE_RANGES),
+                    'label' => $this->translateFilterLabel('price_range', 'Price Range'),
+                    'options' => $this->buildCountOptions($items->pluck('price_range'), Activity::PRICE_RANGES, 'price_range'),
                 ],
                 [
                     'key' => 'primary_theme',
-                    'label' => 'Primary Theme',
-                    'options' => $this->buildCountOptions($items->pluck('primary_themes'), Activity::PRIMARY_THEMES),
+                    'label' => $this->translateFilterLabel('primary_theme', 'Primary Theme'),
+                    'options' => $this->buildCountOptions($items->pluck('primary_themes'), Activity::PRIMARY_THEMES, 'primary_theme'),
                 ],
                 [
                     'key' => 'team_category',
-                    'label' => 'Team Category',
-                    'options' => $this->buildCountOptions($items->pluck('team_categories'), Activity::TEAM_CATEGORIES),
+                    'label' => $this->translateFilterLabel('team_category', 'Team Category'),
+                    'options' => $this->buildCountOptions($items->pluck('team_categories'), Activity::TEAM_CATEGORIES, 'team_category'),
                 ],
                 [
                     'key' => 'booking_confirmation_type',
-                    'label' => 'Confirmation',
-                    'options' => $this->buildCountOptions($items->pluck('booking_confirmation_type'), Activity::BOOKING_CONFIRMATION_TYPES),
+                    'label' => $this->translateFilterLabel('booking_confirmation_type', 'Confirmation'),
+                    'options' => $this->buildCountOptions($items->pluck('booking_confirmation_type'), Activity::BOOKING_CONFIRMATION_TYPES, 'booking_confirmation_type'),
                 ],
             ], fn (array $definition) => !empty($definition['options'])));
         }
@@ -2000,7 +2000,7 @@ class HomeController extends Controller
         return [];
     }
 
-    private function buildCountOptions($values, array $preferredOrder = []): array
+    private function buildCountOptions($values, array $preferredOrder = [], string $definitionKey = null): array
     {
         $counts = collect($values)
             ->flatMap(function ($value) {
@@ -2017,7 +2017,7 @@ class HomeController extends Controller
         $options = $counts
             ->map(fn ($count, $value) => [
                 'value' => $value,
-                'label' => $value,
+                'label' => $definitionKey ? $this->translateFilterOption($definitionKey, $value) : $value,
                 'count' => $count,
             ])
             ->values();
@@ -2032,6 +2032,27 @@ class HomeController extends Controller
         }
 
         return $options->values()->all();
+    }
+
+    private function translateFilterLabel(string $definitionKey, string $fallback): string
+    {
+        $translationKey = "category.filter.{$definitionKey}";
+        $translated = __($translationKey);
+
+        return $translated === $translationKey ? $fallback : $translated;
+    }
+
+    private function translateFilterOption(string $definitionKey, string $value): string
+    {
+        $slug = Str::slug($value, '_');
+        if ($slug === '') {
+            $slug = '_';
+        }
+
+        $translationKey = "category.filter_options.{$definitionKey}.{$slug}";
+        $translated = __($translationKey);
+
+        return $translated === $translationKey ? $value : $translated;
     }
 
     private function normalizeFilterValues($value): array
