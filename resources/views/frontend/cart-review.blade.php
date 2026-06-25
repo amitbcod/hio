@@ -569,7 +569,7 @@
     margin: 0 0 12px;
 }
 
-.fare-rows { display: flex; flex-direction: column; gap: 10px; }
+.fare-rows { display: flex; flex-direction: column; gap: 10px; width:100%; }
 
 .fare-row {
     display: flex;
