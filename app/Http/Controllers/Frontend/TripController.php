@@ -1137,22 +1137,28 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
     </tbody>
     </table></td>
         </tr>
-
+        <tr>
+        <td>&nbsp;</td>
+      </tr>
         <tr>
             <td>
                 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
 <tr>
 <td width="55%" style="vertical-align:top; padding-right:6px;">
-    <div class="thank-you" style="background:#e8f5e9; border-radius:8px; padding:12px; margin-bottom:8px;">
-        <div style="text-align:center; font-size:11px; font-weight:700; color:#2e7d32; margin-bottom:8px;">THANK YOU!</div>
-        <div style="font-size:9px; color:#2e7d32; text-align:center; line-height:1.6;">
-               You will receive payment confirmation by email.<br>
+    <table width="100%" border="0" class="thank-you" style="color:#2e7d32;">
+	    <tbody>
+	      <tr>
+	        <td align="center">THANK YOU!</td>
+	        </tr>
+	      <tr>
+	        <td align="center">You will receive payment confirmation by email.<br>
             Download Voucher from your account/manage trip<br><br>
             We look forward to welcoming you to Mauritius<br>
-            and wish you a wonderful stay!
-        </div>
-    </div>
+            and wish you a wonderful stay!</td>
+	        </tr>
+	      </tbody>
+	    </table>
 </td>
 
 <td width="45%" style="vertical-align:top;">
