@@ -1096,11 +1096,15 @@ if ($discountAmount > 0) {
                 <td class="label">Email:</td>
                 <td class="value">{$travelerEmail}</td>
               </tr>
+              <tr>
+                <td class="label">Meal Plan:</td>
+                <td class="value">Half Board</td>
+              </tr>
             </table></td>
             <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
                 <td class="label">Name:</td>
-                <td class="value">Traveller Name:</td>
+                <td class="value">Traveller Name</td>
               </tr>
               <tr>
                 <td class="label">Account ID:</td>
