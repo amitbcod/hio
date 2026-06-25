@@ -1392,6 +1392,10 @@ class HomeController extends Controller
                         'currency' => $accommodation->currency_code ?? 'USD',
                         'pricing_setting' => 'Per Room/Night',
                         'plan_label' => 'Standard Rate',
+                        'rate_id' => null,
+                        'rate_name' => null,
+                        'meal_plan' => null,
+                        'inclusions' => null,
                     ];
                 }
             } else {
@@ -1400,15 +1404,27 @@ class HomeController extends Controller
                     $nightlyPrice = $option['nightly'];
                     $pricingSetting = $option['pricing_setting'];
                     $rate = $option['rate'];
-                    
+
+                    $planInclusions = $rate->inclusions ?? null;
+                    if (is_string($planInclusions)) {
+                        $decodedInclusions = json_decode($planInclusions, true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($decodedInclusions)) {
+                            $planInclusions = $decodedInclusions;
+                        }
+                    }
+
                     $totalPrice = $nightlyPrice !== null
                         ? round($nightlyPrice * (int) $bookingContext['nights'], 2)
                         : null;
 
                     if ($totalPrice !== null) {
-                        $planLabel = $pricingSetting === 'Per Person/Night' 
-                            ? 'Per Person Plan' 
-                            : ($pricingSetting === 'Per Property/Night' ? 'Property Rate' : 'Per Room Plan');
+                        $planLabelPrefix = $rate->rate_name
+                            ? trim((string) $rate->rate_name)
+                            : ($pricingSetting === 'Per Person/Night'
+                                ? 'Per Person Plan'
+                                : ($pricingSetting === 'Per Property/Night' ? 'Property Rate' : 'Per Room Plan'));
+
+                        $planLabel = trim($planLabelPrefix . ($rate->meal_plan ? ' - ' . $rate->meal_plan : ''));
 
                         $results[] = [
                             'room_id' => (int) $room->id,
@@ -1420,6 +1436,10 @@ class HomeController extends Controller
                             'currency' => $rate->currency ?? $accommodation->currency_code ?? 'USD',
                             'pricing_setting' => $pricingSetting,
                             'plan_label' => $planLabel,
+                            'rate_id' => $rate->id,
+                            'rate_name' => (string) ($rate->rate_name ?? ''),
+                            'meal_plan' => $rate->meal_plan ?? null,
+                            'inclusions' => !empty($planInclusions) ? $planInclusions : null,
                         ];
                     }
                 }

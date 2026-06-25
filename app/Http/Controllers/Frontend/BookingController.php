@@ -140,6 +140,16 @@ class BookingController extends Controller
         $title           = $request->input('title', '');
         $pricingSetting  = $request->input('pricing_setting', 'Per Room/Night');
         $planLabel       = $request->input('plan_label', '');
+        $ratePlanId      = $request->input('rate_plan_id') ? (int) $request->input('rate_plan_id') : null;
+        $rateName        = $request->input('rate_name', '');
+        $mealPlan        = $request->input('meal_plan', '') ?: null;
+        $planInclusions  = $request->input('plan_inclusions');
+        if (is_string($planInclusions)) {
+            $decodedInclusions = json_decode($planInclusions, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decodedInclusions)) {
+                $planInclusions = $decodedInclusions;
+            }
+        }
 
         // Load accommodation for tax/fee details
         $accommodation = Accommodation::find($accommodationId);
@@ -209,6 +219,10 @@ class BookingController extends Controller
             'is_non_refundable'=> $isNonRefundable,
             'pricing_setting'  => $pricingSetting,
             'plan_label'       => $planLabel,
+            'rate_plan_id'     => $ratePlanId,
+            'rate_name'        => $rateName,
+            'meal_plan'        => $mealPlan,
+            'plan_inclusions'  => is_array($planInclusions) ? $planInclusions : ($planInclusions !== null ? [$planInclusions] : []),
         ];
     }
 
@@ -924,6 +938,12 @@ class BookingController extends Controller
                     'trip_id'           => $tripId,
                     'guest_otp_token_id' => $guestOtp?->id,
                     'is_guest'          => $isGuestCheckout ? 1 : 0,
+                    'rate_plan_id'      => $item['rate_plan_id'] ?? null,
+                    'rate_name'         => $item['rate_name'] ?? null,
+                    'pricing_setting'   => $item['pricing_setting'] ?? null,
+                    'plan_label'        => $item['plan_label'] ?? null,
+                    'meal_plan'         => $item['meal_plan'] ?? $item['plan_label'] ?? null,
+                    'plan_inclusions'   => !empty($item['plan_inclusions']) ? json_encode($item['plan_inclusions']) : null,
                 ]);
 
                 if (!$guestOtp) {

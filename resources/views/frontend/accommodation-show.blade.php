@@ -223,6 +223,12 @@
                                                 @if(!empty($room['pricing_setting']))
                                                     <small style="display: block; color: #666; margin-top: 4px; font-size: 11px;">{{ $room['pricing_setting'] }}</small>
                                                 @endif
+                                                @if(!empty($room['meal_plan']))
+                                                    <small style="display: block; color: #666; margin-top: 4px; font-size: 11px;">Meal Plan: {{ $room['meal_plan'] }}</small>
+                                                @endif
+                                                @if(!empty($room['inclusions']))
+                                                    <small style="display: block; color: #666; margin-top: 4px; font-size: 11px;">Includes: {{ is_array($room['inclusions']) ? implode(', ', $room['inclusions']) : $room['inclusions'] }}</small>
+                                                @endif
                                             @else
                                                 <strong>{{ __('accommodation.on_request') }}</strong>
                                             @endif
@@ -249,6 +255,10 @@
                                                 <input type="hidden" name="currency" value="{{ $room['currency'] }}">
                                                 <input type="hidden" name="pricing_setting" value="{{ $room['pricing_setting'] ?? 'Per Room/Night' }}">
                                                 <input type="hidden" name="plan_label" value="{{ $room['plan_label'] ?? '' }}">
+                                                <input type="hidden" name="rate_plan_id" value="{{ $room['rate_id'] ?? '' }}">
+                                                <input type="hidden" name="rate_name" value="{{ $room['rate_name'] ?? '' }}">
+                                                <input type="hidden" name="meal_plan" value="{{ $room['meal_plan'] ?? '' }}">
+                                                <input type="hidden" name="plan_inclusions" value='{{ json_encode($room['inclusions'] ?? []) }}'>
                                                 <button type="submit" class="btn-primary room-book-btn">{{ !empty($room['plan_label']) ? __('accommodation.select_plan', ['plan' => $room['plan_label']]) : __('accommodation.select_room') }}</button>
                                             </form>
                                         @endif

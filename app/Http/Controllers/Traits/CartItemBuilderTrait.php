@@ -33,6 +33,16 @@ trait CartItemBuilderTrait
         $title           = $request->input('title', '');
         $pricingSetting  = $request->input('pricing_setting', 'Per Room/Night');
         $planLabel       = $request->input('plan_label', '');
+        $ratePlanId      = $request->input('rate_plan_id') ? (int) $request->input('rate_plan_id') : null;
+        $rateName        = $request->input('rate_name', '');
+        $mealPlan        = $request->input('meal_plan', '') ?: null;
+        $planInclusions  = $request->input('plan_inclusions');
+        if (is_string($planInclusions)) {
+            $decodedInclusions = json_decode($planInclusions, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decodedInclusions)) {
+                $planInclusions = $decodedInclusions;
+            }
+        }
 
         $accommodation = Accommodation::find($accommodationId);
 
@@ -97,6 +107,10 @@ trait CartItemBuilderTrait
             'is_non_refundable'=> $isNonRefundable,
             'pricing_setting'  => $pricingSetting,
             'plan_label'       => $planLabel,
+            'rate_plan_id'     => $ratePlanId,
+            'rate_name'        => $rateName,
+            'meal_plan'        => $mealPlan,
+            'plan_inclusions'  => is_array($planInclusions) ? $planInclusions : ($planInclusions !== null ? [$planInclusions] : []),
         ];
     }
 

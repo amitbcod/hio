@@ -882,14 +882,48 @@ HTML;
                 $unitPrice = $amount;
                 $totalForLine = $unitPrice * $nights;
 
+                $mealPlanLabel = $booking->meal_plan ? e($booking->meal_plan) : 'N/A';
+                $rateNameLabel = $booking->rate_name ? e($booking->rate_name) : '';
+                $pricingSettingLabel = $booking->pricing_setting ? e($booking->pricing_setting) : '';
+                $planInclusions = null;
+                if (!empty($booking->plan_inclusions)) {
+                    $decodedInclusions = json_decode($booking->plan_inclusions, true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decodedInclusions)) {
+                        $planInclusions = implode(', ', $decodedInclusions);
+                    } else {
+                        $planInclusions = (string) $booking->plan_inclusions;
+                    }
+                }
+
+                $descriptionParts = [
+                    $booking->room->room_name ?? 'Room',
+                ];
+                if ($rateNameLabel !== '') {
+                    $descriptionParts[] = $rateNameLabel;
+                }
+                if ($booking->meal_plan) {
+                    $descriptionParts[] = $mealPlanLabel;
+                }
+
+                $notesParts = [
+                    'Room: ' . ($booking->room->room_name ?? 'Standard'),
+                ];
+                if ($pricingSettingLabel !== '') {
+                    $notesParts[] = 'Pricing: ' . $pricingSettingLabel;
+                }
+               // $notesParts[] = 'Meal Plan: ' . $mealPlanLabel;
+                if ($planInclusions) {
+                    $notesParts[] = 'Includes: ' . $planInclusions;
+                }
+
                 $item = [
                     'type' => 'Accommodation',
                     'name' => e($booking->accommodation->property_name ?? 'Accommodation'),
                     'location' => e($booking->accommodation->city ?? 'Mauritius'),
                     'checkIn' => $booking->check_in_date ? $booking->check_in_date->format('d M Y') : 'N/A',
                     'checkOut' => $booking->check_out_date ? $booking->check_out_date->format('d M Y') : 'N/A',
-                    'description' => e(($booking->room->room_name ?? 'Room') . ' - ' . ($booking->meal_plan ?? 'Bed & Breakfast')),
-                    'notes' => e('Room: ' . ($booking->room->room_name ?? 'Standard') . ' | Meal: ' . ($booking->meal_plan ?? 'Bed & Breakfast')),
+                    'description' => e(implode(' - ', array_filter($descriptionParts))),
+                    'notes' => e(implode(' | ', $notesParts)),
                     'qty' => $nights,
                     'unitPrice' => $unitPrice,
                     'total' => $totalForLine,
@@ -997,6 +1031,16 @@ if ($discountAmount > 0) {
                     </div>';
                     $discountRow = trim($discountRow);
 }
+
+$mealPlanValues = $accommodationBookings
+    ->pluck('meal_plan')
+    ->filter()
+    ->unique()
+    ->values()
+    ->all();
+$mealPlanSafe = !empty($mealPlanValues)
+    ? e(implode(', ', $mealPlanValues))
+    : '-';
         $html = <<<HTML
 <style>
  body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
@@ -1123,7 +1167,7 @@ if ($discountAmount > 0) {
               </tr>
               <tr>
                 <td class="label">Meal Plan:</td>
-                <td class="value">Half Board</td>
+                <td class="value">{$mealPlanSafe}</td>
               </tr>
             </table></td>
             <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
