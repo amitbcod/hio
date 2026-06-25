@@ -736,6 +736,7 @@ HTML;
         $pdf->SetTitle('Voucher - ' . ($booking->booking_reference ?? ($isActivity ? 'activity' : 'accommodation')));
         $pdf->SetMargins(15, 15, 15);
         $pdf->SetAutoPageBreak(true, 15);
+        $pdf->SetHeaderData('', 0, '', '');
         $pdf->AddPage();
         $pdf->SetFont('helvetica', '', 10);
         $pdf->writeHTML($html, true, false, true, false, '');
