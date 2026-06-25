@@ -981,6 +981,10 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 .info-table td { border-bottom:1px solid #dce7f5; font-size:9px; }
 .info-table .label { font-weight:600; color:#0b2b51;  }
 .info-table .value { color:#4a5f7f; }
+
+.service-table2 th {  text-align:left; font-size:9px; font-weight:700; border-bottom:1px solid #dce7f5 }
+.service-table2 td { text-align:left; border-bottom:1px solid #dce7f5; font-size:9px; }
+
 .service-table { width:100%; border-collapse:collapse; margin-bottom:8px; border:none; border-radius:6px; overflow:hidden; }
 .service-table thead tr { background:#0b2b51; color:#fff; }
 .service-table th {  text-align:left; font-size:9px; font-weight:700; border-bottom:1px solid #dce7f5 }
@@ -1125,12 +1129,12 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
       <td align="center">&nbsp;</td>
     </tr>
     <tr>
-      <td><table width="100%" border="0" cellpadding="2" cellspacing="0" class="service-2">
+      <td><table width="100%" border="0" cellpadding="2" cellspacing="0" class="service-table2">
     <thead>
     <tr>
-        <th style="width:23%;">SERVICE</th>
-        <th style="width:14%;">SERVICE DATES</th>
-        <th style="width:23%;">DESCRIPTION</th>
+        <th style="width:21%;">SERVICE</th>
+        <th style="width:18%;">SERVICE DATES</th>
+        <th style="width:21%;">DESCRIPTION</th>
         <th style="width:13%;text-align:center;">QTY</th>
         <th style="width:14%;text-align:center;">UNIT</th>
         <th style="width:13%;text-align:center">TOTAL</th>
