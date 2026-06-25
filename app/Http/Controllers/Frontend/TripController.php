@@ -427,7 +427,7 @@ class TripController extends Controller
 
         $operatorBusinessName = e($operator->business_name ?? $providerName);
         $poweredLogoHtml = $poweredLogoPath
-            ? '<img src="' . $poweredLogoPath . '" width="80" style="width:80px; height:auto; display:block;" alt="Holidays.io logo">'
+            ? '<img src="' . $poweredLogoPath . '" width="50" style="width:50px; height:auto; display:block;" alt="Holidays.io logo">'
             : '<div style="font-size:18px;font-weight:700;color:#f7971e;">Holidays.io</div>';
         $locationLabelSafe = e($locationLabel ?? 'Mauritius');
         $voucherTitle = e($isActivity ? 'Activity Service Voucher' : 'Accommodation Service Voucher');
@@ -960,7 +960,7 @@ HTML;
         }
 
         $poweredLogoHtml = $poweredLogoPath
-            ? '<img src="' . $poweredLogoPath . '" width="80" style="width:80px; height:auto; display:block;" alt="Holidays.io">'
+            ? '<img src="' . $poweredLogoPath . '" width="50" style="width:50px; height:auto; display:block;" alt="Holidays.io">'
             : '<span style="color:#f7971e;font-weight:700;font-size:14px;">HOLIDAYS.io</span>';
 
             $discountRow = '';
