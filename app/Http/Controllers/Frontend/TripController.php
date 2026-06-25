@@ -974,13 +974,13 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
 .header-box { border:none; border-radius:8px; padding:12px; background:#f0f5ff; margin-bottom:12px; }
 .section-title { font-size:11px; font-weight:700; color:#0b2b51; margin:5px 0 0 0; }
 .info-table { width:100%; border-collapse:collapse; margin-bottom:8px; }
-.info-table td { padding:4px; border-bottom:1px solid #dce7f5; font-size:9px; }
-.info-table .label { font-weight:600; color:#0b2b51; width:40%; }
+.info-table td { border-bottom:1px solid #dce7f5; font-size:9px; }
+.info-table .label { font-weight:600; color:#0b2b51;  }
 .info-table .value { color:#4a5f7f; }
 .service-table { width:100%; border-collapse:collapse; margin-bottom:8px; border:none; border-radius:6px; overflow:hidden; }
 .service-table thead tr { background:#0b2b51; color:#fff; }
-.service-table th { padding:10px; text-align:left; font-size:9px; font-weight:700; border-bottom:1px solid #dce7f5 }
-.service-table td { padding:10px; }
+.service-table th {  text-align:left; font-size:9px; font-weight:700; border-bottom:1px solid #dce7f5 }
+.service-table td {  }
 .totals-box { width:100%; background:#f0f5ff; border:none; border-radius:6px; padding:10px; }
 .totals-row { display:flex; justify-content:space-between; padding:4px 0; font-size:9px; }
 .totals-label { font-weight:600; color:#0b2b51; }
@@ -1075,7 +1075,8 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
             <td>&nbsp;</td>
           </tr>
           <tr>
-            <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
+            <td valign="top">
+              <table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
                 <td class="label">Address:</td>
                 <td class="value">{$travelerAddress}</td>
@@ -1088,8 +1089,10 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
                 <td class="label">Email:</td>
                 <td class="value">{$travelerEmail}</td>
               </tr>
-            </table></td>
-            <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
+            </table>
+            </td>
+            <td valign="top">
+              <table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
                 <td class="label">Traveller Account Type:</td>
                 <td class="value">Guest Traveller</td>
@@ -1155,8 +1158,8 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
     </div>
 </td>
 
-<td width="45%" style="vertical-align:top; padding-left:80px;">
-  <table>
+<td width="45%" style="vertical-align:top;">
+  <table width="100%" cellpadding="2" cellspacing="0">
     <tr>
       <td align="right">Subtotal: USD {$formattedSubtotal}</td>
     </tr>
