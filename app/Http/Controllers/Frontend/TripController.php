@@ -736,9 +736,11 @@ HTML;
         $pdf->SetTitle('Voucher - ' . ($booking->booking_reference ?? ($isActivity ? 'activity' : 'accommodation')));
         $pdf->SetMargins(15, 15, 15);
         $pdf->SetAutoPageBreak(true, 15);
-        $pdf->setHeaderFont(['helvetica', '', 0]);
-        $pdf->SetHeaderMargin(0);
+        
+        $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
         $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        
         $pdf->AddPage();
         $pdf->SetFont('helvetica', '', 10);
         $pdf->writeHTML($html, true, false, true, false, '');
@@ -1290,6 +1292,12 @@ HTML;
         $pdf->SetTitle('Invoice ' . $invoiceNumber);
         $pdf->SetMargins(10, 10, 10);
         $pdf->SetAutoPageBreak(true, 10);
+
+        $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+
         $pdf->AddPage();
         $pdf->SetFont('helvetica', '', 9);
         $pdf->writeHTML($html, true, false, true, false, '');
