@@ -215,6 +215,24 @@ nav.navbar.bg-light {
     margin-top:0 !important;
 }
 
+/********************/
+
+nav[aria-label="Pagination Navigation"] > div > span, nav[aria-label="Pagination Navigation"] > div > a{
+  display: inline-block;
+}
+
+nav[aria-label="Pagination Navigation"] > div + div > div + div > span {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+
+
+
+
+
  @media(max-width:768px) {
 
      .col-md-2.show-section {
