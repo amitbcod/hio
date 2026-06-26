@@ -17,6 +17,7 @@ class ActivityVariant extends Model
         'service_id',
         'variant_equipment_id',
         'variant_name',
+        'variant_name_fr',
         'quality_tier',
         'amenities',
         'safety_equipment',

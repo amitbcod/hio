@@ -178,6 +178,19 @@
                                 @enderror
                             </div>
                             <div class="col-md-6">
+                                <label style="font-weight:600;">Variant Name (French)</label>
+                                <input type="text"
+                                       name="variant_name_fr"
+                                       class="form-control @error('variant_name_fr') is-invalid @enderror"
+                                       value="{{ old('variant_name_fr', $variant->variant_name_fr ?? '') }}"
+                                       placeholder="e.g., Lagoon 42 Catamaran (FR)">
+                                @error('variant_name_fr')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
                                 <label style="font-weight:600;">Quality Tier <span class="text-danger">*</span></label>
                                 <select name="quality_tier" class="form-control @error('quality_tier') is-invalid @enderror" required>
                                     <option value="">Select tier</option>
@@ -342,6 +355,19 @@
                                        placeholder="e.g., Lagoon 42 Catamaran"
                                        required>
                             </div>
+                            <div class="col-md-6">
+                                <label style="font-weight:600;">Variant Name (French)</label>
+                                <input type="text"
+                                       name="variant_name_fr"
+                                       class="form-control @error('variant_name_fr') is-invalid @enderror"
+                                       value="{{ old('variant_name_fr') }}"
+                                       placeholder="e.g., Lagoon 42 Catamaran (FR)">
+                                @error('variant_name_fr')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="row mb-3">
                             <div class="col-md-6">
                                 <label style="font-weight:600;">Quality Tier <span class="text-danger">*</span></label>
                                 <select name="quality_tier" class="form-control" required>

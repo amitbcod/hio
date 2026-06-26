@@ -1568,10 +1568,26 @@ class HomeController extends Controller
     private function buildActivityAvailability($variants, $rates, $allotments, array $bookingContext): array
     {
         // For activities, we use a single activity_date instead of check_in/check_out range
+        $locale = app()->getLocale();
         $activityDate = Carbon::parse($bookingContext['activity_date'] ?? now()->toDateString())->startOfDay();
         $days = [$activityDate->toDateString()]; // Single date for activities
 
         $variantItems = $variants;
+        if ($variantItems->isNotEmpty()) {
+            $variantItems = $variantItems->map(function ($variant) use ($locale) {
+                return (object) [
+                    'variant_id' => $variant->variant_id,
+                    'variant_name' => $locale === 'fr' && !empty($variant->variant_name_fr)
+                        ? $variant->variant_name_fr
+                        : $variant->variant_name,
+                    'allotment' => $variant->allotment,
+                    'max_participants' => $variant->max_participants,
+                    'max_pax' => $variant->max_pax,
+                    'quality_tier' => $variant->quality_tier,
+                ];
+            });
+        }
+
         if ($variantItems->isEmpty()) {
             $variantItems = $rates
                 ->map(function ($rate) {

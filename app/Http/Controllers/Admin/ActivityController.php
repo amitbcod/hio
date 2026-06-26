@@ -945,6 +945,7 @@ class ActivityController extends Controller
             // Validation
             $request->validate([
                 'variant_name' => 'required|string|max:255',
+                'variant_name_fr' => 'nullable|string|max:255',
                 'quality_tier' => 'required|in:Standard,Premium,Luxury',
                 'max_pax' => 'required|integer|min:1',
                 'min_participants' => 'required|integer|min:1',
@@ -962,6 +963,7 @@ class ActivityController extends Controller
             $variant->service_id = $activity->service_id;
             $variant->variant_equipment_id = \App\Models\ActivityVariant::generateVariantEquipmentId($activity->id);
             $variant->variant_name = $request->input('variant_name');
+            $variant->variant_name_fr = $request->input('variant_name_fr');
             $variant->quality_tier = $request->input('quality_tier');
             $variant->max_pax = $request->input('max_pax');
             $variant->min_participants = $request->input('min_participants');
@@ -1066,6 +1068,7 @@ class ActivityController extends Controller
 
             // Update variant
             $variant->variant_name = $request->input('variant_name');
+            $variant->variant_name_fr = $request->input('variant_name_fr');
             $variant->quality_tier = $request->input('quality_tier');
             $variant->max_pax = $request->input('max_pax');
             $variant->min_participants = $request->input('min_participants');
