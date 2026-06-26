@@ -298,7 +298,7 @@
                     <span><i class="fa-solid fa-earth-americas"></i>{{ __('site.language') }}:</span>
                     <a href="{{ route('frontend.lang.switch', 'en') }}" class="{{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
                     <a href="{{ route('frontend.lang.switch', 'fr') }}" class="{{ app()->getLocale() === 'fr' ? 'active' : '' }}">FR</a>
-                </div>
+                </div> 
             </div>
         </div>
     </div>
