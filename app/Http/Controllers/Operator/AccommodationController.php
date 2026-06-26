@@ -116,6 +116,7 @@ class AccommodationController extends Controller
         
         $request->validate([
             'property_name' => 'required|string|max:255',
+            'property_name_fr' => 'nullable|string|max:255',
             'property_type' => 'required|string|in:' . implode(',', Accommodation::TYPES),
             'address' => 'required|string|max:500',
             'city' => 'required|string|max:100',
@@ -133,6 +134,8 @@ class AccommodationController extends Controller
                 },
             ],
             'property_description' => 'nullable|string',
+            'property_description_fr' => 'nullable|string',
+            'short_description_fr' => 'nullable|string',
             'legal_holder_name' => 'nullable|string|max:255',
             'legal_holder_id_type' => 'nullable|string|max:50',
             'legal_holder_id_number' => 'nullable|string|max:100',
@@ -150,6 +153,7 @@ class AccommodationController extends Controller
         $accommodation->operator_id = $operator->id;
         $accommodation->business_id = $operator->business_id;
         $accommodation->property_name = $request->property_name;
+        $accommodation->property_name_fr = $request->property_name_fr ?? null;
         $accommodation->property_type = $request->property_type;
         $accommodation->address = $request->address;
         $accommodation->city = $request->city;
@@ -159,7 +163,9 @@ class AccommodationController extends Controller
         $accommodation->latitude = $request->latitude;
         $accommodation->longitude = $request->longitude;
         $accommodation->short_description = $request->short_description;
+        $accommodation->short_description_fr = $request->short_description_fr ?? null;
         $accommodation->property_description = $request->property_description;
+        $accommodation->property_description_fr = $request->property_description_fr ?? null;
         $accommodation->legal_holder_name = $request->legal_holder_name ?? $operator->business_legal_name;
         $accommodation->legal_holder_id_type = $request->legal_holder_id_type;
         $accommodation->legal_holder_id_number = $request->legal_holder_id_number;
@@ -234,6 +240,7 @@ class AccommodationController extends Controller
         
         $request->validate([
             'property_name' => 'required|string|max:255',
+            'property_name_fr' => 'nullable|string|max:255',
             'property_type' => 'required|string|in:' . implode(',', Accommodation::TYPES),
             'address' => 'required|string|max:500',
             'city' => 'required|string|max:100',
@@ -251,6 +258,8 @@ class AccommodationController extends Controller
                 },
             ],
             'property_description' => 'nullable|string',
+            'property_description_fr' => 'nullable|string',
+            'short_description_fr' => 'nullable|string',
             'legal_holder_name' => 'nullable|string|max:255',
             'legal_holder_id_type' => 'nullable|string|max:50',
             'legal_holder_id_number' => 'nullable|string|max:100',
@@ -265,6 +274,7 @@ class AccommodationController extends Controller
         // Update accommodation
         $accommodation->update([
             'property_name' => $request->property_name,
+            'property_name_fr' => $request->property_name_fr ?? null,
             'property_type' => $request->property_type,
             'address' => $request->address,
             'city' => $request->city,
@@ -274,7 +284,9 @@ class AccommodationController extends Controller
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'short_description' => $request->short_description,
+            'short_description_fr' => $request->short_description_fr ?? null,
             'property_description' => $request->property_description,
+            'property_description_fr' => $request->property_description_fr ?? null,
             'legal_holder_name' => $request->legal_holder_name ?? $accommodation->legal_holder_name,
             'legal_holder_id_type' => $request->legal_holder_id_type,
             'legal_holder_id_number' => $request->legal_holder_id_number,
@@ -873,18 +885,23 @@ class AccommodationController extends Controller
             'checkin_time' => 'nullable|date_format:H:i',
             'checkout_time' => 'nullable|date_format:H:i',
             'checkin_checkout_rules' => ['nullable', 'string', $plainTextMax(1000)],
+            'checkin_checkout_rules_fr' => ['nullable', 'string', $plainTextMax(1000)],
             'booking_window_rules' => ['nullable', 'string', $plainTextMax(1000)],
+            'booking_window_rules_fr' => ['nullable', 'string', $plainTextMax(1000)],
             'amendment_policy_type' => 'nullable|in:custom,template',
             'amendment_policy' => ['nullable', 'string', $plainTextMax(5000)],
+            'amendment_policy_fr' => ['nullable', 'string', $plainTextMax(5000)],
             'amendment_policy_template_id' => 'nullable|string|max:100',
             'cancellation_policy_type' => 'required|in:custom,template',
             'cancellation_policy' => ['nullable', 'string', $plainTextMax(5000)],
+            'cancellation_policy_fr' => ['nullable', 'string', $plainTextMax(5000)],
             'cancellation_policy_template_id' => 'nullable|string|max:100',
             'cancellation_penalties_enabled' => 'required|in:0,1',
             'cancellation_penalty_type' => 'nullable|in:Night,Percentage,Amount',
             'cancellation_penalty_value' => 'nullable|numeric|min:0',
             'security_deposit_policy_type' => 'nullable|in:custom,template',
             'security_deposit_policy' => ['nullable', 'string', $plainTextMax(5000)],
+            'security_deposit_policy_fr' => ['nullable', 'string', $plainTextMax(5000)],
             'security_deposit_policy_template_id' => 'nullable|string|max:100',
             'deposit_required' => 'required|in:0,1',
             'deposit_type' => 'nullable|in:Night,Percentage,Amount',
@@ -893,6 +910,7 @@ class AccommodationController extends Controller
             'infant_max_age' => 'nullable|integer|min:0|max:5',
             'house_rules_type' => 'nullable|in:custom,template',
             'house_rules' => ['nullable', 'string', $plainTextMax(5000)],
+            'house_rules_fr' => ['nullable', 'string', $plainTextMax(5000)],
             'house_rules_template_id' => 'nullable|string|max:100',
         ];
 
@@ -927,18 +945,23 @@ class AccommodationController extends Controller
             'checkin_time' => $request->checkin_time ?? null,
             'checkout_time' => $request->checkout_time ?? null,
             'checkin_checkout_rules' => $request->checkin_checkout_rules ?? null,
+            'checkin_checkout_rules_fr' => $request->checkin_checkout_rules_fr ?? null,
             'booking_window_rules' => $request->booking_window_rules ?? null,
+            'booking_window_rules_fr' => $request->booking_window_rules_fr ?? null,
             'amendment_policy_type' => $request->amendment_policy_type ?? 'custom',
             'amendment_policy' => $request->amendment_policy ?? null,
+            'amendment_policy_fr' => $request->amendment_policy_fr ?? null,
             'amendment_policy_template_id' => $request->amendment_policy_template_id ?? null,
             'cancellation_policy_type' => $request->cancellation_policy_type,
             'cancellation_policy' => $request->cancellation_policy ?? null,
+            'cancellation_policy_fr' => $request->cancellation_policy_fr ?? null,
             'cancellation_policy_template_id' => $request->cancellation_policy_template_id ?? null,
             'cancellation_penalties_enabled' => $request->cancellation_penalties_enabled,
             'cancellation_penalty_type' => $request->cancellation_penalty_type ?? null,
             'cancellation_penalty_value' => $request->cancellation_penalty_value ?? null,
             'security_deposit_policy_type' => $request->security_deposit_policy_type ?? 'custom',
             'security_deposit_policy' => $request->security_deposit_policy ?? null,
+            'security_deposit_policy_fr' => $request->security_deposit_policy_fr ?? null,
             'security_deposit_policy_template_id' => $request->security_deposit_policy_template_id ?? null,
             'deposit_required' => $request->deposit_required,
             'deposit_type' => $request->deposit_type ?? null,
@@ -947,6 +970,7 @@ class AccommodationController extends Controller
             'infant_max_age' => $request->infant_max_age ?? null,
             'house_rules_type' => $request->house_rules_type ?? 'custom',
             'house_rules' => $request->house_rules ?? null,
+            'house_rules_fr' => $request->house_rules_fr ?? null,
             'house_rules_template_id' => $request->house_rules_template_id ?? null,
         ]);
 

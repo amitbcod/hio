@@ -73,6 +73,15 @@
                                 @enderror
                             </div>
                             <div class="col-md-6">
+                                <label style="font-weight: 600; margin-bottom: 8px; display: block;">Property Name (French)</label>
+                                <input type="text" name="property_name_fr" class="form-control"
+                                    value="{{ old('property_name_fr', $accommodation->property_name_fr ?? '') }}"
+                                    placeholder="e.g., Résidence Plage du Soleil">
+                                @error('property_name_fr')
+                                    <small style="color: #dc3545;">{{ $message }}</small>
+                                @enderror
+                            </div>
+                            <div class="col-md-6">
                                 <label style="font-weight: 600; margin-bottom: 8px; display: block;">Property Type *</label>
                                 <select name="property_type" class="form-control" required>
                                     <option value="">Select Property Type</option>
@@ -93,6 +102,11 @@
                             <label style="font-weight: 600; margin-bottom: 8px; display: block;">Short Description</label>
                             <textarea name="short_description" id="short_description" style="display:none;">{{ old('short_description', $accommodation->short_description ?? '') }}</textarea>
                             <div id="short_description_editor" style="background:#fff;"></div>
+                            <div style="margin-top:12px;">
+                                <label style="font-weight:600;">Short Description (French)</label>
+                                <textarea name="short_description_fr" id="short_description_fr" style="display:none;">{{ old('short_description_fr', $accommodation->short_description_fr ?? '') }}</textarea>
+                                <div id="short_description_fr_editor" style="background:#fff;"></div>
+                            </div>
                             <small style="color: #999;">Character countdown: <span id="charCount">250</span></small>
                             @error('short_description')
                                 <small style="color: #dc3545;">{{ $message }}</small>
@@ -104,6 +118,11 @@
                             <label style="font-weight: 600; margin-bottom: 8px; display: block;">Full Description</label>
                             <textarea name="property_description" id="property_description" style="display:none;">{{ old('property_description', $accommodation->property_description ?? '') }}</textarea>
                             <div id="property_description_editor" style="background:#fff;"></div>
+                            <div style="margin-top:12px;">
+                                <label style="font-weight:600;">Full Description (French)</label>
+                                <textarea name="property_description_fr" id="property_description_fr" style="display:none;">{{ old('property_description_fr', $accommodation->property_description_fr ?? '') }}</textarea>
+                                <div id="property_description_fr_editor" style="background:#fff;"></div>
+                            </div>
                             <small style="color: #999;">Use the editor toolbar to format your content.</small>
                             @error('property_description')
                                 <small style="color: #dc3545;">{{ $message }}</small>
@@ -259,12 +278,20 @@
         #property_description_editor .ql-editor {
             min-height: 150px;
         }
+        #short_description_fr_editor .ql-editor {
+            min-height: 90px;
+        }
+        #property_description_fr_editor .ql-editor {
+            min-height: 150px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
     <script>
         (function () {
             const shortInput = document.getElementById('short_description');
+                    const shortInputFr = document.getElementById('short_description_fr');
             const fullInput = document.getElementById('property_description');
+                    const fullInputFr = document.getElementById('property_description_fr');
             const charCount = document.getElementById('charCount');
             const form = document.querySelector('form');
 
@@ -293,6 +320,56 @@
                     ]
                 }
             });
+
+                    const shortQuillFr = new Quill('#short_description_fr_editor', {
+                        theme: 'snow',
+                        placeholder: 'Brève description en français (max 250 caractères)',
+                        modules: {
+                            toolbar: [
+                                ['bold', 'italic', 'underline'],
+                                [{ list: 'bullet' }],
+                                ['clean']
+                            ]
+                        }
+                    });
+
+                    const fullQuillFr = new Quill('#property_description_fr_editor', {
+                        theme: 'snow',
+                        placeholder: 'Description complète en français...',
+                        modules: {
+                            toolbar: [
+                                [{ header: [1, 2, 3, false] }],
+                                ['bold', 'italic', 'underline', 'strike'],
+                                [{ list: 'ordered' }, { list: 'bullet' }],
+                                ['link', 'blockquote'],
+                                ['clean']
+                            ]
+                        }
+                    });
+
+                    // Initialize French editors with existing content
+                    if (shortInputFr.value) {
+                        if (/<[a-z][\s\S]*>/i.test(shortInputFr.value)) {
+                            shortQuillFr.clipboard.dangerouslyPasteHTML(shortInputFr.value);
+                        } else {
+                            shortQuillFr.setText(shortInputFr.value);
+                        }
+                    }
+
+                    if (fullInputFr.value) {
+                        fullQuillFr.clipboard.dangerouslyPasteHTML(fullInputFr.value);
+                    }
+
+                    // Sync French editors on text changes
+                    shortQuillFr.on('text-change', function() {
+                        const htmlFr = shortQuillFr.root.innerHTML;
+                        shortInputFr.value = htmlFr === '<p><br></p>' ? '' : htmlFr;
+                    });
+
+                    fullQuillFr.on('text-change', function() {
+                        const htmlFr = fullQuillFr.root.innerHTML;
+                        fullInputFr.value = htmlFr === '<p><br></p>' ? '' : htmlFr;
+                    });
 
             function getShortText() {
                 return (shortQuill.getText() || '').replace(/\n$/, '');
@@ -335,6 +412,11 @@
             form.addEventListener('submit', function () {
                 syncShortDescription();
                 syncFullDescription();
+                // sync french editors - ensure they're persisted before submit
+                const htmlShortFr = shortQuillFr.root.innerHTML;
+                shortInputFr.value = htmlShortFr === '<p><br></p>' ? '' : htmlShortFr;
+                const htmlFullFr = fullQuillFr.root.innerHTML;
+                fullInputFr.value = htmlFullFr === '<p><br></p>' ? '' : htmlFullFr;
             });
 
             syncShortDescription();

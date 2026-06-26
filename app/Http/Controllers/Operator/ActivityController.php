@@ -141,7 +141,9 @@ class ActivityController extends Controller
         $data = $request->validate([
             'service_type' => 'required|in:' . implode(',', Activity::SERVICE_TYPES),
             'activity_name' => 'required|string|min:5|max:120',
+            'activity_name_fr' => 'nullable|string|max:120',
             'short_title' => 'nullable|string|max:60',
+            'short_title_fr' => 'nullable|string|max:60',
             'team_categories' => 'required|array|min:1',
             'team_categories.*' => 'in:' . implode(',', Activity::TEAM_CATEGORIES),
             'physical_level' => 'required|in:' . implode(',', Activity::PHYSICAL_LEVELS),
@@ -155,8 +157,11 @@ class ActivityController extends Controller
             'longitude' => 'required|numeric|between:-180,180',
             'meeting_point_details' => 'required|string|min:10',
             'overview' => 'required|string|min:20',
+            'overview_fr' => 'nullable|string',
             'whats_included' => 'nullable|string',
+            'whats_included_fr' => 'nullable|string',
             'itinerary' => 'required|string|min:20',
+            'itinerary_fr' => 'nullable|string',
             'duration' => 'required|string|max:50',
             'suitable_for_age' => 'nullable|string|max:100',
             'languages_offered' => 'nullable|array',
@@ -171,7 +176,9 @@ class ActivityController extends Controller
         try {
             $activity->service_type = $data['service_type'];
             $activity->activity_name = $data['activity_name'];
+            $activity->activity_name_fr = $data['activity_name_fr'] ?? null;
             $activity->short_title = $data['short_title'] ?? null;
+            $activity->short_title_fr = $data['short_title_fr'] ?? null;
             $activity->team_categories = $data['team_categories'];
             $activity->physical_level = $data['physical_level'];
             $activity->price_range = $data['price_range'];
@@ -183,8 +190,11 @@ class ActivityController extends Controller
             $activity->longitude = $data['longitude'];
             $activity->meeting_point_details = $data['meeting_point_details'];
             $activity->overview = $data['overview'];
+            $activity->overview_fr = $data['overview_fr'] ?? null;
             $activity->whats_included = $data['whats_included'] ?? null;
+            $activity->whats_included_fr = $data['whats_included_fr'] ?? null;
             $activity->itinerary = $data['itinerary'];
+            $activity->itinerary_fr = $data['itinerary_fr'] ?? null;
             $activity->duration = $data['duration'];
             $activity->suitable_for_age = $data['suitable_for_age'] ?? null;
             $activity->languages_offered = $data['languages_offered'] ?? null;
@@ -766,17 +776,22 @@ class ActivityController extends Controller
             $rules = [
                 'service_id' => 'nullable|string|max:50',
                 'booking_window_rules' => 'nullable|string',
+                'booking_window_rules_fr' => 'nullable|string',
                 'no_show_policy' => 'nullable|string',
+                'no_show_policy_fr' => 'nullable|string',
                 'amendment_policy' => 'nullable|string',
+                'amendment_policy_fr' => 'nullable|string',
                 'amendment_policy_type' => 'required|in:Custom,Template',
                 'amendment_policy_template_id' => 'nullable|string',
                 'cancellation_policy' => 'nullable|string',
+                'cancellation_policy_fr' => 'nullable|string',
                 'cancellation_policy_type' => 'required|in:Custom,Template',
                 'cancellation_policy_template_id' => 'nullable|string',
                 'cancellation_penalties_enabled' => 'required|in:Yes,No',
                 'child_policy_age' => 'nullable|integer|min:0|max:17',
                 'infant_policy_age' => 'nullable|integer|min:0|max:5',
                 'safety_requirements' => 'required|string',
+                'safety_requirements_fr' => 'nullable|string',
                 'health_requirements_type' => 'required|in:None,Upload,Generate',
                 'health_requirements_file' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
             ];
@@ -815,11 +830,15 @@ class ActivityController extends Controller
             // Save basic fields
             $policy->service_id = $request->input('service_id');
             $policy->booking_window_rules = $request->input('booking_window_rules');
+            $policy->booking_window_rules_fr = $request->input('booking_window_rules_fr');
             $policy->no_show_policy = $request->input('no_show_policy');
+            $policy->no_show_policy_fr = $request->input('no_show_policy_fr');
             $policy->amendment_policy = $request->input('amendment_policy');
+            $policy->amendment_policy_fr = $request->input('amendment_policy_fr');
             $policy->amendment_policy_type = $request->input('amendment_policy_type');
             $policy->amendment_policy_template_id = $request->input('amendment_policy_template_id');
             $policy->cancellation_policy = $request->input('cancellation_policy');
+            $policy->cancellation_policy_fr = $request->input('cancellation_policy_fr');
             $policy->cancellation_policy_type = $request->input('cancellation_policy_type');
             $policy->cancellation_policy_template_id = $request->input('cancellation_policy_template_id');
             $policy->cancellation_penalties_enabled = $request->input('cancellation_penalties_enabled');
@@ -828,6 +847,7 @@ class ActivityController extends Controller
             $policy->child_policy_age = $request->input('child_policy_age');
             $policy->infant_policy_age = $request->input('infant_policy_age');
             $policy->safety_requirements = $request->input('safety_requirements');
+            $policy->safety_requirements_fr = $request->input('safety_requirements_fr');
             $policy->health_requirements_type = $request->input('health_requirements_type');
 
             // Handle health requirements file upload

@@ -319,10 +319,10 @@
                     <div class="detail-text">{!! $activity['booking_notes_text'] ?: 'Booking notes will be shared by the operator during confirmation.' !!}</div>
                 </div>
 
-                <div class="detail-card">
+                <!-- <div class="detail-card">
                     <h2>Checkout Policy</h2>
                     <div class="detail-text">{!! $activity['checkout_policy_text'] ?: 'Checkout policy is not available yet.' !!}</div>
-                </div>
+                </div> -->
 
                 <div class="detail-card">
                     <h2>Terms And Conditions</h2>

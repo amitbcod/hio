@@ -53,6 +53,14 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row mb-3 policy-wysiwyg-row">
+                            <div class="col-md-12">
+                                <label style="font-weight:600;">Check-in / Check-out Rules (French)</label>
+                                <textarea name="checkin_checkout_rules_fr" id="checkin_checkout_rules_fr" class="form-control" rows="3" placeholder="Décrivez les règles d’enregistrement/départ" style="display:none;">{{ old('checkin_checkout_rules_fr', $accommodation->checkin_checkout_rules_fr ?? '') }}</textarea>
+                                <div id="checkin_checkout_rules_fr_editor" class="wysiwyg-editor"></div>
+                                <small class="policy-helper-note" style="color:#666;display:block;margin-top:4px;">Describe any early check-in, late check-out, or other rules in French</small>
+                            </div>
+                        </div>
 
                         {{-- Section 2: Booking Window --}}
                         <div style="border-top:1px solid #eee;padding-top:20px;margin-bottom:24px;">
@@ -65,6 +73,14 @@
                                     <div id="booking_window_rules_editor" class="wysiwyg-editor"></div>
                                     <small class="policy-helper-note" style="color:#666;display:block;margin-top:4px;">Specify minimum/maximum advance booking requirements</small>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3 policy-wysiwyg-row">
+                            <div class="col-md-12">
+                                <label style="font-weight:600;">Booking Window Rules (French)</label>
+                                <textarea name="booking_window_rules_fr" id="booking_window_rules_fr" class="form-control" rows="3" placeholder="Décrivez les conditions de réservation en français" style="display:none;">{{ old('booking_window_rules_fr', $accommodation->booking_window_rules_fr ?? '') }}</textarea>
+                                <div id="booking_window_rules_fr_editor" class="wysiwyg-editor"></div>
+                                <small class="policy-helper-note" style="color:#666;display:block;margin-top:4px;">Specify minimum/maximum advance booking requirements in French</small>
                             </div>
                         </div>
 
@@ -87,6 +103,12 @@
                                     <div id="amendment_policy_editor" class="wysiwyg-editor"></div>
                                 </div>
                             </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <textarea name="amendment_policy_fr" id="amendment_policy_fr" class="form-control" rows="4" placeholder="Décrivez les règles de modification en français" style="display:none;">{{ old('amendment_policy_fr', $accommodation->amendment_policy_fr ?? '') }}</textarea>
+                                <div id="amendment_policy_fr_editor" class="wysiwyg-editor"></div>
+                            </div>
+                        </div>
 
                             <div id="amendment_template_field" class="row mb-3" style="display:none;">
                                 <div class="col-md-12">
@@ -120,6 +142,12 @@
                                     <div id="cancellation_policy_editor" class="wysiwyg-editor"></div>
                                 </div>
                             </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <textarea name="cancellation_policy_fr" id="cancellation_policy_fr" class="form-control" rows="4" placeholder="Décrivez votre politique d'annulation en français" style="display:none;">{{ old('cancellation_policy_fr', $accommodation->cancellation_policy_fr ?? '') }}</textarea>
+                                <div id="cancellation_policy_fr_editor" class="wysiwyg-editor"></div>
+                            </div>
+                        </div>
 
                             <div id="cancellation_template_field" class="row mb-3" style="display:none;">
                                 <div class="col-md-12">
@@ -188,6 +216,12 @@
                                     <div id="security_deposit_policy_editor" class="wysiwyg-editor"></div>
                                 </div>
                             </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <textarea name="security_deposit_policy_fr" id="security_deposit_policy_fr" class="form-control" rows="3" placeholder="Décrivez la politique de dépôt en français" style="display:none;">{{ old('security_deposit_policy_fr', $accommodation->security_deposit_policy_fr ?? '') }}</textarea>
+                                <div id="security_deposit_policy_fr_editor" class="wysiwyg-editor"></div>
+                            </div>
+                        </div>
 
                             <div id="deposit_template_field" class="row mb-3" style="display:none;">
                                 <div class="col-md-12">
@@ -274,6 +308,13 @@
                                     <div id="house_rules_editor" class="wysiwyg-editor"></div>
                                 </div>
                             </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <textarea name="house_rules_fr" id="house_rules_fr" class="form-control" rows="4" placeholder="Décrivez les règles de la maison en français" style="display:none;">{{ old('house_rules_fr', $accommodation->house_rules_fr ?? '') }}</textarea>
+                                <div id="house_rules_fr_editor" class="wysiwyg-editor"></div>
+                            </div>
+                        </div>
 
                             <div id="house_rules_template_field" class="row mb-3" style="display:none;">
                                 <div class="col-md-12">
@@ -382,11 +423,17 @@
         }
 
         initWysiwyg('checkin_checkout_rules', 'checkin_checkout_rules_editor', 'Describe check-in / check-out rules...');
+        initWysiwyg('checkin_checkout_rules_fr', 'checkin_checkout_rules_fr_editor', 'Décrivez les règles d’enregistrement/ départ en français...');
         initWysiwyg('booking_window_rules', 'booking_window_rules_editor', 'Describe booking window rules...');
+        initWysiwyg('booking_window_rules_fr', 'booking_window_rules_fr_editor', 'Décrivez les conditions de réservation en français...');
         initWysiwyg('amendment_policy', 'amendment_policy_editor', 'Write amendment policy...');
+        initWysiwyg('amendment_policy_fr', 'amendment_policy_fr_editor', 'Écrivez la politique de modification en français...');
         initWysiwyg('cancellation_policy', 'cancellation_policy_editor', 'Write cancellation policy...');
+        initWysiwyg('cancellation_policy_fr', 'cancellation_policy_fr_editor', 'Écrivez la politique d’annulation en français...');
         initWysiwyg('security_deposit_policy', 'security_deposit_policy_editor', 'Write security deposit policy...');
+        initWysiwyg('security_deposit_policy_fr', 'security_deposit_policy_fr_editor', 'Écrivez la politique de dépôt en français...');
         initWysiwyg('house_rules', 'house_rules_editor', 'Write house rules...');
+        initWysiwyg('house_rules_fr', 'house_rules_fr_editor', 'Écrivez les règles de la maison en français...');
 
         if (form) {
             form.addEventListener('submit', function () {

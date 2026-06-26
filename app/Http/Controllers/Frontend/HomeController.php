@@ -328,6 +328,7 @@ class HomeController extends Controller
 
     private function mapActivity(Activity $activity, bool $detailed = false, ?array $bookingContext = null): array
     {
+        $locale = app()->getLocale();
         $galleryImages = collect($activity->gallery_images ?? [])
             ->filter()
             ->map(fn ($path) => $this->storageAsset($path))
@@ -351,15 +352,25 @@ class HomeController extends Controller
             ?? asset('images/holidays-io-logo.png');
 
         $shortDescription = $this->plainText(
-            $activity->seoSocial->short_description
+            // prefer french when set
+            ($locale === 'fr' ? ($activity->seoSocial->short_description_fr ?? null) : null)
+                ?? ($locale === 'fr' ? $activity->short_title_fr ?? null : null)
+                ?? $activity->seoSocial->short_description
                 ?? $activity->short_title
                 ?? $activity->overview
         );
 
         // For detailed views, use HTML content; for lists, use plain text
-        $overviewText = $detailed ? ($activity->overview ?: '') : $this->plainText($activity->overview);
-        $includedText = $detailed ? ($activity->whats_included ?: '') : $this->plainText($activity->whats_included);
-        $itineraryText = $detailed ? ($activity->itinerary ?: '') : $this->plainText($activity->itinerary);
+        // choose french fields when app locale is fr and content exists
+        if ($locale === 'fr') {
+            $overviewText = $detailed ? ($activity->overview_fr ?: ($activity->overview ?: '')) : $this->plainText($activity->overview_fr ?: $activity->overview);
+            $includedText = $detailed ? ($activity->whats_included_fr ?: ($activity->whats_included ?: '')) : $this->plainText($activity->whats_included_fr ?: $activity->whats_included);
+            $itineraryText = $detailed ? ($activity->itinerary_fr ?: ($activity->itinerary ?: '')) : $this->plainText($activity->itinerary_fr ?: $activity->itinerary);
+        } else {
+            $overviewText = $detailed ? ($activity->overview ?: '') : $this->plainText($activity->overview);
+            $includedText = $detailed ? ($activity->whats_included ?: '') : $this->plainText($activity->whats_included);
+            $itineraryText = $detailed ? ($activity->itinerary ?: '') : $this->plainText($activity->itinerary);
+        }
         $meetingPoint = $detailed ? ($activity->meeting_point_details ?: '') : $this->plainText($activity->meeting_point_details);
         
         $bookingContext = $bookingContext ?? $this->defaultDetailBookingContext();
@@ -472,14 +483,20 @@ class HomeController extends Controller
         $termsConditionsText = '';
         
         if ($policy) {
+            $bookingWindowRules = $locale === 'fr' ? ($policy->booking_window_rules_fr ?: $policy->booking_window_rules) : $policy->booking_window_rules;
+            $noShowPolicy = $locale === 'fr' ? ($policy->no_show_policy_fr ?: $policy->no_show_policy) : $policy->no_show_policy;
+            $cancellationPolicy = $locale === 'fr' ? ($policy->cancellation_policy_fr ?: $policy->cancellation_policy) : $policy->cancellation_policy;
+            $amendmentPolicy = $locale === 'fr' ? ($policy->amendment_policy_fr ?: $policy->amendment_policy) : $policy->amendment_policy;
+            $safetyRequirements = $locale === 'fr' ? ($policy->safety_requirements_fr ?: $policy->safety_requirements) : $policy->safety_requirements;
+
             if ($detailed) {
-                $bookingNotesText = $policy->booking_window_rules ?: $policy->no_show_policy ?: '';
-                $checkoutPolicyText = $policy->cancellation_policy ?: $policy->amendment_policy ?: '';
-                $termsConditionsText = $policy->safety_requirements ?: '';
+                $bookingNotesText = $bookingWindowRules ?: $noShowPolicy ?: '';
+                $checkoutPolicyText = $cancellationPolicy ?: $amendmentPolicy ?: '';
+                $termsConditionsText = $safetyRequirements ?: '';
             } else {
-                $bookingNotesText = $this->plainText($policy->booking_window_rules ?: $policy->no_show_policy);
-                $checkoutPolicyText = $this->plainText($policy->cancellation_policy ?: $policy->amendment_policy);
-                $termsConditionsText = $this->plainText($policy->safety_requirements);
+                $bookingNotesText = $this->plainText($bookingWindowRules ?: $noShowPolicy);
+                $checkoutPolicyText = $this->plainText($cancellationPolicy ?: $amendmentPolicy);
+                $termsConditionsText = $this->plainText($safetyRequirements);
             }
         }
 
@@ -498,7 +515,7 @@ class HomeController extends Controller
         return [
             'id' => $activity->id,
             'kind' => 'Activity',
-            'title' => $activity->activity_name,
+            'title' => $locale === 'fr' && !empty($activity->activity_name_fr) ? $activity->activity_name_fr : $activity->activity_name,
             'service_type' => $activity->service_type,
             'meta' => $activity->service_type ?: 'Experience',
             'location' => $location ?: 'Mauritius',
@@ -543,6 +560,7 @@ class HomeController extends Controller
 
     private function mapAccommodation(Accommodation $accommodation, bool $detailed = false, ?array $bookingContext = null): array
     {
+        $locale = app()->getLocale();
         $media = collect($accommodation->media ?? []);
         $rates = collect($accommodation->relationLoaded('rates') ? $accommodation->rates : []);
         $rooms = collect($accommodation->relationLoaded('rooms') ? $accommodation->rooms : []);
@@ -572,8 +590,9 @@ class HomeController extends Controller
             ->unique()
             ->values();
 
-        $shortDescription = $this->plainText($accommodation->short_description ?: $accommodation->property_description);
-        $fullDescription = $this->plainText($accommodation->property_description ?: $accommodation->short_description);
+        // prefer french fields when locale is french and values exist
+        $shortDescription = $this->plainText(($locale === 'fr' ? ($accommodation->short_description_fr ?? null) : null) ?: $accommodation->short_description ?: ($locale === 'fr' ? ($accommodation->property_description_fr ?? null) : null) ?: $accommodation->property_description);
+        $fullDescription = $this->plainText(($locale === 'fr' ? ($accommodation->property_description_fr ?? null) : null) ?: $accommodation->property_description ?: ($locale === 'fr' ? ($accommodation->short_description_fr ?? null) : null) ?: $accommodation->short_description);
 
         $location = implode(' • ', array_filter([
             $accommodation->region,
@@ -667,24 +686,31 @@ class HomeController extends Controller
             ? $this->buildAccommodationAvailability($rooms, $rates, $inventoryRows, $bookings, $bookingContext, $accommodation)
             : [];
 
-        $bookingNotesText = $this->plainText($accommodation->booking_window_rules);
+        $bookingWindowRules = $locale === 'fr' ? ($accommodation->booking_window_rules_fr ?: $accommodation->booking_window_rules) : $accommodation->booking_window_rules;
+        $bookingNotesText = $this->plainText($bookingWindowRules);
 
         if (blank($bookingNotesText) && !blank($accommodation->booking_confirmation_type)) {
             $bookingNotesText = 'Booking confirmation: ' . $accommodation->booking_confirmation_type;
         }
 
+        $checkinCheckoutRules = $locale === 'fr' ? ($accommodation->checkin_checkout_rules_fr ?: $accommodation->checkin_checkout_rules) : $accommodation->checkin_checkout_rules;
         $checkoutPolicyParts = array_values(array_filter([
             $accommodation->checkin_time ? 'Check-in time: ' . substr((string) $accommodation->checkin_time, 0, 5) : null,
             $accommodation->checkout_time ? 'Check-out time: ' . substr((string) $accommodation->checkout_time, 0, 5) : null,
-            $this->plainText($accommodation->checkin_checkout_rules),
+            $this->plainText($checkinCheckoutRules),
         ]));
         $checkoutPolicyText = implode("\n\n", $checkoutPolicyParts);
 
+        $houseRules = $locale === 'fr' ? ($accommodation->house_rules_fr ?: $accommodation->house_rules) : $accommodation->house_rules;
+        $cancellationPolicy = $locale === 'fr' ? ($accommodation->cancellation_policy_fr ?: $accommodation->cancellation_policy) : $accommodation->cancellation_policy;
+        $amendmentPolicy = $locale === 'fr' ? ($accommodation->amendment_policy_fr ?: $accommodation->amendment_policy) : $accommodation->amendment_policy;
+        $securityDepositPolicy = $locale === 'fr' ? ($accommodation->security_deposit_policy_fr ?: $accommodation->security_deposit_policy) : $accommodation->security_deposit_policy;
+
         $termsParts = array_values(array_filter([
-            $this->plainText($accommodation->house_rules),
-            $this->plainText($accommodation->cancellation_policy),
-            $this->plainText($accommodation->amendment_policy),
-            $this->plainText($accommodation->security_deposit_policy),
+            $this->plainText($houseRules),
+            $this->plainText($cancellationPolicy),
+            $this->plainText($amendmentPolicy),
+            $this->plainText($securityDepositPolicy),
         ]));
         $termsConditionsText = implode("\n\n", $termsParts);
 
@@ -723,7 +749,7 @@ class HomeController extends Controller
         return [
             'id' => $accommodation->id,
             'kind' => 'Accommodation',
-            'title' => $accommodation->property_name,
+            'title' => $locale === 'fr' && !empty($accommodation->property_name_fr) ? $accommodation->property_name_fr : $accommodation->property_name,
             'property_type' => $accommodation->property_type,
             'meta' => $accommodation->property_type,
             'location' => $location ?: 'Mauritius',

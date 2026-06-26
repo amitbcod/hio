@@ -65,6 +65,19 @@
                                 @enderror
                             </div>
                         </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label style="font-weight:600;">Booking Window Rules (French)</label>
+                                <input type="text"
+                                       name="booking_window_rules_fr"
+                                       class="form-control @error('booking_window_rules_fr') is-invalid @enderror"
+                                       value="{{ old('booking_window_rules_fr', $policy->booking_window_rules_fr ?? '') }}"
+                                       placeholder="e.g., Réserver au moins 24 heures à l'avance">
+                                @error('booking_window_rules_fr')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Section 2: Policies --}}
@@ -76,6 +89,14 @@
                             <textarea name="no_show_policy" id="no_show_policy" style="display:none;">{{ old('no_show_policy', $policy->no_show_policy ?? '') }}</textarea>
                             <div id="no_show_policy_editor" style="height:130px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                             @error('no_show_policy')
+                                <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label style="font-weight:600;">No-Show Policy (French)</label>
+                            <textarea name="no_show_policy_fr" id="no_show_policy_fr" style="display:none;">{{ old('no_show_policy_fr', $policy->no_show_policy_fr ?? '') }}</textarea>
+                            <div id="no_show_policy_fr_editor" style="height:130px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                            @error('no_show_policy_fr')
                                 <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
                             @enderror
                         </div>
@@ -96,6 +117,14 @@
                                 <textarea name="amendment_policy" id="amendment_policy" style="display:none;">{{ old('amendment_policy', $policy->amendment_policy ?? '') }}</textarea>
                                 <div id="amendment_policy_editor" style="height:130px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                                 @error('amendment_policy')
+                                    <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mb-3">
+                                <label style="font-weight:600;">Amendment Policy (French)</label>
+                                <textarea name="amendment_policy_fr" id="amendment_policy_fr" style="display:none;">{{ old('amendment_policy_fr', $policy->amendment_policy_fr ?? '') }}</textarea>
+                                <div id="amendment_policy_fr_editor" style="height:130px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                                @error('amendment_policy_fr')
                                     <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -125,6 +154,14 @@
                                 <textarea name="cancellation_policy" id="cancellation_policy" style="display:none;">{{ old('cancellation_policy', $policy->cancellation_policy ?? '') }}</textarea>
                                 <div id="cancellation_policy_editor" style="height:160px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                                 @error('cancellation_policy')
+                                    <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mb-3">
+                                <label style="font-weight:600;">Cancellation Policy (French)</label>
+                                <textarea name="cancellation_policy_fr" id="cancellation_policy_fr" style="display:none;">{{ old('cancellation_policy_fr', $policy->cancellation_policy_fr ?? '') }}</textarea>
+                                <div id="cancellation_policy_fr_editor" style="height:160px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                                @error('cancellation_policy_fr')
                                     <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -241,6 +278,14 @@
                             @enderror
                             <small style="color:#666;display:block;margin-top:4px;">Essential for activities with physical risk</small>
                         </div>
+                        <div class="mb-3">
+                            <label style="font-weight:600;">Safety Requirements (French)</label>
+                            <textarea name="safety_requirements_fr" id="safety_requirements_fr" style="display:none;">{{ old('safety_requirements_fr', $policy->safety_requirements_fr ?? '') }}</textarea>
+                            <div id="safety_requirements_fr_editor" style="height:160px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                            @error('safety_requirements_fr')
+                                <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
+                            @enderror
+                        </div>
 
                         <div class="mb-3">
                             <label style="font-weight:600;">Health Requirements Type</label>
@@ -302,9 +347,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // ── Quill editor setup ──────────────────────────────────────────────────
     const quillFields = [
         { id: 'no_show_policy',       placeholder: 'Describe charges if participant does not arrive...' },
+        { id: 'no_show_policy_fr',    placeholder: 'Décrivez les frais si le participant n’arrive pas...' },
         { id: 'amendment_policy',     placeholder: 'Date/participant change rules...' },
+        { id: 'amendment_policy_fr',  placeholder: 'Règles de modification de date/participant...' },
         { id: 'cancellation_policy',  placeholder: 'Cancellation policy text...' },
-        { id: 'safety_requirements',  placeholder: 'Describe mandatory safety briefings, gear, and equipment requirements...' }
+        { id: 'cancellation_policy_fr', placeholder: 'Texte de la politique d’annulation...' },
+        { id: 'safety_requirements',  placeholder: 'Describe mandatory safety briefings, gear, and equipment requirements...' },
+        { id: 'safety_requirements_fr', placeholder: 'Décrivez les briefing de sécurité, équipements et exigences...' }
     ];
 
     const quillInstances = {};

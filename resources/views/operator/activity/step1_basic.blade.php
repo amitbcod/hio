@@ -54,12 +54,19 @@
                                     <label style="font-weight:600;">Activity Name (5–120 chars) *</label>
                                     <input type="text" name="activity_name" class="form-control" maxlength="120" required value="{{ old('activity_name', $activity->activity_name) }}">
                                 </div>
+                                <div class="col-md-6">
+                                    <label style="font-weight:600;">Activity Name (French)</label>
+                                    <input type="text" name="activity_name_fr" class="form-control" maxlength="120" value="{{ old('activity_name_fr', $activity->activity_name_fr) }}">
+                                </div>
                             </div>
-
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label style="font-weight:600;">Short Title (≤60 chars)</label>
                                     <input type="text" name="short_title" class="form-control" maxlength="60" value="{{ old('short_title', $activity->short_title) }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label style="font-weight:600;">Short Title (French)</label>
+                                    <input type="text" name="short_title_fr" class="form-control" maxlength="60" value="{{ old('short_title_fr', $activity->short_title_fr) }}">
                                 </div>
                             </div>
                         </div>
@@ -173,6 +180,11 @@
                                     <label style="font-weight:600;">Overview * (min 20 chars)</label>
                                     <textarea name="overview" id="overview" style="display:none;" required>{{ old('overview', $activity->overview) }}</textarea>
                                     <div id="overview_editor" style="height:170px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                                    <div style="margin-top:12px;">
+                                        <label style="font-weight:600;">Overview (French)</label>
+                                        <textarea name="overview_fr" id="overview_fr" style="display:none;">{{ old('overview_fr', $activity->overview_fr) }}</textarea>
+                                        <div id="overview_fr_editor" style="height:170px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                                    </div>
                                     <div id="error_overview" style="display:none;color:#c62828;font-size:12px;margin-top:4px;padding:6px;background:#ffebee;border-radius:4px;"></div>
                                 </div>
                             </div>
@@ -182,6 +194,11 @@
                                     <label style="font-weight:600;">What are included in the activity? </label>
                                     <textarea name="whats_included" id="whats_included" style="display:none;" >{{ old('whats_included', $activity->whats_included) }}</textarea>
                                     <div id="whats_included_editor" style="height:170px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                                    <div style="margin-top:12px;">
+                                        <label style="font-weight:600;">What are included (French)</label>
+                                        <textarea name="whats_included_fr" id="whats_included_fr" style="display:none;">{{ old('whats_included_fr', $activity->whats_included_fr) }}</textarea>
+                                        <div id="whats_included_fr_editor" style="height:170px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                                    </div>
                                     <div id="error_whats_included" style="display:none;color:#c62828;font-size:12px;margin-top:4px;padding:6px;background:#ffebee;border-radius:4px;"></div>
                                 </div>
                             </div>
@@ -191,6 +208,11 @@
                                     <label style="font-weight:600;">Itinerary * (min 20 chars)</label>
                                     <textarea name="itinerary" id="itinerary" style="display:none;" required>{{ old('itinerary', $activity->itinerary) }}</textarea>
                                     <div id="itinerary_editor" style="height:170px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                                    <div style="margin-top:12px;">
+                                        <label style="font-weight:600;">Itinerary (French)</label>
+                                        <textarea name="itinerary_fr" id="itinerary_fr" style="display:none;">{{ old('itinerary_fr', $activity->itinerary_fr) }}</textarea>
+                                        <div id="itinerary_fr_editor" style="height:170px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
+                                    </div>
                                     <div id="error_itinerary" style="display:none;color:#c62828;font-size:12px;margin-top:4px;padding:6px;background:#ffebee;border-radius:4px;"></div>
                                 </div>
                             </div>
@@ -316,7 +338,10 @@
                 'meeting_point_details': { placeholder: 'Enter meeting point details...' },
                 'overview': { placeholder: 'Enter activity overview...' },
                 'whats_included': { placeholder: 'Enter what is included in the activity...' },
-                'itinerary': { placeholder: 'Enter itinerary details...' }
+                'itinerary': { placeholder: 'Enter itinerary details...' },
+                'overview_fr': { placeholder: 'Entrez le résumé en français...' },
+                'whats_included_fr': { placeholder: 'Entrez ce qui est inclus (français)...' },
+                'itinerary_fr': { placeholder: 'Entrez l\'itinéraire en français...' }
             };
 
             const editors = {};
@@ -406,6 +431,16 @@
                         validateField(fieldName);
                     }
                 });
+            });
+
+            // Ensure French fields are synced on submit if present
+            const frenchFields = ['overview_fr','whats_included_fr','itinerary_fr'];
+            frenchFields.forEach(f => {
+                const ta = document.getElementById(f);
+                if (ta && editors[f]) {
+                    // already handled in generic loop but ensure initial sync
+                    ta.value = editors[f].root.innerHTML === '<p><br></p>' ? '' : editors[f].root.innerHTML;
+                }
             });
 
             // Validate on form submit
