@@ -227,6 +227,18 @@ nav[aria-label="Pagination Navigation"] > div + div > div + div > span {
     align-items: center;
 }
 
+nav[aria-label="Pagination Navigation"] > div + div > div + div > span a  {
+    display: inline-block;
+}
+
+nav[aria-label="Pagination Navigation"] > div + div > div + div > span a  {
+    display: inline-block;
+} 
+
+nav[aria-label="Pagination Navigation"] > div + div > div + div > span svg {
+    font-size:20px
+}
+
 
 
 
