@@ -234,6 +234,11 @@
 
                 </div>{{-- .cart-layout --}}
             @endif
+            
+            <div class="tax-notice">
+                <p><strong><i class="fa-solid fa-circle-exclamation"></i> Tourism Tax Notice</strong>
+Please be informed that the tourism tax is not included in your booking total. This must be paid directly at the property in cash (EUR) during your stay and is charged at EUR 3.00 per person per night.</p>
+            </div>
 
             <!-- ═════════════════════════════════════════════════════════════
                   Checkout Options Modal (Guest vs Login)
@@ -292,6 +297,23 @@
 
 @push('styles')
 <style>
+
+.tax-notice {
+        max-width: 740px;
+    margin: 50px auto 0;
+    font-size: 14px;
+    border: 1px solid #0095da;
+    padding: 10px 30px;
+    color: #0095da;
+}
+
+.tax-notice strong {
+    display: block;
+    margin-bottom: 8px;
+    color:#0093d9
+}
+
+
 /* ── Flash ── */
 .cart-flash {
     padding: 14px 20px;
