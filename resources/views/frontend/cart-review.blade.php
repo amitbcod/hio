@@ -624,6 +624,7 @@ Please be informed that the tourism tax is not included in your booking total. T
     border-radius: 12px;
     text-decoration: none;
     transition: background .2s;
+    cursor: pointer;
 }
 .btn-checkout:hover { background: #16213e; color: #fff; }
 
