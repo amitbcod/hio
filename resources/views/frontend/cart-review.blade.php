@@ -606,6 +606,7 @@ Please be informed that the tourism tax is not included in your booking total. T
     font-weight: 800;
     color: #1a1a2e;
     margin-top: 4px;
+        width: 100%;
 }
 
 .btn-checkout {

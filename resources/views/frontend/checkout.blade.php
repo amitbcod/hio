@@ -1161,11 +1161,11 @@ var(--blue-darker); margin: 0 0 5px; letter-spacing: -0.5px; }
 }
 .summary-heading { font-size: 18px; font-weight: 700; color: #1a1a2e; margin: 0 0 18px; }
 .summary-divider { height: 1px; background: #eee; margin: 16px 0; }
-.fare-rows { display: flex; flex-direction: column; gap: 10px; }
+.fare-rows { display: flex; flex-direction: column; gap: 10px; width:100%;}
 .fare-row { display: flex; justify-content: space-between; font-size: 14px; color: #333; font-weight: 600;}
 .fare-row span:first-child { display: flex; align-items: center; gap: 5px; font-weight: 500;}
 .fare-row--discount { color: #1a7f37; font-weight: 600; }
-.fare-row--total { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-top: 4px; }
+.fare-row--total { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-top: 4px;     width: 100%;}
 
 .btn-checkout {
     display: flex;
