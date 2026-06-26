@@ -236,7 +236,11 @@ nav[aria-label="Pagination Navigation"] > div + div > div + div > span a  {
 } 
 
 nav[aria-label="Pagination Navigation"] > div + div > div + div > span svg {
-    font-size:20px
+    width:20px
+}
+
+nav[aria-label="Pagination Navigation"] > div + div > div + div > span > span > span {
+    display: block;
 }
 
 
