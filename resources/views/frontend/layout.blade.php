@@ -41,19 +41,23 @@
             gap: 8px;
             margin-right: 16px;
             font-size: 13px;
-            color: #111;
+            color: #ffffff;
         }
         .language-switcher a {
-            color: #111;
+            color: #ffffff;
             text-decoration: none;
             font-weight: 700;
         }
         .language-switcher a.active {
-            color: #0f6cb6;
+            color: #fcad10;
         }
         .language-switcher span {
-            opacity: 0.8;
+            opacity: 1;
+            font-size:0
         }
+        
+        .language-switcher span i {font-size:15px}
+        
         .mini-cart-overlay {
             position: fixed;
             inset: 0;
@@ -269,6 +273,22 @@
             color: #9f1c21;
             border: 1px solid #f5c2c2;
         }
+
+        .tax-notice {
+            max-width: 740px;
+            margin: 10px;
+            font-size: 11px;
+            border: 1px solid #0095da;
+            padding: 0px 10px;
+            color: #0095da;
+        }
+
+        .tax-notice strong {
+            display: block;
+            margin-bottom: 2px;
+            color:#0093d9
+        }
+
     </style>
     @stack('styles')
 </head>
@@ -280,11 +300,6 @@
                 <span><i class="fa-solid fa-globe"></i> {{ __('topbar.local_connection') }}</span>
             </div>
             <div class="top-links">
-                <div class="language-switcher">
-                    <span>{{ __('site.language') }}:</span>
-                    <a href="{{ route('frontend.lang.switch', 'en') }}" class="{{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
-                    <a href="{{ route('frontend.lang.switch', 'fr') }}" class="{{ app()->getLocale() === 'fr' ? 'active' : '' }}">FR</a>
-                </div>
                 @if(auth('traveler')->check())
                     <a href="{{ route('traveler.profile') }}">{{ __('profile.menu.profile') }}</a>
                     <form method="POST" action="{{ route('traveler.logout') }}" class="top-inline-form">
@@ -295,6 +310,11 @@
                     <a href="{{ route('traveler.login') }}">{{ __('auth.traveler_login') }}</a>
                     <a href="{{ route('traveler.register') }}">{{ __('auth.traveler_register') }}</a>
                 @endif
+                <div class="language-switcher">
+                    <span><i class="fa-solid fa-earth-americas"></i>{{ __('site.language') }}:</span>
+                    <a href="{{ route('frontend.lang.switch', 'en') }}" class="{{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
+                    <a href="{{ route('frontend.lang.switch', 'fr') }}" class="{{ app()->getLocale() === 'fr' ? 'active' : '' }}">FR</a>
+                </div> 
             </div>
         </div>
     </div>
@@ -417,7 +437,11 @@
                 <div id="miniCartItems"></div>
                 <div id="miniCartEmpty" class="mini-cart-empty" style="display:none;">{{ __('cart.empty') }}</div>
             </div>
-                <div class="mini-cart-summary" id="miniCartSummary">
+            <div class="tax-notice">
+                <p><strong><i class="fa-solid fa-circle-exclamation"></i> Tourism Tax Notice</strong>
+                Please be informed that the tourism tax is not included in your booking total. This must be paid directly at the property in cash (EUR) during your stay and is charged at EUR 3.00 per person per night.</p>
+            </div>
+            <div class="mini-cart-summary" id="miniCartSummary">
                 <div class="mini-cart-summary-row"><span>{{ __('booking.subtotal') }}</span><span id="miniCartSubtotal">USD 0.00</span></div>
                 <div class="mini-cart-summary-row"><span>{{ __('booking.discounts') }}</span><span id="miniCartDiscount">USD 0.00</span></div>
                 <div class="mini-cart-summary-row"><span>{{ __('booking.taxes_charges') }}</span><span id="miniCartTaxFees">USD 0.00</span></div>

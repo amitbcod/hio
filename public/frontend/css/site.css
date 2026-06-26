@@ -2300,9 +2300,9 @@ ol>ul>li {
     padding: 20px;
     border-radius: 8px;
     align-items: self-start;
-    display: flex;
+    /* display: flex;
     flex-direction: column;
-    justify-content: center; 
+    justify-content: center;  */
 }
 
 .summary-card p {
