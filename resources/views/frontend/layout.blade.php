@@ -273,6 +273,22 @@
             color: #9f1c21;
             border: 1px solid #f5c2c2;
         }
+
+        .tax-notice {
+            max-width: 740px;
+            margin: 10px;
+            font-size: 11px;
+            border: 1px solid #0095da;
+            padding: 0px 10px;
+            color: #0095da;
+        }
+
+        .tax-notice strong {
+            display: block;
+            margin-bottom: 2px;
+            color:#0093d9
+        }
+
     </style>
     @stack('styles')
 </head>
@@ -421,7 +437,11 @@
                 <div id="miniCartItems"></div>
                 <div id="miniCartEmpty" class="mini-cart-empty" style="display:none;">{{ __('cart.empty') }}</div>
             </div>
-                <div class="mini-cart-summary" id="miniCartSummary">
+            <div class="tax-notice">
+                <p><strong><i class="fa-solid fa-circle-exclamation"></i> Tourism Tax Notice</strong>
+                Please be informed that the tourism tax is not included in your booking total. This must be paid directly at the property in cash (EUR) during your stay and is charged at EUR 3.00 per person per night.</p>
+            </div>
+            <div class="mini-cart-summary" id="miniCartSummary">
                 <div class="mini-cart-summary-row"><span>{{ __('booking.subtotal') }}</span><span id="miniCartSubtotal">USD 0.00</span></div>
                 <div class="mini-cart-summary-row"><span>{{ __('booking.discounts') }}</span><span id="miniCartDiscount">USD 0.00</span></div>
                 <div class="mini-cart-summary-row"><span>{{ __('booking.taxes_charges') }}</span><span id="miniCartTaxFees">USD 0.00</span></div>
