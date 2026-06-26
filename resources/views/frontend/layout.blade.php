@@ -41,19 +41,23 @@
             gap: 8px;
             margin-right: 16px;
             font-size: 13px;
-            color: #111;
+            color: #ffffff;
         }
         .language-switcher a {
-            color: #111;
+            color: #ffffff;
             text-decoration: none;
             font-weight: 700;
         }
         .language-switcher a.active {
-            color: #0f6cb6;
+            color: #fcad10;
         }
         .language-switcher span {
-            opacity: 0.8;
+            opacity: 1;
+            font-size:0
         }
+        
+        .language-switcher span i {font-size:15px}
+        
         .mini-cart-overlay {
             position: fixed;
             inset: 0;
@@ -280,11 +284,6 @@
                 <span><i class="fa-solid fa-globe"></i> {{ __('topbar.local_connection') }}</span>
             </div>
             <div class="top-links">
-                <div class="language-switcher">
-                    <span>{{ __('site.language') }}:</span>
-                    <a href="{{ route('frontend.lang.switch', 'en') }}" class="{{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
-                    <a href="{{ route('frontend.lang.switch', 'fr') }}" class="{{ app()->getLocale() === 'fr' ? 'active' : '' }}">FR</a>
-                </div>
                 @if(auth('traveler')->check())
                     <a href="{{ route('traveler.profile') }}">{{ __('profile.menu.profile') }}</a>
                     <form method="POST" action="{{ route('traveler.logout') }}" class="top-inline-form">
@@ -295,6 +294,11 @@
                     <a href="{{ route('traveler.login') }}">{{ __('auth.traveler_login') }}</a>
                     <a href="{{ route('traveler.register') }}">{{ __('auth.traveler_register') }}</a>
                 @endif
+                <div class="language-switcher">
+                    <span><i class="fa-solid fa-earth-americas"></i>{{ __('site.language') }}:</span>
+                    <a href="{{ route('frontend.lang.switch', 'en') }}" class="{{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
+                    <a href="{{ route('frontend.lang.switch', 'fr') }}" class="{{ app()->getLocale() === 'fr' ? 'active' : '' }}">FR</a>
+                </div>
             </div>
         </div>
     </div>
