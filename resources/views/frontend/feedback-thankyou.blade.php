@@ -21,14 +21,16 @@
     line-height: 1.8;
 }
 .thankyou-box h1{
-  margin: 0;
     font-size: 34px;
     font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: bold;
 }
 a.btn-home{
       color: #ff8a00;
     font-weight: 700;
     text-decoration: none;
+    display: block;
+    margin: 30px 0;
 }
 a.btn-home:hover{
       color: #333;
