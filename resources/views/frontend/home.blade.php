@@ -264,8 +264,9 @@
                 </div>
             </div>
             <div class="highlight-card">
-                <img src="{{ $heroSlides[0]['image'] ?? asset('images/holidays-io-logo.png') }}"
-                    alt="Featured Mauritius experience">
+                <!-- <img src="{{ $heroSlides[0]['image'] ?? asset('images/holidays-io-logo.png') }}"
+                    alt="Featured Mauritius experience"> -->
+                    <img src="{{ asset('images/Mauritius2.jpg') }}" alt="">
             </div>
         </div>
     </section>
