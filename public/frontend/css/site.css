@@ -1123,6 +1123,13 @@ strong {
     border-radius: 10px;
     overflow: hidden;
     box-shadow: var(--shadow);
+    height: 100%;
+}
+
+.highlight-card img {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
 }
 
 .highlight-copy {
@@ -2325,12 +2332,6 @@ ol>ul>li {
     color: #646464;
 }
 
-.thankyou-box {
-    max-width:400px;
-    margin:0 auto;
-    width:100%;
-    text-align: center;
-} 
 
 
 @media (max-width:860px) {
