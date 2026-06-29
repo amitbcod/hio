@@ -599,7 +599,9 @@ Please be informed that the tourism tax is not included in your booking total. T
     font-size: 14px;
     color: #444;
 }
-.fare-row span:first-child { display: flex; align-items: center; gap: 5px; }
+.fare-row span:first-child { display: flex; align-items: center; gap: 5px; flex: 1;font-weight: 500; padding-right: 20px;}
+.fare-row span:last-child {     text-align: right;
+    flex-basis: 130px;}
 .fare-row--discount { color: #1a7f37; font-weight: 600; }
 .fare-row--total {
     font-size: 16px;
