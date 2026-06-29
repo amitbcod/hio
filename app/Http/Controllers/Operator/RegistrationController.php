@@ -459,6 +459,8 @@ class RegistrationController extends Controller
             return redirect()->route('operator.register.step2')->with('error', 'Please complete previous steps first.');
         }
         $operator = auth()->user();
+        // Refresh the authenticated operator from the database so agreement_type is always sourced from the latest DB value.
+        $operator = \App\Models\Operator::find($operator->operator_id) ?? $operator;
         $collab = null;
         // Prefer collaboration agreement by business when linked
         if (!empty($operator->business_id)) {

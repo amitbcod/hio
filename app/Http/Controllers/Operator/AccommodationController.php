@@ -718,8 +718,8 @@ class AccommodationController extends Controller
             'onsite_phone' => $request->onsite_phone,
 
             'booking_confirmation_type' => $request->booking_confirmation_type,
-            // preserve booking_registration_type from operator/business if set; do not allow arbitrary change here
-            'booking_registration_type' => $accommodation->booking_registration_type ?? ($operator->booking_registration_type ?? ($operator->agreement_type ?? null)),
+            // preserve booking_registration_type from accommodation if set, otherwise use operator agreement_type only
+            'booking_registration_type' => $accommodation->booking_registration_type ?? ($operator->agreement_type ?? null),
         ]);
         
         // Mark step 2 as complete
@@ -818,6 +818,14 @@ class AccommodationController extends Controller
             ->with('success', 'Accounting & Transaction details saved successfully!');
     }
 
+    private function shouldForceTemplatePolicies($operator): bool
+    {
+        $agreementType = $operator->agreement_type ?? null;
+        $normalized = preg_replace('/\s+/', ' ', strtolower(trim((string) $agreementType)));
+
+        return in_array($normalized, ['oto', 'full agreement', 'full service'], true);
+    }
+
     /**
      * Show Step 6: Policies & Rules
      */
@@ -836,7 +844,9 @@ class AccommodationController extends Controller
                 ->with('error', 'Please complete Step 1 first.');
         }
 
-        return view('operator.accommodation.step6_policies_rules', compact('accommodation', 'operator'));
+        $forceTemplatePolicies = $this->shouldForceTemplatePolicies($operator);
+
+        return view('operator.accommodation.step6_policies_rules', compact('accommodation', 'operator', 'forceTemplatePolicies'));
     }
 
     /**
@@ -850,6 +860,25 @@ class AccommodationController extends Controller
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
             abort(403);
+        }
+
+        $forceTemplatePolicies = $this->shouldForceTemplatePolicies($operator);
+
+        if ($forceTemplatePolicies) {
+            $request->merge([
+                'amendment_policy_type' => 'template',
+                'cancellation_policy_type' => 'template',
+                'security_deposit_policy_type' => 'template',
+                'house_rules_type' => 'template',
+                'amendment_policy' => null,
+                'amendment_policy_fr' => null,
+                'cancellation_policy' => null,
+                'cancellation_policy_fr' => null,
+                'security_deposit_policy' => null,
+                'security_deposit_policy_fr' => null,
+                'house_rules' => null,
+                'house_rules_fr' => null,
+            ]);
         }
 
         $plainTextMax = function (int $max) {
@@ -913,6 +942,13 @@ class AccommodationController extends Controller
             'house_rules_fr' => ['nullable', 'string', $plainTextMax(5000)],
             'house_rules_template_id' => 'nullable|string|max:100',
         ];
+
+        if ($forceTemplatePolicies) {
+            $rules['amendment_policy_template_id'] = 'required|string|max:100';
+            $rules['cancellation_policy_template_id'] = 'required|string|max:100';
+            $rules['security_deposit_policy_template_id'] = 'required|string|max:100';
+            $rules['house_rules_template_id'] = 'required|string|max:100';
+        }
 
         // Conditional validation for cancellation policy
         if ($request->cancellation_policy_type === 'custom') {

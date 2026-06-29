@@ -303,9 +303,9 @@ class ActivityController extends Controller
             // Save Booking Settings
             $activity->booking_confirmation_type = $data['booking_confirmation_type'];
             
-            // Set booking registration type from operator if not already set
+            // Set booking registration type from operator agreement type if not already set
             if (!$activity->booking_registration_type) {
-                $activity->booking_registration_type = $operator->booking_registration_type ?? 'Listing';
+                $activity->booking_registration_type = $operator->agreement_type ?? 'Listing Only';
             }
 
             // Mark step 2 as complete
@@ -736,6 +736,14 @@ class ActivityController extends Controller
         }
     }
 
+    private function shouldForceTemplatePolicies($operator): bool
+    {
+        $agreementType = $operator->agreement_type ?? null;
+        $normalized = preg_replace('/\s+/', ' ', strtolower(trim((string) $agreementType)));
+
+        return in_array($normalized, ['oto', 'full agreement', 'full service'], true);
+    }
+
     /**
      * Show Step 6: Policies & Rules
      */
@@ -755,7 +763,9 @@ class ActivityController extends Controller
             $policy = new \App\Models\ActivityPolicy();
         }
 
-        return view('operator.activity.step6_policies_rules', compact('activity', 'policy'));
+        $forceTemplatePolicies = $this->shouldForceTemplatePolicies($operator);
+
+        return view('operator.activity.step6_policies_rules', compact('activity', 'policy', 'operator', 'forceTemplatePolicies'));
     }
 
     /**
@@ -770,6 +780,19 @@ class ActivityController extends Controller
             // Check ownership
             if ($activity->operator_id !== $operator->id) {
                 abort(403, 'Unauthorized action.');
+            }
+
+            $forceTemplatePolicies = $this->shouldForceTemplatePolicies($operator);
+
+            if ($forceTemplatePolicies) {
+                $request->merge([
+                    'amendment_policy_type' => 'Template',
+                    'cancellation_policy_type' => 'Template',
+                    'amendment_policy' => null,
+                    'amendment_policy_fr' => null,
+                    'cancellation_policy' => null,
+                    'cancellation_policy_fr' => null,
+                ]);
             }
 
             // Custom validation rules

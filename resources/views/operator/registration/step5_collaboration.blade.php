@@ -62,7 +62,7 @@
                     <div style="flex: 1;">
                         <label>Agreement Type</label>
                         @php
-                            $agreementType = old('agreement_type', $business->agreement_type ?? $collab->agreement_type ?? '');
+                            $agreementType = old('agreement_type', $operator->agreement_type ?? '');
                         @endphp
                         <input type="text" class="form-control" value="{{ $agreementType }}" readonly>
                         <input type="hidden" id="agreement_type" name="agreement_type" value="{{ $agreementType }}">

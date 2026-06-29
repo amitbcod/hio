@@ -15,6 +15,12 @@
                         <div class="alert alert-danger"><ul style="margin-bottom:0;">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
                     @endif
 
+                    @if($forceTemplatePolicies ?? false)
+                        <div class="alert alert-info" style="margin-bottom:20px;">
+                            <i class="fas fa-info-circle"></i> This agreement type requires using the HIO template for Amendment Policy, Cancellation Policy, Security Deposit Policy, and House Rules.
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ route('operator.accommodation.saveStep6', $accommodation->id) }}">
                         @csrf
 
@@ -88,29 +94,40 @@
                         <div style="border-top:1px solid #eee;padding-top:20px;margin-bottom:24px;">
                             <h5 style="font-weight:600;margin-bottom:12px;">Amendment Policy</h5>
 
+                            @php
+                                $amendmentPolicyType = ($forceTemplatePolicies ?? false)
+                                    ? 'template'
+                                    : old('amendment_policy_type', $accommodation->amendment_policy_type ?? 'custom');
+                            @endphp
+
                             <div class="row mb-3">
+                                @if(!($forceTemplatePolicies ?? false))
+                                    <div class="col-md-6">
+                                        <label style="font-weight:600;"><input type="radio" name="amendment_policy_type" id="amendment_custom" value="custom" {{ $amendmentPolicyType === 'custom' ? 'checked' : '' }}> Write Your Own</label>
+                                    </div>
+                                @endif
                                 <div class="col-md-6">
-                                    <label style="font-weight:600;"><input type="radio" name="amendment_policy_type" id="amendment_custom" value="custom" {{ old('amendment_policy_type', $accommodation->amendment_policy_type ?? 'custom') === 'custom' ? 'checked' : '' }}> Write Your Own</label>
-                                </div>
-                                <div class="col-md-6">
-                                    <label style="font-weight:600;"><input type="radio" name="amendment_policy_type" id="amendment_template" value="template" {{ old('amendment_policy_type', $accommodation->amendment_policy_type ?? '') === 'template' ? 'checked' : '' }}> Use HIO Template</label>
+                                    <label style="font-weight:600;"><input type="radio" name="amendment_policy_type" id="amendment_template" value="template" {{ $amendmentPolicyType === 'template' ? 'checked' : '' }}> Use HIO Template</label>
                                 </div>
                             </div>
+                            @if($forceTemplatePolicies ?? false)
+                                <input type="hidden" name="amendment_policy_type" value="template">
+                            @endif
 
-                            <div id="amendment_custom_field" class="row mb-3">
+                            <div id="amendment_custom_field" class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? 'display:none;' : '' }}">
                                 <div class="col-md-12">
                                     <textarea name="amendment_policy" id="amendment_policy" class="form-control" rows="4" placeholder="Describe guest change, date modification rules, and any associated charges" style="display:none;">{{ old('amendment_policy', $accommodation->amendment_policy ?? '') }}</textarea>
                                     <div id="amendment_policy_editor" class="wysiwyg-editor"></div>
                                 </div>
                             </div>
-                        <div class="row mb-3">
+                        <div class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? 'display:none;' : '' }}">
                             <div class="col-md-12">
                                 <textarea name="amendment_policy_fr" id="amendment_policy_fr" class="form-control" rows="4" placeholder="Décrivez les règles de modification en français" style="display:none;">{{ old('amendment_policy_fr', $accommodation->amendment_policy_fr ?? '') }}</textarea>
                                 <div id="amendment_policy_fr_editor" class="wysiwyg-editor"></div>
                             </div>
                         </div>
 
-                            <div id="amendment_template_field" class="row mb-3" style="display:none;">
+                            <div id="amendment_template_field" class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? '' : 'display:none;' }}">
                                 <div class="col-md-12">
                                     <label style="font-weight:600;">Select HIO Template</label>
                                     <select name="amendment_policy_template_id" id="amendment_policy_template_id" class="form-control">
@@ -127,29 +144,40 @@
                         <div style="border-top:1px solid #eee;padding-top:20px;margin-bottom:24px;">
                             <h5 style="font-weight:600;margin-bottom:12px;">Cancellation Policy *</h5>
 
+                            @php
+                                $cancellationPolicyType = ($forceTemplatePolicies ?? false)
+                                    ? 'template'
+                                    : old('cancellation_policy_type', $accommodation->cancellation_policy_type ?? 'custom');
+                            @endphp
+
                             <div class="row mb-3">
+                                @if(!($forceTemplatePolicies ?? false))
+                                    <div class="col-md-6">
+                                        <label style="font-weight:600;"><input type="radio" name="cancellation_policy_type" id="cancellation_custom" value="custom" {{ $cancellationPolicyType === 'custom' ? 'checked' : '' }}> Write Your Own</label>
+                                    </div>
+                                @endif
                                 <div class="col-md-6">
-                                    <label style="font-weight:600;"><input type="radio" name="cancellation_policy_type" id="cancellation_custom" value="custom" {{ old('cancellation_policy_type', $accommodation->cancellation_policy_type ?? 'custom') === 'custom' ? 'checked' : '' }}> Write Your Own</label>
-                                </div>
-                                <div class="col-md-6">
-                                    <label style="font-weight:600;"><input type="radio" name="cancellation_policy_type" id="cancellation_template" value="template" {{ old('cancellation_policy_type', $accommodation->cancellation_policy_type ?? '') === 'template' ? 'checked' : '' }}> Use HIO Template</label>
+                                    <label style="font-weight:600;"><input type="radio" name="cancellation_policy_type" id="cancellation_template" value="template" {{ $cancellationPolicyType === 'template' ? 'checked' : '' }}> Use HIO Template</label>
                                 </div>
                             </div>
+                            @if($forceTemplatePolicies ?? false)
+                                <input type="hidden" name="cancellation_policy_type" value="template">
+                            @endif
 
-                            <div id="cancellation_custom_field" class="row mb-3">
+                            <div id="cancellation_custom_field" class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? 'display:none;' : '' }}">
                                 <div class="col-md-12">
                                     <textarea name="cancellation_policy" id="cancellation_policy" class="form-control" rows="4" placeholder="Describe your cancellation policy in detail" required style="display:none;">{{ old('cancellation_policy', $accommodation->cancellation_policy ?? '') }}</textarea>
                                     <div id="cancellation_policy_editor" class="wysiwyg-editor"></div>
                                 </div>
                             </div>
-                        <div class="row mb-3">
+                        <div class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? 'display:none;' : '' }}">
                             <div class="col-md-12">
                                 <textarea name="cancellation_policy_fr" id="cancellation_policy_fr" class="form-control" rows="4" placeholder="Décrivez votre politique d'annulation en français" style="display:none;">{{ old('cancellation_policy_fr', $accommodation->cancellation_policy_fr ?? '') }}</textarea>
                                 <div id="cancellation_policy_fr_editor" class="wysiwyg-editor"></div>
                             </div>
                         </div>
 
-                            <div id="cancellation_template_field" class="row mb-3" style="display:none;">
+                            <div id="cancellation_template_field" class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? '' : 'display:none;' }}">
                                 <div class="col-md-12">
                                     <label style="font-weight:600;">Select HIO Template</label>
                                     <select name="cancellation_policy_template_id" id="cancellation_policy_template_id" class="form-control">
@@ -201,29 +229,40 @@
                         <div style="border-top:1px solid #eee;padding-top:20px;margin-bottom:24px;">
                             <h5 style="font-weight:600;margin-bottom:12px;">Security Deposit Policy</h5>
 
+                            @php
+                                $securityDepositPolicyType = ($forceTemplatePolicies ?? false)
+                                    ? 'template'
+                                    : old('security_deposit_policy_type', $accommodation->security_deposit_policy_type ?? 'custom');
+                            @endphp
+
                             <div class="row mb-3">
+                                @if(!($forceTemplatePolicies ?? false))
+                                    <div class="col-md-6">
+                                        <label style="font-weight:600;"><input type="radio" name="security_deposit_policy_type" id="deposit_custom" value="custom" {{ $securityDepositPolicyType === 'custom' ? 'checked' : '' }}> Write Your Own</label>
+                                    </div>
+                                @endif
                                 <div class="col-md-6">
-                                    <label style="font-weight:600;"><input type="radio" name="security_deposit_policy_type" id="deposit_custom" value="custom" {{ old('security_deposit_policy_type', $accommodation->security_deposit_policy_type ?? 'custom') === 'custom' ? 'checked' : '' }}> Write Your Own</label>
-                                </div>
-                                <div class="col-md-6">
-                                    <label style="font-weight:600;"><input type="radio" name="security_deposit_policy_type" id="deposit_template" value="template" {{ old('security_deposit_policy_type', $accommodation->security_deposit_policy_type ?? '') === 'template' ? 'checked' : '' }}> Use HIO Template</label>
+                                    <label style="font-weight:600;"><input type="radio" name="security_deposit_policy_type" id="deposit_template" value="template" {{ $securityDepositPolicyType === 'template' ? 'checked' : '' }}> Use HIO Template</label>
                                 </div>
                             </div>
+                            @if($forceTemplatePolicies ?? false)
+                                <input type="hidden" name="security_deposit_policy_type" value="template">
+                            @endif
 
-                            <div id="deposit_custom_field" class="row mb-3">
+                            <div id="deposit_custom_field" class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? 'display:none;' : '' }}">
                                 <div class="col-md-12">
                                     <textarea name="security_deposit_policy" id="security_deposit_policy" class="form-control" rows="3" placeholder="Describe deposit coverage, refund conditions, and damage assessment rules" style="display:none;">{{ old('security_deposit_policy', $accommodation->security_deposit_policy ?? '') }}</textarea>
                                     <div id="security_deposit_policy_editor" class="wysiwyg-editor"></div>
                                 </div>
                             </div>
-                        <div class="row mb-3">
+                        <div class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? 'display:none;' : '' }}">
                             <div class="col-md-12">
                                 <textarea name="security_deposit_policy_fr" id="security_deposit_policy_fr" class="form-control" rows="3" placeholder="Décrivez la politique de dépôt en français" style="display:none;">{{ old('security_deposit_policy_fr', $accommodation->security_deposit_policy_fr ?? '') }}</textarea>
                                 <div id="security_deposit_policy_fr_editor" class="wysiwyg-editor"></div>
                             </div>
                         </div>
 
-                            <div id="deposit_template_field" class="row mb-3" style="display:none;">
+                            <div id="deposit_template_field" class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? '' : 'display:none;' }}">
                                 <div class="col-md-12">
                                     <label style="font-weight:600;">Select HIO Template</label>
                                     <select name="security_deposit_policy_template_id" id="security_deposit_policy_template_id" class="form-control">
@@ -293,30 +332,41 @@
                         <div style="border-top:1px solid #eee;padding-top:20px;margin-bottom:24px;">
                             <h5 style="font-weight:600;margin-bottom:12px;">House Rules</h5>
 
+                            @php
+                                $houseRulesType = ($forceTemplatePolicies ?? false)
+                                    ? 'template'
+                                    : old('house_rules_type', $accommodation->house_rules_type ?? 'custom');
+                            @endphp
+
                             <div class="row mb-3">
+                                @if(!($forceTemplatePolicies ?? false))
+                                    <div class="col-md-6">
+                                        <label style="font-weight:600;"><input type="radio" name="house_rules_type" id="house_rules_custom" value="custom" {{ $houseRulesType === 'custom' ? 'checked' : '' }}> Write Your Own</label>
+                                    </div>
+                                @endif
                                 <div class="col-md-6">
-                                    <label style="font-weight:600;"><input type="radio" name="house_rules_type" id="house_rules_custom" value="custom" {{ old('house_rules_type', $accommodation->house_rules_type ?? 'custom') === 'custom' ? 'checked' : '' }}> Write Your Own</label>
-                                </div>
-                                <div class="col-md-6">
-                                    <label style="font-weight:600;"><input type="radio" name="house_rules_type" id="house_rules_template" value="template" {{ old('house_rules_type', $accommodation->house_rules_type ?? '') === 'template' ? 'checked' : '' }}> Use HIO Template</label>
+                                    <label style="font-weight:600;"><input type="radio" name="house_rules_type" id="house_rules_template" value="template" {{ $houseRulesType === 'template' ? 'checked' : '' }}> Use HIO Template</label>
                                 </div>
                             </div>
+                            @if($forceTemplatePolicies ?? false)
+                                <input type="hidden" name="house_rules_type" value="template">
+                            @endif
 
-                            <div id="house_rules_custom_field" class="row mb-3">
+                            <div id="house_rules_custom_field" class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? 'display:none;' : '' }}">
                                 <div class="col-md-12">
                                     <textarea name="house_rules" id="house_rules" class="form-control" rows="4" placeholder="e.g., No smoking, No pets, Quiet hours 10pm-8am, Maximum guests allowed: X" style="display:none;">{{ old('house_rules', $accommodation->house_rules ?? '') }}</textarea>
                                     <div id="house_rules_editor" class="wysiwyg-editor"></div>
                                 </div>
                             </div>
                         </div>
-                        <div class="row mb-3">
+                        <div class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? 'display:none;' : '' }}">
                             <div class="col-md-12">
                                 <textarea name="house_rules_fr" id="house_rules_fr" class="form-control" rows="4" placeholder="Décrivez les règles de la maison en français" style="display:none;">{{ old('house_rules_fr', $accommodation->house_rules_fr ?? '') }}</textarea>
                                 <div id="house_rules_fr_editor" class="wysiwyg-editor"></div>
                             </div>
                         </div>
 
-                            <div id="house_rules_template_field" class="row mb-3" style="display:none;">
+                            <div id="house_rules_template_field" class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? '' : 'display:none;' }}">
                                 <div class="col-md-12">
                                     <label style="font-weight:600;">Select HIO Template</label>
                                     <select name="house_rules_template_id" id="house_rules_template_id" class="form-control">

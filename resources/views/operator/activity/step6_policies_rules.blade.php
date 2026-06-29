@@ -33,6 +33,12 @@
                     </div>
                 @endif
 
+                @if($forceTemplatePolicies ?? false)
+                    <div class="alert alert-info" style="border-radius:12px;margin-bottom:20px;">
+                        <i class="fas fa-info-circle"></i> This agreement type requires using the HIO template for Amendment and Cancellation policies.
+                    </div>
+                @endif
+
                 <form action="{{ route('operator.activity.step6.save', $activity->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
@@ -103,24 +109,34 @@
 
                         <div class="mb-3">
                             <label style="font-weight:600;">Amendment Policy</label>
+                            @php
+                                $amendmentPolicyType = ($forceTemplatePolicies ?? false)
+                                    ? 'Template'
+                                    : old('amendment_policy_type', $policy->amendment_policy_type ?? 'Custom');
+                            @endphp
                             <div class="row mb-2">
-                                <div class="col-md-6">
-                                    <label style="font-weight:600;"><input type="radio" name="amendment_policy_type" id="amendment_custom" value="Custom" 
-                                           {{ old('amendment_policy_type', $policy->amendment_policy_type ?? 'Custom') == 'Custom' ? 'checked' : '' }}> Write Your Own</label>
-                                </div>
+                                @if(!($forceTemplatePolicies ?? false))
+                                    <div class="col-md-6">
+                                        <label style="font-weight:600;"><input type="radio" name="amendment_policy_type" id="amendment_custom" value="Custom" 
+                                               {{ $amendmentPolicyType == 'Custom' ? 'checked' : '' }}> Write Your Own</label>
+                                    </div>
+                                @endif
                                 <div class="col-md-6">
                                     <label style="font-weight:600;"><input type="radio" name="amendment_policy_type" id="amendment_template" value="Template"
-                                           {{ old('amendment_policy_type', $policy->amendment_policy_type ?? '') == 'Template' ? 'checked' : '' }}> Use HIO Template</label>
+                                           {{ $amendmentPolicyType == 'Template' ? 'checked' : '' }}> Use HIO Template</label>
                                 </div>
                             </div>
-                            <div id="amendment_custom_field">
+                            @if($forceTemplatePolicies ?? false)
+                                <input type="hidden" name="amendment_policy_type" value="Template">
+                            @endif
+                            <div id="amendment_custom_field" style="{{ ($forceTemplatePolicies ?? false) ? 'display:none;' : '' }}">
                                 <textarea name="amendment_policy" id="amendment_policy" style="display:none;">{{ old('amendment_policy', $policy->amendment_policy ?? '') }}</textarea>
                                 <div id="amendment_policy_editor" style="height:130px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                                 @error('amendment_policy')
                                     <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3" style="{{ ($forceTemplatePolicies ?? false) ? 'display:none;' : '' }}">
                                 <label style="font-weight:600;">Amendment Policy (French)</label>
                                 <textarea name="amendment_policy_fr" id="amendment_policy_fr" style="display:none;">{{ old('amendment_policy_fr', $policy->amendment_policy_fr ?? '') }}</textarea>
                                 <div id="amendment_policy_fr_editor" style="height:130px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
@@ -128,7 +144,7 @@
                                     <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div id="amendment_template_field" style="display:none;">
+                            <div id="amendment_template_field" style="{{ ($forceTemplatePolicies ?? false) ? '' : 'display:none;' }}">
                                 <select name="amendment_policy_template_id" id="amendment_policy_template_id" class="form-control">
                                     <option value="">Choose a template</option>
                                     <option value="template1" {{ old('amendment_policy_template_id', $policy->amendment_policy_template_id ?? '') === 'template1' ? 'selected' : '' }}>Standard Amendment Policy</option>
@@ -140,24 +156,34 @@
 
                         <div class="mb-3">
                             <label style="font-weight:600;">Cancellation Policy <span class="text-danger">*</span></label>
+                            @php
+                                $cancellationPolicyType = ($forceTemplatePolicies ?? false)
+                                    ? 'Template'
+                                    : old('cancellation_policy_type', $policy->cancellation_policy_type ?? 'Custom');
+                            @endphp
                             <div class="row mb-2">
-                                <div class="col-md-6">
-                                    <label style="font-weight:600;"><input type="radio" name="cancellation_policy_type" id="cancellation_custom" value="Custom" 
-                                           {{ old('cancellation_policy_type', $policy->cancellation_policy_type ?? 'Custom') == 'Custom' ? 'checked' : '' }}> Write Your Own</label>
-                                </div>
+                                @if(!($forceTemplatePolicies ?? false))
+                                    <div class="col-md-6">
+                                        <label style="font-weight:600;"><input type="radio" name="cancellation_policy_type" id="cancellation_custom" value="Custom" 
+                                               {{ $cancellationPolicyType == 'Custom' ? 'checked' : '' }}> Write Your Own</label>
+                                    </div>
+                                @endif
                                 <div class="col-md-6">
                                     <label style="font-weight:600;"><input type="radio" name="cancellation_policy_type" id="cancellation_template" value="Template"
-                                           {{ old('cancellation_policy_type', $policy->cancellation_policy_type ?? '') == 'Template' ? 'checked' : '' }}> Use HIO Template</label>
+                                           {{ $cancellationPolicyType == 'Template' ? 'checked' : '' }}> Use HIO Template</label>
                                 </div>
                             </div>
-                            <div id="cancellation_custom_field">
+                            @if($forceTemplatePolicies ?? false)
+                                <input type="hidden" name="cancellation_policy_type" value="Template">
+                            @endif
+                            <div id="cancellation_custom_field" style="{{ ($forceTemplatePolicies ?? false) ? 'display:none;' : '' }}">
                                 <textarea name="cancellation_policy" id="cancellation_policy" style="display:none;">{{ old('cancellation_policy', $policy->cancellation_policy ?? '') }}</textarea>
                                 <div id="cancellation_policy_editor" style="height:160px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
                                 @error('cancellation_policy')
                                     <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3" style="{{ ($forceTemplatePolicies ?? false) ? 'display:none;' : '' }}">
                                 <label style="font-weight:600;">Cancellation Policy (French)</label>
                                 <textarea name="cancellation_policy_fr" id="cancellation_policy_fr" style="display:none;">{{ old('cancellation_policy_fr', $policy->cancellation_policy_fr ?? '') }}</textarea>
                                 <div id="cancellation_policy_fr_editor" style="height:160px;background:#fff;border:1px solid #ddd;border-radius:4px;"></div>
@@ -165,7 +191,7 @@
                                     <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div id="cancellation_template_field" style="display:none;">
+                            <div id="cancellation_template_field" style="{{ ($forceTemplatePolicies ?? false) ? '' : 'display:none;' }}">
                                 <select name="cancellation_policy_template_id" id="cancellation_policy_template_id" class="form-control">
                                     <option value="">Choose a template</option>
                                     <option value="template1" {{ old('cancellation_policy_template_id', $policy->cancellation_policy_template_id ?? '') === 'template1' ? 'selected' : '' }}>Flexible Cancellation (Free up to 7 days)</option>
