@@ -866,7 +866,33 @@ HTML;
         ])));
         $travelerAddress = e($travelerAddress ?: 'Address not provided');
         $accountId = 'TRV-' . str_pad($traveler->id, 6, '0', STR_PAD_LEFT);
+        
+        // Determine account / guest name for ACCOUNT DETAILS
+        $accountName = null;
+        if (!empty($trip->traveler_account_id)) {
+          $account = $trip->traveler;
+          if ($account) {
+            $accountName = trim($account->name ?? (($account->first_name ?? '') . ' ' . ($account->last_name ?? '')));
+          }
+        }
 
+        if (!$accountName) {
+          foreach ($allBookings as $booking) {
+            if (!empty($booking->guests) && $booking->guests->count()) {
+              $g = $booking->guests->first();
+              $accountName = trim(($g->first_name ?? '') . ' ' . ($g->last_name ?? ''));
+              if ($accountName) break;
+            }
+            if (!empty($booking->traveler_name)) { $accountName = $booking->traveler_name; break; }
+            if (!empty($booking->guest_name)) { $accountName = $booking->guest_name; break; }
+            if (!empty($booking->guest_first_name) || !empty($booking->guest_last_name)) {
+              $accountName = trim(($booking->guest_first_name ?? '') . ' ' . ($booking->guest_last_name ?? ''));
+              if ($accountName) break;
+            }
+          }
+        }
+
+        $accountNameSafe = e($accountName ?: ($traveler->name ?? 'Traveller Name'));
         // Build invoice items with proper data
         $invoiceItems = [];
         $subtotal = 0;
@@ -1173,7 +1199,7 @@ $mealPlanSafe = !empty($mealPlanValues)
             <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
                 <td class="label">Name:</td>
-                <td class="value">Traveller Name</td>
+                <td class="value">{$accountNameSafe}</td>
               </tr>
               <tr>
                 <td class="label">Account ID:</td>
