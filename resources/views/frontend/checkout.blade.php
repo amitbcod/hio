@@ -663,7 +663,7 @@
                                     $rooms  = (int) ($item['rooms'] ?? 1);
                                     $lbl = $item['type'] === 'accommodation'
                                         ? $rooms . ' Room' . ($rooms !== 1 ? 's' : '') . ' · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '')
-                                        : 'Activity: ' . ($item['variant_name'] ?: $item['title']);
+                                        : '' . ($item['variant_name'] ?: $item['title']);
                                 @endphp
                                 <div class="fare-row">
                                     <span>{{ $lbl }}</span>
