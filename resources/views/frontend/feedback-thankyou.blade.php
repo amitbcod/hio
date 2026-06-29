@@ -24,6 +24,7 @@
     font-size: 34px;
     font-family: 'Roboto Slab', Georgia, serif;
     font-weight: bold;
+    color: #333;
 }
 a.btn-home{
       color: #ff8a00;
