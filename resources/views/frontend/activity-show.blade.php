@@ -242,18 +242,18 @@
 
             <div class="detail-main">
                 <div class="detail-card">
-                    <h2>Overview</h2>
+                    <h2>{{ __('activity.overview') }}</h2>
                     <div class="detail-text">{!! $activity['overview_text'] ?: $activity['excerpt'] !!}</div>
                 </div>
 
                 @if($approvedActivityReviews && count($approvedActivityReviews) > 0)
                     <div class="detail-card">
-                        <h2>Guest Reviews</h2>
+                        <h2>{{ __('activity.guest_reviews') }}</h2>
                         @foreach($approvedActivityReviews as $review)
                             @php
                                 $travelerName = optional($review->parentReview->trip->traveler)->full_name 
                                     ?? optional($review->parentReview->trip->traveler)->email 
-                                    ?? 'Guest';
+                                    ?? __('activity.guest');
                                 $criteria = is_array($review->criteria) ? $review->criteria : [];
                                 $numericRatings = collect($criteria)->filter(fn($value) => is_numeric($value) && $value !== null && $value !== '');
                                 $avgRating = $numericRatings->count() ? number_format($numericRatings->avg(), 1) : null;
@@ -294,7 +294,7 @@
                 @endif
 
                 <div class="detail-card">
-                    <h2>Location And Map</h2>
+                    <h2>{{ __('activity.location_and_map') }}</h2>
                     <div class="detail-text">
                         {!! $activity['location'] !!}
                         @if(!empty($activity['meeting_point']))
@@ -315,8 +315,8 @@
                 </div>
 
                 <div class="detail-card">
-                    <h2>Booking Notes</h2>
-                    <div class="detail-text">{!! $activity['booking_notes_text'] ?: 'Booking notes will be shared by the operator during confirmation.' !!}</div>
+                    <h2>{{ __('activity.booking_notes') }}</h2>
+                    <div class="detail-text">{!! $activity['booking_notes_text'] ?: __('activity.booking_notes_fallback') !!}</div>
                 </div>
 
                 <!-- <div class="detail-card">
@@ -325,20 +325,20 @@
                 </div> -->
 
                 <div class="detail-card">
-                    <h2>Terms And Conditions</h2>
-                    <div class="detail-text">{!! $activity['terms_conditions_text'] ?: 'Terms and conditions are not available yet.' !!}</div>
+                    <h2>{{ __('activity.terms_and_conditions') }}</h2>
+                    <div class="detail-text">{!! $activity['terms_conditions_text'] ?: __('activity.terms_conditions_fallback') !!}</div>
                 </div>
 
                 @if(!empty($activity['included_text']))
                     <div class="detail-card">
-                        <h2>What’s Included</h2>
+                        <h2>{{ __('activity.whats_included') }}</h2>
                         <div class="detail-text">{!! $activity['included_text'] !!}</div>
                     </div>
                 @endif
 
                 @if(!empty($activity['itinerary_text']))
                     <div class="detail-card">
-                        <h2>Itinerary</h2>
+                        <h2>{{ __('activity.itinerary') }}</h2>
                         <div class="detail-text">{!! $activity['itinerary_text'] !!}</div>
                     </div>
                 @endif

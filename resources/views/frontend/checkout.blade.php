@@ -667,14 +667,14 @@
                                 @endphp
                                 <div class="fare-row">
                                     <span>{{ $lbl }}</span>
-                                    <span>{{ $item['currency'] }} {{ number_format($item['total_price'], 2) }}</span>
+                                    <span> {{ number_format($item['total_price'], 2) }}</span>
                                 </div>
                             @endforeach
 
                             @if($summary['total_discount'] > 0)
                                 <div class="fare-row fare-row--discount">
                                     <span><i class="fa-solid fa-tag"></i> {{ __('cart.discounts') }}</span>
-                                    <span>−{{ $summary['currency'] }} {{ number_format($summary['total_discount'], 2) }}</span>
+                                    <span>− {{ number_format($summary['total_discount'], 2) }}</span>
                                 </div>
                                 <div class="fare-row">
                                     <span>{{ __('cart.price_after_discount') }}</span>
@@ -683,7 +683,7 @@
                             @if($summary['total_tax'] > 0)
                                 <div class="fare-row">
                                     <span>{{ __('checkout.taxes_charges') }}</span>
-                                    <span>{{ $summary['currency'] }} {{ number_format($summary['total_tax'], 2) }}</span>
+                                    <span> {{ number_format($summary['total_tax'], 2) }}</span>
                                 </div>
                             @endif
 
