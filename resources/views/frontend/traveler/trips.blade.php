@@ -79,11 +79,13 @@
                                                     @endforeach
                                                 </div>
                                             </td>
-                                            <td data-label="{{ __('traveler.trips.dates') }}">
-                                                {{ $trip->start_date ? $trip->start_date->format('d M Y') : __('traveler.trip_detail.not_set') }}
-                                                -
-                                                {{ $trip->end_date ? $trip->end_date->format('d M Y') : __('traveler.trip_detail.not_set') }}
-                                            </td>
+                                          <td data-label="{{ __('traveler.trips.dates') }}">
+                                            {{ $trip->start_date ? $trip->start_date->format('d M Y') : __('traveler.trip_detail.not_set') }}
+
+                                            @if($trip->end_date)
+                                                - {{ $trip->end_date->format('d M Y') }}
+                                            @endif
+                                        </td>
                                             <td data-label="{{ __('traveler.trips.status') }}">
                                                 <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
                                             </td>
@@ -166,10 +168,12 @@
                                                     @endforeach
                                                 </div>
                                             </td>
-                                            <td data-label="{{ __('traveler.trips.dates') }}">
+                                           <td data-label="{{ __('traveler.trips.dates') }}">
                                                 {{ $trip->start_date ? $trip->start_date->format('d M Y') : __('traveler.trip_detail.not_set') }}
-                                                -
-                                                {{ $trip->end_date ? $trip->end_date->format('d M Y') : __('traveler.trip_detail.not_set') }}
+
+                                                @if($trip->end_date)
+                                                    - {{ $trip->end_date->format('d M Y') }}
+                                                @endif
                                             </td>
                                             <td data-label="{{ __('traveler.trips.status') }}" align="center">
                                                 <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
