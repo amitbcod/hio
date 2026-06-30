@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Traits\CartItemBuilderTrait;
 use App\Models\SavedGuest;
 use App\Models\Trip;
 use App\Models\ActivityBooking;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 
 class TripController extends Controller
 {
+    use CartItemBuilderTrait;
     public function index()
     {
         $traveler = auth('traveler')->user();
@@ -905,8 +907,9 @@ HTML;
                     : 1;
                 // Ensure nights is a positive integer (guard against swapped or invalid dates)
                 $nights = max(1, abs($nights));
-                $unitPrice = $amount;
-                $totalForLine = $unitPrice * $nights;
+                // The $amount is already the total price for the entire stay, not per-night
+                $unitPrice = $nights > 0 ? $amount / $nights : $amount;
+                $totalForLine = $amount;
 
                 $mealPlanLabel = $booking->meal_plan ? e($booking->meal_plan) : 'N/A';
                 $rateNameLabel = $booking->rate_name ? e($booking->rate_name) : '';
@@ -979,20 +982,47 @@ HTML;
             }
         }
 
-        // Calculate totals
-        $discountPercent = 5;
-        $discountAmount = ($subtotal * $discountPercent) / 100;
-        $taxableAmount = $subtotal - $discountAmount;
-        $vatPercent = 15;
-        $vatAmount = ($taxableAmount * $vatPercent) / 100;
-        $serviceFee = 325;
-        $totalAmount = $taxableAmount + $vatAmount + $serviceFee;
+        // Calculate totals and cart-style breakdown for display
+        $discountPercent = 0;
+        $discountAmount = 0;
+        $taxCharges = 0;
+        $fees = 0;
+        $taxableAmount = $subtotal;
+        $vatPercent = 0;
+        $vatAmount = 0;
+        $totalAmount = $subtotal;
+
+        foreach ($accommodationBookings as $booking) {
+            if (!$booking->accommodation) {
+                continue;
+            }
+            $amount = (float) data_get($booking, 'total_amount', $booking->total_price ?? 0);
+            $nights = $booking->check_in_date && $booking->check_out_date
+                ? (int) $booking->check_out_date->diffInDays($booking->check_in_date)
+                : 1;
+            $nights = max(1, abs($nights));
+            $adults = isset($booking->adults) ? max(1, (int) $booking->adults) : max(1, $booking->guests->count());
+            $taxCharges += $this->calcAccommodationTax($booking->accommodation, $amount, $adults, $nights);
+            $fees += $this->calcAccommodationFees($booking->accommodation, $booking->room_id ?? null, $nights);
+        }
+
+        foreach ($activityBookings as $booking) {
+            if (!$booking->activity) {
+                continue;
+            }
+            $amount = (float) data_get($booking, 'total_amount', $booking->total_price ?? 0);
+            $participants = isset($booking->adults) ? max(1, (int) $booking->adults) : max(1, $booking->guests->count());
+            $taxCharges += $this->calcActivityTax($booking->activity, $amount, $participants);
+        }
+
+        $totalAmount = $subtotal;
 
         $formattedSubtotal = number_format($subtotal, 2);
         $formattedDiscountAmount = number_format($discountAmount, 2);
         $formattedTaxableAmount = number_format($taxableAmount, 2);
         $formattedVatAmount = number_format($vatAmount, 2);
-        $formattedServiceFee = number_format($serviceFee, 2);
+        $formattedServiceFee = number_format($fees, 2);
+        $formattedTaxCharges = number_format($taxCharges, 2);
         $formattedTotalAmount = number_format($totalAmount, 2);
 
         // Build service rows
@@ -1056,6 +1086,26 @@ if ($discountAmount > 0) {
                         <span class="totals-amount">-USD ' . $formattedDiscountAmount . '</span>
                     </div>';
                     $discountRow = trim($discountRow);
+}
+
+$taxableRow = '';
+if ($taxableAmount > 0 && $taxableAmount != $subtotal) {
+    $taxableRow = '<tr><td align="right">Taxable Amount: USD ' . $formattedTaxableAmount . '</td></tr>';
+}
+
+$vatRow = '';
+if ($vatAmount > 0) {
+    $vatRow = '<tr><td align="right">VAT (' . $vatPercent . '%): USD ' . $formattedVatAmount . '</td></tr>';
+}
+
+$serviceFeeRow = '';
+if ($fees > 0) {
+    $serviceFeeRow = '<tr><td align="right">Fees: USD ' . $formattedServiceFee . '</td></tr>';
+}
+
+$taxChargesRow = '';
+if ($taxCharges > 0) {
+    $taxChargesRow = '<tr><td align="right">Taxes & Charges: USD ' . $formattedTaxCharges . '</td></tr>';
 }
 
 $mealPlanValues = $accommodationBookings
@@ -1273,19 +1323,14 @@ $mealPlanSafe = !empty($mealPlanValues)
     <tr>
       <td align="right">{$discountRow}</td>
     </tr>
-    <tr>
-      <td align="right">Taxable Amount: USD {$formattedTaxableAmount}</td>
-    </tr>
-    <tr>
-      <td align="right">VAT ({$vatPercent}%): USD {$formattedVatAmount}</td>
-    </tr>
-    <tr>
-      <td align="right">Service Fee: USD {$formattedServiceFee}</td>
-    </tr>
+    {$taxChargesRow}
+    {$serviceFeeRow}
+    {$taxableRow}
+    {$vatRow}
     <tr>
       <td align="right"><strong>TOTAL PAID: USD {$formattedTotalAmount}</strong></td>
     </tr>
-  </table>
+      </table>
     
 </td>
 </tr>

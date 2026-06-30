@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Traits\CartItemBuilderTrait;
 use App\Models\GuestOtpToken;
 use App\Models\AccommodationBooking;
 use App\Models\ActivityBooking;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 
 class GuestTripController extends Controller
 {
+    use CartItemBuilderTrait;
     /**
      * Show guest trip listing using verification link  
      */
@@ -968,8 +970,9 @@ HTML;
                     : 1;
                 // Ensure nights is a positive integer (guard against swapped or invalid dates)
                 $nights = max(1, abs($nights));
-                $unitPrice = $amount;
-                $totalForLine = $unitPrice * $nights;
+                // The $amount is already the total price for the entire stay, not per-night
+                $unitPrice = $nights > 0 ? $amount / $nights : $amount;
+                $totalForLine = $amount;
 
                 $mealPlanLabel = $booking->meal_plan ? e($booking->meal_plan) : 'N/A';
                 $rateNameLabel = $booking->rate_name ? e($booking->rate_name) : '';
@@ -1042,20 +1045,47 @@ HTML;
             }
         }
 
-        // Calculate totals
-        $discountPercent = 5;
-        $discountAmount = ($subtotal * $discountPercent) / 100;
-        $taxableAmount = $subtotal - $discountAmount;
-        $vatPercent = 15;
-        $vatAmount = ($taxableAmount * $vatPercent) / 100;
-        $serviceFee = 325;
-        $totalAmount = $taxableAmount + $vatAmount + $serviceFee;
+        // Calculate totals and cart-style breakdown for display
+        $discountPercent = 0;
+        $discountAmount = 0;
+        $taxCharges = 0;
+        $fees = 0;
+        $taxableAmount = $subtotal;
+        $vatPercent = 0;
+        $vatAmount = 0;
+        $totalAmount = $subtotal;
+
+        foreach ($accommodationBookings as $booking) {
+            if (!$booking->accommodation) {
+                continue;
+            }
+            $amount = (float) data_get($booking, 'total_amount', $booking->total_price ?? 0);
+            $nights = $booking->check_in_date && $booking->check_out_date
+                ? (int) $booking->check_out_date->diffInDays($booking->check_in_date)
+                : 1;
+            $nights = max(1, abs($nights));
+            $adults = isset($booking->adults) ? max(1, (int) $booking->adults) : max(1, $booking->guests->count());
+            $taxCharges += $this->calcAccommodationTax($booking->accommodation, $amount, $adults, $nights);
+            $fees += $this->calcAccommodationFees($booking->accommodation, $booking->room_id ?? null, $nights);
+        }
+
+        foreach ($activityBookings as $booking) {
+            if (!$booking->activity) {
+                continue;
+            }
+            $amount = (float) data_get($booking, 'total_amount', $booking->total_price ?? 0);
+            $participants = isset($booking->adults) ? max(1, (int) $booking->adults) : max(1, $booking->guests->count());
+            $taxCharges += $this->calcActivityTax($booking->activity, $amount, $participants);
+        }
+
+        $totalAmount = $subtotal;
 
         $formattedSubtotal = number_format($subtotal, 2);
         $formattedDiscountAmount = number_format($discountAmount, 2);
         $formattedTaxableAmount = number_format($taxableAmount, 2);
         $formattedVatAmount = number_format($vatAmount, 2);
-        $formattedServiceFee = number_format($serviceFee, 2);
+        $formattedServiceFee = number_format($fees, 2);
+        $formattedTaxCharges = number_format($taxCharges, 2);
         $formattedTotalAmount = number_format($totalAmount, 2);
 
         // Build service rows
@@ -1088,12 +1118,34 @@ HTML;
         $poweredLogoHtml = $poweredLogoPath
             ? '<img src="' . $poweredLogoPath . '" width="100" height="40" style="width:100px; height:auto; display:block;" alt="Holidays.io">'
             : '<span style="color:#f7971e;font-weight:700;font-size:14px;">HOLIDAYS.io</span>';
+
+$discountRow = '';
 if ($discountAmount > 0) {
     $discountRow = '<div class="totals-row">
                         <span class="totals-label">Discount (' . $discountPercent . '%): </span>
                         <span class="totals-amount">-USD ' . $formattedDiscountAmount . '</span>
                     </div>';
                     $discountRow = trim($discountRow);
+}
+
+$taxableRow = '';
+if ($taxableAmount > 0 && $taxableAmount != $subtotal) {
+    $taxableRow = '<div class="totals-row"><span class="totals-label">Taxable Amount: </span><span class="totals-amount">USD ' . $formattedTaxableAmount . '</span></div>';
+}
+
+$vatRow = '';
+if ($vatAmount > 0) {
+    $vatRow = '<div class="totals-row"><span class="totals-label">VAT (' . $vatPercent . '%): </span><span class="totals-amount">USD ' . $formattedVatAmount . '</span></div>';
+}
+
+$taxChargesRow = '';
+if ($taxCharges > 0) {
+    $taxChargesRow = '<div class="totals-row"><span class="totals-label">Taxes & Charges: </span><span class="totals-amount">USD ' . $formattedTaxCharges . '</span></div>';
+}
+
+$feesRow = '';
+if ($fees > 0) {
+    $feesRow = '<div class="totals-row"><span class="totals-label">Fees: </span><span class="totals-amount">USD ' . $formattedServiceFee . '</span></div>';
 }
 $mealPlanValues = $accommodationBookings
     ->pluck('meal_plan')
@@ -1233,9 +1285,10 @@ body { font-family:helvetica; color:#222; font-size:10px; line-height:1.4; }
     <div class="totals-box" style="background:#fff3e0; border-radius:8px; padding:10px;">
         <div class="totals-row"><span class="totals-label">Subtotal: </span><span class="totals-amount">USD {$formattedSubtotal}</span></div>
         {$discountRow}
-        <div class="totals-row"><span class="totals-label">Taxable Amount: </span><span class="totals-amount">USD {$formattedTaxableAmount}</span></div>
-        <div class="totals-row"><span class="totals-label">VAT ({$vatPercent}%): </span><span class="totals-amount">USD {$formattedVatAmount}</span></div>
-        <div class="totals-row"><span class="totals-label"><strong>Service Fee: </strong></span><span class="totals-amount"><strong>USD {$formattedServiceFee}</strong></span></div>
+        {$taxChargesRow}
+        {$feesRow}
+        {$taxableRow}
+        {$vatRow}
         <div class="total-paid" style="background:#0b2b51; color:#fff; padding:8px; border-radius:4px; font-weight:700; display:flex; justify-content:space-between; margin-top:6px;"><span>TOTAL PAID</span> <span>USD {$formattedTotalAmount}</span></div>
     </div>
 </td>
