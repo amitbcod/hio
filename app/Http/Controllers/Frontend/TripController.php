@@ -496,9 +496,6 @@ class TripController extends Controller
             <td width="32%" valign="top"><table width="100%" border="0">
               <tbody>
                 <tr>
-                  <td style="font-size:8px;color:#5f6d7a;">Powered by</td>
-                </tr>
-                <tr>
                   <td>{$poweredLogoHtml}</td>
                 </tr>
               </tbody>
