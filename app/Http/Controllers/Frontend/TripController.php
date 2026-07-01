@@ -544,18 +544,19 @@ class TripController extends Controller
       <td style="font-size:13px;">Responsible Traveller</td>
     </tr>
     <tr>
+      <td style="font-size:5px;color:white">.</td>
+    </tr>
+    <tr>
       <td><table width="100%" cellpadding="0" cellspacing="0">
          <tr>
           <td width="50%" style="color:#5f6d7a">Full Name: <strong style="color:#000000">{$responsibleNameSafe}</strong></td>
           <td width="50%" style="color:#5f6d7a">Other Travellers: <strong style="color:#000000">{$otherTravellersSafe}</strong></td>
         </tr>
+        <tr>
+          <td style="color:#5f6d7a">Travel Party Size: <strong style="color:#000000">{$travelPartySizeSafe}</strong></td>
+          <td style="color:#5f6d7a">&nbsp;</td>
+        </tr>
       </table></td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-    </tr>
-    <tr>
-      <td style="color:#5f6d7a">Travel Party Size: <strong style="color:#000000">{$travelPartySizeSafe}</strong></td>
     </tr>
     <tr>
       <td>&nbsp;</td>
