@@ -1192,10 +1192,6 @@ $mealPlanSafe = !empty($mealPlanValues)
           <td class="label">Invoice Date:</td>
           <td class="value">{$invoiceDate}</td>
         </tr>
-        <tr>
-          <td class="label">Booking Reference:</td>
-          <td class="value">{$bookingRef}</td>
-        </tr>
       </table></td>
     </tr>
     <tr>
@@ -1215,6 +1211,10 @@ $mealPlanSafe = !empty($mealPlanValues)
           <tr>
             <td valign="top"><table width="99%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
+                <td class="label">Name:</td>
+                <td class="value">{$accountNameSafe}</td>
+              </tr>
+              <tr>
                 <td class="label">Address:</td>
                 <td class="value">{$travelerAddress}</td>
               </tr>
@@ -1222,31 +1222,19 @@ $mealPlanSafe = !empty($mealPlanValues)
                 <td class="label">Phone:</td>
                 <td class="value">{$travelerPhone}</td>
               </tr>
-              <tr>
-                <td class="label">Email:</td>
-                <td class="value">{$travelerEmail}</td>
-              </tr>
-              <tr>
-                <td class="label">Meal Plan:</td>
-                <td class="value">{$mealPlanSafe}</td>
-              </tr>
             </table></td>
             <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
-                <td class="label">Name:</td>
-                <td class="value">{$accountNameSafe}</td>
+                <td class="label">Account Type:</td>
+                <td class="value">(Guest booking or Privilege Traveller)</td>
               </tr>
               <tr>
                 <td class="label">Account ID:</td>
                 <td class="value">{$accountId}</td>
               </tr>
               <tr>
-                <td class="label">Currency:</td>
-                <td class="value">USD (US Dollar)</td>
-              </tr>
-              <tr>
-                <td class="label">Payment Terms:</td>
-                <td class="value"><strong>Paid in Full</strong></td>
+                <td class="label">Booking Reference:</td>
+                <td class="value">{$bookingRef}</td>
               </tr>
             </table></td>
           </tr>
