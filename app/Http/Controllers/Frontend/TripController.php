@@ -835,7 +835,7 @@ HTML;
         }
 
         // Load logo
-        $poweredLogoPath = public_path('images/holidays-io-logo.png');
+        $poweredLogoPath = public_path('images/holidays-io-logo-poweredby.png');
         if (!file_exists($poweredLogoPath)) {
             $poweredLogoPath = '';
         } elseif (preg_match('/\.png$/i', $poweredLogoPath)) {
