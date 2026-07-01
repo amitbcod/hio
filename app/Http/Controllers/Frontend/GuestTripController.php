@@ -556,14 +556,15 @@ body{font-family:helvetica;color:#222; font-size:10px;}
             {$providerAddressSafe}
         </div>
 
-        <div style="margin-top:10px; font-size:8px;">
-            Emergency Contact (24/7)<br>
-            {$emergencyContactSafe}
-        </div>
+      
 
         <div style="margin-top:6px; font-size:8px;">
             Reception / Service Contact<br>
             {$receptionContactSafe}
+        </div>
+          <div style="margin-top:10px; font-size:8px;">
+            Emergency Contact (24/7)<br>
+            {$emergencyContactSafe}
         </div>
     </div>
 </td>

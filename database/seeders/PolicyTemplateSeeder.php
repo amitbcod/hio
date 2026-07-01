@@ -40,10 +40,10 @@ class PolicyTemplateSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'title' => 'Standard Amendment Policy',
+                'title' => 'Strict Amendment Policy',
                 'service_type' => 'activity',
                 'policy_type' => 'Amendment Policy',
-                'content' => '<p>Amendments allowed up to 48 hours before the activity. Amendments within 48 hours are subject to availability.</p>',
+                'content' => '<p>Strict Amendments.</p>',
                 'is_active' => true,
             ],
             [
