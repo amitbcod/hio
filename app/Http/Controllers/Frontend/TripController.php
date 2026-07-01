@@ -401,7 +401,7 @@ class TripController extends Controller
         $providerAddress = $providerAddress ?: '-';
         $emergencyContact = $emergencyContact ?: '-';
         $receptionContact = $receptionContact ?: '-';
-        $poweredLogoPath = public_path('images/holidays-io-logo-poweredby2.png');
+        $poweredLogoPath = public_path('images/holidays-io-logo.png');
         if (!file_exists($poweredLogoPath)) {
             $poweredLogoPath = '';
         } elseif (preg_match('/\.png$/i', $poweredLogoPath)) {
@@ -480,10 +480,10 @@ class TripController extends Controller
                   <td valign="top">{$companyLogoHtml}</td>
                 </tr>
                 <tr>
-                  <td style="font-size:12px;color:#167dc2;line-height: 12px">Your Local Connection - Mauritius<br>{$companyBusinessNameSafe}</td>
+                  <td style="font-size:12px">Your Local Connection - Mauritius</td>
                 </tr>
                 <tr>
-                  <td style="font-size:3px;color:white">.</td>
+                  <td style="font-size:12px">{$companyBusinessNameSafe}</td>
                 </tr>
                 <tr>
                   <td style="color:#6a7b91;font-size:10px">{$companyBusinessAddressSafe}</td>
@@ -493,10 +493,13 @@ class TripController extends Controller
                 </tr>
               </tbody>
             </table></td>
-            <td width="32%" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
+            <td width="32%" valign="top"><table width="100%" border="0">
               <tbody>
                 <tr>
-                  <td align="right">{$poweredLogoHtml}</td>
+                  <td style="font-size:8px;color:#5f6d7a;">Powered by</td>
+                </tr>
+                <tr>
+                  <td>{$poweredLogoHtml}</td>
                 </tr>
               </tbody>
             </table></td>
@@ -525,13 +528,19 @@ class TripController extends Controller
         <tr>
           <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="3" cellspacing="0">
             <tr>
-              <td><strong>Booking Ref.: </strong>{$bookingReferenceSafe}</td>
+              <td><strong>Booking Ref.</strong></td>
+            </tr>
+            <tr>
+              <td>{$bookingReferenceSafe}</td>
             </tr>
           </table></td>
           <td style="width:2%">&nbsp;&nbsp;</td>
           <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="3" cellspacing="0">
             <tr>
-              <td><strong>Service Date: </strong>{$serviceDateSafe}</td>
+              <td><strong>Service Date</strong></td>
+            </tr>
+            <tr>
+              <td>{$serviceDateSafe}</td>
             </tr>
           </table></td>
         </tr>
@@ -544,19 +553,22 @@ class TripController extends Controller
       <td style="font-size:13px;">Responsible Traveller</td>
     </tr>
     <tr>
-      <td style="font-size:5px;color:white">.</td>
-    </tr>
-    <tr>
-      <td><table width="100%" cellpadding="2" cellspacing="0">
-         <tr>
-          <td width="50%" style="color:#5f6d7a">Full Name: <strong style="color:#000000">{$responsibleNameSafe}</strong></td>
-          <td width="50%" style="color:#5f6d7a">Other Travellers: <strong style="color:#000000">{$otherTravellersSafe}</strong></td>
+      <td><table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="50%" style="color:#5f6d7a">Full Name</td>
+          <td width="50%" style="color:#5f6d7a">Other Travellers</td>
         </tr>
         <tr>
-          <td style="color:#5f6d7a">Travel Party Size: <strong style="color:#000000">{$travelPartySizeSafe}</strong></td>
-          <td style="color:#5f6d7a">&nbsp;</td>
+          <td style="color:#5f6d7a">{$responsibleNameSafe}</td>
+          <td style="color:#5f6d7a">{$otherTravellersSafe}</td>
         </tr>
       </table></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td><strong>Travel Party Size:</strong> {$travelPartySizeSafe}</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
@@ -571,39 +583,39 @@ class TripController extends Controller
 				  </tr>
               <tr>
                 <td class="label" width="40%">Property Name</td>
-                <td><strong style="color:#000000">{$serviceNameSafe}</strong></td>
+                <td><strong>{$serviceNameSafe}</strong></td>
               </tr>
               <tr>
                 <td class="label">{$infoLabelCheckIn}</td>
-                <td><strong style="color:#000000">{$checkInDisplaySafe}</strong></td>
+                <td><strong>{$checkInDisplaySafe}</strong></td>
               </tr>
               <tr>
                 <td class="label">{$infoLabelCheckOut}</td>
-                <td><strong style="color:#000000">{$checkOutDisplaySafe}</strong></td>
+                <td><strong>{$checkOutDisplaySafe}</strong></td>
               </tr>
               <tr>
                 <td class="label">{$infoLabelDaysNights}</td>
-                <td><strong style="color:#000000">{$nightsSafe}</strong></td>
+                <td>{$nightsSafe}</td>
               </tr>
               <tr>
                 <td class="label">{$infoLabelType}</td>
-                <td><strong style="color:#000000">{$roomTypeSafe}</strong></td>
+                <td>{$roomTypeSafe}</td>
               </tr>
               <tr>
                 <td class="label">Occupancy</td>
-                <td><strong style="color:#000000">{$occupancySafe}</strong></td>
+                <td>{$occupancySafe}</td>
               </tr>
               <tr>
                 <td class="label">Meal Plan</td>
-                <td><strong style="color:#000000">{$mealPlanSafe}</strong></td>
+                <td>{$mealPlanSafe}</td>
               </tr>
               <tr>
                 <td class="label">Special Requests</td>
-                <td><strong style="color:#000000">{$specialRequestsSafe}</strong></td>
+                <td>{$specialRequestsSafe}</td>
               </tr>
               <tr>
                 <td class="label">Booking Notes</td>
-                <td><strong style="color:#000000">{$bookingNotesSafe}</strong></td>
+                <td>{$bookingNotesSafe}</td>
               </tr>
             </table>
           </td>
@@ -649,7 +661,7 @@ class TripController extends Controller
       <td style="font-size:13px"><strong>Important Information / Conditions</strong></td>
     </tr>
     <tr>
-      <td style="font-size:5px;color:white">.</td>
+      <td>&nbsp;</td>
     </tr>
     <tr>
       <td><ul class="check-list">
@@ -673,7 +685,7 @@ class TripController extends Controller
       <td style="font-size:13px;"><strong>MPO Support and Emergency</strong></td>
     </tr>
     <tr>
-      <td style="font-size:5px;color:white">.</td>
+      <td>&nbsp;</td>
     </tr>
     <tr>
       <td>
@@ -707,7 +719,7 @@ class TripController extends Controller
       <table width="100%" border="0" cellpadding="5" cellspacing="0">
         <tbody>
           <tr>
-            <td align="center"><strong style="color:#0b2b51;">Lolotte Rental and Tours Ltd</strong><br>
+            <td align="center"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
                 Your Local Connection in Mauritius<br>
                 <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span></td>
           </tr>
@@ -823,7 +835,7 @@ HTML;
         }
 
         // Load logo
-        $poweredLogoPath = public_path('images/holidays-io-logo-poweredby2.png');
+        $poweredLogoPath = public_path('images/holidays-io-logo.png');
         if (!file_exists($poweredLogoPath)) {
             $poweredLogoPath = '';
         } elseif (preg_match('/\.png$/i', $poweredLogoPath)) {
@@ -1023,7 +1035,13 @@ HTML;
                             <td valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="2">
                             <tbody>
                               <tr>
+                                <td>' . $item['type'] . '</td>
+                                </tr>
+                              <tr>
                                 <td>' . $item['name'] . '</td>
+                                </tr>
+                              <tr>
+                                <td>' . $item['location'] . '</td>
                                 </tr>
                               </tbody>
                             </table></td>
@@ -1072,7 +1090,7 @@ if ($discountAmount > 0) {
 
 $taxableRow = '';
 if ($taxableAmount > 0 && $taxableAmount != $subtotal) {
-    $taxableRow = '<tr><td align="right">Subtotal: USD ' . $formattedTaxableAmount . '</td></tr>';
+    $taxableRow = '<tr><td align="right">Taxable Amount: USD ' . $formattedTaxableAmount . '</td></tr>';
 }
 
 $vatRow = '';
@@ -1142,10 +1160,10 @@ $mealPlanSafe = !empty($mealPlanValues)
                   <td valign="top">{$companyLogoHtml}</td>
                 </tr>
                 <tr>
-                  <td style="font-size:12px;color:#167dc2;line-height:12px">Your Local Connection - Mauritius<br>{$companyBusinessNameSafe}</td>
+                  <td style="font-size:12px">Your Local Connection - Mauritius</td>
                 </tr>
                 <tr>
-                   <td style="font-size:5px;color:white">.</td>
+                  <td style="font-size:12px">{$companyBusinessNameSafe}</td>
                 </tr>
                 <tr>
                   <td style="color:#6a7b91;font-size:10px">{$companyBusinessAddressSafe}</td>
@@ -1158,10 +1176,13 @@ $mealPlanSafe = !empty($mealPlanValues)
                 </tr>
               </tbody>
             </table></td>
-            <td width="32%" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
+            <td width="32%" valign="top"><table width="100%" border="0">
               <tbody>
                 <tr>
-                  <td align="right">{$poweredLogoHtml}</td>
+                  <td style="font-size:8px;color:#5f6d7a;">Powered by</td>
+                </tr>
+                <tr>
+                  <td>{$poweredLogoHtml}</td>
                 </tr>
               </tbody>
             </table></td>
@@ -1179,12 +1200,16 @@ $mealPlanSafe = !empty($mealPlanValues)
     <tr>
       <td><table width="49%" border="0" cellpadding="2" cellspacing="0" class="info-table">
         <tr>
-          <td width="40%" class="label">Invoice Number:</td>
-          <td width="60%" class="value">{$invoiceNumber}</td>
+          <td class="label">Invoice Number:</td>
+          <td class="value">{$invoiceNumber}</td>
         </tr>
         <tr>
           <td class="label">Invoice Date:</td>
           <td class="value">{$invoiceDate}</td>
+        </tr>
+        <tr>
+          <td class="label">Booking Reference:</td>
+          <td class="value">{$bookingRef}</td>
         </tr>
       </table></td>
     </tr>
@@ -1205,10 +1230,6 @@ $mealPlanSafe = !empty($mealPlanValues)
           <tr>
             <td valign="top"><table width="99%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
-                <td width="40%" class="label">Name:</td>
-                <td width="60%" class="value">{$accountNameSafe}</td>
-              </tr>
-              <tr>
                 <td class="label">Address:</td>
                 <td class="value">{$travelerAddress}</td>
               </tr>
@@ -1216,19 +1237,31 @@ $mealPlanSafe = !empty($mealPlanValues)
                 <td class="label">Phone:</td>
                 <td class="value">{$travelerPhone}</td>
               </tr>
+              <tr>
+                <td class="label">Email:</td>
+                <td class="value">{$travelerEmail}</td>
+              </tr>
+              <tr>
+                <td class="label">Meal Plan:</td>
+                <td class="value">{$mealPlanSafe}</td>
+              </tr>
             </table></td>
             <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
-                <td width="40%" class="label">Account Type:</td>
-                <td width="60%" class="value">(Guest booking or Privilege Traveller)</td>
+                <td class="label">Name:</td>
+                <td class="value">{$accountNameSafe}</td>
               </tr>
               <tr>
                 <td class="label">Account ID:</td>
                 <td class="value">{$accountId}</td>
               </tr>
               <tr>
-                <td class="label">Booking Reference:</td>
-                <td class="value">{$bookingRef}</td>
+                <td class="label">Currency:</td>
+                <td class="value">USD (US Dollar)</td>
+              </tr>
+              <tr>
+                <td class="label">Payment Terms:</td>
+                <td class="value"><strong>Paid in Full</strong></td>
               </tr>
             </table></td>
           </tr>
@@ -1269,13 +1302,31 @@ $mealPlanSafe = !empty($mealPlanValues)
                 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
 <tr>
-<td width="55%" style="vertical-align:top; padding-right:6px;">&nbsp;</td>
+<td width="55%" style="vertical-align:top; padding-right:6px;">
+    <table width="100%" cellpadding="2" cellspacing="0" border="0" class="thank-you" style="color:#2e7d32;">
+	    <tbody>
+	      <tr><td align="center">THANK YOU!</td></tr>
+	      <tr><td align="center">You will receive payment confirmation by email.<br>
+            Download Voucher from your account/manage trip<br><br>
+            We look forward to welcoming you to Mauritius<br>
+            and wish you a wonderful stay!</td>
+	        </tr>
+	      </tbody>
+	    </table>
+</td>
 
 <td width="45%" style="vertical-align:top;">
   <table width="100%" cellpadding="2" cellspacing="0">
     <tr>
-      <td align="right">Amount: USD {$formattedSubtotal}<br>{$discountRow}<br>{$taxChargesRow}<br>{$serviceFeeRow}<br>{$taxableRow}<br>{$vatRow}</td>
+      <td align="right">Subtotal: USD {$formattedSubtotal}</td>
     </tr>
+    <tr>
+      <td align="right">{$discountRow}</td>
+    </tr>
+    {$taxChargesRow}
+    {$serviceFeeRow}
+    {$taxableRow}
+    {$vatRow}
     <tr>
       <td align="right"><strong>TOTAL PAID: USD {$formattedTotalAmount}</strong></td>
     </tr>
@@ -1292,47 +1343,46 @@ $mealPlanSafe = !empty($mealPlanValues)
     <tr>
       <td><table width="100%" border="0" cellpadding="2" cellspacing="0">
         <tbody>
-        <tr>
-          <td valign="top"><table width="100%" border="0">
-            <tbody>
-              <tr>
-                <td><table width="100%" border="0" cellpadding="2" cellspacing="0">
-                  <tbody>
-                    <tr>
-                      <td style="font-size:12px"><strong>IMPORTANT NOTES</strong></td>
-                      <td rowspan="2" valign="top" style="font-size:12px"><table width="100%" cellpadding="2" cellspacing="0" border="0" class="thank-you" style="color:#2e7d32;">
-                        <tbody>
-                          <tr>
-                            <td align="center">THANK YOU!</td>
-                          </tr>
-                          <tr>
-                            <td align="center">You will receive payment confirmation by email.<br>
-                              Download Voucher from your account/manage trip<br>
-                              <br>
-                              We look forward to welcoming you to Mauritius<br>
-                              and wish you a wonderful stay!</td>
-                          </tr>
-                        </tbody>
-                      </table></td>
-                      </tr>
-                    <tr>
-                      <td valign="top"><ul class="check-list">
-                        <li>Please present voucher and passport when required.</li>
-                        <li>All services are subject to availability and terms & conditions of each service provider.</li>
-                        <li>For amendments or cancellations, please refer to the booking terms or contact support.</li>
-                      </ul></td>
-                      </tr>
-                  </tbody>
-                </table></td>
-                </tr>
-              </tbody>
-          </table></td>
-        </tr>
+            <tr>
+              <td style="font-size:12px"><strong>IMPORTANT NOTES</strong></td>
+              <td style="font-size:12px"><strong>NEED ASSISTANCE?</strong></td>
+            </tr>
+            <tr>
+              <td valign="top"><ul class="check-list">
+            <li>Please present voucher and passport when required.</li>
+            <li>All services are subject to availability and terms & conditions of each service provider.</li>
+            <li>For amendments or cancellations, please refer to the booking terms or contact support.</li>
+        </ul></td>
+              <td valign="top"><table width="100%" border="0">
+                <tbody>
+                  <tr>
+                    <td>Support Ticket within your account</td>
+                  </tr>
+                  <tr>
+                    <td>Office Hours: 09:00 - 17:30, Office: +230 427 10 60, WhatsApp: +230 52 51 11 53,</td>
+                  </tr>
+                  <tr>
+                    <td>(After hours Emergency only)</td>
+                  </tr>
+                  <tr>
+                    <td>&nbsp;</td>
+                  </tr>
+                  <tr>
+                    <td><span style="color:#4a5f7f; font-size:8px;">We are here to help you before, during and after your trip.</span></td>
+                  </tr>
+                </tbody>
+              </table></td>
+            </tr>
         </tbody>
       </table></td>
     </tr>
     <tr>
-      <td align="center" style="font-size:8px; color:#7a8a9f; border-top:1px solid #e1ecfa"><table width="100%" border="0" cellpadding="5" cellspacing="0">
+      <td align="center">&nbsp;</td>
+    </tr>
+    <tr>
+      <td align="center" style="font-size:8px; color:#7a8a9f; border-top:1px solid #e1ecfa">
+        
+      <table width="100%" border="0" cellpadding="5" cellspacing="0">
         <tbody>
           <tr>
             <td align="center"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
@@ -1340,10 +1390,15 @@ $mealPlanSafe = !empty($mealPlanValues)
                 <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span></td>
           </tr>
         </tbody>
-      </table></td>
+      </table>
+
+        </td>
     </tr>        
+
   </tbody>
 </table>
+
+
 HTML;
 
         $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
