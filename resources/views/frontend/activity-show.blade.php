@@ -841,11 +841,8 @@
             document.querySelectorAll('.variant-booking-form').forEach(form => {
                 const rateSpecificity = form.dataset.rateSpecificity;
                 const adultRate = parseFloat(form.dataset.adultRate) || 0;
-                const childrenRate = parseFloat(form.dataset.childrenRate) || adultRate;
-                const infantRate = parseFloat(form.dataset.infantRate) || adultRate;
-                const equipmentRate = parseFloat(form.dataset.equipmentRate) || 0;
-                const privateExclusiveRate = parseFloat(form.dataset.privateExclusiveRate) || 0;
-                const currency = form.querySelector('input[name="currency"]')?.value || '';
+                    const childrenRate = Number.isFinite(parseFloat(form.dataset.childrenRate)) ? parseFloat(form.dataset.childrenRate) : adultRate;
+                    const infantRate = Number.isFinite(parseFloat(form.dataset.infantRate)) ? parseFloat(form.dataset.infantRate) : adultRate;
 
                 const maxParticipants = parseInt(form.dataset.maxParticipants, 10) || 0;
                 const hiddenAdults = form.querySelector('.hidden-adults');

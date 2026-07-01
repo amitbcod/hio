@@ -19,4 +19,7 @@
     <a href="{{ route('admin.activity.bookings') }}" class="list-group-item list-group-item-action {{ request()->is('admin/activity/bookings*') ? 'active' : '' }}">Activity Bookings</a>
     <a href="{{ route('admin.payment-transactions.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/payment-transactions*') ? 'active' : '' }}">Payment Transactions</a>
     <a href="{{ route('admin.shared-carts.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/shared-carts*') ? 'active' : '' }}">Shared Cart Links</a>
+    <div class="list-group-item list-group-item-action mt-2 font-weight-bold">HIO Policy Templates</div>
+    <a href="{{ route('admin.policy-templates.index', ['service' => 'accommodation']) }}" class="list-group-item list-group-item-action {{ request()->is('admin/policy-templates*') && request('service')=='accommodation' ? 'active' : '' }}">Accommodation</a>
+    <a href="{{ route('admin.policy-templates.index', ['service' => 'activity']) }}" class="list-group-item list-group-item-action {{ request()->is('admin/policy-templates*') && request('service')=='activity' ? 'active' : '' }}">Activity</a>
 </div>

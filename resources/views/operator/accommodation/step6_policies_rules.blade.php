@@ -130,11 +130,18 @@
                             <div id="amendment_template_field" class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? '' : 'display:none;' }}">
                                 <div class="col-md-12">
                                     <label style="font-weight:600;">Select HIO Template</label>
+                                    @php
+                                        $amendmentTemplates = \App\Models\PolicyTemplate::where('service_type', 'accommodation')
+                                            ->where('policy_type', 'Amendment Policy')
+                                            ->where('is_active', true)
+                                            ->orderBy('title')
+                                            ->get();
+                                    @endphp
                                     <select name="amendment_policy_template_id" id="amendment_policy_template_id" class="form-control">
                                         <option value="">Choose a template</option>
-                                        <option value="template1" {{ old('amendment_policy_template_id', $accommodation->amendment_policy_template_id ?? '') === 'template1' ? 'selected' : '' }}>Standard Amendment Policy</option>
-                                        <option value="template2" {{ old('amendment_policy_template_id', $accommodation->amendment_policy_template_id ?? '') === 'template2' ? 'selected' : '' }}>Flexible Amendment Policy</option>
-                                        <option value="template3" {{ old('amendment_policy_template_id', $accommodation->amendment_policy_template_id ?? '') === 'template3' ? 'selected' : '' }}>Non-Refundable Amendment Policy</option>
+                                        @foreach($amendmentTemplates as $tpl)
+                                            <option value="{{ $tpl->id }}" {{ old('amendment_policy_template_id', $accommodation->amendment_policy_template_id ?? '') == $tpl->id ? 'selected' : '' }}>{{ $tpl->title }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -180,12 +187,18 @@
                             <div id="cancellation_template_field" class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? '' : 'display:none;' }}">
                                 <div class="col-md-12">
                                     <label style="font-weight:600;">Select HIO Template</label>
+                                    @php
+                                        $cancellationTemplates = \App\Models\PolicyTemplate::where('service_type', 'accommodation')
+                                            ->where('policy_type', 'Cancellation Policy')
+                                            ->where('is_active', true)
+                                            ->orderBy('title')
+                                            ->get();
+                                    @endphp
                                     <select name="cancellation_policy_template_id" id="cancellation_policy_template_id" class="form-control">
                                         <option value="">Choose a template</option>
-                                        <option value="template1" {{ old('cancellation_policy_template_id', $accommodation->cancellation_policy_template_id ?? '') === 'template1' ? 'selected' : '' }}>Flexible Cancellation (Free up to 7 days)</option>
-                                        <option value="template2" {{ old('cancellation_policy_template_id', $accommodation->cancellation_policy_template_id ?? '') === 'template2' ? 'selected' : '' }}>Moderate Cancellation (Free up to 14 days)</option>
-                                        <option value="template3" {{ old('cancellation_policy_template_id', $accommodation->cancellation_policy_template_id ?? '') === 'template3' ? 'selected' : '' }}>Strict Cancellation (Non-refundable)</option>
-                                        <option value="template4" {{ old('cancellation_policy_template_id', $accommodation->cancellation_policy_template_id ?? '') === 'template4' ? 'selected' : '' }}>Non-Refundable</option>
+                                        @foreach($cancellationTemplates as $tpl)
+                                            <option value="{{ $tpl->id }}" {{ old('cancellation_policy_template_id', $accommodation->cancellation_policy_template_id ?? '') == $tpl->id ? 'selected' : '' }}>{{ $tpl->title }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -265,11 +278,18 @@
                             <div id="deposit_template_field" class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? '' : 'display:none;' }}">
                                 <div class="col-md-12">
                                     <label style="font-weight:600;">Select HIO Template</label>
+                                    @php
+                                        $depositTemplates = \App\Models\PolicyTemplate::where('service_type', 'accommodation')
+                                            ->where('policy_type', 'Security Deposit Policy')
+                                            ->where('is_active', true)
+                                            ->orderBy('title')
+                                            ->get();
+                                    @endphp
                                     <select name="security_deposit_policy_template_id" id="security_deposit_policy_template_id" class="form-control">
                                         <option value="">Choose a template</option>
-                                        <option value="template1" {{ old('security_deposit_policy_template_id', $accommodation->security_deposit_policy_template_id ?? '') === 'template1' ? 'selected' : '' }}>Standard Deposit Policy</option>
-                                        <option value="template2" {{ old('security_deposit_policy_template_id', $accommodation->security_deposit_policy_template_id ?? '') === 'template2' ? 'selected' : '' }}>Pet-Friendly Deposit Policy</option>
-                                        <option value="template3" {{ old('security_deposit_policy_template_id', $accommodation->security_deposit_policy_template_id ?? '') === 'template3' ? 'selected' : '' }}>No Deposit Policy</option>
+                                        @foreach($depositTemplates as $tpl)
+                                            <option value="{{ $tpl->id }}" {{ old('security_deposit_policy_template_id', $accommodation->security_deposit_policy_template_id ?? '') == $tpl->id ? 'selected' : '' }}>{{ $tpl->title }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -369,12 +389,18 @@
                             <div id="house_rules_template_field" class="row mb-3" style="{{ ($forceTemplatePolicies ?? false) ? '' : 'display:none;' }}">
                                 <div class="col-md-12">
                                     <label style="font-weight:600;">Select HIO Template</label>
+                                    @php
+                                        $houseTemplates = \App\Models\PolicyTemplate::where('service_type', 'accommodation')
+                                            ->where('policy_type', 'House Rules')
+                                            ->where('is_active', true)
+                                            ->orderBy('title')
+                                            ->get();
+                                    @endphp
                                     <select name="house_rules_template_id" id="house_rules_template_id" class="form-control">
                                         <option value="">Choose a template</option>
-                                        <option value="template1" {{ old('house_rules_template_id', $accommodation->house_rules_template_id ?? '') === 'template1' ? 'selected' : '' }}>Standard House Rules</option>
-                                        <option value="template2" {{ old('house_rules_template_id', $accommodation->house_rules_template_id ?? '') === 'template2' ? 'selected' : '' }}>Pet-Friendly House Rules</option>
-                                        <option value="template3" {{ old('house_rules_template_id', $accommodation->house_rules_template_id ?? '') === 'template3' ? 'selected' : '' }}>Shared Property Rules</option>
-                                        <option value="template4" {{ old('house_rules_template_id', $accommodation->house_rules_template_id ?? '') === 'template4' ? 'selected' : '' }}>Luxury Property Rules</option>
+                                        @foreach($houseTemplates as $tpl)
+                                            <option value="{{ $tpl->id }}" {{ old('house_rules_template_id', $accommodation->house_rules_template_id ?? '') == $tpl->id ? 'selected' : '' }}>{{ $tpl->title }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>

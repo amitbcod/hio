@@ -202,4 +202,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('shared-carts/{sharedCart}', [SharedCartController::class, 'show'])->name('shared-carts.show');
     Route::post('shared-carts/{sharedCart}/items', [SharedCartController::class, 'storeItem'])->name('shared-carts.items.store');
     Route::post('shared-carts/{sharedCart}/items/{itemKey}/remove', [SharedCartController::class, 'removeItem'])->name('shared-carts.items.remove');
+
+    // Policy templates (HIO) - admin CRUD
+    Route::get('policy-templates', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'index'])->name('policy-templates.index');
+    Route::get('policy-templates/create', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'create'])->name('policy-templates.create');
+    Route::post('policy-templates', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'store'])->name('policy-templates.store');
+    Route::get('policy-templates/{policyTemplate}/edit', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'edit'])->name('policy-templates.edit');
+    Route::post('policy-templates/{policyTemplate}', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'update'])->name('policy-templates.update');
+    Route::delete('policy-templates/{policyTemplate}', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'destroy'])->name('policy-templates.destroy');
 });

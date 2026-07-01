@@ -145,11 +145,18 @@
                                 @enderror
                             </div>
                             <div id="amendment_template_field" style="{{ ($forceTemplatePolicies ?? false) ? '' : 'display:none;' }}">
+                                @php
+                                    $amendmentTemplates = \App\Models\PolicyTemplate::where('service_type', 'activity')
+                                        ->where('policy_type', 'Amendment Policy')
+                                        ->where('is_active', true)
+                                        ->orderBy('title')
+                                        ->get();
+                                @endphp
                                 <select name="amendment_policy_template_id" id="amendment_policy_template_id" class="form-control">
                                     <option value="">Choose a template</option>
-                                    <option value="template1" {{ old('amendment_policy_template_id', $policy->amendment_policy_template_id ?? '') === 'template1' ? 'selected' : '' }}>Standard Amendment Policy</option>
-                                    <option value="template2" {{ old('amendment_policy_template_id', $policy->amendment_policy_template_id ?? '') === 'template2' ? 'selected' : '' }}>Flexible Amendment Policy</option>
-                                    <option value="template3" {{ old('amendment_policy_template_id', $policy->amendment_policy_template_id ?? '') === 'template3' ? 'selected' : '' }}>Strict Amendment Policy</option>
+                                    @foreach($amendmentTemplates as $tpl)
+                                        <option value="{{ $tpl->id }}" {{ old('amendment_policy_template_id', $policy->amendment_policy_template_id ?? '') == $tpl->id ? 'selected' : '' }}>{{ $tpl->title }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -192,12 +199,18 @@
                                 @enderror
                             </div>
                             <div id="cancellation_template_field" style="{{ ($forceTemplatePolicies ?? false) ? '' : 'display:none;' }}">
+                                @php
+                                    $cancellationTemplates = \App\Models\PolicyTemplate::where('service_type', 'activity')
+                                        ->where('policy_type', 'Cancellation Policy')
+                                        ->where('is_active', true)
+                                        ->orderBy('title')
+                                        ->get();
+                                @endphp
                                 <select name="cancellation_policy_template_id" id="cancellation_policy_template_id" class="form-control">
                                     <option value="">Choose a template</option>
-                                    <option value="template1" {{ old('cancellation_policy_template_id', $policy->cancellation_policy_template_id ?? '') === 'template1' ? 'selected' : '' }}>Flexible Cancellation (Free up to 7 days)</option>
-                                    <option value="template2" {{ old('cancellation_policy_template_id', $policy->cancellation_policy_template_id ?? '') === 'template2' ? 'selected' : '' }}>Moderate Cancellation (Free up to 14 days)</option>
-                                    <option value="template3" {{ old('cancellation_policy_template_id', $policy->cancellation_policy_template_id ?? '') === 'template3' ? 'selected' : '' }}>Strict Cancellation (24 hours notice)</option>
-                                    <option value="template4" {{ old('cancellation_policy_template_id', $policy->cancellation_policy_template_id ?? '') === 'template4' ? 'selected' : '' }}>Non-Refundable</option>
+                                    @foreach($cancellationTemplates as $tpl)
+                                        <option value="{{ $tpl->id }}" {{ old('cancellation_policy_template_id', $policy->cancellation_policy_template_id ?? '') == $tpl->id ? 'selected' : '' }}>{{ $tpl->title }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
