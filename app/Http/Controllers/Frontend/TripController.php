@@ -1320,20 +1320,7 @@ $mealPlanSafe = !empty($mealPlanValues)
         <tbody>
             <tr>
               <td style="font-size:12px"><strong>IMPORTANT NOTES</strong></td>
-              <td rowspan="2" style="font-size:12px"><table width="100%" cellpadding="2" cellspacing="0" border="0" class="thank-you" style="color:#2e7d32;">
-                <tbody>
-                  <tr>
-                    <td align="center">THANK YOU!</td>
-                  </tr>
-                  <tr>
-                    <td align="center">You will receive payment confirmation by email.<br>
-                      Download Voucher from your account/manage trip<br>
-                      <br>
-                      We look forward to welcoming you to Mauritius<br>
-                      and wish you a wonderful stay!</td>
-                  </tr>
-                </tbody>
-              </table></td>
+              <td style="font-size:12px"><strong>NEED ASSISTANCE?</strong></td>
             </tr>
             <tr>
               <td valign="top"><ul class="check-list">
