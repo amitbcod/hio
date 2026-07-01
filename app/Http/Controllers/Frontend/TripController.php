@@ -823,7 +823,7 @@ HTML;
         }
 
         // Load logo
-        $poweredLogoPath = public_path('images/holidays-io-logo.png');
+        $poweredLogoPath = public_path('images/holidays-io-logo-poweredby2.png');
         if (!file_exists($poweredLogoPath)) {
             $poweredLogoPath = '';
         } elseif (preg_match('/\.png$/i', $poweredLogoPath)) {
@@ -1148,10 +1148,10 @@ $mealPlanSafe = !empty($mealPlanValues)
                   <td valign="top">{$companyLogoHtml}</td>
                 </tr>
                 <tr>
-                  <td style="font-size:12px">Your Local Connection - Mauritius</td>
+                  <td style="font-size:12px;color:#167dc2;line-height:12px">Your Local Connection - Mauritius<br>{$companyBusinessNameSafe}</td>
                 </tr>
                 <tr>
-                  <td style="font-size:12px">{$companyBusinessNameSafe}</td>
+                   <td style="font-size:5px;color:white">.</td>
                 </tr>
                 <tr>
                   <td style="color:#6a7b91;font-size:10px">{$companyBusinessAddressSafe}</td>
@@ -1164,13 +1164,10 @@ $mealPlanSafe = !empty($mealPlanValues)
                 </tr>
               </tbody>
             </table></td>
-            <td width="32%" valign="top"><table width="100%" border="0">
+            <td width="32%" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
               <tbody>
                 <tr>
-                  <td style="font-size:8px;color:#5f6d7a;">Powered by</td>
-                </tr>
-                <tr>
-                  <td>{$poweredLogoHtml}</td>
+                  <td align="right">{$poweredLogoHtml}</td>
                 </tr>
               </tbody>
             </table></td>
