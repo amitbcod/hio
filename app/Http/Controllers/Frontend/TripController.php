@@ -401,7 +401,7 @@ class TripController extends Controller
         $providerAddress = $providerAddress ?: '-';
         $emergencyContact = $emergencyContact ?: '-';
         $receptionContact = $receptionContact ?: '-';
-        $poweredLogoPath = public_path('images/holidays-io-logo.png');
+        $poweredLogoPath = public_path('images/holidays-io-logo-poweredby2.png');
         if (!file_exists($poweredLogoPath)) {
             $poweredLogoPath = '';
         } elseif (preg_match('/\.png$/i', $poweredLogoPath)) {
@@ -835,7 +835,7 @@ HTML;
         }
 
         // Load logo
-        $poweredLogoPath = public_path('images/holidays-io-logo-poweredby.png');
+        $poweredLogoPath = public_path('images/holidays-io-logo.png');
         if (!file_exists($poweredLogoPath)) {
             $poweredLogoPath = '';
         } elseif (preg_match('/\.png$/i', $poweredLogoPath)) {
