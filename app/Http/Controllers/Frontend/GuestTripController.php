@@ -634,6 +634,9 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 </div>
 HTML;
 
+        $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
         $pdf->SetCreator('Holidaysio');
         $pdf->SetAuthor($otpToken->email ?? 'Guest');
         $pdf->SetTitle('Voucher - ' . ($booking->booking_reference ?? ($isActivity ? 'activity' : 'accommodation')));
