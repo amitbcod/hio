@@ -1072,7 +1072,7 @@ if ($discountAmount > 0) {
 
 $taxableRow = '';
 if ($taxableAmount > 0 && $taxableAmount != $subtotal) {
-    $taxableRow = '<tr><td align="right">Amount: USD ' . $formattedTaxableAmount . '</td></tr>';
+    $taxableRow = '<tr><td align="right">Subtotal: USD ' . $formattedTaxableAmount . '</td></tr>';
 }
 
 $vatRow = '';
@@ -1275,7 +1275,7 @@ $mealPlanSafe = !empty($mealPlanValues)
 <td width="45%" style="vertical-align:top;">
   <table width="100%" cellpadding="2" cellspacing="0">
     <tr>
-      <td align="right">Subtotal: USD {$formattedSubtotal}</td>
+      <td align="right">Amount: USD {$formattedSubtotal}</td>
     </tr>
     <tr>
       <td align="right">{$discountRow}</td>
