@@ -1142,10 +1142,10 @@ $mealPlanSafe = !empty($mealPlanValues)
                   <td valign="top">{$companyLogoHtml}</td>
                 </tr>
                 <tr>
-                  <td style="font-size:12px">Your Local Connection - Mauritius</td>
+                  <td style="font-size:12px;color:#167dc2;line-height: 12px">Your Local Connection - Mauritius<br>{$companyBusinessNameSafe}</td>
                 </tr>
-                <tr>
-                  <td style="font-size:12px">{$companyBusinessNameSafe}</td>
+				  <tr>
+                  <td style="font-size:3px;color:white">.</td>
                 </tr>
                 <tr>
                   <td style="color:#6a7b91;font-size:10px">{$companyBusinessAddressSafe}</td>
@@ -1158,13 +1158,10 @@ $mealPlanSafe = !empty($mealPlanValues)
                 </tr>
               </tbody>
             </table></td>
-            <td width="32%" valign="top"><table width="100%" border="0">
+            <td width="32%" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
               <tbody>
                 <tr>
-                  <td style="font-size:8px;color:#5f6d7a;">Powered by</td>
-                </tr>
-                <tr>
-                  <td>{$poweredLogoHtml}</td>
+                  <td align="right">{$poweredLogoHtml}</td>
                 </tr>
               </tbody>
             </table></td>
@@ -1189,10 +1186,7 @@ $mealPlanSafe = !empty($mealPlanValues)
           <td class="label">Invoice Date:</td>
           <td class="value">{$invoiceDate}</td>
         </tr>
-        <tr>
-          <td class="label">Booking Reference:</td>
-          <td class="value">{$bookingRef}</td>
-        </tr>
+
       </table></td>
     </tr>
     <tr>
@@ -1212,6 +1206,10 @@ $mealPlanSafe = !empty($mealPlanValues)
           <tr>
             <td valign="top"><table width="99%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
+                <td class="label">Name:</td>
+                <td class="value">{$accountNameSafe}</td>
+              </tr>
+              <tr>
                 <td class="label">Address:</td>
                 <td class="value">{$travelerAddress}</td>
               </tr>
@@ -1219,31 +1217,19 @@ $mealPlanSafe = !empty($mealPlanValues)
                 <td class="label">Phone:</td>
                 <td class="value">{$travelerPhone}</td>
               </tr>
-              <tr>
-                <td class="label">Email:</td>
-                <td class="value">{$travelerEmail}</td>
-              </tr>
-              <tr>
-                <td class="label">Meal Plan:</td>
-                <td class="value">{$mealPlanSafe}</td>
-              </tr>
             </table></td>
             <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
-                <td class="label">Name:</td>
-                <td class="value">{$accountNameSafe}</td>
+                <td class="label">Amount Type:</td>
+                <td class="value">Guest booking</td>
               </tr>
               <tr>
                 <td class="label">Account ID:</td>
                 <td class="value">{$accountId}</td>
               </tr>
               <tr>
-                <td class="label">Currency:</td>
-                <td class="value">USD (US Dollar)</td>
-              </tr>
-              <tr>
-                <td class="label">Payment Terms:</td>
-                <td class="value"><strong>Paid in Full</strong></td>
+                <td class="label">Booking Reference:</td>
+                <td class="value">{$bookingRef}</td>
               </tr>
             </table></td>
           </tr>
@@ -1284,18 +1270,7 @@ $mealPlanSafe = !empty($mealPlanValues)
                 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
 <tr>
-<td width="55%" style="vertical-align:top; padding-right:6px;">
-    <table width="100%" cellpadding="2" cellspacing="0" border="0" class="thank-you" style="color:#2e7d32;">
-	    <tbody>
-	      <tr><td align="center">THANK YOU!</td></tr>
-	      <tr><td align="center">You will receive payment confirmation by email.<br>
-            Download Voucher from your account/manage trip<br><br>
-            We look forward to welcoming you to Mauritius<br>
-            and wish you a wonderful stay!</td>
-	        </tr>
-	      </tbody>
-	    </table>
-</td>
+<td width="55%" style="vertical-align:top; padding-right:6px;">&nbsp;</td>
 
 <td width="45%" style="vertical-align:top;">
   <table width="100%" cellpadding="2" cellspacing="0">
@@ -1327,33 +1302,27 @@ $mealPlanSafe = !empty($mealPlanValues)
         <tbody>
             <tr>
               <td style="font-size:12px"><strong>IMPORTANT NOTES</strong></td>
-              <td style="font-size:12px"><strong>NEED ASSISTANCE?</strong></td>
-            </tr>
-            <tr>
-              <td valign="top"><ul class="check-list">
-            <li>Please present voucher and passport when required.</li>
-            <li>All services are subject to availability and terms & conditions of each service provider.</li>
-            <li>For amendments or cancellations, please refer to the booking terms or contact support.</li>
-        </ul></td>
-              <td valign="top"><table width="100%" border="0">
+              <td rowspan="2" valign="top" style="font-size:12px"><table width="100%" cellpadding="2" cellspacing="0" border="0" class="thank-you" style="color:#2e7d32;">
                 <tbody>
                   <tr>
-                    <td>Support Ticket within your account</td>
+                    <td align="center">THANK YOU!</td>
                   </tr>
                   <tr>
-                    <td>Office Hours: 09:00 - 17:30, Office: +230 427 10 60, WhatsApp: +230 52 51 11 53,</td>
-                  </tr>
-                  <tr>
-                    <td>(After hours Emergency only)</td>
-                  </tr>
-                  <tr>
-                    <td>&nbsp;</td>
-                  </tr>
-                  <tr>
-                    <td><span style="color:#4a5f7f; font-size:8px;">We are here to help you before, during and after your trip.</span></td>
+                    <td align="center">You will receive payment confirmation by email.<br>
+                      Download Voucher from your account/manage trip<br>
+                      <br>
+                      We look forward to welcoming you to Mauritius<br>
+                      and wish you a wonderful stay!</td>
                   </tr>
                 </tbody>
               </table></td>
+            </tr>
+            <tr>
+              <td valign="top"><ul class="check-list">
+                <li>Please present voucher and passport when required.</li>
+                <li>All services are subject to availability and terms & conditions of each service provider.</li>
+                <li>For amendments or cancellations, please refer to the booking terms or contact support.</li>
+              </ul></td>
             </tr>
         </tbody>
       </table></td>
