@@ -1185,8 +1185,8 @@ $mealPlanSafe = !empty($mealPlanValues)
     <tr>
       <td><table width="49%" border="0" cellpadding="2" cellspacing="0" class="info-table">
         <tr>
-          <td width="30%" class="label">Invoice Number:</td>
-          <td width="70%" class="value">{$invoiceNumber}</td>
+          <td width="40%" class="label">Invoice Number:</td>
+          <td width="60%" class="value">{$invoiceNumber}</td>
         </tr>
         <tr>
           <td class="label">Invoice Date:</td>
@@ -1211,8 +1211,8 @@ $mealPlanSafe = !empty($mealPlanValues)
           <tr>
             <td valign="top"><table width="99%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
-                <td width="30%" class="label">Name:</td>
-                <td width="70%" class="value">{$accountNameSafe}</td>
+                <td width="40%" class="label">Name:</td>
+                <td width="60%" class="value">{$accountNameSafe}</td>
               </tr>
               <tr>
                 <td class="label">Address:</td>
@@ -1225,8 +1225,8 @@ $mealPlanSafe = !empty($mealPlanValues)
             </table></td>
             <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
-                <td width="30%" class="label">Account Type:</td>
-                <td width="70%" class="value">(Guest booking or Privilege Traveller)</td>
+                <td width="40%" class="label">Account Type:</td>
+                <td width="60%" class="value">(Guest booking or Privilege Traveller)</td>
               </tr>
               <tr>
                 <td class="label">Account ID:</td>
