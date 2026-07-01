@@ -480,7 +480,11 @@ class TripController extends Controller
                   <td valign="top">{$companyLogoHtml}</td>
                 </tr>
                 <tr>
-                  <td style="font-size:12px;color:#167dc2">Your Local Connection - Mauritius<br>{$companyBusinessNameSafe}</td>
+                  <td style="font-size:12px;color:#167dc2;line-height: 12px">Your Local Connection - Mauritius<br>
+                    {$companyBusinessNameSafe}</td>
+                </tr>
+                <tr>
+                  <td style="font-size:5px;color:white">.</td>
                 </tr>
                 <tr>
                   <td style="color:#6a7b91;font-size:10px">{$companyBusinessAddressSafe}</td>
