@@ -1274,22 +1274,7 @@ $mealPlanSafe = !empty($mealPlanValues)
 <td width="45%" style="vertical-align:top;">
   <table width="100%" cellpadding="2" cellspacing="0">
     <tr>
-      <td align="right">Amount: USD {$formattedSubtotal}</td>
-    </tr>
-    <tr>
-      <td align="right">{$discountRow}</td>
-    </tr>
-    <tr>
-      <td align="right">{$taxChargesRow}</td>
-    </tr>
-    <tr>
-      <td align="right">{$serviceFeeRow}</td>
-    </tr>
-    <tr>
-      <td align="right">{$taxableRow}</td>
-    </tr>
-    <tr>
-      <td align="right">{$vatRow}</td>
+      <td align="right">Amount: USD {$formattedSubtotal}<br>{$discountRow}<br>{$taxChargesRow}<br>{$serviceFeeRow}<br>{$taxableRow}<br>{$vatRow}</td>
     </tr>
     <tr>
       <td align="right"><strong>TOTAL PAID: USD {$formattedTotalAmount}</strong></td>
