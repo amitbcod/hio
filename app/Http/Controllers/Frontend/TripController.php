@@ -1072,7 +1072,7 @@ if ($discountAmount > 0) {
 
 $taxableRow = '';
 if ($taxableAmount > 0 && $taxableAmount != $subtotal) {
-    $taxableRow = '<tr><td align="right">Subtotal: USD ' . $formattedTaxableAmount . '</td></tr>';
+    $taxableRow = '<tr><td align="right">Amount: USD ' . $formattedTaxableAmount . '</td></tr>';
 }
 
 $vatRow = '';
