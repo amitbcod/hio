@@ -547,7 +547,7 @@ class TripController extends Controller
       <td style="font-size:5px;color:white">.</td>
     </tr>
     <tr>
-      <td><table width="100%" cellpadding="0" cellspacing="0">
+      <td><table width="100%" cellpadding="2" cellspacing="0">
          <tr>
           <td width="50%" style="color:#5f6d7a">Full Name: <strong style="color:#000000">{$responsibleNameSafe}</strong></td>
           <td width="50%" style="color:#5f6d7a">Other Travellers: <strong style="color:#000000">{$otherTravellersSafe}</strong></td>
