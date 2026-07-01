@@ -153,6 +153,15 @@ class GuestTripController extends Controller
             abort(404);
         }
 
+        $company = $this->getAdminCompanyData();
+        $companyBusinessNameSafe = e($company['business_name']);
+        $companyBusinessAddressSafe = e($company['business_address']);
+        $companyEmailSafe = e($company['business_email']);
+        $companyPhoneSafe = e($company['business_phone']);
+        $companyVatSafe = e($company['vat_number']);
+        $companyBrnSafe = e($company['brn_number']);
+        $companyLogoHtml = $this->renderAdminCompanyLogoHtml($company['logo_path'], $company['business_name']);
+
         $voucherDate = $isActivity ? optional($booking->activity_date)->format('d/m/Y') : (optional($booking->check_in_date)->format('d/m/Y') . ' - ' . optional($booking->check_out_date)->format('d/m/Y'));
         $serviceName = $isActivity ? ($activity->activity_name ?? 'Activity') : ($accommodation->property_name ?? 'Accommodation');
         $variantName = $isActivity ? ($booking->variant_name ? 'Variant: ' . $booking->variant_name : 'Standard option') : ($room ? 'Room: ' . $room->room_name : 'Standard room');
@@ -962,7 +971,15 @@ HTML;
         $bookingRef = 'B' . str_pad($trip->id, 4, '0', STR_PAD_LEFT);
 
         // Guest details - safe escaping
-        $travelerName = e($otpToken->name ?? 'Guest Traveller');
+        $checkoutGuestName = '';
+        foreach ($allBookings as $bookingItem) {
+            $candidate = trim((string) data_get($bookingItem, 'guest_name', ''));
+            if ($candidate !== '') {
+                $checkoutGuestName = $candidate;
+                break;
+            }
+        }
+        $travelerName = e($checkoutGuestName !== '' ? $checkoutGuestName : ($otpToken->name ?? 'Guest Traveller'));
         $travelerPhone = e($otpToken->phone ?? $otpToken->mobile ?? $otpToken->mobile_phone ?? $otpToken->phone_number ?? $otpToken->contact_number ?? $otpToken->contact_phone ?? 'N/A');
         $travelerEmail = e($otpToken->email ?? 'N/A');
         $travelerAddress = e($otpToken->address ?? 'Address not provided');
