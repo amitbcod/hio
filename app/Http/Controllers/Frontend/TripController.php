@@ -1341,6 +1341,25 @@ $mealPlanSafe = !empty($mealPlanValues)
             <li>All services are subject to availability and terms & conditions of each service provider.</li>
             <li>For amendments or cancellations, please refer to the booking terms or contact support.</li>
         </ul></td>
+              <td valign="top"><table width="100%" border="0">
+                <tbody>
+                  <tr>
+                    <td>Support Ticket within your account</td>
+                  </tr>
+                  <tr>
+                    <td>Office Hours: 09:00 - 17:30, Office: +230 427 10 60, WhatsApp: +230 52 51 11 53,</td>
+                  </tr>
+                  <tr>
+                    <td>(After hours Emergency only)</td>
+                  </tr>
+                  <tr>
+                    <td>&nbsp;</td>
+                  </tr>
+                  <tr>
+                    <td><span style="color:#4a5f7f; font-size:8px;">We are here to help you before, during and after your trip.</span></td>
+                  </tr>
+                </tbody>
+              </table></td>
             </tr>
         </tbody>
       </table></td>
