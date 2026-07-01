@@ -649,7 +649,7 @@ class TripController extends Controller
       <td style="font-size:13px"><strong>Important Information / Conditions</strong></td>
     </tr>
     <tr>
-      <td>&nbsp;</td>
+      <td style="font-size:5px;color:white">.</td>
     </tr>
     <tr>
       <td><ul class="check-list">
@@ -673,7 +673,7 @@ class TripController extends Controller
       <td style="font-size:13px;"><strong>MPO Support and Emergency</strong></td>
     </tr>
     <tr>
-      <td>&nbsp;</td>
+      <td style="font-size:5px;color:white">.</td>
     </tr>
     <tr>
       <td>
