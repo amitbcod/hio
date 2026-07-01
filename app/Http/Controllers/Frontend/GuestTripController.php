@@ -330,7 +330,10 @@ class GuestTripController extends Controller
         }
 
         $firstGuestGuest = isset($guestsForVoucher[0]) ? $guestsForVoucher[0] : null;
-        $responsibleName = $firstGuestGuest ? trim(($firstGuestGuest->first_name ?? '') . ' ' . ($firstGuestGuest->last_name ?? '')) ?: '-' : '-';
+        $bookingCustomerName = trim((string) ($booking->guest_name ?? ''));
+        $responsibleName = $bookingCustomerName !== ''
+            ? $bookingCustomerName
+            : (($firstGuestGuest ? trim(($firstGuestGuest->first_name ?? '') . ' ' . ($firstGuestGuest->last_name ?? '')) : null) ?: '-');
         $responsibleMobile = $booking->guest_mobile ?? $booking->guest_phone ?? ($firstGuestGuest->phone ?? '-') ?? '-';
         $responsibleEmail = $otpToken->email ?? $booking->guest_email ?? ($firstGuestGuest->email ?? '-') ?? '-';
         $adultCount = $booking->adults ?? $booking->adult_count ?? null;
@@ -346,7 +349,13 @@ class GuestTripController extends Controller
             $partySizeParts[] = count($guestsForVoucher) . ' Traveller' . (count($guestsForVoucher) === 1 ? '' : 's');
         }
         $travelPartySize = implode(' • ', $partySizeParts);
-        $otherTravellers = count($guestNames) > 1 ? e(implode(', ', array_slice($guestNames, 1))) : '-';
+        $comparisonName = trim((string) $responsibleName);
+        $otherTravellerNames = array_values(array_filter(array_map(function ($name) {
+            return trim((string) $name);
+        }, $guestNames), function ($name) use ($comparisonName) {
+            return $name !== '' && $name !== $comparisonName;
+        }));
+        $otherTravellers = !empty($otherTravellerNames) ? e(implode(', ', $otherTravellerNames)) : '-';
 
         $providerName = $accommodation->property_name ?? ($activity->activity_name ?? 'Service Provider');
         if ($isActivity) {

@@ -352,7 +352,13 @@ class TripController extends Controller
         }
 
         $firstGuest = $booking->guests->first();
-        $responsibleName = $traveler->name ?? ($firstGuest ? trim(($firstGuest->first_name ?? '') . ' ' . ($firstGuest->last_name ?? '')) : null) ?? '-';
+        $bookingCustomerName = trim((string) ($booking->guest_name ?? ''));
+        $travelerAccountName = trim((string) ($traveler->name ?? ''));
+        $responsibleName = $travelerAccountName !== ''
+            ? $travelerAccountName
+            : ($bookingCustomerName !== ''
+                ? $bookingCustomerName
+                : ((($firstGuest ? trim(($firstGuest->first_name ?? '') . ' ' . ($firstGuest->last_name ?? '')) : null) ?: '-')));
         $responsibleMobile = $traveler->phone ?? $booking->traveler_mobile ?? $booking->guest_mobile ?? ($firstGuest->phone ?? '-');
         $responsibleEmail = $traveler->email ?? $booking->traveler_email ?? $booking->guest_email ?? ($firstGuest->email ?? '-');
         $adultCount = $booking->adults ?? $booking->adult_count ?? null;
@@ -368,7 +374,13 @@ class TripController extends Controller
             $partySizeParts[] = count($guestsForVoucher) . ' Traveller' . (count($guestsForVoucher) === 1 ? '' : 's');
         }
         $travelPartySize = implode(' • ', $partySizeParts);
-        $otherTravellers = count($guestNames) > 1 ? e(implode(', ', array_slice($guestNames, 1))) : '-';
+        $comparisonName = trim((string) $responsibleName);
+        $otherTravellerNames = array_values(array_filter(array_map(function ($name) {
+            return trim((string) $name);
+        }, $guestNames), function ($name) use ($comparisonName) {
+            return $name !== '' && $name !== $comparisonName;
+        }));
+        $otherTravellers = !empty($otherTravellerNames) ? e(implode(', ', $otherTravellerNames)) : '-';
 
         $providerName = $accommodation->property_name ?? ($activity->activity_name ?? 'Service Provider');
         if ($isActivity) {
