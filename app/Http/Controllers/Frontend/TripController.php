@@ -525,19 +525,13 @@ class TripController extends Controller
         <tr>
           <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="3" cellspacing="0">
             <tr>
-              <td><strong>Booking Ref.</strong></td>
-            </tr>
-            <tr>
-              <td>{$bookingReferenceSafe}</td>
+              <td><strong>Booking Ref.: </strong>{$bookingReferenceSafe}</td>
             </tr>
           </table></td>
           <td style="width:2%">&nbsp;&nbsp;</td>
           <td width="49%" style="background-color: #f7fafd;border: 1px solid #d7e4f0;"><table width="100%" cellpadding="3" cellspacing="0">
             <tr>
-              <td><strong>Service Date</strong></td>
-            </tr>
-            <tr>
-              <td>{$serviceDateSafe}</td>
+              <td><strong>Service Date: </strong>{$serviceDateSafe}</td>
             </tr>
           </table></td>
         </tr>
