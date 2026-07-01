@@ -1339,9 +1339,6 @@ $mealPlanSafe = !empty($mealPlanValues)
       </table></td>
     </tr>
     <tr>
-      <td align="center">&nbsp;</td>
-    </tr>
-    <tr>
       <td align="center" style="font-size:8px; color:#7a8a9f; border-top:1px solid #e1ecfa">
         
       <table width="100%" border="0" cellpadding="5" cellspacing="0">
