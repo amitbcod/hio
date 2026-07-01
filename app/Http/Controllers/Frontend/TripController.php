@@ -1292,49 +1292,42 @@ $mealPlanSafe = !empty($mealPlanValues)
     <tr>
       <td><table width="100%" border="0" cellpadding="2" cellspacing="0">
         <tbody>
-            <tr>
-              <td style="font-size:12px"><strong>IMPORTANT NOTES</strong></td>
-              <td rowspan="2" style="font-size:12px"><table width="100%" cellpadding="2" cellspacing="0" border="0" class="thank-you" style="color:#2e7d32;">
-                <tbody>
-                  <tr>
-                    <td align="center">THANK YOU!</td>
-                  </tr>
-                  <tr>
-                    <td align="center">You will receive payment confirmation by email.<br>
-                      Download Voucher from your account/manage trip<br>
-                      <br>
-                      We look forward to welcoming you to Mauritius<br>
-                      and wish you a wonderful stay!</td>
-                  </tr>
-                </tbody>
-              </table></td>
-            </tr>
-            <tr>
-              <td valign="top"><ul class="check-list">
-            <li>Please present voucher and passport when required.</li>
-            <li>All services are subject to availability and terms & conditions of each service provider.</li>
-            <li>For amendments or cancellations, please refer to the booking terms or contact support.</li>
-        </ul></td>
-              <td valign="top"><table width="100%" border="0">
-                <tbody>
-                  <tr>
-                    <td>Support Ticket within your account</td>
-                  </tr>
-                  <tr>
-                    <td>Office Hours: 09:00 - 17:30, Office: +230 427 10 60, WhatsApp: +230 52 51 11 53,</td>
-                  </tr>
-                  <tr>
-                    <td>(After hours Emergency only)</td>
-                  </tr>
-                  <tr>
-                    <td>&nbsp;</td>
-                  </tr>
-                  <tr>
-                    <td><span style="color:#4a5f7f; font-size:8px;">We are here to help you before, during and after your trip.</span></td>
-                  </tr>
-                </tbody>
-              </table></td>
-            </tr>
+        <tr>
+          <td valign="top"><table width="100%" border="0">
+            <tbody>
+              <tr>
+                <td><table width="100%" border="0" cellpadding="2" cellspacing="0">
+                  <tbody>
+                    <tr>
+                      <td style="font-size:12px"><strong>IMPORTANT NOTES</strong></td>
+                      <td rowspan="2" valign="top" style="font-size:12px"><table width="100%" cellpadding="2" cellspacing="0" border="0" class="thank-you" style="color:#2e7d32;">
+                        <tbody>
+                          <tr>
+                            <td align="center">THANK YOU!</td>
+                          </tr>
+                          <tr>
+                            <td align="center">You will receive payment confirmation by email.<br>
+                              Download Voucher from your account/manage trip<br>
+                              <br>
+                              We look forward to welcoming you to Mauritius<br>
+                              and wish you a wonderful stay!</td>
+                          </tr>
+                        </tbody>
+                      </table></td>
+                      </tr>
+                    <tr>
+                      <td valign="top"><ul class="check-list">
+                        <li>Please present voucher and passport when required.</li>
+                        <li>All services are subject to availability and terms & conditions of each service provider.</li>
+                        <li>For amendments or cancellations, please refer to the booking terms or contact support.</li>
+                      </ul></td>
+                      </tr>
+                  </tbody>
+                </table></td>
+                </tr>
+              </tbody>
+          </table></td>
+        </tr>
         </tbody>
       </table></td>
     </tr>
@@ -1351,8 +1344,6 @@ $mealPlanSafe = !empty($mealPlanValues)
     </tr>        
   </tbody>
 </table>
-
-
 HTML;
 
         $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
