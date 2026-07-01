@@ -1023,13 +1023,7 @@ HTML;
                             <td valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="2">
                             <tbody>
                               <tr>
-                                <td>' . $item['type'] . '</td>
-                                </tr>
-                              <tr>
                                 <td>' . $item['name'] . '</td>
-                                </tr>
-                              <tr>
-                                <td>' . $item['location'] . '</td>
                                 </tr>
                               </tbody>
                             </table></td>
@@ -1078,7 +1072,7 @@ if ($discountAmount > 0) {
 
 $taxableRow = '';
 if ($taxableAmount > 0 && $taxableAmount != $subtotal) {
-    $taxableRow = '<tr><td align="right">Taxable Amount: USD ' . $formattedTaxableAmount . '</td></tr>';
+    $taxableRow = '<tr><td align="right">Subtotal: USD ' . $formattedTaxableAmount . '</td></tr>';
 }
 
 $vatRow = '';
@@ -1291,15 +1285,23 @@ $mealPlanSafe = !empty($mealPlanValues)
 <td width="45%" style="vertical-align:top;">
   <table width="100%" cellpadding="2" cellspacing="0">
     <tr>
-      <td align="right">Subtotal: USD {$formattedSubtotal}</td>
+      <td align="right">Amount: USD {$formattedSubtotal}</td>
     </tr>
     <tr>
       <td align="right">{$discountRow}</td>
     </tr>
-    {$taxChargesRow}
-    {$serviceFeeRow}
-    {$taxableRow}
-    {$vatRow}
+    <tr>
+      <td align="right">{$taxChargesRow}</td>
+    </tr>
+    <tr>
+      <td align="right">{$serviceFeeRow}</td>
+    </tr>
+    <tr>
+      <td align="right">{$taxableRow}</td>
+    </tr>
+    <tr>
+      <td align="right">{$vatRow}</td>
+    </tr>
     <tr>
       <td align="right"><strong>TOTAL PAID: USD {$formattedTotalAmount}</strong></td>
     </tr>
@@ -1318,7 +1320,20 @@ $mealPlanSafe = !empty($mealPlanValues)
         <tbody>
             <tr>
               <td style="font-size:12px"><strong>IMPORTANT NOTES</strong></td>
-              <td style="font-size:12px"><strong>NEED ASSISTANCE?</strong></td>
+              <td rowspan="2" style="font-size:12px"><table width="100%" cellpadding="2" cellspacing="0" border="0" class="thank-you" style="color:#2e7d32;">
+                <tbody>
+                  <tr>
+                    <td align="center">THANK YOU!</td>
+                  </tr>
+                  <tr>
+                    <td align="center">You will receive payment confirmation by email.<br>
+                      Download Voucher from your account/manage trip<br>
+                      <br>
+                      We look forward to welcoming you to Mauritius<br>
+                      and wish you a wonderful stay!</td>
+                  </tr>
+                </tbody>
+              </table></td>
             </tr>
             <tr>
               <td valign="top"><ul class="check-list">
@@ -1326,25 +1341,6 @@ $mealPlanSafe = !empty($mealPlanValues)
             <li>All services are subject to availability and terms & conditions of each service provider.</li>
             <li>For amendments or cancellations, please refer to the booking terms or contact support.</li>
         </ul></td>
-              <td valign="top"><table width="100%" border="0">
-                <tbody>
-                  <tr>
-                    <td>Support Ticket within your account</td>
-                  </tr>
-                  <tr>
-                    <td>Office Hours: 09:00 - 17:30, Office: +230 427 10 60, WhatsApp: +230 52 51 11 53,</td>
-                  </tr>
-                  <tr>
-                    <td>(After hours Emergency only)</td>
-                  </tr>
-                  <tr>
-                    <td>&nbsp;</td>
-                  </tr>
-                  <tr>
-                    <td><span style="color:#4a5f7f; font-size:8px;">We are here to help you before, during and after your trip.</span></td>
-                  </tr>
-                </tbody>
-              </table></td>
             </tr>
         </tbody>
       </table></td>
