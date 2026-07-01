@@ -545,13 +545,9 @@ class TripController extends Controller
     </tr>
     <tr>
       <td><table width="100%" cellpadding="0" cellspacing="0">
-        <tr>
-          <td width="50%" style="color:#5f6d7a">Full Name</td>
-          <td width="50%" style="color:#5f6d7a">Other Travellers</td>
-        </tr>
-        <tr>
-          <td style="color:#5f6d7a">{$responsibleNameSafe}</td>
-          <td style="color:#5f6d7a">{$otherTravellersSafe}</td>
+         <tr>
+          <td width="50%" style="color:#5f6d7a">Full Name: <strong style="color:#000000">{$responsibleNameSafe}</strong></td>
+          <td width="50%" style="color:#5f6d7a">Other Travellers: <strong style="color:#000000">{$otherTravellersSafe}</strong></td>
         </tr>
       </table></td>
     </tr>
@@ -559,7 +555,7 @@ class TripController extends Controller
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td><strong>Travel Party Size:</strong> {$travelPartySizeSafe}</td>
+      <td style="color:#5f6d7a">Travel Party Size: <strong style="color:#000000">{$travelPartySizeSafe}</strong></td>
     </tr>
     <tr>
       <td>&nbsp;</td>
@@ -574,39 +570,39 @@ class TripController extends Controller
 				  </tr>
               <tr>
                 <td class="label" width="40%">Property Name</td>
-                <td><strong>{$serviceNameSafe}</strong></td>
+                <td><strong style="color:#000000">{$serviceNameSafe}</strong></td>
               </tr>
               <tr>
                 <td class="label">{$infoLabelCheckIn}</td>
-                <td><strong>{$checkInDisplaySafe}</strong></td>
+                <td><strong style="color:#000000">{$checkInDisplaySafe}</strong></td>
               </tr>
               <tr>
                 <td class="label">{$infoLabelCheckOut}</td>
-                <td><strong>{$checkOutDisplaySafe}</strong></td>
+                <td><strong style="color:#000000">{$checkOutDisplaySafe}</strong></td>
               </tr>
               <tr>
                 <td class="label">{$infoLabelDaysNights}</td>
-                <td>{$nightsSafe}</td>
+                <td><strong style="color:#000000">{$nightsSafe}</strong></td>
               </tr>
               <tr>
                 <td class="label">{$infoLabelType}</td>
-                <td>{$roomTypeSafe}</td>
+                <td><strong style="color:#000000">{$roomTypeSafe}</strong></td>
               </tr>
               <tr>
                 <td class="label">Occupancy</td>
-                <td>{$occupancySafe}</td>
+                <td><strong style="color:#000000">{$occupancySafe}</strong></td>
               </tr>
               <tr>
                 <td class="label">Meal Plan</td>
-                <td>{$mealPlanSafe}</td>
+                <td><strong style="color:#000000">{$mealPlanSafe}</strong></td>
               </tr>
               <tr>
                 <td class="label">Special Requests</td>
-                <td>{$specialRequestsSafe}</td>
+                <td><strong style="color:#000000">{$specialRequestsSafe}</strong></td>
               </tr>
               <tr>
                 <td class="label">Booking Notes</td>
-                <td>{$bookingNotesSafe}</td>
+                <td><strong style="color:#000000">{$bookingNotesSafe}</strong></td>
               </tr>
             </table>
           </td>
@@ -710,7 +706,7 @@ class TripController extends Controller
       <table width="100%" border="0" cellpadding="5" cellspacing="0">
         <tbody>
           <tr>
-            <td align="center"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
+            <td align="center"><strong style="color:#0b2b51;">Lolotte Rental and Tours Ltd</strong><br>
                 Your Local Connection in Mauritius<br>
                 <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span></td>
           </tr>
