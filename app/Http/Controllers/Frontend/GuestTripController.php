@@ -388,15 +388,36 @@ class GuestTripController extends Controller
             $emergencyContact = $accommodation->emergency_contact_phone ?? $operator->emergency_contact_phone ?? null;
             $receptionContact = $accommodation->reception_contact_phone ?? $operator->reception_contact_phone ?? null;
         }
+        $contactDisplay = function ($contactValue) {
+            if ($contactValue === null || $contactValue === '') {
+                return '-';
+            }
+
+            $parts = is_array($contactValue) ? $contactValue : preg_split('/\s*\|\s*/', (string) $contactValue);
+            $filtered = [];
+            foreach ((array) $parts as $part) {
+                $part = trim((string) $part);
+                if ($part === '') {
+                    continue;
+                }
+                if (preg_match('/^(Name|Email):/i', $part)) {
+                    continue;
+                }
+                $filtered[] = $part;
+            }
+
+            return !empty($filtered) ? implode(' | ', $filtered) : '-';
+        };
+
         if (!$emergencyContact && !empty($reservationContact)) {
-            $emergencyContact = implode(' | ', $reservationContact);
+            $emergencyContact = $reservationContact;
         }
         if (!$receptionContact && !empty($reservationContact)) {
-            $receptionContact = implode(' | ', $reservationContact);
+            $receptionContact = $reservationContact;
         }
         $providerAddress = $providerAddress ?: '-';
-        $emergencyContact = $emergencyContact ?: '-';
-        $receptionContact = $receptionContact ?: '-';
+        $emergencyContact = $contactDisplay($emergencyContact);
+        $receptionContact = $contactDisplay($receptionContact);
 
         $roomType = $room->room_name ?? $booking->room_name ?? '-';
         $occupancy = $adultCount !== null ? (int) $adultCount . ' Adults' . ($childCount ? ' • ' . (int) $childCount . ' Children' : '') : '-';
