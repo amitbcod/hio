@@ -114,7 +114,7 @@
                         customised activities, The Rainbow IO will help you plan a meaningful and unforgettable trip to
                         Mauritius
                         for leisure or business. <a
-                            href="https://holidaystest.mirackle.com/live/travel-info/the-rainbow-io-mauritius">Discover more
+                            href="https://therainbow.io" target="_black">Discover more
                             at
                             The Rainbow IO.&nbsp;</a>
                     </p>

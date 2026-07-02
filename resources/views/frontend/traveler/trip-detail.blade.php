@@ -12,7 +12,7 @@
                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.show', ['otp' => $otp]) : route('traveler.trips') }}"
                     class="btn btn-secondary-outline">&larr; {{ __('traveler.trip_detail.back_to_trips') }}</a>
                 <div class="trip-id">
-                    <h1>{{ __('traveler.trip_detail.heading') }} <strong>#{{ $trip->id }}</strong></h1>
+                    <h2>{{ __('traveler.trip_detail.heading') }} <strong>#{{ $trip->id }}</strong></h2>
                     <!-- <p style="color: #666; font-size: 1rem; margin: 5px 0; padding: 12px 16px; background: #fff3e0; border-left: 4px solid #ff9500; display: inline-block; border-radius: 4px;">Trip ID: <strong>#{{ $trip->id }}</strong></p> -->
 
                     @php
@@ -102,8 +102,13 @@
                                     <div class="ref-no">{{ $booking->booking_reference }}</div>
                                 </div>
                             </div>
-                            <div class="status">
-                                {{ $booking->booking_status ?? 'Pending' }}
+                            <div class="right-section2">
+                                <div class="status">
+                                    {{ $booking->booking_status ?? 'Pending' }}
+                                </div>
+                                <button type="submit" class="cancel-btn">
+                                    Cancel
+                                </button>
                             </div>
                         </div>
                         <div class="booking-details">
