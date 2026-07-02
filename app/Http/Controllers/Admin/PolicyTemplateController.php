@@ -33,7 +33,7 @@ class PolicyTemplateController extends Controller
 
         // ensure content and is_active captured correctly
         $data['content'] = $request->input('content');
-        $data['is_active'] = $request->has('is_active');
+        $data['is_active'] = $request->exists('is_active') ? $request->has('is_active') : true;
         $data['created_by'] = auth()->id() ?? null;
         $data['title'] = $data['policy_type'];
 
@@ -68,17 +68,22 @@ class PolicyTemplateController extends Controller
 
         // capture content and checkbox explicitly
         $data['content'] = $request->input('content');
-        $data['is_active'] = $request->has('is_active');
-        $data['title'] = $data['policy_type'];
+        $data['is_active'] = $request->exists('is_active') ? $request->has('is_active') : $policyTemplate->is_active;
 
-        // generate unique slug (avoid collision with other records)
-        $slugBase = Str::slug($data['title']);
-        $slug = $slugBase;
-        $i = 1;
-        while (PolicyTemplate::where('slug', $slug)->where('id', '!=', $policyTemplate->id)->exists()) {
-            $slug = $slugBase . '-' . $i++;
+        // preserve title unless the policy type actually changes
+        if ($policyTemplate->policy_type !== $data['policy_type']) {
+            $data['title'] = $data['policy_type'];
+            $slugBase = Str::slug($data['title']);
+            $slug = $slugBase;
+            $i = 1;
+            while (PolicyTemplate::where('slug', $slug)->where('id', '!=', $policyTemplate->id)->exists()) {
+                $slug = $slugBase . '-' . $i++;
+            }
+            $data['slug'] = $slug;
+        } else {
+            $data['title'] = $policyTemplate->title;
+            $data['slug'] = $policyTemplate->slug;
         }
-        $data['slug'] = $slug;
 
         $policyTemplate->update($data);
 

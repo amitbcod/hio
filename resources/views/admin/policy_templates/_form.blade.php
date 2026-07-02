@@ -24,6 +24,16 @@
 </div>
 
 <div class="form-group">
+    <label>Active</label>
+    <div class="checkbox">
+        <label>
+            <input type="checkbox" name="is_active" value="1" {{ old('is_active', optional($template)->is_active ?? true) ? 'checked' : '' }}>
+            Enable this policy template
+        </label>
+    </div>
+</div>
+
+<div class="form-group">
     <label>Content (HTML)</label>
     <textarea name="content" id="content" class="form-control" rows="10" style="display:none;">{{ old('content', optional($template)->content) }}</textarea>
     <div id="content_editor" class="wysiwyg-editor" style="min-height:160px;background:#fff;border:1px solid #ddd;border-radius:4px;margin-bottom:8px;"></div>

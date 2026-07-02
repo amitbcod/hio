@@ -198,12 +198,6 @@ class GuestTripController extends Controller
 
         if ($isActivity) {
             $reservationContact = [];
-            if ($activity->reservation_contact_name) {
-                $reservationContact[] = 'Name: ' . $activity->reservation_contact_name;
-            }
-            if ($activity->reservation_contact_email) {
-                $reservationContact[] = 'Email: ' . $activity->reservation_contact_email;
-            }
             if ($activity->reservation_contact_phone) {
                 $reservationContact[] = 'Phone: ' . $activity->reservation_contact_phone;
             }
@@ -212,12 +206,6 @@ class GuestTripController extends Controller
             }
 
             $accountingContact = [];
-            if ($activity->accounting_contact_name) {
-                $accountingContact[] = 'Name: ' . $activity->accounting_contact_name;
-            }
-            if ($activity->accounting_contact_email) {
-                $accountingContact[] = 'Email: ' . $activity->accounting_contact_email;
-            }
             if ($activity->accounting_contact_phone) {
                 $accountingContact[] = 'Phone: ' . $activity->accounting_contact_phone;
             }
@@ -226,12 +214,6 @@ class GuestTripController extends Controller
             }
 
             $managementContact = [];
-            if ($activity->management_contact_name) {
-                $managementContact[] = 'Name: ' . $activity->management_contact_name;
-            }
-            if ($activity->management_contact_email) {
-                $managementContact[] = 'Email: ' . $activity->management_contact_email;
-            }
             if ($activity->management_contact_phone) {
                 $managementContact[] = 'Phone: ' . $activity->management_contact_phone;
             }
@@ -248,12 +230,6 @@ class GuestTripController extends Controller
             }
         } elseif ($isAccommodation) {
             $reservationContact = [];
-            if ($accommodation->reservation_contact_name) {
-                $reservationContact[] = 'Name: ' . $accommodation->reservation_contact_name;
-            }
-            if ($accommodation->reservation_contact_email) {
-                $reservationContact[] = 'Email: ' . $accommodation->reservation_contact_email;
-            }
             if ($accommodation->reservation_contact_phone) {
                 $reservationContact[] = 'Phone: ' . $accommodation->reservation_contact_phone;
             }
@@ -262,12 +238,6 @@ class GuestTripController extends Controller
             }
 
             $accountingContact = [];
-            if ($accommodation->accounting_contact_name) {
-                $accountingContact[] = 'Name: ' . $accommodation->accounting_contact_name;
-            }
-            if ($accommodation->accounting_contact_email) {
-                $accountingContact[] = 'Email: ' . $accommodation->accounting_contact_email;
-            }
             if ($accommodation->accounting_contact_phone) {
                 $accountingContact[] = 'Phone: ' . $accommodation->accounting_contact_phone;
             }
@@ -276,12 +246,6 @@ class GuestTripController extends Controller
             }
 
             $managementContact = [];
-            if ($accommodation->management_contact_name) {
-                $managementContact[] = 'Name: ' . $accommodation->management_contact_name;
-            }
-            if ($accommodation->management_contact_email) {
-                $managementContact[] = 'Email: ' . $accommodation->management_contact_email;
-            }
             if ($accommodation->management_contact_phone) {
                 $managementContact[] = 'Phone: ' . $accommodation->management_contact_phone;
             }

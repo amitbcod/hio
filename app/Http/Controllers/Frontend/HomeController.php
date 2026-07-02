@@ -8,6 +8,7 @@ use App\Models\AccommodationRate;
 use App\Models\Activity;
 use App\Models\ActivityBooking;
 use App\Models\OperatorStatusReview;
+use App\Models\PolicyTemplate;
 use App\Models\Review;
 use App\Models\ReviewItem;
 use Carbon\Carbon;
@@ -378,6 +379,7 @@ class HomeController extends Controller
         $policy = $activity->relationLoaded('policy') ? $activity->policy : null;
         $variants = collect($activity->relationLoaded('variants') ? $activity->variants : []);
         $allotments = collect($activity->relationLoaded('allotments') ? $activity->allotments : []);
+        $forceTemplatePolicies = $this->shouldForceTemplatePolicies($activity->operator?->agreement_type ?? null);
 
         $startingRate = $rates
             ->flatMap(function ($rate) {
@@ -483,10 +485,24 @@ class HomeController extends Controller
         $termsConditionsText = '';
         
         if ($policy) {
-            $bookingWindowRules = $locale === 'fr' ? ($policy->booking_window_rules_fr ?: $policy->booking_window_rules) : $policy->booking_window_rules;
+                $bookingWindowRules = $locale === 'fr' ? ($policy->booking_window_rules_fr ?: $policy->booking_window_rules) : $policy->booking_window_rules;
             $noShowPolicy = $locale === 'fr' ? ($policy->no_show_policy_fr ?: $policy->no_show_policy) : $policy->no_show_policy;
-            $cancellationPolicy = $locale === 'fr' ? ($policy->cancellation_policy_fr ?: $policy->cancellation_policy) : $policy->cancellation_policy;
-            $amendmentPolicy = $locale === 'fr' ? ($policy->amendment_policy_fr ?: $policy->amendment_policy) : $policy->amendment_policy;
+            $cancellationPolicy = $this->resolvePolicyText(
+                $policy->cancellation_policy_type,
+                $policy->cancellation_policy_template_id,
+                $locale === 'fr' ? ($policy->cancellation_policy_fr ?: $policy->cancellation_policy) : $policy->cancellation_policy,
+                'activity',
+                'Cancellation Policy',
+                $forceTemplatePolicies
+            );
+            $amendmentPolicy = $this->resolvePolicyText(
+                $policy->amendment_policy_type,
+                $policy->amendment_policy_template_id,
+                $locale === 'fr' ? ($policy->amendment_policy_fr ?: $policy->amendment_policy) : $policy->amendment_policy,
+                'activity',
+                'Amendment Policy',
+                $forceTemplatePolicies
+            );
             $safetyRequirements = $locale === 'fr' ? ($policy->safety_requirements_fr ?: $policy->safety_requirements) : $policy->safety_requirements;
 
             if ($detailed) {
@@ -701,10 +717,40 @@ class HomeController extends Controller
         ]));
         $checkoutPolicyText = implode("\n\n", $checkoutPolicyParts);
 
-        $houseRules = $locale === 'fr' ? ($accommodation->house_rules_fr ?: $accommodation->house_rules) : $accommodation->house_rules;
-        $cancellationPolicy = $locale === 'fr' ? ($accommodation->cancellation_policy_fr ?: $accommodation->cancellation_policy) : $accommodation->cancellation_policy;
-        $amendmentPolicy = $locale === 'fr' ? ($accommodation->amendment_policy_fr ?: $accommodation->amendment_policy) : $accommodation->amendment_policy;
-        $securityDepositPolicy = $locale === 'fr' ? ($accommodation->security_deposit_policy_fr ?: $accommodation->security_deposit_policy) : $accommodation->security_deposit_policy;
+        $forceTemplatePolicies = $this->shouldForceTemplatePolicies($accommodation->operator?->agreement_type ?? null);
+
+        $houseRules = $this->resolvePolicyText(
+            $accommodation->house_rules_type,
+            $accommodation->house_rules_template_id,
+            $locale === 'fr' ? ($accommodation->house_rules_fr ?: $accommodation->house_rules) : $accommodation->house_rules,
+            'accommodation',
+            'House Rules',
+            $forceTemplatePolicies
+        );
+        $cancellationPolicy = $this->resolvePolicyText(
+            $accommodation->cancellation_policy_type,
+            $accommodation->cancellation_policy_template_id,
+            $locale === 'fr' ? ($accommodation->cancellation_policy_fr ?: $accommodation->cancellation_policy) : $accommodation->cancellation_policy,
+            'accommodation',
+            'Cancellation Policy',
+            $forceTemplatePolicies
+        );
+        $amendmentPolicy = $this->resolvePolicyText(
+            $accommodation->amendment_policy_type,
+            $accommodation->amendment_policy_template_id,
+            $locale === 'fr' ? ($accommodation->amendment_policy_fr ?: $accommodation->amendment_policy) : $accommodation->amendment_policy,
+            'accommodation',
+            'Amendment Policy',
+            $forceTemplatePolicies
+        );
+        $securityDepositPolicy = $this->resolvePolicyText(
+            $accommodation->security_deposit_policy_type,
+            $accommodation->security_deposit_policy_template_id,
+            $locale === 'fr' ? ($accommodation->security_deposit_policy_fr ?: $accommodation->security_deposit_policy) : $accommodation->security_deposit_policy,
+            'accommodation',
+            'Security Deposit Policy',
+            $forceTemplatePolicies
+        );
 
         $termsParts = array_values(array_filter([
             $this->plainText($houseRules),
@@ -784,6 +830,43 @@ class HomeController extends Controller
             'terms_conditions_text' => $termsConditionsText,
             'gallery' => $detailed ? $gallery->all() : [],
         ];
+    }
+
+    private function resolvePolicyText(?string $policyType, ?string $templateId, ?string $customText, string $serviceType, string $templatePolicyType, bool $forceTemplate = false): string
+    {
+        $typeNormalized = strtolower(trim((string) ($policyType ?? '')));
+        if ($forceTemplate && !blank($templateId)) {
+            $templateText = $this->getPolicyTemplateContent($templateId, $serviceType, $templatePolicyType);
+            return $templateText ?: ($customText ?: '');
+        }
+
+        if ($typeNormalized === 'template' || (blank($typeNormalized) && !blank($templateId))) {
+            $templateText = $this->getPolicyTemplateContent($templateId, $serviceType, $templatePolicyType);
+            return $templateText ?: ($customText ?: '');
+        }
+
+        return $customText ?: '';
+    }
+
+    private function shouldForceTemplatePolicies(?string $agreementType): bool
+    {
+        $normalized = preg_replace('/\s+/', ' ', strtolower(trim((string) $agreementType)));
+        return in_array($normalized, ['oto', 'full agreement', 'full service'], true);
+    }
+
+    private function getPolicyTemplateContent(?string $templateId, string $serviceType, string $policyType): ?string
+    {
+        if (blank($templateId)) {
+            return null;
+        }
+
+        $template = PolicyTemplate::where('id', $templateId)
+            ->where('service_type', $serviceType)
+            ->where('policy_type', $policyType)
+            ->where('is_active', true)
+            ->first();
+
+        return $template ? $template->content : null;
     }
 
     private function buildSimilarAccommodations(Accommodation $accommodation): array
