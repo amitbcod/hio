@@ -810,8 +810,12 @@
             /* Right Side */
 
             .right-section{
-                text-align:right;
-                min-width:150px;
+                    text-align: right;
+                    /* min-width: 150px; */
+                    display: flex;
+                    flex-direction: column;
+                    align-items: normal;
+                    justify-content: center;
             }
 
             .status{
