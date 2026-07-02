@@ -2321,9 +2321,9 @@ ol>ul>li {
 
 .summary-card label {
     font-size: 14px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #999;
+        font-weight: 600;
+    text-transform: capitalize;
+    color: #706f6f;
 }
 
 .summary-card svg {
@@ -2338,8 +2338,8 @@ display: inline-block;
     color: #c72626;
     padding: 8px 16px;
     border-radius: 8px;
-    font-weight: 600;
-    margin-bottom: 20px;
+    font-weight: 500;
+    margin-bottom: 15px;
     border: 0;
     cursor: pointer;
     font-size: 18px;

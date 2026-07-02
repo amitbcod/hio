@@ -278,6 +278,9 @@
 
                                 <div class="right-section">
                                     <div class="status">{{ $booking->booking_status ?? __('traveler.trip_detail.not_set') }}</div>
+                                    <button type="submit" class="cancel-btn">
+                                        Cancel
+                                    </button>
                                     <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="manage-link">
                                         {{ __('traveler.trip_detail.manage') }}
                                         <i class="fa-solid fa-angle-right"></i>
