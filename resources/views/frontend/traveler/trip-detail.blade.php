@@ -217,8 +217,19 @@
 
                                     <div>
                                         <div class="activity-info">
-                                            <h3>{{ $booking->activity ? $booking->activity->activity_name : __('traveler.trip_detail.not_set') }}</h3>
-                                            <div class="subtitle">{{ $booking->variant_name ?? '' }}</div>
+                                            <h3>{{ $booking->variant_name ?: ($booking->activity ? $booking->activity->activity_name : __('traveler.trip_detail.not_set')) }}</h3>
+                                            @php
+                                                $activityLocation = '';
+                                                if ($booking->activity) {
+                                                    $locationParts = array_filter([
+                                                        $booking->activity->town,
+                                                        $booking->activity->region,
+                                                        $booking->activity->country,
+                                                    ]);
+                                                    $activityLocation = implode(', ', $locationParts);
+                                                }
+                                            @endphp
+                                            <div class="subtitle">{{ $activityLocation }}</div>
                                         </div>
 
                                         <div class="booking-details">
