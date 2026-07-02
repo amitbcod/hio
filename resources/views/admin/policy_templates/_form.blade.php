@@ -39,3 +39,9 @@
     <div id="content_editor" class="wysiwyg-editor" style="min-height:160px;background:#fff;border:1px solid #ddd;border-radius:4px;margin-bottom:8px;"></div>
 </div>
 
+<div class="form-group">
+    <label>French Content (HTML)</label>
+    <textarea name="content_fr" id="content_fr" class="form-control" rows="10" style="display:none;">{{ old('content_fr', optional($template)->content_fr) }}</textarea>
+    <div id="content_fr_editor" class="wysiwyg-editor" style="min-height:160px;background:#fff;border:1px solid #ddd;border-radius:4px;margin-bottom:8px;"></div>
+</div>
+

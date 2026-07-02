@@ -15,6 +15,7 @@ class PolicyTemplate extends Model
         'service_type',
         'policy_type',
         'content',
+        'content_fr',
         'is_active',
         'created_by',
     ];

@@ -507,12 +507,12 @@ class HomeController extends Controller
 
             if ($detailed) {
                 $bookingNotesText = $bookingWindowRules ?: $noShowPolicy ?: '';
-                $checkoutPolicyText = $cancellationPolicy ?: $amendmentPolicy ?: '';
-                $termsConditionsText = $safetyRequirements ?: '';
+                $checkoutPolicyText = trim(implode("\n\n", array_filter([$cancellationPolicy, $amendmentPolicy])));
+                $termsConditionsText = trim(implode("\n\n", array_filter([$checkoutPolicyText, $safetyRequirements])));
             } else {
                 $bookingNotesText = $this->plainText($bookingWindowRules ?: $noShowPolicy);
-                $checkoutPolicyText = $this->plainText($cancellationPolicy ?: $amendmentPolicy);
-                $termsConditionsText = $this->plainText($safetyRequirements);
+                $checkoutPolicyText = $this->plainText(trim(implode("\n\n", array_filter([$cancellationPolicy, $amendmentPolicy]))));
+                $termsConditionsText = $this->plainText(trim(implode("\n\n", array_filter([$checkoutPolicyText, $safetyRequirements]))));
             }
         }
 
@@ -866,7 +866,16 @@ class HomeController extends Controller
             ->where('is_active', true)
             ->first();
 
-        return $template ? $template->content : null;
+        if (!$template) {
+            return null;
+        }
+
+        $locale = app()->getLocale();
+        if ($locale === 'fr') {
+            return $template->content_fr ?: $template->content;
+        }
+
+        return $template->content;
     }
 
     private function buildSimilarAccommodations(Accommodation $accommodation): array

@@ -28,11 +28,13 @@ class PolicyTemplateController extends Controller
             'service_type' => 'required|in:accommodation,activity',
             'policy_type' => 'required|string|max:255',
             'content' => 'nullable|string',
+            'content_fr' => 'nullable|string',
             'is_active' => 'nullable',
         ]);
 
         // ensure content and is_active captured correctly
         $data['content'] = $request->input('content');
+        $data['content_fr'] = $request->input('content_fr');
         $data['is_active'] = $request->exists('is_active') ? $request->has('is_active') : true;
         $data['created_by'] = auth()->id() ?? null;
         $data['title'] = $data['policy_type'];
@@ -63,12 +65,25 @@ class PolicyTemplateController extends Controller
             'service_type' => 'required|in:accommodation,activity',
             'policy_type' => 'required|string|max:255',
             'content' => 'nullable|string',
+            'content_fr' => 'nullable|string',
             'is_active' => 'nullable',
         ]);
 
-        // capture content and checkbox explicitly
+        // capture content, French content, and checkbox explicitly
         $data['content'] = $request->input('content');
+        $data['content_fr'] = $request->input('content_fr');
         $data['is_active'] = $request->exists('is_active') ? $request->has('is_active') : $policyTemplate->is_active;
+
+        // temporary debug: log incoming french content length (help diagnose missing save)
+        try {
+            \Log::info('PolicyTemplate update payload', [
+                'id' => $policyTemplate->id,
+                'content_fr_present' => $request->has('content_fr'),
+                'content_fr_length' => is_string($request->input('content_fr')) ? strlen($request->input('content_fr')) : null,
+            ]);
+        } catch (\Throwable $e) {
+            // swallow logging errors to avoid breaking update flow
+        }
 
         // preserve title unless the policy type actually changes
         if ($policyTemplate->policy_type !== $data['policy_type']) {
