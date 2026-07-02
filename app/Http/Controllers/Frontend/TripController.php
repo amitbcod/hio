@@ -1315,7 +1315,7 @@ $mealPlanSafe = !empty($mealPlanValues)
       <table width="100%" border="0" cellpadding="5" cellspacing="0">
         <tbody>
           <tr>
-            <td align="center"><strong style="color:#0b2b51;">LRT Mauritius LTD </strong><br>
+            <td align="center"><strong style="color:#0b2b51;">Lolotte Rental and Tours Ltd </strong><br>
                 Your Local Connection in Mauritius<br>
                 <strong style="color:#0b2b51;">Powered by</strong> <span style="color:#f7971e; font-weight:700;">HOLIDAYS.IO</span></td>
           </tr>
