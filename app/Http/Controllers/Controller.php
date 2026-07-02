@@ -62,8 +62,29 @@ abstract class Controller extends BaseController
 
     protected function renderAdminCompanyLogoHtml(string $logoPath, string $fallbackName = 'Holidays.io'): string
     {
-        if ($logoPath && file_exists($logoPath)) {
-            return '<img src="' . $logoPath . '" width="100" style="width:100px; height:auto; display:block;" alt="' . e($fallbackName) . '">';
+        $candidatePaths = [];
+
+        if (!empty($logoPath)) {
+            $candidatePaths[] = $logoPath;
+        }
+
+        $defaultLogoPath = public_path('images/holidays-io-logo.png');
+        if (is_file($defaultLogoPath)) {
+            $candidatePaths[] = $defaultLogoPath;
+        }
+
+        foreach ($candidatePaths as $candidatePath) {
+            $resolvedPath = $candidatePath;
+            if (!empty($candidatePath) && !preg_match('#^(data:|https?:|\\\\)#i', $candidatePath)) {
+                $resolvedPath = file_exists($candidatePath) ? $candidatePath : public_path(ltrim($candidatePath, '/'));
+            }
+
+            if (!empty($resolvedPath) && is_file($resolvedPath)) {
+                $mimeType = mime_content_type($resolvedPath) ?: 'image/png';
+                $imageData = base64_encode(file_get_contents($resolvedPath));
+
+                return '<img src="data:' . $mimeType . ';base64,' . $imageData . '" width="100" style="width:100px; height:auto; display:block;" alt="' . e($fallbackName) . '">';
+            }
         }
 
         return '<div style="font-size:18px;font-weight:700;color:#f7971e;">' . e($fallbackName) . '</div>';
