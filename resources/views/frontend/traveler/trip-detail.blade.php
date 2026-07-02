@@ -288,7 +288,7 @@
                                 </div>
                             </div>
 
-                            <div class="timeslot-box">
+                            <div class="timeslot-box" style="display:none">
                                 <div>
                                     <div class="timeslot-title">
                                         <i class="fa-solid fa-circle-info"></i>
