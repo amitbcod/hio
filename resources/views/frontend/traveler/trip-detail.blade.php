@@ -102,13 +102,22 @@
                                     <div class="ref-no">{{ $booking->booking_reference }}</div>
                                 </div>
                             </div>
+                            @php
+                                $cancelDate = $booking->check_in_date ?? $booking->activity_date;
+                                $canCancel = in_array($booking->booking_status, ['Confirmed', 'Pending']) && $cancelDate && $cancelDate->gt(\Carbon\Carbon::today());
+                            @endphp
                             <div class="right-section2">
                                 <div class="status">
                                     {{ $booking->booking_status ?? 'Pending' }}
                                 </div>
-                                <button type="submit" class="cancel-btn">
-                                    Cancel
-                                </button>
+                                @if($canCancel && (!isset($guestMode) || !$guestMode))
+                                    <form method="POST" action="{{ route('traveler.trip.booking.cancel', ['trip' => $trip->id, 'booking' => $booking->id]) }}" onsubmit="return confirm('{{ __('traveler.trip_cancel_confirm') }}');">
+                                        @csrf
+                                        <button type="submit" class="cancel-btn">
+                                            {{ __('traveler.trip_cancel_button') }}
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                         <div class="booking-details">
@@ -240,7 +249,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="detail-item">
+                                            <!-- <div class="detail-item">
                                                 <div class="detail-title">
                                                     <i class="fa-regular fa-clock"></i>
                                                     <span>{{ __('traveler.trip_detail.time_slot') }}
@@ -261,8 +270,41 @@
                                                         @endif
                                                     </span>
                                                 </div>
-                                            </div>
+                                            </div> -->
+                                            <div class="detail-item">
+                                                <div class="detail-title">
+                                                    <i class="fa-regular fa-clock"></i>
+                                                    <span>
+                                                        {{ __('traveler.trip_detail.time_slot') }}
 
+                                                        <div class="detail-value">
+                                                            @php
+                                                                $slot = $booking->activity_time_slot_id && $booking->activity && $booking->activity->schedulingTimeSlots
+                                                                    ? $booking->activity->schedulingTimeSlots->firstWhere('timeslot_id', $booking->activity_time_slot_id)
+                                                                    : null;
+                                                            @endphp
+
+                                                            @if($slot)
+                                                                {{ date('H:i', strtotime($slot->start_time)) }} - {{ date('H:i', strtotime($slot->end_time)) }}
+                                                            @else
+                                                                @if($booking->time_slot)
+                                                                    {{ $booking->time_slot }}
+                                                                @elseif($booking->start_time && $booking->end_time)
+                                                                    {{ date('H:i', strtotime($booking->start_time)) }} - {{ date('H:i', strtotime($booking->end_time)) }}
+                                                                @else
+                                                                    -
+                                                                @endif
+                                                            @endif
+                                                        </div>
+
+                                                        @if(!empty($booking->duration))
+                                                            <div class="detail-small">
+                                                                {{ __('traveler.trip_detail.duration') }}: {{ $booking->duration }}
+                                                            </div>
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            </div>
                                             <div class="detail-item">
                                                 <div class="detail-title">
                                                     <span>{{ __('traveler.trip_detail.amount') }}
@@ -276,11 +318,20 @@
                                     </div>
                                 </div>
 
+                                @php
+                                    $cancelDate = $booking->check_in_date ?? $booking->activity_date;
+                                    $canCancel = in_array($booking->booking_status, ['Confirmed', 'Pending']) && $cancelDate && $cancelDate->gt(\Carbon\Carbon::today());
+                                @endphp
                                 <div class="right-section">
                                     <div class="status">{{ $booking->booking_status ?? __('traveler.trip_detail.not_set') }}</div>
-                                    <button type="submit" class="cancel-btn">
-                                        Cancel
-                                    </button>
+                                    @if($canCancel && (!isset($guestMode) || !$guestMode))
+                                        <form method="POST" action="{{ route('traveler.trip.booking.cancel', ['trip' => $trip->id, 'booking' => $booking->id]) }}" onsubmit="return confirm('{{ __('traveler.trip_cancel_confirm') }}');">
+                                            @csrf
+                                            <button type="submit" class="cancel-btn">
+                                                {{ __('traveler.trip_cancel_button') }}
+                                            </button>
+                                        </form>
+                                    @endif
                                     <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="manage-link">
                                         {{ __('traveler.trip_detail.manage') }}
                                         <i class="fa-solid fa-angle-right"></i>
@@ -305,9 +356,9 @@
                             </div>
                         </div>
 
-                        <div class="activity-footer">
+                        <!-- <div class="activity-footer">
                             <a href="#">{{ __('traveler.trip_detail.view_all_activities', ['count' => $activityBookings->count()]) }} <i class="fa-solid fa-angle-down"></i></a>
-                        </div>
+                        </div> -->
                     </div>
                 @endforeach
             @endif
@@ -407,6 +458,16 @@
                                                 style="margin-top: 5px;font-weight: 600; color: #ff9500;">{{ __('traveler.trip_detail.manage') }}</a>
                                             <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
                                                 class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">{{ __('traveler.trip_detail.download_voucher') }}</a>
+                                            @php
+                                                $cancelDate = $booking->check_in_date ?? $booking->activity_date;
+                                                $canCancel = in_array($booking->booking_status, ['Confirmed', 'Pending']) && $cancelDate && $cancelDate->gt(\Carbon\Carbon::today());
+                                            @endphp
+                                            @if($canCancel && (!isset($guestMode) || !$guestMode))
+                                                <form method="POST" action="{{ route('traveler.trip.booking.cancel', ['trip' => $trip->id, 'booking' => $booking->id]) }}" style="display:inline; margin-top:5px;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ __('traveler.trip_cancel_confirm') }}');" style="font-weight: 600;">{{ __('traveler.trip_cancel_button') }}</button>
+                                                </form>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach
@@ -475,6 +536,16 @@
                                             @if($booking->guests->count() > 0)
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}#download-voucher-section"
                                                     class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">{{ __('traveler.trip_detail.download_voucher') }}</a>
+                                            @endif
+                                            @php
+                                                $cancelDate = $booking->check_in_date ?? $booking->activity_date;
+                                                $canCancel = in_array($booking->booking_status, ['Confirmed', 'Pending']) && $cancelDate && $cancelDate->gt(\Carbon\Carbon::today());
+                                            @endphp
+                                            @if($canCancel && (!isset($guestMode) || !$guestMode))
+                                                <form method="POST" action="{{ route('traveler.trip.booking.cancel', ['trip' => $trip->id, 'booking' => $booking->id]) }}" style="display:inline; margin-top:5px;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ __('traveler.trip_cancel_confirm') }}');" style="font-weight: 600;">{{ __('traveler.trip_cancel_button') }}</button>
+                                                </form>
                                             @endif
                                         </td>
                                     </tr>

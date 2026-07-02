@@ -115,11 +115,11 @@
                         <input id="city_region" type="text" name="city_region" value="{{ old('city_region', $profile->city_region) }}">
                     </div>
 
-                    <div class="traveler-form-group">
+                    <!-- <div class="traveler-form-group">
                         <label for="emergency_contact_name">{{ __('profile.emergency_contact_name') }}</label>
                         <input id="emergency_contact_name" type="text" name="emergency_contact_name" value="{{ old('emergency_contact_name', $profile->emergency_contact_name) }}">
-                    </div>
-
+                    </div> -->
+<input id="emergency_contact_name" type="hidden" name="emergency_contact_name" value="{{ old('emergency_contact_name', $profile->emergency_contact_name) }}">
                     <div class="traveler-form-group">
                         <label for="emergency_contact_phone">{{ __('profile.emergency_contact_phone') }}</label>
                         <input id="emergency_contact_phone" type="text" name="emergency_contact_phone" value="{{ old('emergency_contact_phone', $profile->emergency_contact_phone) }}" placeholder="+23052511153">
@@ -130,7 +130,7 @@
                         <textarea id="special_notes" name="special_notes" rows="4">{{ old('special_notes', $profile->special_notes) }}</textarea>
                     </div>
 
-                    <div class="traveler-form-group">
+                    <div class="traveler-form-group" style="display:none">
                         <label for="preferred_language">{{ __('profile.preferred_language') }}</label>
                         <select id="preferred_language" name="preferred_language" required>
                             @foreach($preferredLanguages as $code => $label)

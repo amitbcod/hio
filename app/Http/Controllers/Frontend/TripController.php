@@ -67,6 +67,38 @@ class TripController extends Controller
         return view('frontend.traveler.trip-detail', compact('trip', 'accommodationBookings', 'activityBookings', 'tripStartDate', 'tripEndDate'));
     }
 
+    public function cancelBooking(Trip $trip, $bookingId)
+    {
+        $traveler = auth('traveler')->user();
+        if ($trip->traveler_account_id !== $traveler->id) {
+            abort(403);
+        }
+
+        $booking = AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->first();
+        if (!$booking) {
+            $booking = ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->first();
+        }
+
+        if (!$booking) {
+            abort(404);
+        }
+
+        if ($booking->booking_status === 'Cancelled') {
+            return back()->with('error', __('traveler.booking_already_cancelled'));
+        }
+
+        $bookingDate = $booking instanceof AccommodationBooking ? $booking->check_in_date : $booking->activity_date;
+        $cutoff = \Carbon\Carbon::today();
+        if (!$bookingDate || $bookingDate->lte($cutoff)) {
+            return back()->with('error', __('traveler.booking_cannot_cancel_after_cutoff'));
+        }
+
+        $booking->booking_status = 'Cancelled';
+        $booking->save();
+
+        return back()->with('success', __('traveler.booking_cancelled_success'));
+    }
+
     public function manageGuests(Trip $trip, $bookingId)
     {
         $traveler = auth('traveler')->user();

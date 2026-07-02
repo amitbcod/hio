@@ -220,7 +220,7 @@
                                                                         <span class="availability-extra"></span>
                                                                     </div>
                                                                     <input type="hidden" name="timeslot_discount_value" class="timeslot-discount-input" value="">
-                                                                    <button type="submit" class="btn-book-now">{{ __('home.view_details') }}</button>
+                                                                    <button type="submit" class="btn-book-now">{{ __('home.view_book_now') }}</button>
                                                                 @else
                                                                     <button type="button" class="btn-book-now" disabled>{{ __('activity.no_time_slot_available') }}</button>
                                                                 @endif
