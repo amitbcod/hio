@@ -2338,11 +2338,12 @@ display: inline-block;
     color: #c72626;
     padding: 8px 16px;
     border-radius: 8px;
-    font-weight: 500;
+    font-weight: 600; 
     margin-bottom: 15px;
     border: 0;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 16px;
+    font-family: 'Open Sans', Arial, sans-serif;
 }
 
 .right-section2 {
