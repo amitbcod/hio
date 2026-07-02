@@ -168,6 +168,17 @@ class GuestTripController extends Controller
         $duration = $isActivity ? ($activity->duration ? 'Duration: ' . $activity->duration : '') : '';
         $allowedTags = '<strong><em><u><br><p><ul><ol><li><b><i>';
 
+        $poweredLogoPath = public_path('images/holidays-io-logo-poweredby2.png');
+        if (!file_exists($poweredLogoPath)) {
+            $poweredLogoPath = '';
+        } elseif (preg_match('/\.png$/i', $poweredLogoPath)) {
+            $poweredLogoPath = $this->getSanitizedPngForTcpdf($poweredLogoPath);
+        }
+
+        $poweredLogoHtml = $poweredLogoPath
+            ? '<img src="' . $poweredLogoPath . '" width="70" style="width:70px; height:auto; display:block;" alt="Holidays.io logo">'
+            : '<div style="font-size:18px;font-weight:700;color:#f7971e;">Holidays.io</div>';
+
         if ($isActivity) {
             $meetingPoint = $activity->meeting_point_details ? strip_tags($activity->meeting_point_details, $allowedTags) : 'Not available';
             $overview = $activity->overview ? strip_tags($activity->overview, $allowedTags) : 'Not available';
@@ -491,7 +502,7 @@ body{font-family:helvetica;color:#222; font-size:10px;}
 <td width="35%" style="text-align:left;vertical-align:top;">
     <div style="display:inline-block;padding:10px 12px;background:#ffffff;">
         <div style="font-size:11px;color:#5f6d7a;margin-bottom:6px;">Powered by</div>
-        <div style="font-size:18px;font-weight:700;color:#f7971e;">Holidays.io</div>
+        {$poweredLogoHtml}
     </div>
 </td>
 </tr>
