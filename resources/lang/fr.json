@@ -499,6 +499,7 @@
     "accommodation.reviews": "Avis",
     "accommodation.rating_summary_label": "Très bien",
     "accommodation.review_count": "{0} Aucun avis disponible|{1} 1 avis provenant des données du profil de l'opérateur.|[2,*] :count avis provenant des données du profil de l'opérateur.",
+    "reviews.count": "{0} Aucun avis|{1} 1 avis|[2,*] :count avis",
     "accommodation.no_guest_reviews": "Aucun avis client disponible pour cette propriété.",
     "checkout.add_guest_details": "Ajouter les détails de :type",
     "checkout.select_saved_guests": "Sélectionnez des voyageurs enregistrés",

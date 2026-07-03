@@ -246,8 +246,9 @@ class HomeController extends Controller
             ->with('parentReview.trip.traveler')
             ->get();
 
-        return view('frontend.activity-show', [
-            'activity' => $this->mapActivity($activity->load([
+        $activityRatingSummary = $this->resolveReviewRatingSummary($approvedActivityReviews);
+
+        $activityData = $this->mapActivity($activity->load([
                 'seoSocial',
                 'policy',
                 'variants',
@@ -264,7 +265,14 @@ class HomeController extends Controller
                 },
                 'schedulingTimeSlots',
                 'operator',
-            ]), true, $bookingContext),
+            ]), true, $bookingContext);
+
+        $activityData['rating_score'] = $activityRatingSummary['score'];
+        $activityData['rating_display'] = $activityRatingSummary['score_display'];
+        $activityData['rating_count'] = $activityRatingSummary['count'];
+
+        return view('frontend.activity-show', [
+            'activity' => $activityData,
             'approvedActivityReviews' => $approvedActivityReviews,
         ]);
     }
@@ -319,9 +327,16 @@ class HomeController extends Controller
             ->with('parentReview.trip.traveler')
             ->get();
 
+        $reviewRatingSummary = $this->resolveReviewRatingSummary($approvedAccommodationReviews);
+        $accommodationData = $this->mapAccommodation($accommodation, true, $bookingContext);
+
+        $accommodationData['rating_score'] = $reviewRatingSummary['score'];
+        $accommodationData['rating_display'] = $reviewRatingSummary['score_display'];
+        $accommodationData['rating_count'] = $reviewRatingSummary['count'];
+
         return view('frontend.accommodation-show', [
-            'accommodation' => $this->mapAccommodation($accommodation, true, $bookingContext),
-            'ratingSummary' => $ratingSummary,
+            'accommodation' => $accommodationData,
+            'ratingSummary' => $reviewRatingSummary,
             'similarAccommodations' => $similarAccommodations,
             'approvedAccommodationReviews' => $approvedAccommodationReviews,
         ]);
@@ -425,7 +440,12 @@ class HomeController extends Controller
             ? $this->buildActivityAvailability($variants, $rates, $allotments, $bookingContext)
             : [];
 
-        $operatorRating = $this->resolveAccommodationRating($activity->operator?->operator_id);
+        $activityBookingIds = $activity->bookings()->pluck('id')->toArray();
+        $activityReviewSummary = $this->resolveReviewSummaryByBookingIds($activityBookingIds, 'activity');
+        $activityRatingSource = $activityReviewSummary['count'] > 0
+            ? $activityReviewSummary
+            : $this->resolveAccommodationRating($activity->operator?->operator_id);
+
         $timeSlots = [];
         if ($detailed && $activity->relationLoaded('schedulingTimeSlots')) {
             $activityBookings = ActivityBooking::where('activity_id', $activity->id)
@@ -552,9 +572,9 @@ class HomeController extends Controller
             'starting_rate_of_adult' => $startingRateofadult,
             'overview_text' => $overviewText,
             'included_text' => $includedText,
-            'rating_score' => $operatorRating['score'],
-            'rating_display' => $operatorRating['score_display'],
-            'rating_count' => $operatorRating['count'],
+            'rating_score' => $activityRatingSource['score'],
+            'rating_display' => $activityRatingSource['score_display'],
+            'rating_count' => $activityRatingSource['count'],
             'itinerary_text' => $itineraryText,
             'meeting_point' => $meetingPoint,
             'booking' => $detailed ? $bookingContext : [],
@@ -792,6 +812,13 @@ class HomeController extends Controller
             $termsConditionsText = implode("\n", $templateParts);
         }
 
+        $accommodationBookingIds = $accommodation->bookings()->pluck('id')->toArray();
+        $accommodationReviewSummary = $this->resolveReviewSummaryByBookingIds($accommodationBookingIds, 'accommodation');
+        $operatorRating = $this->resolveAccommodationRating($accommodation->operator?->operator_id);
+        $accommodationRatingSource = $accommodationReviewSummary['count'] > 0
+            ? $accommodationReviewSummary
+            : $operatorRating;
+
         return [
             'id' => $accommodation->id,
             'kind' => 'Accommodation',
@@ -813,9 +840,9 @@ class HomeController extends Controller
             'starting_rate' => $startingRate,
             'budget_range' => $this->mapAccommodationBudgetRange($startingRate),
             'description_text' => $fullDescription,
-            'rating_score' => $operatorRating['score'],
-            'rating_display' => $operatorRating['score_display'],
-            'rating_count' => $operatorRating['count'],
+            'rating_score' => $accommodationRatingSource['score'],
+            'rating_display' => $accommodationRatingSource['score_display'],
+            'rating_count' => $accommodationRatingSource['count'],
             'booking' => $detailed ? $bookingContext : [],
             'available_rooms' => $availableRooms,
             'checkin_time' => $accommodation->checkin_time ? substr((string) $accommodation->checkin_time, 0, 5) : null,
@@ -979,6 +1006,62 @@ class HomeController extends Controller
             'score_display' => $score !== null ? number_format($score, 1) : null,
             'count' => (int) ($review->testimonials_count ?? 0),
         ];
+    }
+
+    private function resolveReviewRatingSummary($reviewItems): array
+    {
+        if ($reviewItems->isEmpty()) {
+            return [
+                'score' => null,
+                'score_display' => null,
+                'count' => 0,
+            ];
+        }
+
+        $reviewAverages = $reviewItems->map(function ($reviewItem) {
+            $criteria = is_array($reviewItem->criteria) ? $reviewItem->criteria : [];
+            $numericCriteria = collect($criteria)->filter(fn ($value) => is_numeric($value) && $value !== null && $value !== '');
+
+            if ($numericCriteria->isEmpty()) {
+                return null;
+            }
+
+            return $numericCriteria->avg();
+        })->filter();
+
+        if ($reviewAverages->isEmpty()) {
+            return [
+                'score' => null,
+                'score_display' => null,
+                'count' => $reviewItems->count(),
+            ];
+        }
+
+        $score = round($reviewAverages->avg(), 1);
+
+        return [
+            'score' => $score,
+            'score_display' => number_format($score, 1),
+            'count' => $reviewItems->count(),
+        ];
+    }
+
+    private function resolveReviewSummaryByBookingIds(array $bookingIds, string $serviceType): array
+    {
+        if (empty($bookingIds)) {
+            return [
+                'score' => null,
+                'score_display' => null,
+                'count' => 0,
+            ];
+        }
+
+        $reviewItems = ReviewItem::where('service_type', $serviceType)
+            ->whereIn('service_id', $bookingIds)
+            ->where('status', 'approved')
+            ->get();
+
+        return $this->resolveReviewRatingSummary($reviewItems);
     }
 
     private function parseFlexibleList($value): array

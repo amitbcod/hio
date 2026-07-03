@@ -28,8 +28,26 @@
             <h1>
                 {{ $activity['title'] }}
                 @if(!empty($activity['rating_display']))
-                    @php $activityDetailStars = (int) round($activity['rating_display']); @endphp
-                    <span class="detail-title-rating" aria-label="{{ $activityDetailStars }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $activityDetailStars))) !!}</span>
+                    @php
+                        $ratingValue = (float) $activity['rating_display'];
+                        $fullStars = min(5, max(0, floor($ratingValue)));
+                        $halfStar = ($ratingValue - $fullStars) >= 0.5 ? 1 : 0;
+                        $emptyStars = 5 - $fullStars - $halfStar;
+                    @endphp
+                    <span class="detail-title-rating" aria-label="{{ number_format($ratingValue, 1) }} out of 5 stars">
+                        @for($i = 0; $i < $fullStars; $i++)
+                            <i class="fa-solid fa-star"></i>
+                        @endfor
+                        @if($halfStar)
+                            <i class="fa-solid fa-star-half-stroke"></i>
+                        @endif
+                        @for($i = 0; $i < $emptyStars; $i++)
+                            <i class="fa-regular fa-star"></i>
+                        @endfor
+                    </span>
+                    @if(!empty($activity['rating_count']))
+                        <a href="#reviews" class="detail-review-link">{{ trans_choice('reviews.count', $activity['rating_count'], ['count' => $activity['rating_count']]) }}</a>
+                    @endif
                 @endif
             </h1>
             <p>{{ $activity['excerpt'] }}</p>
@@ -247,7 +265,7 @@
                 </div>
 
                 @if($approvedActivityReviews && count($approvedActivityReviews) > 0)
-                    <div class="detail-card">
+                    <div class="detail-card" id="reviews">
                         <h2>{{ __('activity.guest_reviews') }}</h2>
                         @foreach($approvedActivityReviews as $review)
                             @php
@@ -265,9 +283,24 @@
                                         <p>{{ $review->parentReview->created_at->format('M d, Y') }}</p>
                                     </div>
                                     @if($avgRating)
-                                        @php $reviewStars = (int) round($avgRating); @endphp
+                                        @php
+                                            $ratingValue = (float) $avgRating;
+                                            $fullStars = min(5, max(0, floor($ratingValue)));
+                                            $halfStar = ($ratingValue - $fullStars) >= 0.5 ? 1 : 0;
+                                            $emptyStars = 5 - $fullStars - $halfStar;
+                                        @endphp
                                         <div class="review-card__score">
-                                            <span class="review-score-badge" aria-label="{{ $reviewStars }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $reviewStars))) !!}</span>
+                                            <span class="review-score-badge" aria-label="{{ number_format($ratingValue, 1) }} out of 5 stars">
+                                                @for($i = 0; $i < $fullStars; $i++)
+                                                    <i class="fa-solid fa-star"></i>
+                                                @endfor
+                                                @if($halfStar)
+                                                    <i class="fa-solid fa-star-half-stroke"></i>
+                                                @endif
+                                                @for($i = 0; $i < $emptyStars; $i++)
+                                                    <i class="fa-regular fa-star"></i>
+                                                @endfor
+                                            </span>
                                         </div>
                                     @endif
                                 </div>
@@ -622,6 +655,15 @@
 
         .detail-title-rating i {
             color: #f59e0b;
+        }
+
+        .detail-review-link {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 12px;
+            font-size: 0.9rem;
+            color: #ffffff;
+            text-decoration: underline;
         }
 
         .review-card__score {

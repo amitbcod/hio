@@ -499,6 +499,7 @@
     "accommodation.reviews": "Reviews",
     "accommodation.rating_summary_label": "Very Good",
     "accommodation.review_count": "{0} No reviews available|{1} 1 review from operator profile data.|[2,*] :count reviews from operator profile data.",
+    "reviews.count": "{0} No reviews|{1} 1 review|[2,*] :count reviews",
     "accommodation.no_guest_reviews": "No guest reviews available yet for this property.",
     "checkout.add_guest_details": "Add :type details",
     "checkout.select_saved_guests": "Select saved guests",

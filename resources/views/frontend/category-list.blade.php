@@ -260,8 +260,26 @@
                                     <div class="category-result-title-row">
                                         <h3><a href="{{ $iteUSDl }}">{{ $item['title'] }}</a></h3>
                                         @if(!empty($item['rating_display']))
-                                            @php $itemRating = (int) round($item['rating_display']); @endphp
-                                            <span class="listing-rating-badge" aria-label="{{ $itemRating }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $itemRating))) !!}</span>
+                                            @php
+                                                $ratingValue = (float) $item['rating_display'];
+                                                $fullStars = min(5, max(0, floor($ratingValue)));
+                                                $halfStar = ($ratingValue - $fullStars) >= 0.5 ? 1 : 0;
+                                                $emptyStars = 5 - $fullStars - $halfStar;
+                                            @endphp
+                                            <span class="listing-rating-badge" aria-label="{{ number_format($ratingValue, 1) }} out of 5 stars">
+                                                @for($i = 0; $i < $fullStars; $i++)
+                                                    <i class="fa-solid fa-star"></i>
+                                                @endfor
+                                                @if($halfStar)
+                                                    <i class="fa-solid fa-star-half-stroke"></i>
+                                                @endif
+                                                @for($i = 0; $i < $emptyStars; $i++)
+                                                    <i class="fa-regular fa-star"></i>
+                                                @endfor
+                                            </span>
+                                            @if(!empty($item['rating_count']))
+                                                <span class="listing-review-count">{{ trans_choice('reviews.count', $item['rating_count'], ['count' => $item['rating_count']]) }}</span>
+                                            @endif
                                         @endif
                                     </div>
                                     <p>{{ $item['excerpt'] }}</p>
@@ -398,47 +416,7 @@
                     }
                 });
             }
-
-            // Handle guest/room counter buttons
-            document.querySelectorAll('.guest-rooms-selector .count-btn').forEach(function (button) {
-                button.addEventListener('click', function () {
-                    const target = button.getAttribute('data-target');
-                    const input = findInput(target);
-                    if (!input) return;
-
-                    let value = parseInt(input.value, 10) || 0;
-                    if (button.classList.contains('increment')) {
-                        value += 1;
-                    } else if (button.classList.contains('decrement')) {
-                        value -= 1;
-                    }
-
-                    if (target === 'adults' || target === 'rooms') {
-                        value = Math.max(1, value);
-                    } else {
-                        value = Math.max(0, value);
-                    }
-
-                    input.value = value;
-                    updateGuestSummary();
-                });
-            });
-
-            // Initialize display on page load
-            updateCategoryFields();
-            updateGuestSummary();
         });
     </script>
 
-    <script>
-        if (window.innerWidth <= 768) {
-        document.querySelector(".toggle").addEventListener("click", function () {
-            document
-            .querySelector(".category-filter-form")
-            .classList.toggle("show");
-
-            this.querySelector(".arrow").classList.toggle("up");
-        });
-        }
-    </script>
 @endsection

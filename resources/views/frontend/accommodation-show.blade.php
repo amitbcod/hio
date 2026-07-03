@@ -62,8 +62,26 @@
             <h1>
                 {{ $accommodation['title'] }}
                 @if(!empty($accommodation['rating_display']))
-                    @php $titleAccommodationStars = (int) round($accommodation['rating_display']); @endphp
-                    <span class="detail-title-rating" aria-label="{{ $titleAccommodationStars }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $titleAccommodationStars))) !!}</span>
+                    @php
+                        $ratingValue = (float) $accommodation['rating_display'];
+                        $fullStars = min(5, max(0, floor($ratingValue)));
+                        $halfStar = ($ratingValue - $fullStars) >= 0.5 ? 1 : 0;
+                        $emptyStars = 5 - $fullStars - $halfStar;
+                    @endphp
+                    <span class="detail-title-rating" aria-label="{{ number_format($ratingValue, 1) }} out of 5 stars">
+                        @for($i = 0; $i < $fullStars; $i++)
+                            <i class="fa-solid fa-star"></i>
+                        @endfor
+                        @if($halfStar)
+                            <i class="fa-solid fa-star-half-stroke"></i>
+                        @endif
+                        @for($i = 0; $i < $emptyStars; $i++)
+                            <i class="fa-regular fa-star"></i>
+                        @endfor
+                    </span>
+                    @if(!empty($accommodation['rating_count']))
+                        <a href="#reviews" class="detail-review-link">{{ trans_choice('reviews.count', $accommodation['rating_count'], ['count' => $accommodation['rating_count']]) }}</a>
+                    @endif
                 @endif
             </h1>
             <p>
@@ -293,13 +311,13 @@
                 <h2>{{ __('accommodation.guest_reviews_rating') }}</h2>
                 @if(!empty($ratingSummary['score_display']))
                     @php $summaryStars = (int) round($ratingSummary['score_display']); @endphp
-                    <div class="rating-overview">
+                    <!-- <div class="rating-overview">
                         <div class="rating-score" aria-label="{{ $summaryStars }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $summaryStars))) !!}</div>
                         <div>
                             <strong>{{ __('accommodation.rating_summary_label') }}</strong>
                             <p>{{ trans_choice('accommodation.review_count', (int) ($ratingSummary['count'] ?? 0), ['count' => number_format((int) ($ratingSummary['count'] ?? 0))]) }}</p>
                         </div>
-                    </div>
+                    </div> -->
                 @elseif(empty($approvedAccommodationReviews) || count($approvedAccommodationReviews) === 0)
                     <p class="detail-empty">{{ __('accommodation.no_guest_reviews') }}</p>
                 @endif
@@ -323,9 +341,24 @@
                                         <p>{{ $review->parentReview->created_at->format('M d, Y') }}</p>
                                     </div>
                                     @if($avgRating)
-                                        @php $reviewStars = (int) round($avgRating); @endphp
+                                        @php
+                                            $ratingValue = (float) $avgRating;
+                                            $fullStars = min(5, max(0, floor($ratingValue)));
+                                            $halfStar = ($ratingValue - $fullStars) >= 0.5 ? 1 : 0;
+                                            $emptyStars = 5 - $fullStars - $halfStar;
+                                        @endphp
                                         <div class="review-card__score">
-                                            <span class="review-score-badge" aria-label="{{ $reviewStars }} star rating">{!! str_repeat('<i class="fa-solid fa-star"></i>', max(1, min(5, $reviewStars))) !!}</span>
+                                            <span class="review-score-badge" aria-label="{{ number_format($ratingValue, 1) }} out of 5 stars">
+                                                @for($i = 0; $i < $fullStars; $i++)
+                                                    <i class="fa-solid fa-star"></i>
+                                                @endfor
+                                                @if($halfStar)
+                                                    <i class="fa-solid fa-star-half-stroke"></i>
+                                                @endif
+                                                @for($i = 0; $i < $emptyStars; $i++)
+                                                    <i class="fa-regular fa-star"></i>
+                                                @endfor
+                                            </span>
                                         </div>
                                     @endif
                                 </div>
@@ -503,6 +536,15 @@
 
         .detail-title-rating i {
             color: #f59e0b;
+        }
+
+        .detail-review-link {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 12px;
+            font-size: 0.9rem;
+            color: #ffffff;
+            text-decoration: underline;
         }
 
         .detail-page-shell {
