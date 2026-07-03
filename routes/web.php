@@ -25,6 +25,7 @@ Route::get('/', [HomeController::class, 'index'])->name('frontend.home');
 Route::get('/about-us', [PageController::class, 'aboutUs'])->name('frontend.about-us');
 Route::get('/terms-and-conditions', [PageController::class, 'termsAndConditions'])->name('frontend.terms-and-conditions');
 Route::get('/privacy-policy', [PageController::class, 'privacyPolicy'])->name('frontend.privacy-policy');
+Route::get('/pages/{slug}', [\App\Http\Controllers\Frontend\StaticPageController::class, 'show'])->name('frontend.static-pages.show');
 Route::get('/category-list', [HomeController::class, 'categoryList'])->name('frontend.category.list');
 Route::get('/activities/{activity}', [HomeController::class, 'showActivity'])->name('frontend.activities.show');
 Route::get('/accommodations/{accommodation}', [HomeController::class, 'showAccommodation'])->name('frontend.accommodations.show');

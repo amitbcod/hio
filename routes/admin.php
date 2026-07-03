@@ -210,4 +210,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('policy-templates/{policyTemplate}/edit', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'edit'])->name('policy-templates.edit');
     Route::match(['put','patch','post'], 'policy-templates/{policyTemplate}', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'update'])->name('policy-templates.update');
     Route::delete('policy-templates/{policyTemplate}', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'destroy'])->name('policy-templates.destroy');
+
+    // Static pages - admin CRUD
+    Route::get('static-pages', [\App\Http\Controllers\Admin\StaticPageController::class, 'index'])->name('static-pages.index');
+    Route::get('static-pages/create', [\App\Http\Controllers\Admin\StaticPageController::class, 'create'])->name('static-pages.create');
+    Route::post('static-pages', [\App\Http\Controllers\Admin\StaticPageController::class, 'store'])->name('static-pages.store');
+    Route::get('static-pages/{staticPage}/edit', [\App\Http\Controllers\Admin\StaticPageController::class, 'edit'])->name('static-pages.edit');
+    Route::match(['put','patch','post'], 'static-pages/{staticPage}', [\App\Http\Controllers\Admin\StaticPageController::class, 'update'])->name('static-pages.update');
+    Route::delete('static-pages/{staticPage}', [\App\Http\Controllers\Admin\StaticPageController::class, 'destroy'])->name('static-pages.destroy');
 });
