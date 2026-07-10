@@ -226,6 +226,76 @@ Route::prefix('operator')->name('operator.')->group(function () {
         
         Route::delete('activity/{id}', [ActivityController::class, 'destroy'])->name('activity.destroy');
 
+        // Transport Management Routes
+        Route::get('transport', [\App\Http\Controllers\Operator\TransportController::class, 'index'])->name('transport.index');
+        Route::get('transport/create', [\App\Http\Controllers\Operator\TransportController::class, 'create'])->name('transport.create');
+        Route::post('transport', [\App\Http\Controllers\Operator\TransportController::class, 'store'])->name('transport.store');
+        
+        // Transport Settings Wizard (MUST be before parameterized routes)
+        Route::get('transport/basic-details', [\App\Http\Controllers\Operator\TransportController::class, 'showBasicDetails'])->name('transport.basic-details');
+        Route::post('transport/basic-details', [\App\Http\Controllers\Operator\TransportController::class, 'saveBasicDetails'])->name('transport.basic-details.save');
+        Route::get('transport/accounting-and-transaction', [\App\Http\Controllers\Operator\TransportController::class, 'showAccountingAndTransaction'])->name('transport.accounting-and-transaction');
+        Route::post('transport/accounting-and-transaction', [\App\Http\Controllers\Operator\TransportController::class, 'saveAccountingAndTransaction'])->name('transport.accounting-and-transaction.save');
+        Route::get('transport/policies-rules', [\App\Http\Controllers\Operator\TransportController::class, 'showPoliciesRules'])->name('transport.policies-rules');
+        Route::post('transport/policies-rules', [\App\Http\Controllers\Operator\TransportController::class, 'savePoliciesRules'])->name('transport.policies-rules.save');
+        Route::get('transport/reservation-and-communication', [\App\Http\Controllers\Operator\TransportController::class, 'showReservationAndCommunication'])->name('transport.reservation-and-communication');
+        Route::post('transport/reservation-and-communication', [\App\Http\Controllers\Operator\TransportController::class, 'saveReservationAndCommunication'])->name('transport.reservation-and-communication.save');
+        Route::get('transport/promotions-offers', [\App\Http\Controllers\Operator\TransportController::class, 'showPromotionsOffers'])->name('transport.promotions-offers');
+        Route::post('transport/promotions-offers', [\App\Http\Controllers\Operator\TransportController::class, 'savePromotionsOffers'])->name('transport.promotions-offers.save');
+        Route::get('transport/service-description', [\App\Http\Controllers\Operator\TransportController::class, 'showServiceDescription'])->name('transport.service-description');
+        Route::post('transport/service-description', [\App\Http\Controllers\Operator\TransportController::class, 'saveServiceDescription'])->name('transport.service-description.save');
+
+        // Parameterized routes (MUST be after specific routes)
+        Route::get('transport/{transport}', [\App\Http\Controllers\Operator\TransportController::class, 'show'])->name('transport.show');
+        Route::get('transport/{transport}/edit', [\App\Http\Controllers\Operator\TransportController::class, 'edit'])->name('transport.edit');
+        Route::put('transport/{transport}', [\App\Http\Controllers\Operator\TransportController::class, 'update'])->name('transport.update');
+
+        // Transport Step 2: Routes & Pricing
+        Route::get('transport/{transport}/step2-routes-pricing', [\App\Http\Controllers\Operator\TransportController::class, 'step2RoutesPricing'])->name('transport.step2.show');
+        Route::post('transport/{transport}/step2-routes-pricing', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep2RoutesPricing'])->name('transport.step2.save');
+        
+        // Transport Step 3: Media
+        Route::get('transport/{transport}/step3-media', [\App\Http\Controllers\Operator\TransportController::class, 'step3Media'])->name('transport.step3.show');
+        Route::post('transport/{transport}/step3-media', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep3Media'])->name('transport.step3.save');
+        Route::delete('transport/{transport}/step3-media/{imageIndex}', [\App\Http\Controllers\Operator\TransportController::class, 'deleteStep3MediaImage'])->name('transport.step3.delete-image');
+        
+        // Transport Step 4: Compliance
+        Route::get('transport/{transport}/step4-compliance', [\App\Http\Controllers\Operator\TransportController::class, 'step4Compliance'])->name('transport.step4.show');
+        Route::post('transport/{transport}/step4-compliance', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep4Compliance'])->name('transport.step4.save');
+
+        // Transport Step 5: Promotions & Offers
+        Route::get('transport/{transport}/step5-promotions-offers', [\App\Http\Controllers\Operator\TransportController::class, 'step5PromotionsOffers'])->name('transport.step5.show');
+        Route::post('transport/{transport}/step5-promotions-offers', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep5PromotionsOffers'])->name('transport.step5.save');
+
+        // Transport Step 6: Service Description
+        Route::get('transport/{transport}/step6-service-description', [\App\Http\Controllers\Operator\TransportController::class, 'step6ServiceDescription'])->name('transport.step6-service-description.show');
+        Route::post('transport/{transport}/step6-service-description', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep6ServiceDescription'])->name('transport.step6-service-description.save');
+        
+        // Transport Step 7: SEO & Social
+        Route::get('transport/{transport}/step6-seo', [\App\Http\Controllers\Operator\TransportController::class, 'step6Seo'])->name('transport.step6.show');
+        Route::post('transport/{transport}/step6-seo', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep6Seo'])->name('transport.step6.save');
+        
+        // Transport Step 7: Publish & Submit for Approval
+        Route::get('transport/{transport}/step7-publish', [\App\Http\Controllers\Operator\TransportController::class, 'step7Publish'])->name('transport.step7.show');
+        Route::post('transport/{transport}/submit-for-approval', [\App\Http\Controllers\Operator\TransportController::class, 'submitForApproval'])->name('transport.submit-approval');
+        
+        // Transport Bookings - General list for all transports
+        Route::get('transport-bookings', [\App\Http\Controllers\Operator\TransportController::class, 'allBookingsList'])->name('transport.bookings');
+        
+        // Transport Bookings - Specific transport bookings (kept for compatibility)
+        Route::get('transport/{transport}/bookings', [\App\Http\Controllers\Operator\TransportController::class, 'bookingList'])->name('transport.transport-bookings');
+        Route::get('transport/{transport}/bookings/{booking}', [\App\Http\Controllers\Operator\TransportController::class, 'bookingDetails'])->name('transport.booking.details');
+
+        // Driver Management Routes
+        Route::get('drivers', [\App\Http\Controllers\Operator\OperatorDriverController::class, 'index'])->name('drivers.index');
+        Route::get('drivers/create', [\App\Http\Controllers\Operator\OperatorDriverController::class, 'create'])->name('drivers.create');
+        Route::post('drivers', [\App\Http\Controllers\Operator\OperatorDriverController::class, 'store'])->name('drivers.store');
+        Route::get('drivers/{driver}', [\App\Http\Controllers\Operator\OperatorDriverController::class, 'show'])->name('drivers.show');
+        Route::get('drivers/{driver}/edit', [\App\Http\Controllers\Operator\OperatorDriverController::class, 'edit'])->name('drivers.edit');
+        Route::post('drivers/{driver}', [\App\Http\Controllers\Operator\OperatorDriverController::class, 'update'])->name('drivers.update');
+        Route::delete('drivers/{driver}', [\App\Http\Controllers\Operator\OperatorDriverController::class, 'destroy'])->name('drivers.destroy');
+        Route::post('drivers/{driver}/verify-documents', [\App\Http\Controllers\Operator\OperatorDriverController::class, 'verifyDocuments'])->name('drivers.verify-documents');
+
         // Shared cart links
         Route::get('shared-carts', [SharedCartController::class, 'index'])->name('shared-carts.index');
         Route::get('shared-carts/create', [SharedCartController::class, 'create'])->name('shared-carts.create');

@@ -374,6 +374,107 @@
                 @endforeach
             @endif
 
+            @if(isset($transportBookings) && $transportBookings->count() > 0)
+                @foreach($transportBookings as $booking)
+                    @php
+                        $transportImg = null;
+                        if ($booking->transport) {
+                            if (!empty($booking->transport->gallery_images) && is_array($booking->transport->gallery_images) && !empty($booking->transport->gallery_images[0])) {
+                                $transportImg = asset('storage/' . $booking->transport->gallery_images[0]);
+                            }
+                        }
+                        $transportImg = $transportImg ?? 'https://images.unsplash.com/photo-1521033719794-41049d18c355?w=600';
+                    @endphp
+
+                    <div class="booking-card dynamic-card transport-card">
+                        <div class="booking-header">
+                            <div class="header-icon">
+                                <i class="fa-solid fa-bus"></i>
+                            </div>
+                            <h2>{{ __('traveler.trip_detail.transport_booking') }}</h2>
+                        </div>
+
+                        <div class="booking-content">
+                            <div class="left-section">
+                                <img src="{{ $transportImg }}" alt="{{ $booking->transport?->vehicle_name ?? __('traveler.trip_detail.transport') }}" class="property-img">
+                                <div class="property-info">
+                                    <h3>{{ $booking->transport?->vehicle_name ?? __('traveler.trip_detail.transport') }}</h3>
+                                    <div class="type">{{ trim(($booking->route_from ?? '') . ' → ' . ($booking->route_to ?? '')) }}</div>
+
+                                    <div class="ref-label">{{ __('traveler.trip_detail.booking_ref') }}</div>
+                                    <div class="ref-no">{{ $booking->booking_reference }}</div>
+                                </div>
+                            </div>
+
+                            <div class="right-section2">
+                                <div class="status">
+                                    {{ $booking->booking_status ?? 'Pending' }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="booking-details">
+                            <div class="detail-item">
+                                <div class="detail-title">
+                                    <i class="fa-regular fa-calendar"></i>
+                                    <span>
+                                        {{ __('traveler.trip_detail.pickup') }}
+                                        <div class="detail-value">{{ $booking->pickup_date ? $booking->pickup_date->format('d M Y') : __('traveler.trip_detail.not_set') }}</div>
+                                        @if(!empty($booking->pickup_time))
+                                            <div class="detail-small">{{ $booking->pickup_time }}</div>
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="detail-item">
+                                <div class="detail-title">
+                                    <i class="fa-regular fa-calendar"></i>
+                                    <span>
+                                        {{ __('traveler.trip_detail.return') }}
+                                        <div class="detail-value">{{ $booking->return_date ? $booking->return_date->format('d M Y') : __('traveler.trip_detail.not_set') }}</div>
+                                        @if(!empty($booking->return_time))
+                                            <div class="detail-small">{{ $booking->return_time }}</div>
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="detail-item">
+                                <div class="detail-title">
+                                    <i class="fa-solid fa-users"></i>
+                                    <span>
+                                        {{ __('traveler.trip_detail.passengers') }}
+                                        <div class="detail-value">
+                                            {{ $booking->total_passengers ?? (($booking->adults ?? 0) + ($booking->children ?? 0)) }}
+                                        </div>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="detail-item">
+                                <div class="detail-title">
+                                    <i class="fa-regular fa-credit-card"></i>
+                                    <span>
+                                        {{ __('traveler.trip_detail.amount') }}
+                                        <div class="detail-value">
+                                            {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
+                                        </div>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-secondary btn-download">
+                                <i class="fa-solid fa-download"></i>
+                                {{ __('traveler.trip_detail.download_voucher') }}
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            @endif
+
             <!-- add more services section (uses same forms as legacy) -->
             <div class="services-card dynamic-card">
                 <div class="services-header">
@@ -568,7 +669,7 @@
             @endif
 
             <!-- No Bookings Message -->
-            @if($accommodationBookings->count() === 0 && $activityBookings->count() === 0)
+            @if($accommodationBookings->count() === 0 && $activityBookings->count() === 0 && (!isset($transportBookings) || $transportBookings->count() === 0))
                 <div style="background: #f9f9f9; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 30px;">
                     <p style="color: #999; font-size: 1.1rem; margin: 0;">{{ __('traveler.trip_detail.no_bookings') }}</p>
                 </div>

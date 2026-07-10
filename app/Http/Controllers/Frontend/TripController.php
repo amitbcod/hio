@@ -8,6 +8,7 @@ use App\Models\SavedGuest;
 use App\Models\Trip;
 use App\Models\ActivityBooking;
 use App\Models\AccommodationBooking;
+use App\Models\TransportBooking;
 use App\Services\TripStatusService;
 use Illuminate\Http\Request;
 
@@ -18,7 +19,7 @@ class TripController extends Controller
     {
         $traveler = auth('traveler')->user();
         $trips = Trip::where('traveler_account_id', $traveler->id)
-            ->with(['accommodationBookings', 'activityBookings'])
+            ->with(['accommodationBookings', 'activityBookings', 'transportBookings'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -50,6 +51,12 @@ class TripController extends Controller
             ->with(['activity', 'guests'])
             ->orderBy('activity_date', 'asc')
             ->get();
+
+        $transportBookings = TransportBooking::where('trip_id', $trip->id)
+            ->where('is_guest', 0)
+            ->with(['transport', 'driver'])
+            ->orderBy('pickup_date', 'asc')
+            ->get();
         
         // Calculate actual trip dates from all bookings
         $allDates = [];
@@ -60,11 +67,15 @@ class TripController extends Controller
         foreach ($activityBookings as $booking) {
             if ($booking->activity_date) $allDates[] = $booking->activity_date;
         }
+        foreach ($transportBookings as $booking) {
+            if ($booking->pickup_date) $allDates[] = $booking->pickup_date;
+            if ($booking->return_date) $allDates[] = $booking->return_date;
+        }
         
         $tripStartDate = !empty($allDates) ? min($allDates) : $trip->start_date;
         $tripEndDate = !empty($allDates) ? max($allDates) : $trip->end_date;
         
-        return view('frontend.traveler.trip-detail', compact('trip', 'accommodationBookings', 'activityBookings', 'tripStartDate', 'tripEndDate'));
+        return view('frontend.traveler.trip-detail', compact('trip', 'accommodationBookings', 'activityBookings', 'transportBookings', 'tripStartDate', 'tripEndDate'));
     }
 
     public function cancelBooking(Trip $trip, $bookingId)
@@ -183,11 +194,19 @@ class TripController extends Controller
         }
 
         if (!$booking) {
+            $booking = TransportBooking::where('id', $bookingId)
+                ->where('trip_id', $trip->id)
+                ->with(['transport.operator', 'driver', 'guests'])
+                ->first();
+        }
+
+        if (!$booking) {
             abort(404);
         }
 
         $isActivity = $booking instanceof \App\Models\ActivityBooking;
         $isAccommodation = $booking instanceof \App\Models\AccommodationBooking;
+        $isTransport = $booking instanceof TransportBooking;
 
         if ($isActivity) {
             $activity = $booking->activity;
@@ -203,12 +222,31 @@ class TripController extends Controller
             }
             $room = $booking->room;
             $operator = $accommodation->operator;
+        } elseif ($isTransport) {
+            $transport = $booking->transport;
+            if (!$transport) {
+                abort(404);
+            }
+            $operator = $transport->operator;
+            $ops = null;
         } else {
             abort(404);
         }
-        $voucherDate = $isActivity ? optional($booking->activity_date)->format('d/m/Y') : (optional($booking->check_in_date)->format('d/m/Y') . ' - ' . optional($booking->check_out_date)->format('d/m/Y'));
-        $serviceName = $isActivity ? ($activity->activity_name ?? 'Activity') : ($accommodation->property_name ?? 'Accommodation');
-        $variantName = $isActivity ? ($booking->variant_name ? 'Variant: ' . $booking->variant_name : 'Standard option') : ($room ? 'Room: ' . $room->room_name : 'Standard room');
+        $voucherDate = $isActivity
+            ? optional($booking->activity_date)->format('d/m/Y')
+            : ($isTransport
+                ? trim((optional($booking->pickup_date)->format('d/m/Y') ?: '') . ' - ' . (optional($booking->return_date)->format('d/m/Y') ?: ''))
+                : (optional($booking->check_in_date)->format('d/m/Y') . ' - ' . optional($booking->check_out_date)->format('d/m/Y')));
+        $serviceName = $isActivity
+            ? ($activity->activity_name ?? 'Activity')
+            : ($isTransport
+                ? ($transport->vehicle_name ?? 'Transport')
+                : ($accommodation->property_name ?? 'Accommodation'));
+        $variantName = $isActivity
+            ? ($booking->variant_name ? 'Variant: ' . $booking->variant_name : 'Standard option')
+            : ($isTransport
+                ? ($transport->vehicle_name ? 'Vehicle: ' . $transport->vehicle_name : 'Standard transport option')
+                : ($room ? 'Room: ' . $room->room_name : 'Standard room'));
         $duration = $isActivity ? ($activity->duration ? 'Duration: ' . $activity->duration : '') : '';
         $allowedTags = '<strong><em><u><br><p><ul><ol><li><b><i>';
         if ($isActivity) {
@@ -286,6 +324,24 @@ class TripController extends Controller
             }
 
             $opsContact = []; // No ops for accommodation
+        } elseif ($isTransport) {
+            $reservationContact = [];
+            if (!empty($operator->phone)) {
+                $reservationContact[] = 'Phone: ' . $operator->phone;
+            }
+            if (!empty($operator->mobile)) {
+                $reservationContact[] = 'Mobile: ' . $operator->mobile;
+            }
+            if (!empty($operator->reservation_contact_phone)) {
+                $reservationContact[] = 'Reservation: ' . $operator->reservation_contact_phone;
+            }
+            if (!empty($operator->reservation_contact_mobile)) {
+                $reservationContact[] = 'Reservation: ' . $operator->reservation_contact_mobile;
+            }
+
+            $accountingContact = [];
+            $managementContact = [];
+            $opsContact = [];
         }
 
         $voucherGuest = null;
@@ -338,9 +394,19 @@ class TripController extends Controller
         }
 
         $issueDate = now()->format('d M Y');
-        $serviceDate = $isActivity ? optional($booking->activity_date)->format('d M Y') : (optional($booking->check_in_date)->format('d M Y') . ' - ' . optional($booking->check_out_date)->format('d M Y'));
-        $checkInDisplay = $isActivity ? optional($booking->activity_date)->format('d M Y') . ' • ' . ($booking->activity_time ?? '-') : optional($booking->check_in_date)->format('d M Y') . ' • From ' . ($booking->check_in_time ?? '14:00');
-        $checkOutDisplay = $isActivity ? ($activity->duration ? e($activity->duration) : '-') : optional($booking->check_out_date)->format('d M Y') . ' • By ' . ($booking->check_out_time ?? '11:00');
+        if ($isActivity) {
+            $serviceDate = optional($booking->activity_date)->format('d M Y');
+            $checkInDisplay = optional($booking->activity_date)->format('d M Y') . ' • ' . ($booking->activity_time ?? '-');
+            $checkOutDisplay = $activity->duration ? e($activity->duration) : '-';
+        } elseif ($isTransport) {
+            $serviceDate = trim((optional($booking->pickup_date)->format('d M Y') ?: '') . ' - ' . (optional($booking->return_date)->format('d M Y') ?: '')) ?: 'N/A';
+            $checkInDisplay = optional($booking->pickup_date)->format('d M Y') . ' • ' . ($booking->pickup_time ?? '-');
+            $checkOutDisplay = optional($booking->return_date)->format('d M Y') . ' • ' . ($booking->return_time ?? '-');
+        } else {
+            $serviceDate = trim((optional($booking->check_in_date)->format('d M Y') ?: '') . ' - ' . (optional($booking->check_out_date)->format('d M Y') ?: '')) ?: 'N/A';
+            $checkInDisplay = optional($booking->check_in_date)->format('d M Y') . ' • From ' . ($booking->check_in_time ?? '14:00');
+            $checkOutDisplay = optional($booking->check_out_date)->format('d M Y') . ' • By ' . ($booking->check_out_time ?? '11:00');
+        }
         $nights = '-';
         if ($isAccommodation && $booking->check_in_date && $booking->check_out_date) {
             $diff = $booking->check_in_date->diffInDays($booking->check_out_date);
@@ -378,7 +444,7 @@ class TripController extends Controller
         }));
         $otherTravellers = !empty($otherTravellerNames) ? e(implode(', ', $otherTravellerNames)) : '-';
 
-        $providerName = $accommodation->property_name ?? ($activity->activity_name ?? 'Service Provider');
+        $providerName = $accommodation->property_name ?? ($activity->activity_name ?? ($transport->vehicle_name ?? 'Service Provider'));
         if ($isActivity) {
             $providerAddress = trim(implode(', ', array_filter([
                 $activity->destination ?? null,
@@ -389,6 +455,16 @@ class TripController extends Controller
             $locationLabel = $activity->town ?: ($activity->region ?: ($operator->country ?? 'Mauritius'));
             $emergencyContact = $activity->emergency_contact_phone ?? $operator->emergency_contact_phone ?? null;
             $receptionContact = $activity->reception_contact_phone ?? $operator->reception_contact_phone ?? null;
+        } elseif ($isTransport) {
+            $providerAddress = trim(implode(', ', array_filter([
+                $operator->address_line_1 ?? null,
+                $operator->address_line_2 ?? null,
+                $operator->city ?? null,
+                $operator->country ?? null,
+            ])), ', ');
+            $locationLabel = $booking->route_to ?: ($operator->country ?? 'Mauritius');
+            $emergencyContact = $operator->emergency_contact_phone ?? $operator->phone ?? null;
+            $receptionContact = $operator->reception_contact_phone ?? $operator->mobile ?? null;
         } else {
             $providerAddress = trim(implode(', ', array_filter([
                 $accommodation->address_line_1 ?? null,
@@ -429,9 +505,13 @@ class TripController extends Controller
             ? route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guestId], true)
             : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id], true);
 
-        $roomType = $room->room_name ?? $booking->room_name ?? '-';
-        $occupancy = $adultCount !== null ? (int) $adultCount . ' Adults' . ($childCount ? ' • ' . (int) $childCount . ' Children' : '') : '-';
-        $mealPlan = $booking->meal_plan ?? $booking->package_name ?? 'N/A';
+        $roomType = $isTransport ? ($transport->vehicle_name ?? '-') : ($room->room_name ?? $booking->room_name ?? '-');
+        $occupancy = $isTransport
+            ? (($booking->total_passengers !== null ? (int) $booking->total_passengers . ' Passengers' : ((($booking->adults ?? 0) + ($booking->children ?? 0)) . ' Passengers')))
+            : ($adultCount !== null ? (int) $adultCount . ' Adults' . ($childCount ? ' • ' . (int) $childCount . ' Children' : '') : '-');
+        $mealPlan = $isTransport
+            ? (($booking->route_from || $booking->route_to) ? trim(($booking->route_from ?? '') . ' → ' . ($booking->route_to ?? '')) : 'N/A')
+            : ($booking->meal_plan ?? $booking->package_name ?? 'N/A');
         $specialRequests = $booking->special_request ?? $booking->special_requests ?? 'None';
         $bookingNotes = $booking->notes ?? $booking->booking_notes ?? '-';
 
@@ -440,13 +520,13 @@ class TripController extends Controller
             ? '<img src="' . $poweredLogoPath . '" width="70" style="width:70px; height:auto; display:block;" alt="Holidays.io logo">'
             : '<div style="font-size:18px;font-weight:700;color:#f7971e;">Holidays.io</div>';
         $locationLabelSafe = e($locationLabel ?? 'Mauritius');
-        $voucherTitle = e($isActivity ? 'Activity Service Voucher' : 'Accommodation Service Voucher');
+        $voucherTitle = e($isTransport ? 'Transport Service Voucher' : ($isActivity ? 'Activity Service Voucher' : 'Accommodation Service Voucher'));
         $bookingReferenceSafe = e($booking->booking_reference ?? '-');
         $issueDateSafe = e($issueDate);
         $serviceDateSafe = e($serviceDate);
-        $serviceTypeLabel = e($isActivity ? 'Activity' : 'Accommodation');
-        $serviceDurationLabel = e($isActivity ? 'Number of Days' : 'Number of Nights');
-        $serviceTypeDetailLabel = e($isActivity ? 'Activity Type' : 'Room Type');
+        $serviceTypeLabel = e($isTransport ? 'Transport' : ($isActivity ? 'Activity' : 'Accommodation'));
+        $serviceDurationLabel = e($isTransport ? 'Route' : ($isActivity ? 'Number of Days' : 'Number of Nights'));
+        $serviceTypeDetailLabel = e($isTransport ? 'Vehicle Type' : ($isActivity ? 'Activity Type' : 'Room Type'));
         $responsibleNameSafe = e($responsibleName);
         $responsibleMobileSafe = e($responsibleMobile);
         $responsibleEmailSafe = e($responsibleEmail);
@@ -465,10 +545,30 @@ class TripController extends Controller
         $mealPlanSafe = e($mealPlan);
         $specialRequestsSafe = e($specialRequests);
         $bookingNotesSafe = e($bookingNotes);
-        $infoLabelCheckIn = e($isActivity ? 'Activity Date / Time' : 'Check-in Date / Time');
-        $infoLabelCheckOut = e($isActivity ? 'Activity Date / Time' : 'Check-out Date / Time');
-        $infoLabelDaysNights = e($isActivity ? 'Number of Days' : 'Number of Nights');
-        $infoLabelType = e($isActivity ? 'Activity Type' : 'Room Type');
+        $infoLabelCheckIn = e($isTransport ? 'Pickup Date / Time' : ($isActivity ? 'Activity Date / Time' : 'Check-in Date / Time'));
+        $infoLabelCheckOut = e($isTransport ? 'Return Date / Time' : ($isActivity ? 'Activity Date / Time' : 'Check-out Date / Time'));
+        $infoLabelDaysNights = e($isTransport ? 'Route' : ($isActivity ? 'Number of Days' : 'Number of Nights'));
+        $infoLabelType = e($isTransport ? 'Vehicle Type' : ($isActivity ? 'Activity Type' : 'Room Type'));
+        $invoiceTitle = e(__('invoice.title'));
+        $invoiceNumberLabel = e(__('invoice.number_label'));
+        $invoiceDateLabel = e(__('invoice.date_label'));
+        $billToLabel = e(__('invoice.bill_to'));
+        $accountDetailsLabel = e(__('invoice.account_details'));
+        $nameLabel = e(__('invoice.name_label'));
+        $addressLabel = e(__('invoice.address_label'));
+        $phoneLabel = e(__('invoice.phone_label'));
+        $amountTypeLabel = e(__('invoice.amount_type'));
+        $accountIdLabel = e(__('invoice.account_id'));
+        $bookingRefLabel = e(__('invoice.booking_ref'));
+        $accountHolderLabel = e(__('invoice.account_holder_label'));
+        $accountHolderNote = e(__('invoice.account_holder_note'));
+        $serviceLabel = e(__('invoice.service'));
+        $serviceDatesLabel = e(__('invoice.service_dates'));
+        $descriptionLabel = e(__('invoice.description'));
+        $qtyLabel = e(__('invoice.qty'));
+        $unitLabel = e(__('invoice.unit'));
+        $totalLabel = e(__('invoice.total'));
+
         $html = <<<HTML
 <style>
     .label{font-size:8px;color:#5f6d7a;letter-spacing:0.5px;}
@@ -750,7 +850,7 @@ HTML;
             $y = 120;
           //  $pdf->write2DBarcode($voucherUrl, 'QRCODE,H', $x, $y, 35, 35, [], 'N');
         }
-        $filename = ($isActivity ? 'activity' : 'accommodation') . '-voucher-' . preg_replace('/[^A-Za-z0-9_-]/', '', $booking->booking_reference) . '.pdf';
+        $filename = ($isActivity ? 'activity' : ($isTransport ? 'transport' : 'accommodation')) . '-voucher-' . preg_replace('/[^A-Za-z0-9_-]/', '', $booking->booking_reference) . '.pdf';
         $pdf->Output($filename, 'D');
         exit;
     }
@@ -1185,16 +1285,16 @@ $mealPlanSafe = !empty($mealPlanValues)
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <td><h1 style="font-size:22px">INVOICE</h1></td>
+      <td><h1 style="font-size:22px">{$invoiceTitle}</h1></td>
     </tr>
     <tr>
       <td><table width="49%" border="0" cellpadding="2" cellspacing="0" class="info-table">
-        <tr>
-          <td class="label">Invoice Number:</td>
+          <tr>
+          <td class="label">{$invoiceNumberLabel}</td>
           <td class="value">{$invoiceNumber}</td>
         </tr>
         <tr>
-          <td class="label">Invoice Date:</td>
+          <td class="label">{$invoiceDateLabel}</td>
           <td class="value">{$invoiceDate}</td>
         </tr>
 
@@ -1207,8 +1307,8 @@ $mealPlanSafe = !empty($mealPlanValues)
       <td><table width="100%" border="0" cellpadding="2" cellspacing="0">
         <tbody>
           <tr>
-            <td style="font-size:12px"><strong>BILL TO</strong></td>
-            <td style="font-size:12px"><strong>ACCOUNT DETAILS</strong></td>
+            <td style="font-size:12px"><strong>{$billToLabel}</strong></td>
+            <td style="font-size:12px"><strong>{$accountDetailsLabel}</strong></td>
           </tr>
           <tr>
             <td>{$travelerName}</td>
@@ -1217,29 +1317,29 @@ $mealPlanSafe = !empty($mealPlanValues)
           <tr>
             <td valign="top"><table width="99%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
-                <td class="label">Name:</td>
+                <td class="label">{$nameLabel}</td>
                 <td class="value">{$accountNameSafe}</td>
               </tr>
               <tr>
-                <td class="label">Address:</td>
+                <td class="label">{$addressLabel}</td>
                 <td class="value">{$travelerAddress}</td>
               </tr>
               <tr>
-                <td class="label">Phone:</td>
+                <td class="label">{$phoneLabel}</td>
                 <td class="value">{$travelerPhone}</td>
               </tr>
             </table></td>
             <td valign="top"><table width="100%" border="0" cellpadding="2" cellspacing="0" class="info-table">
               <tr>
-                <td class="label">Amount Type:</td>
+                <td class="label">{$amountTypeLabel}</td>
                 <td class="value">Guest booking</td>
               </tr>
               <tr>
-                <td class="label">Account ID:</td>
+                <td class="label">{$accountIdLabel}</td>
                 <td class="value">{$accountId}</td>
               </tr>
               <tr>
-                <td class="label">Booking Reference:</td>
+                <td class="label">{$bookingRefLabel}</td>
                 <td class="value">{$bookingRef}</td>
               </tr>
             </table></td>
@@ -1251,7 +1351,7 @@ $mealPlanSafe = !empty($mealPlanValues)
       <td>&nbsp;</td>
     </tr>
      <tr>
-      <td align="center"><strong style="color:#0b2b51;">ACCOUNT HOLDER:</strong> This invoice has been issued to the account holder.</td>
+      <td align="center"><strong style="color:#0b2b51;">{$accountHolderLabel}</strong> {$accountHolderNote}</td>
     </tr>
     <tr>
       <td align="center">&nbsp;</td>
@@ -1260,12 +1360,12 @@ $mealPlanSafe = !empty($mealPlanValues)
       <td><table width="100%" border="0" cellpadding="2" cellspacing="0" class="service-table2">
     <thead>
     <tr>
-        <th style="width:21%;">SERVICE</th>
-        <th style="width:18%;">SERVICE DATES</th>
-        <th style="width:21%;">DESCRIPTION</th>
-        <th style="width:13%;text-align:center;">QTY</th>
-        <th style="width:14%;text-align:center;">UNIT</th>
-        <th style="width:13%;text-align:center">TOTAL</th>
+      <th style="width:21%;">{$serviceLabel}</th>
+      <th style="width:18%;">{$serviceDatesLabel}</th>
+      <th style="width:21%;">{$descriptionLabel}</th>
+      <th style="width:13%;text-align:center;">{$qtyLabel}</th>
+      <th style="width:14%;text-align:center;">{$unitLabel}</th>
+      <th style="width:13%;text-align:center">{$totalLabel}</th>
     </tr>
     </thead>
     <tbody>

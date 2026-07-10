@@ -22,6 +22,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('activities/{activity}/approve', [DashboardController::class, 'approveActivity'])->name('activity.approve');
     Route::post('activities/{activity}/reject', [DashboardController::class, 'rejectActivity'])->name('activity.reject');
 
+    // Admin transport approvals
+    Route::post('transports/{transport}/approve', [DashboardController::class, 'approveTransport'])->name('transport.approve');
+    Route::post('transports/{transport}/reject', [DashboardController::class, 'rejectTransport'])->name('transport.reject');
+
     // Admin role management (create global / business-scoped roles)
     Route::get('roles', [\App\Http\Controllers\Admin\RoleController::class, 'index'])->name('roles.index');
     Route::post('roles', [\App\Http\Controllers\Admin\RoleController::class, 'store'])->name('roles.store');
@@ -218,4 +222,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('static-pages/{staticPage}/edit', [\App\Http\Controllers\Admin\StaticPageController::class, 'edit'])->name('static-pages.edit');
     Route::match(['put','patch','post'], 'static-pages/{staticPage}', [\App\Http\Controllers\Admin\StaticPageController::class, 'update'])->name('static-pages.update');
     Route::delete('static-pages/{staticPage}', [\App\Http\Controllers\Admin\StaticPageController::class, 'destroy'])->name('static-pages.destroy');
+
+    Route::get('vehicle-types', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'index'])->name('vehicle-types.index');
+    Route::get('vehicle-types/create', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'create'])->name('vehicle-types.create');
+    Route::post('vehicle-types', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'store'])->name('vehicle-types.store');
+    Route::get('vehicle-types/{vehicleType}/edit', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'edit'])->name('vehicle-types.edit');
+    Route::put('vehicle-types/{vehicleType}', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'update'])->name('vehicle-types.update');
+    Route::delete('vehicle-types/{vehicleType}', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'destroy'])->name('vehicle-types.destroy');
 });

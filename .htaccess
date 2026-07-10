@@ -1,0 +1,11 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Avoid rewriting requests that already target public/
+    RewriteCond %{REQUEST_URI} !^/public/
+
+    # If the requested file or directory does not exist, rewrite to public/index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /public/$1 [L,QSA]
+</IfModule>

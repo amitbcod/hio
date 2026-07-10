@@ -112,7 +112,7 @@
             <div class="login-form-section">
                 <!-- <h2>Login to Your Account</h2> -->
                 <h2>Login</h2>
-                <form method="POST" action="{{ route('operator.login') }}">
+                <form method="POST" action="/operator/login">
                     @csrf
                     {{-- Carry accept_token through the login form if present (owner redirected from public verify page)
                     --}}

@@ -9,6 +9,8 @@ use App\Models\Activity;
 use App\Models\ActivityPromotion;
 use App\Models\ActivitySchedulingTimeSlot;
 use App\Models\ActivityVariant;
+use App\Models\Transport;
+use App\Models\TransportRate;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -304,5 +306,87 @@ trait CartItemBuilderTrait
         }
 
         return round(min($discountValue, $totalPrice), 2);
+    }
+
+    protected function buildTransportCartItem(Request $request): array
+    {
+        $transportId = (int) $request->input('transport_id');
+        $rateId = $request->input('rate_id') ? (int) $request->input('rate_id') : null;
+        $routeId = $request->input('route_id', null);
+        $routeFrom = $request->input('route_from', '');
+        $routeTo = $request->input('route_to', '');
+        $pickupDate = $request->input('pickup_date');
+        $pickupTime = $request->input('pickup_time', '');
+        $returnDate = $request->input('return_date');
+        $returnTime = $request->input('return_time', '');
+        $passengers = max(1, (int) $request->input('passengers', 1));
+        $pricePerPassenger = (float) $request->input('price_per_passenger', 0);
+        $returnPrice = max(0.0, (float) $request->input('return_price', 0));
+        $currency = $request->input('currency', 'USD');
+        $image = $request->input('image', '');
+        $title = $request->input('title', '');
+
+        $transport = Transport::find($transportId);
+        if (!$transport) {
+            return [];
+        }
+
+        // Calculate total price
+        $totalPrice = $pricePerPassenger * $passengers;
+        if (!blank($returnDate) && $returnPrice > 0) {
+            $totalPrice += $returnPrice * $passengers;
+        }
+        $taxAmount = 0.0;
+        $discountAmount = 0.0;
+
+        // If transport has tax configuration, calculate tax
+        if ($transport->tax_type && $transport->tax_value) {
+            $taxAmount = $this->calcTransportTax($transport, $totalPrice);
+        }
+
+        $priceAfterDiscount = max(0, $totalPrice - $discountAmount);
+        $netAmount = $priceAfterDiscount + $taxAmount;
+
+        return [
+            'cart_key' => uniqid('transport_', true),
+            'type' => 'transport',
+            'transport_id' => $transportId,
+            'rate_id' => $rateId,
+            'route_id' => $routeId,
+            'route_from' => $routeFrom,
+            'route_to' => $routeTo,
+            'title' => $title ?: ($transport->vehicle_name ?? 'Transport'),
+            'image' => $image,
+            'pickup_date' => $pickupDate,
+            'pickup_date_display' => $pickupDate ? Carbon::parse($pickupDate)->format('d M Y') : '',
+            'pickup_time' => $pickupTime,
+            'return_date' => $returnDate,
+            'return_date_display' => $returnDate ? Carbon::parse($returnDate)->format('d M Y') : '',
+            'return_time' => $returnTime,
+            'passengers' => $passengers,
+            'price_per_passenger' => $pricePerPassenger,
+            'return_price' => $returnPrice,
+            'total_price' => $totalPrice,
+            'currency' => $currency,
+            'tax_amount' => $taxAmount,
+            'discount_amount' => $discountAmount,
+            'net_amount' => $netAmount,
+            'vehicle_type' => $transport->vehicle_type,
+            'seating_capacity' => $transport->seating_capacity,
+        ];
+    }
+
+    protected function calcTransportTax(Transport $transport, float $baseAmount): float
+    {
+        if (!$transport->tax_type || !$transport->tax_value) {
+            return 0.0;
+        }
+
+        if ($transport->tax_type === 'Percentage') {
+            return round($baseAmount * $transport->tax_value / 100, 2);
+        }
+
+        // Fixed amount
+        return round($transport->tax_value, 2);
     }
 }

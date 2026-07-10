@@ -22,6 +22,7 @@
     <div class="list-group-item list-group-item-action mt-2 font-weight-bold">HIO Policy Templates</div>
     <a href="{{ route('admin.policy-templates.index', ['service' => 'accommodation']) }}" class="list-group-item list-group-item-action {{ request()->is('admin/policy-templates*') && request('service')=='accommodation' ? 'active' : '' }}">Accommodation</a>
     <a href="{{ route('admin.policy-templates.index', ['service' => 'activity']) }}" class="list-group-item list-group-item-action {{ request()->is('admin/policy-templates*') && request('service')=='activity' ? 'active' : '' }}">Activity</a>
+    <a href="{{ route('admin.vehicle-types.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/vehicle-types*') ? 'active' : '' }}">Vehicle Types</a>
     <div class="list-group-item list-group-item-action mt-2 font-weight-bold">Pages</div>
     <a href="{{ route('admin.static-pages.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/static-pages*') ? 'active' : '' }}">Static Pages</a>
 </div>

@@ -51,6 +51,10 @@
                                                 $serviceTypes->push('Activity');
                                             }
                                             
+                                            if ($trip->transportBookings && $trip->transportBookings->isNotEmpty()) {
+                                                $serviceTypes->push('Transport');
+                                            }
+                                            
                                             if ($serviceTypes->isEmpty()) {
                                                 $serviceTypes->push('Travel');
                                             }
@@ -72,6 +76,8 @@
                                                                 {{ __('traveler.trips.service_type_accommodation') }}
                                                             @elseif($type === 'Activity')
                                                                 {{ __('traveler.trips.service_type_activity') }}
+                                                            @elseif($type === 'Transport')
+                                                                {{ __('traveler.trips.service_type_transport') }}
                                                             @else
                                                                 {{ __('traveler.trips.service_type_travel') }}
                                                             @endif
@@ -89,7 +95,7 @@
                                             <td data-label="{{ __('traveler.trips.status') }}">
                                                 <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
                                             </td>
-                                            <td data-label="{{ __('traveler.trips.bookings') }}" style="text-align: center;">{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}</td>
+                                            <td data-label="{{ __('traveler.trips.bookings') }}" style="text-align: center;">{{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) + ($trip->transportBookings ? $trip->transportBookings->count() : 0) }}</td>
                                             <td class="trip-actions-cell">
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">{{ __('traveler.trips.details') }}</a>
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.download-invoice', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.download-invoice', $trip) }}" class="btn btn-secondary" download>{{ __('traveler.trips.invoice') }}</a>
@@ -140,6 +146,10 @@
                                                 $serviceTypes->push('Activity');
                                             }
                                             
+                                            if ($trip->transportBookings && $trip->transportBookings->isNotEmpty()) {
+                                                $serviceTypes->push('Transport');
+                                            }
+                                            
                                             if ($serviceTypes->isEmpty()) {
                                                 $serviceTypes->push('Travel');
                                             }
@@ -161,6 +171,8 @@
                                                                 {{ __('traveler.trips.service_type_accommodation') }}
                                                             @elseif($type === 'Activity')
                                                                 {{ __('traveler.trips.service_type_activity') }}
+                                                            @elseif($type === 'Transport')
+                                                                {{ __('traveler.trips.service_type_transport') }}
                                                             @else
                                                                 {{ __('traveler.trips.service_type_travel') }}
                                                             @endif
@@ -179,7 +191,7 @@
                                                 <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
                                             </td>
                                             <td data-label="{{ __('traveler.trips.bookings') }}" style="text-align: center;">
-                                                {{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) }}
+                                                {{ ($trip->accommodationBookings ? $trip->accommodationBookings->count() : 0) + ($trip->activityBookings ? $trip->activityBookings->count() : 0) + ($trip->transportBookings ? $trip->transportBookings->count() : 0) }}
                                             </td>
                                             <td class="trip-actions-cell">
                                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip->id]) : route('traveler.trip.detail', $trip) }}" class="btn btn-primary">{{ __('traveler.trips.details') }}</a>

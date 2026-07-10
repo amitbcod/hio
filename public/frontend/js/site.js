@@ -445,6 +445,20 @@ function initMiniCart() {
 
             const payload = await response.json();
             if (!response.ok || !payload.success) {
+                if (payload.suppress_minicart) {
+                    let alertMessage = payload.message || 'Unable to add item to cart.';
+                    if ((!alertMessage || alertMessage === 'Unable to add item to cart.') && payload.errors) {
+                        if (Array.isArray(payload.errors)) {
+                            alertMessage = payload.errors[0] || alertMessage;
+                        } else {
+                            const firstError = Object.values(payload.errors).flat()[0];
+                            alertMessage = firstError || alertMessage;
+                        }
+                    }
+                    alert(alertMessage);
+                    return;
+                }
+
                 throw new Error(payload.message || 'Unable to add item to cart.');
             }
 

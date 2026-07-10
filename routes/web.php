@@ -29,6 +29,7 @@ Route::get('/pages/{slug}', [\App\Http\Controllers\Frontend\StaticPageController
 Route::get('/category-list', [HomeController::class, 'categoryList'])->name('frontend.category.list');
 Route::get('/activities/{activity}', [HomeController::class, 'showActivity'])->name('frontend.activities.show');
 Route::get('/accommodations/{accommodation}', [HomeController::class, 'showAccommodation'])->name('frontend.accommodations.show');
+Route::get('/transports/{transport}', [HomeController::class, 'showTransport'])->name('frontend.transports.show');
 
 // Test route
 Route::get('/test', [TestController::class, 'test']);

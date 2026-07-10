@@ -50,14 +50,33 @@
                         @foreach($cart as $cartKey => $item)
                             @php
                                 $isAccom = $item['type'] === 'accommodation';
+                                $isActivity = $item['type'] === 'activity';
+                                $isTransport = $item['type'] === 'transport';
                                 $nights  = (int) ($item['nights'] ?? 1);
                                 $rooms   = (int) ($item['rooms'] ?? 1);
-                                $label   = $isAccom
-                                    ? ($rooms . ' Room' . ($rooms !== 1 ? 's' : '') . ' · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '') . ' · ' . $item['room_name'])
-                                    : ('Activity · ' . ($item['variant_name'] ?: 'Standard'));
-                                $subLabel = $isAccom
-                                    ? ($item['adults'] . ' Adults' . ($item['children'] > 0 ? ', ' . $item['children'] . ' Children' : '') . (!empty($item['infants']) ? ', ' . $item['infants'] . ' Infants' : '') . ' · ' . $rooms . '× ' . $item['room_name'])
-                                    : ($item['adults'] . ' Adults' . ($item['children'] > 0 ? ', ' . $item['children'] . ' Children' : '') . (!empty($item['infants']) ? ', ' . $item['infants'] . ' Infants' : ''));
+                                $adults  = (int) ($item['adults'] ?? 0);
+                                $children = (int) ($item['children'] ?? 0);
+                                $infants = (int) ($item['infants'] ?? 0);
+                                if ($isAccom) {
+                                    $roomLabel = trans_choice('cart.rooms', $rooms, ['count' => $rooms]);
+                                    $nightLabel = trans_choice('cart.nights', $nights, ['count' => $nights]);
+                                    $label = $roomLabel . ' · ' . $nightLabel . ' · ' . ($item['room_name'] ?? __('traveler.trip_detail.room'));
+                                    $subParts = [];
+                                    if ($adults > 0) $subParts[] = trans_choice('accommodation.summary.adults', $adults, ['count' => $adults]);
+                                    if ($children > 0) $subParts[] = trans_choice('accommodation.summary.children', $children, ['count' => $children]);
+                                    if ($infants > 0) $subParts[] = trans_choice('accommodation.summary.infants', $infants, ['count' => $infants]);
+                                    $subLabel = implode(', ', $subParts);
+                                    $subLabel = $subLabel ? ($subLabel . ' · ' . $rooms . '× ' . ($item['room_name'] ?? __('traveler.trip_detail.room'))) : '';
+                                } else if ($isActivity) {
+                                    $label = __('cart.type.activity') . ' · ' . ($item['variant_name'] ?? $item['title'] ?? __('traveler.trip_detail.standard'));
+                                    $subLabel = $adults > 0 ? trans_choice('accommodation.summary.adults', $adults, ['count' => $adults]) : '';
+                                } else if ($isTransport) {
+                                    $label = __('cart.type.transport') . ' · ' . trim((string) (($item['route_from'] ?? '') . ($item['route_to'] ? ' → ' . $item['route_to'] : '')));
+                                    $subLabel = __('home.search.passengers') . ': ' . ($item['passengers'] ?? '1');
+                                } else {
+                                    $label = $item['variant_name'] ?? $item['title'] ?? 'Booking';
+                                    $subLabel = '';
+                                }
                             @endphp
 
                             <div class="cart-item-card">
@@ -67,7 +86,7 @@
                                         <img src="{{ $item['image'] }}" alt="{{ $item['title'] }}">
                                     @else
                                         <div class="cart-item-img-placeholder">
-                                            <i class="fa-solid {{ $isAccom ? 'fa-hotel' : 'fa-person-hiking' }}"></i>
+                                            <i class="fa-solid {{ $isAccom ? 'fa-hotel' : ($isTransport ? 'fa-car' : 'fa-person-hiking') }}"></i>
                                         </div>
                                     @endif
                                 </div>
@@ -76,7 +95,7 @@
                                 <div class="cart-item-body">
                                     <div class="cart-item-top">
                                         <div>
-                                            <span class="cart-item-badge">{{ $isAccom ? __('cart.type.stay') : __('cart.type.activity') }}</span>
+                                            <span class="cart-item-badge">{{ $isAccom ? __('cart.type.stay') : ($isTransport ? __('cart.type.transport') : __('cart.type.activity')) }}</span>
                                             <h3 class="cart-item-title">{{ $item['title'] }}</h3>
                                             @if($isAccom && !empty($item['plan_label']))
                                                 <p class="cart-item-sub" style="color: #19b5b5; font-weight: 500;">{{ $item['plan_label'] }} • {{ $item['pricing_setting'] ?? 'Per Room/Night' }}</p>
@@ -91,7 +110,7 @@
                                         if($isAccom) {
                                         @endphp
                                             <div class="cart-item-nights">
-                                                {{ $nights }} Night{{ $nights !== 1 ? 's' : '' }} Total
+                                                {{ trans_choice('cart.nights_total', $nights, ['count' => $nights]) }}
                                             </div>
                                         @php
                                         }
@@ -99,13 +118,19 @@
                                         </div>
                                     </div>
 
+                                    @php
+                                        $checkInDisplay = $item['check_in_display'] ?? $item['pickup_date_display'] ?? '';
+                                        $checkOutDisplay = $item['check_out_display'] ?? $item['return_date_display'] ?? '';
+                                        $checkInValue = $item['check_in'] ?? $item['pickup_date'] ?? null;
+                                        $checkOutValue = $item['check_out'] ?? $item['return_date'] ?? null;
+                                    @endphp
                                     <div class="cart-item-dates">
                                         <span><i class="fa-regular fa-calendar"></i>
-                                            {{ $item['check_in_display'] }}
+                                            {{ $checkInDisplay }}
                                         </span>
-                                        @if(!$isAccom || $item['check_in'] !== $item['check_out'])
+                                        @if(!$isAccom || $checkInValue !== $checkOutValue)
                                             <span class="cart-item-arrow">→</span>
-                                            <span>{{ $item['check_out_display'] }}</span>
+                                            <span>{{ $checkOutDisplay }}</span>
                                         @endif
                                     </div>
 
@@ -122,7 +147,9 @@
                                     <div class="cart-item-actions">
                                         <a href="{{ $isAccom
                                             ? route('frontend.accommodations.show', $item['accommodation_id'])
-                                            : route('frontend.activities.show', $item['activity_id']) }}"
+                                            : ($isActivity
+                                                ? route('frontend.activities.show', $item['activity_id'])
+                                                : route('frontend.transports.show', $item['transport_id'] ?? null)) }}"
                                            class="cart-link">
                                             <i class="fa-solid fa-eye"></i> {{ __('cart.view_rules') }}
                                         </a>
@@ -177,9 +204,13 @@
                                     @php
                                         $nights = (int) ($item['nights'] ?? 1);
                                         $rooms  = (int) ($item['rooms'] ?? 1);
-                                        $label  = $item['type'] === 'accommodation'
-                                            ? $rooms . ' Room' . ($rooms !== 1 ? 's' : '') . ' · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '')
-                                            : 'Activity: ' . ($item['variant_name'] ?: $item['title']);
+                                        if ($item['type'] === 'accommodation') {
+                                            $label = trans_choice('cart.rooms', $rooms, ['count' => $rooms]) . ' · ' . trans_choice('cart.nights', $nights, ['count' => $nights]);
+                                        } else if ($item['type'] === 'activity') {
+                                            $label = __('cart.type.activity') . ': ' . ($item['variant_name'] ?? $item['title']);
+                                        } else {
+                                            $label = __('cart.type.transport') . ': ' . trim((string) (($item['route_from'] ?? '') . ($item['route_to'] ? ' → ' . $item['route_to'] : '')));
+                                        }
                                     @endphp
                                     <div class="fare-row">
                                         <span>{{ $label }}</span>

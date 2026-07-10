@@ -213,7 +213,7 @@
         style="color: #007bff; text-decoration: none; display: inline-flex; align-items: center;">
             
             <i class="fa-solid fa-download" style="margin-right:5px;"></i> 
-            Download Voucher
+            {{ __('traveler.manage_guests.download_voucher') }}
         </a>
     </div>
 @endif
@@ -229,7 +229,7 @@
                                         <input type="checkbox" class="saved-guest-checkbox-input" data-relation="{{ $guest->relation ?? 'other' }}" data-gender="{{ $guest->gender ?? '' }}" data-first-name="{{ $guest->first_name }}" data-middle-name="{{ $guest->middle_name ?? '' }}" data-last-name="{{ $guest->last_name }}" data-dob="{{ $guest->dob }}" data-nationality="{{ $guest->nationality ?? '' }}" data-passport="{{ $guest->passport_number ?? '' }}" data-notes="{{ $guest->notes ?? '' }}">
                                         <div>
                                             <strong>{{ trim($guest->first_name . ' ' . ($guest->last_name ?? '')) }}</strong><br>
-                                            <small>{{ $guest->nationality ?? 'Unknown' }} · {{ $guest->dob ? \Carbon\Carbon::parse($guest->dob)->format('d/m/Y') : 'No DOB' }}</small>
+                                            <small>{{ $guest->nationality ?? __('traveler.manage_guests.unknown') }} · {{ $guest->dob ? \Carbon\Carbon::parse($guest->dob)->format('d/m/Y') : __('traveler.manage_guests.no_dob') }}</small>
                                         </div>
                                     </label>
                                 </div>
@@ -250,7 +250,7 @@
                                     $timeSlot = $activityTimeSlots->where('timeslot_id', $booking->activity_time_slot_id)->first();
                                 @endphp
                                 @if($timeSlot)
-                                    <span class="guest-item-timeslot" style="font-size: 12px; color: #007bff; display: block;">Time Slot: {{ $timeSlot->start_time }} - {{ $timeSlot->end_time }}</span>
+                                    <span class="guest-item-timeslot" style="font-size: 12px; color: #007bff; display: block;">{{ __('traveler.manage_guests.time_slot') }}: {{ $timeSlot->start_time }} - {{ $timeSlot->end_time }}</span>
                                 @endif
                             @endif
                         </div>
@@ -260,11 +260,11 @@
                             </button> -->
                             @if ($booking instanceof \App\Models\ActivityBooking && isset($guest->id) && $canDownload)
                                 <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) }}" target="_blank" style="font-size: 14px; color: #007bff; text-decoration: none; display: inline-flex; align-items: center;">
-                                    <i class="fa-solid fa-download"></i> Download Voucher
+                                    <i class="fa-solid fa-download"></i> {{ __('traveler.manage_guests.download_voucher') }}
                                 </a>
                             @endif
                             <button type="button" class="btn-remove-guest" data-index="{{ $index }}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #dc3545; padding: 0;">
-                                <i class="fa-solid fa-trash"></i> Delete
+                                <i class="fa-solid fa-trash"></i> {{ __('traveler.manage_guests.delete') }}
                             </button>
                         </div>
                     </div>

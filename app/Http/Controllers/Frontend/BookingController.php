@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Traits\CartItemBuilderTrait;
 use App\Models\Accommodation;
 use App\Models\AccommodationBooking;
 use App\Models\AccommodationFee;
@@ -12,6 +13,8 @@ use App\Models\ActivityBooking;
 use App\Models\ActivityPromotion;
 use App\Models\ActivitySchedulingTimeSlot;
 use App\Models\ActivityVariant;
+use App\Models\Transport;
+use App\Models\TransportBooking;
 use App\Models\BookingGuest;
 use App\Models\SavedGuest;
 use App\Models\TravelerCart;
@@ -42,6 +45,8 @@ use Illuminate\Validation\Rule;
 
 class BookingController extends Controller
 {
+    use CartItemBuilderTrait;
+
     // ═══════════════════════════════════════════════════════════════════════
     //  ADD TO CART
     // ═══════════════════════════════════════════════════════════════════════
@@ -89,6 +94,37 @@ class BookingController extends Controller
             $item = $this->buildAccommodationCartItem($request);
         } elseif ($type === 'activity') {
             $item = $this->buildActivityCartItem($request);
+        } elseif ($type === 'transport') {
+            $validator = Validator::make($request->all(), [
+                'route_from' => ['required', 'string'],
+                'route_to'   => ['required', 'string'],
+            ], [
+                'route_from.required' => __('transport.validation.select_departure'),
+                'route_to.required' => __('transport.validation.select_destination'),
+            ]);
+
+            if ($validator->fails()) {
+                if ($request->expectsJson()) {
+                    // If the add-to-cart request came from the detail page, suppress showing validation
+                    // messages in the minicart UI and return a silent JSON error so the detail page
+                    // can show a localized alert instead (client-side prevents this normally).
+                    if ($request->input('source') === 'detail') {
+                        return response()->json([
+                            'success' => false,
+                            'suppress_minicart' => true,
+                            'errors' => $validator->errors(),
+                            'message' => $validator->errors()->first(),
+                        ], 422);
+                    }
+
+                    return response()->json([ 'success' => false, 'errors' => $validator->errors() ], 422);
+                }
+
+                // For non-AJAX requests, continue with default behavior (redirect back with errors)
+                $validator->validate();
+            }
+
+            $item = $this->buildTransportCartItem($request);
         } else {
             return back()->with('error', 'Invalid booking type.');
         }
@@ -442,7 +478,7 @@ class BookingController extends Controller
 
         $totalGuests = 0;
         foreach ($cart as $item) {
-            $totalGuests += $item['adults'] + $item['children'] + ($item['infants'] ?? 0);
+            $totalGuests += $this->getCartItemGuestCount($item);
         }
 
         $guestDefaults = [
@@ -606,7 +642,7 @@ class BookingController extends Controller
 
         $totalGuests = 0;
         foreach ($cart as $item) {
-            $totalGuests += $item['adults'] + $item['children'] + ($item['infants'] ?? 0);
+            $totalGuests += $this->getCartItemGuestCount($item);
         }
 
         $traveler = Auth::guard('traveler')->user();
@@ -717,7 +753,7 @@ class BookingController extends Controller
 
         $totalGuests = 0;
         foreach ($cart as $item) {
-            $totalGuests += $item['adults'] + $item['children'] + ($item['infants'] ?? 0);
+            $totalGuests += $this->getCartItemGuestCount($item);
         }
 
         $guestsInput = $request->input('guests', []);
@@ -1247,6 +1283,151 @@ class BookingController extends Controller
                         'notes' => $guest['notes'],
                     ]);
                 }
+            } elseif ($item['type'] === 'transport') {
+                $booking = TransportBooking::create([
+                    'booking_reference' => $ref,
+                    'transport_id' => $item['transport_id'],
+                    'guest_name' => $guestName,
+                    'traveler_account_id' => $travelerAccountId,
+                    'traveler_relation' => $primaryGuest['relation'] ?? null,
+                    'traveler_first_name' => $primaryGuest['first_name'] ?? null,
+                    'traveler_middle_name' => $primaryGuest['middle_name'] ?? null,
+                    'traveler_last_name' => $primaryGuest['last_name'] ?? null,
+                    'traveler_dob' => $primaryGuest['dob'] ?? null,
+                    'traveler_gender' => $primaryGuest['gender'] ?? null,
+                    'traveler_nationality' => $primaryGuest['nationality'] ?? null,
+                    'traveler_passport_number' => $primaryGuest['passport_number'] ?? null,
+                    'traveler_notes' => $primaryGuest['notes'] ?? null,
+                    'guest_email' => $guestEmail,
+                    'guest_phone' => $guestPhone,
+                    'route_from' => $item['route_from'] ?? null,
+                    'route_to' => $item['route_to'] ?? null,
+                    'pickup_date' => $item['pickup_date'],
+                    'pickup_time' => $item['pickup_time'] ?? null,
+                    'return_date' => $item['return_date'] ?? null,
+                    'return_time' => $item['return_time'] ?? null,
+                    'passengers' => $item['passengers'] ?? 1,
+                    'adults' => $item['passengers'] ?? 1, // Transport uses passengers field
+                    'children' => 0,
+                    'booking_status' => 'Pending',
+                    'total_amount' => $item['net_amount'],
+                    'currency' => $item['currency'],
+                    'payment_method' => $paymentMethod === 'againgency' ? 'Againgency' : 'COD',
+                    'source_channel' => 'Direct',
+                    'special_requests' => $special,
+                    'booked_at' => now(),
+                    'trip_id' => $tripId,
+                    'is_guest' => $isGuestCheckout ? 1 : 0,
+                ]);
+
+                if (!$guestOtp) {
+                    $guestOtp = GuestOtpToken::createForGuest($guestEmail, $booking->id);
+                }
+
+                if ($guestOtp) {
+                    $booking->guest_otp_token_id = $guestOtp->id;
+                    $booking->save();
+                }
+
+                if (!$firstNotificationBooking) {
+                    $firstNotificationBooking = $booking;
+                }
+
+                $operatorEmail = optional($booking->transport->operator)->email;
+                if ($operatorEmail) {
+                    $operatorNotificationBookings[$operatorEmail] = $booking;
+                }
+
+                // Create Trip party members if Trip exists
+                if ($tripId) {
+                    foreach ($itemGuests as $guest) {
+                        $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                        Traveller::firstOrCreate(
+                            ['trip_id' => $tripId, 'name' => $fullName],
+                            [
+                                'email' => $guestEmail,
+                                'phone' => $guestPhone,
+                                'date_of_birth' => $guest['dob'] ?? null,
+                                'relationship' => $guest['relation'] ?? 'guest',
+                            ]
+                        );
+                    }
+                    // Add global additional guests to trip
+                    foreach ($globalAdditionalGuests as $guest) {
+                        $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                        Traveller::firstOrCreate(
+                            ['trip_id' => $tripId, 'name' => $fullName],
+                            [
+                                'email' => $guestEmail,
+                                'phone' => $guestPhone,
+                                'date_of_birth' => $guest['dob'] ?? null,
+                                'relationship' => $guest['relation'] ?? 'guest',
+                            ]
+                        );
+                    }
+
+                    // Create Booking record
+                    $tripBooking = Booking::create([
+                        'trip_id' => $tripId,
+                        'operator_id' => null,
+                        'total_amount' => $item['net_amount'],
+                        'status' => 'pending',
+                    ]);
+                    $tripBookingIds[] = $tripBooking->id;
+
+                    // Create BookingLineItem
+                    $bli = BookingLineItem::create([
+                        'booking_id' => $tripBooking->id,
+                        'service_type' => 'transport',
+                        'service_id' => $item['transport_id'],
+                        'quantity' => $item['passengers'] ?? 1,
+                        'price' => $item['net_amount'],
+                        'start_date' => $item['pickup_date'],
+                        'end_date' => $item['return_date'] ?? $item['pickup_date'],
+                        'status' => 'active',
+                    ]);
+
+                    // Link guests to BLI
+                    foreach ($itemGuests as $guest) {
+                        $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                        $traveller = Traveller::where('trip_id', $tripId)->where('name', $fullName)->first();
+                        if ($traveller) {
+                            BliTravellerAllocation::create([
+                                'bli_id' => $bli->id,
+                                'traveller_id' => $traveller->id,
+                            ]);
+                        }
+                    }
+                    // Link global additional guests to BLI
+                    foreach ($globalAdditionalGuests as $guest) {
+                        $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                        $traveller = Traveller::where('trip_id', $tripId)->where('name', $fullName)->first();
+                        if ($traveller) {
+                            BliTravellerAllocation::create([
+                                'bli_id' => $bli->id,
+                                'traveller_id' => $traveller->id,
+                            ]);
+                        }
+                    }
+                }
+
+                // Store all guests
+                foreach ($itemGuests as $index => $guest) {
+                    BookingGuest::create([
+                        'booking_id' => $booking->id,
+                        'booking_type' => 'transport',
+                        'guest_number' => $index + 1,
+                        'relation' => $guest['relation'],
+                        'first_name' => $guest['first_name'],
+                        'middle_name' => $guest['middle_name'],
+                        'last_name' => $guest['last_name'],
+                        'dob' => $guest['dob'],
+                        'gender' => $this->normalizeGender($guest['gender'] ?? null),
+                        'nationality' => $guest['nationality'],
+                        'passport_number' => $guest['passport_number'],
+                        'notes' => $guest['notes'],
+                    ]);
+                }
             }
 
             $bookingRefs[] = $ref;
@@ -1305,6 +1486,9 @@ class BookingController extends Controller
                     } elseif (($firstItem['type'] ?? null) === 'activity') {
                         $startDate = $firstItem['check_in'] ?? $firstItem['activity_date'] ?? null;
                         $endDate = $firstItem['check_out'] ?? $firstItem['activity_date'] ?? null;
+                    } elseif (($firstItem['type'] ?? null) === 'transport') {
+                        $startDate = $firstItem['pickup_date'] ?? null;
+                        $endDate = $firstItem['return_date'] ?? $firstItem['pickup_date'] ?? null;
                     }
                 }
             }
@@ -1364,13 +1548,18 @@ class BookingController extends Controller
 
     public function confirmation(string $ref)
     {
-        // Try to find in accommodation bookings first
+        // Try to find booking by reference across supported services
         $booking = AccommodationBooking::where('booking_reference', $ref)->first();
         $type = 'accommodation';
 
         if (!$booking) {
             $booking = ActivityBooking::where('booking_reference', $ref)->first();
             $type = 'activity';
+        }
+
+        if (!$booking) {
+            $booking = TransportBooking::where('booking_reference', $ref)->first();
+            $type = 'transport';
         }
 
         $bookingRefs = session()->get('booking_refs', [$ref]);
@@ -1640,6 +1829,15 @@ class BookingController extends Controller
         ];
     }
 
+    private function getCartItemGuestCount(array $item): int
+    {
+        return match ($item['type'] ?? null) {
+            'transport' => max(1, (int) ($item['passengers'] ?? 1)),
+            'activity' => (int) ($item['participants'] ?? (($item['adults'] ?? 0) + ($item['children'] ?? 0) + ($item['infants'] ?? 0))),
+            default => (int) (($item['adults'] ?? 0) + ($item['children'] ?? 0) + ($item['infants'] ?? 0)),
+        };
+    }
+
     private function calcAccommodationTax(Accommodation $accommodation, float $totalPrice, int $adults, int $nights): float
     {
         $taxType       = $accommodation->tax_type ?? 'None';
@@ -1739,13 +1937,20 @@ class BookingController extends Controller
 
     private function generateBookingRef(string $type, ?int $tripId = null, ?string $date = null): string
     {
-        $prefix = $type === 'accommodation' ? 'ACC' : 'ACT';
+        $prefix = match ($type) {
+            'accommodation' => 'ACC',
+            'transport'     => 'TRS',
+            default         => 'ACT',
+        };
         $datePart = $date ? Carbon::parse($date)->format('Ymd') : now()->format('Ymd');
 
         if ($tripId) {
-            // Count existing bookings for this trip
-            $existingCount = AccommodationBooking::where('trip_id', $tripId)->count() +
-                           ActivityBooking::where('trip_id', $tripId)->count();
+            // Count existing bookings for this trip by service type
+            $existingCount = match ($type) {
+                'accommodation' => AccommodationBooking::where('trip_id', $tripId)->count(),
+                'transport'     => TransportBooking::where('trip_id', $tripId)->count(),
+                default         => ActivityBooking::where('trip_id', $tripId)->count(),
+            };
 
             $sequenceNumber = $existingCount + 1;
             $tripTag = $tripId;
@@ -1757,7 +1962,8 @@ class BookingController extends Controller
             $suffix = 1;
             while (
                 ($type === 'accommodation' && AccommodationBooking::where('booking_reference', $candidate)->exists()) ||
-                ($type === 'activity' && ActivityBooking::where('booking_reference', $candidate)->exists())
+                ($type === 'activity' && ActivityBooking::where('booking_reference', $candidate)->exists()) ||
+                ($type === 'transport' && TransportBooking::where('booking_reference', $candidate)->exists())
             ) {
                 $candidate = sprintf('%s-%02d', $baseRef, $suffix++);
             }

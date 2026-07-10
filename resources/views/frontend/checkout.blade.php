@@ -594,9 +594,19 @@
                                                     <span style="background: #f0f7f7; color: #19b5b5; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px;">{{ $item['plan_label'] }}</span>
                                                 @endif
                                                 <span class="item-panel-meta">
-                                                    {{ $item['check_in_display'] }}
-                                                    @if($item['check_in'] !== $item['check_out'])
-                                                        → {{ $item['check_out_display'] }}
+                                                    @if(!empty($item['type']) && $item['type'] === 'transport')
+                                                        @if(!empty($item['route_from']) || !empty($item['route_to']))
+                                                            {{ trim(($item['route_from'] ?? '') . ' → ' . ($item['route_to'] ?? '')) }}<br>
+                                                        @endif
+                                                        {{ $item['pickup_date_display'] ?? '' }}{{ !empty($item['pickup_time']) ? ' · '.$item['pickup_time'] : '' }}
+                                                        @if(!empty($item['return_date_display']))
+                                                            → {{ $item['return_date_display'] }}{{ !empty($item['return_time']) ? ' · '.$item['return_time'] : '' }}
+                                                        @endif
+                                                    @else
+                                                        {{ $item['check_in_display'] ?? '' }}
+                                                        @if(!empty($item['check_in']) && !empty($item['check_out']) && $item['check_in'] !== $item['check_out'])
+                                                            → {{ $item['check_out_display'] ?? '' }}
+                                                        @endif
                                                     @endif
                                                 </span>
                                             </div>
@@ -611,8 +621,16 @@
                                                         <span><i class="fa-solid fa-baby-carriage"></i> {{ $item['infants'] }} infant{{ $item['infants'] != 1 ? 's' : '' }}</span>
                                                     @endif
                                                     <span><i class="fa-solid fa-bed"></i> {{ $item['room_name'] }} · {{ $item['nights'] }} night{{ $item['nights'] != 1 ? 's' : '' }}</span>
+                                                @elseif($item['type'] === 'transport')
+                                                    <span><i class="fa-solid fa-user-group"></i> {{ $item['passengers'] ?? 1 }} passenger{{ ($item['passengers'] ?? 1) != 1 ? 's' : '' }}</span>
+                                                    @if(!empty($item['route_from']) || !empty($item['route_to']))
+                                                        <span><i class="fa-solid fa-location-dot"></i> {{ trim(($item['route_from'] ?? '') . ' → ' . ($item['route_to'] ?? '')) }}</span>
+                                                    @endif
+                                                    @if(!empty($item['vehicle_type']))
+                                                        <span><i class="fa-solid fa-car-side"></i> {{ $item['vehicle_type'] }}</span>
+                                                    @endif
                                                 @else
-                                                    @php $participantCount = ($item['adults'] ?? 0) + ($item['children'] ?? 0); @endphp
+                                                    @php $participantCount = ($item['participants'] ?? (($item['adults'] ?? 0) + ($item['children'] ?? 0))); @endphp
                                                     <span><i class="fa-solid fa-user"></i> {{ $participantCount }} participant{{ $participantCount != 1 ? 's' : '' }}</span>
                                                     <span><i class="fa-solid fa-person-hiking"></i> {{ $item['variant_name'] ?: 'Standard' }}</span>
                                                 @endif
@@ -663,7 +681,7 @@
                                     $rooms  = (int) ($item['rooms'] ?? 1);
                                     $lbl = $item['type'] === 'accommodation'
                                         ? $rooms . ' Room' . ($rooms !== 1 ? 's' : '') . ' · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '')
-                                        : '' . ($item['variant_name'] ?: $item['title']);
+                                        : ($item['variant_name'] ?? $item['title'] ?? 'Item');
                                 @endphp
                                 <div class="fare-row">
                                     <span>{{ $lbl }}</span>

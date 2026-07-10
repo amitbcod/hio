@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Business;
 use App\Models\Accommodation;
 use App\Models\Activity;
+use App\Models\Transport;
 use App\Models\Review;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BusinessApproved;
@@ -48,11 +49,20 @@ class DashboardController extends Controller
             ->orderByRaw('COALESCE(submitted_for_approval_at, created_at) DESC')
             ->get();
 
+        $pendingTransports = Transport::with(['operator'])
+            ->whereNotNull('submitted_for_approval_at')
+            ->where(function ($query) {
+                $query->where('approval_status', 'Pending')
+                    ->orWhere('status', Transport::STATUS_IN_REVIEW);
+            })
+            ->orderByRaw('COALESCE(submitted_for_approval_at, created_at) DESC')
+            ->get();
+
         $feedbacks = Review::with(['trip.traveler'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('admin.dashboard.index', compact('businesses', 'pendingAccommodations', 'pendingActivities', 'feedbacks'));
+        return view('admin.dashboard.index', compact('businesses', 'pendingAccommodations', 'pendingActivities', 'pendingTransports', 'feedbacks'));
     }
 
     public function approveBusiness(Request $request, Business $business)
@@ -179,5 +189,55 @@ class DashboardController extends Controller
         ]);
 
         return redirect()->route('admin.dashboard')->with('success', 'Activity rejected. Operator can update and resubmit.');
+    }
+
+    public function approveTransport(Request $request, Transport $transport)
+    {
+        if (!session('admin_id')) return redirect()->route('admin.login');
+
+        $data = $request->validate([
+            'approval_notes' => 'nullable|string|max:2000',
+        ]);
+
+        $adminId = (int) session('admin_id');
+
+        $transport->update([
+            'approval_status' => 'Approved',
+            'status' => Transport::STATUS_ACTIVE,
+            'approved_at' => now(),
+            'approved_by' => $adminId > 0 ? $adminId : null,
+            'approval_notes' => $data['approval_notes'] ?? null,
+            'is_published' => true,
+            'published_at' => now(),
+            'is_visible_to_travellers' => true,
+            'step7_publish' => 1,
+        ]);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Transport approved and now visible on frontend.');
+    }
+
+    public function rejectTransport(Request $request, Transport $transport)
+    {
+        if (!session('admin_id')) return redirect()->route('admin.login');
+
+        $data = $request->validate([
+            'approval_notes' => 'nullable|string|max:2000',
+        ]);
+
+        $adminId = (int) session('admin_id');
+
+        $transport->update([
+            'approval_status' => 'Rejected',
+            'status' => Transport::STATUS_DRAFT,
+            'approved_at' => null,
+            'approved_by' => $adminId > 0 ? $adminId : null,
+            'approval_notes' => $data['approval_notes'] ?? null,
+            'is_published' => false,
+            'published_at' => null,
+            'is_visible_to_travellers' => false,
+            'step7_publish' => 0,
+        ]);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Transport rejected. Operator can update and resubmit.');
     }
 }

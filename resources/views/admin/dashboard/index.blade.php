@@ -77,6 +77,46 @@
         </tbody>
     </table>
 
+    <h5 class="mt-5">Pending Vehicle Approvals</h5>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Vehicle</th>
+                <th>Operator</th>
+                <th>Submitted</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse(($pendingTransports ?? collect()) as $transport)
+                <tr>
+                    <td>{{ $transport->id }}</td>
+                    <td>
+                        <strong>{{ $transport->vehicle_name }}</strong><br>
+                        <small class="text-muted">{{ $transport->vehicle_type }}</small>
+                    </td>
+                    <td>{{ $transport->operator->email ?? 'N/A' }}</td>
+                    <td>{{ $transport->submitted_for_approval_at ? $transport->submitted_for_approval_at->format('Y-m-d H:i') : ($transport->created_at ? $transport->created_at->format('Y-m-d H:i') : 'N/A') }}</td>
+                    <td>{{ $transport->approval_status ?? $transport->status }}</td>
+                    <td>
+                        <form method="POST" action="{{ route('admin.transport.approve', $transport) }}" style="display:inline">
+                            @csrf
+                            <button class="btn btn-sm btn-success">Approve</button>
+                        </form>
+                        <form method="POST" action="{{ route('admin.transport.reject', $transport) }}" style="display:inline" onsubmit="return confirm('Reject this transport submission?');">
+                            @csrf
+                            <button class="btn btn-sm btn-danger">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="6">No pending vehicle submissions.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+
     <h5 class="mt-5">Pending Activity Approvals</h5>
     <table class="table">
         <thead>

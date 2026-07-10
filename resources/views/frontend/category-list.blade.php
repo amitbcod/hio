@@ -14,6 +14,8 @@
             'activity_date' => $filters['activity_date'],
             'type' => $filters['type'],
             'name' => $filters['name'],
+            'transport_from' => $filters['transport_from'] ?? null,
+            'transport_to' => $filters['transport_to'] ?? null,
             'adults' => $filters['adults'] ?? null,
             'children' => $filters['children'] ?? null,
             'rooms' => $filters['rooms'] ?? null,
@@ -29,6 +31,8 @@
             'infants' => $filters['infants'] ?? (int) request()->query('infants', 0),
             'rooms' => $filters['rooms'] ?? (int) request()->query('rooms', 1),
             'participants' => $filters['participants'] ?? (int) request()->query('participants', 1),
+            'transport_from' => $filters['transport_from'] ?? '',
+            'transport_to' => $filters['transport_to'] ?? '',
         ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
@@ -91,6 +95,24 @@
                                 <option value="all" {{ $filters['region'] === 'all' || $filters['region'] === '' ? 'selected' : '' }}>{{ __('home.search.all') }}</option>
                                 @foreach($searchOptions[$category]['regions'] ?? [] as $region)
                                     <option value="{{ $region }}" {{ $filters['region'] === $region ? 'selected' : '' }}>{{ $region }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="category-search-cell category-search-cell--transport" style="display: none; flex: 0 1 280px; min-width: 280px">
+                            <h5>{{ __('home.search.from') }}</h5>
+                            <select name="transport_from" class="category-search-select" data-search-from>
+                                <option value="">{{ __('home.search.departure_location') }}</option>
+                                @foreach($searchOptions['transport']['froms'] ?? [] as $from)
+                                    <option value="{{ $from }}" {{ ($filters['transport_from'] ?? '') === $from ? 'selected' : '' }}>{{ $from }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="category-search-cell category-search-cell--transport" style="display: none; flex: 0 1 280px; min-width: 280px">
+                            <h5>{{ __('home.search.to') }}</h5>
+                            <select name="transport_to" class="category-search-select" data-search-to>
+                                <option value="">{{ __('home.search.destination') }}</option>
+                                @foreach($searchOptions['transport']['tos'] ?? [] as $to)
+                                    <option value="{{ $to }}" {{ ($filters['transport_to'] ?? '') === $to ? 'selected' : '' }}>{{ $to }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -186,6 +208,8 @@
                         <input type="hidden" name="activity_date" value="{{ $filters['activity_date'] }}">
                         <input type="hidden" name="type" value="{{ $filters['type'] }}">
                         <input type="hidden" name="name" value="{{ $filters['name'] }}">
+                        <input type="hidden" name="transport_from" value="{{ $filters['transport_from'] ?? '' }}">
+                        <input type="hidden" name="transport_to" value="{{ $filters['transport_to'] ?? '' }}">
                         <input type="hidden" name="adults" value="{{ $filters['adults'] ?? 2 }}">
                         <input type="hidden" name="children" value="{{ $filters['children'] ?? 0 }}">
                         <input type="hidden" name="infants" value="{{ $filters['infants'] ?? 0 }}">
@@ -243,7 +267,11 @@
                                 }
                                 $startingRate = $item['starting_rate_of_adult'] ?? null;
                                 $isActivityListing = ($item['kind'] ?? null) === 'Activity' || $category === 'tours';
-                                $priceUnit = $isActivityListing ? '/ person' : '/ room';
+                                if ($category === 'transports' || $category === 'transport') {
+                                    $priceUnit = '';
+                                } else {
+                                    $priceUnit = $isActivityListing ? '/ person' : '/ room';
+                                }
                             @endphp
                             <article class="category-result-card">
                                 @if(isset($item['available_rooms_count']) && $item['available_rooms_count'] !== null)
@@ -256,7 +284,7 @@
                                     <img src="{{ $item['image'] }}" alt="{{ $item['title'] }}">
                                 </a>
                                 <div class="category-result-body">
-                                    <span class="listing-location"><i class="fa-solid fa-location-dot"></i> {{ $item['location'] }}</span>
+                                    <span class="listing-location"><i class="fa-solid fa-location-dot"></i> {{ $item['location'] ?? 'Mauritius' }}</span>
                                     <div class="category-result-title-row">
                                         <h3><a href="{{ $iteUSDl }}">{{ $item['title'] }}</a></h3>
                                         @if(!empty($item['rating_display']))

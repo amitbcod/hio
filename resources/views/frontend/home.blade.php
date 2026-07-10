@@ -172,11 +172,21 @@
                                 <div class="transport-row" style="">
                                     <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
                                         <h5>{{ __('home.search.from') }}</h5>
-                                        <input type="text" name="transport_from" class="category-search-input" value="{{ request()->query('transport_from', '') }}" placeholder="{{ __('home.search.departure_location') }}">
+                                        <select name="transport_from" class="category-search-select" data-search-from>
+                                            <option value="">{{ __('home.search.departure_location') }}</option>
+                                            @foreach(($searchOptions['transport']['froms'] ?? []) as $from)
+                                                <option value="{{ $from }}" {{ request()->query('transport_from', '') === $from ? 'selected' : '' }}>{{ $from }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                     <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
                                         <h5>{{ __('home.search.to') }}</h5>
-                                        <input type="text" name="transport_to" class="category-search-input" value="{{ request()->query('transport_to', '') }}" placeholder="{{ __('home.search.destination') }}">
+                                        <select name="transport_to" class="category-search-select" data-search-to>
+                                            <option value="">{{ __('home.search.destination') }}</option>
+                                            @foreach(($searchOptions['transport']['tos'] ?? []) as $to)
+                                                <option value="{{ $to }}" {{ request()->query('transport_to', '') === $to ? 'selected' : '' }}>{{ $to }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                     <div class="transport-field" style="flex: 0 1 110px; min-width: 110px;">
                                         <h5>{{ __('home.search.passengers') }}</h5>
