@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('operators', function (Blueprint $table) {
             $table->id();
             $table->string('operator_id', 50);
+            $table->index('operator_id', 'idx_operators_operator_id');
             $table->enum('user_type', ['Operator','MPO','Agent'])->default('Operator');
             $table->enum('is_owner', ['yes','no'])->default('yes');
             $table->string('email', 191);
