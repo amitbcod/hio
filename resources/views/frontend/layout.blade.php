@@ -481,6 +481,7 @@
                     <ul>
                         <li><a href="{{ url('/#accommodations-section') }}">{{ __('footer.accommodation') }}</a></li>
                         <li><a href="{{ url('/#activities-section') }}">{{ __('footer.activities') }}</a></li>
+                        <li><a href="{{ route('frontend.home', ['category' => 'transport']) }}#discover-mauritius">{{ __('footer.transport') }}</a></li>
                         <li><a href="{{ url('/#discover-mauritius') }}">{{ __('footer.discover_mauritius') }}</a></li>
                         <li><a href="{{ url('/operator/accommodation') }}">{{ __('footer.operator') }}</a></li>
                     </ul>
