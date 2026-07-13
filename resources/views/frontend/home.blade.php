@@ -294,15 +294,15 @@
 
             <div class="tabs-shell">
                 <div class="tab-buttons">
-                    <button type="button" class="tab-button is-active" data-tab-target="activities">{{ __('home.tabs.activities') }}</button>
-                    <button type="button" class="tab-button" data-tab-target="holiday-rentals">{{ __('home.tabs.holiday_rentals') }}</button>
-                    <button type="button" class="tab-button" data-tab-target="hotels">{{ __('home.tabs.hotels') }}</button>
-                    <button type="button" class="tab-button" data-tab-target="services">{{ __('home.tabs.services') }}</button>
-                    <button type="button" class="tab-button" data-tab-target="transport">{{ __('home.tabs.transport') }}</button>
-                    <button type="button" class="tab-button" data-tab-target="wedding">{{ __('home.tabs.wedding') }}</button>
+                    <button type="button" class="tab-button {{ $selectedCategory === 'tours' || $selectedCategory === '' ? 'is-active' : '' }}" data-tab-target="activities">{{ __('home.tabs.activities') }}</button>
+                    <!-- <button type="button" class="tab-button" data-tab-target="holiday-rentals">{{ __('home.tabs.holiday_rentals') }}</button> -->
+                    <button type="button" class="tab-button {{ $selectedCategory === 'accommodation' ? 'is-active' : '' }}" data-tab-target="hotels">{{ __('home.tabs.hotels') }}</button>
+                    <!-- <button type="button" class="tab-button" data-tab-target="services">{{ __('home.tabs.services') }}</button> -->
+                    <button type="button" class="tab-button {{ $selectedCategory === 'transport' ? 'is-active' : '' }}" data-tab-target="transport">{{ __('home.tabs.transport') }}</button>
+                    <!-- <button type="button" class="tab-button" data-tab-target="wedding">{{ __('home.tabs.wedding') }}</button> -->
                 </div>
 
-                <div class="tab-panel is-active" data-tab-panel="activities" id="activities-section">
+                <div class="tab-panel {{ $selectedCategory === 'tours' || $selectedCategory === '' ? 'is-active' : '' }}" data-tab-panel="activities" id="activities-section">
                     @if($activities->isEmpty())
                         <div class="empty-state">{{ __('home.empty.activity_data') }}</div>
                     @else
@@ -367,7 +367,7 @@
                     @endif
                 </div>
 
-                <div class="tab-panel" data-tab-panel="hotels">
+                <div class="tab-panel {{ $selectedCategory === 'accommodation' ? 'is-active' : '' }}" data-tab-panel="hotels">
                     @if($hotels->isEmpty())
                         <div class="empty-state">{{ __('home.empty.hotel_data') }}</div>
                     @else
@@ -402,8 +402,32 @@
                 <div class="tab-panel" data-tab-panel="services">
                     <div class="empty-state">{{ __('home.empty.service_data') }}</div>
                 </div>
-                <div class="tab-panel" data-tab-panel="transport">
-                    <div class="empty-state">{{ __('home.empty.transport_data') }}</div>
+                <div class="tab-panel {{ $selectedCategory === 'transport' ? 'is-active' : '' }}" data-tab-panel="transport">
+                    @if($transports->isEmpty())
+                        <div class="empty-state">{{ __('home.empty.transport_data') }}</div>
+                    @else
+                        <div class="cards-grid">
+                            @foreach($transports as $transport)
+                                <article class="listing-card">
+                                    <a href="{{ $transport['url'] }}" class="listing-media">
+                                        <img src="{{ $transport['image'] }}" alt="{{ $transport['title'] }}">
+                                        <span class="listing-badge">{{ $transport['vehicle_type'] ?: __('home.tabs.transport') }}</span>
+                                    </a>
+                                    <div class="listing-body">
+                                        <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
+                                            {{ $transport['location'] }}</span>
+                                        <div class="listing-title-row">
+                                            <h3><a href="{{ $transport['url'] }}">{{ $transport['title'] }}</a></h3>
+                                        </div>
+                                        <p>{{ $transport['excerpt'] }}</p>
+                                        <div class="listing-footer">
+                                            <a href="{{ $transport['url'] }}">{{ __('home.view_details') }}</a>
+                                        </div>
+                                    </div>
+                                </article>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
                 <div class="tab-panel" data-tab-panel="wedding">
                     <div class="empty-state">{{ __('home.empty.wedding_data') }}</div>
@@ -480,6 +504,20 @@
                 const rect = target.getBoundingClientRect();
                 const offsetTop = window.pageYOffset + rect.top - (window.innerHeight / 2) + (rect.height / 2);
                 window.scrollTo({ top: Math.max(0, offsetTop), behavior: 'smooth' });
+            };
+
+            const activateTabForCategory = function () {
+                const selectedCategory = document.querySelector('input[name="category"]:checked')?.value;
+                const categoryTabMap = {
+                    accommodation: 'hotels',
+                    tours: 'activities',
+                    transport: 'transport',
+                };
+
+                const targetTab = categoryTabMap[selectedCategory];
+                if (targetTab) {
+                    activateTab(targetTab);
+                }
             };
 
             tabButtons.forEach((button) => {
@@ -650,7 +688,10 @@
 
             // Attach change event to category radios
             categoryRadios.forEach(function (radio) {
-                radio.addEventListener('change', updateCategoryFields);
+                radio.addEventListener('change', function () {
+                    updateCategoryFields();
+                    activateTabForCategory();
+                });
             });
 
             // Handle guest cell expand/collapse

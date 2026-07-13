@@ -59,6 +59,24 @@ class HomeController extends Controller
             ->filter(fn (array $item) => in_array($item['property_type'], $hotelTypes, true))
             ->values();
 
+        $transports = $this->approvedTransportQuery()->with([
+                'rates' => function ($query) {
+                    $query->where('is_active', true)->orderBy('price_per_person');
+                },
+                'operator',
+                'routes',
+            ])
+            ->whereNotNull('vehicle_name')
+            ->latest('updated_at')
+            ->take(8)
+            ->get()
+            ->map(fn (Transport $transport) => $this->mapTransport(
+                $transport,
+                false,
+                $filters['transport_from'] ?? '',
+                $filters['transport_to'] ?? ''
+            ));
+
         if ($holidayRentals->isEmpty()) {
             $holidayRentals = $accommodations->take(4)->values();
         }
@@ -114,6 +132,7 @@ class HomeController extends Controller
             'activities' => $activities,
             'holidayRentals' => $holidayRentals,
             'hotels' => $hotels,
+            'transports' => $transports,
             'stats' => $stats,
             'selectedCategory' => $selectedCategory,
             'filters' => $filters,

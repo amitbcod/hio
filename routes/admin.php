@@ -223,6 +223,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::match(['put','patch','post'], 'static-pages/{staticPage}', [\App\Http\Controllers\Admin\StaticPageController::class, 'update'])->name('static-pages.update');
     Route::delete('static-pages/{staticPage}', [\App\Http\Controllers\Admin\StaticPageController::class, 'destroy'])->name('static-pages.destroy');
 
+    Route::get('places', [\App\Http\Controllers\Admin\PlaceController::class, 'index'])->name('places.index');
+    Route::get('places/create', [\App\Http\Controllers\Admin\PlaceController::class, 'create'])->name('places.create');
+    Route::post('places', [\App\Http\Controllers\Admin\PlaceController::class, 'store'])->name('places.store');
+    Route::get('places/{place}/edit', [\App\Http\Controllers\Admin\PlaceController::class, 'edit'])->name('places.edit');
+    Route::put('places/{place}', [\App\Http\Controllers\Admin\PlaceController::class, 'update'])->name('places.update');
+    Route::delete('places/{place}', [\App\Http\Controllers\Admin\PlaceController::class, 'destroy'])->name('places.destroy');
+
     Route::get('vehicle-types', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'index'])->name('vehicle-types.index');
     Route::get('vehicle-types/create', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'create'])->name('vehicle-types.create');
     Route::post('vehicle-types', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'store'])->name('vehicle-types.store');

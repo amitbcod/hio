@@ -340,15 +340,21 @@
                 </div>
             </div>
             <nav class="main-nav">
-                <a href="{{ route('frontend.home') }}" class="is-active">{{ __('site.home') }}</a>
-                <a href="{{ route('frontend.home', ['category' => 'accommodation']) }}">{{ __('site.accommodation') }}</a>
-                <a href="{{ route('frontend.home', ['category' => 'tours']) }}">{{ __('site.activities') }}</a>
+                <a href="{{ route('frontend.home') }}" class="{{ request()->routeIs('frontend.home') && ! request()->query('category') ? 'is-active' : '' }}">{{ __('site.home') }}</a>
+                <a href="{{ route('frontend.home', ['category' => 'accommodation']) }}" class="{{ request()->routeIs('frontend.home') && request()->query('category') === 'accommodation' ? 'is-active' : '' }}">{{ __('site.accommodation') }}</a>
+                <a href="{{ route('frontend.home', ['category' => 'tours']) }}" class="{{ request()->routeIs('frontend.home') && request()->query('category') === 'tours' ? 'is-active' : '' }}">{{ __('site.activities') }}</a>
+                <a href="{{ route('frontend.home', ['category' => 'transport']) }}" class="{{ request()->routeIs('frontend.home') && request()->query('category') === 'transport' ? 'is-active' : '' }}">{{ __('site.transport') }}</a>
                 <a href="{{ url('/#discover-mauritius') }}">{{ __('site.discover_mauritius') }}</a>
                 <a href="{{ url('/operator/accommodation') }}">{{ __('site.operator') }}</a>
                 <a href="{{ route('frontend.booking.cart') }}" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> {{ __('site.cart') }} <span id="headerCartCount" class="header-cart-badge">{{ count(session('booking_cart', [])) }}</span></a>
             </nav>
         </div>
     </header>
+
+    @php
+        $currentRouteIsHome = request()->routeIs('frontend.home');
+        $currentCategory = request()->query('category');
+    @endphp
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {

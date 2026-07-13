@@ -163,7 +163,25 @@
                 <p>{!! nl2br(e($transport['description'] ?: $transport['overview'] ?? '')) !!}</p>
             </div>
 
-            <div class="detail-section-card" id="routes-pricing">
+            <div class="detail-section-card" id="vehicle-details">
+                <h2>{{ __('transport.details_title') }}</h2>
+                <div class="transport-detail-list">
+                    <div class="transport-detail-item">
+                        <strong>{{ __('transport.vehicle_name') }}</strong>
+                        <span>{{ $transport['title'] ?? '' }}</span>
+                    </div>
+                    <div class="transport-detail-item">
+                        <strong>{{ __('transport.vehicle_type_label') }}</strong>
+                        <span>{{ $transport['vehicle_type'] ?? '' }}</span>
+                    </div>
+                    <div class="transport-detail-item">
+                        <strong>{{ __('transport.seating_capacity') }}</strong>
+                        <span>{{ $transport['seating_capacity'] ?? '' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- <div class="detail-section-card" id="routes-pricing">
                 <h2>{{ __('transport.routes_pricing') }}</h2>
                 @if(empty($routes))
                     <p>{{ __('transport.no_route_pricing') }}</p>
@@ -197,7 +215,7 @@
                         @endforeach
                     </div>
                 @endif
-            </div>
+            </div> -->
 
             <div class="detail-section-card" id="promotions">
                 <h2>{{ __('transport.promotions_offers') }}</h2>
