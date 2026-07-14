@@ -1568,6 +1568,14 @@ class BookingController extends Controller
         $paymentMethod = session()->get('payment_method');
         $paymentStatus = 'pending';
 
+        $relatedTransportBookings = collect();
+        if ($booking && !empty($booking->trip_id)) {
+            $relatedTransportBookings = \App\Models\TransportBooking::where('trip_id', $booking->trip_id)
+                ->with('transport')
+                ->when($type === 'transport', fn($query) => $query->where('booking_reference', '<>', $booking->booking_reference))
+                ->get();
+        }
+
         if (!$paymentMethod && $booking) {
             // If $booking is a Booking model it will have payments() relation.
             if ($booking instanceof \App\Models\Booking) {
@@ -1600,7 +1608,7 @@ class BookingController extends Controller
             }
         }
 
-        return view('frontend.booking-confirmation', compact('booking', 'type', 'ref', 'bookingRefs', 'guestName', 'summary', 'paymentMethod', 'paymentStatus'));
+        return view('frontend.booking-confirmation', compact('booking', 'type', 'ref', 'bookingRefs', 'guestName', 'summary', 'paymentMethod', 'paymentStatus', 'relatedTransportBookings'));
     }
 
     public function paymentCallback(Request $request)

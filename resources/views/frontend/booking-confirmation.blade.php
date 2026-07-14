@@ -112,13 +112,58 @@
                                         <span class="detail-val">{{ $booking->check_out_date->format('d M Y') }}</span>
                                     </div>
                                 @endif
-                            @else
+                            @elseif($type === 'activity')
                                 @if($booking->activity_date)
                                     <div class="confirm-detail-item">
                                         <span class="detail-key">{{ __('booking.activity_date') }}</span>
                                         <span class="detail-val">{{ $booking->activity_date->format('d M Y') }}</span>
                                     </div>
                                 @endif
+                           @elseif($type === 'transport')
+                                <div class="confirm-detail-item detail-full-width">
+                                    <span class="detail-key">{{ __('booking.transport_details') }}</span>
+                                </div>
+                                @if($booking->pickup_date)
+                                    <div class="confirm-detail-item">
+                                        <span class="detail-key">{{ __('booking.transport_pickup_date') }}</span>
+                                        <span class="detail-val">{{ $booking->pickup_date->format('d M Y') }}</span>
+                                    </div>
+                                @endif
+                                @if($booking->pickup_time)
+                                    <div class="confirm-detail-item">
+                                        <span class="detail-key">{{ __('booking.transport_pickup_time') }}</span>
+                                        <span class="detail-val">{{ $booking->pickup_time }}</span>
+                                    </div>
+                                @endif
+                                @if($booking->return_date)
+                                    <div class="confirm-detail-item">
+                                        <span class="detail-key">{{ __('booking.transport_return_date') }}</span>
+                                        <span class="detail-val">{{ $booking->return_date->format('d M Y') }}</span>
+                                    </div>
+                                @endif
+                                @if($booking->return_time)
+                                    <div class="confirm-detail-item">
+                                        <span class="detail-key">{{ __('booking.transport_return_time') }}</span>
+                                        <span class="detail-val">{{ $booking->return_time }}</span>
+                                    </div>
+                                @endif
+                                <div class="confirm-detail-item">
+                                    <span class="detail-key">{{ __('booking.transport_vehicle') }}</span>
+                                    <span class="detail-val">
+                                        {{ optional($booking->transport)->vehicle_name ?? __('traveler.common.not_available') }}
+                                        {{ optional($booking->transport)->vehicle_type ? ' (' . optional($booking->transport)->vehicle_type . ')' : '' }}
+                                    </span>
+                                </div>
+                                <div class="confirm-detail-item">
+                                    <span class="detail-key">{{ __('booking.transport_seating_capacity') }}</span>
+                                    <span class="detail-val">
+                                        {{ optional($booking->transport)->seating_capacity ?? __('traveler.common.not_available') }}
+                                    </span>
+                                </div>
+                                <div class="confirm-detail-item">
+                                    <span class="detail-key">{{ __('booking.transport_route') }}</span>
+                                    <span class="detail-val">{{ $booking->route_from }} → {{ $booking->route_to }}</span>
+                                </div>
                             @endif
                             <div class="confirm-detail-item">
                                 <span class="detail-key">{{ __('booking.guests') }}</span>
@@ -142,6 +187,119 @@
                             @endif
                         </div>
                     </div>
+                @endif
+
+                @if(!empty($relatedTransportBookings) && $relatedTransportBookings->isNotEmpty())
+                    <!-- <div class="confirm-details">
+                        <h2 class="confirm-details-title">{{ __('booking.transport_details') ?? 'Transport Details' }}</h2>
+                        @foreach($relatedTransportBookings as $transportBooking)
+                            <div class="confirm-details-grid">
+                                @if($transportBooking->pickup_date)
+                                    <div class="confirm-detail-item">
+                                        <span class="detail-key">Pickup Date</span>
+                                        <span class="detail-val">{{ $transportBooking->pickup_date->format('d M Y') }}</span>
+                                    </div>
+                                @endif
+                                @if($transportBooking->pickup_time)
+                                    <div class="confirm-detail-item">
+                                        <span class="detail-key">Pickup Time</span>
+                                        <span class="detail-val">{{ $transportBooking->pickup_time }}</span>
+                                    </div>
+                                @endif
+                                @if($transportBooking->return_date)
+                                    <div class="confirm-detail-item">
+                                        <span class="detail-key">Return Date</span>
+                                        <span class="detail-val">{{ $transportBooking->return_date->format('d M Y') }}</span>
+                                    </div>
+                                @endif
+                                @if($transportBooking->return_time)
+                                    <div class="confirm-detail-item">
+                                        <span class="detail-key">Return Time</span>
+                                        <span class="detail-val">{{ $transportBooking->return_time }}</span>
+                                    </div>
+                                @endif
+                                <div class="confirm-detail-item">
+                                    <span class="detail-key">Vehicle</span>
+                                    <span class="detail-val">{{ optional($transportBooking->transport)->vehicle_name ?? 'N/A' }}{{ optional($transportBooking->transport)->vehicle_type ? ' (' . optional($transportBooking->transport)->vehicle_type . ')' : '' }}</span>
+                                </div>
+                                <div class="confirm-detail-item">
+                                    <span class="detail-key">Seating Capacity</span>
+                                    <span class="detail-val">{{ optional($transportBooking->transport)->seating_capacity ?? 'N/A' }}</span>
+                                </div>
+                                <div class="confirm-detail-item">
+                                    <span class="detail-key">Route</span>
+                                    <span class="detail-val">{{ $transportBooking->route_from }} → {{ $transportBooking->route_to }}</span>
+                                </div>
+                                <div class="confirm-detail-item">
+                                    <span class="detail-key">Booking Reference</span>
+                                    <span class="detail-val">{{ $transportBooking->booking_reference }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div> -->
+
+                    <div class="confirm-details">
+    <h2 class="confirm-details-title">{{ __('booking.transport_details') }}</h2>
+
+    @foreach($relatedTransportBookings as $transportBooking)
+        <div class="confirm-details-grid">
+
+            @if($transportBooking->pickup_date)
+                <div class="confirm-detail-item">
+                    <span class="detail-key">{{ __('booking.transport_pickup_date') }}</span>
+                    <span class="detail-val">{{ $transportBooking->pickup_date->format('d M Y') }}</span>
+                </div>
+            @endif
+
+            @if($transportBooking->pickup_time)
+                <div class="confirm-detail-item">
+                    <span class="detail-key">{{ __('booking.transport_pickup_time') }}</span>
+                    <span class="detail-val">{{ $transportBooking->pickup_time }}</span>
+                </div>
+            @endif
+
+            @if($transportBooking->return_date)
+                <div class="confirm-detail-item">
+                    <span class="detail-key">{{ __('booking.transport_return_date') }}</span>
+                    <span class="detail-val">{{ $transportBooking->return_date->format('d M Y') }}</span>
+                </div>
+            @endif
+
+            @if($transportBooking->return_time)
+                <div class="confirm-detail-item">
+                    <span class="detail-key">{{ __('booking.transport_return_time') }}</span>
+                    <span class="detail-val">{{ $transportBooking->return_time }}</span>
+                </div>
+            @endif
+
+            <div class="confirm-detail-item">
+                <span class="detail-key">{{ __('booking.transport_vehicle') }}</span>
+                <span class="detail-val">
+                    {{ optional($transportBooking->transport)->vehicle_name ?? __('traveler.common.not_available') }}
+                    {{ optional($transportBooking->transport)->vehicle_type ? ' (' . optional($transportBooking->transport)->vehicle_type . ')' : '' }}
+                </span>
+            </div>
+
+            <div class="confirm-detail-item">
+                <span class="detail-key">{{ __('booking.transport_seating_capacity') }}</span>
+                <span class="detail-val">
+                    {{ optional($transportBooking->transport)->seating_capacity ?? __('traveler.common.not_available') }}
+                </span>
+            </div>
+
+            <div class="confirm-detail-item">
+                <span class="detail-key">{{ __('booking.transport_route') }}</span>
+                <span class="detail-val">{{ $transportBooking->route_from }} → {{ $transportBooking->route_to }}</span>
+            </div>
+
+            <div class="confirm-detail-item">
+                <span class="detail-key">{{ __('booking.booking_reference') }}</span>
+                <span class="detail-val">{{ $transportBooking->booking_reference }}</span>
+            </div>
+
+        </div>
+    @endforeach
+</div>
                 @endif
 
                 {{-- What's next --}}
@@ -322,6 +480,7 @@
     gap: 12px;
 }
 .confirm-detail-item { display: flex; flex-direction: column; gap: 3px; }
+.confirm-detail-item.detail-full-width { grid-column: 1 / -1; padding-bottom: 12px; }
 .detail-key {
     font-size: 11px;
     font-weight: 700;

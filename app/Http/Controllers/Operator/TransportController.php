@@ -704,9 +704,13 @@ class TransportController extends Controller
 
         $validated = $request->validate([
             'long_description' => 'nullable|string',
+            'long_description_fr' => 'nullable|string',
             'inclusions' => 'nullable|string',
+            'inclusions_fr' => 'nullable|string',
             'exclusions' => 'nullable|string',
+            'exclusions_fr' => 'nullable|string',
             'pickup_instructions' => 'nullable|string',
+            'pickup_instructions_fr' => 'nullable|string',
         ]);
 
         $transport->update(array_merge($validated, [
@@ -808,7 +812,7 @@ class TransportController extends Controller
 
         // Get bookings for all transports
         $bookings = TransportBooking::whereIn('transport_id', $transports)
-            ->with(['transport', 'traveler_account'])
+            ->with(['transport', 'travelerAccount'])
             ->orderBy('booked_at', 'desc')
             ->paginate(20);
 
@@ -847,5 +851,43 @@ class TransportController extends Controller
         }
 
         return view('operator.transport.booking-details', compact('transport', 'booking'));
+    }
+
+    /**
+     * Update booking status for transport bookings
+     */
+    public function updateBookingStatus(Request $request, $bookingId)
+    {
+        $operator = Auth::guard('operator')->user() ?? Auth::guard('operator_staff')->user();
+        if (!$operator) {
+            abort(403);
+        }
+
+        // Transports are owned by operators; do not query a non-existent `business_id` column.
+        $transportIds = Transport::where('operator_id', $operator->id)
+            ->pluck('id');
+
+        $booking = TransportBooking::whereIn('transport_id', $transportIds)
+            ->where('id', $bookingId)
+            ->firstOrFail();
+
+        $request->validate([
+            'booking_status' => 'required|in:Confirmed,Cancelled',
+        ]);
+
+        if ($booking->booking_status === 'Cancelled') {
+            return back()->with('error', 'Cancelled bookings cannot be updated.');
+        }
+
+        $booking->booking_status = $request->input('booking_status');
+        $booking->save();
+
+        (new \App\Services\OperatorBookingNotificationService())->notifyBookingStatusChanged(
+            $booking,
+            'transport',
+            $booking->booking_status
+        );
+
+        return back()->with('success', 'Booking status updated to ' . $booking->booking_status . '.');
     }
 }

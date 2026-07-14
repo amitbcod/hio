@@ -181,6 +181,45 @@
                 </div>
             </div>
 
+            <div class="detail-section-card" id="service-descriptions">
+                <h2>{{ __('transport.service_description') }}</h2>
+                <div class="transport-description-items">
+                    @php
+                        $locale = app()->getLocale();
+                    @endphp
+
+                    @if($locale === 'fr' && !empty($transport['long_description_fr']))
+                        <div class="service-desc-item">{!! $transport['long_description_fr'] !!}</div>
+                    @elseif(!empty($transport['long_description']))
+                        <div class="service-desc-item">{!! $transport['long_description'] !!}</div>
+                    @endif
+
+                    @if($locale === 'fr' && !empty($transport['inclusions_fr']))
+                        <h4>{{ __('transport.inclusions') }}</h4>
+                        <div class="service-desc-item">{!! $transport['inclusions_fr'] !!}</div>
+                    @elseif(!empty($transport['inclusions']))
+                        <h4>{{ __('transport.inclusions') }}</h4>
+                        <div class="service-desc-item">{!! $transport['inclusions'] !!}</div>
+                    @endif
+
+                    @if($locale === 'fr' && !empty($transport['exclusions_fr']))
+                        <h4>{{ __('transport.exclusions') }}</h4>
+                        <div class="service-desc-item">{!! $transport['exclusions_fr'] !!}</div>
+                    @elseif(!empty($transport['exclusions']))
+                        <h4>{{ __('transport.exclusions') }}</h4>
+                        <div class="service-desc-item">{!! $transport['exclusions'] !!}</div>
+                    @endif
+
+                    @if($locale === 'fr' && !empty($transport['pickup_instructions_fr']))
+                        <h4>{{ __('transport.pickup_instructions') }}</h4>
+                        <div class="service-desc-item">{!! $transport['pickup_instructions_fr'] !!}</div>
+                    @elseif(!empty($transport['pickup_instructions']))
+                        <h4>{{ __('transport.pickup_instructions') }}</h4>
+                        <div class="service-desc-item">{!! $transport['pickup_instructions'] !!}</div>
+                    @endif
+                </div>
+            </div>
+
             <!-- <div class="detail-section-card" id="routes-pricing">
                 <h2>{{ __('transport.routes_pricing') }}</h2>
                 @if(empty($routes))

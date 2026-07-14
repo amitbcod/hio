@@ -75,6 +75,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('activity/bookings', [\App\Http\Controllers\Admin\ActivityBookingController::class, 'index'])->name('activity.bookings');
     Route::get('activity/bookings/{booking}', [\App\Http\Controllers\Admin\ActivityBookingController::class, 'show'])->name('activity.booking.details');
 
+    // Admin transport booking management (superadmin)
+    Route::get('transport/bookings', [\App\Http\Controllers\Admin\TransportBookingController::class, 'index'])->name('transport.bookings');
+    Route::get('transport/bookings/{booking}', [\App\Http\Controllers\Admin\TransportBookingController::class, 'show'])->name('transport.booking.details');
+
     // Admin accommodation management for selected operator/business
     Route::get('accommodations/select-operator', [\App\Http\Controllers\Admin\AccommodationController::class, 'selectOperator'])->name('accommodation.select-operator');
     Route::post('accommodations/select-operator', [\App\Http\Controllers\Admin\AccommodationController::class, 'setOperator'])->name('accommodation.set-operator');

@@ -17,6 +17,7 @@
     <a href="{{ route('admin.activity.create') }}" class="list-group-item list-group-item-action {{ request()->is('admin/activity/create*') ? 'active' : '' }}">Create Activity</a>
     <a href="{{ route('admin.accommodation.bookings') }}" class="list-group-item list-group-item-action {{ request()->is('admin/accommodation/bookings*') ? 'active' : '' }}">Accommodation Bookings</a>
     <a href="{{ route('admin.activity.bookings') }}" class="list-group-item list-group-item-action {{ request()->is('admin/activity/bookings*') ? 'active' : '' }}">Activity Bookings</a>
+    <a href="{{ route('admin.transport.bookings') }}" class="list-group-item list-group-item-action {{ request()->is('admin/transport/bookings*') ? 'active' : '' }}">Transport Bookings</a>
     <a href="{{ route('admin.payment-transactions.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/payment-transactions*') ? 'active' : '' }}">Payment Transactions</a>
     <a href="{{ route('admin.shared-carts.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/shared-carts*') ? 'active' : '' }}">Shared Cart Links</a>
     <div class="list-group-item list-group-item-action mt-2 font-weight-bold">HIO Policy Templates</div>

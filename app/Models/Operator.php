@@ -32,4 +32,12 @@ class Operator extends Model implements AuthenticatableContract
     {
         return $this->hasOne(OperatorAccountingPayout::class, 'business_id', 'business_id');
     }
+
+    /**
+     * Transport services added by this operator.
+     */
+    public function transports()
+    {
+        return $this->hasMany(Transport::class, 'operator_id');
+    }
 }

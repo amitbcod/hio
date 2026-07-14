@@ -24,9 +24,19 @@
                         <div id="long_description_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:160px;"></div>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Long Description (Français)</label>
+                        <textarea name="long_description_fr" id="long_description_fr" class="form-control" style="display:none;">{{ old('long_description_fr', $transport->long_description_fr) }}</textarea>
+                        <div id="long_description_fr_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:160px;"></div>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Inclusions</label>
                         <textarea name="inclusions" id="inclusions" class="form-control" style="display:none;">{{ old('inclusions', $transport->inclusions) }}</textarea>
                         <div id="inclusions_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Inclusions (Français)</label>
+                        <textarea name="inclusions_fr" id="inclusions_fr" class="form-control" style="display:none;">{{ old('inclusions_fr', $transport->inclusions_fr) }}</textarea>
+                        <div id="inclusions_fr_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Exclusions</label>
@@ -34,9 +44,19 @@
                         <div id="exclusions_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Exclusions (Français)</label>
+                        <textarea name="exclusions_fr" id="exclusions_fr" class="form-control" style="display:none;">{{ old('exclusions_fr', $transport->exclusions_fr) }}</textarea>
+                        <div id="exclusions_fr_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Pickup Instructions</label>
                         <textarea name="pickup_instructions" id="pickup_instructions" class="form-control" style="display:none;">{{ old('pickup_instructions', $transport->pickup_instructions) }}</textarea>
                         <div id="pickup_instructions_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Pickup Instructions (Français)</label>
+                        <textarea name="pickup_instructions_fr" id="pickup_instructions_fr" class="form-control" style="display:none;">{{ old('pickup_instructions_fr', $transport->pickup_instructions_fr) }}</textarea>
+                        <div id="pickup_instructions_fr_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
                     </div>
                 </div>
                 <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save & Continue</button>
@@ -51,9 +71,13 @@
             const form = document.querySelector('form');
             const fields = [
                 { textareaId: 'long_description', editorId: 'long_description_editor', placeholder: 'Write the full description of the transport service...' },
+                { textareaId: 'long_description_fr', editorId: 'long_description_fr_editor', placeholder: 'Écrivez la description complète du service en français...' },
                 { textareaId: 'inclusions', editorId: 'inclusions_editor', placeholder: 'List what is included...' },
+                { textareaId: 'inclusions_fr', editorId: 'inclusions_fr_editor', placeholder: 'Listez ce qui est inclus (français)...' },
                 { textareaId: 'exclusions', editorId: 'exclusions_editor', placeholder: 'List what is not included...' },
-                { textareaId: 'pickup_instructions', editorId: 'pickup_instructions_editor', placeholder: 'Provide pickup instructions...' }
+                { textareaId: 'exclusions_fr', editorId: 'exclusions_fr_editor', placeholder: 'Listez ce qui n\'est pas inclus (français)...' },
+                { textareaId: 'pickup_instructions', editorId: 'pickup_instructions_editor', placeholder: 'Provide pickup instructions...' },
+                { textareaId: 'pickup_instructions_fr', editorId: 'pickup_instructions_fr_editor', placeholder: 'Instructions de prise en charge (français)...' }
             ];
 
             const editors = [];

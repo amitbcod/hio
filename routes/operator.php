@@ -281,6 +281,7 @@ Route::prefix('operator')->name('operator.')->group(function () {
         
         // Transport Bookings - General list for all transports
         Route::get('transport-bookings', [\App\Http\Controllers\Operator\TransportController::class, 'allBookingsList'])->name('transport.bookings');
+        Route::post('transport/bookings/{booking}/status', [\App\Http\Controllers\Operator\TransportController::class, 'updateBookingStatus'])->name('transport.booking.status');
         
         // Transport Bookings - Specific transport bookings (kept for compatibility)
         Route::get('transport/{transport}/bookings', [\App\Http\Controllers\Operator\TransportController::class, 'bookingList'])->name('transport.transport-bookings');
