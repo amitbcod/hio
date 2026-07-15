@@ -1,5 +1,5 @@
 <!-- Transport Steps Sidebar -->
-<div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);position:sticky;top:92px;max-height:calc(100vh - 92px);overflow:auto;box-sizing:border-box;min-width:200px;width:auto;">
+<div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);position:sticky;max-height:calc(100vh - 92px);overflow:auto;box-sizing:border-box;min-width:200px;width:auto;">
     <h6 style="font-weight:600;margin:0 0 16px 0;font-size:16px;color:white;">Transport Steps</h6>
     <div style="display:flex;flex-direction:column;gap:8px;">
         @php

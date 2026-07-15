@@ -3,14 +3,14 @@
 @section('title', 'Transport Step 6 | Operator Dashboard')
 
 @section('content')
-<div class="container mt-4">
+<div class="container">
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-3 net-section">
             @php $currentStep = 6; @endphp
             @include('operator.transport._steps_sidebar')
         </div>
         <div class="col-md-9">
-            <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);margin-bottom:16px;">
+            <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);margin-bottom:16px; margin-top:40px">
                 <h2 style="font-weight:700;margin:0;">Step 6: Service Description</h2>
                 <p style="margin:8px 0 0 0;color:#666;">Add the full service description and key service details for the transport listing.</p>
             </div>
