@@ -9,7 +9,7 @@
             @php $currentStep = 2; @endphp
             @include('operator.transport._steps_sidebar')
         </div>
-        <div class="col-md-9">
+        <div class="col-md-9 transport-rightside">
             <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);margin-bottom:16px; margin-top:40px">
                 <h2 style="font-weight:700;margin:0;">Step 2: Routes & Pricing</h2>
                 <p style="margin:8px 0 0 0;color:#666;">Define routes, fare options, and pricing by vehicle type.</p>
