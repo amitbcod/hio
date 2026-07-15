@@ -65,7 +65,7 @@
                     </div>
                 </div>
 
-                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                <div style="display:flex;gap:12px;flex-wrap:wrap; padding:18px">
                     <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Create Transport</button>
                     <a href="{{ route('operator.transport.index') }}" class="btn" style="background:#f0f0f0;color:#333;padding:10px 20px;border-radius:4px;border:none;">Cancel</a>
                 </div>
