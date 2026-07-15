@@ -34,7 +34,7 @@
                     $routeUrl = '#';
                 }
             @endphp
-            <a href="{{ $routeUrl }}" style="padding:10px 12px;background:{{ $isActive ? '#e3f2fd' : ($isComplete ? '#e8f5e9' : '#f5f5f5') }};border-left:4px solid {{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#ccc') }};border-radius:4px;text-decoration:none;font-size:13px;color:{{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#666') }};font-weight:{{ $isActive ? '600' : '500' }};display:flex;justify-content:space-between;align-items:center;">
+            <a href="{{ $routeUrl }}" style="padding:10px 12px;background:{{ $isActive ? '#e3f2fd' : ($isComplete ? 'transparent' : '#f5f5f5') }};border-left:4px solid {{ $isActive ? '#2196f3' : ($isComplete ? '#ffffff' : '#ccc') }};border-radius:4px;text-decoration:none;font-size:13px;color:{{ $isActive ? '#2196f3' : ($isComplete ? '#ffffff' : '#666') }};font-weight:{{ $isActive ? '600' : '500' }};display:flex;justify-content:space-between;align-items:center;">
                 <span>Step {{ $stepNum }}: {{ $stepData['name'] }}</span>
                 <span style="font-size:12px;">{{ $isComplete ? '✓' : $stepNum }}</span>
             </a>
