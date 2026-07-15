@@ -5,7 +5,7 @@
 @section('content')
 <div class="container">
     <div class="row">
-        <div class="col-md-3 net-section">
+        <div id="sidebar" class="col-md-3 net-section">
             @php $currentStep = 5; @endphp
             @include('operator.transport._steps_sidebar')
         </div>
