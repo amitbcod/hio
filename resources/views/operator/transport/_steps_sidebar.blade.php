@@ -1,3 +1,33 @@
+
+<script>
+      function toggleMenu(element) {
+         let submenu = element.nextElementSibling;
+
+         element.classList.toggle("active");
+         submenu.classList.toggle("hidden");
+      }
+   </script>
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+   </script>
+
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+
+      document.addEventListener("click", function (e) {
+         let sidebar = document.getElementById("sidebar");
+         let hamburger = document.querySelector(".hamburger");
+
+         if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+            sidebar.classList.remove("active");
+         }
+      });
+   </script>
+
 <!-- Transport Steps Sidebar -->
 <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);position:sticky;max-height:calc(100vh - 92px);overflow:auto;box-sizing:border-box;min-width:200px;width:auto;">
     <h6 style="font-weight:600;margin:0 0 16px 0;font-size:16px;color:white;">Transport Steps</h6>
