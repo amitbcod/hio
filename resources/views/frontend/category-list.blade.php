@@ -33,6 +33,11 @@
             'participants' => $filters['participants'] ?? (int) request()->query('participants', 1),
             'transport_from' => $filters['transport_from'] ?? '',
             'transport_to' => $filters['transport_to'] ?? '',
+            'service_type' => request()->query('service_type', 'route'),
+            'arrival_date' => request()->query('arrival_date', ''),
+            'arrival_time' => request()->query('arrival_time', ''),
+            'return_date' => request()->query('return_date', ''),
+            'return_time' => request()->query('return_time', ''),
         ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
@@ -98,6 +103,24 @@
                                 @endforeach
                             </select>
                         </div>
+                        @push('styles')
+                            <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+                        @endpush
+                        @push('scripts')
+                            <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    try {
+                                        const from = document.querySelector('select[data-search-from]');
+                                        const to = document.querySelector('select[data-search-to]');
+                                        if (from) new TomSelect(from, {allowEmptyOption: true, create: false});
+                                        if (to) new TomSelect(to, {allowEmptyOption: true, create: false});
+                                    } catch (e) {
+                                        console.error('TomSelect init error', e);
+                                    }
+                                });
+                            </script>
+                        @endpush
                         <div class="category-search-cell category-search-cell--transport" style="display: none; flex: 0 1 280px; min-width: 280px">
                             <h5>{{ __('home.search.from') }}</h5>
                             <select name="transport_from" class="category-search-select" data-search-from>

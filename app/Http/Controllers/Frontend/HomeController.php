@@ -1059,6 +1059,7 @@ class HomeController extends Controller
             'pickup_instructions_fr' => $detailed ? ($transport->pickup_instructions_fr ?? '') : '',
             'overview' => $detailed ? $transport->overview : '',
             'amenities' => $transport->amenities ?? [],
+            'car_rental_prices' => $transport->car_rental_prices ?? [],
             'routes_pricing' => $routes->toArray(),
             'selected_route' => $matchedRoute ? $matchedRoute : null,
             'place_names' => $placeNames,

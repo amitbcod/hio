@@ -7,19 +7,119 @@
     @php
         $booking = $transport['booking'] ?? [
             'pickup_date' => now()->format('Y-m-d'),
+            'pickup_time' => '',
             'pickup_date_display' => now()->format('d-m-Y'),
             'return_date' => now()->addDay()->format('Y-m-d'),
+            'return_time' => '',
             'return_date_display' => now()->addDay()->format('d-m-Y'),
             'passengers' => 1,
         ];
         $routes = $transport['routes_pricing'] ?? [];
         $amenities = $transport['amenities'] ?? [];
         $operator = $transport['operator'] ?? null;
+        $serviceType = request()->query('service_type', 'route');
+        $booking['pickup_date'] = request()->query('pickup_date', request()->query('arrival_date', request()->query('check_in', $booking['pickup_date'])));
+        $booking['pickup_time'] = request()->query('pickup_time', request()->query('arrival_time', $booking['pickup_time']));
+        $booking['return_date'] = request()->query('return_date', request()->query('check_out', $booking['return_date']));
+        $booking['return_time'] = request()->query('return_time', $booking['return_time']);
+        $booking['passengers'] = request()->query('passengers', $booking['passengers']);
         $detailQuery = http_build_query([
             'pickup_date' => $booking['pickup_date'],
+            'pickup_time' => $booking['pickup_time'],
             'return_date' => $booking['return_date'],
+            'return_time' => $booking['return_time'],
             'passengers' => $booking['passengers'],
+            'service_type' => $serviceType,
         ]);
+        $carPrices = $transport['car_rental_prices'] ?? [];
+
+        // Compute car rental price when requested and dates/times are present
+        $carRentalTotal = null;
+        $debugInfo = [];
+        try {
+            $pickupDateParam = request()->query('pickup_date') ?: request()->query('arrival_date') ?: request()->query('check_in') ?: null;
+            $pickupTimeParam = request()->query('pickup_time') ?: request()->query('arrival_time') ?: null;
+            $returnDateParam = request()->query('return_date') ?: request()->query('return_date') ?: request()->query('check_out') ?: null;
+            $returnTimeParam = request()->query('return_time') ?: null;
+
+            $debugInfo['params'] = [
+                'pickupDateParam' => $pickupDateParam,
+                'pickupTimeParam' => $pickupTimeParam,
+                'returnDateParam' => $returnDateParam,
+                'returnTimeParam' => $returnTimeParam,
+            ];
+
+            if ($serviceType === 'car_rental' && $pickupDateParam && $pickupTimeParam && $returnDateParam && $returnTimeParam) {
+                // Ensure times are properly formatted - trim and remove extra spaces
+                $pickupTimeParam = trim($pickupTimeParam);
+                $returnTimeParam = trim($returnTimeParam);
+                
+                $start = \Carbon\Carbon::parse($pickupDateParam . ' ' . $pickupTimeParam);
+                $end = \Carbon\Carbon::parse($returnDateParam . ' ' . $returnTimeParam);
+                $debugInfo['start'] = $start->toString();
+                $debugInfo['end'] = $end->toString();
+                
+                // Ensure end is after start, swap if needed
+                if ($end->isBefore($start)) {
+                    $temp = $start;
+                    $start = $end;
+                    $end = $temp;
+                    $debugInfo['swapped'] = true;
+                }
+                
+                if ($end->greaterThan($start)) {
+                    $totalMinutes = $end->diffInMinutes($start);
+                    // Ensure we have positive minutes
+                    $totalMinutes = abs($totalMinutes);
+                    $totalHours = max(1, (int) ceil($totalMinutes / 60));
+                    $debugInfo['totalMinutes'] = $totalMinutes;
+                    $debugInfo['totalHours'] = $totalHours;
+
+                    $days = intdiv($totalHours, 24);
+                    $remainder = $totalHours % 24;
+
+                    $blocks = [];
+                    if (!empty($carPrices['per_hour'])) {
+                        $blocks[1] = floatval($carPrices['per_hour']);
+                    }
+                    if (!empty($carPrices['per_4h'])) {
+                        $blocks[4] = floatval($carPrices['per_4h']);
+                    }
+                    if (!empty($carPrices['per_8h'])) {
+                        $blocks[8] = floatval($carPrices['per_8h']);
+                    }
+                    if (!empty($carPrices['per_12h'])) {
+                        $blocks[12] = floatval($carPrices['per_12h']);
+                    }
+                    if (!empty($carPrices['per_24h'])) {
+                        $blocks[24] = floatval($carPrices['per_24h']);
+                    }
+
+                    $debugInfo['blocks'] = $blocks;
+
+                    if (!empty($blocks)) {
+                        $dp = array_fill(0, $totalHours + 1, INF);
+                        $dp[0] = 0.0;
+                        for ($h = 1; $h <= $totalHours; $h++) {
+                            foreach ($blocks as $blockHours => $blockPrice) {
+                                $prev = max(0, $h - $blockHours);
+                                $dp[$h] = min($dp[$h], $dp[$prev] + $blockPrice);
+                            }
+                        }
+                        $total = $dp[$totalHours];
+                        $debugInfo['total'] = $total;
+                        $debugInfo['dp_array'] = $dp;
+                    } else {
+                        $total = 0.0;
+                        $debugInfo['total'] = 'blocks_empty';
+                    }
+
+                    $carRentalTotal = number_format($total, 2, '.', '');
+                }
+            }
+        } catch (\Exception $e) {
+            $carRentalTotal = null;
+        }
         $detailImage = $transport['image'] ?? asset('images/transport.svg');
     @endphp
 
@@ -84,19 +184,26 @@
                         </div>
                         <div class="booking-field">
                             <label>{{ __('transport.form.pickup_time') }}</label>
-                            <input type="time" name="pickup_time" value="{{ $booking['pickup_time'] ?? '' }}" class="booking-input">
+                            <input type="time" name="pickup_time" value="{{ $booking['pickup_time'] }}" class="booking-input">
                         </div>
                         <div class="booking-field">
                             <label>{{ __('transport.form.return_date') }}</label>
-                            <input type="date" name="return_date" value="{{ $booking['return_date'] ?? '' }}" class="booking-input" min="{{ date('Y-m-d') }}">
+                            <input type="date" name="return_date" value="{{ $booking['return_date'] }}" class="booking-input" min="{{ date('Y-m-d') }}">
                         </div>
                         <div class="booking-field">
                             <label>{{ __('transport.form.return_time') }}</label>
-                            <input type="time" name="return_time" value="{{ $booking['return_time'] ?? '' }}" class="booking-input">
+                            <input type="time" name="return_time" value="{{ $booking['return_time'] }}" class="booking-input">
                         </div>
                         <div class="booking-field">
                             <label>{{ __('transport.form.passengers') }}</label>
                             <input type="number" name="passengers" min="1" value="{{ $booking['passengers'] }}" class="booking-input">
+                        </div>
+                        <div class="booking-field">
+                            <label>Service Type</label>
+                            <select name="service_type" id="service-type-select" class="booking-input">
+                                <option value="route" {{ ($serviceType ?? 'route') === 'route' ? 'selected' : '' }}>Route wise</option>
+                                <option value="car_rental" {{ ($serviceType ?? '') === 'car_rental' ? 'selected' : '' }}>Car rental</option>
+                            </select>
                         </div>
                         <button type="submit" class="btn-primary booking-btn">{{ __('transport.form.update_search') }}</button>
                     </form>
@@ -121,12 +228,14 @@
                         <input type="hidden" name="title" value="{{ $transport['title'] }}">
                         <input type="hidden" name="image" value="{{ $detailImage }}">
                         <input type="hidden" id="transport-price-per-passenger" name="price_per_passenger" value="{{ number_format((float) $selectedDefaultPrice, 2, '.', '') }}">
+                        <input type="hidden" id="transport-car-rental-total" name="car_rental_total" value="{{ $carRentalTotal ?? 0 }}">
                         <input type="hidden" id="transport-return-price" name="return_price" value="{{ number_format((float) ($selectedReturnPrice ?? 0), 2, '.', '') }}">
                         <input type="hidden" name="currency" value="USD">
                         <input type="hidden" name="pickup_date" value="{{ $booking['pickup_date'] }}">
                         <input type="hidden" name="return_date" value="{{ $booking['return_date'] ?? '' }}">
                         <input type="hidden" name="pickup_time" id="booking-pickup-time" value="{{ $booking['pickup_time'] ?? '' }}">
                         <input type="hidden" name="return_time" id="booking-return-time" value="{{ $booking['return_time'] ?? '' }}">
+                        <input type="hidden" name="service_type" id="booking-service-type" value="{{ $serviceType ?? 'route' }}">
                         <input type="hidden" name="passengers" value="{{ $booking['passengers'] }}">
                         <input type="hidden" id="transport-route-id" name="route_id" value="{{ $routeId }}">
                         <input type="hidden" id="transport-route-from" name="route_from" value="{{ $selectedRouteFrom }}">
@@ -137,8 +246,30 @@
                     </form>
 
                     <div class="booking-summary-line" id="transport-price-summary">
-                        <span>{{ __('transport.price') }}: USD {{ number_format((float) $selectedDefaultPrice, 2) }}{{ !empty($booking['return_date']) && $selectedReturnPrice ? ' + ' . __('transport.return_price') . ' USD ' . number_format((float) $selectedReturnPrice, 2) : '' }}</span>
+                        @if(($serviceType ?? 'route') === 'car_rental' && !empty($carRentalTotal))
+                            <span>{{ __('transport.price') }}: USD {{ $carRentalTotal }}</span>
+                        @else
+                            <span>{{ __('transport.price') }}: USD {{ number_format((float) $selectedDefaultPrice, 2) }}{{ !empty($booking['return_date']) && $selectedReturnPrice ? ' + ' . __('transport.return_price') . ' USD ' . number_format((float) $selectedReturnPrice, 2) : '' }}</span>
+                        @endif
                     </div>
+                    
+                    <!-- DEBUG: Car Rental Calculation -->
+                    @if(($serviceType ?? 'route') === 'car_rental')
+                        <!-- <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-size: 12px; border: 1px solid #ccc;">
+                            <strong>DEBUG INFO:</strong><br>
+                            Service Type: {{ $serviceType ?? 'N/A' }}<br>
+                            Pickup: {{ request()->query('arrival_date') ?? 'N/A' }} {{ request()->query('arrival_time') ?? 'N/A' }}<br>
+                            Return: {{ request()->query('return_date') ?? 'N/A' }} {{ request()->query('return_time') ?? 'N/A' }}<br>
+                            <strong>Debug Calculation Info:</strong><br>
+                            Total Minutes: {{ $debugInfo['totalMinutes'] ?? 'N/A' }}<br>
+                            Total Hours: {{ $debugInfo['totalHours'] ?? 'N/A' }}<br>
+                            Blocks: <pre style="font-size: 11px;">{{ json_encode($debugInfo['blocks'] ?? [], JSON_PRETTY_PRINT) }}</pre>
+                            DP Array: <pre style="font-size: 11px;">{{ json_encode($debugInfo['dp_array'] ?? [], JSON_PRETTY_PRINT) }}</pre>
+                            Calculated Total: {{ $debugInfo['total'] ?? 'N/A' }}<br>
+                            Car Prices: <pre style="font-size: 11px;">{{ json_encode($transport['car_rental_prices'] ?? [], JSON_PRETTY_PRINT) }}</pre>
+                            Car Rental Total (Formatted): {{ $carRentalTotal ?? 'NULL' }}<br>
+                        </div> -->
+                    @endif
 
                     @if($operator)
                         <div class="booking-quick-links">
@@ -394,8 +525,19 @@
 @endpush
 
 @push('scripts')
+    <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
             <script>
         document.addEventListener('DOMContentLoaded', function () {
+            try {
+                const tmpFrom = document.getElementById('transport-place-from');
+                const tmpTo = document.getElementById('transport-place-to');
+                if (tmpFrom) new TomSelect(tmpFrom, {allowEmptyOption: true, create: false});
+                if (tmpTo) new TomSelect(tmpTo, {allowEmptyOption: true, create: false});
+            } catch (e) {
+                console.error('TomSelect init error', e);
+            }
+
             const fromSelect = document.getElementById('transport-place-from');
             const toSelect = document.getElementById('transport-place-to');
             const routeIdInput = document.getElementById('transport-route-id');
@@ -407,6 +549,8 @@
 
             const routes = @json($routes);
             const rawPlaceRegionMap = @json($transport['place_region_map'] ?? []);
+            const serverCarRentalTotal = @json($carRentalTotal);
+            const serverServiceType = @json($serviceType ?? 'route');
             const placeRegionMap = Object.fromEntries(
                 Object.entries(rawPlaceRegionMap || {}).map(([key, value]) => [String(key).trim().toLowerCase(), String(value).trim().toLowerCase()])
             );
@@ -500,6 +644,30 @@
                 }
             }
 
+            // Validate GET search form: require pickup/return date & time for car_rental service type
+            const getSearchForm = document.querySelector('.booking-form-grid');
+            const serviceTypeSelect = document.getElementById('service-type-select');
+            if (getSearchForm) {
+                getSearchForm.addEventListener('submit', function (ev) {
+                    const st = serviceTypeSelect ? serviceTypeSelect.value : serverServiceType;
+                    if (st === 'car_rental') {
+                        const pickupDate = getSearchForm.querySelector('input[name="pickup_date"]')?.value || '';
+                        const pickupTime = getSearchForm.querySelector('input[name="pickup_time"]')?.value || '';
+                        const returnDate = getSearchForm.querySelector('input[name="return_date"]')?.value || '';
+                        const returnTime = getSearchForm.querySelector('input[name="return_time"]')?.value || '';
+                        if (!pickupDate || !pickupTime || !returnDate || !returnTime) {
+                            ev.preventDefault();
+                            alert('For Car rental service please select pickup and return dates and times.');
+                            return false;
+                        }
+                    }
+                    // sync hidden service type for booking-add-form
+                    const hiddenServiceInput = document.getElementById('booking-service-type');
+                    if (hiddenServiceInput && serviceTypeSelect) hiddenServiceInput.value = serviceTypeSelect.value;
+                    return true;
+                });
+            }
+
             // Enforce route selection and traveller login before adding to cart
             const bookingAddForm = document.querySelector('.booking-add-form');
             const bookNowBtn = bookingAddForm ? bookingAddForm.querySelector('button[type="submit"]') : null;
@@ -510,6 +678,19 @@
             if (bookingAddForm) {
                 bookingAddForm.addEventListener('submit', function (ev) {
                     updateRouteFields();
+                    // ensure service type rules when adding to cart
+                    const hiddenService = document.getElementById('booking-service-type')?.value || serverServiceType;
+                    if (hiddenService === 'car_rental') {
+                        const pickup = document.querySelector('input[name="pickup_date"]')?.value || '';
+                        const pickupT = document.querySelector('input[name="pickup_time"]')?.value || '';
+                        const ret = document.querySelector('input[name="return_date"]')?.value || '';
+                        const retT = document.querySelector('input[name="return_time"]')?.value || '';
+                        if (!pickup || !pickupT || !ret || !retT) {
+                            ev.preventDefault();
+                            alert('Please provide pickup and return dates and times for car rental bookings.');
+                            return false;
+                        }
+                    }
                     const routeFromVal = (fromSelect && fromSelect.value) ? fromSelect.value.trim() : ((routeFromInput && routeFromInput.value) ? routeFromInput.value.trim() : '');
                     const routeToVal = (toSelect && toSelect.value) ? toSelect.value.trim() : ((routeToInput && routeToInput.value) ? routeToInput.value.trim() : '');
                     if (!routeFromVal) {

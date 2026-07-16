@@ -322,6 +322,8 @@ trait CartItemBuilderTrait
         $passengers = max(1, (int) $request->input('passengers', 1));
         $pricePerPassenger = (float) $request->input('price_per_passenger', 0);
         $returnPrice = max(0.0, (float) $request->input('return_price', 0));
+        $carRentalTotal = (float) $request->input('car_rental_total', 0);
+        $serviceType = $request->input('service_type', 'route');
         $currency = $request->input('currency', 'USD');
         $image = $request->input('image', '');
         $title = $request->input('title', '');
@@ -331,11 +333,17 @@ trait CartItemBuilderTrait
             return [];
         }
 
-        // Calculate total price
-        $totalPrice = $pricePerPassenger * $passengers;
-        if (!blank($returnDate) && $returnPrice > 0) {
-            $totalPrice += $returnPrice * $passengers;
+        // Calculate total price - use car rental total for car_rental service type
+        if ($serviceType === 'car_rental' && $carRentalTotal > 0) {
+            $totalPrice = $carRentalTotal;
+            $pricePerPassenger = 0; // Not used for car rental
+        } else {
+            $totalPrice = $pricePerPassenger * $passengers;
+            if (!blank($returnDate) && $returnPrice > 0) {
+                $totalPrice += $returnPrice * $passengers;
+            }
         }
+        
         $taxAmount = 0.0;
         $discountAmount = 0.0;
 
@@ -350,6 +358,7 @@ trait CartItemBuilderTrait
         return [
             'cart_key' => uniqid('transport_', true),
             'type' => 'transport',
+            'service_type' => $serviceType,
             'transport_id' => $transportId,
             'rate_id' => $rateId,
             'route_id' => $routeId,
@@ -366,6 +375,7 @@ trait CartItemBuilderTrait
             'passengers' => $passengers,
             'price_per_passenger' => $pricePerPassenger,
             'return_price' => $returnPrice,
+            'car_rental_total' => $carRentalTotal,
             'total_price' => $totalPrice,
             'currency' => $currency,
             'tax_amount' => $taxAmount,

@@ -66,6 +66,24 @@
                                     <div class="main-icon accommodation"><img src="images/accommodation.svg"></div>
                                     <span>{{ __('home.search.accommodation') }}</span>
                                 </div>
+                                @push('styles')
+                                    <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+                                @endpush
+                                @push('scripts')
+                                    <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function () {
+                                            try {
+                                                const from = document.querySelector('select[data-search-from]');
+                                                const to = document.querySelector('select[data-search-to]');
+                                                if (from) new TomSelect(from, {allowEmptyOption: true, create: false});
+                                                if (to) new TomSelect(to, {allowEmptyOption: true, create: false});
+                                            } catch (e) {
+                                                console.error('TomSelect init error', e);
+                                            }
+                                        });
+                                    </script>
+                                @endpush
                             </label>
                             <label class="category-radio-item">
                                 <input type="radio" name="category" value="tours" {{ $selectedCategory === 'tours' ? 'checked' : '' }}>
@@ -192,6 +210,13 @@
                                         <h5>{{ __('home.search.passengers') }}</h5>
                                         <input type="number" name="passengers" class="category-search-input" min="1" value="{{ request()->query('passengers', 2) }}">
                                     </div>
+                                    <div class="transport-field" style="flex: 0 1 140px; min-width: 140px;">
+                                        <h5>Service Type</h5>
+                                        <select name="service_type" class="category-search-select" id="home-service-type">
+                                            <option value="route" {{ request()->query('service_type','route') === 'route' ? 'selected' : '' }}>Route wise</option>
+                                            <option value="car_rental" {{ request()->query('service_type') === 'car_rental' ? 'selected' : '' }}>Car rental</option>
+                                        </select>
+                                    </div>
                                     <div class="transport-row-date">
                                         <div class="transport-field" style="flex: 1 1 160px;">
                                             <h5>{{ __('home.search.arrival_date_time') }}</h5>
@@ -225,6 +250,32 @@
         </div>
 
     </section>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('home-category-search-form');
+            if (!form) return;
+            form.addEventListener('submit', function (e) {
+                const cat = form.querySelector('input[name="category"]:checked')?.value || '';
+                if (cat === 'transport') {
+                    const st = form.querySelector('select[name="service_type"]')?.value || 'route';
+                    if (st === 'car_rental') {
+                        const arrivalDate = form.querySelector('input[name="arrival_date"]')?.value || '';
+                        const arrivalTime = form.querySelector('input[name="arrival_time"]')?.value || '';
+                        const returnDate = form.querySelector('input[name="return_date"]')?.value || '';
+                        const returnTime = form.querySelector('input[name="return_time"]')?.value || '';
+                        if (!arrivalDate || !arrivalTime || !returnDate || !returnTime) {
+                            e.preventDefault();
+                            alert('For Car rental please provide pickup and return dates and times.');
+                            return false;
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    @endpush
 
 
 

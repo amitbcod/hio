@@ -253,6 +253,9 @@ Route::prefix('operator')->name('operator.')->group(function () {
         // Transport Step 2: Routes & Pricing
         Route::get('transport/{transport}/step2-routes-pricing', [\App\Http\Controllers\Operator\TransportController::class, 'step2RoutesPricing'])->name('transport.step2.show');
         Route::post('transport/{transport}/step2-routes-pricing', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep2RoutesPricing'])->name('transport.step2.save');
+        // Transport Step 2-B: Car Rental Pricing (per-hour, 4h, 8h, 12h, 24h)
+        Route::get('transport/{transport}/step2-car-rental', [\App\Http\Controllers\Operator\TransportController::class, 'step2CarRental'])->name('transport.step2.car_rental.show');
+        Route::post('transport/{transport}/step2-car-rental', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep2CarRental'])->name('transport.step2.car_rental.save');
         
         // Transport Step 3: Media
         Route::get('transport/{transport}/step3-media', [\App\Http\Controllers\Operator\TransportController::class, 'step3Media'])->name('transport.step3.show');

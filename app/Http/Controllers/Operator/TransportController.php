@@ -519,6 +519,8 @@ class TransportController extends Controller
 
         $transport->update(['step2_routes_pricing' => 1]);
 
+        return redirect()->route('operator.transport.step2.car_rental.show', $transport->id)->with('success', 'Routes and pricing saved. You can now add car rental prices.');
+
         return redirect()->route('operator.transport.step3.show', $transport->id)
             ->with('success', 'Routes and pricing saved.');
     }
@@ -693,6 +695,40 @@ class TransportController extends Controller
         }
 
         return view('operator.transport.step6-service-description', compact('transport'));
+    }
+
+    public function step2CarRental(Transport $transport)
+    {
+        $operator = Auth::guard('operator')->user() ?? Auth::guard('operator_staff')->user();
+        if (!$operator || $transport->operator_id !== $operator->id) {
+            abort(403);
+        }
+
+        return view('operator.transport.step2-car-rental', compact('transport'));
+    }
+
+    public function saveStep2CarRental(Request $request, Transport $transport)
+    {
+        $operator = Auth::guard('operator')->user() ?? Auth::guard('operator_staff')->user();
+        if (!$operator || $transport->operator_id !== $operator->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'car_rental_prices.per_hour' => 'nullable|numeric|min:0',
+            'car_rental_prices.per_4h' => 'nullable|numeric|min:0',
+            'car_rental_prices.per_8h' => 'nullable|numeric|min:0',
+            'car_rental_prices.per_12h' => 'nullable|numeric|min:0',
+            'car_rental_prices.per_24h' => 'nullable|numeric|min:0',
+        ]);
+
+        $prices = $validated['car_rental_prices'] ?? [];
+        $transport->update([
+            'car_rental_prices' => $prices,
+            'step2_car_rental' => 1,
+        ]);
+
+        return redirect()->route('operator.transport.step3.show', $transport->id)->with('success', 'Car rental prices saved. Continue to media step.');
     }
 
     public function saveStep6ServiceDescription(Request $request, Transport $transport)

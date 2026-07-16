@@ -32,6 +32,7 @@ class Transport extends Model
 
     protected $casts = [
         'routes_pricing' => 'array',
+        'car_rental_prices' => 'array',
         'promotions_offers' => 'array',
         'amenities' => 'array',
         'amenities_fr' => 'array',
