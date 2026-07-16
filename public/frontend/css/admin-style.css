@@ -243,7 +243,9 @@ nav[aria-label="Pagination Navigation"] > div + div > div + div > span > span > 
     display: block;
 }
 
-
+.transport-rightside {
+    
+}
 
 
 

@@ -1,6 +1,36 @@
+
+<script>
+      function toggleMenu(element) {
+         let submenu = element.nextElementSibling;
+
+         element.classList.toggle("active");
+         submenu.classList.toggle("hidden");
+      }
+   </script>
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+   </script>
+
+   <script>
+      function toggleSidebar() {
+         document.getElementById("sidebar").classList.toggle("active");
+      }
+
+      document.addEventListener("click", function (e) {
+         let sidebar = document.getElementById("sidebar");
+         let hamburger = document.querySelector(".hamburger");
+
+         if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+            sidebar.classList.remove("active");
+         }
+      });
+   </script>
+
 <!-- Transport Steps Sidebar -->
-<div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);position:sticky;top:92px;max-height:calc(100vh - 92px);overflow:auto;box-sizing:border-box;min-width:200px;width:auto;">
-    <h6 style="font-weight:700;margin:0 0 16px 0;font-size:14px;color:#333;">Transport Steps</h6>
+<div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);position:sticky;max-height:calc(100vh - 92px);overflow:auto;box-sizing:border-box;min-width:200px;width:auto;">
+    <h6 style="font-weight:600;margin:0 0 16px 0;font-size:16px;color:white;">Transport Steps</h6>
     <div style="display:flex;flex-direction:column;gap:8px;">
         @php
             $steps = [
@@ -34,7 +64,7 @@
                     $routeUrl = '#';
                 }
             @endphp
-            <a href="{{ $routeUrl }}" style="padding:10px 12px;background:{{ $isActive ? '#e3f2fd' : ($isComplete ? '#e8f5e9' : '#f5f5f5') }};border-left:4px solid {{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#ccc') }};border-radius:4px;text-decoration:none;font-size:13px;color:{{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#666') }};font-weight:{{ $isActive ? '600' : '500' }};display:flex;justify-content:space-between;align-items:center;">
+            <a href="{{ $routeUrl }}" style="padding:10px 12px;background:{{ $isActive ? '#e3f2fd' : ($isComplete ? 'transparent' : '#f5f5f5') }};border-left:4px solid {{ $isActive ? '#2196f3' : ($isComplete ? '#ffffff' : '#ccc') }};border-radius:4px;text-decoration:none;font-size:13px;color:{{ $isActive ? '#2196f3' : ($isComplete ? '#ffffff' : '#666') }};font-weight:{{ $isActive ? '600' : '500' }};display:flex;justify-content:space-between;align-items:center;">
                 <span>Step {{ $stepNum }}: {{ $stepData['name'] }}</span>
                 <span style="font-size:12px;">{{ $isComplete ? '✓' : $stepNum }}</span>
             </a>
