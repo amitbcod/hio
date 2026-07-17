@@ -246,7 +246,7 @@
 
 
 
-                                                     <span class="show-password" onclick="togglePassword()">
+                                                     <span class="show-password">
                             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </span>
                         <div class="password-req mt-1">
@@ -329,13 +329,18 @@
         document.addEventListener('DOMContentLoaded', function() {
             toggleOwnerFields();
         });
-        function togglePassword() {
-            var x = document.getElementById("password");
-            if (x.type === "password") {
-                x.type = "text";
-            } else {
-                x.type = "password";
-        }
+        function togglePassword(el) {
+            try {
+                var container = el.closest('.position-relative') || el.parentNode;
+                var input = container.querySelector('input[type="password"], input[type="text"]');
+                if (!input) {
+                    input = document.getElementById('password');
+                }
+                if (!input) return;
+                input.type = input.type === 'password' ? 'text' : 'password';
+            } catch (e) {
+                console.error('togglePassword error', e);
+            }
         }
 
         function updateAgreementPreview() {
@@ -351,7 +356,7 @@
                  var map = {
                       'Listing Only':  {title: 'Listing Only Agreement', desc: 'Listing Only: minimal listing service. Download the full agreement PDF for details.', file: '/agreements/listing_only.pdf'},
                      'OTO': {title: 'O TO Agreement', desc: 'OTO: On the one-off operator arrangement. Download the full agreement PDF for details.', file: '/agreements/oto.pdf'},
-                     'Widget Only': {t itle: 'Widget Only Agreement', desc: 'Widget Only: integration for widget-only bookings. Download the full agreement PDF for details.', file: '/agreements/widget_only.pdf'},
+                     'Widget Only': {title: 'Widget Only Agreement', desc: 'Widget Only: integration for widget-only bookings. Download the full agreement PDF for details.', file: '/agreements/widget_only.pdf'},
                      'OTO + Widget': {title: 'OTO + Widget Agreement', desc: 'OTO + Widget: combined OTO and widget terms. Download the full agreement PDF for details.', file: '/agreements/oto_widget.pdf'},
                     'Full Service': {title : 'Full Service Agreement', desc: 'Full Service: comprehensive managed service agreement. Download the full  agreement PDF for details.' , file: '/agreements/full_service.pdf'}
                 };
@@ -374,7 +379,14 @@
                 select.addEventListener('change', updateAgreementPreview);
             }
             // initialize preview (handles preselected values)
-        updateAgreementPreview();
+            updateAgreementPreview();
+
+            // Bind password toggles
+            document.querySelectorAll('.show-password').forEach(function(el) {
+                el.addEventListener('click', function (ev) {
+                    togglePassword(el);
+                });
+            });
     });
     </script>
 @endsection

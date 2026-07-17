@@ -127,7 +127,7 @@
                     <div class="form-group mb-3 position-relative">
                         <label for="password">Password *</label>
                         <input type="password" name="password" class="form-control" id="password" required>
-                        <span class="show-password" onclick="togglePassword()">
+                        <span class="show-password">
                             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -166,13 +166,24 @@
         </div>
     </div>
     <script>
-        function togglePassword() {
-            var x = document.getElementById("password");
-            if (x.type === "password") {
-                x.type = "text";
-            } else {
-                x.type = "password";
+        function togglePassword(el) {
+            try {
+                var container = el.closest('.position-relative') || el.parentNode;
+                var input = container.querySelector('input[type="password"], input[type="text"]');
+                if (!input) {
+                    input = document.getElementById('password');
+                }
+                if (!input) return;
+                input.type = input.type === 'password' ? 'text' : 'password';
+            } catch (e) {
+                console.error('togglePassword error', e);
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.show-password').forEach(function(el) {
+                el.addEventListener('click', function () { togglePassword(el); });
+            });
+        });
     </script>
 @endsection
