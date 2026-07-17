@@ -548,6 +548,19 @@ class TripController extends Controller
         $infoLabelCheckIn = e($isTransport ? 'Pickup Date / Time' : ($isActivity ? 'Activity Date / Time' : 'Check-in Date / Time'));
         $infoLabelCheckOut = e($isTransport ? 'Return Date / Time' : ($isActivity ? 'Activity Date / Time' : 'Check-out Date / Time'));
         $infoLabelDaysNights = e($isTransport ? 'Route' : ($isActivity ? 'Number of Days' : 'Number of Nights'));
+        
+        // Get assigned drivers for transport booking
+        $driversHtml = '';
+        if ($isTransport && $booking->drivers && $booking->drivers->count() > 0) {
+            $driversHtml = '<tr><td class="label">Assigned Driver(s)</td></tr>';
+            foreach ($booking->drivers as $driver) {
+                $driverName = e($driver->driver_name ?? '-');
+                $driverPhone = e($driver->driver_phone ?? $driver->driver_mobile_no ?? '-');
+                $driversHtml .= '<tr><td><strong>' . $driverName . '</strong></td></tr>';
+                $driversHtml .= '<tr><td style="font-size:9px;">Phone: ' . $driverPhone . '</td></tr>';
+                $driversHtml .= '<tr><td>&nbsp;</td></tr>';
+            }
+        }
         $infoLabelType = e($isTransport ? 'Vehicle Type' : ($isActivity ? 'Activity Type' : 'Room Type'));
         $invoiceTitle = e(__('invoice.title'));
         $invoiceNumberLabel = e(__('invoice.number_label'));
@@ -747,7 +760,7 @@ class TripController extends Controller
               <tr>
                 <td>{$emergencyContactSafe}</td>
               </tr>
-              
+              {$driversHtml}
             </table>
           </td>
         </tr>

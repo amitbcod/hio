@@ -7,8 +7,10 @@ use App\Models\Transport;
 use App\Models\TransportRate;
 use App\Models\TransportBooking;
 use App\Models\TransportVehicleType;
+use App\Models\OperatorDriver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -720,9 +722,18 @@ class TransportController extends Controller
             'car_rental_prices.per_8h' => 'nullable|numeric|min:0',
             'car_rental_prices.per_12h' => 'nullable|numeric|min:0',
             'car_rental_prices.per_24h' => 'nullable|numeric|min:0',
+            'car_rental_prices.seasonal' => 'nullable|array',
+            'car_rental_prices.seasonal.*.start' => 'required_with:car_rental_prices.seasonal|date',
+            'car_rental_prices.seasonal.*.end' => 'required_with:car_rental_prices.seasonal|date|after_or_equal:car_rental_prices.seasonal.*.start',
+            'car_rental_prices.seasonal.*.per_hour' => 'nullable|numeric|min:0',
+            'car_rental_prices.seasonal.*.per_4h' => 'nullable|numeric|min:0',
+            'car_rental_prices.seasonal.*.per_8h' => 'nullable|numeric|min:0',
+            'car_rental_prices.seasonal.*.per_12h' => 'nullable|numeric|min:0',
+            'car_rental_prices.seasonal.*.per_24h' => 'nullable|numeric|min:0',
         ]);
 
         $prices = $validated['car_rental_prices'] ?? [];
+        $prices['seasonal'] = array_values($prices['seasonal'] ?? []);
         $transport->update([
             'car_rental_prices' => $prices,
             'step2_car_rental' => 1,
@@ -925,5 +936,118 @@ class TransportController extends Controller
         );
 
         return back()->with('success', 'Booking status updated to ' . $booking->booking_status . '.');
+    }
+
+    /**
+     * Get available drivers for assignment
+     */
+    public function getAvailableDriversForBooking($bookingId)
+    {
+        $operator = Auth::guard('operator')->user() ?? Auth::guard('operator_staff')->user();
+        if (!$operator) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $booking = TransportBooking::findOrFail($bookingId);
+        $transport = Transport::findOrFail($booking->transport_id);
+        
+        if ($transport->operator_id !== $operator->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Get operator's drivers
+        $driverQuery = OperatorDriver::query()
+            ->where('driver_status', 'Active')
+            ->where(function ($query) use ($operator) {
+                $query->where('operator_id', $operator->operator_id);
+
+                if (!empty($operator->business_id)) {
+                    $query->orWhere('business_id', $operator->business_id);
+                }
+            })
+            ->where(function ($query) {
+                $query->whereNull('license_expiry_date')
+                      ->orWhere('license_expiry_date', '>=', now()->toDateString());
+            });
+
+        $drivers = $driverQuery->get([
+            'id',
+            'driver_name',
+            'driver_mobile_no as driver_phone',
+            'email as driver_email',
+        ]);
+
+        $assignedDriverIds = $booking->drivers()->pluck('operator_drivers.id')->toArray();
+
+        return response()->json([
+            'drivers' => $drivers,
+            'assigned_driver_ids' => $assignedDriverIds,
+        ]);
+    }
+
+    /**
+     * Assign multiple drivers to a booking
+     */
+    public function assignDrivers(Request $request, TransportBooking $booking)
+    {
+        $operator = Auth::guard('operator')->user() ?? Auth::guard('operator_staff')->user();
+        if (!$operator) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $transport = Transport::findOrFail($booking->transport_id);
+        if ($transport->operator_id !== $operator->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'driver_ids' => 'required|array|min:1',
+            'driver_ids.*' => 'integer|exists:operator_drivers,id',
+        ]);
+
+        // Verify all drivers belong to this operator
+        $validDriverIds = OperatorDriver::where('operator_id', $operator->operator_id)
+            ->whereIn('id', $request->input('driver_ids'))
+            ->pluck('id')
+            ->toArray();
+
+        if (count($validDriverIds) !== count($request->input('driver_ids'))) {
+            return response()->json(['error' => 'Invalid driver selection'], 422);
+        }
+
+        // Sync drivers (replaces existing assignments)
+        $booking->drivers()->sync($validDriverIds);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Drivers assigned successfully',
+        ]);
+    }
+
+    /**
+     * Get assigned drivers for a booking
+     */
+    public function getBookingDrivers(TransportBooking $booking)
+    {
+        $operator = Auth::guard('operator')->user() ?? Auth::guard('operator_staff')->user();
+        if (!$operator) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $transport = Transport::findOrFail($booking->transport_id);
+        if ($transport->operator_id !== $operator->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $drivers = $booking->drivers()
+            ->get([
+                'operator_drivers.id as id',
+                'operator_drivers.driver_name',
+                'operator_drivers.driver_mobile_no as driver_phone',
+                'operator_drivers.email as driver_email',
+            ])
+            ->toArray();
+
+        return response()->json(['drivers' => $drivers]);
     }
 }

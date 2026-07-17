@@ -74,6 +74,14 @@ class OperatorDriver extends Model
     }
 
     /**
+     * Get driver phone from mobile or fallback fields
+     */
+    public function getDriverPhoneAttribute()
+    {
+        return $this->driver_mobile_no ?? $this->phone ?? null;
+    }
+
+    /**
      * Check if driver's documents are valid
      */
     public function hasValidDocuments()

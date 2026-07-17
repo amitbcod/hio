@@ -81,12 +81,34 @@
 
                                 <div class="row mb-3">
                                     <div class="col-md-4"><label class="form-label">Single trip price (per vehicle)</label></div>
-                                    <div class="col-md-8"><input type="number" name="routes[{{ $index }}][pricing][default_price]" class="form-control" value="{{ $pricing['default_price'] ?? '' }}" min="0" step="0.01" required></div>
+                                    <div class="col-md-8"><input type="number" name="routes[{{ $index }}][pricing][default_price]" class="form-control" value="{{ $pricing['default_price'] ?? '' }}" min="0" step="0.01"></div>
                                 </div>
 
                                 <div class="row mb-3">
                                     <div class="col-md-4"><label class="form-label">Return trip price (per vehicle)</label></div>
                                     <div class="col-md-8"><input type="number" name="routes[{{ $index }}][pricing][return_price]" class="form-control" value="{{ $pricing['return_price'] ?? '' }}" min="0" step="0.01"></div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <label class="form-label">Seasonal Prices</label>
+                                    <p class="text-muted small mb-2">If a seasonal date range matches the booking date, that price will be used. Otherwise the default single trip price is applied.</p>
+                                    <div class="seasonal-list" data-index="{{ $index }}">
+                                        @php $seasonalEntries = $pricing['seasonal'] ?? []; @endphp
+                                        @foreach($seasonalEntries as $seasonIndex => $season)
+                                            <div class="season-row mb-2">
+                                                <div class="row gx-2">
+                                                    <div class="col-md-3"><input type="date" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][start]" class="form-control" value="{{ $season['start'] ?? $season['start_date'] ?? '' }}"></div>
+                                                    <div class="col-md-3"><input type="date" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][end]" class="form-control" value="{{ $season['end'] ?? $season['end_date'] ?? '' }}"></div>
+                                                    <div class="col-md-3"><input type="number" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][price]" class="form-control" placeholder="Seasonal price" min="0" step="0.01" value="{{ $season['price'] ?? '' }}"></div>
+                                                    <div class="col-md-3 d-flex align-items-center"><button type="button" class="btn btn-sm btn-danger w-100" onclick="this.closest('.season-row').remove();">Remove</button></div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-secondary" onclick="addSeason({{ $index }});">Add Seasonal Price</button>
+                                    </div>
+                                    <div class="route-errors text-danger mt-2" id="route-errors-{{ $index }}"></div>
                                 </div>
 
                                 <input type="hidden" name="routes[{{ $index }}][pricing][vehicle_type]" value="{{ $transport->vehicle_type }}">

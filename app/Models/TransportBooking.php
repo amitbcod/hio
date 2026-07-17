@@ -66,6 +66,17 @@ class TransportBooking extends Model
         return $this->belongsTo(OperatorDriver::class, 'driver_id');
     }
 
+    // Many-to-many relationship with multiple drivers
+    public function drivers()
+    {
+        return $this->belongsToMany(
+            OperatorDriver::class,
+            'transport_booking_drivers',
+            'transport_booking_id',
+            'operator_driver_id'
+        )->withTimestamps();
+    }
+
     public function travelerAccount()
     {
         return $this->belongsTo(TravelerAccount::class, 'traveler_account_id');

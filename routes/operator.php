@@ -289,6 +289,8 @@ Route::prefix('operator')->name('operator.')->group(function () {
         // Transport Bookings - Specific transport bookings (kept for compatibility)
         Route::get('transport/{transport}/bookings', [\App\Http\Controllers\Operator\TransportController::class, 'bookingList'])->name('transport.transport-bookings');
         Route::get('transport/{transport}/bookings/{booking}', [\App\Http\Controllers\Operator\TransportController::class, 'bookingDetails'])->name('transport.booking.details');
+        Route::post('transport-bookings/{booking}/assign-drivers', [\App\Http\Controllers\Operator\TransportController::class, 'assignDrivers'])->name('transport.booking.assign-drivers');
+        Route::get('transport-bookings/{booking}/drivers', [\App\Http\Controllers\Operator\TransportController::class, 'getAvailableDriversForBooking'])->name('transport.booking.get-drivers');
 
         // Driver Management Routes
         Route::get('drivers', [\App\Http\Controllers\Operator\OperatorDriverController::class, 'index'])->name('drivers.index');

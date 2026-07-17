@@ -46,7 +46,10 @@
                                         <td>{{ $booking->currency ?? 'USD' }} {{ number_format($booking->total_amount, 2) }}</td>
                                         <td>{{ ucfirst($booking->booking_status ?? 'pending') }}</td>
                                         <td>{{ optional($booking->booked_at)->format('M d, Y H:i') }}</td>
-                                        <td><a href="{{ route('operator.transport.booking.details', [$booking->transport_id, $booking->id]) }}" class="btn btn-sm btn-primary">Details</a></td>
+                                        <td>
+                                            <a href="{{ route('operator.transport.booking.details', [$booking->transport_id, $booking->id]) }}" class="btn btn-sm btn-primary">Details</a>
+                                            <button class="btn btn-sm btn-info" onclick="openAssignDriverModal({{ $booking->id }})">Assign Driver</button>
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -59,4 +62,131 @@
         </div>
     </div>
 </div>
+
+<!-- Assign Driver Modal -->
+<div class="modal fade" id="assignDriverModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Drivers to Booking</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeAssignDriverModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="assignDriverForm">
+                    @csrf
+                    <div class="form-group">
+                        <label for="driverSelect">Select Drivers <span style="color: red;">*</span></label>
+                        <select id="driverSelect" name="driver_ids[]" multiple class="form-control" required style="height: 150px;">
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                        <small class="form-text text-muted">Hold Ctrl (Cmd on Mac) to select multiple drivers</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="closeAssignDriverModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveDriverAssignment()">Assign Drivers</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentBookingId = null;
+const getDriversUrlTemplate = "{{ route('operator.transport.booking.get-drivers', ['booking' => 'BOOKING_ID']) }}";
+const assignDriversUrlTemplate = "{{ route('operator.transport.booking.assign-drivers', ['booking' => 'BOOKING_ID']) }}";
+
+function openAssignDriverModal(bookingId) {
+    currentBookingId = bookingId;
+    const url = getDriversUrlTemplate.replace('BOOKING_ID', bookingId);
+
+    fetch(url, {
+        credentials: 'same-origin'
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.drivers) {
+                populateDriverSelect(data.drivers, data.assigned_driver_ids || []);
+                $('#assignDriverModal').modal('show');
+            } else {
+                throw new Error('No drivers payload');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching drivers:', error);
+            alert('Error loading drivers');
+        });
+}
+
+function populateDriverSelect(drivers, selectedIds = []) {
+    const select = document.getElementById('driverSelect');
+    select.innerHTML = '';
+
+    drivers.forEach(driver => {
+        const option = document.createElement('option');
+        option.value = driver.id;
+        option.text = `${driver.driver_name} (${driver.driver_phone || 'N/A'})`;
+        if (selectedIds.includes(driver.id)) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+}
+
+function closeAssignDriverModal() {
+    $('#assignDriverModal').modal('hide');
+}
+
+function saveDriverAssignment() {
+    const driverIds = Array.from(document.getElementById('driverSelect').selectedOptions).map(option => option.value);
+
+    if (driverIds.length === 0) {
+        alert('Please select at least one driver');
+        return;
+    }
+
+    const url = assignDriversUrlTemplate.replace('BOOKING_ID', currentBookingId);
+
+    fetch(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            driver_ids: driverIds
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(body => {
+                throw new Error(body.error || body.message || `HTTP ${response.status}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert('Drivers assigned successfully');
+            closeAssignDriverModal();
+            location.reload();
+        } else {
+            throw new Error(data.error || data.message || 'Unknown error');
+        }
+    })
+    .catch(error => {
+        console.error('Error assigning drivers:', error);
+        alert('Error assigning drivers: ' + error.message);
+    });
+}
+</script>
+
 @endsection
