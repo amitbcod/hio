@@ -829,6 +829,21 @@
             .listing-rating-badge i {
                 color: #f59e0b;
             }
+
+            .category-search-cell--transport .ts-wrapper.category-search-select .ts-control {
+                padding: 0;
+            }
+
+            .category-search-cell--transport .ts-wrapper.category-search-select {
+                width:110px
+            }
+
+            .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown.single {
+                background: #fff;
+                font-size: 14px;
+                font-weight: normal;
+            }
+
         </style>
     @endpush
 @endsection
