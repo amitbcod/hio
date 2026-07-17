@@ -3009,7 +3009,7 @@ div.detail-top-grid {
     }
 
     div.booking-form-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; 
     }
 }
 
