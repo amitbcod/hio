@@ -3148,7 +3148,7 @@ div.detail-top-grid {
         font-size: 12px !important;
     }
 
-    .detail-gallery-card {
+    div.detail-gallery-card {
         position: static;
     }
 
