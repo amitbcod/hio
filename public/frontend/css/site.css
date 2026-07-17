@@ -1642,7 +1642,7 @@ select.category-search-select {
 }
 
 input.category-search-input {
-    width: 100%;
+    width: auto;
 }
 
 .hero-overlay {
@@ -2572,5 +2572,8 @@ display: inline-block;
 
     .toggle .arrow.up {
         transform: rotate(-135deg);
+    }
+    input.category-search-input {
+        width: 100%;
     }
 }

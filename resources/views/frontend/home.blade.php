@@ -836,7 +836,8 @@
             }
 
             .category-search-cell--transport .ts-wrapper.category-search-select {
-                width:100%
+                width:100%;
+                    height: 22px;
             }
 
             .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown.single {
@@ -851,7 +852,7 @@
                 appearance: none !important;
                 -webkit-appearance: none !important;
                 -moz-appearance: none !important;
-                background: #fff !important;
+                background: transparent !important;
                 padding-right: 10px !important;
             }
 
