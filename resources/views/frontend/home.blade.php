@@ -844,6 +844,33 @@
                 font-weight: normal;
             }
 
+            .category-search-input[type="date"],
+            .category-search-input[type="time"] {
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                background: #fff !important;
+                padding-right: 10px !important;
+            }
+
+            .category-search-input[type="date"]::-webkit-calendar-picker-indicator,
+            .category-search-input[type="date"]::-webkit-clear-button,
+            .category-search-input[type="date"]::-webkit-inner-spin-button,
+            .category-search-input[type="date"]::-webkit-outer-spin-button,
+            .category-search-input[type="time"]::-webkit-calendar-picker-indicator,
+            .category-search-input[type="time"]::-webkit-clear-button,
+            .category-search-input[type="time"]::-webkit-inner-spin-button,
+            .category-search-input[type="time"]::-webkit-outer-spin-button,
+            .category-search-input[type="date"]::-ms-clear,
+            .category-search-input[type="date"]::-ms-expand,
+            .category-search-input[type="time"]::-ms-clear,
+            .category-search-input[type="time"]::-ms-expand {
+                display: none !important;
+                opacity: 0 !important;
+                width: 0 !important;
+                height: 0 !important;
+            }
+
         </style>
     @endpush
 @endsection

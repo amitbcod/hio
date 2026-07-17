@@ -237,21 +237,33 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="booking-field">
+                        <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.pickup_date') }}</label>
-                            <input type="date" name="pickup_date" value="{{ $booking['pickup_date'] }}" class="booking-input" min="{{ date('Y-m-d') }}">
+                            <div class="custom-picker-wrapper">
+                                <input type="text" readonly class="booking-input booking-input-text" value="{{ $booking['pickup_date'] }}">
+                                <input type="date" name="pickup_date" value="{{ $booking['pickup_date'] }}" class="booking-input booking-input-native" min="{{ date('Y-m-d') }}">
+                            </div>
                         </div>
-                        <div class="booking-field">
+                        <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.pickup_time') }}</label>
-                            <input type="time" name="pickup_time" value="{{ $booking['pickup_time'] }}" class="booking-input">
+                            <div class="custom-picker-wrapper">
+                                <input type="text" readonly class="booking-input booking-input-text" value="{{ $booking['pickup_time'] }}">
+                                <input type="time" name="pickup_time" value="{{ $booking['pickup_time'] }}" class="booking-input booking-input-native">
+                            </div>
                         </div>
-                        <div class="booking-field">
+                        <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.return_date') }}</label>
-                            <input type="date" name="return_date" value="{{ $booking['return_date'] }}" class="booking-input" min="{{ date('Y-m-d') }}">
+                            <div class="custom-picker-wrapper">
+                                <input type="text" readonly class="booking-input booking-input-text" value="{{ $booking['return_date'] }}">
+                                <input type="date" name="return_date" value="{{ $booking['return_date'] }}" class="booking-input booking-input-native" min="{{ date('Y-m-d') }}">
+                            </div>
                         </div>
-                        <div class="booking-field">
+                        <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.return_time') }}</label>
-                            <input type="time" name="return_time" value="{{ $booking['return_time'] }}" class="booking-input">
+                            <div class="custom-picker-wrapper">
+                                <input type="text" readonly class="booking-input booking-input-text" value="{{ $booking['return_time'] }}">
+                                <input type="time" name="return_time" value="{{ $booking['return_time'] }}" class="booking-input booking-input-native">
+                            </div>
                         </div>
                         <div class="booking-field">
                             <label>{{ __('transport.form.passengers') }}</label>
@@ -533,6 +545,120 @@
             background: #fff;
         }
 
+        .custom-picker-wrapper {
+            position: relative;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .booking-input-text {
+            width: 100%;
+            background: #fff;
+            cursor: pointer;
+            pointer-events: none;
+        }
+
+        .booking-input-native {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            opacity: 0 !important;
+            cursor: pointer !important;
+            border-radius: 8px !important;
+            border: 1px solid transparent !important;
+            background: transparent !important;
+            padding: 0 12px !important;
+            z-index: 3 !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            outline: none !important;
+            color: transparent !important;
+            caret-color: transparent !important;
+            pointer-events: auto !important;
+        }
+
+        .booking-input-native::-webkit-calendar-picker-indicator,
+        .booking-input-native::-webkit-clear-button,
+        .booking-input-native::-webkit-inner-spin-button,
+        .booking-input-native::-webkit-outer-spin-button,
+        .booking-input-native::-ms-clear,
+        .booking-input-native::-ms-expand {
+            display: none !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        .booking-input-native::-webkit-textfield-decoration-container,
+        .booking-input-native::-webkit-clear-button,
+        .booking-input-native::-webkit-inner-spin-button,
+        .booking-input-native::-webkit-outer-spin-button,
+        .booking-input-native::-webkit-textfield-decoration-container,
+        .booking-input-native::-webkit-datetime-edit-text,
+        .booking-input-native::-webkit-datetime-edit-fields-wrapper,
+        .booking-input-native::-webkit-datetime-edit-month-field,
+        .booking-input-native::-webkit-datetime-edit-day-field,
+        .booking-input-native::-webkit-datetime-edit-year-field,
+        .booking-input-native::-webkit-datetime-edit-hour-field,
+        .booking-input-native::-webkit-datetime-edit-minute-field,
+        .booking-input-native::-ms-clear,
+        .booking-input-native::-ms-expand {
+            display: none !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .booking-input-native::-moz-focus-inner,
+        .booking-input-native::-moz-placeholder {
+            border: 0 !important;
+            color: transparent !important;
+        }
+
+        .booking-input[type="date"] {
+            min-height: 38px !important;
+        }
+
+        .booking-input[type="time"] {
+            min-height: 34px !important;
+        }
+
+        .booking-input[type="date"]::-webkit-calendar-picker-indicator,
+        .booking-input[type="time"]::-webkit-calendar-picker-indicator,
+        .booking-input[type="date"]::-webkit-clear-button,
+        .booking-input[type="time"]::-webkit-clear-button,
+        .booking-input[type="date"]::-webkit-inner-spin-button,
+        .booking-input[type="time"]::-webkit-inner-spin-button,
+        .booking-input[type="date"]::-webkit-outer-spin-button,
+        .booking-input[type="time"]::-webkit-outer-spin-button,
+        .booking-input[type="date"]::-ms-clear,
+        .booking-input[type="time"]::-ms-clear,
+        .booking-input[type="date"]::-ms-expand,
+        .booking-input[type="time"]::-ms-expand {
+            display: none !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        .booking-input[type="date"]::-moz-focus-inner,
+        .booking-input[type="time"]::-moz-focus-inner {
+            border: 0 !important;
+        }
+
+        .booking-input[type="date"] {
+            min-height: 38px !important;
+        }
+
+        .booking-input[type="time"] {
+            min-height: 34px !important;
+        }
+
         .booking-btn {
             width: 100%;
             border: 0;
@@ -597,6 +723,13 @@
             const returnPriceInput = document.getElementById('transport-return-price');
             const routePriceSummary = document.getElementById('transport-price-summary');
             const pickupDateInput = document.querySelector('input[name="pickup_date"]');
+            const pickupDateText = pickupDateInput ? pickupDateInput.closest('.custom-picker-wrapper').querySelector('.booking-input-text') : null;
+            const pickupTimeInput = document.querySelector('input[name="pickup_time"]');
+            const pickupTimeText = pickupTimeInput ? pickupTimeInput.closest('.custom-picker-wrapper').querySelector('.booking-input-text') : null;
+            const returnDateInput = document.querySelector('input[name="return_date"]');
+            const returnDateText = returnDateInput ? returnDateInput.closest('.custom-picker-wrapper').querySelector('.booking-input-text') : null;
+            const returnTimeInput = document.querySelector('input[name="return_time"]');
+            const returnTimeText = returnTimeInput ? returnTimeInput.closest('.custom-picker-wrapper').querySelector('.booking-input-text') : null;
 
             const routes = @json($routes);
             const rawPlaceRegionMap = @json($transport['place_region_map'] ?? []);
@@ -710,44 +843,48 @@
                     pickupDateInput.addEventListener('change', syncRoutePrice);
                 }
                 updateRouteFields();
-                // ensure hidden booking time fields reflect top form values
-                const topPickupTime = document.querySelector('input[name="pickup_time"]');
-                const topReturnTime = document.querySelector('input[name="return_time"]');
+
+                const hiddenPickupDate = document.querySelector('.booking-add-form input[name="pickup_date"]');
+                const hiddenReturnDate = document.querySelector('.booking-add-form input[name="return_date"]');
                 const hiddenPickup = document.getElementById('booking-pickup-time');
                 const hiddenReturn = document.getElementById('booking-return-time');
-                if (topPickupTime && hiddenPickup) {
-                    topPickupTime.addEventListener('change', () => hiddenPickup.value = topPickupTime.value);
-                    // initialize
-                    hiddenPickup.value = topPickupTime.value || hiddenPickup.value || '';
-                }
-                if (topReturnTime && hiddenReturn) {
-                    topReturnTime.addEventListener('change', () => hiddenReturn.value = topReturnTime.value);
-                    hiddenReturn.value = topReturnTime.value || hiddenReturn.value || '';
-                }
-            }
 
-            // Validate GET search form: require pickup/return date & time for car_rental service type
-            const getSearchForm = document.querySelector('.booking-form-grid');
-            const serviceTypeSelect = document.getElementById('service-type-select');
-            if (getSearchForm) {
-                getSearchForm.addEventListener('submit', function (ev) {
-                    const st = serviceTypeSelect ? serviceTypeSelect.value : serverServiceType;
-                    if (st === 'car_rental') {
-                        const pickupDate = getSearchForm.querySelector('input[name="pickup_date"]')?.value || '';
-                        const pickupTime = getSearchForm.querySelector('input[name="pickup_time"]')?.value || '';
-                        const returnDate = getSearchForm.querySelector('input[name="return_date"]')?.value || '';
-                        const returnTime = getSearchForm.querySelector('input[name="return_time"]')?.value || '';
-                        if (!pickupDate || !pickupTime || !returnDate || !returnTime) {
-                            ev.preventDefault();
-                            alert('For Car rental service please select pickup and return dates and times.');
-                            return false;
-                        }
+                const syncNativePicker = function (nativeInput, textInput, hiddenInput) {
+                    if (!nativeInput || !textInput) {
+                        return;
                     }
-                    // sync hidden service type for booking-add-form
-                    const hiddenServiceInput = document.getElementById('booking-service-type');
-                    if (hiddenServiceInput && serviceTypeSelect) hiddenServiceInput.value = serviceTypeSelect.value;
-                    return true;
-                });
+                    textInput.value = nativeInput.value || '';
+                    const wrapper = nativeInput.closest('.custom-picker-wrapper');
+                    if (wrapper) {
+                        wrapper.addEventListener('click', function () {
+                            nativeInput.focus();
+                            if (typeof nativeInput.showPicker === 'function') {
+                                nativeInput.showPicker();
+                            }
+                        });
+                    }
+                    nativeInput.addEventListener('change', function () {
+                        textInput.value = nativeInput.value || '';
+                        if (hiddenInput) {
+                            hiddenInput.value = nativeInput.value || hiddenInput.value || '';
+                        }
+                        if (nativeInput.name === 'pickup_date') {
+                            updateRouteFields();
+                        }
+                    });
+                };
+
+                syncNativePicker(pickupDateInput, pickupDateText, hiddenPickupDate);
+                syncNativePicker(returnDateInput, returnDateText, hiddenReturnDate);
+                syncNativePicker(pickupTimeInput, pickupTimeText, hiddenPickup);
+                syncNativePicker(returnTimeInput, returnTimeText, hiddenReturn);
+
+                if (pickupTimeInput && hiddenPickup) {
+                    hiddenPickup.value = pickupTimeInput.value || hiddenPickup.value || '';
+                }
+                if (returnTimeInput && hiddenReturn) {
+                    hiddenReturn.value = returnTimeInput.value || hiddenReturn.value || '';
+                }
             }
 
             // Enforce route selection and traveller login before adding to cart
