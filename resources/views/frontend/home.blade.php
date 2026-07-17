@@ -832,10 +832,11 @@
 
             .category-search-cell--transport .ts-wrapper.category-search-select .ts-control {
                 padding: 0;
+                    padding-right: 20px !important;
             }
 
             .category-search-cell--transport .ts-wrapper.category-search-select {
-                width:110px
+                width:100%
             }
 
             .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown.single {
@@ -843,6 +844,7 @@
                 font-size: 14px;
                 font-weight: normal;
             }
+
 
             .category-search-input[type="date"],
             .category-search-input[type="time"] {
@@ -869,6 +871,10 @@
                 opacity: 0 !important;
                 width: 0 !important;
                 height: 0 !important;
+
+            .category-search-cell--transport .ts-wrapper:not(.form-control,.form-select).single .ts-control {
+                 background-position: right 3px center;
+
             }
 
         </style>
