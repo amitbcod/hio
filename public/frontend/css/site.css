@@ -2951,6 +2951,18 @@ display: inline-block;
             grid-template-columns: repeat(4, minmax(0, 1fr));
         }
 
+
+        .detail-gallery-card {
+             position: sticky;
+            top: 96px;
+        }
+
+        .detail-booking-card {
+            padding: 20px;
+            position: sticky;
+            top: 96px;
+        }
+
         @media (max-width: 1120px) {
             .detail-top-grid {
                 grid-template-columns: 1fr;
