@@ -69,7 +69,7 @@ class HomeController extends Controller
             ->whereNotNull('vehicle_name')
             ->latest('updated_at')
             ->take(8)
-            ->get()
+            ->get('')
             ->map(fn (Transport $transport) => $this->mapTransport(
                 $transport,
                 false,
