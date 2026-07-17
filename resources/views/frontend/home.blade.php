@@ -844,6 +844,11 @@
                 font-weight: normal;
             }
 
+            .category-search-cell--transport .ts-wrapper.category-search-select input {
+                position: absolute;
+                opacity: 0; 
+            }
+
         </style>
     @endpush
 @endsection
