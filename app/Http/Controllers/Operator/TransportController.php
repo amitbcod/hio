@@ -440,6 +440,7 @@ class TransportController extends Controller
             'routes.*.pricing.seasonal.*.start' => 'required_with:routes.*.pricing.seasonal|date',
             'routes.*.pricing.seasonal.*.end' => 'required_with:routes.*.pricing.seasonal|date|after_or_equal:routes.*.pricing.seasonal.*.start',
             'routes.*.pricing.seasonal.*.price' => 'required_with:routes.*.pricing.seasonal|numeric|min:0',
+            'routes.*.pricing.seasonal.*.return_price' => 'required_with:routes.*.pricing.seasonal|numeric|min:0',
         ]);
 
         $validator->after(function ($validator) use ($request) {

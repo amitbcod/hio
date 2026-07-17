@@ -32,7 +32,7 @@ class HomeController extends Controller
         $filters = $this->collectSearchFilters($request);
         $searchOptions = $this->buildSearchOptions();
 
-        $activities = $this->approvedActivityQuery()->with(['seoSocial', 'operator'])
+        $activities = $this->approvedActivityQuery($filters['activity_date'] ?? null)->with(['seoSocial', 'operator'])
             ->whereNotNull('activity_name')
             ->latest('updated_at')
             ->take(8)
@@ -200,7 +200,7 @@ class HomeController extends Controller
             })
             ->values();
 
-        $activities = $this->approvedActivityQuery()->with([
+        $activities = $this->approvedActivityQuery($filters['activity_date'] ?? null)->with([
                 'seoSocial',
                 'rates' => function ($query) {
                     $query->orderBy('adult_rate')->orderBy('equipment_rate')->orderBy('private_exclusive_rate');
@@ -941,6 +941,7 @@ class HomeController extends Controller
                             'start_date' => $season['start'] ?? $season['start_date'] ?? null,
                             'end_date' => $season['end'] ?? $season['end_date'] ?? null,
                             'price' => isset($season['price']) ? (float) $season['price'] : (isset($season['price_per_person']) ? (float) $season['price_per_person'] : null),
+                            'return_price' => isset($season['return_price']) ? (float) $season['return_price'] : null,
                         ];
                     })
                     ->filter(fn($item) => !blank($item['start_date']) && !blank($item['end_date']) && $item['price'] !== null)
@@ -977,6 +978,7 @@ class HomeController extends Controller
                                 'start_date' => $season['start'] ?? $season['start_date'] ?? null,
                                 'end_date' => $season['end'] ?? $season['end_date'] ?? null,
                                 'price' => isset($season['price']) ? (float) $season['price'] : null,
+                                'return_price' => isset($season['return_price']) ? (float) $season['return_price'] : null,
                             ];
                         })
                         ->filter(fn($item) => !blank($item['start_date']) && !blank($item['end_date']) && $item['price'] !== null)
@@ -2493,7 +2495,7 @@ class HomeController extends Controller
     {
         return match ($category) {
             'tours' => [
-                'service_type' => $this->normalizeFilterValues($request->query('service_type', [])),
+                'service_type' => array_values(array_intersect($this->normalizeFilterValues($request->query('service_type', [])), Activity::SERVICE_TYPES)),
                 'physical_level' => $this->normalizeFilterValues($request->query('physical_level', [])),
                 'price_range' => $this->normalizeFilterValues($request->query('price_range', [])),
                 'primary_theme' => $this->normalizeFilterValues($request->query('primary_theme', [])),
@@ -2718,11 +2720,17 @@ class HomeController extends Controller
             ->where('status', Accommodation::STATUS_ACTIVE);
     }
 
-    private function approvedActivityQuery()
+    private function approvedActivityQuery(?string $date = null)
     {
+        $today = $date ? \Carbon\Carbon::parse($date)->toDateString() : \Carbon\Carbon::today()->toDateString();
+
         return Activity::query()
             ->where('approval_status', 'Approved')
-            ->where('status', Activity::STATUS_ACTIVE);
+            ->where('status', Activity::STATUS_ACTIVE)
+            ->whereDoesntHave('blackoutDates', function ($query) use ($today) {
+                $query->whereDate('start_date', '<=', $today)
+                      ->whereDate('end_date', '>=', $today);
+            });
     }
 
     private function approvedTransportQuery()

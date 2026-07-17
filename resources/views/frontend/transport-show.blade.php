@@ -18,10 +18,10 @@
         $amenities = $transport['amenities'] ?? [];
         $operator = $transport['operator'] ?? null;
         $serviceType = request()->query('service_type', 'route');
-        $booking['pickup_date'] = request()->query('pickup_date', request()->query('arrival_date', request()->query('check_in', $booking['pickup_date'])));
-        $booking['pickup_time'] = request()->query('pickup_time', request()->query('arrival_time', $booking['pickup_time']));
-        $booking['return_date'] = request()->query('return_date', request()->query('check_out', $booking['return_date']));
-        $booking['return_time'] = request()->query('return_time', $booking['return_time']);
+        $booking['pickup_date'] = trim((string) request()->query('pickup_date', request()->query('arrival_date', request()->query('check_in', $booking['pickup_date']))));
+        $booking['pickup_time'] = trim((string) request()->query('pickup_time', request()->query('arrival_time', $booking['pickup_time'])));
+        $booking['return_date'] = trim((string) request()->query('return_date', request()->query('check_out', $booking['return_date'])));
+        $booking['return_time'] = trim((string) request()->query('return_time', $booking['return_time']));
         $booking['passengers'] = request()->query('passengers', $booking['passengers']);
         $detailQuery = http_build_query([
             'pickup_date' => $booking['pickup_date'],
@@ -148,7 +148,7 @@
         } catch (\Exception $e) {
             $carRentalTotal = null;
         }
-        $resolveSeasonalValue = function ($seasonalEntries, $dateValue, $defaultValue = null) {
+        $resolveSeasonalValue = function ($seasonalEntries, $dateValue, $defaultValue = null, $field = 'price') {
             $dateValue = trim((string) ($dateValue ?? ''));
             if ($dateValue === '') {
                 $dateValue = now()->toDateString();
@@ -165,7 +165,7 @@
                 $startDate = \Carbon\Carbon::parse($start)->startOfDay();
                 $endDate = \Carbon\Carbon::parse($end)->endOfDay();
                 if ($targetDate->between($startDate, $endDate, true)) {
-                    return isset($entry['price']) ? (float) $entry['price'] : $defaultValue;
+                    return isset($entry[$field]) ? (float) $entry[$field] : $defaultValue;
                 }
             }
 
@@ -176,8 +176,9 @@
         $selectedRouteFrom = $transport['selected_transport_from'] ?? ($selectedRoute['route_from'] ?? '');
         $selectedRouteTo = $transport['selected_transport_to'] ?? ($selectedRoute['route_to'] ?? '');
         $selectedDefaultPrice = $selectedRoute['pricing']['default_price'] ?? $transport['starting_rate'] ?? 0;
-        $selectedDefaultPrice = $resolveSeasonalValue($selectedRoute['pricing']['seasonal'] ?? [], $booking['pickup_date'], $selectedDefaultPrice);
+        $selectedDefaultPrice = $resolveSeasonalValue($selectedRoute['pricing']['seasonal'] ?? [], $booking['pickup_date'], $selectedDefaultPrice, 'price');
         $selectedReturnPrice = $selectedRoute['pricing']['return_price'] ?? null;
+        $selectedReturnPrice = $resolveSeasonalValue($selectedRoute['pricing']['seasonal'] ?? [], $booking['return_date'], $selectedReturnPrice, 'return_price');
         $routeId = $selectedRoute['route_id'] ?? '';
         $detailImage = $transport['image'] ?? asset('images/transport.svg');
     @endphp
@@ -773,7 +774,7 @@
                 return routeLookup.get(`${fromRegion}|${toRegion}`) || null;
             }
 
-            function resolveSeasonalValue(seasonalEntries, dateValue, defaultValue) {
+            function resolveSeasonalValue(seasonalEntries, dateValue, defaultValue, field = 'price') {
                 const normalizedDate = String(dateValue || '').trim();
                 const targetDate = normalizedDate ? new Date(`${normalizedDate}T00:00:00`) : new Date();
                 if (Number.isNaN(targetDate.getTime())) {
@@ -791,7 +792,8 @@
                     const startDate = new Date(`${start}T00:00:00`);
                     const endDate = new Date(`${end}T23:59:59`);
                     if (targetDate >= startDate && targetDate <= endDate) {
-                        return entry?.price != null ? parseFloat(entry.price) : defaultValue;
+                        const value = entry?.[field];
+                        return value != null ? parseFloat(value) : defaultValue;
                     }
                 }
 
@@ -808,15 +810,18 @@
 
                 const selectedRoute = findRouteBySelection(fromSelect.value, toSelect.value);
                 const bookingDateValue = (pickupDateInput && pickupDateInput.value) ? pickupDateInput.value : (booking && booking.pickup_date ? booking.pickup_date : '');
+                const bookingReturnDateValue = (returnDateInput && returnDateInput.value) ? returnDateInput.value : (booking && booking.return_date ? booking.return_date : '');
                 if (selectedRoute) {
                     routeIdInput.value = selectedRoute.route_id || '';
                     const defaultPrice = selectedRoute.pricing?.default_price != null ? parseFloat(selectedRoute.pricing.default_price) : 0;
-                    const effectivePrice = resolveSeasonalValue(selectedRoute.pricing?.seasonal || [], bookingDateValue, defaultPrice);
+                    const effectivePrice = resolveSeasonalValue(selectedRoute.pricing?.seasonal || [], bookingDateValue, defaultPrice, 'price');
                     pricePerPassengerInput.value = (effectivePrice || 0).toFixed(2);
 
                     // Only set return price if a return date was included in the booking context
                     if (booking && booking.return_date) {
-                        returnPriceInput.value = (parseFloat(selectedRoute.pricing?.return_price || 0) || 0).toFixed(2);
+                        const defaultReturnPrice = selectedRoute.pricing?.return_price != null ? parseFloat(selectedRoute.pricing.return_price) : 0;
+                        const effectiveReturnPrice = resolveSeasonalValue(selectedRoute.pricing?.seasonal || [], bookingReturnDateValue, defaultReturnPrice, 'return_price');
+                        returnPriceInput.value = (effectiveReturnPrice || 0).toFixed(2);
                     } else {
                         returnPriceInput.value = '';
                     }
@@ -868,7 +873,7 @@
                         if (hiddenInput) {
                             hiddenInput.value = nativeInput.value || hiddenInput.value || '';
                         }
-                        if (nativeInput.name === 'pickup_date') {
+                        if (nativeInput.name === 'pickup_date' || nativeInput.name === 'return_date') {
                             updateRouteFields();
                         }
                     });

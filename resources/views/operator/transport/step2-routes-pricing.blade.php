@@ -97,10 +97,11 @@
                                         @foreach($seasonalEntries as $seasonIndex => $season)
                                             <div class="season-row mb-2">
                                                 <div class="row gx-2">
-                                                    <div class="col-md-3"><input type="date" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][start]" class="form-control" value="{{ $season['start'] ?? $season['start_date'] ?? '' }}"></div>
-                                                    <div class="col-md-3"><input type="date" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][end]" class="form-control" value="{{ $season['end'] ?? $season['end_date'] ?? '' }}"></div>
-                                                    <div class="col-md-3"><input type="number" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][price]" class="form-control" placeholder="Seasonal price" min="0" step="0.01" value="{{ $season['price'] ?? '' }}"></div>
-                                                    <div class="col-md-3 d-flex align-items-center"><button type="button" class="btn btn-sm btn-danger w-100" onclick="this.closest('.season-row').remove();">Remove</button></div>
+                                                    <div class="col-md-2"><input type="date" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][start]" class="form-control" value="{{ $season['start'] ?? $season['start_date'] ?? '' }}"></div>
+                                                    <div class="col-md-2"><input type="date" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][end]" class="form-control" value="{{ $season['end'] ?? $season['end_date'] ?? '' }}"></div>
+                                                    <div class="col-md-2"><input type="number" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][price]" class="form-control" placeholder="Single trip" min="0" step="0.01" value="{{ $season['price'] ?? '' }}"></div>
+                                                    <div class="col-md-2"><input type="number" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][return_price]" class="form-control" placeholder="Return trip" min="0" step="0.01" value="{{ $season['return_price'] ?? '' }}"></div>
+                                                    <div class="col-md-2 d-flex align-items-center"><button type="button" class="btn btn-sm btn-danger w-100" onclick="this.closest('.season-row').remove();">Remove</button></div>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -232,10 +233,11 @@
 
         seasonRow.innerHTML = `
             <div class="row gx-2">
-                <div class="col-md-3"><input type="date" name="routes[${routeIndex}][pricing][seasonal][${seasonCount}][start]" class="form-control"></div>
-                <div class="col-md-3"><input type="date" name="routes[${routeIndex}][pricing][seasonal][${seasonCount}][end]" class="form-control"></div>
-                <div class="col-md-3"><input type="number" name="routes[${routeIndex}][pricing][seasonal][${seasonCount}][price]" class="form-control" placeholder="Seasonal price" min="0" step="0.01"></div>
-                <div class="col-md-3 d-flex align-items-center"><button type="button" class="btn btn-sm btn-danger w-100" onclick="this.closest('.season-row').remove();">Remove</button></div>
+                <div class="col-md-2"><input type="date" name="routes[${routeIndex}][pricing][seasonal][${seasonCount}][start]" class="form-control"></div>
+                <div class="col-md-2"><input type="date" name="routes[${routeIndex}][pricing][seasonal][${seasonCount}][end]" class="form-control"></div>
+                <div class="col-md-2"><input type="number" name="routes[${routeIndex}][pricing][seasonal][${seasonCount}][price]" class="form-control" placeholder="Single trip" min="0" step="0.01"></div>
+                <div class="col-md-2"><input type="number" name="routes[${routeIndex}][pricing][seasonal][${seasonCount}][return_price]" class="form-control" placeholder="Return trip" min="0" step="0.01"></div>
+                <div class="col-md-2 d-flex align-items-center"><button type="button" class="btn btn-sm btn-danger w-100" onclick="this.closest('.season-row').remove();">Remove</button></div>
             </div>
         `;
 
