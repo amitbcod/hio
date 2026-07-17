@@ -3008,7 +3008,7 @@ div.detail-top-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .booking-form-grid {
+    div.booking-form-grid {
         grid-template-columns: 1fr;
     }
 }
