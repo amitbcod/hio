@@ -312,7 +312,7 @@
                         @if(($serviceType ?? 'route') === 'car_rental' && !empty($carRentalTotal))
                             <span>{{ __('transport.price') }}: USD {{ $carRentalTotal }}</span>
                         @else
-                            <span>{{ __('transport.price') }}: USD {{ number_format((float) $selectedDefaultPrice, 2) }}{{ !empty($booking['return_date']) && $selectedReturnPrice ? ' + ' . __('transport.return_price') . ' USD ' . number_format((float) $selectedReturnPrice, 2) : '' }}</span>
+                            <span>{{ __('transport.price') }}: USD {{ !empty($booking['return_date']) && $selectedReturnPrice ? ' ' . number_format((float) $selectedReturnPrice, 2) : '' }}</span>
                         @endif
                     </div>
                     
@@ -335,12 +335,12 @@
                     @endif
 
                     @if($operator)
-                        <div class="booking-quick-links">
+                        <!-- <div class="booking-quick-links">
                             <p><strong>{{ __('transport.operator') }}:</strong> {{ $operator['name'] }}</p>
                             @if(!empty($operator['email']))
                                 <a href="mailto:{{ $operator['email'] }}">{{ __('transport.contact_operator') }}</a>
                             @endif
-                        </div>
+                        </div> -->
                     @endif
                 </aside>
             </div>

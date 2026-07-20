@@ -10,9 +10,12 @@
             @include('operator.transport._steps_sidebar')
         </div>
         <div class="col-md-9">
-            <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);margin-bottom:16px; margin-top:40px">
-                <h2 style="font-weight:700;margin:0;">Step 2: Routes & Pricing</h2>
-                <p style="margin:8px 0 0 0;color:#666;">Define routes, fare options, and pricing by vehicle type.</p>
+            <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);margin-bottom:16px; margin-top:40px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+                <div>
+                    <h2 style="font-weight:700;margin:0;">Step 2: Routes & Pricing</h2>
+                    <p style="margin:8px 0 0 0;color:#666;">Define routes, fare options, and pricing by vehicle type.</p>
+                </div>
+                <a href="{{ route('operator.transport.step2.car_rental.show', $transport->id) }}" class="btn btn-primary" style="background:#19b5b5;color:#fff;border:none;">Set Vehicle rental price</a>
             </div>
 
             <form id="step2-routes-pricing-form" method="POST" action="{{ route('operator.transport.step2.save', $transport->id) }}">
