@@ -70,7 +70,7 @@ strong {
 }
 
 .wrap {
-    width: min(1260px, calc(100% - 32px));
+    width: min(1280px, calc(100% - 32px));
     margin: 0 auto;
 }
 
@@ -1498,7 +1498,7 @@ strong {
 .home-main-search {
     position: absolute;
     bottom: 140px;
-    max-width: 1260px;
+    max-width: 1280px;
     left: 50%;
     transform: translate(-50%, 0);
     width: 100%;
@@ -1518,7 +1518,7 @@ strong {
 
 .page-main-search {
     position: relative;
-    max-width: 1260px;
+    max-width: 1280px;
     width: 100%;
     background: transparent;
     border: 0;
