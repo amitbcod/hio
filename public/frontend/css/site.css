@@ -1544,7 +1544,7 @@ strong {
     width: 100%;
     grid-column: 1 / -1;
     background: #fff;
-    padding: 20px;
+    padding: 15px;
     border-radius: 10px;
 }
 
@@ -1642,7 +1642,7 @@ select.category-search-select {
 }
 
 input.category-search-input {
-    width: auto;
+    width: 100%;
 }
 
 .hero-overlay {
@@ -2165,7 +2165,7 @@ label.saved-guest-checkbox {
     padding: 12px 12px;
     border-left: 2px solid rgba(255, 255, 255, 1);
     margin-bottom: 0;
-    gap: 10px;
+    gap: 0;
 }
 
 .category-search-cell--transport .transport-row>div:first-child {
