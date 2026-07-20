@@ -2963,6 +2963,14 @@ div.detail-top-grid {
     top: 96px;
 }
 
+div#transport-price-summary {
+    color: var(--ink); 
+    font-size: 18px;
+    font-weight: 800;
+} 
+
+
+
 @media (max-width: 1120px) {
     div.detail-top-grid {
         grid-template-columns: 1fr;
