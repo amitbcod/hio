@@ -38,7 +38,7 @@
             </select>
         </div>
         <div class="mb-3">
-            <button class="btn btn-primary">Save</button>
+            <button class="btn btn-primary" style="margin-bottom: 10px;">Save</button>
             <a href="{{ route('admin.travellers.index') }}" class="btn btn-secondary">Back</a>
         </div>
     </form>

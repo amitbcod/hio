@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Trips Management</h3>
-                    <a href="{{ route('admin.trips.create') }}" class="btn btn-primary float-right">Create Trip</a>
+                    <!-- <a href="{{ route('admin.trips.create') }}" class="btn btn-primary float-right">Create Trip</a> -->
                 </div>
                 <div class="card-body">
                     <table class="table table-bordered">
@@ -31,7 +31,7 @@
                                 <td>{{ $trip->status }}</td>
                                 <td>
                                     <a href="{{ route('admin.trips.show', $trip) }}" class="btn btn-sm btn-info">View</a>
-                                    <a href="{{ route('admin.trips.edit', $trip) }}" class="btn btn-sm btn-warning">Edit</a>
+                                    <!-- <a href="{{ route('admin.trips.edit', $trip) }}" class="btn btn-sm btn-warning">Edit</a> -->
                                 </td>
                             </tr>
                             @endforeach

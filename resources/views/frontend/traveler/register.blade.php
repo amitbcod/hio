@@ -51,9 +51,15 @@
                         <small>{{ __('auth.traveler_register_mobile_hint') }}</small>
                     </div>
 
-                    <div class="traveler-form-group">
+                    <div class="traveler-form-group position-relative">
                         <label for="password">{{ __('auth.traveler_register_password_label') }}</label>
                         <input id="password" type="password" name="password" required>
+                        <span class="show-password" data-target="#password" aria-label="Toggle password visibility">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </span>
                         <small>{{ __('auth.traveler_register_password_hint') }}</small>
                     </div>
 
@@ -220,6 +226,33 @@
             font-size: 14px;
         }
 
+        .traveler-form-group.position-relative {
+            position: relative;
+        }
+
+        .traveler-form-group.position-relative .show-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #6b7280;
+            opacity: 0.85;
+        }
+
+        .traveler-form-group.position-relative .show-password:hover {
+            opacity: 1;
+        }
+
+        .traveler-form-group.position-relative input {
+            padding-right: 44px;
+        }
+
         @media (max-width: 760px) {
             .traveler-form-grid {
                 grid-template-columns: 1fr;
@@ -235,3 +268,18 @@
         }
     </style>
 @endpush
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.show-password').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var target = button.dataset.target;
+                    var input = target ? document.querySelector(target) : button.closest('.traveler-form-group').querySelector('input');
+                    if (!input) return;
+                    input.type = input.type === 'password' ? 'text' : 'password';
+                });
+            });
+        });
+    </script>
+

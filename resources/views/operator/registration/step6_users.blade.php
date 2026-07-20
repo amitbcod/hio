@@ -48,7 +48,7 @@
                     @endif
                 </div>
                 @if(!auth('operator_staff')->check())
-                <a href="{{ url('operator/dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+                <!-- <a href="{{ url('operator/dashboard') }}" class="btn btn-secondary">Back to Dashboard</a> -->
                 @endif
             </div>
 

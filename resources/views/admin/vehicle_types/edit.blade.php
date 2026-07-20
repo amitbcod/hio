@@ -29,7 +29,7 @@
             <input type="checkbox" name="is_active" class="form-check-input" id="is_active" {{ old('is_active', $vehicleType->is_active) ? 'checked' : '' }}>
             <label class="form-check-label" for="is_active">Active</label>
         </div>
-        <button type="submit" class="btn btn-primary">Update Vehicle Type</button>
+        <button type="submit" class="btn btn-primary" style="margin-bottom: 10px;">Update Vehicle Type</button>
         <a href="{{ route('admin.vehicle-types.index') }}" class="btn btn-secondary ms-2">Cancel</a>
     </form>
 </div>

@@ -33,7 +33,7 @@
             <input type="checkbox" name="is_active" class="form-check-input" id="is_active" {{ old('is_active', true) ? 'checked' : '' }}>
             <label class="form-check-label" for="is_active">Active</label>
         </div>
-        <button type="submit" class="btn btn-primary">Save Hotel / City Mapping</button>
+        <button type="submit" class="btn btn-primary" style="margin-bottom: 10px;">Save Hotel / City Mapping</button>
         <a href="{{ route('admin.places.index') }}" class="btn btn-secondary ms-2">Cancel</a>
     </form>
 </div>
