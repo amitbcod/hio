@@ -2437,6 +2437,15 @@ class HomeController extends Controller
                     });
                 });
             }
+
+            $requestedPassengers = max(1, (int) ($filters['passengers'] ?? 1));
+            $items = $items->filter(function (array $item) use ($requestedPassengers) {
+                $capacity = isset($item['seating_capacity']) ? (int) $item['seating_capacity'] : 0;
+                if ($capacity <= 0) {
+                    return true;
+                }
+                return $requestedPassengers <= $capacity;
+            });
         }
 
         if ($category === 'accommodation' && $filters['rooms'] > 1) {
