@@ -268,7 +268,7 @@
                         </div>
                         <div class="booking-field">
                             <label>{{ __('transport.form.passengers') }}</label>
-                            <input type="number" name="passengers" min="1" value="{{ $booking['passengers'] }}" class="booking-input">
+                            <input type="number" name="passengers" min="1" max="{{ $transport['seating_capacity'] ?? '' }}" value="{{ min($booking['passengers'], $transport['seating_capacity'] ?? $booking['passengers']) }}" class="booking-input">
                         </div>
                         <div class="booking-field">
                             <label>Service Type</label>
