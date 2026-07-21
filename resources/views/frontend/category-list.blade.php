@@ -159,21 +159,21 @@
                                     </select>
                                 </div>
                                 <div class="transport-row-date">
-                                    <div class="transport-field" style="flex: 1 1 150px; min-width: 120px;">
+                                    <div class="transport-field" style="flex: 1 1 160px;">
                                         <h5>{{ __('home.search.arrival_date_time') }}</h5>
                                         <input type="date" name="arrival_date" class="category-search-input" value="{{ $filters['arrival_date'] ?? now()->format('Y-m-d') }}">
                                     </div>
-                                    <div class="transport-field" style="flex: 0 1 90px; min-width: 90px;">
+                                    <div class="transport-field" style="flex: 1 1 120px;">
                                         <h5>&nbsp;</h5>
                                         <input type="time" name="arrival_time" class="category-search-input" value="{{ $filters['arrival_time'] ?? '' }}">
                                     </div>
                                 </div>
                                 <div class="transport-row-date">
-                                    <div class="transport-field" style="flex: 1 1 150px; min-width: 120px;">
+                                    <div class="transport-field" style="flex: 1 1 160px;">
                                         <h5>{{ __('home.search.return_date_time') }}</h5>
                                         <input type="date" name="return_date" class="category-search-input" value="{{ $filters['return_date'] ?? '' }}">
                                     </div>
-                                    <div class="transport-field" style="flex: 0 1 90px; min-width: 90px;">
+                                    <div class="transport-field" style="flex: 1 1 120px">
                                         <h5>&nbsp;</h5>
                                         <input type="time" name="return_time" class="category-search-input" value="{{ $filters['return_time'] ?? '' }}">
                                     </div>
