@@ -129,7 +129,7 @@
                         @endpush
                         <div class="category-search-cell category-search-cell--transport" style="display: none;">
                             <div class="transport-row">
-                                <div class="transport-field" style="flex: 1 1 150px; min-width: 120px;">
+                                <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
                                     <h5>{{ __('home.search.from') }}</h5>
                                     <select name="transport_from" class="category-search-select" data-search-from>
                                         <option value="">{{ __('home.search.departure_location') }}</option>
@@ -138,7 +138,7 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="transport-field" style="flex: 1 1 150px; min-width: 120px;">
+                                <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
                                     <h5>{{ __('home.search.to') }}</h5>
                                     <select name="transport_to" class="category-search-select" data-search-to>
                                         <option value="">{{ __('home.search.destination') }}</option>
@@ -147,34 +147,36 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="transport-field" style="flex: 0 1 95px; min-width: 95px;">
+                                <div class="transport-field" style="flex: 0 1 110px; min-width: 110px;">
                                     <h5>{{ __('home.search.passengers') }}</h5>
                                     <input type="number" name="passengers" class="category-search-input" min="1" value="{{ $filters['passengers'] ?? 2 }}">
                                 </div>
-                                <div class="transport-field" style="flex: 0 1 120px; min-width: 120px;">
+                                <div class="transport-field" style="flex: 0 1 140px; min-width: 140px;">
                                     <h5>{{ __('home.search.service_type') }}</h5>
                                     <select name="service_type" class="category-search-select">
                                         <option value="route" {{ ($filters['service_type'] ?? 'route') === 'route' ? 'selected' : '' }}>{{ __('home.search.route_wise') }}</option>
                                         <option value="car_rental" {{ ($filters['service_type'] ?? '') === 'car_rental' ? 'selected' : '' }}>{{ __('home.search.car_rental') }}</option>
                                     </select>
                                 </div>
-                            </div>
-                            <div class="transport-row-date">
-                                <div class="transport-field" style="flex: 1 1 150px; min-width: 120px;">
-                                    <h5>{{ __('home.search.arrival_date_time') }}</h5>
-                                    <input type="date" name="arrival_date" class="category-search-input" value="{{ $filters['arrival_date'] ?? now()->format('Y-m-d') }}">
+                                <div class="transport-row-date">
+                                    <div class="transport-field" style="flex: 1 1 150px; min-width: 120px;">
+                                        <h5>{{ __('home.search.arrival_date_time') }}</h5>
+                                        <input type="date" name="arrival_date" class="category-search-input" value="{{ $filters['arrival_date'] ?? now()->format('Y-m-d') }}">
+                                    </div>
+                                    <div class="transport-field" style="flex: 0 1 90px; min-width: 90px;">
+                                        <h5>&nbsp;</h5>
+                                        <input type="time" name="arrival_time" class="category-search-input" value="{{ $filters['arrival_time'] ?? '' }}">
+                                    </div>
                                 </div>
-                                <div class="transport-field" style="flex: 0 1 90px; min-width: 90px;">
-                                    <h5>&nbsp;</h5>
-                                    <input type="time" name="arrival_time" class="category-search-input" value="{{ $filters['arrival_time'] ?? '' }}">
-                                </div>
-                                <div class="transport-field" style="flex: 1 1 150px; min-width: 120px;">
-                                    <h5>{{ __('home.search.return_date_time') }}</h5>
-                                    <input type="date" name="return_date" class="category-search-input" value="{{ $filters['return_date'] ?? '' }}">
-                                </div>
-                                <div class="transport-field" style="flex: 0 1 90px; min-width: 90px;">
-                                    <h5>&nbsp;</h5>
-                                    <input type="time" name="return_time" class="category-search-input" value="{{ $filters['return_time'] ?? '' }}">
+                                <div class="transport-row-date">
+                                    <div class="transport-field" style="flex: 1 1 150px; min-width: 120px;">
+                                        <h5>{{ __('home.search.return_date_time') }}</h5>
+                                        <input type="date" name="return_date" class="category-search-input" value="{{ $filters['return_date'] ?? '' }}">
+                                    </div>
+                                    <div class="transport-field" style="flex: 0 1 90px; min-width: 90px;">
+                                        <h5>&nbsp;</h5>
+                                        <input type="time" name="return_time" class="category-search-input" value="{{ $filters['return_time'] ?? '' }}">
+                                    </div>
                                 </div>
                             </div>
                         </div>
