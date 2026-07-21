@@ -552,7 +552,7 @@
                 font-weight: normal;
             }
 
-            .transport-row,
+            /* .transport-row,
             .transport-row-date {
                 display: flex;
                 flex-wrap: wrap;
@@ -563,7 +563,7 @@
 
             .transport-row-date {
                 margin-top: 10px;
-            }
+            } */
 
             .transport-field {
                 display: flex;
@@ -582,7 +582,7 @@
                 min-width: 0;
             }
 
-            .transport-row,
+            /* .transport-row,
             .transport-row-date {
                 display: flex;
                 flex-wrap: wrap;
@@ -593,7 +593,7 @@
 
             .transport-row-date {
                 margin-top: 0;
-            }
+            } */
 
             .transport-field {
                 display: flex;
