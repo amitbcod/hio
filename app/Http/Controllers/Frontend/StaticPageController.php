@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\StaticPage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 
 class StaticPageController extends Controller
 {
@@ -18,6 +19,12 @@ class StaticPageController extends Controller
         } else {
             $content = $page->content_en ?: $page->content_fr;
         }
+
+        $heroSlides = [
+            ['image' => asset('images/mauritius.jpg')],
+        ];
+
+        $content = Blade::render($content, compact('page', 'heroSlides'));
 
         return view('frontend.pages.static-page', compact('page', 'content'));
     }

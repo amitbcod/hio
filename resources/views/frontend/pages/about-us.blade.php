@@ -13,7 +13,7 @@
 
     <section class="page-section">
         <div class="wrap">
-            <h1>About Us - Lolotte Rental and Tours</h1>
+            <h1>About Us - Lolotte Rental and Tourstt</h1>
             <p>Lolotte Rental and Tours Ltd (LRT) proudly serves as the local partner for Holidays.io (HIO) in Mauritius and
                 Rodrigues. With over three decades of experience in the tourism industry, the founder of LRT has a deep
                 passion for her homeland. Her profound love for the islands, respect for nature, and commitment to

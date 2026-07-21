@@ -16,6 +16,12 @@
             'name' => $filters['name'],
             'transport_from' => $filters['transport_from'] ?? null,
             'transport_to' => $filters['transport_to'] ?? null,
+            'service_type' => $filters['service_type'] ?? null,
+            'arrival_date' => $filters['arrival_date'] ?? null,
+            'arrival_time' => $filters['arrival_time'] ?? null,
+            'return_date' => $filters['return_date'] ?? null,
+            'return_time' => $filters['return_time'] ?? null,
+            'passengers' => $filters['passengers'] ?? null,
             'adults' => $filters['adults'] ?? null,
             'children' => $filters['children'] ?? null,
             'rooms' => $filters['rooms'] ?? null,
@@ -121,23 +127,56 @@
                                 });
                             </script>
                         @endpush
-                        <div class="category-search-cell category-search-cell--transport" style="display: none; flex: 0 1 280px; min-width: 280px">
-                            <h5>{{ __('home.search.from') }}</h5>
-                            <select name="transport_from" class="category-search-select" data-search-from>
-                                <option value="">{{ __('home.search.departure_location') }}</option>
-                                @foreach($searchOptions['transport']['froms'] ?? [] as $from)
-                                    <option value="{{ $from }}" {{ ($filters['transport_from'] ?? '') === $from ? 'selected' : '' }}>{{ $from }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="category-search-cell category-search-cell--transport" style="display: none; flex: 0 1 280px; min-width: 280px">
-                            <h5>{{ __('home.search.to') }}</h5>
-                            <select name="transport_to" class="category-search-select" data-search-to>
-                                <option value="">{{ __('home.search.destination') }}</option>
-                                @foreach($searchOptions['transport']['tos'] ?? [] as $to)
-                                    <option value="{{ $to }}" {{ ($filters['transport_to'] ?? '') === $to ? 'selected' : '' }}>{{ $to }}</option>
-                                @endforeach
-                            </select>
+                        <div class="category-search-cell category-search-cell--transport" style="display: none;">
+                            <div class="transport-row">
+                                <div class="transport-field" style="flex: 1 1 150px; min-width: 120px;">
+                                    <h5>{{ __('home.search.from') }}</h5>
+                                    <select name="transport_from" class="category-search-select" data-search-from>
+                                        <option value="">{{ __('home.search.departure_location') }}</option>
+                                        @foreach($searchOptions['transport']['froms'] ?? [] as $from)
+                                            <option value="{{ $from }}" {{ ($filters['transport_from'] ?? '') === $from ? 'selected' : '' }}>{{ $from }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="transport-field" style="flex: 1 1 150px; min-width: 120px;">
+                                    <h5>{{ __('home.search.to') }}</h5>
+                                    <select name="transport_to" class="category-search-select" data-search-to>
+                                        <option value="">{{ __('home.search.destination') }}</option>
+                                        @foreach($searchOptions['transport']['tos'] ?? [] as $to)
+                                            <option value="{{ $to }}" {{ ($filters['transport_to'] ?? '') === $to ? 'selected' : '' }}>{{ $to }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="transport-field" style="flex: 0 1 95px; min-width: 95px;">
+                                    <h5>{{ __('home.search.passengers') }}</h5>
+                                    <input type="number" name="passengers" class="category-search-input" min="1" value="{{ $filters['passengers'] ?? 2 }}">
+                                </div>
+                                <div class="transport-field" style="flex: 0 1 120px; min-width: 120px;">
+                                    <h5>{{ __('home.search.service_type') }}</h5>
+                                    <select name="service_type" class="category-search-select">
+                                        <option value="route" {{ ($filters['service_type'] ?? 'route') === 'route' ? 'selected' : '' }}>{{ __('home.search.route_wise') }}</option>
+                                        <option value="car_rental" {{ ($filters['service_type'] ?? '') === 'car_rental' ? 'selected' : '' }}>{{ __('home.search.car_rental') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="transport-row-date">
+                                <div class="transport-field" style="flex: 1 1 150px; min-width: 120px;">
+                                    <h5>{{ __('home.search.arrival_date_time') }}</h5>
+                                    <input type="date" name="arrival_date" class="category-search-input" value="{{ $filters['arrival_date'] ?? now()->format('Y-m-d') }}">
+                                </div>
+                                <div class="transport-field" style="flex: 0 1 90px; min-width: 90px;">
+                                    <h5>&nbsp;</h5>
+                                    <input type="time" name="arrival_time" class="category-search-input" value="{{ $filters['arrival_time'] ?? '' }}">
+                                </div>
+                                <div class="transport-field" style="flex: 1 1 150px; min-width: 120px;">
+                                    <h5>{{ __('home.search.return_date_time') }}</h5>
+                                    <input type="date" name="return_date" class="category-search-input" value="{{ $filters['return_date'] ?? '' }}">
+                                </div>
+                                <div class="transport-field" style="flex: 0 1 90px; min-width: 90px;">
+                                    <h5>&nbsp;</h5>
+                                    <input type="time" name="return_time" class="category-search-input" value="{{ $filters['return_time'] ?? '' }}">
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Accommodation/Transport: Check-In and Check-Out -->
@@ -233,6 +272,12 @@
                         <input type="hidden" name="name" value="{{ $filters['name'] }}">
                         <input type="hidden" name="transport_from" value="{{ $filters['transport_from'] ?? '' }}">
                         <input type="hidden" name="transport_to" value="{{ $filters['transport_to'] ?? '' }}">
+                        <input type="hidden" name="service_type" value="{{ $filters['service_type'] ?? 'route' }}">
+                        <input type="hidden" name="arrival_date" value="{{ $filters['arrival_date'] ?? '' }}">
+                        <input type="hidden" name="arrival_time" value="{{ $filters['arrival_time'] ?? '' }}">
+                        <input type="hidden" name="return_date" value="{{ $filters['return_date'] ?? '' }}">
+                        <input type="hidden" name="return_time" value="{{ $filters['return_time'] ?? '' }}">
+                        <input type="hidden" name="passengers" value="{{ $filters['passengers'] ?? 2 }}">
                         <input type="hidden" name="adults" value="{{ $filters['adults'] ?? 2 }}">
                         <input type="hidden" name="children" value="{{ $filters['children'] ?? 0 }}">
                         <input type="hidden" name="infants" value="{{ $filters['infants'] ?? 0 }}">
@@ -390,9 +435,11 @@
             const guestCell = document.querySelector('.category-search-cell--guests');
             const guestCellHeading = document.getElementById('guest-cell-heading');
             const roomsRow = document.getElementById('rooms-row');
+            const regionCell = document.querySelector('.category-search-cell--region');
             const accommodationCheckInCell = document.querySelector('.category-search-cell--check-in');
             const accommodationCheckOutCell = document.querySelector('.category-search-cell--check-out');
             const toursActivityDateCell = document.querySelector('.category-search-cell--activity-date');
+            const transportCells = document.querySelectorAll('.category-search-cell--transport');
             const categoryRadios = document.querySelectorAll('input[name="category"]');
             const guestTexts = {
                 participants: {!! json_encode(__('home.search.participants')) !!},
@@ -433,13 +480,24 @@
                 if (selectedCategory === 'tours') {
                     accommodationCheckInCell.style.display = 'none';
                     accommodationCheckOutCell.style.display = 'none';
+                    transportCells.forEach((cell) => cell.style.display = 'none');
                     guestCell.style.display = 'block';
                     toursActivityDateCell.style.display = 'block';
                     if (guestCellHeading) guestCellHeading.textContent = guestTexts.participants;
                     if (roomsRow) roomsRow.style.display = 'none';
+                } else if (selectedCategory === 'transport') {
+                    regionCell.style.display = 'none';
+                    accommodationCheckInCell.style.display = 'none';
+                    accommodationCheckOutCell.style.display = 'none';
+                    transportCells.forEach((cell) => cell.style.display = 'block');
+                    guestCell.style.display = 'none';
+                    toursActivityDateCell.style.display = 'none';
+                    if (roomsRow) roomsRow.style.display = 'none';
                 } else {
+                    regionCell.style.display = 'block';
                     accommodationCheckInCell.style.display = 'block';
                     accommodationCheckOutCell.style.display = 'block';
+                    transportCells.forEach((cell) => cell.style.display = 'none');
                     guestCell.style.display = 'block';
                     toursActivityDateCell.style.display = 'none';
                     if (guestCellHeading) guestCellHeading.textContent = guestTexts.guestRooms;
@@ -455,6 +513,10 @@
                 });
             });
 
+            // Initialize on first load
+            updateCategoryFields();
+            updateGuestSummary();
+
             // Handle guest cell expand/collapse
             if (guestCell && guestSummary) {
                 guestSummary.addEventListener('click', function () {
@@ -469,5 +531,135 @@
             }
         });
     </script>
+
+    @push('styles')
+        <style>
+            .category-search-cell--transport .ts-wrapper.category-search-select .ts-control {
+                padding: 0;
+                padding-right: 20px !important;
+            }
+
+            .category-search-cell--transport .ts-wrapper.category-search-select {
+                width: 100%;
+                height: 22px;
+            }
+
+            .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown.single {
+                background: #fff;
+                font-size: 14px;
+                font-weight: normal;
+            }
+
+            .transport-row,
+            .transport-row-date {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                align-items: flex-end;
+                margin-top: 12px;
+            }
+
+            .transport-row-date {
+                margin-top: 10px;
+            }
+
+            .transport-field {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .transport-field h5 {
+                margin: 0;
+                font-size: 0.84rem;
+                line-height: 1.2;
+                color: inherit;
+            }
+
+            .category-search-cell--transport .transport-field {
+                min-width: 0;
+            }
+
+            .transport-row,
+            .transport-row-date {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                align-items: flex-end;
+                margin-top: 10px;
+            }
+
+            .transport-row-date {
+                margin-top: 0;
+            }
+
+            .transport-field {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                min-width: 0;
+            }
+
+            .transport-field h5 {
+                margin: 0;
+                font-size: 0.85rem;
+                line-height: 1.2;
+            }
+
+            .transport-field input,
+            .transport-field select {
+                min-height: 44px;
+                height: 44px;
+                width: 100%;
+                box-sizing: border-box;
+                padding: 0 12px;
+            }
+
+            .category-search-cell--transport .category-search-input,
+            .category-search-cell--transport .category-search-select {
+                width: 100%;
+                min-height: 44px;
+                height: 44px;
+                box-sizing: border-box;
+                padding: 0 12px;
+            }
+
+            .category-search-cell--transport .category-search-select {
+                min-height: 44px;
+                height: 44px;
+            }
+
+            .category-search-input[type="date"],
+            .category-search-input[type="time"] {
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                background: transparent !important;
+                padding-right: 10px !important;
+            }
+
+            .category-search-input[type="date"]::-webkit-calendar-picker-indicator,
+            .category-search-input[type="date"]::-webkit-clear-button,
+            .category-search-input[type="date"]::-webkit-inner-spin-button,
+            .category-search-input[type="date"]::-webkit-outer-spin-button,
+            .category-search-input[type="time"]::-webkit-calendar-picker-indicator,
+            .category-search-input[type="time"]::-webkit-clear-button,
+            .category-search-input[type="time"]::-webkit-inner-spin-button,
+            .category-search-input[type="time"]::-webkit-outer-spin-button,
+            .category-search-input[type="date"]::-ms-clear,
+            .category-search-input[type="date"]::-ms-expand,
+            .category-search-input[type="time"]::-ms-clear,
+            .category-search-input[type="time"]::-ms-expand {
+                display: none !important;
+                opacity: 0 !important;
+                width: 0 !important;
+                height: 0 !important;
+            }
+
+            .category-search-cell--transport .ts-wrapper:not(.form-control,.form-select).single .ts-control {
+                background-position: right 3px center;
+            }
+        </style>
+    @endpush
 
 @endsection

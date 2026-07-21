@@ -872,10 +872,10 @@
                 opacity: 0 !important;
                 width: 0 !important;
                 height: 0 !important;
+            }
 
             .category-search-cell--transport .ts-wrapper:not(.form-control,.form-select).single .ts-control {
-                 background-position: right 3px center;
-
+                background-position: right 3px center;
             }
 
         </style>

@@ -2308,6 +2308,12 @@ class HomeController extends Controller
             'participants' => max(1, (int) $request->query('participants', 1)),
             'transport_from' => trim((string) $request->query('transport_from', '')),
             'transport_to' => trim((string) $request->query('transport_to', '')),
+            'service_type' => trim((string) $request->query('service_type', 'route')),
+            'arrival_date' => (string) $request->query('arrival_date', ''),
+            'arrival_time' => trim((string) $request->query('arrival_time', '')),
+            'return_date' => (string) $request->query('return_date', ''),
+            'return_time' => trim((string) $request->query('return_time', '')),
+            'passengers' => max(1, (int) $request->query('passengers', 2)),
         ];
     }
 
