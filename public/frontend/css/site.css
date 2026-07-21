@@ -207,6 +207,7 @@ strong {
 .btn-secondary,
 .btn-outline {
     padding: 12px 20px;
+    font-size: 100%;
 }
 
 .btn-primary {
