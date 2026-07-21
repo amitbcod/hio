@@ -240,28 +240,28 @@
                         </div>
                         <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.pickup_date') }}</label>
-                            <div class="custom-picker-wrapper">
+                            <div class="custom-picker-wrapper date-picker">
                                 <input type="text" readonly class="booking-input booking-input-text" value="{{ $booking['pickup_date'] }}">
                                 <input type="date" name="pickup_date" value="{{ $booking['pickup_date'] }}" class="booking-input booking-input-native" min="{{ date('Y-m-d') }}">
                             </div>
                         </div>
                         <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.pickup_time') }}</label>
-                            <div class="custom-picker-wrapper">
+                            <div class="custom-picker-wrapper time-picker">
                                 <input type="text" readonly class="booking-input booking-input-text" value="{{ $booking['pickup_time'] }}">
                                 <input type="time" name="pickup_time" value="{{ $booking['pickup_time'] }}" class="booking-input booking-input-native">
                             </div>
                         </div>
                         <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.return_date') }}</label>
-                            <div class="custom-picker-wrapper">
+                            <div class="custom-picker-wrapper date-picker">
                                 <input type="text" readonly class="booking-input booking-input-text" value="{{ $booking['return_date'] }}">
                                 <input type="date" name="return_date" value="{{ $booking['return_date'] }}" class="booking-input booking-input-native" min="{{ date('Y-m-d') }}">
                             </div>
                         </div>
                         <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.return_time') }}</label>
-                            <div class="custom-picker-wrapper">
+                            <div class="custom-picker-wrapper time-picker">
                                 <input type="text" readonly class="booking-input booking-input-text" value="{{ $booking['return_time'] }}">
                                 <input type="time" name="return_time" value="{{ $booking['return_time'] }}" class="booking-input booking-input-native">
                             </div>
@@ -552,6 +552,29 @@
             cursor: pointer;
         }
 
+        .custom-picker-wrapper::after {
+            content: '';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            pointer-events: none;
+            opacity: 0.65;
+        }
+
+        .custom-picker-wrapper.date-picker::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23666' d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z'/%3E%3C/svg%3E");
+        }
+
+        .custom-picker-wrapper.time-picker::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23666' d='M12 20c4.41 0 8-3.59 8-8s-3.59-8-8-8-8 3.59-8 8 3.59 8 8 8zm0-14c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6 2.69-6 6-6zm.5 3H11v5l4.25 2.52.75-1.23-3.5-2.04V9z'/%3E%3C/svg%3E");
+        }
+
         .booking-input-text {
             width: 100%;
             background: #fff;
@@ -579,6 +602,7 @@
             color: transparent !important;
             caret-color: transparent !important;
             pointer-events: auto !important;
+            mix-blend-mode: normal !important;
         }
 
         .booking-input-native::-webkit-calendar-picker-indicator,
@@ -860,14 +884,33 @@
                     }
                     textInput.value = nativeInput.value || '';
                     const wrapper = nativeInput.closest('.custom-picker-wrapper');
+                    const openPicker = function () {
+                        nativeInput.focus();
+                        if (typeof nativeInput.showPicker === 'function') {
+                            nativeInput.showPicker();
+                        } else {
+                            nativeInput.click();
+                        }
+                    };
                     if (wrapper) {
-                        wrapper.addEventListener('click', function () {
-                            nativeInput.focus();
-                            if (typeof nativeInput.showPicker === 'function') {
-                                nativeInput.showPicker();
-                            }
+                        wrapper.style.cursor = 'pointer';
+                        wrapper.addEventListener('click', function (event) {
+                            event.preventDefault();
+                            openPicker();
                         });
                     }
+                    textInput.style.cursor = 'pointer';
+                    textInput.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        openPicker();
+                    });
+                    nativeInput.addEventListener('focus', function () {
+                        if (typeof nativeInput.showPicker === 'function') {
+                            setTimeout(() => {
+                                nativeInput.showPicker();
+                            }, 0);
+                        }
+                    });
                     nativeInput.addEventListener('change', function () {
                         textInput.value = nativeInput.value || '';
                         if (hiddenInput) {
