@@ -3244,4 +3244,12 @@ div#transport-price-summary {
     input.category-search-input {
         width: 100%;
     }
+
+    .hero-slides {
+         min-height: 680px;
+    }
+
+    .filter-note {
+        margin-top: 20px;
+    }
 }
