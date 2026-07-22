@@ -344,18 +344,32 @@
                     @endif
                 </aside>
             </div>
-
+            @php
+                $overviewContent = $transport['description'] ?: ($transport['overview'] ?? '');
+            @endphp
             <nav class="detail-anchor-nav">
+                
+            @if(!empty(trim($overviewContent)))
                 <a href="#overview">{{ __('transport.overview') }}</a>
+            @endif
                 <a href="#routes-pricing">{{ __('transport.routes_pricing') }}</a>
                 <a href="#promotions">{{ __('transport.promotions') }}</a>
                 <a href="#amenities">{{ __('transport.amenities') }}</a>
             </nav>
 
-            <div class="detail-section-card" id="overview">
+            <!-- <div class="detail-section-card" id="overview">
                 <h2>{{ __('transport.overview') }}</h2>
                 <p>{!! nl2br(e($transport['description'] ?: $transport['overview'] ?? '')) !!}</p>
-            </div>
+            </div> -->
+
+
+
+            @if(!empty(trim($overviewContent)))
+                <div class="detail-section-card" id="overview">
+                    <h2>{{ __('transport.overview') }}</h2>
+                    <p>{!! nl2br(e($overviewContent)) !!}</p>
+                </div>
+            @endif
 
             <div class="detail-section-card" id="vehicle-details">
                 <h2>{{ __('transport.details_title') }}</h2>
