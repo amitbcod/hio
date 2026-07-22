@@ -177,18 +177,18 @@
                             <div class="category-search-cell category-search-cell--transport" style="display: none;">
                                 <div class="transport-row" style="">
                                     <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
-                                        <h5>{{ __('home.search.from') }}</h5>
+                                        <h5>{{ __('home.search.departure_location') }}</h5>
                                         <select name="transport_from" class="category-search-select" data-search-from>
-                                            <option value="">{{ __('home.search.departure_location') }}</option>
+                                            <option value="" disabled hidden>{{ __('home.search.departure_location') }}</option>
                                             @foreach(($searchOptions['transport']['froms'] ?? []) as $from)
                                                 <option value="{{ $from }}" {{ request()->query('transport_from', '') === $from ? 'selected' : '' }}>{{ $from }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
-                                        <h5>{{ __('home.search.to') }}</h5>
+                                        <h5>{{ __('home.search.destination') }}</h5>
                                         <select name="transport_to" class="category-search-select" data-search-to>
-                                            <option value="">{{ __('home.search.destination') }}</option>
+                                            <option value="" disabled hidden>{{ __('home.search.destination') }}</option>
                                             @foreach(($searchOptions['transport']['tos'] ?? []) as $to)
                                                 <option value="{{ $to }}" {{ request()->query('transport_to', '') === $to ? 'selected' : '' }}>{{ $to }}</option>
                                             @endforeach
@@ -521,6 +521,7 @@
 
                     if (from && !transportTomSelectInstances.from) {
                         transportTomSelectInstances.from = new TomSelect(from, {
+                            placeholder: '{{ __('home.search.departure_location') }}',
                             allowEmptyOption: true,
                             create: false,
                             closeAfterSelect: true,
@@ -534,6 +535,7 @@
 
                     if (to && !transportTomSelectInstances.to) {
                         transportTomSelectInstances.to = new TomSelect(to, {
+                            placeholder: '{{ __('home.search.destination') }}',
                             allowEmptyOption: true,
                             create: false,
                             closeAfterSelect: true,

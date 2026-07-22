@@ -2368,6 +2368,7 @@ class HomeController extends Controller
                 ->pluck('place_name')
                 ->map(fn ($value) => trim((string) $value))
                 ->filter()
+                ->reject(fn ($value) => in_array(Str::lower($value), ['pick up', 'pickup', 'drop off'], true))
                 ->unique()
                 ->values()
                 ->all();
