@@ -872,18 +872,25 @@
             }
 
             .category-search-cell--transport .ts-wrapper.category-search-select .ts-control {
-                min-height: 44px;
+                /* min-height: 44px;
                 line-height: 1.3;
                 padding: 0 12px 0 8px;
                 display: flex;
-                align-items: center;
+                align-items: center; */
+                height: 22px;
+                overflow: hidden;
+                padding:0;
             }
 
-            .category-search-cell--transport .ts-wrapper.category-search-select {
+            .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown-content {
+                max-height: 140px;
+            }
+
+            /* .category-search-cell--transport .ts-wrapper.category-search-select {
                 width: 100%;
                 min-height: 44px;
                 box-sizing: border-box;
-            }
+            } */
 
             .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown.single {
                 background: #fff;
