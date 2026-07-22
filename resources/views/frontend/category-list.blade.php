@@ -571,12 +571,12 @@
                 gap: 6px;
             }
 
-            .transport-field h5 {
+            /* .transport-field h5 {
                 margin: 0;
                 font-size: 0.84rem;
                 line-height: 1.2;
                 color: inherit;
-            }
+            } */
 
             .category-search-cell--transport .transport-field {
                 min-width: 0;
@@ -602,34 +602,34 @@
                 min-width: 0;
             }
 
-            .transport-field h5 {
+            /* .transport-field h5 {
                 margin: 0;
                 font-size: 0.85rem;
                 line-height: 1.2;
-            }
+            } */
 
-            .transport-field input,
+            /* .transport-field input,
             .transport-field select {
                 min-height: 44px;
                 height: 44px;
                 width: 100%;
                 box-sizing: border-box;
                 padding: 0 12px;
-            }
+            } */
 
-            .category-search-cell--transport .category-search-input,
+            /* .category-search-cell--transport .category-search-input,
             .category-search-cell--transport .category-search-select {
                 width: 100%;
                 min-height: 44px;
                 height: 44px;
                 box-sizing: border-box;
                 padding: 0 12px;
-            }
+            } */
 
-            .category-search-cell--transport .category-search-select {
+            /* .category-search-cell--transport .category-search-select {
                 min-height: 44px;
                 height: 44px;
-            }
+            } */
 
             .category-search-input[type="date"],
             .category-search-input[type="time"] {
