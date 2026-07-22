@@ -565,11 +565,11 @@
                 margin-top: 10px;
             } */
 
-            .transport-field {
+            /* .transport-field {
                 display: flex;
                 flex-direction: column;
                 gap: 6px;
-            }
+            } */
 
             /* .transport-field h5 {
                 margin: 0;
@@ -578,9 +578,9 @@
                 color: inherit;
             } */
 
-            .category-search-cell--transport .transport-field {
+            /* .category-search-cell--transport .transport-field {
                 min-width: 0;
-            }
+            } */
 
             /* .transport-row,
             .transport-row-date {
@@ -595,12 +595,12 @@
                 margin-top: 0;
             } */
 
-            .transport-field {
+            /* .transport-field {
                 display: flex;
                 flex-direction: column;
                 gap: 4px;
                 min-width: 0;
-            }
+            } */
 
             /* .transport-field h5 {
                 margin: 0;
