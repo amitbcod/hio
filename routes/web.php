@@ -66,3 +66,15 @@ use App\Http\Controllers\Frontend\FeedbackController;
 Route::get('/feedback/trip/{trip}', [FeedbackController::class, 'show'])->name('frontend.feedback.show');
 Route::post('/feedback/trip/{trip}', [FeedbackController::class, 'submit'])->name('frontend.feedback.submit');
 Route::get('/feedback/send/{trip}', [FeedbackController::class, 'sendRequest'])->name('frontend.feedback.send');
+
+use App\Http\Controllers\Frontend\BookingWidgetController;
+
+// Operator booking widget management
+Route::middleware(['auth'])->prefix('operator')->group(function () {
+    Route::post('/booking-widget/generate', [BookingWidgetController::class, 'generate'])->name('operator.booking-widget.generate');
+    Route::get('/booking-widget/script', [BookingWidgetController::class, 'showScript'])->name('operator.booking-widget.script');
+});
+
+// Public widget endpoints used by the embeddable widget script
+Route::get('/widget/validate/{token}', [BookingWidgetController::class, 'validateToken']);
+Route::get('/widget/track-redirect', [BookingWidgetController::class, 'trackRedirect']);

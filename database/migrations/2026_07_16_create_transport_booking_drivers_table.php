@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('transport_booking_drivers', function (Blueprint $table) {
+        if (!Schema::hasTable('transport_booking_drivers')) {
+            Schema::create('transport_booking_drivers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('transport_booking_id')->constrained('transport_bookings')->onDelete('cascade');
             $table->foreignId('operator_driver_id')->constrained('operator_drivers')->onDelete('cascade');
@@ -19,7 +20,8 @@ return new class extends Migration
             
             // Unique constraint to prevent duplicate assignments
             $table->unique(['transport_booking_id', 'operator_driver_id'], 'tbd_booking_driver_unique');
-        });
+            });
+        }
     }
 
     /**

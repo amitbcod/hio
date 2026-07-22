@@ -71,18 +71,6 @@
                                 @endpush
                                 @push('scripts')
                                     <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
-                                    <script>
-                                        document.addEventListener('DOMContentLoaded', function () {
-                                            try {
-                                                const from = document.querySelector('select[data-search-from]');
-                                                const to = document.querySelector('select[data-search-to]');
-                                                if (from) new TomSelect(from, {allowEmptyOption: true, create: false});
-                                                if (to) new TomSelect(to, {allowEmptyOption: true, create: false});
-                                            } catch (e) {
-                                                console.error('TomSelect init error', e);
-                                            }
-                                        });
-                                    </script>
                                 @endpush
                             </label>
                             <label class="category-radio-item">
@@ -513,6 +501,56 @@
                 infants: {!! json_encode(__('home.search.infants_label')) !!},
                 rooms: {!! json_encode(__('home.search.rooms_label')) !!}
             };
+            let transportTomSelectInstances = {
+                from: null,
+                to: null,
+            };
+
+            const syncTomSelectValue = function (select, instance) {
+                if (!select || !instance) return;
+                instance.setValue(select.value || '');
+                if (typeof instance.refreshItems === 'function') {
+                    instance.refreshItems();
+                }
+            };
+
+            const initTransportSearchTomSelects = function () {
+                try {
+                    const from = document.querySelector('select[data-search-from]');
+                    const to = document.querySelector('select[data-search-to]');
+
+                    if (from && !transportTomSelectInstances.from) {
+                        transportTomSelectInstances.from = new TomSelect(from, {
+                            allowEmptyOption: true,
+                            create: false,
+                            closeAfterSelect: true,
+                            onInitialize: function () {
+                                if (from.value) {
+                                    this.setValue(from.value);
+                                }
+                            },
+                        });
+                    }
+
+                    if (to && !transportTomSelectInstances.to) {
+                        transportTomSelectInstances.to = new TomSelect(to, {
+                            allowEmptyOption: true,
+                            create: false,
+                            closeAfterSelect: true,
+                            onInitialize: function () {
+                                if (to.value) {
+                                    this.setValue(to.value);
+                                }
+                            },
+                        });
+                    }
+
+                    syncTomSelectValue(from, transportTomSelectInstances.from);
+                    syncTomSelectValue(to, transportTomSelectInstances.to);
+                } catch (e) {
+                    console.error('TomSelect init error', e);
+                }
+            };
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabPanels = document.querySelectorAll('.tab-panel');
 
@@ -724,6 +762,7 @@
                     toursActivityDateCell.style.display = 'none';
                     transportCells.forEach(el => el.style.display = 'block');
                     if (regionCell) regionCell.style.display = 'none';
+                    initTransportSearchTomSelects();
                 } else {
                     accommodationCheckInCell.style.display = 'block';
                     accommodationCheckOutCell.style.display = 'block';
@@ -831,13 +870,17 @@
             }
 
             .category-search-cell--transport .ts-wrapper.category-search-select .ts-control {
-                padding: 0;
-                    padding-right: 20px !important;
+                min-height: 44px;
+                line-height: 1.3;
+                padding: 0 12px 0 8px;
+                display: flex;
+                align-items: center;
             }
 
             .category-search-cell--transport .ts-wrapper.category-search-select {
-                width:100%;
-                    height: 22px;
+                width: 100%;
+                min-height: 44px;
+                box-sizing: border-box;
             }
 
             .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown.single {
