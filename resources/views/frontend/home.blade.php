@@ -882,6 +882,10 @@
                 padding:0;
             }
 
+            .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown-content {
+                max-height: 140px;
+            }
+
             /* .category-search-cell--transport .ts-wrapper.category-search-select {
                 width: 100%;
                 min-height: 44px;
