@@ -879,6 +879,7 @@
                 align-items: center; */
                 height: 22px;
                 overflow: hidden;
+                padding:0;
             }
 
             /* .category-search-cell--transport .ts-wrapper.category-search-select {
