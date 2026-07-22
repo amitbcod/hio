@@ -110,6 +110,8 @@
     "category.filter.meal_plan": "Formule repas",
     "category.filter.budget": "Gamme de prix",
     "category.filter.service_type": "Type de service",
+    "category.filter.vehicle_type": "Type de véhicule",
+    "category.filter.seating_capacity": "Nombre de sièges",
     "category.filter.physical_level": "Niveau physique",
     "category.filter.price_range": "Gamme de prix",
     "category.filter.primary_theme": "Thème principal",

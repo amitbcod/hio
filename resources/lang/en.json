@@ -112,6 +112,8 @@
     "category.filter.meal_plan": "Meal Plan",
     "category.filter.budget": "Budget Range",
     "category.filter.service_type": "Service Type",
+    "category.filter.vehicle_type": "Vehicle Type",
+    "category.filter.seating_capacity": "Seat capacity",
     "category.filter.physical_level": "Physical Level",
     "category.filter.price_range": "Price Range",
     "category.filter.primary_theme": "Primary Theme",

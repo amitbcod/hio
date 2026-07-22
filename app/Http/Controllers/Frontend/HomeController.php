@@ -2522,6 +2522,10 @@ class HomeController extends Controller
                 'meal_plan' => $this->normalizeFilterValues($request->query('meal_plan', [])),
                 'budget' => $this->normalizeFilterValues($request->query('budget', [])),
             ],
+            'transport' => [
+                'vehicle_type' => $this->normalizeFilterValues($request->query('vehicle_type', [])),
+                'seating_capacity' => $this->normalizeFilterValues($request->query('seating_capacity', [])),
+            ],
             default => [],
         };
     }
@@ -2583,6 +2587,29 @@ class HomeController extends Controller
             }
         }
 
+        
+
+        
+
+        if ($category === 'transport') {
+            if (!empty($sidebarSelections['vehicle_type'])) {
+                $selected = $sidebarSelections['vehicle_type'];
+                $items = $items->filter(fn (array $item) => in_array((string) ($item['vehicle_type'] ?? ''), $selected, true));
+            }
+
+            if (!empty($sidebarSelections['seating_capacity'])) {
+                $selected = array_map('intval', $sidebarSelections['seating_capacity']);
+                // interpret seating_capacity filter as minimum required seats — use the highest selected value
+                $minSeats = !empty($selected) ? max($selected) : 0;
+                if ($minSeats > 0) {
+                    $items = $items->filter(function (array $item) use ($minSeats) {
+                        $cap = isset($item['seating_capacity']) ? (int) $item['seating_capacity'] : 0;
+                        return $cap >= $minSeats;
+                    });
+                }
+            }
+        }
+
         return $items->values();
     }
 
@@ -2604,6 +2631,24 @@ class HomeController extends Controller
                     'key' => 'budget',
                     'label' => $this->translateFilterLabel('budget', 'Budget Range'),
                     'options' => $this->buildCountOptions($items->pluck('budget_range'), ['Budget', 'Mid Range', 'Top End'], 'budget'),
+                ],
+            ], fn (array $definition) => !empty($definition['options'])));
+        }
+
+        if ($category === 'transport') {
+            $vehicleTypes = $items->pluck('vehicle_type')->filter()->map(fn($v) => trim((string) $v))->unique()->sort()->values()->all();
+            $seatCaps = $items->pluck('seating_capacity')->filter()->map(fn($v) => (int) $v)->unique()->sort()->values()->map(fn($v) => (string) $v)->all();
+
+            return array_values(array_filter([
+                [
+                    'key' => 'vehicle_type',
+                    'label' => $this->translateFilterLabel('vehicle_type', 'Vehicle Type'),
+                    'options' => $this->buildCountOptions($items->pluck('vehicle_type'), $vehicleTypes, 'vehicle_type'),
+                ],
+                [
+                    'key' => 'seating_capacity',
+                    'label' => $this->translateFilterLabel('seating_capacity', 'Seat capacity'),
+                    'options' => $this->buildCountOptions($items->pluck('seating_capacity')->map(fn($v) => (string) ($v ?? '')), $seatCaps, 'seating_capacity'),
                 ],
             ], fn (array $definition) => !empty($definition['options'])));
         }
