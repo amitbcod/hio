@@ -241,43 +241,37 @@
                         <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.pickup_date') }}</label>
                             <div class="custom-picker-wrapper date-picker">
-                                <input type="text" readonly class="booking-input booking-input-text" value="{{ $booking['pickup_date'] }}">
-                                <input type="date" name="pickup_date" value="{{ $booking['pickup_date'] }}" class="booking-input booking-input-native" min="{{ date('Y-m-d') }}">
+                                <input type="date" name="pickup_date" value="{{ $booking['pickup_date'] }}" class="booking-input booking-input-native booking-input-native-visible" min="{{ date('Y-m-d') }}">
                             </div>
                         </div>
                         <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.pickup_time') }}</label>
                             <div class="custom-picker-wrapper time-picker">
-                                <input type="text" readonly class="booking-input booking-input-text" value="{{ $booking['pickup_time'] }}">
-                                <input type="time" name="pickup_time" value="{{ $booking['pickup_time'] }}" class="booking-input booking-input-native">
+                                <input type="time" name="pickup_time" value="{{ $booking['pickup_time'] }}" class="booking-input booking-input-native booking-input-native-visible">
                             </div>
                         </div>
                         <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.return_date') }}</label>
                             <div class="custom-picker-wrapper date-picker">
-                                <input type="text" readonly class="booking-input booking-input-text" value="{{ $booking['return_date'] }}">
-                                <input type="date" name="return_date" value="{{ $booking['return_date'] }}" class="booking-input booking-input-native" min="{{ date('Y-m-d') }}">
+                                <input type="date" name="return_date" value="{{ $booking['return_date'] }}" class="booking-input booking-input-native booking-input-native-visible" min="{{ date('Y-m-d') }}">
                             </div>
                         </div>
                         <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.return_time') }}</label>
                             <div class="custom-picker-wrapper time-picker">
-                                <input type="text" readonly class="booking-input booking-input-text" value="{{ $booking['return_time'] }}">
-                                <input type="time" name="return_time" value="{{ $booking['return_time'] }}" class="booking-input booking-input-native">
+                                <input type="time" name="return_time" value="{{ $booking['return_time'] }}" class="booking-input booking-input-native booking-input-native-visible">
                             </div>
                         </div>
                         <div class="booking-field">
                             <label>{{ __('transport.form.passengers') }}</label>
                             <input type="number" name="passengers" min="1" max="{{ $transport['seating_capacity'] ?? '' }}" value="{{ min($booking['passengers'], $transport['seating_capacity'] ?? $booking['passengers']) }}" class="booking-input">
                         </div>
+                        <input type="hidden" name="service_type" value="{{ $serviceType ?? 'route' }}">
                         <div class="booking-field">
-                            <label>Service Type</label>
-                            <select name="service_type" id="service-type-select" class="booking-input">
-                                <option value="route" {{ ($serviceType ?? 'route') === 'route' ? 'selected' : '' }}>Route wise</option>
-                                <option value="car_rental" {{ ($serviceType ?? '') === 'car_rental' ? 'selected' : '' }}>Car rental</option>
-                            </select>
+                            <label>{{ __('transport.form.service_type') }}</label>
+                            <div class="booking-input booking-input-static">{{ ($serviceType ?? 'route') === 'car_rental' ? __('transport.form.car_rental') : __('transport.form.route_wise') }}</div>
                         </div>
-                        <button type="submit" class="btn-primary booking-btn">{{ __('transport.form.update_search') }}</button>
+                        <button id="booking-update-search-btn" type="submit" class="btn-primary booking-btn">{{ __('transport.form.update_search') }}</button>
                     </form>
 
                     <!-- <div class="booking-summary-line">
@@ -305,7 +299,7 @@
                         <input type="hidden" id="transport-route-to" name="route_to" value="{{ $selectedRouteTo }}">
                         <input type="hidden" name="source" value="detail">
 
-                        <button type="submit" class="btn-secondary booking-btn">{{ __('transport.form.book_now') }}</button>
+                        <button id="booking-now-btn" type="submit" class="btn-secondary booking-btn">{{ __('transport.form.book_now') }}</button>
                     </form>
 
                     <div class="booking-summary-line" id="transport-price-summary">
@@ -617,6 +611,18 @@
             caret-color: transparent !important;
             pointer-events: auto !important;
             mix-blend-mode: normal !important;
+        }
+
+        .booking-input-native-visible {
+            opacity: 1 !important;
+            color: var(--ink) !important;
+            caret-color: var(--ink) !important;
+            background: #fff !important;
+            position: relative !important;
+            z-index: 1 !important;
+            border: 1px solid var(--line) !important;
+            padding: 0 12px !important;
+            min-height: 42px !important;
         }
 
         .booking-input-native::-webkit-calendar-picker-indicator,
@@ -950,11 +956,87 @@
             }
 
             // Enforce route selection and traveller login before adding to cart
+            const bookingUpdateSearchForm = document.querySelector('.booking-form-grid');
+            const bookingServiceTypeHidden = bookingUpdateSearchForm ? bookingUpdateSearchForm.querySelector('input[name="service_type"]') : null;
+            const bookingUpdateSearchBtn = document.getElementById('booking-update-search-btn');
+            const bookingNowBtn = document.getElementById('booking-now-btn');
             const bookingAddForm = document.querySelector('.booking-add-form');
-            const bookNowBtn = bookingAddForm ? bookingAddForm.querySelector('button[type="submit"]') : null;
             const transportRouteFromHidden = document.getElementById('transport-route-from');
             const transportRouteToHidden = document.getElementById('transport-route-to');
             const travelerLoggedIn = @json(auth('traveler')->check());
+
+            const isCarRentalService = function () {
+                return (bookingServiceTypeHidden?.value || '{{ $serviceType ?? 'route' }}') === 'car_rental';
+            };
+
+            const hasCarRentalTimes = function () {
+                const pickupT = document.querySelector('input[name="pickup_time"]')?.value.trim() || '';
+                const returnT = document.querySelector('input[name="return_time"]')?.value.trim() || '';
+                return pickupT !== '' && returnT !== '';
+            };
+
+            const setCarRentalButtonState = function (disabled) {
+                if (bookingUpdateSearchBtn) {
+                    bookingUpdateSearchBtn.disabled = disabled;
+                    if (disabled) {
+                        bookingUpdateSearchBtn.setAttribute('disabled', 'disabled');
+                    } else {
+                        bookingUpdateSearchBtn.removeAttribute('disabled');
+                    }
+                }
+                if (bookingNowBtn) {
+                    bookingNowBtn.disabled = disabled;
+                    if (disabled) {
+                        bookingNowBtn.setAttribute('disabled', 'disabled');
+                    } else {
+                        bookingNowBtn.removeAttribute('disabled');
+                    }
+                }
+            };
+
+            const updateCarRentalState = function (showAlert) {
+                const isCarRental = isCarRentalService();
+                const timesValid = hasCarRentalTimes();
+                if (isCarRental && !timesValid) {
+                    setCarRentalButtonState(true);
+                    if (showAlert) {
+                        alert('Please provide pickup and return times for car rental search before updating.');
+                    }
+                } else {
+                    setCarRentalButtonState(false);
+                }
+            };
+
+            const bindCarRentalState = function () {
+                const pickupTimeField = document.querySelector('input[name="pickup_time"]');
+                const returnTimeField = document.querySelector('input[name="return_time"]');
+                pickupTimeField?.addEventListener('change', function () {
+                    updateCarRentalState(false);
+                });
+                returnTimeField?.addEventListener('change', function () {
+                    updateCarRentalState(false);
+                });
+                pickupTimeField?.addEventListener('input', function () {
+                    updateCarRentalState(false);
+                });
+                returnTimeField?.addEventListener('input', function () {
+                    updateCarRentalState(false);
+                });
+            };
+
+            bindCarRentalState();
+            updateCarRentalState(false);
+
+            if (bookingUpdateSearchForm) {
+                bookingUpdateSearchForm.addEventListener('submit', function (ev) {
+                    if (isCarRentalService() && !hasCarRentalTimes()) {
+                        ev.preventDefault();
+                        alert('Please provide pickup and return times for car rental search before updating.');
+                        updateCarRentalState(false);
+                        return false;
+                    }
+                });
+            }
 
             if (bookingAddForm) {
                 bookingAddForm.addEventListener('submit', function (ev) {

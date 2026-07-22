@@ -560,6 +560,25 @@
             updateCategoryFields();
             updateGuestSummary();
 
+            const categorySearchForm = document.getElementById('category-search-form');
+            if (categorySearchForm) {
+                categorySearchForm.addEventListener('submit', function (event) {
+                    const selectedCategory = categorySearchForm.querySelector('input[name="category"]:checked')?.value || '';
+                    if (selectedCategory === 'transport') {
+                        const st = categorySearchForm.querySelector('select[name="service_type"]')?.value || 'route';
+                        if (st === 'car_rental') {
+                            const pickupTime = categorySearchForm.querySelector('input[name="arrival_time"]')?.value || '';
+                            const dropoffTime = categorySearchForm.querySelector('input[name="return_time"]')?.value || '';
+                            if (!pickupTime || !dropoffTime) {
+                                event.preventDefault();
+                                alert('For Car rental please provide pickup and return times first.');
+                                return false;
+                            }
+                        }
+                    }
+                });
+            }
+
             // Handle guest cell expand/collapse
             if (guestCell && guestSummary) {
                 guestSummary.addEventListener('click', function () {
