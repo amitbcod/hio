@@ -3248,4 +3248,8 @@ div#transport-price-summary {
     .hero-slides {
          min-height: 680px;
     }
+
+    .filter-note {
+        margin-top: 20px;
+    }
 }
