@@ -883,7 +883,7 @@
             }
 
             .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown-content {
-                max-height: 140px;
+                max-height: 195px;
             }
 
             /* .category-search-cell--transport .ts-wrapper.category-search-select {
