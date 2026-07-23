@@ -512,6 +512,8 @@ class TripController extends Controller
         $mealPlan = $isTransport
             ? (($booking->route_from || $booking->route_to) ? trim(($booking->route_from ?? '') . ' → ' . ($booking->route_to ?? '')) : 'N/A')
             : ($booking->meal_plan ?? $booking->package_name ?? 'N/A');
+        $vehicleRegistration = $isTransport ? ($transport->registration_number ?? 'N/A') : 'N/A';
+        $seatingCapacity = $isTransport ? ($transport->seating_capacity ? (int)$transport->seating_capacity . ' Seats' : 'N/A') : 'N/A';
         $specialRequests = $booking->special_request ?? $booking->special_requests ?? 'None';
         $bookingNotes = $booking->notes ?? $booking->booking_notes ?? '-';
 
@@ -543,11 +545,36 @@ class TripController extends Controller
         $roomTypeSafe = e($roomType);
         $occupancySafe = e($occupancy);
         $mealPlanSafe = e($mealPlan);
+        $vehicleRegistrationSafe = e($vehicleRegistration);
+        $seatingCapacitySafe = e($seatingCapacity);
         $specialRequestsSafe = e($specialRequests);
         $bookingNotesSafe = e($bookingNotes);
         $infoLabelCheckIn = e($isTransport ? 'Pickup Date / Time' : ($isActivity ? 'Activity Date / Time' : 'Check-in Date / Time'));
         $infoLabelCheckOut = e($isTransport ? 'Return Date / Time' : ($isActivity ? 'Activity Date / Time' : 'Check-out Date / Time'));
         $infoLabelDaysNights = e($isTransport ? 'Route' : ($isActivity ? 'Number of Days' : 'Number of Nights'));
+        $mealPlanLabel = e($isTransport ? 'Route' : 'Meal Plan');
+        
+        // Skip Days/Nights row for transport (already shown as Route in Meal Plan section)
+        $daysNightsRowHtml = '';
+        if (!$isTransport) {
+            $daysNightsRowHtml = '<tr>
+                <td class="label">{$infoLabelDaysNights}</td>
+                <td><strong style="color:#000000">{$nightsSafe}</strong></td>
+              </tr>';
+        }
+        
+        // Transport-specific details rows
+        $transportDetailRows = '';
+        if ($isTransport) {
+            $transportDetailRows = '<tr>';
+            $transportDetailRows .= '<td class="label">Vehicle Registration</td>';
+            $transportDetailRows .= '<td><strong style="color:#000000">' . $vehicleRegistrationSafe . '</strong></td>';
+            $transportDetailRows .= '</tr>';
+            $transportDetailRows .= '<tr>';
+            $transportDetailRows .= '<td class="label">Seating Capacity</td>';
+            $transportDetailRows .= '<td><strong style="color:#000000">' . $seatingCapacitySafe . '</strong></td>';
+            $transportDetailRows .= '</tr>';
+        }
         
         // Get assigned drivers for transport booking
         $driversHtml = '';
@@ -702,10 +729,7 @@ class TripController extends Controller
                 <td class="label">{$infoLabelCheckOut}</td>
                 <td><strong style="color:#000000">{$checkOutDisplaySafe}</strong></td>
               </tr>
-              <tr>
-                <td class="label">{$infoLabelDaysNights}</td>
-                <td><strong style="color:#000000">{$nightsSafe}</strong></td>
-              </tr>
+              {$daysNightsRowHtml}
               <tr>
                 <td class="label">{$infoLabelType}</td>
                 <td><strong style="color:#000000">{$roomTypeSafe}</strong></td>
@@ -715,9 +739,10 @@ class TripController extends Controller
                 <td><strong style="color:#000000">{$occupancySafe}</strong></td>
               </tr>
               <tr>
-                <td class="label">Meal Plan</td>
+                <td class="label">{$mealPlanLabel}</td>
                 <td><strong style="color:#000000">{$mealPlanSafe}</strong></td>
               </tr>
+              {$transportDetailRows}
               <tr>
                 <td class="label">Special Requests</td>
                 <td><strong style="color:#000000">{$specialRequestsSafe}</strong></td>
