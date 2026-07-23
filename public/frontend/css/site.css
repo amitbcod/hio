@@ -2970,6 +2970,10 @@ div#transport-price-summary {
     font-weight: 800;
 } 
 
+.focus .ts-control {
+    box-shadow: none !important;
+    outline: 0;
+}
 
 
 @media (max-width: 1120px) {
