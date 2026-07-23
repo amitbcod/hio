@@ -1498,7 +1498,7 @@ strong {
 
 .home-main-search {
     position: absolute;
-    bottom: 140px;
+    bottom: 180px;
     max-width: 1280px;
     left: 50%;
     transform: translate(-50%, 0);
@@ -1854,7 +1854,7 @@ button#cancelModalBtn {
 }
 
 .category-search-cell .guest-rooms-row label {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     color: #1b2d55;
     width: 130px;
