@@ -173,10 +173,9 @@ class TravelerAuthController extends Controller
         $email = strtolower(trim($request->input('email')));
         $token = $request->input('token');
         $record = DB::table('password_reset_tokens')->where('email', $email)->first();
-        $expireMinutes = config('auth.passwords.travelers.expire', 60);
 
-        if (! $record || ! Hash::check($token, $record->token) || Carbon::parse($record->created_at)->addMinutes($expireMinutes)->isPast()) {
-            return back()->withErrors(['email' => 'Invalid or expired reset token.'])->withInput();
+        if (! $record || ! Hash::check($token, $record->token)) {
+            return back()->withErrors(['email' => 'Invalid reset token.'])->withInput();
         }
 
         $account = TravelerAccount::where('email', $email)->first();
