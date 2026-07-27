@@ -28,6 +28,8 @@
     <a href="{{ route('admin.policy-templates.index', ['service' => 'accommodation']) }}" class="list-group-item list-group-item-action {{ request()->is('admin/policy-templates*') && request('service')=='accommodation' ? 'active' : '' }}">Accommodation</a>
     <a href="{{ route('admin.policy-templates.index', ['service' => 'activity']) }}" class="list-group-item list-group-item-action {{ request()->is('admin/policy-templates*') && request('service')=='activity' ? 'active' : '' }}">Activity</a>
     <a href="{{ route('admin.vehicle-types.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/vehicle-types*') ? 'active' : '' }}">Vehicle Types</a>
+    <a href="{{ route('admin.regions.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/regions*') ? 'active' : '' }}">Regions</a>
+    <a href="{{ route('admin.transport-service-route-pairs.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/transport-service-route-pairs*') ? 'active' : '' }}">Transport Service Route Pairs</a>
     <a href="{{ route('admin.places.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/places*') ? 'active' : '' }}">Hotel / City Mapping</a>
     @if(Route::has('admin.static-pages.index'))
         <a href="{{ route('admin.static-pages.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/static-pages*') ? 'active' : '' }} font-weight-bold">Pages</a>

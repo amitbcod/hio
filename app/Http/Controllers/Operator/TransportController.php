@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Operator;
 
 use App\Http\Controllers\Controller;
+use App\Models\Region;
 use App\Models\Transport;
 use App\Models\TransportRate;
 use App\Models\TransportBooking;
@@ -401,6 +402,93 @@ class TransportController extends Controller
     // Step 2: Routes & Pricing
     // ════════════════════════════════════════════════════════════════════════
 
+    private function getTransportPricingServiceDefinitions(array $regions): array
+    {
+        $regionOptions = array_values(array_unique(array_filter(array_map('trim', $regions))));
+        $regionOptions = array_values(array_unique(array_merge(['Airport'], $regionOptions)));
+        $baseRegions = array_values(array_values(array_filter($regionOptions, fn ($region) => $region !== 'Airport')));
+
+        $airportPairs = array_map(fn ($region) => ['route_from' => 'Airport', 'route_to' => $region], $baseRegions);
+        $interRegionPairs = [];
+        foreach ($baseRegions as $fromRegion) {
+            foreach ($baseRegions as $toRegion) {
+                if ($fromRegion !== $toRegion) {
+                    $interRegionPairs[] = ['route_from' => $fromRegion, 'route_to' => $toRegion];
+                }
+            }
+        }
+
+        $configuredPairs = \App\Models\TransportServiceRoutePair::query()
+            ->where('is_active', true)
+            ->get()
+            ->groupBy('service_type');
+
+        return [
+            'airport_transfer' => [
+                'label' => 'Airport Transfer',
+                'pairs' => $configuredPairs->has('airport_transfer')
+                    ? $configuredPairs['airport_transfer']->map(fn ($pair) => ['route_from' => $pair->route_from, 'route_to' => $pair->route_to])->values()->all()
+                    : $airportPairs,
+            ],
+            'activity_transfer' => [
+                'label' => 'Activity Transfer',
+                'pairs' => $configuredPairs->has('activity_transfer')
+                    ? $configuredPairs['activity_transfer']->map(fn ($pair) => ['route_from' => $pair->route_from, 'route_to' => $pair->route_to])->values()->all()
+                    : array_values(array_merge($airportPairs, $interRegionPairs)),
+            ],
+            'full_day_sightseeing' => [
+                'label' => 'Full Day Sightseeing',
+                'pairs' => $configuredPairs->has('full_day_sightseeing')
+                    ? $configuredPairs['full_day_sightseeing']->map(fn ($pair) => ['route_from' => $pair->route_from, 'route_to' => $pair->route_to])->values()->all()
+                    : array_values(array_merge($airportPairs, $interRegionPairs)),
+            ],
+        ];
+    }
+
+    private function buildServiceRouteEntries(array $serviceDefinitions, array $savedRoutes, $existingRoutes, string $serviceKey): array
+    {
+        $serviceDefinition = $serviceDefinitions[$serviceKey] ?? ['label' => ucfirst(str_replace('_', ' ', $serviceKey)), 'pairs' => []];
+        $routeEntries = [];
+        $existingRouteCollection = collect($existingRoutes);
+
+        foreach ($serviceDefinition['pairs'] as $pair) {
+            $pairKey = $pair['route_from'] . '-' . $pair['route_to'];
+            $existingRoute = $existingRouteCollection->first(function ($route) use ($pairKey, $serviceKey) {
+                $routeFrom = $route->route_from ?? $route->pickup_value;
+                $routeTo = $route->route_to ?? $route->dropoff_value;
+                $routeService = $route->service_type ?? 'airport_transfer';
+                return $routeService === $serviceKey && ($routeFrom . '-' . $routeTo) === $pairKey;
+            });
+
+            if (!empty($savedRoutes)) {
+                $savedRoute = collect($savedRoutes)->first(function ($route) use ($serviceKey, $pair) {
+                    $routeService = $route['service_type'] ?? 'airport_transfer';
+                    return $routeService === $serviceKey && (($route['route_from'] ?? '') === $pair['route_from']) && (($route['route_to'] ?? '') === $pair['route_to']);
+                });
+                if ($savedRoute) {
+                    $routeEntries[] = $savedRoute;
+                    continue;
+                }
+            }
+
+            $routeEntries[] = [
+                'route_id' => $existingRoute->route_id ?? '',
+                'service_type' => $serviceKey,
+                'route_from' => $pair['route_from'],
+                'route_to' => $pair['route_to'],
+                'route_type' => $existingRoute->route_type ?? 'Route',
+                'pickup_type' => $existingRoute->pickup_type ?? 'Location zone',
+                'pickup_value' => $existingRoute->pickup_value ?? $pair['route_from'],
+                'dropoff_type' => $existingRoute->dropoff_type ?? 'Location zone',
+                'dropoff_value' => $existingRoute->dropoff_value ?? $pair['route_to'],
+                'duration_estimate' => $existingRoute->duration_estimate ?? null,
+                'pricing' => $existingRoute->pricing ?? [],
+            ];
+        }
+
+        return $routeEntries;
+    }
+
     public function step2RoutesPricing(Transport $transport)
     {
         $operator = Auth::guard('operator')->user() ?? Auth::guard('operator_staff')->user();
@@ -410,8 +498,19 @@ class TransportController extends Controller
 
         $routes = $transport->routes()->get();
         $vehicleTypes = TransportVehicleType::activeList();
+        $regionOptions = Region::orderBy('name')->pluck('name')->toArray();
+        $serviceDefinitions = $this->getTransportPricingServiceDefinitions($regionOptions);
 
-        return view('operator.transport.step2-routes-pricing', compact('transport', 'routes', 'vehicleTypes'));
+        $serviceGroups = [];
+        $savedRoutes = old('routes', []);
+        foreach ($serviceDefinitions as $serviceKey => $serviceDefinition) {
+            $serviceGroups[$serviceKey] = [
+                'label' => $serviceDefinition['label'],
+                'routes' => $this->buildServiceRouteEntries($serviceDefinitions, $savedRoutes, $routes, $serviceKey),
+            ];
+        }
+
+        return view('operator.transport.step2-routes-pricing', compact('transport', 'routes', 'vehicleTypes', 'serviceGroups', 'regionOptions'));
     }
 
     public function saveStep2RoutesPricing(Request $request, Transport $transport)
@@ -421,11 +520,17 @@ class TransportController extends Controller
             abort(403);
         }
 
+        $regionOptions = Region::orderBy('name')->pluck('name')->toArray();
+        $regionOptions = array_values(array_unique(array_merge(['Airport'], array_filter(array_map('trim', $regionOptions)))));
+        $regionRule = 'required|string|in:' . implode(',', $regionOptions);
+        $serviceTypeRule = 'required|string|in:airport_transfer,activity_transfer,full_day_sightseeing';
+
         $validator = Validator::make($request->all(), [
             'routes' => 'required|array|min:1',
             'routes.*.route_id' => 'nullable|string|max:100',
-            'routes.*.route_from' => 'required|string|in:Airport,North,South',
-            'routes.*.route_to' => 'required|string|in:Airport,North,South',
+            'routes.*.service_type' => $serviceTypeRule,
+            'routes.*.route_from' => $regionRule,
+            'routes.*.route_to' => $regionRule,
             'routes.*.route_type' => 'nullable|in:Airport,Route,Hourly',
             'routes.*.pickup_type' => 'nullable|in:Airport,Address,Hotel,Location zone',
             'routes.*.pickup_value' => 'nullable|string|max:255',
@@ -505,9 +610,11 @@ class TransportController extends Controller
             $dropoffType = $routeData['dropoff_type'] ?? 'Location zone';
             $pickupValue = $routeData['pickup_value'] ?? $routeFrom;
             $dropoffValue = $routeData['dropoff_value'] ?? $routeTo;
+            $serviceType = $routeData['service_type'] ?? 'airport_transfer';
 
             $transport->routes()->create([
                 'route_id' => $routeId,
+                'service_type' => $serviceType,
                 'route_type' => $routeType,
                 'pickup_type' => $pickupType,
                 'pickup_value' => $pickupValue,

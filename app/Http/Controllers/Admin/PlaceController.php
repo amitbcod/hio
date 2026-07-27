@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Place;
+use App\Models\Region;
 use Illuminate\Http\Request;
 
 class PlaceController extends Controller
@@ -17,16 +18,19 @@ class PlaceController extends Controller
 
     public function create()
     {
-        $regions = ['Airport', 'South', 'North'];
+        $regions = Region::orderBy('name')->pluck('name')->toArray();
 
         return view('admin.places.create', compact('regions'));
     }
 
     public function store(Request $request)
     {
+        $regionNames = Region::pluck('name')->toArray();
+        $regionValidation = 'required|in:' . implode(',', $regionNames);
+
         $data = $request->validate([
             'place_name' => 'required|string|max:100|unique:places,place_name',
-            'route_region' => 'required|in:Airport,South,North',
+            'route_region' => $regionValidation,
             'is_active' => 'nullable',
         ]);
 
@@ -39,16 +43,19 @@ class PlaceController extends Controller
 
     public function edit(Place $place)
     {
-        $regions = ['Airport', 'South', 'North'];
+        $regions = Region::orderBy('name')->pluck('name')->toArray();
 
         return view('admin.places.edit', compact('place', 'regions'));
     }
 
     public function update(Request $request, Place $place)
     {
+        $regionNames = Region::pluck('name')->toArray();
+        $regionValidation = 'required|in:' . implode(',', $regionNames);
+
         $data = $request->validate([
             'place_name' => 'required|string|max:100|unique:places,place_name,' . $place->id,
-            'route_region' => 'required|in:Airport,South,North',
+            'route_region' => $regionValidation,
             'is_active' => 'nullable',
         ]);
 

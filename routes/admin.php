@@ -240,4 +240,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('vehicle-types/{vehicleType}/edit', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'edit'])->name('vehicle-types.edit');
     Route::put('vehicle-types/{vehicleType}', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'update'])->name('vehicle-types.update');
     Route::delete('vehicle-types/{vehicleType}', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'destroy'])->name('vehicle-types.destroy');
+
+    // Admin regions management (CRUD)
+    Route::get('regions', [\App\Http\Controllers\Admin\RegionController::class, 'index'])->name('regions.index');
+    Route::get('regions/create', [\App\Http\Controllers\Admin\RegionController::class, 'create'])->name('regions.create');
+    Route::post('regions', [\App\Http\Controllers\Admin\RegionController::class, 'store'])->name('regions.store');
+    Route::get('regions/{region}/edit', [\App\Http\Controllers\Admin\RegionController::class, 'edit'])->name('regions.edit');
+    Route::post('regions/{region}', [\App\Http\Controllers\Admin\RegionController::class, 'update'])->name('regions.update');
+    Route::delete('regions/{region}', [\App\Http\Controllers\Admin\RegionController::class, 'destroy'])->name('regions.destroy');
+
+    Route::get('transport-service-route-pairs', [\App\Http\Controllers\Admin\TransportServiceRoutePairController::class, 'index'])->name('transport-service-route-pairs.index');
+    Route::post('transport-service-route-pairs', [\App\Http\Controllers\Admin\TransportServiceRoutePairController::class, 'store'])->name('transport-service-route-pairs.store');
+    Route::post('transport-service-route-pairs/{transportServiceRoutePair}', [\App\Http\Controllers\Admin\TransportServiceRoutePairController::class, 'update'])->name('transport-service-route-pairs.update');
+    Route::delete('transport-service-route-pairs/{transportServiceRoutePair}', [\App\Http\Controllers\Admin\TransportServiceRoutePairController::class, 'destroy'])->name('transport-service-route-pairs.destroy');
 });

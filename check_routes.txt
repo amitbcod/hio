@@ -1,0 +1,5 @@
+php artisan tinker
+
+DB::table('transport_service_route_pairs')->count()
+DB::table('transport_service_route_pairs')->selectRaw('service_type, COUNT(*) as count')->groupBy('service_type')->get()
+DB::table('transport_service_route_pairs')->limit(3)->get()

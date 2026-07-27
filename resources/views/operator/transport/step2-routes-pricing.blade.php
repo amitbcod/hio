@@ -20,102 +20,85 @@
 
             <form id="step2-routes-pricing-form" method="POST" action="{{ route('operator.transport.step2.save', $transport->id) }}">
                 @csrf
-                <div id="routes-container">
-                    @php
-                        // Fixed set of region pairs we require pricing for
-                        $pairs = [
-                            ['route_from' => 'Airport', 'route_to' => 'North'],
-                            ['route_from' => 'Airport', 'route_to' => 'South'],
-                            ['route_from' => 'North', 'route_to' => 'South'],
-                            ['route_from' => 'South', 'route_to' => 'North'],
-                            ['route_from' => 'North', 'route_to' => 'North'],
-                            ['route_from' => 'South', 'route_to' => 'South'],
-                        ];
+                <div class="mb-4">
+                    <ul class="nav nav-tabs" id="service-tabs" role="tablist">
+                        @foreach($serviceGroups as $serviceKey => $serviceGroup)
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {{ $loop->first ? 'active' : '' }}" id="{{ $serviceKey }}-tab" data-bs-toggle="tab" data-bs-target="#{{ $serviceKey }}-pane" type="button" role="tab" aria-controls="{{ $serviceKey }}-pane" aria-selected="{{ $loop->first ? 'true' : 'false' }}">
+                                    {{ $serviceGroup['label'] }}
+                                </button>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
 
-                        $existing = collect($routes)->mapWithKeys(function ($route) {
-                            $from = $route->route_from ?? $route->pickup_value;
-                            $to = $route->route_to ?? $route->dropoff_value;
-                            return [$from . '-' . $to => $route];
-                        });
+                <div class="tab-content" id="service-tabs-content">
+                    @foreach($serviceGroups as $serviceKey => $serviceGroup)
+                        <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="{{ $serviceKey }}-pane" role="tabpanel" aria-labelledby="{{ $serviceKey }}-tab">
+                            <div class="alert alert-light border mb-3">
+                                <strong>{{ $serviceGroup['label'] }}</strong> pricing uses the region pairs configured for this service.
+                            </div>
+                            <div id="routes-container-{{ $serviceKey }}">
+                                @php $serviceRoutes = $serviceGroup['routes']; @endphp
+                                @foreach($serviceRoutes as $index => $route)
+                                    @php $routeIndexValue = $loop->parent->index * 1000 + $index; @endphp
+                                    <div class="route-card" style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;">
+                                        <h5 style="margin:0 0 8px 0;">{{ $route['route_from'] }} → {{ $route['route_to'] }}</h5>
 
-                        // Prefer old input on validation error
-                        if (old('routes')) {
-                            $savedRoutes = old('routes');
-                        } else {
-                            $savedRoutes = [];
-                            foreach ($pairs as $p) {
-                                $key = $p['route_from'] . '-' . $p['route_to'];
-                                $route = $existing[$key] ?? null;
-                                $savedRoutes[] = [
-                                    'route_id' => $route->route_id ?? '',
-                                    'route_from' => $p['route_from'],
-                                    'route_to' => $p['route_to'],
-                                    'route_type' => $route->route_type ?? 'Route',
-                                    'pickup_type' => $route->pickup_type ?? 'Location zone',
-                                    'pickup_value' => $route->pickup_value ?? $p['route_from'],
-                                    'dropoff_type' => $route->dropoff_type ?? 'Location zone',
-                                    'dropoff_value' => $route->dropoff_value ?? $p['route_to'],
-                                    'duration_estimate' => $route->duration_estimate ?? null,
-                                    'pricing' => $route->pricing ?? [],
-                                ];
-                            }
-                        }
-                    @endphp
+                                        <input type="hidden" name="routes[{{ $routeIndexValue }}][route_id]" value="{{ $route['route_id'] ?? '' }}">
+                                        <input type="hidden" name="routes[{{ $routeIndexValue }}][service_type]" value="{{ $serviceKey }}">
+                                        <input type="hidden" name="routes[{{ $routeIndexValue }}][route_from]" value="{{ $route['route_from'] }}">
+                                        <input type="hidden" name="routes[{{ $routeIndexValue }}][route_to]" value="{{ $route['route_to'] }}">
+                                        <input type="hidden" name="routes[{{ $routeIndexValue }}][route_type]" value="{{ $route['route_type'] ?? 'Route' }}">
+                                        <input type="hidden" name="routes[{{ $routeIndexValue }}][pickup_type]" value="{{ $route['pickup_type'] ?? 'Location zone' }}">
+                                        <input type="hidden" name="routes[{{ $routeIndexValue }}][pickup_value]" value="{{ $route['pickup_value'] ?? $route['route_from'] }}">
+                                        <input type="hidden" name="routes[{{ $routeIndexValue }}][dropoff_type]" value="{{ $route['dropoff_type'] ?? 'Location zone' }}">
+                                        <input type="hidden" name="routes[{{ $routeIndexValue }}][dropoff_value]" value="{{ $route['dropoff_value'] ?? $route['route_to'] }}">
 
-                    @foreach($savedRoutes as $index => $route)
-                        <div class="route-card" style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;">
-                            <h5 style="margin:0 0 8px 0;">{{ $route['route_from'] }} → {{ $route['route_to'] }}</h5>
+                                        <div style="background:#f8f9fa;border-radius:10px;padding:16px;margin-top:8px;">
+                                            <h6 style="margin-bottom:12px;">Pricing ({{ $vehicleTypes[$transport->vehicle_type] ?? $transport->vehicle_type }})</h6>
 
-                            <input type="hidden" name="routes[{{ $index }}][route_id]" value="{{ $route['route_id'] ?? '' }}">
-                            <input type="hidden" name="routes[{{ $index }}][route_from]" value="{{ $route['route_from'] }}">
-                            <input type="hidden" name="routes[{{ $index }}][route_to]" value="{{ $route['route_to'] }}">
-                            <input type="hidden" name="routes[{{ $index }}][route_type]" value="{{ $route['route_type'] ?? 'Route' }}">
-                            <input type="hidden" name="routes[{{ $index }}][pickup_type]" value="{{ $route['pickup_type'] ?? 'Location zone' }}">
-                            <input type="hidden" name="routes[{{ $index }}][pickup_value]" value="{{ $route['pickup_value'] ?? $route['route_from'] }}">
-                            <input type="hidden" name="routes[{{ $index }}][dropoff_type]" value="{{ $route['dropoff_type'] ?? 'Location zone' }}">
-                            <input type="hidden" name="routes[{{ $index }}][dropoff_value]" value="{{ $route['dropoff_value'] ?? $route['route_to'] }}">
+                                            @php
+                                                $pricing = $route['pricing'] ?? [];
+                                            @endphp
 
-                            <div style="background:#f8f9fa;border-radius:10px;padding:16px;margin-top:8px;">
-                                <h6 style="margin-bottom:12px;">Pricing ({{ $vehicleTypes[$transport->vehicle_type] ?? $transport->vehicle_type }})</h6>
-
-                                @php
-                                    $pricing = $route['pricing'] ?? [];
-                                @endphp
-
-                                <div class="row mb-3">
-                                    <div class="col-md-4"><label class="form-label">Single trip price (per vehicle)</label></div>
-                                    <div class="col-md-8"><input type="number" name="routes[{{ $index }}][pricing][default_price]" class="form-control" value="{{ $pricing['default_price'] ?? '' }}" min="0" step="0.01"></div>
-                                </div>
-
-                                <div class="row mb-3">
-                                    <div class="col-md-4"><label class="form-label">Return trip price (per vehicle)</label></div>
-                                    <div class="col-md-8"><input type="number" name="routes[{{ $index }}][pricing][return_price]" class="form-control" value="{{ $pricing['return_price'] ?? '' }}" min="0" step="0.01"></div>
-                                </div>
-
-                                <div class="mt-3">
-                                    <label class="form-label">Seasonal Prices</label>
-                                    <p class="text-muted small mb-2">If a seasonal date range matches the booking date, that price will be used. Otherwise the default single trip price is applied.</p>
-                                    <div class="seasonal-list" data-index="{{ $index }}">
-                                        @php $seasonalEntries = $pricing['seasonal'] ?? []; @endphp
-                                        @foreach($seasonalEntries as $seasonIndex => $season)
-                                            <div class="season-row mb-2">
-                                                <div class="row gx-2">
-                                                    <div class="col-md-2"><input type="date" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][start]" class="form-control" value="{{ $season['start'] ?? $season['start_date'] ?? '' }}"></div>
-                                                    <div class="col-md-2"><input type="date" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][end]" class="form-control" value="{{ $season['end'] ?? $season['end_date'] ?? '' }}"></div>
-                                                    <div class="col-md-2"><input type="number" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][price]" class="form-control" placeholder="Single trip" min="0" step="0.01" value="{{ $season['price'] ?? '' }}"></div>
-                                                    <div class="col-md-2"><input type="number" name="routes[{{ $index }}][pricing][seasonal][{{ $seasonIndex }}][return_price]" class="form-control" placeholder="Return trip" min="0" step="0.01" value="{{ $season['return_price'] ?? '' }}"></div>
-                                                    <div class="col-md-2 d-flex align-items-center"><button type="button" class="btn btn-sm btn-danger w-100" onclick="this.closest('.season-row').remove();">Remove</button></div>
-                                                </div>
+                                            <div class="row mb-3">
+                                                <div class="col-md-4"><label class="form-label">Single trip price (per vehicle)</label></div>
+                                                <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][default_price]" class="form-control" value="{{ $pricing['default_price'] ?? '' }}" min="0" step="0.01"></div>
                                             </div>
-                                        @endforeach
-                                    </div>
-                                    <div class="mt-2">
-                                        <button type="button" class="btn btn-sm btn-secondary" onclick="addSeason({{ $index }});">Add Seasonal Price</button>
-                                    </div>
-                                    <div class="route-errors text-danger mt-2" id="route-errors-{{ $index }}"></div>
-                                </div>
 
-                                <input type="hidden" name="routes[{{ $index }}][pricing][vehicle_type]" value="{{ $transport->vehicle_type }}">
+                                            <div class="row mb-3">
+                                                <div class="col-md-4"><label class="form-label">Return trip price (per vehicle)</label></div>
+                                                <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][return_price]" class="form-control" value="{{ $pricing['return_price'] ?? '' }}" min="0" step="0.01"></div>
+                                            </div>
+
+                                            <div class="mt-3">
+                                                <label class="form-label">Seasonal Prices</label>
+                                                <p class="text-muted small mb-2">If a seasonal date range matches the booking date, that price will be used. Otherwise the default single trip price is applied.</p>
+                                                <div class="seasonal-list" data-index="{{ $routeIndexValue }}">
+                                                    @php $seasonalEntries = $pricing['seasonal'] ?? []; @endphp
+                                                    @foreach($seasonalEntries as $seasonIndex => $season)
+                                                        <div class="season-row mb-2">
+                                                            <div class="row gx-2">
+                                                                <div class="col-md-2"><input type="date" name="routes[{{ $routeIndexValue }}][pricing][seasonal][{{ $seasonIndex }}][start]" class="form-control" value="{{ $season['start'] ?? $season['start_date'] ?? '' }}"></div>
+                                                                <div class="col-md-2"><input type="date" name="routes[{{ $routeIndexValue }}][pricing][seasonal][{{ $seasonIndex }}][end]" class="form-control" value="{{ $season['end'] ?? $season['end_date'] ?? '' }}"></div>
+                                                                <div class="col-md-2"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][seasonal][{{ $seasonIndex }}][price]" class="form-control" placeholder="Single trip" min="0" step="0.01" value="{{ $season['price'] ?? '' }}"></div>
+                                                                <div class="col-md-2"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][seasonal][{{ $seasonIndex }}][return_price]" class="form-control" placeholder="Return trip" min="0" step="0.01" value="{{ $season['return_price'] ?? '' }}"></div>
+                                                                <div class="col-md-2 d-flex align-items-center"><button type="button" class="btn btn-sm btn-danger w-100" onclick="this.closest('.season-row').remove();">Remove</button></div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                                <div class="mt-2">
+                                                    <button type="button" class="btn btn-sm btn-secondary" onclick="addSeason({{ $routeIndexValue }});">Add Seasonal Price</button>
+                                                </div>
+                                                <div class="route-errors text-danger mt-2" id="route-errors-{{ $routeIndexValue }}"></div>
+                                            </div>
+
+                                            <input type="hidden" name="routes[{{ $routeIndexValue }}][pricing][vehicle_type]" value="{{ $transport->vehicle_type }}">
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
                     @endforeach
@@ -128,7 +111,6 @@
 
 @push('scripts')
 <script>
-    let routeIndex = {{ count($savedRoutes) }};
     const vehicleTypeLabel = @json($vehicleTypes[$transport->vehicle_type] ?? $transport->vehicle_type);
     const vehicleTypeValue = @json($transport->vehicle_type);
     const seasonalCounts = {};
@@ -278,111 +260,5 @@
         }
     });
 
-    function addRoute() {
-        const container = document.getElementById('routes-container');
-        const routeCard = document.createElement('div');
-        routeCard.className = 'route-card';
-        routeCard.style = 'background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;';
-
-        routeCard.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 style="margin:0;">Route ${routeIndex + 1}</h5>
-                <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.route-card').remove();">Remove</button>
-            </div>
-            <div class="row mb-3">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Route Type</label>
-                    <select name="routes[${routeIndex}][route_type]" class="form-control" required>
-                        <option value="Airport">Airport</option>
-                        <option value="Route">Route</option>
-                        <option value="Hourly">Hourly</option>
-                    </select>
-                </div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Route From</label>
-                    <select name="routes[${routeIndex}][route_from]" class="form-control" required>
-                        <option value="Airport">Airport</option>
-                        <option value="North">North</option>
-                        <option value="South">South</option>
-                    </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Route To</label>
-                    <select name="routes[${routeIndex}][route_to]" class="form-control" required>
-                        <option value="Airport">Airport</option>
-                        <option value="North">North</option>
-                        <option value="South">South</option>
-                    </select>
-                </div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Pickup Type</label>
-                    <select name="routes[${routeIndex}][pickup_type]" class="form-control" required>
-                        <option value="Airport">Airport</option>
-                        <option value="Address">Address</option>
-                        <option value="Hotel">Hotel</option>
-                        <option value="Location zone">Location zone</option>
-                    </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Pickup Value</label>
-                    <input type="text" name="routes[${routeIndex}][pickup_value]" class="form-control" required>
-                </div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Drop-off Type</label>
-                    <select name="routes[${routeIndex}][dropoff_type]" class="form-control" required>
-                        <option value="Airport">Airport</option>
-                        <option value="Address">Address</option>
-                        <option value="Hotel">Hotel</option>
-                        <option value="Location zone">Location zone</option>
-                    </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Drop-off Value</label>
-                    <input type="text" name="routes[${routeIndex}][dropoff_value]" class="form-control" required>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Duration Estimate (minutes)</label>
-                <input type="number" name="routes[${routeIndex}][duration_estimate]" class="form-control">
-            </div>
-            <input type="hidden" name="routes[${routeIndex}][route_id]" value="">
-            <div style="background:#f8f9fa;border-radius:10px;padding:16px;">
-                <h6 style="margin-bottom:16px;">Pricing for this Vehicle (${vehicleTypeLabel})</h6>
-                <div class="row mb-3">
-                    <div class="col-md-5">
-                        <label class="form-label" style="font-weight:600;">Default Price</label>
-                    </div>
-                    <div class="col-md-7">
-                        <input type="number" name="routes[${routeIndex}][pricing][default_price]" class="form-control" placeholder="Default price (required if no seasonal rates)" min="0" step="0.01">
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-5">
-                        <label class="form-label" style="font-weight:600;">Return Price</label>
-                    </div>
-                    <div class="col-md-7">
-                        <input type="number" name="routes[${routeIndex}][pricing][return_price]" class="form-control" placeholder="Return price (optional)" min="0" step="0.01">
-                    </div>
-                </div>
-                <div class="seasonal-list" data-index="${routeIndex}">
-                    <h6 style="margin-top:12px;">Seasonal Prices</h6>
-                </div>
-                <div class="mt-2">
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="addSeason(${routeIndex});">Add Seasonal Price</button>
-                </div>
-                <div class="route-errors text-danger mt-2" id="route-errors-${routeIndex}"></div>
-                <input type="hidden" name="routes[${routeIndex}][pricing][vehicle_type]" value="${vehicleTypeValue}">
-            </div>
-        `;
-
-        container.appendChild(routeCard);
-        routeIndex++;
-    }
 </script>
 @endpush
