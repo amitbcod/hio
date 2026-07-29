@@ -20,6 +20,7 @@
 
             <form id="step2-routes-pricing-form" method="POST" action="{{ route('operator.transport.step2.save', $transport->id) }}">
                 @csrf
+                <input type="hidden" name="save_service" id="save_service" value="">
                 <div class="mb-4">
                     <ul class="nav nav-tabs" id="service-tabs" role="tablist">
                         @foreach($serviceGroups as $serviceKey => $serviceGroup)
@@ -42,7 +43,7 @@
                                 @php $serviceRoutes = $serviceGroup['routes']; @endphp
                                 @foreach($serviceRoutes as $index => $route)
                                     @php $routeIndexValue = $loop->parent->index * 1000 + $index; @endphp
-                                    <div class="route-card" style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;">
+                                    <div class="route-card" data-service="{{ $serviceKey }}" style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;">
                                         <h5 style="margin:0 0 8px 0;">{{ $route['route_from'] }} → {{ $route['route_to'] }}</h5>
 
                                         <input type="hidden" name="routes[{{ $routeIndexValue }}][route_id]" value="{{ $route['route_id'] ?? '' }}">
@@ -100,10 +101,12 @@
                                     </div>
                                 @endforeach
                             </div>
+                            <div class="mt-3">
+                                <button type="submit" name="save_service" value="{{ $serviceKey }}" class="btn btn-primary save-service-btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save {{ $serviceGroup['label'] }}</button>
+                            </div>
                         </div>
                     @endforeach
                 </div>
-                <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save Step 2</button>
             </form>
         </div>
     </div>
@@ -232,8 +235,19 @@
     }
 
     function validateAllRoutes(event) {
+        const form = event.target;
+        const saveServiceField = document.getElementById('save_service');
+        const saveService = saveServiceField ? saveServiceField.value : '';
         let valid = true;
-        const seasonalContainers = document.querySelectorAll('.seasonal-list');
+
+        const seasonalContainers = Array.from(document.querySelectorAll('.seasonal-list'))
+            .filter((container) => {
+                if (!saveService) {
+                    return true;
+                }
+                const routeCard = container.closest('.route-card');
+                return routeCard && routeCard.dataset.service === saveService;
+            });
 
         seasonalContainers.forEach((container) => {
             const routeIndex = container.dataset.index;
@@ -258,6 +272,15 @@
         if (form) {
             form.addEventListener('submit', validateAllRoutes);
         }
+
+        document.querySelectorAll('.save-service-btn').forEach((button) => {
+            button.addEventListener('click', function () {
+                const saveServiceField = document.getElementById('save_service');
+                if (saveServiceField) {
+                    saveServiceField.value = this.value;
+                }
+            });
+        });
     });
 
 </script>

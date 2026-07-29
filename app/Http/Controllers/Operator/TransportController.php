@@ -524,8 +524,14 @@ class TransportController extends Controller
         $regionOptions = array_values(array_unique(array_merge(['Airport'], array_filter(array_map('trim', $regionOptions)))));
         $regionRule = 'required|string|in:' . implode(',', $regionOptions);
         $serviceTypeRule = 'required|string|in:airport_transfer,activity_transfer,full_day_sightseeing';
+        $saveService = $request->input('save_service');
+        $routesPayload = $request->input('routes', []);
 
-        $validator = Validator::make($request->all(), [
+        if ($saveService) {
+            $routesPayload = array_values(array_filter($routesPayload, fn ($route) => ($route['service_type'] ?? null) === $saveService));
+        }
+
+        $validator = Validator::make(['routes' => $routesPayload], [
             'routes' => 'required|array|min:1',
             'routes.*.route_id' => 'nullable|string|max:100',
             'routes.*.service_type' => $serviceTypeRule,
@@ -542,30 +548,79 @@ class TransportController extends Controller
             'routes.*.pricing.default_price' => 'nullable|numeric|min:0',
             'routes.*.pricing.return_price' => 'nullable|numeric|min:0',
             'routes.*.pricing.seasonal' => 'nullable|array',
-            'routes.*.pricing.seasonal.*.start' => 'required_with:routes.*.pricing.seasonal|date',
-            'routes.*.pricing.seasonal.*.end' => 'required_with:routes.*.pricing.seasonal|date|after_or_equal:routes.*.pricing.seasonal.*.start',
-            'routes.*.pricing.seasonal.*.price' => 'required_with:routes.*.pricing.seasonal|numeric|min:0',
-            'routes.*.pricing.seasonal.*.return_price' => 'required_with:routes.*.pricing.seasonal|numeric|min:0',
+            'routes.*.pricing.seasonal.*.start' => 'nullable|date',
+            'routes.*.pricing.seasonal.*.end' => 'nullable|date|after_or_equal:routes.*.pricing.seasonal.*.start',
+            'routes.*.pricing.seasonal.*.price' => 'nullable|numeric|min:0',
+            'routes.*.pricing.seasonal.*.return_price' => 'nullable|numeric|min:0',
         ]);
 
-        $validator->after(function ($validator) use ($request) {
-            $routes = $request->input('routes', []);
+        $validator->after(function ($validator) use ($request, $routesPayload) {
+            $routes = $routesPayload;
+            $activeRouteCount = 0;
+
             foreach ($routes as $index => $routeData) {
                 $pricing = $routeData['pricing'] ?? [];
                 $defaultPrice = $pricing['default_price'] ?? null;
                 $seasonals = $pricing['seasonal'] ?? [];
+                $returnPrice = $pricing['return_price'] ?? null;
 
-                if (empty($seasonals) && $defaultPrice === null) {
+                $hasDefaultPrice = array_key_exists('default_price', $pricing) && $defaultPrice !== null && $defaultPrice !== '';
+                $hasReturnPrice = array_key_exists('return_price', $pricing) && $returnPrice !== null && $returnPrice !== '';
+                $hasSeasonalValues = false;
+
+                foreach ($seasonals as $seasonal) {
+                    if (!is_array($seasonal)) {
+                        continue;
+                    }
+                    foreach ($seasonal as $value) {
+                        if ($value !== null && $value !== '') {
+                            $hasSeasonalValues = true;
+                            break 2;
+                        }
+                    }
+                }
+
+                if (!$hasDefaultPrice && !$hasReturnPrice && !$hasSeasonalValues) {
+                    continue;
+                }
+
+                $activeRouteCount++;
+
+                if (!$hasSeasonalValues && !$hasDefaultPrice) {
                     $validator->errors()->add("routes.{$index}.pricing.default_price", 'Default price is required when no seasonal pricing is provided.');
                 }
 
                 $ranges = [];
                 foreach ($seasonals as $sIndex => $seasonal) {
-                    if (empty($seasonal['start']) || empty($seasonal['end'])) {
+                    if (!is_array($seasonal)) {
                         continue;
                     }
-                    $start = strtotime($seasonal['start']);
-                    $end = strtotime($seasonal['end']);
+
+                    $startValue = trim((string) ($seasonal['start'] ?? ''));
+                    $endValue = trim((string) ($seasonal['end'] ?? ''));
+                    $priceValue = $seasonal['price'] ?? null;
+                    $returnPriceValue = $seasonal['return_price'] ?? null;
+                    $hasSeasonRowValues = $startValue !== '' || $endValue !== '' || $priceValue !== null && $priceValue !== '' || $returnPriceValue !== null && $returnPriceValue !== '';
+
+                    if (!$hasSeasonRowValues) {
+                        continue;
+                    }
+
+                    if ($startValue === '' || $endValue === '' || $priceValue === null || $priceValue === '') {
+                        $validator->errors()->add("routes.{$index}.pricing.seasonal.{$sIndex}.start", 'Seasonal pricing rows require start, end, and price values.');
+                        $validator->errors()->add("routes.{$index}.pricing.seasonal.{$sIndex}.end", 'Seasonal pricing rows require start, end, and price values.');
+                        continue;
+                    }
+
+                    $start = strtotime($startValue);
+                    $end = strtotime($endValue);
+
+                    if ($start === false || $end === false) {
+                        $validator->errors()->add("routes.{$index}.pricing.seasonal.{$sIndex}.start", 'Seasonal dates must be valid.');
+                        $validator->errors()->add("routes.{$index}.pricing.seasonal.{$sIndex}.end", 'Seasonal dates must be valid.');
+                        continue;
+                    }
+
                     if ($start > $end) {
                         $validator->errors()->add("routes.{$index}.pricing.seasonal.{$sIndex}.end", 'Seasonal end date must be after or equal to start date.');
                         continue;
@@ -581,21 +636,52 @@ class TransportController extends Controller
                     $ranges[] = ['start' => $start, 'end' => $end];
                 }
             }
+
+            if ($activeRouteCount === 0) {
+                $validator->errors()->add('routes', 'Please provide at least one route pricing entry.');
+            }
         });
 
         $validator->validate();
 
         $data = $validator->validated();
 
-        $transport->routes()->delete();
+        if ($saveService) {
+            $transport->routes()->where('service_type', $saveService)->delete();
+        } else {
+            $transport->routes()->delete();
+        }
 
         foreach ($data['routes'] as $index => $routeData) {
             $routePricing = $routeData['pricing'] ?? [];
+            $defaultPrice = $routePricing['default_price'] ?? null;
+            $returnPrice = $routePricing['return_price'] ?? null;
+            $seasonals = $routePricing['seasonal'] ?? [];
+
+            $hasDefaultPrice = array_key_exists('default_price', $routePricing) && $defaultPrice !== null && $defaultPrice !== '';
+            $hasReturnPrice = array_key_exists('return_price', $routePricing) && $returnPrice !== null && $returnPrice !== '';
+            $hasSeasonalValues = false;
+            foreach ($seasonals as $seasonal) {
+                if (!is_array($seasonal)) {
+                    continue;
+                }
+                foreach ($seasonal as $value) {
+                    if ($value !== null && $value !== '') {
+                        $hasSeasonalValues = true;
+                        break 2;
+                    }
+                }
+            }
+
+            if (!$hasDefaultPrice && !$hasReturnPrice && !$hasSeasonalValues) {
+                continue;
+            }
+
             $pricing = [
                 'vehicle_type' => $routePricing['vehicle_type'] ?? $transport->vehicle_type,
-                'default_price' => $routePricing['default_price'] ?? null,
-                'return_price' => $routePricing['return_price'] ?? null,
-                'seasonal' => array_values($routePricing['seasonal'] ?? []),
+                'default_price' => $defaultPrice !== '' ? $defaultPrice : null,
+                'return_price' => $returnPrice !== '' ? $returnPrice : null,
+                'seasonal' => array_values($seasonals),
             ];
 
             $routeId = trim((string) ($routeData['route_id'] ?? ''));
@@ -628,6 +714,17 @@ class TransportController extends Controller
         }
 
         $transport->update(['step2_routes_pricing' => 1]);
+
+        if ($saveService) {
+            $serviceLabels = [
+                'airport_transfer' => 'Airport Transfer',
+                'activity_transfer' => 'Activity Transfer',
+                'full_day_sightseeing' => 'Full Day Sightseeing',
+            ];
+
+            return redirect()->route('operator.transport.step2.show', $transport->id)
+                ->with('success', ($serviceLabels[$saveService] ?? ucfirst(str_replace('_', ' ', $saveService))) . ' pricing saved.');
+        }
 
         return redirect()->route('operator.transport.step2.car_rental.show', $transport->id)->with('success', 'Routes and pricing saved. You can now add car rental prices.');
 
