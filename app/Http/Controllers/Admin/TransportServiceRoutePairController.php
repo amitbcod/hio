@@ -37,6 +37,8 @@ class TransportServiceRoutePairController extends Controller
             'route_from' => 'required|string',
             'route_to' => 'required|string',
             'is_active' => 'nullable|boolean',
+            'trip_time_minutes' => 'nullable|integer|min:0',
+            'buffer_time_minutes' => 'nullable|integer|min:0',
         ]);
 
         TransportServiceRoutePair::create($data + ['is_active' => (bool) ($request->boolean('is_active') ?? true)]);
@@ -55,6 +57,8 @@ class TransportServiceRoutePairController extends Controller
             'route_from' => 'required|string',
             'route_to' => 'required|string',
             'is_active' => 'nullable|boolean',
+            'trip_time_minutes' => 'nullable|integer|min:0',
+            'buffer_time_minutes' => 'nullable|integer|min:0',
         ]);
 
         $transportServiceRoutePair->update($data + ['is_active' => (bool) ($request->boolean('is_active') ?? true)]);

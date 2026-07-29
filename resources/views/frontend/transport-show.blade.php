@@ -9,9 +9,9 @@
             'pickup_date' => now()->format('Y-m-d'),
             'pickup_time' => '',
             'pickup_date_display' => now()->format('d-m-Y'),
-            'return_date' => now()->addDay()->format('Y-m-d'),
+            'return_date' => '',
             'return_time' => '',
-            'return_date_display' => now()->addDay()->format('d-m-Y'),
+            'return_date_display' => '',
             'passengers' => 1,
         ];
         $routes = $transport['routes_pricing'] ?? [];
@@ -20,8 +20,8 @@
         $serviceType = request()->query('service_type', 'route');
         $booking['pickup_date'] = trim((string) request()->query('pickup_date', request()->query('arrival_date', request()->query('check_in', $booking['pickup_date']))));
         $booking['pickup_time'] = trim((string) request()->query('pickup_time', request()->query('arrival_time', $booking['pickup_time'])));
-        $booking['return_date'] = trim((string) request()->query('return_date', request()->query('check_out', $booking['return_date'])));
-        $booking['return_time'] = trim((string) request()->query('return_time', $booking['return_time']));
+        $booking['return_date'] = trim((string) request()->query('return_date', ''));
+        $booking['return_time'] = trim((string) request()->query('return_time', ''));
         $booking['passengers'] = request()->query('passengers', $booking['passengers']);
         $detailQuery = http_build_query([
             'pickup_date' => $booking['pickup_date'],
@@ -67,7 +67,7 @@
         try {
             $pickupDateParam = request()->query('pickup_date') ?: request()->query('arrival_date') ?: request()->query('check_in') ?: null;
             $pickupTimeParam = request()->query('pickup_time') ?: request()->query('arrival_time') ?: null;
-            $returnDateParam = request()->query('return_date') ?: request()->query('return_date') ?: request()->query('check_out') ?: null;
+            $returnDateParam = request()->query('return_date') ?: null;
             $returnTimeParam = request()->query('return_time') ?: null;
 
             $debugInfo['params'] = [
@@ -299,14 +299,14 @@
                         <input type="hidden" id="transport-route-to" name="route_to" value="{{ $selectedRouteTo }}">
                         <input type="hidden" name="source" value="detail">
 
-                        <button id="booking-now-btn" type="submit" class="btn-secondary booking-btn">{{ __('transport.form.book_now') }}</button>
+                        <button id="booking-now-btn" type="button" class="btn-secondary booking-btn">{{ __('transport.form.book_now') }}</button>
                     </form>
 
                     <div class="booking-summary-line" id="transport-price-summary">
                         @if(($serviceType ?? 'route') === 'car_rental' && !empty($carRentalTotal))
                             <span>{{ __('transport.price') }}: USD {{ $carRentalTotal }}</span>
                         @else
-                            <span>{{ __('transport.price') }}: USD {{ !empty($booking['return_date']) && $selectedReturnPrice ? ' ' . number_format((float) $selectedReturnPrice, 2) : '' }}</span>
+                            <span>{{ __('transport.price') }}: USD {{ number_format((float) ($selectedDefaultPrice ?? 0), 2) }}@if(!empty($booking['return_date']) && $selectedReturnPrice) + {{ __('transport.return_price') }} USD {{ number_format((float) $selectedReturnPrice, 2) }}@endif</span>
                         @endif
                     </div>
                     
@@ -364,6 +364,96 @@
                     <p>{!! nl2br(e($overviewContent)) !!}</p>
                 </div>
             @endif
+
+            @push('scripts')
+            <script>
+                (function() {
+                    const form = document.querySelector('.booking-add-form');
+                    if (!form) return;
+
+                    const submitBtn = form.querySelector('#booking-now-btn');
+                    if (!submitBtn) return;
+
+                    submitBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+
+                        // disable immediately to avoid double-clicks
+                        submitBtn.disabled = true;
+
+                        const url = form.getAttribute('action');
+                        // Sync visible booking inputs into the add-to-cart form
+                        const visiblePickupDate = document.querySelector('input[name="pickup_date"]');
+                        const visiblePickupTime = document.querySelector('input[name="pickup_time"]');
+                        const visibleReturnDate = document.querySelector('input[name="return_date"]');
+                        const visibleReturnTime = document.querySelector('input[name="return_time"]');
+                        const visibleFrom = document.querySelector('select[name="transport_from"]');
+                        const visibleTo = document.querySelector('select[name="transport_to"]');
+                        const visiblePassengers = document.querySelector('input[name="passengers"]');
+
+                        const pickupDateValue = visiblePickupDate ? visiblePickupDate.value.trim() : '';
+                        const pickupTimeValue = visiblePickupTime ? visiblePickupTime.value.trim() : '';
+                        const returnDateValue = visibleReturnDate ? visibleReturnDate.value.trim() : '';
+                        const returnTimeValue = visibleReturnTime ? visibleReturnTime.value.trim() : '';
+
+                        if (!pickupDateValue || !pickupTimeValue) {
+                            alert('Please provide both pickup date and pickup time before booking.');
+                            submitBtn.disabled = false;
+                            return;
+                        }
+
+                        if ((returnDateValue && !returnTimeValue) || (!returnDateValue && returnTimeValue)) {
+                            alert('Please provide both return date and return time for a return trip.');
+                            submitBtn.disabled = false;
+                            return;
+                        }
+
+                        if (visiblePickupDate) form.querySelector('input[name="pickup_date"]').value = visiblePickupDate.value || '';
+                        if (visiblePickupTime) form.querySelector('input[name="pickup_time"]').value = visiblePickupTime.value || '';
+                        if (visibleReturnDate) form.querySelector('input[name="return_date"]').value = visibleReturnDate.value || '';
+                        if (visibleReturnTime) form.querySelector('input[name="return_time"]').value = visibleReturnTime.value || '';
+                        if (visibleFrom) form.querySelector('input[name="route_from"]').value = visibleFrom.value || '';
+                        if (visibleTo) form.querySelector('input[name="route_to"]').value = visibleTo.value || '';
+                        if (visiblePassengers) form.querySelector('input[name="passengers"]').value = visiblePassengers.value || 1;
+
+                        const formData = new FormData(form);
+
+                        fetch(url, {
+                            method: 'POST',
+                            body: formData,
+                            credentials: 'same-origin',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        }).then(async (res) => {
+                            let payload = null;
+                            try { payload = await res.json(); } catch (err) { payload = null; }
+
+                            if (!res.ok) {
+                                // handle validation / conflict
+                                const message = (payload && payload.message) ? payload.message : 'Failed to add to cart.';
+                                alert(message);
+                                submitBtn.disabled = false;
+                                return;
+                            }
+
+                            if (payload && payload.success) {
+                                // Redirect to cart review
+                                window.location.href = "{{ route('frontend.booking.cart') }}";
+                                return;
+                            }
+
+                            // fallback
+                            alert(payload && payload.message ? payload.message : 'Unable to add to cart.');
+                            submitBtn.disabled = false;
+                        }).catch((err) => {
+                            console.error('Add to cart error', err);
+                            alert('An error occurred. Please try again.');
+                            submitBtn.disabled = false;
+                        });
+                    });
+                })();
+            </script>
+            @endpush
 
             <div class="detail-section-card" id="vehicle-details">
                 <h2>{{ __('transport.details_title') }}</h2>
@@ -934,7 +1024,7 @@
                     nativeInput.addEventListener('change', function () {
                         textInput.value = nativeInput.value || '';
                         if (hiddenInput) {
-                            hiddenInput.value = nativeInput.value || hiddenInput.value || '';
+                            hiddenInput.value = nativeInput.value || '';
                         }
                         if (nativeInput.name === 'pickup_date' || nativeInput.name === 'return_date') {
                             updateRouteFields();
@@ -973,6 +1063,12 @@
                 const pickupT = document.querySelector('input[name="pickup_time"]')?.value.trim() || '';
                 const returnT = document.querySelector('input[name="return_time"]')?.value.trim() || '';
                 return pickupT !== '' && returnT !== '';
+            };
+
+            const isPartialReturnTrip = function () {
+                const returnDate = document.querySelector('input[name="return_date"]')?.value.trim() || '';
+                const returnTime = document.querySelector('input[name="return_time"]')?.value.trim() || '';
+                return (returnDate !== '' || returnTime !== '') && !(returnDate !== '' && returnTime !== '');
             };
 
             const setCarRentalButtonState = function (disabled) {
@@ -1029,10 +1125,22 @@
 
             if (bookingUpdateSearchForm) {
                 bookingUpdateSearchForm.addEventListener('submit', function (ev) {
+                    const pickupDateValue = document.querySelector('input[name="pickup_date"]')?.value.trim() || '';
+                    const pickupTimeValue = document.querySelector('input[name="pickup_time"]')?.value.trim() || '';
+                    if (!pickupDateValue || !pickupTimeValue) {
+                        ev.preventDefault();
+                        alert('Please provide both pickup date and pickup time before updating search.');
+                        return false;
+                    }
                     if (isCarRentalService() && !hasCarRentalTimes()) {
                         ev.preventDefault();
                         alert('Please provide pickup and return times for car rental search before updating.');
                         updateCarRentalState(false);
+                        return false;
+                    }
+                    if (isPartialReturnTrip()) {
+                        ev.preventDefault();
+                        alert('Please provide both return date and return time for a return trip search.');
                         return false;
                     }
                 });
@@ -1041,18 +1149,30 @@
             if (bookingAddForm) {
                 bookingAddForm.addEventListener('submit', function (ev) {
                     updateRouteFields();
+                    const pickup = document.querySelector('input[name="pickup_date"]')?.value.trim() || '';
+                    const pickupT = document.querySelector('input[name="pickup_time"]')?.value.trim() || '';
+                    if (!pickup || !pickupT) {
+                        ev.preventDefault();
+                        alert('Please provide both pickup date and pickup time before booking.');
+                        return false;
+                    }
+
                     // ensure service type rules when adding to cart
                     const hiddenService = document.getElementById('booking-service-type')?.value || serverServiceType;
                     if (hiddenService === 'car_rental') {
-                        const pickup = document.querySelector('input[name="pickup_date"]')?.value || '';
-                        const pickupT = document.querySelector('input[name="pickup_time"]')?.value || '';
-                        const ret = document.querySelector('input[name="return_date"]')?.value || '';
-                        const retT = document.querySelector('input[name="return_time"]')?.value || '';
-                        if (!pickup || !pickupT || !ret || !retT) {
+                        const ret = document.querySelector('input[name="return_date"]')?.value.trim() || '';
+                        const retT = document.querySelector('input[name="return_time"]')?.value.trim() || '';
+                        if (!ret || !retT) {
                             ev.preventDefault();
                             alert('Please provide pickup and return dates and times for car rental bookings.');
                             return false;
                         }
+                    }
+
+                    if (isPartialReturnTrip()) {
+                        ev.preventDefault();
+                        alert('Please provide both return date and return time for a return trip.');
+                        return false;
                     }
                     const routeFromVal = (fromSelect && fromSelect.value) ? fromSelect.value.trim() : ((routeFromInput && routeFromInput.value) ? routeFromInput.value.trim() : '');
                     const routeToVal = (toSelect && toSelect.value) ? toSelect.value.trim() : ((routeToInput && routeToInput.value) ? routeToInput.value.trim() : '');

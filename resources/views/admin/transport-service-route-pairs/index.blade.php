@@ -48,6 +48,14 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label class="form-label">Trip Time (min)</label>
+                    <input type="number" name="trip_time_minutes" class="form-control" min="0" value="60">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Buffer Time (min)</label>
+                    <input type="number" name="buffer_time_minutes" class="form-control" min="0" value="30">
+                </div>
+                <div class="col-md-1">
                     <label class="form-label">Active</label>
                     <select name="is_active" class="form-select">
                         <option value="1" selected>Yes</option>
@@ -70,18 +78,40 @@
                             <th>Service Type</th>
                             <th>From</th>
                             <th>To</th>
+                            <th>Trip Time</th>
+                            <th>Buffer Time</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($pairs as $pair)
+                            @php $formId = 'route-pair-form-' . $pair->id; @endphp
                             <tr>
                                 <td>{{ $serviceTypes[$pair->service_type] ?? ucfirst(str_replace('_', ' ', $pair->service_type)) }}</td>
                                 <td>{{ $pair->route_from }}</td>
                                 <td>{{ $pair->route_to }}</td>
-                                <td>{{ $pair->is_active ? 'Active' : 'Inactive' }}</td>
                                 <td>
+                                    <input type="number" name="trip_time_minutes" form="{{ $formId }}" class="form-control form-control-sm" min="0" value="{{ (int) ($pair->trip_time_minutes ?? 0) }}">
+                                </td>
+                                <td>
+                                    <input type="number" name="buffer_time_minutes" form="{{ $formId }}" class="form-control form-control-sm" min="0" value="{{ (int) ($pair->buffer_time_minutes ?? 0) }}">
+                                </td>
+                                <td>
+                                    <select name="is_active" form="{{ $formId }}" class="form-select form-select-sm">
+                                        <option value="1" {{ $pair->is_active ? 'selected' : '' }}>Active</option>
+                                        <option value="0" {{ !$pair->is_active ? 'selected' : '' }}>Inactive</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <form id="{{ $formId }}" method="POST" action="{{ route('admin.transport-service-route-pairs.update', $pair->id) }}" class="d-flex gap-2 align-items-center">
+                                        @csrf
+                                        <input type="hidden" name="_method" value="PUT">
+                                        <input type="hidden" name="service_type" value="{{ $pair->service_type }}">
+                                        <input type="hidden" name="route_from" value="{{ $pair->route_from }}">
+                                        <input type="hidden" name="route_to" value="{{ $pair->route_to }}">
+                                        <button class="btn btn-sm btn-success" type="submit">Save</button>
+                                    </form>
                                     <form method="POST" action="{{ route('admin.transport-service-route-pairs.destroy', $pair->id) }}" style="display:inline">
                                         @csrf
                                         @method('DELETE')

@@ -251,6 +251,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::get('transport-service-route-pairs', [\App\Http\Controllers\Admin\TransportServiceRoutePairController::class, 'index'])->name('transport-service-route-pairs.index');
     Route::post('transport-service-route-pairs', [\App\Http\Controllers\Admin\TransportServiceRoutePairController::class, 'store'])->name('transport-service-route-pairs.store');
-    Route::post('transport-service-route-pairs/{transportServiceRoutePair}', [\App\Http\Controllers\Admin\TransportServiceRoutePairController::class, 'update'])->name('transport-service-route-pairs.update');
+    Route::match(['put', 'patch', 'post'], 'transport-service-route-pairs/{transportServiceRoutePair}', [\App\Http\Controllers\Admin\TransportServiceRoutePairController::class, 'update'])->name('transport-service-route-pairs.update');
     Route::delete('transport-service-route-pairs/{transportServiceRoutePair}', [\App\Http\Controllers\Admin\TransportServiceRoutePairController::class, 'destroy'])->name('transport-service-route-pairs.destroy');
 });

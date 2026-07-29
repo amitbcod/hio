@@ -13,6 +13,8 @@ class TransportServiceRoutePair extends Model
         'route_from',
         'route_to',
         'is_active',
+        'trip_time_minutes',
+        'buffer_time_minutes',
     ];
 
     protected $casts = [

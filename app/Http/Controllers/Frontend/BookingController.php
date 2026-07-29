@@ -15,6 +15,7 @@ use App\Models\ActivitySchedulingTimeSlot;
 use App\Models\ActivityVariant;
 use App\Models\Transport;
 use App\Models\TransportBooking;
+use App\Models\TransportServiceRoutePair;
 use App\Models\BookingGuest;
 use App\Models\SavedGuest;
 use App\Models\TravelerCart;
@@ -98,9 +99,19 @@ class BookingController extends Controller
             $validator = Validator::make($request->all(), [
                 'route_from' => ['required', 'string'],
                 'route_to'   => ['required', 'string'],
+                'pickup_date' => ['required', 'date'],
+                'pickup_time' => ['required', 'date_format:H:i'],
+                'return_date' => ['nullable', 'date'],
+                'return_time' => ['nullable', 'date_format:H:i'],
             ], [
                 'route_from.required' => __('transport.validation.select_departure'),
                 'route_to.required' => __('transport.validation.select_destination'),
+                'pickup_date.required' => __('transport.validation.pickup_date_required'),
+                'pickup_date.date' => __('transport.validation.pickup_date_invalid'),
+                'pickup_time.required' => __('transport.validation.pickup_time_required'),
+                'pickup_time.date_format' => __('transport.validation.pickup_time_invalid'),
+                'return_date.date' => __('transport.validation.return_date_invalid'),
+                'return_time.date_format' => __('transport.validation.return_time_invalid'),
             ]);
 
             if ($validator->fails()) {
@@ -122,6 +133,110 @@ class BookingController extends Controller
 
                 // For non-AJAX requests, continue with default behavior (redirect back with errors)
                 $validator->validate();
+            }
+
+            $returnDate = $request->input('return_date');
+            $returnTime = $request->input('return_time');
+            if ((!blank($returnDate) && blank($returnTime)) || (blank($returnDate) && !blank($returnTime))) {
+                $message = __('transport.validation.return_date_time_required');
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                return back()->withInput()->with('error', $message);
+            }
+
+            // Before building and adding a transport cart item, check vehicle availability
+            $bookingData = [
+                'transport_id' => $request->input('transport_id'),
+                'route_from' => $request->input('route_from'),
+                'route_to' => $request->input('route_to'),
+                'pickup_date' => $request->input('pickup_date'),
+                'pickup_time' => $request->input('pickup_time'),
+            ];
+
+            $conflict = $this->detectTransportAvailabilityConflict($bookingData);
+            if ($conflict) {
+                $unavailableUntil = $conflict['ends_at'] ?? null;
+                $message = 'Vehicle not available until ' . ($unavailableUntil ? Carbon::parse($unavailableUntil)->format('d M Y H:i') : $conflict['message']);
+
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $message,
+                        'conflict' => $conflict,
+                    ], 422);
+                }
+
+                return back()->withInput()->with('error', $message);
+            }
+
+            // Also check session cart for conflicts or duplicates
+            $cart = $this->resolveCart();
+            $newWindow = $this->computeBookingWindow($bookingData);
+            if ($newWindow === null) {
+                // if can't compute window (no trip+buffer), fall back to not blocking
+            } else {
+                foreach ($cart as $existing) {
+                    if (!is_array($existing) || ($existing['type'] ?? '') !== 'transport') {
+                        continue;
+                    }
+
+                    // exact duplicate check (normalize routes and times)
+                    $existingTransportId = (int) ($existing['transport_id'] ?? 0);
+                    $newTransportId = (int) ($bookingData['transport_id'] ?? 0);
+
+                    $existingFrom = strtolower(trim((string) ($existing['route_from'] ?? '')));
+                    $existingTo = strtolower(trim((string) ($existing['route_to'] ?? '')));
+                    $newFrom = strtolower(trim((string) ($bookingData['route_from'] ?? '')));
+                    $newTo = strtolower(trim((string) ($bookingData['route_to'] ?? '')));
+
+                    // normalize pickup times to H:i (ignore seconds)
+                    try {
+                        $existingPickupTime = !empty($existing['pickup_time']) ? \Carbon\Carbon::parse($existing['pickup_time'])->format('H:i') : trim((string) ($existing['pickup_time'] ?? ''));
+                    } catch (\Exception $e) {
+                        $existingPickupTime = trim((string) ($existing['pickup_time'] ?? ''));
+                    }
+                    try {
+                        $newPickupTime = !empty($bookingData['pickup_time']) ? \Carbon\Carbon::parse($bookingData['pickup_time'])->format('H:i') : trim((string) ($bookingData['pickup_time'] ?? ''));
+                    } catch (\Exception $e) {
+                        $newPickupTime = trim((string) ($bookingData['pickup_time'] ?? ''));
+                    }
+
+                    if ($existingTransportId === $newTransportId
+                        && $existingFrom === $newFrom
+                        && $existingTo === $newTo
+                        && trim((string) ($existing['pickup_date'] ?? '')) === trim((string) ($bookingData['pickup_date'] ?? ''))
+                        && $existingPickupTime === $newPickupTime
+                    ) {
+                        $message = 'This booking is already in your cart.';
+                        if ($request->expectsJson()) {
+                            return response()->json(['success' => false, 'message' => $message], 422);
+                        }
+                        return back()->withInput()->with('error', $message);
+                    }
+
+                    // overlap check against cart item
+                    $existingBookingData = [
+                        'transport_id' => $existing['transport_id'] ?? null,
+                        'route_from' => $existing['route_from'] ?? null,
+                        'route_to' => $existing['route_to'] ?? null,
+                        'pickup_date' => $existing['pickup_date'] ?? null,
+                        'pickup_time' => $existing['pickup_time'] ?? null,
+                    ];
+                    $existingWindow = $this->computeBookingWindow($existingBookingData);
+                    if ($existingWindow === null) {
+                        continue;
+                    }
+
+                    $overlaps = $newWindow['start']->lt($existingWindow['end']) && $newWindow['end']->gt($existingWindow['start']);
+                    if ($overlaps) {
+                        $message = 'Vehicle not available until ' . $existingWindow['end']->format('d M Y H:i');
+                        if ($request->expectsJson()) {
+                            return response()->json(['success' => false, 'message' => $message, 'conflict' => ['starts_at' => $existingWindow['start']->toDateTimeString(), 'ends_at' => $existingWindow['end']->toDateTimeString()]], 422);
+                        }
+                        return back()->withInput()->with('error', $message);
+                    }
+                }
             }
 
             $item = $this->buildTransportCartItem($request);
@@ -260,6 +375,159 @@ class BookingController extends Controller
             'meal_plan'        => $mealPlan,
             'plan_inclusions'  => is_array($planInclusions) ? $planInclusions : ($planInclusions !== null ? [$planInclusions] : []),
         ];
+    }
+
+    private function detectTransportAvailabilityConflict(array $bookingData, ?int $ignoreBookingId = null): ?array
+    {
+        $transportId = (int) ($bookingData['transport_id'] ?? 0);
+        if (!$transportId) {
+            return null;
+        }
+
+        $routeFrom = trim((string) ($bookingData['route_from'] ?? ''));
+        $routeTo = trim((string) ($bookingData['route_to'] ?? ''));
+        $pickupDate = $bookingData['pickup_date'] ?? null;
+        $pickupTime = $bookingData['pickup_time'] ?? null;
+
+        if ($pickupDate === null || $pickupTime === null || $routeFrom === '' || $routeTo === '') {
+            return null;
+        }
+
+        $routeFromNorm = strtolower(trim($routeFrom));
+        $routeToNorm = strtolower(trim($routeTo));
+
+        $pair = TransportServiceRoutePair::query()
+            ->where('is_active', true)
+            ->where(function ($query) use ($routeFromNorm, $routeToNorm) {
+                $query->where(function ($q) use ($routeFromNorm, $routeToNorm) {
+                    $q->whereRaw('LOWER(TRIM(route_from)) = ?', [$routeFromNorm])
+                      ->whereRaw('LOWER(TRIM(route_to)) = ?', [$routeToNorm]);
+                })->orWhere(function ($q) use ($routeFromNorm, $routeToNorm) {
+                    $q->whereRaw('LOWER(TRIM(route_from)) = ?', [$routeToNorm])
+                      ->whereRaw('LOWER(TRIM(route_to)) = ?', [$routeFromNorm]);
+                });
+            })
+            ->first();
+
+        $tripMinutes = 0;
+        $bufferMinutes = 0;
+        if ($pair) {
+            $tripMinutes = (int) ($pair->trip_time_minutes ?? 0);
+            $bufferMinutes = (int) ($pair->buffer_time_minutes ?? 0);
+        }
+
+        $totalMinutes = $tripMinutes + $bufferMinutes;
+        if ($totalMinutes <= 0) {
+            // fallback to conservative default if no route pair configured
+            $tripMinutes = 60;
+            $bufferMinutes = 30;
+            $totalMinutes = $tripMinutes + $bufferMinutes;
+        }
+
+        $start = Carbon::parse($pickupDate . ' ' . $pickupTime);
+        $end = (clone $start)->addMinutes($totalMinutes);
+
+        $query = TransportBooking::query()
+            ->where('transport_id', $transportId)
+            ->where('booking_status', '!=', 'Cancelled')
+            ->whereNotNull('pickup_date')
+            ->whereNotNull('pickup_time');
+
+        if ($ignoreBookingId) {
+            $query->where('id', '!=', $ignoreBookingId);
+        }
+
+        $existingBookings = $query->get();
+        foreach ($existingBookings as $booking) {
+            if (!$booking->pickup_date || !$booking->pickup_time) {
+                continue;
+            }
+
+            $bookingStart = Carbon::parse($booking->pickup_date->toDateString() . ' ' . $booking->pickup_time);
+            $bookingRouteFrom = $booking->route_from;
+            $bookingRouteTo = $booking->route_to;
+            $bookingPair = TransportServiceRoutePair::query()
+                ->where('is_active', true)
+                ->where(function ($query) use ($bookingRouteFrom, $bookingRouteTo) {
+                    $query->where(function ($q) use ($bookingRouteFrom, $bookingRouteTo) {
+                        $q->where('route_from', $bookingRouteFrom)->where('route_to', $bookingRouteTo);
+                    })->orWhere(function ($q) use ($bookingRouteFrom, $bookingRouteTo) {
+                        $q->where('route_from', $bookingRouteTo)->where('route_to', $bookingRouteFrom);
+                    });
+                })
+                ->first();
+
+            $bookingTripMinutes = 0;
+            $bookingBufferMinutes = 0;
+            if ($bookingPair) {
+                $bookingTripMinutes = (int) ($bookingPair->trip_time_minutes ?? 0);
+                $bookingBufferMinutes = (int) ($bookingPair->buffer_time_minutes ?? 0);
+            }
+
+            $bookingTotalMinutes = $bookingTripMinutes + $bookingBufferMinutes;
+            if ($bookingTotalMinutes <= 0) {
+                $bookingTotalMinutes = $totalMinutes;
+            }
+
+            $bookingEnd = (clone $bookingStart)->addMinutes($bookingTotalMinutes);
+
+            $overlaps = $start->lt($bookingEnd) && $end->gt($bookingStart);
+            if ($overlaps) {
+                return [
+                    'message' => 'Sorry, this vehicle is already booked for the selected time slot.',
+                    'booking_id' => $booking->id,
+                    'starts_at' => $bookingStart->toDateTimeString(),
+                    'ends_at' => $bookingEnd->toDateTimeString(),
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    private function computeBookingWindow(array $bookingData): ?array
+    {
+        $routeFrom = trim((string) ($bookingData['route_from'] ?? ''));
+        $routeTo = trim((string) ($bookingData['route_to'] ?? ''));
+        $pickupDate = $bookingData['pickup_date'] ?? null;
+        $pickupTime = $bookingData['pickup_time'] ?? null;
+
+        if ($pickupDate === null || $pickupTime === null || $routeFrom === '' || $routeTo === '') {
+            return null;
+        }
+
+        $pair = TransportServiceRoutePair::query()
+            ->where('is_active', true)
+            ->where(function ($query) use ($routeFrom, $routeTo) {
+                $query->where(function ($q) use ($routeFrom, $routeTo) {
+                    $q->whereRaw('LOWER(TRIM(route_from)) = ?', [strtolower($routeFrom)])
+                      ->whereRaw('LOWER(TRIM(route_to)) = ?', [strtolower($routeTo)]);
+                })->orWhere(function ($q) use ($routeFrom, $routeTo) {
+                    $q->whereRaw('LOWER(TRIM(route_from)) = ?', [strtolower($routeTo)])
+                      ->whereRaw('LOWER(TRIM(route_to)) = ?', [strtolower($routeFrom)]);
+                });
+            })
+            ->first();
+
+        $tripMinutes = 0;
+        $bufferMinutes = 0;
+        if ($pair) {
+            $tripMinutes = (int) ($pair->trip_time_minutes ?? 0);
+            $bufferMinutes = (int) ($pair->buffer_time_minutes ?? 0);
+        }
+
+        $totalMinutes = $tripMinutes + $bufferMinutes;
+        if ($totalMinutes <= 0) {
+            // fallback to conservative default if no route pair configured
+            $tripMinutes = 60;
+            $bufferMinutes = 30;
+            $totalMinutes = $tripMinutes + $bufferMinutes;
+        }
+
+        $start = Carbon::parse($pickupDate . ' ' . $pickupTime);
+        $end = (clone $start)->addMinutes($totalMinutes);
+
+        return ['start' => $start, 'end' => $end, 'trip_minutes' => $tripMinutes, 'buffer_minutes' => $bufferMinutes];
     }
 
     private function buildActivityCartItem(Request $request): array
@@ -913,6 +1181,20 @@ class BookingController extends Controller
         }
 
         foreach ($cart as $item) {
+            if ($item['type'] === 'transport') {
+                $conflict = $this->detectTransportAvailabilityConflict([
+                    'transport_id' => $item['transport_id'] ?? null,
+                    'route_from' => $item['route_from'] ?? null,
+                    'route_to' => $item['route_to'] ?? null,
+                    'pickup_date' => $item['pickup_date'] ?? null,
+                    'pickup_time' => $item['pickup_time'] ?? null,
+                ]);
+
+                if ($conflict) {
+                    return back()->with('error', $conflict['message']);
+                }
+            }
+
             $dateForRef = $item['check_in'] ?? now()->format('Y-m-d');
             $ref = $this->generateBookingRef($item['type'], $tripId, $dateForRef);
 
@@ -2010,7 +2292,32 @@ class BookingController extends Controller
         if (empty($cart)) {
             session()->forget('booking_cart');
         } else {
-            session()->put('booking_cart', $cart);
+            // Deduplicate transport items by normalized signature: transport_id|route_from|route_to|pickup_date|pickup_time(H:i)
+            $seen = [];
+            $unique = [];
+            foreach ($cart as $key => $item) {
+                if (is_array($item) && ($item['type'] ?? '') === 'transport') {
+                    $tId = (int) ($item['transport_id'] ?? 0);
+                    $from = strtolower(trim((string) ($item['route_from'] ?? '')));
+                    $to = strtolower(trim((string) ($item['route_to'] ?? '')));
+                    $date = trim((string) ($item['pickup_date'] ?? ''));
+                    try {
+                        $time = !empty($item['pickup_time']) ? \Carbon\Carbon::parse($item['pickup_time'])->format('H:i') : trim((string) ($item['pickup_time'] ?? ''));
+                    } catch (\Exception $e) {
+                        $time = trim((string) ($item['pickup_time'] ?? ''));
+                    }
+                    $sig = sprintf('%d|%s|%s|%s|%s', $tId, $from, $to, $date, $time);
+                    if (!isset($seen[$sig])) {
+                        $seen[$sig] = true;
+                        $unique[$key] = $item;
+                    }
+                } else {
+                    $unique[$key] = $item;
+                }
+            }
+
+            session()->put('booking_cart', $unique);
+            $cart = $unique;
         }
 
         $travelerId = $this->travelerAccountId();
