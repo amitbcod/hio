@@ -525,9 +525,13 @@ class TransportController extends Controller
         $regionRule = 'required|string|in:' . implode(',', $regionOptions);
         $serviceTypeRule = 'required|string|in:airport_transfer,activity_transfer,full_day_sightseeing';
         $saveService = $request->input('save_service');
+        if (is_array($saveService)) {
+            $saveService = trim((string) end($saveService));
+        }
+        $saveService = trim((string) $saveService);
         $routesPayload = $request->input('routes', []);
 
-        if ($saveService) {
+        if ($saveService !== '') {
             $routesPayload = array_values(array_filter($routesPayload, fn ($route) => ($route['service_type'] ?? null) === $saveService));
         }
 

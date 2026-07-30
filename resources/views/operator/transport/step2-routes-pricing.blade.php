@@ -102,7 +102,7 @@
                                 @endforeach
                             </div>
                             <div class="mt-3">
-                                <button type="submit" name="save_service" value="{{ $serviceKey }}" class="btn btn-primary save-service-btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save {{ $serviceGroup['label'] }}</button>
+                                <button type="submit" value="{{ $serviceKey }}" class="btn btn-primary save-service-btn" data-service="{{ $serviceKey }}" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save {{ $serviceGroup['label'] }}</button>
                             </div>
                         </div>
                     @endforeach
@@ -237,7 +237,10 @@
     function validateAllRoutes(event) {
         const form = event.target;
         const saveServiceField = document.getElementById('save_service');
-        const saveService = saveServiceField ? saveServiceField.value : '';
+        let saveService = saveServiceField ? saveServiceField.value : '';
+        if (!saveService && event.submitter) {
+            saveService = event.submitter.value || '';
+        }
         let valid = true;
 
         const seasonalContainers = Array.from(document.querySelectorAll('.seasonal-list'))

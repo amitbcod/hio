@@ -176,34 +176,35 @@
                             <!-- Transport: route, passengers and dates -->
                             <div class="category-search-cell category-search-cell--transport" style="display: none;">
                                 <div class="transport-row" style="">
+                                    <div class="transport-field" style="flex: 0 1 140px; min-width: 140px;">
+                                        <h5>Service Type</h5>
+                                        <select name="service_type" class="category-search-select" id="home-service-type">
+                                            <option value="airport_transfer" {{ request()->query('service_type','airport_transfer') === 'airport_transfer' ? 'selected' : '' }}>Airport Transfer</option>
+                                            <option value="activity_transfer" {{ request()->query('service_type') === 'activity_transfer' ? 'selected' : '' }}>Activity Transfer</option>
+                                            <option value="full_day_sightseeing" {{ request()->query('service_type') === 'full_day_sightseeing' ? 'selected' : '' }}>Full Day Sightseeing</option>
+                                        </select>
+                                    </div>
                                     <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
-                                        <h5>{{ __('home.search.departure_location') }}</h5>
-                                        <select name="transport_from" class="category-search-select" data-search-from>
-                                            <option value="" disabled hidden>{{ __('home.search.departure_location') }}</option>
-                                            @foreach(($searchOptions['transport']['froms'] ?? []) as $from)
-                                                <option value="{{ $from }}" {{ request()->query('transport_from', '') === $from ? 'selected' : '' }}>{{ $from }}</option>
+                                        <h5>{{ __('home.search.departure_region') }}</h5>
+                                        <select name="pickup_region_id" class="category-search-select" data-search-from>
+                                            <option value="" disabled hidden>{{ __('home.search.departure_region') }}</option>
+                                            @foreach(($searchOptions['transport']['froms'] ?? []) as $regionId => $regionName)
+                                                <option value="{{ $regionId }}" {{ request()->query('pickup_region_id', '') === (string) $regionId ? 'selected' : '' }}>{{ $regionName }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
-                                        <h5>{{ __('home.search.destination') }}</h5>
-                                        <select name="transport_to" class="category-search-select" data-search-to>
-                                            <option value="" disabled hidden>{{ __('home.search.destination') }}</option>
-                                            @foreach(($searchOptions['transport']['tos'] ?? []) as $to)
-                                                <option value="{{ $to }}" {{ request()->query('transport_to', '') === $to ? 'selected' : '' }}>{{ $to }}</option>
+                                        <h5>{{ __('home.search.destination_region') }}</h5>
+                                        <select name="dropoff_region_id" class="category-search-select" data-search-to>
+                                            <option value="" disabled hidden>{{ __('home.search.destination_region') }}</option>
+                                            @foreach(($searchOptions['transport']['tos'] ?? []) as $regionId => $regionName)
+                                                <option value="{{ $regionId }}" {{ request()->query('dropoff_region_id', '') === (string) $regionId ? 'selected' : '' }}>{{ $regionName }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="transport-field" style="flex: 0 1 110px; min-width: 110px;">
                                         <h5>{{ __('home.search.passengers') }}</h5>
                                         <input type="number" name="passengers" class="category-search-input" min="1" value="{{ request()->query('passengers', 2) }}">
-                                    </div>
-                                    <div class="transport-field" style="flex: 0 1 140px; min-width: 140px;">
-                                        <h5>Service Type</h5>
-                                        <select name="service_type" class="category-search-select" id="home-service-type">
-                                            <option value="route" {{ request()->query('service_type','route') === 'route' ? 'selected' : '' }}>Route wise</option>
-                                            <option value="car_rental" {{ request()->query('service_type') === 'car_rental' ? 'selected' : '' }}>Car rental</option>
-                                        </select>
                                     </div>
                                     <div class="transport-row-date">
                                         <div class="transport-field" style="flex: 1 1 160px;">
@@ -247,17 +248,12 @@
             form.addEventListener('submit', function (e) {
                 const cat = form.querySelector('input[name="category"]:checked')?.value || '';
                 if (cat === 'transport') {
-                    const st = form.querySelector('select[name="service_type"]')?.value || 'route';
-                    if (st === 'car_rental') {
-                        const arrivalDate = form.querySelector('input[name="arrival_date"]')?.value || '';
-                        const arrivalTime = form.querySelector('input[name="arrival_time"]')?.value || '';
-                        const returnDate = form.querySelector('input[name="return_date"]')?.value || '';
-                        const returnTime = form.querySelector('input[name="return_time"]')?.value || '';
-                        if (!arrivalDate || !arrivalTime || !returnDate || !returnTime) {
-                            e.preventDefault();
-                            alert('For Car rental please provide pickup and return dates and times.');
-                            return false;
-                        }
+                    const arrivalDate = form.querySelector('input[name="arrival_date"]')?.value || '';
+                    const arrivalTime = form.querySelector('input[name="arrival_time"]')?.value || '';
+                    if (!arrivalDate || !arrivalTime) {
+                        e.preventDefault();
+                        alert('Please provide pickup date and pickup time before searching transport.');
+                        return false;
                     }
                 }
             });

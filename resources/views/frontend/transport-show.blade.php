@@ -17,7 +17,15 @@
         $routes = $transport['routes_pricing'] ?? [];
         $amenities = $transport['amenities'] ?? [];
         $operator = $transport['operator'] ?? null;
-        $serviceType = request()->query('service_type', 'route');
+        $serviceType = in_array(trim((string) request()->query('service_type', 'airport_transfer')), ['airport_transfer', 'activity_transfer', 'full_day_sightseeing'], true)
+            ? trim((string) request()->query('service_type'))
+            : 'airport_transfer';
+        $serviceTypeLabel = match ($serviceType) {
+            'airport_transfer' => __('transport.form.airport_transfer'),
+            'activity_transfer' => __('transport.form.activity_transfer'),
+            'full_day_sightseeing' => __('transport.form.full_day_sightseeing'),
+            default => ucwords(str_replace('_', ' ', $serviceType)),
+        };
         $booking['pickup_date'] = trim((string) request()->query('pickup_date', request()->query('arrival_date', request()->query('check_in', $booking['pickup_date']))));
         $booking['pickup_time'] = trim((string) request()->query('pickup_time', request()->query('arrival_time', $booking['pickup_time'])));
         $booking['return_date'] = trim((string) request()->query('return_date', ''));
@@ -219,22 +227,62 @@
                 </div>
 
                 <aside class="detail-booking-card">
+                    @php
+                        $transportRegionOptions = [];
+                        $selectedTransportFrom = trim((string) ($transport['selected_transport_from'] ?? ''));
+                        $selectedTransportTo = trim((string) ($transport['selected_transport_to'] ?? ''));
+                        foreach ($transport['place_region_map'] ?? [] as $place => $region) {
+                            $region = trim((string) $region);
+                            if ($region === '') {
+                                continue;
+                            }
+                            $regionKey = strtolower($region);
+                            if (!isset($transportRegionOptions[$regionKey])) {
+                                $transportRegionOptions[$regionKey] = $region;
+                            }
+                        }
+
+                        $selectedFromKey = '';
+                        $selectedToKey = '';
+                        if ($selectedTransportFrom !== '') {
+                            $selectedFromNormalized = strtolower($selectedTransportFrom);
+                            if (isset($transportRegionOptions[$selectedFromNormalized])) {
+                                $selectedFromKey = $selectedFromNormalized;
+                            } elseif (!empty($transport['place_region_map'][$selectedTransportFrom])) {
+                                $mapped = strtolower(trim((string) $transport['place_region_map'][$selectedTransportFrom]));
+                                if (isset($transportRegionOptions[$mapped])) {
+                                    $selectedFromKey = $mapped;
+                                }
+                            }
+                        }
+                        if ($selectedTransportTo !== '') {
+                            $selectedToNormalized = strtolower($selectedTransportTo);
+                            if (isset($transportRegionOptions[$selectedToNormalized])) {
+                                $selectedToKey = $selectedToNormalized;
+                            } elseif (!empty($transport['place_region_map'][$selectedTransportTo])) {
+                                $mapped = strtolower(trim((string) $transport['place_region_map'][$selectedTransportTo]));
+                                if (isset($transportRegionOptions[$mapped])) {
+                                    $selectedToKey = $mapped;
+                                }
+                            }
+                        }
+                    @endphp
                     <form method="GET" action="{{ route('frontend.transports.show', $transport['id']) }}" class="booking-form-grid">
                         <div class="booking-field">
-                            <label>{{ __('home.search.from') }}</label>
+                            <label>{{ __('home.search.departure_region') }}</label>
                             <select id="transport-place-from" name="transport_from" class="booking-input">
-                                <option value="">{{ __('home.search.departure_location') }}</option>
-                                @foreach($transport['place_names'] ?? [] as $place)
-                                    <option value="{{ $place }}" {{ ($transport['selected_transport_from'] ?? '') === $place ? 'selected' : '' }}>{{ $place }}</option>
+                                <option value="">{{ __('home.search.departure_region') }}</option>
+                                @foreach($transportRegionOptions as $regionKey => $regionName)
+                                    <option value="{{ $regionName }}" {{ $selectedFromKey === $regionKey ? 'selected' : '' }}>{{ $regionName }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="booking-field">
-                            <label>{{ __('home.search.to') }}</label>
+                            <label>{{ __('home.search.destination_region') }}</label>
                             <select id="transport-place-to" name="transport_to" class="booking-input">
-                                <option value="">{{ __('home.search.destination') }}</option>
-                                @foreach($transport['place_names'] ?? [] as $place)
-                                    <option value="{{ $place }}" {{ ($transport['selected_transport_to'] ?? '') === $place ? 'selected' : '' }}>{{ $place }}</option>
+                                <option value="">{{ __('home.search.destination_region') }}</option>
+                                @foreach($transportRegionOptions as $regionKey => $regionName)
+                                    <option value="{{ $regionName }}" {{ $selectedToKey === $regionKey ? 'selected' : '' }}>{{ $regionName }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -266,10 +314,10 @@
                             <label>{{ __('transport.form.passengers') }}</label>
                             <input type="number" name="passengers" min="1" max="{{ $transport['seating_capacity'] ?? '' }}" value="{{ min($booking['passengers'], $transport['seating_capacity'] ?? $booking['passengers']) }}" class="booking-input">
                         </div>
-                        <input type="hidden" name="service_type" value="{{ $serviceType ?? 'route' }}">
+                        <input type="hidden" name="service_type" value="{{ $serviceType }}">
                         <div class="booking-field">
                             <label>{{ __('transport.form.service_type') }}</label>
-                            <div class="booking-input booking-input-static">{{ ($serviceType ?? 'route') === 'car_rental' ? __('transport.form.car_rental') : __('transport.form.route_wise') }}</div>
+                            <div class="booking-input booking-input-static">{{ $serviceTypeLabel }}</div>
                         </div>
                         <button id="booking-update-search-btn" type="submit" class="btn-primary booking-btn">{{ __('transport.form.update_search') }}</button>
                     </form>
@@ -292,7 +340,7 @@
                         <input type="hidden" name="return_date" value="{{ $booking['return_date'] ?? '' }}">
                         <input type="hidden" name="pickup_time" id="booking-pickup-time" value="{{ $booking['pickup_time'] ?? '' }}">
                         <input type="hidden" name="return_time" id="booking-return-time" value="{{ $booking['return_time'] ?? '' }}">
-                        <input type="hidden" name="service_type" id="booking-service-type" value="{{ $serviceType ?? 'route' }}">
+                        <input type="hidden" name="service_type" id="booking-service-type" value="{{ $serviceType }}">
                         <input type="hidden" name="passengers" value="{{ $booking['passengers'] }}">
                         <input type="hidden" id="transport-route-id" name="route_id" value="{{ $routeId }}">
                         <input type="hidden" id="transport-route-from" name="route_from" value="{{ $selectedRouteFrom }}">
@@ -303,30 +351,10 @@
                     </form>
 
                     <div class="booking-summary-line" id="transport-price-summary">
-                        @if(($serviceType ?? 'route') === 'car_rental' && !empty($carRentalTotal))
-                            <span>{{ __('transport.price') }}: USD {{ $carRentalTotal }}</span>
-                        @else
-                            <span>{{ __('transport.price') }}: USD {{ number_format((float) ($selectedDefaultPrice ?? 0), 2) }}@if(!empty($booking['return_date']) && $selectedReturnPrice) + {{ __('transport.return_price') }} USD {{ number_format((float) $selectedReturnPrice, 2) }}@endif</span>
-                        @endif
+                        <span>{{ __('transport.price') }}: USD {{ number_format((float) ($selectedDefaultPrice ?? 0), 2) }}@if(!empty($booking['return_date']) && $selectedReturnPrice) + {{ __('transport.return_price') }} USD {{ number_format((float) $selectedReturnPrice, 2) }}@endif</span>
                     </div>
                     
                     <!-- DEBUG: Car Rental Calculation -->
-                    @if(($serviceType ?? 'route') === 'car_rental')
-                        <!-- <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-size: 12px; border: 1px solid #ccc;">
-                            <strong>DEBUG INFO:</strong><br>
-                            Service Type: {{ $serviceType ?? 'N/A' }}<br>
-                            Pickup: {{ request()->query('arrival_date') ?? 'N/A' }} {{ request()->query('arrival_time') ?? 'N/A' }}<br>
-                            Return: {{ request()->query('return_date') ?? 'N/A' }} {{ request()->query('return_time') ?? 'N/A' }}<br>
-                            <strong>Debug Calculation Info:</strong><br>
-                            Total Minutes: {{ $debugInfo['totalMinutes'] ?? 'N/A' }}<br>
-                            Total Hours: {{ $debugInfo['totalHours'] ?? 'N/A' }}<br>
-                            Blocks: <pre style="font-size: 11px;">{{ json_encode($debugInfo['blocks'] ?? [], JSON_PRETTY_PRINT) }}</pre>
-                            DP Array: <pre style="font-size: 11px;">{{ json_encode($debugInfo['dp_array'] ?? [], JSON_PRETTY_PRINT) }}</pre>
-                            Calculated Total: {{ $debugInfo['total'] ?? 'N/A' }}<br>
-                            Car Prices: <pre style="font-size: 11px;">{{ json_encode($transport['car_rental_prices'] ?? [], JSON_PRETTY_PRINT) }}</pre>
-                            Car Rental Total (Formatted): {{ $carRentalTotal ?? 'NULL' }}<br>
-                        </div> -->
-                    @endif
 
                     @if($operator)
                         <!-- <div class="booking-quick-links">
@@ -868,8 +896,8 @@
 
             const routes = @json($routes);
             const rawPlaceRegionMap = @json($transport['place_region_map'] ?? []);
+            const serverServiceType = @json($serviceType);
             const serverCarRentalTotal = @json($carRentalTotal);
-            const serverServiceType = @json($serviceType ?? 'route');
             const placeRegionMap = Object.fromEntries(
                 Object.entries(rawPlaceRegionMap || {}).map(([key, value]) => [String(key).trim().toLowerCase(), String(value).trim().toLowerCase()])
             );
@@ -892,6 +920,9 @@
 
             const routeLookup = new Map();
             routes.forEach(route => {
+                if (String(route.service_type || 'airport_transfer') !== serverServiceType) {
+                    return;
+                }
                 const fromRegion = normalizeValue(route.route_from || '');
                 const toRegion = normalizeValue(route.route_to || '');
                 if (fromRegion && toRegion) {
@@ -1055,11 +1086,9 @@
             const transportRouteToHidden = document.getElementById('transport-route-to');
             const travelerLoggedIn = @json(auth('traveler')->check());
 
-            const isCarRentalService = function () {
-                return (bookingServiceTypeHidden?.value || '{{ $serviceType ?? 'route' }}') === 'car_rental';
-            };
+            const selectedServiceType = bookingServiceTypeHidden?.value || serverServiceType;
 
-            const hasCarRentalTimes = function () {
+            const hasReturnTripTimes = function () {
                 const pickupT = document.querySelector('input[name="pickup_time"]')?.value.trim() || '';
                 const returnT = document.querySelector('input[name="return_time"]')?.value.trim() || '';
                 return pickupT !== '' && returnT !== '';
@@ -1071,57 +1100,19 @@
                 return (returnDate !== '' || returnTime !== '') && !(returnDate !== '' && returnTime !== '');
             };
 
-            const setCarRentalButtonState = function (disabled) {
+            const updateSearchButtonState = function () {
+                // All current service types may proceed without legacy car rental locking.
                 if (bookingUpdateSearchBtn) {
-                    bookingUpdateSearchBtn.disabled = disabled;
-                    if (disabled) {
-                        bookingUpdateSearchBtn.setAttribute('disabled', 'disabled');
-                    } else {
-                        bookingUpdateSearchBtn.removeAttribute('disabled');
-                    }
+                    bookingUpdateSearchBtn.disabled = false;
+                    bookingUpdateSearchBtn.removeAttribute('disabled');
                 }
                 if (bookingNowBtn) {
-                    bookingNowBtn.disabled = disabled;
-                    if (disabled) {
-                        bookingNowBtn.setAttribute('disabled', 'disabled');
-                    } else {
-                        bookingNowBtn.removeAttribute('disabled');
-                    }
+                    bookingNowBtn.disabled = false;
+                    bookingNowBtn.removeAttribute('disabled');
                 }
             };
 
-            const updateCarRentalState = function (showAlert) {
-                const isCarRental = isCarRentalService();
-                const timesValid = hasCarRentalTimes();
-                if (isCarRental && !timesValid) {
-                    setCarRentalButtonState(true);
-                    if (showAlert) {
-                        alert('Please provide pickup and return times for car rental search before updating.');
-                    }
-                } else {
-                    setCarRentalButtonState(false);
-                }
-            };
-
-            const bindCarRentalState = function () {
-                const pickupTimeField = document.querySelector('input[name="pickup_time"]');
-                const returnTimeField = document.querySelector('input[name="return_time"]');
-                pickupTimeField?.addEventListener('change', function () {
-                    updateCarRentalState(false);
-                });
-                returnTimeField?.addEventListener('change', function () {
-                    updateCarRentalState(false);
-                });
-                pickupTimeField?.addEventListener('input', function () {
-                    updateCarRentalState(false);
-                });
-                returnTimeField?.addEventListener('input', function () {
-                    updateCarRentalState(false);
-                });
-            };
-
-            bindCarRentalState();
-            updateCarRentalState(false);
+            updateSearchButtonState();
 
             if (bookingUpdateSearchForm) {
                 bookingUpdateSearchForm.addEventListener('submit', function (ev) {
@@ -1130,12 +1121,6 @@
                     if (!pickupDateValue || !pickupTimeValue) {
                         ev.preventDefault();
                         alert('Please provide both pickup date and pickup time before updating search.');
-                        return false;
-                    }
-                    if (isCarRentalService() && !hasCarRentalTimes()) {
-                        ev.preventDefault();
-                        alert('Please provide pickup and return times for car rental search before updating.');
-                        updateCarRentalState(false);
                         return false;
                     }
                     if (isPartialReturnTrip()) {
@@ -1158,17 +1143,6 @@
                     }
 
                     // ensure service type rules when adding to cart
-                    const hiddenService = document.getElementById('booking-service-type')?.value || serverServiceType;
-                    if (hiddenService === 'car_rental') {
-                        const ret = document.querySelector('input[name="return_date"]')?.value.trim() || '';
-                        const retT = document.querySelector('input[name="return_time"]')?.value.trim() || '';
-                        if (!ret || !retT) {
-                            ev.preventDefault();
-                            alert('Please provide pickup and return dates and times for car rental bookings.');
-                            return false;
-                        }
-                    }
-
                     if (isPartialReturnTrip()) {
                         ev.preventDefault();
                         alert('Please provide both return date and return time for a return trip.');

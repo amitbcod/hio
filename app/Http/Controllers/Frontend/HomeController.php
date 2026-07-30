@@ -8,6 +8,7 @@ use App\Models\AccommodationRate;
 use App\Models\Activity;
 use App\Models\ActivityBooking;
 use App\Models\Place;
+use App\Models\Region;
 use App\Models\Transport;
 use App\Models\TransportRoute;
 use App\Models\OperatorStatusReview;
@@ -214,6 +215,25 @@ class HomeController extends Controller
             ->map(fn (Activity $activity) => $this->mapActivity($activity))
             ->values();
 
+        $selectedPickupRegion = '';
+        $selectedDropoffRegion = '';
+
+        if ($filters['pickup_region_id'] !== '') {
+            $selectedPickupRegion = $this->getRegionNameFromId($filters['pickup_region_id']) ?? '';
+        }
+
+        if ($filters['dropoff_region_id'] !== '') {
+            $selectedDropoffRegion = $this->getRegionNameFromId($filters['dropoff_region_id']) ?? '';
+        }
+
+        if ($selectedPickupRegion === '' && $filters['transport_from'] !== '') {
+            $selectedPickupRegion = $this->getPlaceRegion($filters['transport_from']) ?? '';
+        }
+
+        if ($selectedDropoffRegion === '' && $filters['transport_to'] !== '') {
+            $selectedDropoffRegion = $this->getPlaceRegion($filters['transport_to']) ?? '';
+        }
+
         $transports = $this->approvedTransportQuery()->with([
                 'rates' => function ($query) {
                     $query->where('is_active', true)->orderBy('price_per_person');
@@ -225,7 +245,7 @@ class HomeController extends Controller
             ->latest('updated_at')
             ->take(120)
             ->get()
-            ->map(fn (Transport $transport) => $this->mapTransport($transport, false, $filters['transport_from'], $filters['transport_to']))
+            ->map(fn (Transport $transport) => $this->mapTransport($transport, false, $selectedPickupRegion, $selectedDropoffRegion))
             ->values();
 
         $items = match ($category) {
@@ -387,12 +407,35 @@ class HomeController extends Controller
         $bookingContext = $this->buildTransportBookingContext($request);
         $transport = $transport->load(['operator', 'rates', 'routes']);
 
+        $serviceType = in_array(trim((string) $request->query('service_type', 'airport_transfer')), ['airport_transfer', 'activity_transfer', 'full_day_sightseeing'], true)
+            ? trim((string) $request->query('service_type'))
+            : 'airport_transfer';
+
         $transportData = $this->mapTransport(
             $transport,
             true,
-            $request->query('transport_from', ''),
-            $request->query('transport_to', '')
+            $request->query('pickup_region_id', '') !== ''
+                ? ($this->getRegionNameFromId($request->query('pickup_region_id')) ?? $request->query('transport_from', ''))
+                : $request->query('transport_from', ''),
+            $request->query('dropoff_region_id', '') !== ''
+                ? ($this->getRegionNameFromId($request->query('dropoff_region_id')) ?? $request->query('transport_to', ''))
+                : $request->query('transport_to', '')
         );
+
+        $filteredRoutes = collect($transportData['routes_pricing'] ?? [])
+            ->filter(fn ($route) => trim((string) ($route['service_type'] ?? 'airport_transfer')) === $serviceType)
+            ->values();
+
+        if ($filteredRoutes->isNotEmpty()) {
+            $transportData['routes_pricing'] = $filteredRoutes->all();
+            $transportData['selected_route'] = $this->findRouteByPlaceSelection(
+                $filteredRoutes,
+                $transportData['selected_transport_from'] ?? '',
+                $transportData['selected_transport_to'] ?? ''
+            ) ?? $filteredRoutes->first();
+        }
+
+        $transportData['service_type'] = $serviceType;
         $transportData['booking'] = $bookingContext;
 
         return view('frontend.transport-show', [
@@ -954,6 +997,7 @@ class HomeController extends Controller
 
                 return [
                     'route_id' => $route->route_id,
+                    'service_type' => $route->service_type ?? 'airport_transfer',
                     'route_from' => $routeFrom,
                     'route_to' => $routeTo,
                     'route_name' => $routeName,
@@ -991,6 +1035,7 @@ class HomeController extends Controller
 
                     return [
                         'route_id' => $route['route_id'] ?? null,
+                        'service_type' => trim((string) ($route['service_type'] ?? 'airport_transfer')) ?: 'airport_transfer',
                         'route_from' => $routeFrom,
                         'route_to' => $routeTo,
                         'route_name' => $routeName,
@@ -2306,9 +2351,13 @@ class HomeController extends Controller
             'infants' => max(0, (int) $request->query('infants', 0)),
             'rooms' => max(1, (int) $request->query('rooms', 1)),
             'participants' => max(1, (int) $request->query('participants', 1)),
+            'pickup_region_id' => trim((string) $request->query('pickup_region_id', '')),
+            'dropoff_region_id' => trim((string) $request->query('dropoff_region_id', '')),
             'transport_from' => trim((string) $request->query('transport_from', '')),
             'transport_to' => trim((string) $request->query('transport_to', '')),
-            'service_type' => trim((string) $request->query('service_type', 'route')),
+            'service_type' => in_array(trim((string) $request->query('service_type', 'airport_transfer')), ['airport_transfer', 'activity_transfer', 'full_day_sightseeing'], true)
+                ? trim((string) $request->query('service_type', 'airport_transfer'))
+                : 'airport_transfer',
             'arrival_date' => (string) $request->query('arrival_date', ''),
             'arrival_time' => trim((string) $request->query('arrival_time', '')),
             'return_date' => (string) $request->query('return_date', ''),
@@ -2374,6 +2423,14 @@ class HomeController extends Controller
                 ->all();
         }
 
+        $transportRegionOptions = Region::orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
+
+        if (empty($transportRegionOptions)) {
+            $transportRegionOptions = $placeNames;
+        }
+
         return [
             'accommodation' => [
                 'regions' => $accommodationRegions,
@@ -2384,10 +2441,10 @@ class HomeController extends Controller
                 'types' => $activityTypes,
             ],
             'transport' => [
-                'regions' => [],
+                'regions' => array_values($transportRegionOptions),
                 'types' => [],
-                'froms' => $placeNames,
-                'tos' => $placeNames,
+                'froms' => $transportRegionOptions,
+                'tos' => $transportRegionOptions,
             ],
         ];
     }
@@ -2420,10 +2477,22 @@ class HomeController extends Controller
         }
 
         if ($category === 'transport') {
-            $transportFrom = $filters['transport_from'] !== '' ? $this->getPlaceRegion($filters['transport_from']) : null;
-            $transportTo = $filters['transport_to'] !== '' ? $this->getPlaceRegion($filters['transport_to']) : null;
+            $transportFrom = '';
+            $transportTo = '';
 
-            if ($transportFrom !== null) {
+            if ($filters['pickup_region_id'] !== '') {
+                $transportFrom = $this->getRegionNameFromId($filters['pickup_region_id']);
+            } elseif ($filters['transport_from'] !== '') {
+                $transportFrom = $this->getPlaceRegion($filters['transport_from']);
+            }
+
+            if ($filters['dropoff_region_id'] !== '') {
+                $transportTo = $this->getRegionNameFromId($filters['dropoff_region_id']);
+            } elseif ($filters['transport_to'] !== '') {
+                $transportTo = $this->getPlaceRegion($filters['transport_to']);
+            }
+
+            if (!blank($transportFrom)) {
                 $items = $items->filter(function (array $item) use ($transportFrom) {
                     return collect($item['routes_pricing'] ?? [])->contains(function ($route) use ($transportFrom) {
                         return Str::lower((string) ($route['route_from'] ?? '')) === Str::lower($transportFrom);
@@ -2431,10 +2500,19 @@ class HomeController extends Controller
                 });
             }
 
-            if ($transportTo !== null) {
+            if (!blank($transportTo)) {
                 $items = $items->filter(function (array $item) use ($transportTo) {
                     return collect($item['routes_pricing'] ?? [])->contains(function ($route) use ($transportTo) {
                         return Str::lower((string) ($route['route_to'] ?? '')) === Str::lower($transportTo);
+                    });
+                });
+            }
+
+            if (in_array($filters['service_type'], ['airport_transfer', 'activity_transfer', 'full_day_sightseeing'], true)) {
+                $items = $items->filter(function (array $item) use ($filters) {
+                    $serviceType = $filters['service_type'];
+                    return collect($item['routes_pricing'] ?? [])->contains(function ($route) use ($serviceType) {
+                        return trim((string) ($route['service_type'] ?? 'airport_transfer')) === $serviceType;
                     });
                 });
             }
@@ -2505,6 +2583,17 @@ class HomeController extends Controller
             ->where('is_active', true)
             ->whereRaw('LOWER(REPLACE(TRIM(place_name),"  "," ")) = ?', [preg_replace('/\s+/u', ' ', $lower)])
             ->value('route_region');
+    }
+
+    private function getRegionNameFromId(string $regionId): ?string
+    {
+        if (blank($regionId) || !is_numeric($regionId)) {
+            return null;
+        }
+
+        return Region::query()
+            ->where('id', (int) $regionId)
+            ->value('name');
     }
 
     private function collectSidebarFilters(Request $request, string $category): array
