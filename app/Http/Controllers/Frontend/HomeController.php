@@ -1136,8 +1136,8 @@ class HomeController extends Controller
             return $routes;
         }
 
-        $fromRegion = $this->getPlaceRegion($selectedFrom);
-        $toRegion = $this->getPlaceRegion($selectedTo);
+        $fromRegion = $this->normalizeSelectedRouteRegion($selectedFrom);
+        $toRegion = $this->normalizeSelectedRouteRegion($selectedTo);
 
         if (blank($fromRegion) || blank($toRegion)) {
             return $routes;
@@ -1147,13 +1147,13 @@ class HomeController extends Controller
             $routeFromRegion = $this->normalizeRouteRegion((string) ($route['route_from'] ?? ''));
             $routeToRegion = $this->normalizeRouteRegion((string) ($route['route_to'] ?? ''));
 
-            // Primary: match by normalized region
+            // Primary: match by normalized region or direct region name
             if (Str::lower($routeFromRegion ?? '') === Str::lower($fromRegion)
                 && Str::lower($routeToRegion ?? '') === Str::lower($toRegion)) {
                 return true;
             }
 
-            // Fallback: match by exact place name (case-insensitive)
+            // Fallback: match by exact place name or exact direct values (case-insensitive)
             $routeFromName = trim((string) ($route['route_from'] ?? ''));
             $routeToName = trim((string) ($route['route_to'] ?? ''));
             if ($routeFromName !== '' && $routeToName !== '') {
@@ -1185,14 +1185,14 @@ class HomeController extends Controller
             return null;
         }
 
-        $fromRegion = $this->getPlaceRegion($selectedFrom);
-        $toRegion = $this->getPlaceRegion($selectedTo);
+        $fromRegion = $this->normalizeSelectedRouteRegion($selectedFrom);
+        $toRegion = $this->normalizeSelectedRouteRegion($selectedTo);
 
         if (blank($fromRegion) || blank($toRegion)) {
             return null;
         }
 
-        // First attempt: match by region
+        // First attempt: match by normalized region or direct region name
         $found = $routes->first(function ($route) use ($fromRegion, $toRegion) {
             $routeFromRegion = $this->normalizeRouteRegion((string) ($route['route_from'] ?? ''));
             $routeToRegion = $this->normalizeRouteRegion((string) ($route['route_to'] ?? ''));
@@ -1217,6 +1217,26 @@ class HomeController extends Controller
             return Str::lower($routeFromName) === Str::lower($selectedFrom)
                 && Str::lower($routeToName) === Str::lower($selectedTo);
         });
+    }
+
+    private function normalizeSelectedRouteRegion(string $value): ?string
+    {
+        $value = trim($value);
+        if (blank($value)) {
+            return null;
+        }
+
+        $placeRegion = $this->getPlaceRegion($value);
+        if (!blank($placeRegion)) {
+            return $placeRegion;
+        }
+
+        $lower = Str::lower($value);
+        if (in_array($lower, ['north', 'south', 'airport'], true)) {
+            return ucfirst($lower);
+        }
+
+        return ucfirst($lower);
     }
 
     private function normalizeRouteRegion(string $value): ?string

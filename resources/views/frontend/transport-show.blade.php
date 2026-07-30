@@ -242,6 +242,27 @@
                             }
                         }
 
+                        foreach ($transport['routes_pricing'] ?? [] as $route) {
+                            $routeFrom = trim((string) ($route['route_from'] ?? ''));
+                            $routeTo = trim((string) ($route['route_to'] ?? ''));
+                            if ($routeFrom !== '') {
+                                $routeFromKey = strtolower($routeFrom);
+                                if (!isset($transportRegionOptions[$routeFromKey])) {
+                                    $transportRegionOptions[$routeFromKey] = $routeFrom;
+                                }
+                            }
+                            if ($routeTo !== '') {
+                                $routeToKey = strtolower($routeTo);
+                                if (!isset($transportRegionOptions[$routeToKey])) {
+                                    $transportRegionOptions[$routeToKey] = $routeTo;
+                                }
+                            }
+                        }
+
+                        if (!empty($transportRegionOptions)) {
+                            uasort($transportRegionOptions, fn ($a, $b) => strcmp($a, $b));
+                        }
+
                         $selectedFromKey = '';
                         $selectedToKey = '';
                         if ($selectedTransportFrom !== '') {
