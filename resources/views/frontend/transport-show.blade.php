@@ -17,13 +17,15 @@
         $routes = $transport['routes_pricing'] ?? [];
         $amenities = $transport['amenities'] ?? [];
         $operator = $transport['operator'] ?? null;
-        $serviceType = in_array(trim((string) request()->query('service_type', 'airport_transfer')), ['airport_transfer', 'activity_transfer', 'full_day_sightseeing'], true)
+        $serviceType = in_array(trim((string) request()->query('service_type', 'airport_transfer')), ['airport_transfer', 'activity_transfer', 'hotel_transfer', 'full_day_sightseeing', 'half_day_sightseeing'], true)
             ? trim((string) request()->query('service_type'))
             : 'airport_transfer';
         $serviceTypeLabel = match ($serviceType) {
             'airport_transfer' => __('transport.form.airport_transfer'),
             'activity_transfer' => __('transport.form.activity_transfer'),
+            'hotel_transfer' => __('transport.form.hotel_transfer'),
             'full_day_sightseeing' => __('transport.form.full_day_sightseeing'),
+            'half_day_sightseeing' => __('transport.form.half_day_sightseeing'),
             default => ucwords(str_replace('_', ' ', $serviceType)),
         };
         $booking['pickup_date'] = trim((string) request()->query('pickup_date', request()->query('arrival_date', request()->query('check_in', $booking['pickup_date']))));
@@ -366,13 +368,23 @@
                         <input type="hidden" id="transport-route-id" name="route_id" value="{{ $routeId }}">
                         <input type="hidden" id="transport-route-from" name="route_from" value="{{ $selectedRouteFrom }}">
                         <input type="hidden" id="transport-route-to" name="route_to" value="{{ $selectedRouteTo }}">
+                        <div class="booking-field">
+                            <label for="booking-dropoff-address">{{ __('transport.form.dropoff_address') }}</label>
+                            <textarea id="booking-dropoff-address" name="dropoff_address" rows="3" class="booking-input" placeholder="{{ __('transport.form.dropoff_address_placeholder') }}" required></textarea>
+                        </div>
                         <input type="hidden" name="source" value="detail">
 
                         <button id="booking-now-btn" type="button" class="btn-secondary booking-btn">{{ __('transport.form.book_now') }}</button>
                     </form>
 
                     <div class="booking-summary-line" id="transport-price-summary">
-                        <span>{{ __('transport.price') }}: USD {{ number_format((float) ($selectedDefaultPrice ?? 0), 2) }}@if(!empty($booking['return_date']) && $selectedReturnPrice) + {{ __('transport.return_price') }} USD {{ number_format((float) $selectedReturnPrice, 2) }}@endif</span>
+                        <span>
+                            @if(!empty($booking['return_date']) && $selectedReturnPrice)
+                                {{ __('transport.price') }}: USD {{ number_format((float) $selectedReturnPrice, 2) }}
+                            @else
+                                {{ __('transport.price') }}: USD {{ number_format((float) ($selectedDefaultPrice ?? 0), 2) }}
+                            @endif
+                        </span>
                     </div>
                     
                     <!-- DEBUG: Car Rental Calculation -->
@@ -456,6 +468,14 @@
                             return;
                         }
 
+                        const visibleDropoffAddress = document.querySelector('textarea[name="dropoff_address"]');
+                        const dropoffAddressValue = visibleDropoffAddress ? visibleDropoffAddress.value.trim() : '';
+                        if (!dropoffAddressValue) {
+                            alert('Please provide a drop-off address before booking.');
+                            submitBtn.disabled = false;
+                            return;
+                        }
+
                         if (visiblePickupDate) form.querySelector('input[name="pickup_date"]').value = visiblePickupDate.value || '';
                         if (visiblePickupTime) form.querySelector('input[name="pickup_time"]').value = visiblePickupTime.value || '';
                         if (visibleReturnDate) form.querySelector('input[name="return_date"]').value = visibleReturnDate.value || '';
@@ -463,6 +483,7 @@
                         if (visibleFrom) form.querySelector('input[name="route_from"]').value = visibleFrom.value || '';
                         if (visibleTo) form.querySelector('input[name="route_to"]').value = visibleTo.value || '';
                         if (visiblePassengers) form.querySelector('input[name="passengers"]').value = visiblePassengers.value || 1;
+                        if (visibleDropoffAddress) visibleDropoffAddress.value = dropoffAddressValue;
 
                         const formData = new FormData(form);
 

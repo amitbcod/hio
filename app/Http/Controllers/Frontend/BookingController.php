@@ -101,6 +101,7 @@ class BookingController extends Controller
                 'route_to'   => ['required', 'string'],
                 'pickup_date' => ['required', 'date'],
                 'pickup_time' => ['required', 'date_format:H:i'],
+                'dropoff_address' => ['required', 'string', 'max:1000'],
                 'return_date' => ['nullable', 'date'],
                 'return_time' => ['nullable', 'date_format:H:i'],
             ], [
@@ -110,6 +111,8 @@ class BookingController extends Controller
                 'pickup_date.date' => __('transport.validation.pickup_date_invalid'),
                 'pickup_time.required' => __('transport.validation.pickup_time_required'),
                 'pickup_time.date_format' => __('transport.validation.pickup_time_invalid'),
+                'dropoff_address.required' => __('transport.validation.dropoff_address_required'),
+                'dropoff_address.max' => __('transport.validation.dropoff_address_too_long'),
                 'return_date.date' => __('transport.validation.return_date_invalid'),
                 'return_time.date_format' => __('transport.validation.return_time_invalid'),
             ]);
@@ -1588,6 +1591,7 @@ class BookingController extends Controller
                     'pickup_time' => $item['pickup_time'] ?? null,
                     'return_date' => $item['return_date'] ?? null,
                     'return_time' => $item['return_time'] ?? null,
+                    'dropoff_address' => $item['dropoff_address'] ?? null,
                     'passengers' => $item['passengers'] ?? 1,
                     'adults' => $item['passengers'] ?? 1, // Transport uses passengers field
                     'children' => 0,

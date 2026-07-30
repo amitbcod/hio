@@ -423,7 +423,7 @@ class TransportController extends Controller
             ->get()
             ->groupBy('service_type');
 
-        return [
+        $serviceDefinitions = [
             'airport_transfer' => [
                 'label' => 'Airport Transfer',
                 'pairs' => $configuredPairs->has('airport_transfer')
@@ -436,13 +436,38 @@ class TransportController extends Controller
                     ? $configuredPairs['activity_transfer']->map(fn ($pair) => ['route_from' => $pair->route_from, 'route_to' => $pair->route_to])->values()->all()
                     : array_values(array_merge($airportPairs, $interRegionPairs)),
             ],
+            'hotel_transfer' => [
+                'label' => 'Hotel Transfer',
+                'pairs' => $configuredPairs->has('hotel_transfer')
+                    ? $configuredPairs['hotel_transfer']->map(fn ($pair) => ['route_from' => $pair->route_from, 'route_to' => $pair->route_to])->values()->all()
+                    : [],
+            ],
             'full_day_sightseeing' => [
                 'label' => 'Full Day Sightseeing',
                 'pairs' => $configuredPairs->has('full_day_sightseeing')
                     ? $configuredPairs['full_day_sightseeing']->map(fn ($pair) => ['route_from' => $pair->route_from, 'route_to' => $pair->route_to])->values()->all()
                     : array_values(array_merge($airportPairs, $interRegionPairs)),
             ],
+            'half_day_sightseeing' => [
+                'label' => 'Half Day Sightseeing',
+                'pairs' => $configuredPairs->has('half_day_sightseeing')
+                    ? $configuredPairs['half_day_sightseeing']->map(fn ($pair) => ['route_from' => $pair->route_from, 'route_to' => $pair->route_to])->values()->all()
+                    : [],
+            ],
         ];
+
+        foreach ($configuredPairs->keys() as $serviceKey) {
+            if (isset($serviceDefinitions[$serviceKey])) {
+                continue;
+            }
+
+            $serviceDefinitions[$serviceKey] = [
+                'label' => ucwords(str_replace('_', ' ', $serviceKey)),
+                'pairs' => $configuredPairs[$serviceKey]->map(fn ($pair) => ['route_from' => $pair->route_from, 'route_to' => $pair->route_to])->values()->all(),
+            ];
+        }
+
+        return $serviceDefinitions;
     }
 
     private function buildServiceRouteEntries(array $serviceDefinitions, array $savedRoutes, $existingRoutes, string $serviceKey): array
@@ -522,8 +547,21 @@ class TransportController extends Controller
 
         $regionOptions = Region::orderBy('name')->pluck('name')->toArray();
         $regionOptions = array_values(array_unique(array_merge(['Airport'], array_filter(array_map('trim', $regionOptions)))));
+        $configuredServiceTypes = \App\Models\TransportServiceRoutePair::query()
+            ->where('is_active', true)
+            ->pluck('service_type')
+            ->unique()
+            ->values()
+            ->all();
+        $allowedServiceTypes = array_values(array_unique(array_merge([
+            'airport_transfer',
+            'activity_transfer',
+            'hotel_transfer',
+            'full_day_sightseeing',
+            'half_day_sightseeing',
+        ], $configuredServiceTypes)));
         $regionRule = 'required|string|in:' . implode(',', $regionOptions);
-        $serviceTypeRule = 'required|string|in:airport_transfer,activity_transfer,full_day_sightseeing';
+        $serviceTypeRule = 'required|string|in:' . implode(',', $allowedServiceTypes);
         $saveService = $request->input('save_service');
         if (is_array($saveService)) {
             $saveService = trim((string) end($saveService));
@@ -688,19 +726,25 @@ class TransportController extends Controller
                 'seasonal' => array_values($seasonals),
             ];
 
-            $routeId = trim((string) ($routeData['route_id'] ?? ''));
-            if ($routeId === '') {
-                $routeId = 'TRN-' . $transport->id . '-' . ($index + 1);
-            }
-
             $routeFrom = $routeData['route_from'] ?? ($routeData['pickup_value'] ?? null);
             $routeTo = $routeData['route_to'] ?? ($routeData['dropoff_value'] ?? null);
+            $serviceType = $routeData['service_type'] ?? 'airport_transfer';
+            $routeId = trim((string) ($routeData['route_id'] ?? ''));
+            if ($routeId === '') {
+                $serviceTypeSlug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $serviceType));
+                $routeFromSlug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', (string) $routeFrom));
+                $routeToSlug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', (string) $routeTo));
+                $routeId = 'TRN-' . $transport->id . '-' . trim($serviceTypeSlug, '-') . '-' . trim($routeFromSlug, '-') . '-' . trim($routeToSlug, '-');
+                $routeId = preg_replace('/-+/', '-', $routeId);
+                if ($routeId === '') {
+                    $routeId = 'TRN-' . $transport->id . '-' . ($index + 1);
+                }
+            }
             $routeType = $routeData['route_type'] ?? (($routeFrom === 'Airport' || $routeTo === 'Airport') ? 'Airport' : 'Route');
             $pickupType = $routeData['pickup_type'] ?? 'Location zone';
             $dropoffType = $routeData['dropoff_type'] ?? 'Location zone';
             $pickupValue = $routeData['pickup_value'] ?? $routeFrom;
             $dropoffValue = $routeData['dropoff_value'] ?? $routeTo;
-            $serviceType = $routeData['service_type'] ?? 'airport_transfer';
 
             $transport->routes()->create([
                 'route_id' => $routeId,
@@ -723,7 +767,9 @@ class TransportController extends Controller
             $serviceLabels = [
                 'airport_transfer' => 'Airport Transfer',
                 'activity_transfer' => 'Activity Transfer',
+                'hotel_transfer' => 'Hotel Transfer',
                 'full_day_sightseeing' => 'Full Day Sightseeing',
+                'half_day_sightseeing' => 'Half Day Sightseeing',
             ];
 
             return redirect()->route('operator.transport.step2.show', $transport->id)

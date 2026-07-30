@@ -407,7 +407,7 @@ class HomeController extends Controller
         $bookingContext = $this->buildTransportBookingContext($request);
         $transport = $transport->load(['operator', 'rates', 'routes']);
 
-        $serviceType = in_array(trim((string) $request->query('service_type', 'airport_transfer')), ['airport_transfer', 'activity_transfer', 'full_day_sightseeing'], true)
+        $serviceType = in_array(trim((string) $request->query('service_type', 'airport_transfer')), ['airport_transfer', 'activity_transfer', 'hotel_transfer', 'full_day_sightseeing', 'half_day_sightseeing'], true)
             ? trim((string) $request->query('service_type'))
             : 'airport_transfer';
 
@@ -2375,7 +2375,7 @@ class HomeController extends Controller
             'dropoff_region_id' => trim((string) $request->query('dropoff_region_id', '')),
             'transport_from' => trim((string) $request->query('transport_from', '')),
             'transport_to' => trim((string) $request->query('transport_to', '')),
-            'service_type' => in_array(trim((string) $request->query('service_type', 'airport_transfer')), ['airport_transfer', 'activity_transfer', 'full_day_sightseeing'], true)
+            'service_type' => in_array(trim((string) $request->query('service_type', 'airport_transfer')), ['airport_transfer', 'activity_transfer', 'hotel_transfer', 'full_day_sightseeing', 'half_day_sightseeing'], true)
                 ? trim((string) $request->query('service_type', 'airport_transfer'))
                 : 'airport_transfer',
             'arrival_date' => (string) $request->query('arrival_date', ''),
@@ -2528,7 +2528,7 @@ class HomeController extends Controller
                 });
             }
 
-            if (in_array($filters['service_type'], ['airport_transfer', 'activity_transfer', 'full_day_sightseeing'], true)) {
+            if (in_array($filters['service_type'], ['airport_transfer', 'activity_transfer', 'hotel_transfer', 'full_day_sightseeing', 'half_day_sightseeing'], true)) {
                 $items = $items->filter(function (array $item) use ($filters) {
                     $serviceType = $filters['service_type'];
                     return collect($item['routes_pricing'] ?? [])->contains(function ($route) use ($serviceType) {

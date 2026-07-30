@@ -24,6 +24,7 @@ return new class extends Migration
             $table->time('pickup_time')->nullable();
             $table->date('return_date')->nullable();
             $table->time('return_time')->nullable();
+            $table->text('dropoff_address')->nullable();
             
             // Passengers
             $table->integer('adults')->default(1);

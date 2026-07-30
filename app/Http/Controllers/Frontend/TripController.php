@@ -547,6 +547,7 @@ class TripController extends Controller
         $mealPlanSafe = e($mealPlan);
         $vehicleRegistrationSafe = e($vehicleRegistration);
         $seatingCapacitySafe = e($seatingCapacity);
+        $dropoffAddressSafe = e($booking->dropoff_address ?? '');
         $specialRequestsSafe = e($specialRequests);
         $bookingNotesSafe = e($bookingNotes);
         $infoLabelCheckIn = e($isTransport ? 'Pickup Date / Time' : ($isActivity ? 'Activity Date / Time' : 'Check-in Date / Time'));
@@ -573,6 +574,10 @@ class TripController extends Controller
             $transportDetailRows .= '<tr>';
             $transportDetailRows .= '<td class="label">Seating Capacity</td>';
             $transportDetailRows .= '<td><strong style="color:#000000">' . $seatingCapacitySafe . '</strong></td>';
+            $transportDetailRows .= '</tr>';
+            $transportDetailRows .= '<tr>';
+            $transportDetailRows .= '<td class="label">Drop-off Address</td>';
+            $transportDetailRows .= '<td><strong style="color:#000000">' . ($dropoffAddressSafe ?: '-') . '</strong></td>';
             $transportDetailRows .= '</tr>';
         }
         
@@ -964,8 +969,9 @@ HTML;
         // Get all bookings for the trip
         $accommodationBookings = $trip->accommodationBookings ?? collect();
         $activityBookings = $trip->activityBookings ?? collect();
+        $transportBookings = $trip->transportBookings()->with(['transport'])->get() ?? collect();
         
-        $allBookings = $accommodationBookings->merge($activityBookings);
+        $allBookings = $accommodationBookings->merge($activityBookings)->merge($transportBookings);
         
         if ($allBookings->isEmpty()) {
             abort(404);
@@ -992,6 +998,27 @@ HTML;
         $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad($trip->id, 6, '0', STR_PAD_LEFT);
         $invoiceDate = now()->format('d M Y');
         $bookingRef = 'B' . str_pad($trip->id, 4, '0', STR_PAD_LEFT);
+        $invoiceTitle = e(__('invoice.title'));
+        $invoiceNumberLabel = e(__('invoice.number_label'));
+        $invoiceDateLabel = e(__('invoice.date_label'));
+        $bookingRefLabel = e(__('invoice.booking_ref'));
+        $billToLabel = e(__('invoice.bill_to'));
+        $accountDetailsLabel = e(__('invoice.account_details'));
+        $nameLabel = e(__('invoice.name_label'));
+        $addressLabel = e(__('invoice.address_label'));
+        $phoneLabel = e(__('invoice.phone_label'));
+        $emailLabel = e(__('invoice.email_label'));
+        $amountTypeLabel = e(__('invoice.amount_type'));
+        $accountIdLabel = e(__('invoice.account_id'));
+        $paymentMethodLabel = e(__('invoice.payment_method'));
+        $accountHolderLabel = e(__('invoice.account_holder_label'));
+        $accountHolderNote = e(__('invoice.account_holder_note'));
+        $serviceLabel = e(__('invoice.service'));
+        $serviceDatesLabel = e(__('invoice.service_dates'));
+        $descriptionLabel = e(__('invoice.description'));
+        $qtyLabel = e(__('invoice.qty'));
+        $unitLabel = e(__('invoice.unit'));
+        $totalLabel = e(__('invoice.total'));
 
         // Traveler details - safe escaping
         $travelerName = e($traveler->name ?? $traveler->first_name ?? 'Guest');
@@ -1032,6 +1059,15 @@ HTML;
         }
 
         $accountNameSafe = e($accountName ?: ($traveler->name ?? 'Traveller Name'));
+        $paymentMethod = null;
+        foreach ($transportBookings as $booking) {
+            if (!empty($booking->payment_method)) {
+                $paymentMethod = $booking->payment_method;
+                break;
+            }
+        }
+        $paymentMethodSafe = e($paymentMethod ?: 'N/A');
+
         // Build invoice items with proper data
         $invoiceItems = [];
         $subtotal = 0;
@@ -1112,6 +1148,36 @@ HTML;
                     'notes' => e(($booking->variant_name ?? ($booking->activity->service_type ?? 'Activity')) . ' | ' . (($booking->guests ?? collect())->count() ?: 1) . ' pax'),
                     'qty' => 1,
                     'unitPrice' => $amount,
+                    'total' => $amount,
+                ];
+                $invoiceItems[] = $item;
+                $subtotal += $amount;
+            }
+        }
+
+        foreach ($transportBookings as $booking) {
+            $amount = (float) data_get($booking, 'total_amount', $booking->total_amount ?? 0);
+            if ($booking->transport && $amount > 0) {
+                $passengers = max(1, (int) data_get($booking, 'total_passengers', ($booking->adults ?? 0) + ($booking->children ?? 0)));
+                $pricePerPerson = (float) data_get($booking, 'price_per_person', 0);
+                $unitPrice = $pricePerPerson > 0 ? $pricePerPerson : $amount;
+                $quantity = $pricePerPerson > 0 ? $passengers : 1;
+                $description = sprintf(
+                    'Route: %s to %s | %s pax',
+                    e($booking->route_from ?? 'N/A'),
+                    e($booking->route_to ?? 'N/A'),
+                    $passengers
+                );
+                $item = [
+                    'type' => 'Transport',
+                    'name' => e($booking->transport->vehicle_name ?? 'Transport'),
+                    'location' => e($booking->route_to ?? $booking->transport->location ?? 'Mauritius'),
+                    'checkIn' => $booking->pickup_date ? $booking->pickup_date->format('d M Y') : 'N/A',
+                    'checkOut' => $booking->return_date ? $booking->return_date->format('d M Y') : 'N/A',
+                    'description' => $description,
+                    'notes' => e(($booking->transport->vehicle_type ?? 'Vehicle') . ' | Pickup: ' . ($booking->pickup_time ?? '-') . ' | Return: ' . ($booking->return_time ?? '-') . ' | Drop-off: ' . ($booking->dropoff_address ?? '-')),
+                    'qty' => $quantity,
+                    'unitPrice' => $unitPrice,
                     'total' => $amount,
                 ];
                 $invoiceItems[] = $item;
@@ -1371,6 +1437,10 @@ $mealPlanSafe = !empty($mealPlanValues)
               <tr>
                 <td class="label">{$amountTypeLabel}</td>
                 <td class="value">Guest booking</td>
+              </tr>
+              <tr>
+                <td class="label">{$paymentMethodLabel}</td>
+                <td class="value">{$paymentMethodSafe}</td>
               </tr>
               <tr>
                 <td class="label">{$accountIdLabel}</td>

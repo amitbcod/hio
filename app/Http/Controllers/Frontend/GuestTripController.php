@@ -492,8 +492,17 @@ class GuestTripController extends Controller
         $mealPlan = $isTransport
             ? (($booking->route_from || $booking->route_to) ? trim(($booking->route_from ?? '') . ' → ' . ($booking->route_to ?? '')) : 'N/A')
             : ($booking->meal_plan ?? $booking->package_name ?? 'N/A');
+        $dropoffAddress = $booking->dropoff_address ?? null;
         $specialRequests = $booking->special_request ?? $booking->special_requests ?? 'None';
         $bookingNotes = $booking->notes ?? $booking->booking_notes ?? '-';
+
+        $transportDetailRow = '';
+        if ($isTransport) {
+            $transportDetailRow = '<tr>' .
+                '<td class="label">Drop-off Address</td>' .
+                '<td><strong>' . e($dropoffAddress ?: '-') . '</strong></td>' .
+                '</tr>';
+        }
 
         $operatorLabel = e($operator->business_name ?? $providerName);
         $locationLabelSafe = e('Mauritius');
@@ -518,6 +527,7 @@ class GuestTripController extends Controller
         $roomTypeSafe = e($roomType);
         $occupancySafe = e($occupancy);
         $mealPlanSafe = e($mealPlan);
+        $dropoffAddressSafe = e($dropoffAddress ?: '-');
         $specialRequestsSafe = e($specialRequests);
         $bookingNotesSafe = e($bookingNotes);
         $infoLabelCheckIn = e($isTransport ? 'Pickup Date / Time' : ($isActivity ? 'Activity Date / Time' : 'Check-in Date / Time'));
@@ -664,6 +674,8 @@ body{font-family:helvetica;color:#222; font-size:10px;}
                 <td class="label">Meal Plan</td>
                 <td>{$mealPlanSafe}</td>
             </tr>
+
+            {$transportDetailRow}
 
             <tr>
                 <td class="label">Special Requests</td>
@@ -1208,7 +1220,7 @@ HTML;
                     'checkIn' => $booking->pickup_date ? $booking->pickup_date->format('d M Y') : 'N/A',
                     'checkOut' => $booking->return_date ? $booking->return_date->format('d M Y') : 'N/A',
                     'description' => $description,
-                    'notes' => e(($booking->transport->vehicle_type ?? 'Vehicle') . ' | Pickup: ' . ($booking->pickup_time ?? '-') . ' | Return: ' . ($booking->return_time ?? '-')),
+                    'notes' => e(($booking->transport->vehicle_type ?? 'Vehicle') . ' | Pickup: ' . ($booking->pickup_time ?? '-') . ' | Return: ' . ($booking->return_time ?? '-') . ' | Drop-off: ' . ($booking->dropoff_address ?? '-')),
                     'qty' => $quantity,
                     'unitPrice' => $unitPrice,
                     'total' => $amount,

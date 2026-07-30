@@ -126,7 +126,9 @@
                                     <select name="service_type" class="category-search-select">
                                         <option value="airport_transfer" {{ ($filters['service_type'] ?? 'airport_transfer') === 'airport_transfer' ? 'selected' : '' }}>Airport Transfer</option>
                                         <option value="activity_transfer" {{ ($filters['service_type'] ?? '') === 'activity_transfer' ? 'selected' : '' }}>Activity Transfer</option>
+                                        <option value="hotel_transfer" {{ ($filters['service_type'] ?? '') === 'hotel_transfer' ? 'selected' : '' }}>Hotel Transfer</option>
                                         <option value="full_day_sightseeing" {{ ($filters['service_type'] ?? '') === 'full_day_sightseeing' ? 'selected' : '' }}>Full Day Sightseeing</option>
+                                        <option value="half_day_sightseeing" {{ ($filters['service_type'] ?? '') === 'half_day_sightseeing' ? 'selected' : '' }}>Half Day Sightseeing</option>
                                     </select>
                                 </div>
                                 <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">

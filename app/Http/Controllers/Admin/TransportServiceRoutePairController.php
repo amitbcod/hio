@@ -20,7 +20,9 @@ class TransportServiceRoutePairController extends Controller
         $serviceTypes = [
             'airport_transfer' => 'Airport Transfer',
             'activity_transfer' => 'Activity Transfer',
+            'hotel_transfer' => 'Hotel Transfer',
             'full_day_sightseeing' => 'Full Day Sightseeing',
+            'half_day_sightseeing' => 'Half Day Sightseeing',
         ];
 
         return view('admin.transport-service-route-pairs.index', compact('pairs', 'regions', 'serviceTypes'));
@@ -33,7 +35,7 @@ class TransportServiceRoutePairController extends Controller
         }
 
         $data = $request->validate([
-            'service_type' => 'required|string|in:airport_transfer,activity_transfer,full_day_sightseeing',
+            'service_type' => 'required|string|in:airport_transfer,activity_transfer,hotel_transfer,full_day_sightseeing,half_day_sightseeing',
             'route_from' => 'required|string',
             'route_to' => 'required|string',
             'is_active' => 'nullable|boolean',
@@ -53,7 +55,7 @@ class TransportServiceRoutePairController extends Controller
         }
 
         $data = $request->validate([
-            'service_type' => 'required|string|in:airport_transfer,activity_transfer,full_day_sightseeing',
+            'service_type' => 'required|string|in:airport_transfer,activity_transfer,hotel_transfer,full_day_sightseeing,half_day_sightseeing',
             'route_from' => 'required|string',
             'route_to' => 'required|string',
             'is_active' => 'nullable|boolean',

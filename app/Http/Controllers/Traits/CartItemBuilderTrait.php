@@ -323,6 +323,7 @@ trait CartItemBuilderTrait
         $pricePerPassenger = (float) $request->input('price_per_passenger', 0);
         $returnPrice = max(0.0, (float) $request->input('return_price', 0));
         $carRentalTotal = (float) $request->input('car_rental_total', 0);
+        $dropoffAddress = trim((string) $request->input('dropoff_address', ''));
         $serviceType = $request->input('service_type', 'route');
         $currency = $request->input('currency', 'USD');
         $image = $request->input('image', '');
@@ -382,6 +383,7 @@ trait CartItemBuilderTrait
             'return_date_display' => $returnDate ? Carbon::parse($returnDate)->format('d M Y') : '',
             'return_time' => $returnTime,
             'passengers' => $passengers,
+            'dropoff_address' => $dropoffAddress,
             'price_per_passenger' => $pricePerPassenger,
             'return_price' => $returnPrice,
             'car_rental_total' => $carRentalTotal,
