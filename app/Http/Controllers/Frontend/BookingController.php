@@ -1601,6 +1601,7 @@ class BookingController extends Controller
                     'payment_method' => $paymentMethod === 'againgency' ? 'Againgency' : 'COD',
                     'source_channel' => 'Direct',
                     'special_requests' => $special,
+                    'service_type' => $item['service_type'] ?? null,
                     'booked_at' => now(),
                     'trip_id' => $tripId,
                     'is_guest' => $isGuestCheckout ? 1 : 0,

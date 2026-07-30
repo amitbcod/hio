@@ -57,6 +57,20 @@ class TripController extends Controller
             ->with(['transport', 'driver'])
             ->orderBy('pickup_date', 'asc')
             ->get();
+
+        // Prepare `service_type_display` only if the booking has a persisted `service_type`.
+        foreach ($transportBookings as $tb) {
+          $serviceType = trim((string) ($tb->service_type ?? ''));
+          if ($serviceType !== '') {
+            $translated = __('transport.form.' . $serviceType);
+            $tb->service_type_display = $translated !== 'transport.form.' . $serviceType
+              ? $translated
+              : ucwords(str_replace(['_', '-'], ' ', $serviceType));
+          } else {
+            // For older rows without service_type, show a dash as requested
+            $tb->service_type_display = '-';
+          }
+        }
         
         // Calculate actual trip dates from all bookings
         $allDates = [];
@@ -546,6 +560,23 @@ class TripController extends Controller
         $occupancySafe = e($occupancy);
         $mealPlanSafe = e($mealPlan);
         $vehicleRegistrationSafe = e($vehicleRegistration);
+        $serviceTypeDisplaySafe = '';
+        if ($isTransport) {
+          if (!empty($booking->service_type_display)) {
+            $transportServiceTypeDisplay = $booking->service_type_display;
+          } else {
+            $transportServiceTypeValue = trim((string) ($booking->service_type ?? ''));
+            if ($transportServiceTypeValue !== '') {
+              $translatedServiceType = __('transport.form.' . $transportServiceTypeValue, [], app()->getLocale());
+              $transportServiceTypeDisplay = $translatedServiceType !== 'transport.form.' . $transportServiceTypeValue
+                ? $translatedServiceType
+                : ucwords(str_replace(['_', '-'], ' ', $transportServiceTypeValue));
+            } else {
+              $transportServiceTypeDisplay = __('cart.type.transport');
+            }
+          }
+          $serviceTypeDisplaySafe = e($transportServiceTypeDisplay);
+        }
         $seatingCapacitySafe = e($seatingCapacity);
         $dropoffAddressSafe = e($booking->dropoff_address ?? '');
         $specialRequestsSafe = e($specialRequests);
@@ -738,6 +769,10 @@ class TripController extends Controller
               <tr>
                 <td class="label">{$infoLabelType}</td>
                 <td><strong style="color:#000000">{$roomTypeSafe}</strong></td>
+              </tr>
+              <tr>
+                <td class="label">Service Type</td>
+                <td><strong style="color:#000000">{$serviceTypeDisplaySafe}</strong></td>
               </tr>
               <tr>
                 <td class="label">Occupancy</td>
@@ -1162,8 +1197,25 @@ HTML;
                 $pricePerPerson = (float) data_get($booking, 'price_per_person', 0);
                 $unitPrice = $pricePerPerson > 0 ? $pricePerPerson : $amount;
                 $quantity = $pricePerPerson > 0 ? $passengers : 1;
+                // Prefer precomputed display value (inferred or persisted), fallback to service_type
+                if (!empty($booking->service_type_display) && $booking->service_type_display !== '-') {
+                  $transportServiceTypeDisplay = $booking->service_type_display;
+                } else {
+                  $transportServiceTypeValue = trim((string) data_get($booking, 'service_type', ''));
+                  $transportServiceTypeDisplay = '';
+                  if ($transportServiceTypeValue !== '') {
+                    $translatedServiceType = __('transport.form.' . $transportServiceTypeValue, [], app()->getLocale());
+                    $transportServiceTypeDisplay = $translatedServiceType !== 'transport.form.' . $transportServiceTypeValue
+                      ? $translatedServiceType
+                      : ucwords(str_replace(['_', '-'], ' ', $transportServiceTypeValue));
+                  } else {
+                    // older rows with no service_type: show a dash
+                    $transportServiceTypeDisplay = '-';
+                  }
+                }
                 $description = sprintf(
-                    'Route: %s to %s | %s pax',
+                    'Service Type: %s | Route: %s to %s | %s pax',
+                    e($transportServiceTypeDisplay),
                     e($booking->route_from ?? 'N/A'),
                     e($booking->route_to ?? 'N/A'),
                     $passengers

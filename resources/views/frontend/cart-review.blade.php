@@ -209,7 +209,19 @@
                                         } else if ($item['type'] === 'activity') {
                                             $label = __('cart.type.activity') . ': ' . ($item['variant_name'] ?? $item['title']);
                                         } else {
-                                            $label = __('cart.type.transport') . ': ' . trim((string) (($item['route_from'] ?? '') . ($item['route_to'] ? ' → ' . $item['route_to'] : '')));
+                                            $transportServiceType = trim((string) ($item['service_type'] ?? ''));
+                                            $transportServiceTypeLabel = '';
+                                            if ($transportServiceType !== '') {
+                                                $translatedServiceType = __('transport.form.' . $transportServiceType, [], app()->getLocale());
+                                                $transportServiceTypeLabel = $translatedServiceType !== 'transport.form.' . $transportServiceType
+                                                    ? $translatedServiceType
+                                                    : ucwords(str_replace(['_', '-'], ' ', $transportServiceType));
+                                            }
+                                            $routeLabel = trim((string) (($item['route_from'] ?? '') . ($item['route_to'] ? ' → ' . $item['route_to'] : '')));
+                                            $label = __('cart.type.transport') . ': ' . ($transportServiceTypeLabel ?: __('cart.type.transport'));
+                                            if ($routeLabel !== '') {
+                                                $label .= ' · ' . $routeLabel;
+                                            }
                                         }
                                     @endphp
                                     <div class="fare-row">

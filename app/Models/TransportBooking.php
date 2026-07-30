@@ -34,6 +34,7 @@ class TransportBooking extends Model
         'traveler_passport_number',
         'traveler_notes',
         'dropoff_address',
+        'service_type',
         'price_per_person',
         'total_amount',
         'currency',

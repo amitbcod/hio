@@ -399,6 +399,14 @@
                                 <img src="{{ $transportImg }}" alt="{{ $booking->transport?->vehicle_name ?? __('traveler.trip_detail.transport') }}" class="property-img">
                                 <div class="property-info">
                                     <h3>{{ $booking->transport?->vehicle_name ?? __('traveler.trip_detail.transport') }}</h3>
+                                    @if(!empty($booking->transport?->vehicle_type))
+                                        <div class="subtitle">{{ $booking->transport->vehicle_type }}</div>
+                                    @endif
+                                    @php
+                                        // Show persisted display value or a dash for older rows without service_type
+                                        $displayType = $booking->service_type_display ?? '-';
+                                    @endphp
+                                    <div class="subtitle" style="font-weight:600;color:#4a4a4a;">{{ $displayType }}</div>
                                     <div class="type">{{ trim(($booking->route_from ?? '') . ' → ' . ($booking->route_to ?? '')) }}</div>
 
                                     <div class="ref-label">{{ __('traveler.trip_detail.booking_ref') }}</div>
