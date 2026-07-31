@@ -1206,7 +1206,7 @@ class HomeController extends Controller
         }
 
         // Fallback: match by exact place names (case-insensitive)
-        return $routes->first(function ($route) use ($selectedFrom, $selectedTo) {
+        $exact = $routes->first(function ($route) use ($selectedFrom, $selectedTo) {
             $routeFromName = trim((string) ($route['route_from'] ?? ''));
             $routeToName = trim((string) ($route['route_to'] ?? ''));
 
@@ -1217,6 +1217,44 @@ class HomeController extends Controller
             return Str::lower($routeFromName) === Str::lower($selectedFrom)
                 && Str::lower($routeToName) === Str::lower($selectedTo);
         });
+
+        if ($exact) {
+            return $exact;
+        }
+
+        // As a final fallback, try to find a reverse route (operator may only add one direction).
+        // If a reverse route exists (B -> A) and user requested A -> B, use the reverse route's pricing
+        // but return a copy with `route_from`/`route_to` swapped so the UI shows A → B while using the existing price.
+        $reverse = $routes->first(function ($route) use ($selectedFrom, $selectedTo) {
+            $routeFromName = trim((string) ($route['route_from'] ?? ''));
+            $routeToName = trim((string) ($route['route_to'] ?? ''));
+            if ($routeFromName === '' || $routeToName === '') {
+                return false;
+            }
+            return Str::lower($routeFromName) === Str::lower($selectedTo)
+                && Str::lower($routeToName) === Str::lower($selectedFrom);
+        });
+
+        if ($reverse) {
+            // Ensure reverse route actually has pricing before using it as fallback
+            $pricing = $reverse['pricing'] ?? [];
+            $hasPricing = (isset($pricing['default_price']) && $pricing['default_price'] !== null)
+                || (isset($pricing['return_price']) && $pricing['return_price'] !== null)
+                || (!empty($pricing['seasonal'] ?? []));
+
+            if (!$hasPricing) {
+                // don't use reverse route if no price information present
+                return null;
+            }
+            $copy = $reverse;
+            // Swap from/to and route_name for display, keep pricing intact
+            $copy['route_from'] = $selectedFrom;
+            $copy['route_to'] = $selectedTo;
+            $copy['route_name'] = trim(($selectedFrom ? $selectedFrom : '') . ' → ' . ($selectedTo ? $selectedTo : ''));
+            return $copy;
+        }
+
+        return null;
     }
 
     private function normalizeSelectedRouteRegion(string $value): ?string
@@ -2512,20 +2550,59 @@ class HomeController extends Controller
                 $transportTo = $this->getPlaceRegion($filters['transport_to']);
             }
 
-            if (!blank($transportFrom)) {
-                $items = $items->filter(function (array $item) use ($transportFrom) {
-                    return collect($item['routes_pricing'] ?? [])->contains(function ($route) use ($transportFrom) {
-                        return Str::lower((string) ($route['route_from'] ?? '')) === Str::lower($transportFrom);
-                    });
-                });
-            }
+            // If both pickup and dropoff provided, accept transports that have either
+            // a direct A->B route or a reverse B->A route (we'll use reverse pricing later).
+            if (!blank($transportFrom) && !blank($transportTo)) {
+                $fromExpected = $this->normalizeSelectedRouteRegion($transportFrom);
+                $toExpected = $this->normalizeSelectedRouteRegion($transportTo);
 
-            if (!blank($transportTo)) {
-                $items = $items->filter(function (array $item) use ($transportTo) {
-                    return collect($item['routes_pricing'] ?? [])->contains(function ($route) use ($transportTo) {
-                        return Str::lower((string) ($route['route_to'] ?? '')) === Str::lower($transportTo);
+                $items = $items->filter(function (array $item) use ($fromExpected, $toExpected) {
+                    return collect($item['routes_pricing'] ?? [])->contains(function ($route) use ($fromExpected, $toExpected) {
+                        $routeFromNorm = $this->normalizeRouteRegion((string) ($route['route_from'] ?? ''));
+                        $routeToNorm = $this->normalizeRouteRegion((string) ($route['route_to'] ?? ''));
+                        if (blank($routeFromNorm) || blank($routeToNorm)) {
+                            return false;
+                        }
+
+                        // direct match A -> B
+                        if (Str::lower($routeFromNorm) === Str::lower($fromExpected)
+                            && Str::lower($routeToNorm) === Str::lower($toExpected)) {
+                            return true;
+                        }
+
+                        // reverse match B -> A (operator only added opposite direction)
+                        if (Str::lower($routeFromNorm) === Str::lower($toExpected)
+                            && Str::lower($routeToNorm) === Str::lower($fromExpected)) {
+                            return true;
+                        }
+
+                        return false;
                     });
                 });
+            } else {
+                if (!blank($transportFrom)) {
+                    $expected = $this->normalizeSelectedRouteRegion($transportFrom);
+                    $items = $items->filter(function (array $item) use ($expected) {
+                        return collect($item['routes_pricing'] ?? [])->contains(function ($route) use ($expected) {
+                            $routeFromNorm = $this->normalizeRouteRegion((string) ($route['route_from'] ?? ''));
+                            $routeToNorm = $this->normalizeRouteRegion((string) ($route['route_to'] ?? ''));
+                            return (!blank($routeFromNorm) && Str::lower($routeFromNorm) === Str::lower($expected))
+                                || (!blank($routeToNorm) && Str::lower($routeToNorm) === Str::lower($expected));
+                        });
+                    });
+                }
+
+                if (!blank($transportTo)) {
+                    $expected = $this->normalizeSelectedRouteRegion($transportTo);
+                    $items = $items->filter(function (array $item) use ($expected) {
+                        return collect($item['routes_pricing'] ?? [])->contains(function ($route) use ($expected) {
+                            $routeFromNorm = $this->normalizeRouteRegion((string) ($route['route_from'] ?? ''));
+                            $routeToNorm = $this->normalizeRouteRegion((string) ($route['route_to'] ?? ''));
+                            return (!blank($routeToNorm) && Str::lower($routeToNorm) === Str::lower($expected))
+                                || (!blank($routeFromNorm) && Str::lower($routeFromNorm) === Str::lower($expected));
+                        });
+                    });
+                }
             }
 
             if (in_array($filters['service_type'], ['airport_transfer', 'activity_transfer', 'hotel_transfer', 'full_day_sightseeing', 'half_day_sightseeing'], true)) {
