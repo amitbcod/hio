@@ -517,6 +517,8 @@
     "traveler.trip_detail.pickup": "Prise en charge",
     "traveler.trip_detail.return": "Retour",
     "traveler.trip_detail.passengers": "Passagers",
+    "traveler.trip_detail.pickup_address": "Adresse de prise en charge",
+    "traveler.trip_detail.dropoff_address": "Adresse de dépose",
     "traveler.trip_detail.room": "Chambre",
     "traveler.trip_detail.check_in": "Arrivée",
     "traveler.trip_detail.check_out": "Départ",

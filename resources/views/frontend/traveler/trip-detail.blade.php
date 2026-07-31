@@ -450,6 +450,26 @@
 
                             <div class="detail-item">
                                 <div class="detail-title">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                    <span>
+                                        {{ __('traveler.trip_detail.pickup_address') }}
+                                        <div class="detail-value">{{ $booking->pickup_address ? $booking->pickup_address : __('traveler.trip_detail.not_set') }}</div>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="detail-item">
+                                <div class="detail-title">
+                                    <i class="fa-solid fa-map-pin"></i>
+                                    <span>
+                                        {{ __('traveler.trip_detail.dropoff_address') }}
+                                        <div class="detail-value">{{ $booking->dropoff_address ? $booking->dropoff_address : __('traveler.trip_detail.not_set') }}</div>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="detail-item">
+                                <div class="detail-title">
                                     <i class="fa-solid fa-users"></i>
                                     <span>
                                         {{ __('traveler.trip_detail.passengers') }}

@@ -578,6 +578,7 @@ class TripController extends Controller
           $serviceTypeDisplaySafe = e($transportServiceTypeDisplay);
         }
         $seatingCapacitySafe = e($seatingCapacity);
+        $pickupAddressSafe = e($booking->pickup_address ?? '');
         $dropoffAddressSafe = e($booking->dropoff_address ?? '');
         $specialRequestsSafe = e($specialRequests);
         $bookingNotesSafe = e($bookingNotes);
@@ -605,6 +606,10 @@ class TripController extends Controller
             $transportDetailRows .= '<tr>';
             $transportDetailRows .= '<td class="label">Seating Capacity</td>';
             $transportDetailRows .= '<td><strong style="color:#000000">' . $seatingCapacitySafe . '</strong></td>';
+            $transportDetailRows .= '</tr>';
+            $transportDetailRows .= '<tr>';
+            $transportDetailRows .= '<td class="label">Pickup Address</td>';
+            $transportDetailRows .= '<td><strong style="color:#000000">' . ($pickupAddressSafe ?: '-') . '</strong></td>';
             $transportDetailRows .= '</tr>';
             $transportDetailRows .= '<tr>';
             $transportDetailRows .= '<td class="label">Drop-off Address</td>';

@@ -506,6 +506,7 @@ class GuestTripController extends Controller
         $mealPlan = $isTransport
             ? (($booking->route_from || $booking->route_to) ? trim(($booking->route_from ?? '') . ' → ' . ($booking->route_to ?? '')) : 'N/A')
             : ($booking->meal_plan ?? $booking->package_name ?? 'N/A');
+        $pickupAddress = $booking->pickup_address ?? null;
         $dropoffAddress = $booking->dropoff_address ?? null;
         $specialRequests = $booking->special_request ?? $booking->special_requests ?? 'None';
         $bookingNotes = $booking->notes ?? $booking->booking_notes ?? '-';
@@ -513,6 +514,10 @@ class GuestTripController extends Controller
         $transportDetailRow = '';
         if ($isTransport) {
             $transportDetailRow = '<tr>' .
+                '<td class="label">Pickup Address</td>' .
+                '<td><strong>' . e($pickupAddress ?: '-') . '</strong></td>' .
+                '</tr>' .
+                '<tr>' .
                 '<td class="label">Drop-off Address</td>' .
                 '<td><strong>' . e($dropoffAddress ?: '-') . '</strong></td>' .
                 '</tr>';

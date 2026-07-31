@@ -369,6 +369,11 @@
                         <input type="hidden" id="transport-route-from" name="route_from" value="{{ $selectedRouteFrom }}">
                         <input type="hidden" id="transport-route-to" name="route_to" value="{{ $selectedRouteTo }}">
                         <div class="booking-field">
+                            <label for="booking-pickup-address">{{ __('transport.form.pickup_address') }}</label>
+                            <textarea id="booking-pickup-address" name="pickup_address" rows="3" class="booking-input" placeholder="{{ __('transport.form.pickup_address_placeholder') }}" required></textarea>
+                        </div>
+
+                        <div class="booking-field">
                             <label for="booking-dropoff-address">{{ __('transport.form.dropoff_address') }}</label>
                             <textarea id="booking-dropoff-address" name="dropoff_address" rows="3" class="booking-input" placeholder="{{ __('transport.form.dropoff_address_placeholder') }}" required></textarea>
                         </div>
@@ -468,6 +473,14 @@
                             return;
                         }
 
+                        const visiblePickupAddress = document.querySelector('textarea[name="pickup_address"]');
+                        const pickupAddressValue = visiblePickupAddress ? visiblePickupAddress.value.trim() : '';
+                        if (!pickupAddressValue) {
+                            alert('Please provide a pick-up address before booking.');
+                            submitBtn.disabled = false;
+                            return;
+                        }
+
                         const visibleDropoffAddress = document.querySelector('textarea[name="dropoff_address"]');
                         const dropoffAddressValue = visibleDropoffAddress ? visibleDropoffAddress.value.trim() : '';
                         if (!dropoffAddressValue) {
@@ -484,6 +497,7 @@
                         if (visibleTo) form.querySelector('input[name="route_to"]').value = visibleTo.value || '';
                         if (visiblePassengers) form.querySelector('input[name="passengers"]').value = visiblePassengers.value || 1;
                         if (visibleDropoffAddress) visibleDropoffAddress.value = dropoffAddressValue;
+                        if (visiblePickupAddress) visiblePickupAddress.value = pickupAddressValue;
 
                         const formData = new FormData(form);
 
@@ -521,6 +535,41 @@
                             submitBtn.disabled = false;
                         });
                     });
+
+                    // Auto-fill airport address when service type is airport_transfer
+                    const serviceTypeInput = document.querySelector('input[name="service_type"]#booking-service-type') || document.querySelector('input#booking-service-type') || document.querySelector('input[name="service_type"]');
+                    function autoFillAirportAddress() {
+                        try {
+                            const service = serviceTypeInput ? (serviceTypeInput.value || '').trim() : '';
+                            if (service !== 'airport_transfer') return;
+
+                            const fromSelect = document.querySelector('select[name="transport_from"]') || document.getElementById('transport-place-from');
+                            const toSelect = document.querySelector('select[name="transport_to"]') || document.getElementById('transport-place-to');
+                            const pickupTextarea = document.getElementById('booking-pickup-address');
+                            const dropoffTextarea = document.getElementById('booking-dropoff-address');
+
+                            const fromVal = fromSelect ? String(fromSelect.value || '').trim() : '';
+                            const toVal = toSelect ? String(toSelect.value || '').trim() : '';
+
+                            if (fromVal && fromVal.toLowerCase() === 'airport') {
+                                if (pickupTextarea && !pickupTextarea.value.trim()) pickupTextarea.value = 'Airport';
+                            }
+
+                            if (toVal && toVal.toLowerCase() === 'airport') {
+                                if (dropoffTextarea && !dropoffTextarea.value.trim()) dropoffTextarea.value = 'Airport';
+                            }
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
+
+                    document.addEventListener('DOMContentLoaded', autoFillAirportAddress);
+                    const fromSelGlobal = document.getElementById('transport-place-from');
+                    const toSelGlobal = document.getElementById('transport-place-to');
+                    if (fromSelGlobal) fromSelGlobal.addEventListener('change', autoFillAirportAddress);
+                    if (toSelGlobal) toSelGlobal.addEventListener('change', autoFillAirportAddress);
+                    try { autoFillAirportAddress(); } catch (e) { /* ignore */ }
+
                 })();
             </script>
             @endpush

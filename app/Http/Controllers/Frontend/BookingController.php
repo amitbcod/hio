@@ -1591,6 +1591,7 @@ class BookingController extends Controller
                     'pickup_time' => $item['pickup_time'] ?? null,
                     'return_date' => $item['return_date'] ?? null,
                     'return_time' => $item['return_time'] ?? null,
+                    'pickup_address' => $item['pickup_address'] ?? null,
                     'dropoff_address' => $item['dropoff_address'] ?? null,
                     'passengers' => $item['passengers'] ?? 1,
                     'adults' => $item['passengers'] ?? 1, // Transport uses passengers field

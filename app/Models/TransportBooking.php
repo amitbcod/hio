@@ -33,6 +33,7 @@ class TransportBooking extends Model
         'traveler_nationality',
         'traveler_passport_number',
         'traveler_notes',
+        'pickup_address',
         'dropoff_address',
         'service_type',
         'price_per_person',
