@@ -349,7 +349,7 @@
                         <span>{{ $booking['passengers'] }} {{ trans_choice('transport.summary.passengers', $booking['passengers']) }}</span>
                     </div> -->
 
-                    <form method="POST" action="{{ route('frontend.booking.cart.add') }}" class="booking-add-form">
+                    <form method="POST" action="{{ route('frontend.booking.cart.add') }}" class="booking-add-form" style="gap:10px">
                         @csrf
                         <input type="hidden" name="type" value="transport">
                         <input type="hidden" name="transport_id" value="{{ $transport['id'] }}">
