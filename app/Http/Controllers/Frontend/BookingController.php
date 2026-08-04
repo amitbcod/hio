@@ -1758,9 +1758,21 @@ class BookingController extends Controller
                 ]
             );
 
+            $operatorToken = $request->query('operator_token') ?: session('operator_token');
+            if ($operatorToken) {
+                session(['operator_token' => $operatorToken]);
+            }
+
             $callbackUrl = route('frontend.booking.payment.callback');
-            $successUrl = route('frontend.booking.payment.return', ['status' => 'success', 'ref' => $primaryRef, 'transaction_ref' => $transactionRef]);
-            $failureUrl = route('frontend.booking.payment.return', ['status' => 'failed', 'ref' => $primaryRef, 'transaction_ref' => $transactionRef]);
+            $returnParams = ['status' => 'success', 'ref' => $primaryRef, 'transaction_ref' => $transactionRef];
+            $failureParams = ['status' => 'failed', 'ref' => $primaryRef, 'transaction_ref' => $transactionRef];
+            if ($operatorToken) {
+                $returnParams['operator_token'] = $operatorToken;
+                $failureParams['operator_token'] = $operatorToken;
+            }
+
+            $successUrl = route('frontend.booking.payment.return', $returnParams);
+            $failureUrl = route('frontend.booking.payment.return', $failureParams);
 
             // Extract dates from the first cart item for Ecommpay compliance
             $startDate = null;
@@ -1824,7 +1836,12 @@ class BookingController extends Controller
 
         $this->storeCart([]);
 
-        return redirect()->route('frontend.booking.confirmation', ['ref' => $primaryRef])
+        $confirmationParams = ['ref' => $primaryRef];
+        if (!empty($operatorToken)) {
+            $confirmationParams['operator_token'] = $operatorToken;
+        }
+
+        return redirect()->route('frontend.booking.confirmation', $confirmationParams)
             ->with('booking_refs', $bookingRefs)
             ->with('guest_name', $guestName)
             ->with('summary', $summary);
@@ -1987,7 +2004,13 @@ class BookingController extends Controller
             return redirect()->route('frontend.booking.checkout')->with('error', 'Payment return data incomplete.');
         }
 
-        return redirect()->route('frontend.booking.confirmation', ['ref' => $primaryRef])
+        $operatorToken = $request->input('operator_token') ?: session('operator_token');
+        $confirmationParams = ['ref' => $primaryRef];
+        if ($operatorToken) {
+            $confirmationParams['operator_token'] = $operatorToken;
+        }
+
+        return redirect()->route('frontend.booking.confirmation', $confirmationParams)
             ->with('booking_refs', session('booking_refs', [$primaryRef]))
             ->with('guest_name', session('guest_name'))
             ->with('summary', session('summary'))

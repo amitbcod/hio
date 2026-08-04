@@ -521,8 +521,8 @@
                             }
 
                             if (payload && payload.success) {
-                                // Redirect to cart review
-                                window.location.href = "{{ route('frontend.booking.cart') }}";
+                                // Redirect to cart review while preserving operator branding state
+                                window.location.href = "{{ route('frontend.booking.cart', request()->query('operator_token') ? ['operator_token' => request()->query('operator_token')] : []) }}";
                                 return;
                             }
 

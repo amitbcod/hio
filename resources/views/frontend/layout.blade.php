@@ -289,68 +289,152 @@
             color:#0093d9
         }
 
+        .operator-header {
+            background: #ffffff;
+            padding: 22px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .operator-header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .operator-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+
+        .operator-brand img {
+            max-height: 70px;
+            max-width: 220px;
+            object-fit: contain;
+        }
+
+        .operator-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #222;
+        }
+
+        .operator-contact a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #222;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 15px;
+        }
+
+        .operator-contact a i {
+            color: #007bff;
+            font-size: 18px;
+        }
+
     </style>
     @stack('styles')
 </head>
 <body>
-    <div class="top-bar">
-        <div class="wrap top-bar-inner">
-            <div class="top-meta">
-                <span><i class="fa-solid fa-phone"></i> {{ __('topbar.phone') }}</span>
-                <span><i class="fa-solid fa-globe"></i> {{ __('topbar.local_connection') }}</span>
-            </div>
-            <div class="top-links">
-                @if(auth('traveler')->check())
-                    <a href="{{ route('traveler.profile') }}">{{ __('profile.menu.profile') }}</a>
-                    <form method="POST" action="{{ route('traveler.logout') }}" class="top-inline-form">
-                        @csrf
-                        <button type="submit" class="top-link-button">{{ __('auth.traveler_logout') }}</button>
-                    </form>
-                @else
-                    <a href="{{ route('traveler.login') }}">{{ __('auth.traveler_login') }}</a>
-                    <a href="{{ route('traveler.register') }}">{{ __('auth.traveler_register') }}</a>
-                @endif
-                <div class="language-switcher">
-                    <span><i class="fa-solid fa-earth-americas"></i>{{ __('site.language') }}:</span>
-                    <a href="{{ route('frontend.lang.switch', 'en') }}" class="{{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
-                    <a href="{{ route('frontend.lang.switch', 'fr') }}" class="{{ app()->getLocale() === 'fr' ? 'active' : '' }}">FR</a>
-                </div> 
-            </div>
-        </div>
-    </div>
+    @php
+        $operatorToken = request()->query('operator_token') ?: session('operator_token');
+        $operatorQuery = $operatorToken ? ['operator_token' => $operatorToken] : [];
+        $showSiteBranding = empty($operatorToken);
+    @endphp
 
-    <header class="site-header">
-        <div class="wrap site-header-inner">
-            <a href="{{ url('/') }}" class="brand">
-                <!-- <i class="fa-solid fa-house header-home-icon" aria-hidden="true"></i> -->
-                <img src="{{ asset('images/holidays-io-logo.png') }}" alt="Holidays.io logo">
-                <!-- <div>
-                    <small>Your local connection</small>
-                    <strong>Holidays<span>.io</span></strong>
-                </div> -->
-            </a>
-            <div class="top-right-mobill">
-            
-                <a href="{{ route('frontend.booking.cart') }}" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> <span id="headerCartCount" class="header-cart-badge">{{ count(session('booking_cart', [])) }}</span></a>
-            
-                <div class="mobile-menu-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                    </svg>
+    @if($showSiteBranding)
+        <div class="top-bar">
+            <div class="wrap top-bar-inner">
+                <div class="top-meta">
+                    @if(!empty($operatorProfile))
+                        @if(!empty($operatorProfile->contact_phone))
+                            <span><i class="fa-solid fa-phone"></i> {{ $operatorProfile->contact_phone }}</span>
+                        @endif
+                        @if(!empty($operatorProfile->contact_email))
+                            <span><i class="fa-solid fa-envelope"></i> {{ $operatorProfile->contact_email }}</span>
+                        @endif
+                    @else
+                        <span><i class="fa-solid fa-phone"></i> {{ __('topbar.phone') }}</span>
+                        <span><i class="fa-solid fa-globe"></i> {{ __('topbar.local_connection') }}</span>
+                    @endif
+                </div>
+                <div class="top-links">
+                    @if(auth('traveler')->check())
+                        <a href="{{ route('traveler.profile') }}">{{ __('profile.menu.profile') }}</a>
+                        <form method="POST" action="{{ route('traveler.logout') }}" class="top-inline-form">
+                            @csrf
+                            <button type="submit" class="top-link-button">{{ __('auth.traveler_logout') }}</button>
+                        </form>
+                    @else
+                        <a href="{{ route('traveler.login') }}">{{ __('auth.traveler_login') }}</a>
+                        <a href="{{ route('traveler.register') }}">{{ __('auth.traveler_register') }}</a>
+                    @endif
+                    <div class="language-switcher">
+                        <span><i class="fa-solid fa-earth-americas"></i>{{ __('site.language') }}:</span>
+                        <a href="{{ route('frontend.lang.switch', 'en') }}" class="{{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
+                        <a href="{{ route('frontend.lang.switch', 'fr') }}" class="{{ app()->getLocale() === 'fr' ? 'active' : '' }}">FR</a>
+                    </div>
                 </div>
             </div>
-            <nav class="main-nav">
-                <a href="{{ route('frontend.home') }}" class="{{ request()->routeIs('frontend.home') && ! request()->query('category') ? 'is-active' : '' }}">{{ __('site.home') }}</a>
-                <a href="{{ route('frontend.home', ['category' => 'accommodation']) }}" class="{{ request()->routeIs('frontend.home') && request()->query('category') === 'accommodation' ? 'is-active' : '' }}">{{ __('site.accommodation') }}</a>
-                <a href="{{ route('frontend.home', ['category' => 'tours']) }}" class="{{ request()->routeIs('frontend.home') && request()->query('category') === 'tours' ? 'is-active' : '' }}">{{ __('site.activities') }}</a>
-                <a href="{{ route('frontend.home', ['category' => 'transport']) }}" class="{{ request()->routeIs('frontend.home') && request()->query('category') === 'transport' ? 'is-active' : '' }}">{{ __('site.transport') }}</a>
-                <a href="{{ url('/#discover-mauritius') }}">{{ __('site.discover_mauritius') }}</a>
-                <a href="{{ url('/operator/accommodation') }}">{{ __('site.operator') }}</a>
-                <a href="{{ route('frontend.booking.cart') }}" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> {{ __('site.cart') }} <span id="headerCartCount" class="header-cart-badge">{{ count(session('booking_cart', [])) }}</span></a>
-            </nav>
         </div>
-    </header>
 
+        <header class="site-header">
+            <div class="wrap site-header-inner">
+                <a href="{{ route('frontend.home', $operatorQuery) }}" class="brand">
+                    @if(!empty($operatorProfile) && !empty($operatorProfile->company_logo))
+                        <img src="{{ asset('storage/' . $operatorProfile->company_logo) }}" alt="{{ $operatorProfile->trading_name ?: $operatorProfile->business_legal_name }} logo">
+                    @else
+                        <img src="{{ asset('images/holidays-io-logo.png') }}" alt="Holidays.io logo">
+                    @endif
+                    @if(!empty($operatorProfile))
+                        <div>
+                            <small>{{ $operatorProfile->contact_name ?: __('site.operator') }}</small>
+                            <strong>{{ $operatorProfile->trading_name ?: $operatorProfile->business_legal_name }}</strong>
+                        </div>
+                    @endif
+                </a>
+                <div class="top-right-mobill">
+                    <a href="{{ route('frontend.booking.cart', $operatorQuery) }}" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> <span id="headerCartCount" class="header-cart-badge">{{ count(session('booking_cart', [])) }}</span></a>
+                    <div class="mobile-menu-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                    </div>
+                </div>
+                <nav class="main-nav">
+                    <a href="{{ route('frontend.home', $operatorQuery) }}" class="{{ request()->routeIs('frontend.home') && ! request()->query('category') ? 'is-active' : '' }}">{{ __('site.home') }}</a>
+                    <a href="{{ route('frontend.home', array_merge(['category' => 'accommodation'], $operatorQuery)) }}" class="{{ request()->routeIs('frontend.home') && request()->query('category') === 'accommodation' ? 'is-active' : '' }}">{{ __('site.accommodation') }}</a>
+                    <a href="{{ route('frontend.home', array_merge(['category' => 'tours'], $operatorQuery)) }}" class="{{ request()->routeIs('frontend.home') && request()->query('category') === 'tours' ? 'is-active' : '' }}">{{ __('site.activities') }}</a>
+                    <a href="{{ route('frontend.home', array_merge(['category' => 'transport'], $operatorQuery)) }}" class="{{ request()->routeIs('frontend.home') && request()->query('category') === 'transport' ? 'is-active' : '' }}">{{ __('site.transport') }}</a>
+                    <a href="{{ route('frontend.home', $operatorQuery) }}#discover-mauritius">{{ __('site.discover_mauritius') }}</a>
+                    <a href="{{ url('/operator/accommodation') }}">{{ __('site.operator') }}</a>
+                    <a href="{{ route('frontend.booking.cart', $operatorQuery) }}" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> {{ __('site.cart') }} <span id="headerCartCount" class="header-cart-badge">{{ count(session('booking_cart', [])) }}</span></a>
+                </nav>
+            </div>
+        </header>
+    @elseif(!empty($operatorProfile))
+        <header class="operator-header">
+            <div class="wrap operator-header-inner">
+                <a href="{{ route('frontend.home', $operatorQuery) }}" class="operator-brand">
+                    @if(!empty($operatorProfile->company_logo))
+                        <img src="{{ asset('storage/' . $operatorProfile->company_logo) }}" alt="{{ $operatorProfile->trading_name ?: $operatorProfile->business_legal_name }} logo">
+                    @else
+                        <span class="operator-name">{{ $operatorProfile->trading_name ?: $operatorProfile->business_legal_name }}</span>
+                    @endif
+                </a>
+                <div class="operator-contact">
+                    @if(!empty($operatorProfile->contact_phone))
+                        <a href="tel:{{ $operatorProfile->contact_phone }}"><i class="fa-solid fa-phone"></i> {{ $operatorProfile->contact_phone }}</a>
+                    @endif
+                </div>
+            </div>
+        </header>
+    @endif
     @php
         $currentRouteIsHome = request()->routeIs('frontend.home');
         $currentCategory = request()->query('category');
@@ -454,21 +538,22 @@
                 <div class="mini-cart-summary-row total"><span>{{ __('booking.net_amount_payable') }}</span><span id="miniCartTotal">USD 0.00</span></div>
             </div>
             <div class="mini-cart-actions">
-                <a href="{{ route('frontend.booking.cart') }}" class="mini-cart-link">{{ __('cart.view') }}</a>
-                <a href="{{ auth('traveler')->check() ? route('frontend.booking.checkout') : route('frontend.booking.guest-checkout') }}" class="mini-cart-checkout-btn">{{ __('cart.proceed_to_checkout') }}</a>
+                <a href="{{ route('frontend.booking.cart', $operatorQuery) }}" class="mini-cart-link">{{ __('cart.view') }}</a>
+                <a href="{{ auth('traveler')->check() ? route('frontend.booking.checkout', $operatorQuery) : route('frontend.booking.guest-checkout', $operatorQuery) }}" class="mini-cart-checkout-btn">{{ __('cart.proceed_to_checkout') }}</a>
             </div>
         </div>
     </div>
 
     @yield('content')
 
-    <footer class="site-footer">
-        <div class="wrap">
-            <div class="site-footer-grid">
-                <div>
-                    <h4>{{ __('footer.about_title') }}</h4>
-                    <p>{{ __('footer.about_text') }}</p>
-                    <ul class="social-footer">
+    @if($showSiteBranding)
+        <footer class="site-footer">
+            <div class="wrap">
+                <div class="site-footer-grid">
+                    <div>
+                        <h4>{{ __('footer.about_title') }}</h4>
+                        <p>{{ __('footer.about_text') }}</p>
+                        <ul class="social-footer">
                         <li><a href="#"><i class="fa-brands fa-facebook"></i></a></li>
                         <li><a href="#"><i class="fa-brands fa-youtube"></i></a></li>
                         <li><a href="#"><i class="fa-brands fa-instagram"></i></a></li>
@@ -479,10 +564,10 @@
                 <div>
                     <h4>{{ __('footer.quick_links') }}</h4>
                     <ul>
-                        <li><a href="{{ url('/#accommodations-section') }}">{{ __('footer.accommodation') }}</a></li>
-                        <li><a href="{{ url('/#activities-section') }}">{{ __('footer.activities') }}</a></li>
-                        <li><a href="{{ route('frontend.home', ['category' => 'transport']) }}#discover-mauritius">{{ __('footer.transport') }}</a></li>
-                        <li><a href="{{ url('/#discover-mauritius') }}">{{ __('footer.discover_mauritius') }}</a></li>
+                        <li><a href="{{ route('frontend.home', $operatorQuery) }}#accommodations-section">{{ __('footer.accommodation') }}</a></li>
+                        <li><a href="{{ route('frontend.home', $operatorQuery) }}#activities-section">{{ __('footer.activities') }}</a></li>
+                        <li><a href="{{ route('frontend.home', array_merge(['category' => 'transport'], $operatorQuery)) }}#discover-mauritius">{{ __('footer.transport') }}</a></li>
+                        <li><a href="{{ route('frontend.home', $operatorQuery) }}#discover-mauritius">{{ __('footer.discover_mauritius') }}</a></li>
                         <li><a href="{{ url('/operator/accommodation') }}">{{ __('footer.operator') }}</a></li>
                     </ul>
                 </div>
@@ -541,12 +626,14 @@
                 <!-- <span>Dynamic public frontend powered by Laravel</span> -->
             </div>
         </div>
+    </footer>
+    @endif
 
-        <!-- ═════════════════════════════════════════════════════════
-             Guest Access Modal
-        ═════════════════════════════════════════════════════════ -->
-        <div id="guestAccessModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
-            <div class="modal-content" style="background: white; padding: 40px; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+    <!-- ═════════════════════════════════════════════════════════
+         Guest Access Modal
+    ═════════════════════════════════════════════════════════ -->
+    <div id="guestAccessModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background: white; padding: 40px; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                 <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 style="margin: 0; font-size: 20px;">Access Your Guest Booking</h2>
                     <button type="button" onclick="closeGuestAccessModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
@@ -572,7 +659,6 @@
                 </div>
             </div>
         </div>
-    </footer>
 
     <script src="{{ asset('frontend/js/site.js') }}"></script>
     @stack('scripts')

@@ -394,8 +394,8 @@ class TransportController extends Controller
 
         $transport->update($data);
 
-        return redirect()->route('operator.transport.show', $transport->id)
-            ->with('success', 'Transport updated.');
+        return redirect()->route('operator.transport.step2.show', $transport->id)
+            ->with('success', 'Transport updated. Continue with Routes & Pricing.');
     }
 
     // ════════════════════════════════════════════════════════════════════════

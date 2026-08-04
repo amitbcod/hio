@@ -7,6 +7,7 @@ use App\Models\Accommodation;
 use App\Models\AccommodationRate;
 use App\Models\Activity;
 use App\Models\ActivityBooking;
+use App\Models\BookingWidget;
 use App\Models\Place;
 use App\Models\Region;
 use App\Models\Transport;
@@ -148,7 +149,22 @@ class HomeController extends Controller
         $sidebarSelections = $this->collectSidebarFilters($request, $category);
         $searchOptions = $this->buildSearchOptions();
 
-        $accommodations = $this->approvedAccommodationQuery()->with([
+        $operatorToken = (string) $request->query('operator_token', '');
+        $operatorId = null;
+
+        if ($operatorToken !== '') {
+            $widget = BookingWidget::where('widget_token', $operatorToken)
+                ->where('is_active', true)
+                ->first();
+
+            if ($widget) {
+                $operatorId = (string) $widget->operator_id;
+            }
+        }
+
+        $accommodations = $this->approvedAccommodationQuery()
+            ->when($operatorId, fn ($query) => $query->where('operator_id', $operatorId))
+            ->with([
                 'media' => function ($query) {
                     $query->orderBy('order')->orderBy('id');
                 },
@@ -201,7 +217,9 @@ class HomeController extends Controller
             })
             ->values();
 
-        $activities = $this->approvedActivityQuery($filters['activity_date'] ?? null)->with([
+        $activities = $this->approvedActivityQuery($filters['activity_date'] ?? null)
+            ->when($operatorId, fn ($query) => $query->where('operator_id', $operatorId))
+            ->with([
                 'seoSocial',
                 'rates' => function ($query) {
                     $query->orderBy('adult_rate')->orderBy('equipment_rate')->orderBy('private_exclusive_rate');

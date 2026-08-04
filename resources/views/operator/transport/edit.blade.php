@@ -26,6 +26,7 @@
 
             <form method="POST" action="{{ route('operator.transport.update', $transport->id) }}">
                 @csrf
+                @method('PUT')
 
                 <div style="background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,0.04);margin-bottom:16px;">
                     <div class="row mb-3">
@@ -36,6 +37,7 @@
                         <div class="col-md-6">
                             <label style="font-weight:600;">Vehicle Type <span style="color:#d32f2f">*</span></label>
                             <input type="text" class="form-control" value="{{ old('vehicle_type', $transport->vehicle_type) }}" readonly>
+                            <input type="hidden" name="vehicle_type" value="{{ old('vehicle_type', $transport->vehicle_type) }}">
                         </div>
                     </div>
 

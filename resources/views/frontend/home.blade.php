@@ -57,6 +57,7 @@
                 <form method="GET" action="{{ route('frontend.category.list') }}"
                     class="category-search-form category-search-form--detailed" id="home-category-search-form"
                     data-search-options='@json($searchOptions)'>
+                    <input type="hidden" name="operator_token" value="{{ request()->query('operator_token') }}">
                     <div class="category-search-cell category-search-cell--what">
                         <!-- <h5><span>01</span> What?</h5> -->
                         <div class="category-radio-group">

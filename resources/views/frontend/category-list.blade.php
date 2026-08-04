@@ -28,6 +28,7 @@
             'children' => $filters['children'] ?? null,
             'rooms' => $filters['rooms'] ?? null,
             'participants' => $filters['participants'] ?? null,
+            'operator_token' => request()->query('operator_token'),
         ], fn ($value) => $value !== null && $value !== '');
 
         $detailQuery = array_filter([
@@ -48,6 +49,7 @@
             'arrival_time' => request()->query('arrival_time', ''),
             'return_date' => request()->query('return_date', ''),
             'return_time' => request()->query('return_time', ''),
+            'operator_token' => request()->query('operator_token'),
         ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
@@ -57,7 +59,7 @@
         </div>
         <div class="wrap page-hero-content">
             <div class="breadcrumbs">
-                <a href="{{ route('frontend.home') }}">{{ __('site.home') }}</a>
+                <a href="{{ route('frontend.home', request()->query('operator_token') ? ['operator_token' => request()->query('operator_token')] : []) }}">{{ __('site.home') }}</a>
                 <span>/</span>
                 <span>{{ $categoryTitle }} {{ __('category.listings') }}</span>
             </div>
@@ -75,6 +77,7 @@
                 class="category-search-form category-search-form--detailed"
                 id="category-search-form"
                 data-search-options='@json($searchOptions)'>
+                <input type="hidden" name="operator_token" value="{{ request()->query('operator_token') }}">
                 <div class="category-search-cell category-search-cell--what page-category-search">
                     <!-- <h5><span>01</span> What?</h5> -->
                     <div class="category-radio-group">
@@ -260,6 +263,7 @@
                     <p class="filter-note">{{ __('filters.none_available') }}</p>
                 @else
                     <form method="GET" action="{{ route('frontend.category.list') }}" class="category-filter-form">
+                        <input type="hidden" name="operator_token" value="{{ request()->query('operator_token') }}">
                         <input type="hidden" name="category" value="{{ $category }}">
                         <input type="hidden" name="region" value="{{ $filters['region'] }}">
                         <input type="hidden" name="check_in" value="{{ $filters['check_in'] }}">

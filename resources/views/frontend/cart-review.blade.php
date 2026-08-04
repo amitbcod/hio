@@ -897,7 +897,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function openCheckoutModal() {
     const isAuthenticated = {{ auth('traveler')->check() ? 'true' : 'false' }};
-    const targetUrl = isAuthenticated ? '{{ route("frontend.booking.checkout") }}' : '{{ route("frontend.booking.guest-checkout") }}';
+    const operatorToken = '{{ request()->query('operator_token') }}';
+    const operatorQuery = operatorToken ? '?operator_token=' + encodeURIComponent(operatorToken) : '';
+    const targetUrl = isAuthenticated ? '{{ route("frontend.booking.checkout") }}' + operatorQuery : '{{ route("frontend.booking.guest-checkout") }}' + operatorQuery;
     window.location.href = targetUrl;
 }
 
