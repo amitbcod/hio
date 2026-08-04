@@ -364,6 +364,7 @@
 
                 <form method="POST" action="{{ route('frontend.booking.place-order') }}" class="checkout-form" id="checkoutForm">
                     @csrf
+                    <input type="hidden" name="operator_token" value="{{ request()->query('operator_token') ?: session('operator_token') }}">
 
                     @if(session('error'))
                         <div class="form-errors">

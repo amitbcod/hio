@@ -1,0 +1,66 @@
+[
+    {
+        "url": "http:\/\/127.0.0.1:8010\/",
+        "service_type": [
+            "Airport Transfer",
+            "Activity Transfer",
+            "Hotel Transfer",
+            "Full Day Sightseeing",
+            "Half Day Sightseeing"
+        ],
+        "pickup": [
+            "Pick Up Region",
+            "Airport",
+            "East",
+            "North",
+            "South",
+            "South East",
+            "South West",
+            "West"
+        ],
+        "dropoff": [
+            "Drop Off Region",
+            "Airport",
+            "East",
+            "North",
+            "South",
+            "South East",
+            "South West",
+            "West"
+        ],
+        "has_rebuild": true,
+        "has_update": false
+    },
+    {
+        "url": "http:\/\/127.0.0.1:8010\/category-list?operator_token=&category=transport&region=all&check_in=2026-08-04&check_out=2026-08-06&activity_date=2026-08-04&adults=2&children=0&infants=0&rooms=1&service_type=hotel_transfer&pickup_region_id=2&passengers=2&arrival_date=2026-08-04&arrival_time=18%3A25&return_date=&return_time=",
+        "service_type": [
+            "Airport Transfer",
+            "Activity Transfer",
+            "Hotel Transfer",
+            "Full Day Sightseeing",
+            "Half Day Sightseeing"
+        ],
+        "pickup": [
+            "Pick Up Region",
+            "Airport",
+            "East",
+            "North",
+            "South",
+            "South East",
+            "South West",
+            "West"
+        ],
+        "dropoff": [
+            "Drop Off Region",
+            "Airport",
+            "East",
+            "North",
+            "South",
+            "South East",
+            "South West",
+            "West"
+        ],
+        "has_rebuild": true,
+        "has_update": false
+    }
+]

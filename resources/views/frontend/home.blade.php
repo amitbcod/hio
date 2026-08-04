@@ -505,49 +505,101 @@
                 to: null,
             };
 
-            const syncTomSelectValue = function (select, instance) {
-                if (!select || !instance) return;
-                instance.setValue(select.value || '');
-                if (typeof instance.refreshItems === 'function') {
-                    instance.refreshItems();
+            let transportRegionOptionData = {
+                from: [],
+                to: [],
+            };
+
+            const getTransportOptions = function (select) {
+                if (!select) return [];
+                return Array.from(select.options).map((option) => ({
+                    value: option.value,
+                    text: option.textContent.trim(),
+                    selected: option.selected,
+                    disabled: option.disabled,
+                    hidden: option.hidden,
+                    isAirport: /airport/i.test(option.textContent || ''),
+                }));
+            };
+
+            const restoreTransportOptions = function (select, options, hideAirport) {
+                if (!select) return;
+                const currentValue = select.value;
+                select.innerHTML = '';
+
+                options.forEach((optionData) => {
+                    if (!optionData.value || !hideAirport || !optionData.isAirport) {
+                        const option = document.createElement('option');
+                        option.value = optionData.value;
+                        option.textContent = optionData.text;
+                        option.disabled = !!optionData.disabled;
+                        option.hidden = !!optionData.hidden;
+                        if (optionData.selected) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    }
+                });
+
+                if (hideAirport && currentValue) {
+                    const stillExists = select.querySelector(`option[value="${currentValue}"]`);
+                    if (!stillExists) {
+                        select.value = '';
+                    }
                 }
+            };
+
+            const destroyTransportTomSelects = function () {
+                ['from', 'to'].forEach((key) => {
+                    const instance = transportTomSelectInstances[key];
+                    if (instance && typeof instance.destroy === 'function') {
+                        instance.destroy();
+                    }
+                    transportTomSelectInstances[key] = null;
+                });
+            };
+
+            const createTransportTomSelect = function (select, placeholderText) {
+                if (!select) return null;
+                return new TomSelect(select, {
+                    placeholder: placeholderText,
+                    allowEmptyOption: true,
+                    create: false,
+                    closeAfterSelect: true,
+                    onInitialize: function () {
+                        if (select.value) {
+                            this.setValue(select.value);
+                        }
+                    },
+                });
+            };
+
+            const rebuildTransportSearchTomSelects = function (serviceType) {
+                const from = document.querySelector('select[data-search-from]');
+                const to = document.querySelector('select[data-search-to]');
+                const hideAirport = serviceType === 'hotel_transfer';
+
+                destroyTransportTomSelects();
+
+                if (from && !transportRegionOptionData.from.length) {
+                    transportRegionOptionData.from = getTransportOptions(from);
+                }
+                if (to && !transportRegionOptionData.to.length) {
+                    transportRegionOptionData.to = getTransportOptions(to);
+                }
+
+                restoreTransportOptions(from, transportRegionOptionData.from, hideAirport);
+                restoreTransportOptions(to, transportRegionOptionData.to, hideAirport);
+
+                transportTomSelectInstances.from = createTransportTomSelect(from, '{{ __('home.search.departure_location') }}');
+                transportTomSelectInstances.to = createTransportTomSelect(to, '{{ __('home.search.destination') }}');
             };
 
             const initTransportSearchTomSelects = function () {
                 try {
-                    const from = document.querySelector('select[data-search-from]');
-                    const to = document.querySelector('select[data-search-to]');
-
-                    if (from && !transportTomSelectInstances.from) {
-                        transportTomSelectInstances.from = new TomSelect(from, {
-                            placeholder: '{{ __('home.search.departure_location') }}',
-                            allowEmptyOption: true,
-                            create: false,
-                            closeAfterSelect: true,
-                            onInitialize: function () {
-                                if (from.value) {
-                                    this.setValue(from.value);
-                                }
-                            },
-                        });
-                    }
-
-                    if (to && !transportTomSelectInstances.to) {
-                        transportTomSelectInstances.to = new TomSelect(to, {
-                            placeholder: '{{ __('home.search.destination') }}',
-                            allowEmptyOption: true,
-                            create: false,
-                            closeAfterSelect: true,
-                            onInitialize: function () {
-                                if (to.value) {
-                                    this.setValue(to.value);
-                                }
-                            },
-                        });
-                    }
-
-                    syncTomSelectValue(from, transportTomSelectInstances.from);
-                    syncTomSelectValue(to, transportTomSelectInstances.to);
+                    const serviceTypeSelect = document.querySelector('select[name="service_type"]');
+                    const serviceType = serviceTypeSelect ? serviceTypeSelect.value : 'airport_transfer';
+                    rebuildTransportSearchTomSelects(serviceType);
                 } catch (e) {
                     console.error('TomSelect init error', e);
                 }
@@ -776,6 +828,13 @@
                 }
                 updateGuestSummary();
             };
+
+            const serviceTypeSelect = document.querySelector('select[name="service_type"]');
+            if (serviceTypeSelect) {
+                serviceTypeSelect.addEventListener('change', function () {
+                    rebuildTransportSearchTomSelects(this.value);
+                });
+            }
 
             // Attach change event to category radios
             categoryRadios.forEach(function (radio) {

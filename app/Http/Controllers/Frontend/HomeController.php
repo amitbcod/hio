@@ -2503,6 +2503,12 @@ class HomeController extends Controller
             ->pluck('name', 'id')
             ->all();
 
+        if (request()->query('service_type') === 'hotel_transfer') {
+            $transportRegionOptions = array_filter($transportRegionOptions, function ($regionName) {
+                return !Str::contains(Str::lower((string) $regionName), 'airport');
+            });
+        }
+
         if (empty($transportRegionOptions)) {
             $transportRegionOptions = $placeNames;
         }

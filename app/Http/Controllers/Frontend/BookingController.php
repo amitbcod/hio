@@ -897,10 +897,14 @@ class BookingController extends Controller
     //  CHECKOUT (Guest info form - requires auth)
     // ═══════════════════════════════════════════════════════════════════════
 
-    public function checkout()
+    public function checkout(Request $request)
     {
         if (!Auth::guard('traveler')->check()) {
             return redirect()->route('traveler.login')->with('error', 'Please log in as a traveler to continue to checkout.');
+        }
+
+        if ($request->query('operator_token')) {
+            session(['operator_token' => $request->query('operator_token')]);
         }
 
         $cart = $this->resolveCart();
@@ -1758,7 +1762,7 @@ class BookingController extends Controller
                 ]
             );
 
-            $operatorToken = $request->query('operator_token') ?: session('operator_token');
+            $operatorToken = $request->input('operator_token') ?: session('operator_token');
             if ($operatorToken) {
                 session(['operator_token' => $operatorToken]);
             }
@@ -2005,6 +2009,28 @@ class BookingController extends Controller
         }
 
         $operatorToken = $request->input('operator_token') ?: session('operator_token');
+
+        Log::info('Payment return handler entered', [
+            'primary_ref' => $primaryRef,
+            'transaction_ref' => $transactionRef,
+            'status' => $status,
+            'operator_token_request' => $request->input('operator_token'),
+            'operator_token_session' => session('operator_token'),
+            'operator_token_used' => $operatorToken,
+            'query_string' => $request->getQueryString(),
+        ]);
+
+        if ($operatorToken) {
+            session(['operator_token' => $operatorToken]);
+            Log::info('Operator token persisted to session on payment return', ['operator_token' => $operatorToken]);
+        } else {
+            Log::warning('Operator token missing on payment return', [
+                'primary_ref' => $primaryRef,
+                'transaction_ref' => $transactionRef,
+                'query_string' => $request->getQueryString(),
+            ]);
+        }
+
         $confirmationParams = ['ref' => $primaryRef];
         if ($operatorToken) {
             $confirmationParams['operator_token'] = $operatorToken;

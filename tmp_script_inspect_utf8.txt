@@ -1,0 +1,5 @@
+﻿URL http://127.0.0.1:8010/ NO rebuild function
+---
+URL http://127.0.0.1:8010/category-list?operator_token=&category=transport&region=all&check_in=2026-08-04&check_out=2026-08-06&activity_date=2026-08-04&adults=2&children=0&infants=0&rooms=1&service_type=hotel_transfer&pickup_region_id=2&passengers=2&arrival_date=2026-08-04&arrival_time=18%3A25&return_date=&return_time= NO rebuild function
+---
+

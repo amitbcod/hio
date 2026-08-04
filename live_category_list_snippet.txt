@@ -1,0 +1,24 @@
+﻿const rebuildTransportSearchTomSelects = function (serviceType) {
+                const from = document.querySelector('select[data-search-from]');
+                const to = document.querySelector('select[data-search-to]');
+                const hideAirport = serviceType === 'hotel_transfer';
+
+                if (from && !transportRegionOptionData.from.length) {
+                    transportRegionOptionData.from = getTransportOptions(from);
+                }
+                if (to && !transportRegionOptionData.to.length) {
+                    transportRegionOptionData.to = getTransportOptions(to);
+                }
+
+                restoreTransportOptions(from, transportRegionOptionData.from, hideAirport);
+                restoreTransportOptions(to, transportRegionOptionData.to, hideAirport);
+
+                destroyTransportTomSelects();
+
+                transportTomSelectInstances.from = createTransportTomSelect(from, 'Pick Up');
+                transportTomSelectInstances.to = createTransportTomSelect(to, 'Drop Off');
+            };
+
+            const initTransportSearchTomSelects = function () {
+                try {
+                    const serviceTypeSelect = document.queryS

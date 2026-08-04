@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="hzBicYVudficoGBYOKjqLkcJcWzLqTlTjCwWU1Kq">
+    <meta name="app-base-url" content="http://127.0.0.1:8010">
+    <meta name="description" content="Browse Transport listings on Holidays.io.">
+    <title>Transport Listings | Holidays.io</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="http://127.0.0.1:8010/frontend/css/site.css">
+    <style>
+        .header-home-icon {
+            margin-right: 10px;
+            font-size: 24px;
+            color: #16213e;
+            vertical-align: middle;
+        }
+
+        .header-cart-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            margin-left: 6px;
+            padding: 0 6px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            background: #ff5a5f;
+            border-radius: 999px;
+        }
+        .language-switcher {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 16px;
+            font-size: 13px;
+            color: #ffffff;
+        }
+        .language-switcher a {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .language-switcher a.active {
+            color: #fcad10;
+        }
+        .language-switcher span {
+            opacity: 1;
+            font-size:0
+        }
+        
+        .language-switcher span i {font-size:15px}
+        
+        .mini-cart-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 9998;
+            display: none;
+            justify-content: flex-end;
+            align-items: stretch;
+            overflow: hidden;
+
+            /* opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease; */
+        }
+
+        .mini-cart-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mini-cart-panel {
+            width: min(420px, 95%);
+            background: #fff;
+            box-shadow: -4px 0 30px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+
+            /* transform: translateX(100%);
+            transition: transform 0.35s ease; */
+        }
+
+        .mini-cart-overlay.show .mini-cart-panel {
+            transform: translateX(0);
+        }
+
+        .mini-cart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 22px 24px;
+            border-bottom: 1px solid #eee;
+            background: #fafafa;
+        }
+        .mini-cart-header h2 {
+            margin: 0;
+            font-size: 18px;
+            line-height: 1.2;
+        }
+        .mini-cart-close {
+            border: none;
+            background: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+        }
+        .mini-cart-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .mini-cart-item {
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid #f1f1f1;
+            align-items: start;
+        }
+        .mini-cart-item:last-child {
+            border-bottom: none;
+        }
+        .mini-cart-item-image {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+        .mini-cart-item-image img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #f5f5f5;
+        }
+        .mini-cart-item-image-label {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            color: #111;
+            line-height: 1.3;
+        }
+        .mini-cart-item-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-start;
+        }
+        .mini-cart-item-meta {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+        .mini-cart-item-price {
+            text-align: right;
+            font-size: 15px;
+            font-weight: 700;
+            color: #111;
+            min-width: 76px;
+        }
+        .mini-cart-item-delete {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+        .mini-cart-item-delete:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        .mini-cart-item-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 4px;
+        }
+        .mini-cart-item-date {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .mini-cart-item-guests {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .mini-cart-summary {
+            padding: 16px 24px;
+            border-top: 1px solid #eee;
+            background: #f9f9f9;
+        }
+        .mini-cart-summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .mini-cart-summary-row.total {
+            font-weight: 700;
+            margin-top: 8px;
+        }
+        .mini-cart-actions {
+            display: flex;
+            gap: 12px;
+            padding: 18px 24px 24px;
+            background: #fff;
+            border-top: 1px solid #eee;
+        }
+        .mini-cart-actions .mini-cart-link,
+        .mini-cart-actions .mini-cart-checkout-btn {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+        .mini-cart-actions .mini-cart-link {
+            color: #333;
+            background: #f2f2f2;
+            border: 1px solid #ddd;
+        }
+        .mini-cart-actions .mini-cart-checkout-btn {
+            color: #fff;
+            background: #16213e;
+            border: none;
+        }
+        .mini-cart-empty {
+            color: #555;
+            font-size: 14px;
+            padding: 30px 0;
+            text-align: center;
+        }
+        .mini-cart-message {
+            padding: 14px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.4;
+            display: none;
+        }
+        .mini-cart-message.success {
+            background: #e6ffed;
+            color: #116530;
+            border: 1px solid #b9f2c2;
+        }
+        .mini-cart-message.error {
+            background: #ffe8e8;
+            color: #9f1c21;
+            border: 1px solid #f5c2c2;
+        }
+
+        .tax-notice {
+            max-width: 740px;
+            margin: 10px;
+            font-size: 11px;
+            border: 1px solid #0095da;
+            padding: 0px 10px;
+            color: #0095da;
+        }
+
+        .tax-notice strong {
+            display: block;
+            margin-bottom: 2px;
+            color:#0093d9
+        }
+
+        .operator-header {
+            background: #ffffff;
+            padding: 22px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .operator-header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .operator-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+
+        .operator-brand img {
+            max-height: 70px;
+            max-width: 220px;
+            object-fit: contain;
+        }
+
+        .operator-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #222;
+        }
+
+        .operator-contact a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #222;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 15px;
+        }
+
+        .operator-contact a i {
+            color: #007bff;
+            font-size: 18px;
+        }
+
+    </style>
+                                <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+                                <style>
+            .category-search-cell--transport .ts-wrapper.category-search-select .ts-control {
+                /* min-height: 44px;
+                line-height: 1.3;
+                padding: 0 12px 0 8px;
+                display: flex;
+                align-items: center; */
+                height: 22px;
+                overflow: hidden;
+                padding:0;
+            }
+
+            .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown-content {
+                max-height: 195px;
+            }
+
+            .category-search-cell--transport .ts-wrapper.category-search-select {
+                /* width: 100%;
+                min-height: 44px;
+                box-sizing: border-box; */
+            }
+
+            .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown.single {
+                background: #fff;
+                font-size: 14px;
+                font-weight: normal;
+            }
+
+            /* .transport-row,
+            .transport-row-date {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                align-items: flex-end;
+                margin-top: 12px;
+            }
+
+            .transport-row-date {
+                margin-top: 10px;
+            } */
+
+            /* .transport-field {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            } */
+
+            /* .transport-field h5 {
+                margin: 0;
+                font-size: 0.84rem;
+                line-height: 1.2;
+                color: inherit;
+            } */
+
+            /* .category-search-cell--transport .transport-field {
+                min-width: 0;
+            } */
+
+            /* .transport-row,
+            .transport-row-date {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                align-items: flex-end;
+                margin-top: 10px;
+            }
+
+            .transport-row-date {
+                margin-top: 0;
+            } */
+
+            /* .transport-field {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                min-width: 0;
+            } */
+
+            /* .transport-field h5 {
+                margin: 0;
+                font-size: 0.85rem;
+                line-height: 1.2;
+            } */
+
+            /* .transport-field input,
+            .transport-field select {
+                min-height: 44px;
+                height: 44px;
+                width: 100%;
+                box-sizing: border-box;
+                padding: 0 12px;
+            } */
+
+            /* .category-search-cell--transport .category-search-input,
+            .category-search-cell--transport .category-search-select {
+                width: 100%;
+                min-height: 44px;
+                height: 44px;
+                box-sizing: border-box;
+                padding: 0 12px;
+            } */
+
+            /* .category-search-cell--transport .category-search-select {
+                min-height: 44px;
+                height: 44px;
+            } */
+
+            .category-search-input[type="date"],
+            .category-search-input[type="time"] {
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                background: transparent !important;
+                padding-right: 10px !important;
+            }
+
+            .category-search-input[type="date"]::-webkit-calendar-picker-indicator,
+            .category-search-input[type="date"]::-webkit-clear-button,
+            .category-search-input[type="date"]::-webkit-inner-spin-button,
+            .category-search-input[type="date"]::-webkit-outer-spin-button,
+            .category-search-input[type="time"]::-webkit-calendar-picker-indicator,
+            .category-search-input[type="time"]::-webkit-clear-button,
+            .category-search-input[type="time"]::-webkit-inner-spin-button,
+            .category-search-input[type="time"]::-webkit-outer-spin-button,
+            .category-search-input[type="date"]::-ms-clear,
+            .category-search-input[type="date"]::-ms-expand,
+            .category-search-input[type="time"]::-ms-clear,
+            .category-search-input[type="time"]::-ms-expand {
+                display: none !important;
+                opacity: 0 !important;
+                width: 0 !important;
+                height: 0 !important;
+            }
+
+            .category-search-cell--transport .ts-wrapper:not(.form-control,.form-select).single .ts-control {
+                background-position: right 3px center;
+            }
+        </style>
+    </head>
+<body>
+    
+            <div class="top-bar">
+            <div class="wrap top-bar-inner">
+                <div class="top-meta">
+                                            <span><i class="fa-solid fa-phone"></i> +230 52 51 11 53</span>
+                        <span><i class="fa-solid fa-globe"></i> Your Local Connection - Mauritius</span>
+                                    </div>
+                <div class="top-links">
+                                            <a href="http://127.0.0.1:8010/traveler/login">Traveller Login</a>
+                        <a href="http://127.0.0.1:8010/traveler/register">Traveller Register</a>
+                                        <div class="language-switcher">
+                        <span><i class="fa-solid fa-earth-americas"></i>Language:</span>
+                        <a href="http://127.0.0.1:8010/lang/en" class="active">EN</a>
+                        <a href="http://127.0.0.1:8010/lang/fr" class="">FR</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <header class="site-header">
+            <div class="wrap site-header-inner">
+                <a href="http://127.0.0.1:8010" class="brand">
+                                            <img src="http://127.0.0.1:8010/images/holidays-io-logo.png" alt="Holidays.io logo">
+                                                        </a>
+                <div class="top-right-mobill">
+                    <a href="http://127.0.0.1:8010/booking/cart" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> <span id="headerCartCount" class="header-cart-badge">0</span></a>
+                    <div class="mobile-menu-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                    </div>
+                </div>
+                <nav class="main-nav">
+                    <a href="http://127.0.0.1:8010" class="">Home</a>
+                    <a href="http://127.0.0.1:8010?category=accommodation" class="">Accommodation</a>
+                    <a href="http://127.0.0.1:8010?category=tours" class="">Activities</a>
+                    <a href="http://127.0.0.1:8010?category=transport" class="">Transport</a>
+                    <a href="http://127.0.0.1:8010#discover-mauritius">Discover Mauritius</a>
+                    <a href="http://127.0.0.1:8010/operator/accommodation">Operator</a>
+                    <a href="http://127.0.0.1:8010/booking/cart" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> Cart <span id="headerCartCount" class="header-cart-badge">0</span></a>
+                </nav>
+            </div>
+        </header>
+        
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const menuIcon = document.querySelector('.mobile-menu-icon');
+        const nav = document.querySelector('.main-nav');
+
+        menuIcon.addEventListener('click', function (e) {
+            e.stopPropagation();
+            nav.classList.toggle('active');
+        });
+        nav.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+        document.addEventListener('click', function () {
+            nav.classList.remove('active');
+        });
+    });
+    </script>
+    
+
+    
+    
+        <div id="miniCartOverlay" class="mini-cart-overlay" aria-hidden="true"
+            data-msg-item-added="Item added to cart."
+            data-msg-item-removed="Item removed from cart."
+            data-msg-cart-empty="Your cart is empty"
+            data-msg-unable-load="Item added to cart. Unable to load cart details."
+            data-msg-unable-add="Unable to add item to cart."
+            data-msg-unable-remove="Unable to remove item from cart."
+            data-cart-items-zero="No items in cart"
+            data-cart-items-one="1 item in cart"
+            data-cart-items-many=":count items in cart">
+        <div class="mini-cart-panel" role="dialog" aria-modal="true" aria-labelledby="miniCartTitle">
+            <div class="mini-cart-header">
+                <div>
+                    <h2 id="miniCartTitle">Booking Cart</h2>
+                    <p id="miniCartCountText" style="margin: 6px 0 0; color: #666; font-size: 13px;">No items in cart</p>
+                </div>
+                <button id="closeMiniCartBtn" type="button" class="mini-cart-close" aria-label="Booking Cart">×</button>
+            </div>
+            <div class="mini-cart-body">
+                <div id="miniCartMessage" class="mini-cart-message"></div>
+                <div id="miniCartItems"></div>
+                <div id="miniCartEmpty" class="mini-cart-empty" style="display:none;">Your cart is empty. Add a booking to see it here.</div>
+            </div>
+            <div class="tax-notice">
+                <p><strong><i class="fa-solid fa-circle-exclamation"></i> Tourism Tax Notice</strong>
+                Please be informed that the tourism tax is not included in your booking total. This must be paid directly at the property in cash (EUR) during your stay and is charged at EUR 3.00 per person per night.</p>
+            </div>
+            <div class="mini-cart-summary" id="miniCartSummary">
+                <div class="mini-cart-summary-row"><span>Subtotal</span><span id="miniCartSubtotal">USD 0.00</span></div>
+                <div class="mini-cart-summary-row"><span>Discounts</span><span id="miniCartDiscount">USD 0.00</span></div>
+                <div class="mini-cart-summary-row"><span>Taxes &amp; Charges</span><span id="miniCartTaxFees">USD 0.00</span></div>
+                <div class="mini-cart-summary-row total"><span>Net Amount Payable</span><span id="miniCartTotal">USD 0.00</span></div>
+            </div>
+            <div class="mini-cart-actions">
+                <a href="http://127.0.0.1:8010/booking/cart" class="mini-cart-link">View Cart</a>
+                <a href="http://127.0.0.1:8010/booking/guest-checkout" class="mini-cart-checkout-btn">Proceed to Checkout</a>
+            </div>
+        </div>
+    </div>
+
+        
+    <section class="page-hero" style="display:none">
+        <div class="page-hero-media">
+            <img src="http://127.0.0.1:8010/storage/transports/media/eDkiU3feaOpoMOQ6Hy4nFJjNULTdu1FjZ65JYiPA.jpg" alt="Transport">
+        </div>
+        <div class="wrap page-hero-content">
+            <div class="breadcrumbs">
+                <a href="http://127.0.0.1:8010">Home</a>
+                <span>/</span>
+                <span>Transport Listings</span>
+            </div>
+            <h1>Transport Listings</h1>
+            <p>
+                Browse listings by category and open each card to view full details.
+            </p>
+        </div>
+    </section>
+
+    <section class="main-search page-main-search">
+        <div class="wrap2">
+            <form method="GET"
+                action="http://127.0.0.1:8010/category-list"
+                class="category-search-form category-search-form--detailed"
+                id="category-search-form"
+                data-search-options='{"accommodation":{"regions":["Quatre Bornes"],"types":["Hotel"]},"tours":{"regions":["B\/h Vaishnodevi Mandir","Gujarat","dfs","wsx"],"types":["Activity","Tour"]},"transport":{"regions":["Airport","East","North","South","South East","South West","West"],"types":[],"froms":{"1":"Airport","4":"East","2":"North","3":"South","6":"South East","7":"South West","5":"West"},"tos":{"1":"Airport","4":"East","2":"North","3":"South","6":"South East","7":"South West","5":"West"}}}'>
+                <input type="hidden" name="operator_token" value="">
+                <div class="category-search-cell category-search-cell--what page-category-search">
+                    <!-- <h5><span>01</span> What?</h5> -->
+                    <div class="category-radio-group">
+                        <label class="category-radio-item">
+                            <input type="radio" name="category" value="accommodation" >
+                            <div class="cat-radio-tab">
+                            <div class="main-icon accommodation"><img src="images/accommodation.svg"></div>
+                            <span>Accommodation</span>
+                            </div>
+                        </label>
+                        <label class="category-radio-item">
+                            <input type="radio" name="category" value="tours" >
+                            <div class="cat-radio-tab">
+                            <div class="main-icon activity"><img src="images/activity.svg"></div>
+                            <span>Activities</span>
+                            </div>
+                        </label>
+                        <label class="category-radio-item">
+                            <input type="radio" name="category" value="transport" checked>
+                            <div class="cat-radio-tab">
+                            <div class="main-icon transport"><img src="images/transport.svg"></div>
+                            <span>Transport</span>
+                            </div> 
+                        </label>
+                    </div>
+                </div>
+
+              <div class="category-input-group">
+                 <div class="category-input-group-inner">
+                        <div class="category-search-cell category-search-cell--region" style="flex: 0 1 280px; min-width: 280px">
+                            <h5>Region / Area</h5>
+                            <select name="region" class="category-search-select" data-search-region data-selected="all">
+                                <option value="all" selected>All</option>
+                                                                    <option value="Airport" >Airport</option>
+                                                                    <option value="East" >East</option>
+                                                                    <option value="North" >North</option>
+                                                                    <option value="South" >South</option>
+                                                                    <option value="South East" >South East</option>
+                                                                    <option value="South West" >South West</option>
+                                                                    <option value="West" >West</option>
+                                                            </select>
+                        </div>
+                                                                        <div class="category-search-cell category-search-cell--transport" style="display: none;">
+                            <div class="transport-row">
+                                <div class="transport-field" style="flex: 0 1 140px; min-width: 140px;">
+                                    <h5>Service Type</h5>
+                                    <select name="service_type" class="category-search-select">
+                                        <option value="airport_transfer" >Airport Transfer</option>
+                                        <option value="activity_transfer" >Activity Transfer</option>
+                                        <option value="hotel_transfer" selected>Hotel Transfer</option>
+                                        <option value="full_day_sightseeing" >Full Day Sightseeing</option>
+                                        <option value="half_day_sightseeing" >Half Day Sightseeing</option>
+                                    </select>
+                                </div>
+                                <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
+                                    <h5>Pick Up Region</h5>
+                                    <select name="pickup_region_id" class="category-search-select" data-search-from>
+                                        <option value="" disabled hidden>Pick Up Region</option>
+                                                                                    <option value="1" >Airport</option>
+                                                                                    <option value="4" >East</option>
+                                                                                    <option value="2" selected>North</option>
+                                                                                    <option value="3" >South</option>
+                                                                                    <option value="6" >South East</option>
+                                                                                    <option value="7" >South West</option>
+                                                                                    <option value="5" >West</option>
+                                                                            </select>
+                                </div>
+                                <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
+                                    <h5>Drop Off Region</h5>
+                                    <select name="dropoff_region_id" class="category-search-select" data-search-to>
+                                        <option value="" disabled hidden>Drop Off Region</option>
+                                                                                    <option value="1" >Airport</option>
+                                                                                    <option value="4" >East</option>
+                                                                                    <option value="2" >North</option>
+                                                                                    <option value="3" >South</option>
+                                                                                    <option value="6" >South East</option>
+                                                                                    <option value="7" >South West</option>
+                                                                                    <option value="5" >West</option>
+                                                                            </select>
+                                </div>
+                                <div class="transport-field" style="flex: 0 1 110px; min-width: 110px;">
+                                    <h5>Passengers</h5>
+                                    <input type="number" name="passengers" class="category-search-input" min="1" value="2">
+                                </div>
+                                <div class="transport-row-date">
+                                    <div class="transport-field" style="flex: 1 1 160px;">
+                                        <h5>Pick Up Date</h5>
+                                        <input type="date" name="arrival_date" class="category-search-input" value="2026-08-04">
+                                    </div>
+                                    <div class="transport-field" style="flex: 1 1 120px;">
+                                        <h5>&nbsp;</h5>
+                                        <input type="time" name="arrival_time" class="category-search-input" value="18:25">
+                                    </div>
+                                </div>
+                                <div class="transport-row-date">
+                                    <div class="transport-field" style="flex: 1 1 160px;">
+                                        <h5>Return Date</h5>
+                                        <input type="date" name="return_date" class="category-search-input" value="">
+                                    </div>
+                                    <div class="transport-field" style="flex: 1 1 120px">
+                                        <h5>&nbsp;</h5>
+                                        <input type="time" name="return_time" class="category-search-input" value="">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Accommodation/Transport: Check-In and Check-Out -->
+                        <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-in" style="display: none; flex: 0">
+                            <h5>Check In</h5>
+                            <div class="category-search-dates">
+                                <input type="date" name="check_in" class="category-search-input" value="2026-08-04">
+                            </div>
+                        </div>
+
+                        <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-out" style="display: none; flex: 0 ">
+                            <h5>Check Out</h5>
+                            <div class="category-search-dates">
+                                <input type="date" name="check_out" class="category-search-input" value="2026-08-06">
+                            </div>
+                        </div>
+
+                        <!-- Tours/Activity: Activity Date -->
+                        <div class="category-search-cell category-search-cell--tours category-search-cell--activity-date" style="display: none;">
+                            <h5>Select Date</h5>
+                            <div class="category-search-dates">
+                                <input type="date" name="activity_date" class="category-search-input" value="2026-08-04">
+                            </div>
+                        </div>
+
+                        <!-- Accommodation/Transport/Activity: Guest details -->
+                        <div class="category-search-cell category-search-cell--guests" style="display: none;">
+                            <h5 id="guest-cell-heading">Guests &amp; Rooms</h5>
+                            <div class="guest-rooms-summary">
+                                <span id="guest-rooms-summary-text">2 Adult · 0 Children · 0 Infants · 1 Rooms</span>
+                            </div>
+                            <div class="guest-rooms-selector">
+                                <div class="guest-rooms-row">
+                                    <label for="category-adults-field">Adult <span>(18+ years)</span></label>
+                                    <div class="guest-rooms-counter">
+                                        <button type="button" class="count-btn decrement" data-target="adults">−</button>
+                                        <input id="category-adults-field" type="text" name="adults" value="2" readonly>
+                                        <button type="button" class="count-btn increment" data-target="adults">+</button>
+                                    </div>
+                                </div>
+                                <div class="guest-rooms-row">
+                                    <label for="category-children-field">Children <span>(2-11 years)</span></label>
+                                    <div class="guest-rooms-counter">
+                                        <button type="button" class="count-btn decrement" data-target="children">−</button>
+                                        <input id="category-children-field" type="text" name="children" value="0" readonly>
+                                        <button type="button" class="count-btn increment" data-target="children">+</button>
+                                    </div>
+                                </div>
+                                <div class="guest-rooms-row">
+                                    <label for="category-infants-field">Infants <span>(0-1 years)</span></label>
+                                    <div class="guest-rooms-counter">
+                                        <button type="button" class="count-btn decrement" data-target="infants">−</button>
+                                        <input id="category-infants-field" type="text" name="infants" value="0" readonly>
+                                        <button type="button" class="count-btn increment" data-target="infants">+</button>
+                                    </div>
+                                </div>
+                                <div class="guest-rooms-row" id="rooms-row">
+                                    <label for="category-rooms-field">Rooms <span>(Max 9 rooms)</span></label>
+                                    <div class="guest-rooms-counter">
+                                        <button type="button" class="count-btn decrement" data-target="rooms">−</button>
+                                        <input id="category-rooms-field" type="text" name="rooms" value="1" readonly>
+                                        <button type="button" class="count-btn increment" data-target="rooms">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="category-search-submit">
+                            <button type="submit" class="btn-primary">Proceed</button>
+                        </div>
+                    </div>
+                </div>
+
+                
+            </form>
+        </div>
+    </section>
+
+    <section class="page-section category-listing-section">
+        <div class="wrap category-layout">
+            <aside class="category-filters">
+                <h3 class="toggle">Filter by <span class="arrow"></span></h3>
+                                    <form method="GET" action="http://127.0.0.1:8010/category-list" class="category-filter-form">
+                        <input type="hidden" name="operator_token" value="">
+                        <input type="hidden" name="category" value="transport">
+                        <input type="hidden" name="region" value="all">
+                        <input type="hidden" name="check_in" value="2026-08-04">
+                        <input type="hidden" name="check_out" value="2026-08-06">
+                        <input type="hidden" name="activity_date" value="2026-08-04">
+                        <input type="hidden" name="type" value="">
+                        <input type="hidden" name="name" value="">
+                        <input type="hidden" name="pickup_region_id" value="2">
+                        <input type="hidden" name="dropoff_region_id" value="">
+                        <input type="hidden" name="transport_from" value="">
+                        <input type="hidden" name="transport_to" value="">
+                        <input type="hidden" name="service_type" value="hotel_transfer">
+                        <input type="hidden" name="arrival_date" value="2026-08-04">
+                        <input type="hidden" name="arrival_time" value="18:25">
+                        <input type="hidden" name="return_date" value="">
+                        <input type="hidden" name="return_time" value="">
+                        <input type="hidden" name="passengers" value="2">
+                        <input type="hidden" name="adults" value="2">
+                        <input type="hidden" name="children" value="0">
+                        <input type="hidden" name="infants" value="0">
+                        <input type="hidden" name="rooms" value="1">
+
+                                                                                <div class="filter-group">
+                                <strong>Vehicle Type</strong>
+                                                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            name="vehicle_type[]"
+                                            value="Standard car"
+                                            >
+                                        <span>Standard car</span>
+                                        <small>(1)</small>
+                                    </label>
+                                                            </div>
+                                                                                <div class="filter-group">
+                                <strong>Seat capacity</strong>
+                                                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            name="seating_capacity[]"
+                                            value="4"
+                                            >
+                                        <span>4</span>
+                                        <small>(1)</small>
+                                    </label>
+                                                            </div>
+                        
+                        <div class="filter-actions">
+                            <button type="submit" class="btn-primary">Apply filters</button>
+                            <a href="http://127.0.0.1:8010/category-list?category=transport&amp;region=all&amp;check_in=2026-08-04&amp;check_out=2026-08-06&amp;activity_date=2026-08-04&amp;pickup_region_id=2&amp;service_type=hotel_transfer&amp;arrival_date=2026-08-04&amp;arrival_time=18%3A25&amp;passengers=2&amp;adults=2&amp;children=0&amp;rooms=1&amp;participants=1" class="filter-clear-link">Clear filters</a>
+                        </div>
+                    </form>
+                            </aside>
+
+            <div class="category-results">
+                <div class="section-header category-results-head">
+                    <div>
+                        <h2>Transport</h2>
+                        <p>1 listing found</p>
+                    </div>
+                </div>
+
+                                    <div class="category-result-list">
+                                                                                <article class="category-result-card">
+                                                                <a href="http://127.0.0.1:8010/transports/2?check_in=2026-08-04&amp;check_out=2026-08-06&amp;activity_date=2026-08-04&amp;adults=2&amp;children=0&amp;infants=0&amp;rooms=1&amp;participants=1&amp;pickup_region_id=2&amp;service_type=hotel_transfer&amp;arrival_date=2026-08-04&amp;arrival_time=18%3A25" class="category-result-media">
+                                    <img src="http://127.0.0.1:8010/storage/transports/media/eDkiU3feaOpoMOQ6Hy4nFJjNULTdu1FjZ65JYiPA.jpg" alt="Car">
+                                </a>
+                                <div class="category-result-body">
+                                    <span class="listing-location"><i class="fa-solid fa-location-dot"></i> Mauritius</span>
+                                    <div class="category-result-title-row">
+                                        <h3><a href="http://127.0.0.1:8010/transports/2?check_in=2026-08-04&amp;check_out=2026-08-06&amp;activity_date=2026-08-04&amp;adults=2&amp;children=0&amp;infants=0&amp;rooms=1&amp;participants=1&amp;pickup_region_id=2&amp;service_type=hotel_transfer&amp;arrival_date=2026-08-04&amp;arrival_time=18%3A25">Car</a></h3>
+                                                                            </div>
+                                    <p>fgg</p>
+                                    <div class="category-result-footer">
+                                        <span class="chip">Transport</span>
+                                                                                                                            <span class="listing-price">From USD 11 </span>
+                                                                                <a href="http://127.0.0.1:8010/transports/2?check_in=2026-08-04&amp;check_out=2026-08-06&amp;activity_date=2026-08-04&amp;adults=2&amp;children=0&amp;infants=0&amp;rooms=1&amp;participants=1&amp;pickup_region_id=2&amp;service_type=hotel_transfer&amp;arrival_date=2026-08-04&amp;arrival_time=18%3A25">View Details</a>
+                                    </div>
+                                </div>
+                            </article>
+                                            </div>
+
+                    <div class="category-pagination">
+                        
+                                                    <span class="is-disabled">&laquo;</span>
+                        
+                                                                                    <span class="is-current">1</span>
+                                                    
+                                                    <span class="is-disabled">&raquo;</span>
+                                            </div>
+                            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const findInput = (key) => document.querySelector(`[name='${key}']`);
+            const guestSummary = document.getElementById('guest-rooms-summary-text');
+            const guestCell = document.querySelector('.category-search-cell--guests');
+            const guestCellHeading = document.getElementById('guest-cell-heading');
+            const roomsRow = document.getElementById('rooms-row');
+            const regionCell = document.querySelector('.category-search-cell--region');
+            const accommodationCheckInCell = document.querySelector('.category-search-cell--check-in');
+            const accommodationCheckOutCell = document.querySelector('.category-search-cell--check-out');
+            const toursActivityDateCell = document.querySelector('.category-search-cell--activity-date');
+            const transportCells = document.querySelectorAll('.category-search-cell--transport');
+            const categoryRadios = document.querySelectorAll('input[name="category"]');
+            const guestTexts = {
+                participants: "Participants",
+                guestRooms: "Guests & Rooms",
+                adults: "Adults",
+                children: "Children",
+                infants: "Infants",
+                rooms: "Rooms"
+            };
+            let transportTomSelectInstances = {
+                from: null,
+                to: null,
+            };
+
+            let transportRegionOptionData = {
+                from: [],
+                to: [],
+            };
+
+            const getTransportOptions = function (select) {
+                if (!select) return [];
+                return Array.from(select.options).map((option) => ({
+                    value: option.value,
+                    text: option.textContent.trim(),
+                    selected: option.selected,
+                    isAirport: /airport/i.test(option.textContent || ''),
+                }));
+            };
+
+            const restoreTransportOptions = function (select, options, hideAirport) {
+                if (!select) return;
+                const currentValue = select.value;
+                select.innerHTML = '';
+
+                options.forEach((optionData) => {
+                    if (!optionData.value || !hideAirport || !optionData.isAirport) {
+                        const option = document.createElement('option');
+                        option.value = optionData.value;
+                        option.textContent = optionData.text;
+                        if (optionData.selected) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    }
+                });
+
+                if (hideAirport && currentValue) {
+                    const stillExists = select.querySelector(`option[value="${currentValue}"]`);
+                    if (!stillExists) {
+                        select.value = '';
+                    }
+                }
+            };
+
+            const destroyTransportTomSelects = function () {
+                ['from', 'to'].forEach((key) => {
+                    const instance = transportTomSelectInstances[key];
+                    if (instance && typeof instance.destroy === 'function') {
+                        instance.destroy();
+                    }
+                    transportTomSelectInstances[key] = null;
+                });
+            };
+
+            const createTransportTomSelect = function (select, placeholderText) {
+                if (!select) return null;
+                return new TomSelect(select, {
+                    placeholder: placeholderText,
+                    allowEmptyOption: true,
+                    create: false,
+                    closeAfterSelect: true,
+                    onInitialize: function () {
+                        if (select.value) {
+                            this.setValue(select.value);
+                        }
+                    },
+                });
+            };
+
+            const rebuildTransportSearchTomSelects = function (serviceType) {
+                const from = document.querySelector('select[data-search-from]');
+                const to = document.querySelector('select[data-search-to]');
+                const hideAirport = serviceType === 'hotel_transfer';
+
+                if (from && !transportRegionOptionData.from.length) {
+                    transportRegionOptionData.from = getTransportOptions(from);
+                }
+                if (to && !transportRegionOptionData.to.length) {
+                    transportRegionOptionData.to = getTransportOptions(to);
+                }
+
+                restoreTransportOptions(from, transportRegionOptionData.from, hideAirport);
+                restoreTransportOptions(to, transportRegionOptionData.to, hideAirport);
+
+                destroyTransportTomSelects();
+
+                transportTomSelectInstances.from = createTransportTomSelect(from, 'Pick Up');
+                transportTomSelectInstances.to = createTransportTomSelect(to, 'Drop Off');
+            };
+
+            const initTransportSearchTomSelects = function () {
+                try {
+                    const serviceTypeSelect = document.querySelector('select[name="service_type"]');
+                    const serviceType = serviceTypeSelect ? serviceTypeSelect.value : 'airport_transfer';
+                    rebuildTransportSearchTomSelects(serviceType);
+                } catch (e) {
+                    console.error('TomSelect init error', e);
+                }
+            };
+
+            // Update guest rooms summary text
+            const updateGuestSummary = function () {
+                const adults = parseInt(findInput('adults')?.value || 0, 10);
+                const children = parseInt(findInput('children')?.value || 0, 10);
+                const infants = parseInt(findInput('infants')?.value || 0, 10);
+                const rooms = parseInt(findInput('rooms')?.value || 0, 10);
+
+                if (guestSummary) {
+                    const selectedCategory = document.querySelector('input[name="category"]:checked')?.value;
+                    const parts = [
+                        `${adults} ${guestTexts.adults}`,
+                        `${children} ${guestTexts.children}`,
+                        `${infants} ${guestTexts.infants}`,
+                    ];
+
+                    if (selectedCategory !== 'tours') {
+                        parts.push(`${rooms} ${guestTexts.rooms}`);
+                    }
+
+                    guestSummary.textContent = parts.join(' · ');
+                }
+            };
+
+            // Show/hide fields based on selected category
+            const updateCategoryFields = function () {
+                const selectedCategory = document.querySelector('input[name="category"]:checked')?.value;
+
+                if (selectedCategory === 'tours') {
+                    accommodationCheckInCell.style.display = 'none';
+                    accommodationCheckOutCell.style.display = 'none';
+                    transportCells.forEach((cell) => cell.style.display = 'none');
+                    guestCell.style.display = 'block';
+                    toursActivityDateCell.style.display = 'block';
+                    if (guestCellHeading) guestCellHeading.textContent = guestTexts.participants;
+                    if (roomsRow) roomsRow.style.display = 'none';
+                } else if (selectedCategory === 'transport') {
+                    regionCell.style.display = 'none';
+                    accommodationCheckInCell.style.display = 'none';
+                    accommodationCheckOutCell.style.display = 'none';
+                    transportCells.forEach((cell) => cell.style.display = 'block');
+                    guestCell.style.display = 'none';
+                    toursActivityDateCell.style.display = 'none';
+                    if (roomsRow) roomsRow.style.display = 'none';
+                    initTransportSearchTomSelects();
+                } else {
+                    regionCell.style.display = 'block';
+                    accommodationCheckInCell.style.display = 'block';
+                    accommodationCheckOutCell.style.display = 'block';
+                    transportCells.forEach((cell) => cell.style.display = 'none');
+                    guestCell.style.display = 'block';
+                    toursActivityDateCell.style.display = 'none';
+                    if (guestCellHeading) guestCellHeading.textContent = guestTexts.guestRooms;
+                    if (roomsRow) roomsRow.style.display = 'flex';
+                }
+            };
+
+            const serviceTypeSelect = document.querySelector('select[name="service_type"]');
+            if (serviceTypeSelect) {
+                serviceTypeSelect.addEventListener('change', function () {
+                    rebuildTransportSearchTomSelects(this.value);
+                });
+            }
+
+            // Attach change event to category radios
+            categoryRadios.forEach(function (radio) {
+                radio.addEventListener('change', function () {
+                    updateCategoryFields();
+                    updateGuestSummary();
+                });
+            });
+
+            // Initialize on first load
+            updateCategoryFields();
+            updateGuestSummary();
+
+            const categorySearchForm = document.getElementById('category-search-form');
+            if (categorySearchForm) {
+                categorySearchForm.addEventListener('submit', function (event) {
+                    // Current transport service types do not require legacy car rental time validation.
+                });
+            }
+
+            // Handle guest cell expand/collapse
+            if (guestCell && guestSummary) {
+                guestSummary.addEventListener('click', function () {
+                    guestCell.classList.toggle('is-open');
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!guestCell.contains(event.target)) {
+                        guestCell.classList.remove('is-open');
+                    }
+                });
+            }
+        });
+    </script>
+
+    
+
+            <footer class="site-footer">
+            <div class="wrap">
+                <div class="site-footer-grid">
+                    <div>
+                        <h4>Holidays.io</h4>
+                        <p>Holidays.io connects travelers with live accommodation and activity listings across Mauritius.</p>
+                        <ul class="social-footer">
+                        <li><a href="#"><i class="fa-brands fa-facebook"></i></a></li>
+                        <li><a href="#"><i class="fa-brands fa-youtube"></i></a></li>
+                        <li><a href="#"><i class="fa-brands fa-instagram"></i></a></li>
+                        <li><a href="#"><i class="fa-brands fa-x-twitter"></i></a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="http://127.0.0.1:8010#accommodations-section">Accommodation</a></li>
+                        <li><a href="http://127.0.0.1:8010#activities-section">Activities</a></li>
+                        <li><a href="http://127.0.0.1:8010?category=transport#discover-mauritius">Transport</a></li>
+                        <li><a href="http://127.0.0.1:8010#discover-mauritius">Discover Mauritius</a></li>
+                        <li><a href="http://127.0.0.1:8010/operator/accommodation">Operator</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Links</h4>
+                    <ul>
+                        <li><a href="http://127.0.0.1:8010/about-us">About Us</a></li>
+                        <li><a href="http://127.0.0.1:8010/#activities-section">Contact</a></li>
+                        <li><a href="http://127.0.0.1:8010/#discover-mauritius">Travel Blogs</a></li>
+                        <li><a href="http://127.0.0.1:8010/terms-and-conditions">Terms of Use</a></li>
+                        <li><a href="#">Privacy Statement</a></li>
+                        <li><a href="#">Conditions</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4>Contacts</h4>
+                    <ul class="contact-footer">
+                        <li><i class="fa-solid fa-location-dot"></i><span>14, Sodnac Avenue Quatre Bornes, Mauritius</span></li>
+                        <li><a href="tel:+23052511153"><i class="fa-solid fa-phone"></i><span>+230 52511153</span></a></li>
+                        <li><a href="mailto:info@holidays.io"><i class="fa-solid fa-envelope"></i><span>info@holidays.io</span></a></li>
+                    </ul>
+                </div>
+
+                <!-- <div>
+                    <h4>Guest Orders</h4>
+                    <ul>
+                        <li><a href="javascript:void(0);" onclick="openGuestAccessModal()">Access My Guest Booking</a></li>
+                        <li>
+                                                            <a href="http://127.0.0.1:8010/traveler/login">Traveller Login</a>
+                                                    </li>
+                    </ul>
+                </div> -->
+                <div>
+                                           </div>
+            </div>
+            <div class="site-footer-bottom">
+                <span>© 2026 Holidays.io All rights reserved. </span>
+                <span>No part of this site may be reproduced without our written permission</span>
+                <!-- <span>Dynamic public frontend powered by Laravel</span> -->
+            </div>
+        </div>
+    </footer>
+    
+    <!-- ═════════════════════════════════════════════════════════
+         Guest Access Modal
+    ═════════════════════════════════════════════════════════ -->
+    <div id="guestAccessModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background: white; padding: 40px; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; font-size: 20px;">Access Your Guest Booking</h2>
+                    <button type="button" onclick="closeGuestAccessModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
+                </div>
+
+                <div class="modal-body">
+                    <p style="color: #666; margin-bottom: 20px;">Enter your email address to search for your guest bookings.</p>
+
+                    <form id="guestAccessForm" style="display: flex; flex-direction: column; gap: 15px;">
+                        <div>
+                            <label for="guestEmail" style="display: block; margin-bottom: 5px; font-weight: 500;">Email Address</label>
+                            <input type="email" id="guestEmail" name="email" placeholder="your@email.com" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
+                        </div>
+
+                        <button type="submit" style="padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                            Find My Bookings
+                        </button>
+                    </form>
+
+                    <p style="font-size: 12px; color: #999; margin-top: 15px; text-align: center;">
+                        You'll receive an OTP via email to access your guest booking details.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    <script src="http://127.0.0.1:8010/frontend/js/site.js"></script>
+                                <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+                        
+    <script>
+        function openGuestAccessModal() {
+            const modal = document.getElementById('guestAccessModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeGuestAccessModal() {
+            const modal = document.getElementById('guestAccessModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('guestAccessModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeGuestAccessModal();
+                    }
+                });
+
+                // Handle form submission
+                document.getElementById('guestAccessForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const email = document.getElementById('guestEmail').value;
+                    if (email) {
+                        // Redirect to guest order search page or send email
+                        window.location.href = '/traveler/guest-order-search?email=' + encodeURIComponent(email);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
