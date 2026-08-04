@@ -62,6 +62,7 @@ class BookingWidgetController extends Controller
             'destination', 'check_in', 'check_out', 'guests', 'rooms',
             'activity_date', 'travellers',
             'pickup', 'dropoff', 'pickup_date', 'pickup_time', 'passengers',
+            'arrival_date', 'arrival_time', 'return_date', 'return_time',
             'operator_token',
         ];
 
@@ -74,6 +75,32 @@ class BookingWidgetController extends Controller
 
         // include operator token for tracking
         $query['operator_token'] = $token;
+
+        // Normalize widget params to frontend expected keys
+        if ($service === 'accommodation') {
+            if (isset($query['guests'])) {
+                $query['adults'] = (int) $query['guests'];
+                unset($query['guests']);
+            }
+        }
+
+        if ($service === 'activity') {
+            unset($query['guests']);
+            if (isset($query['travellers'])) {
+                $query['adults'] = (int) $query['travellers'];
+                $query['participants'] = (int) $query['travellers'];
+            }
+            unset($query['travellers']);
+        }
+
+        if ($service === 'transport') {
+            if (isset($query['pickup_date'])) {
+                $query['arrival_date'] = $query['pickup_date'];
+            }
+            if (isset($query['pickup_time'])) {
+                $query['arrival_time'] = $query['pickup_time'];
+            }
+        }
 
         // Decide base path per service
         $base = '/category-list?category=' . ($service === 'transport' ? 'transport' : ($service === 'activity' ? 'tours' : 'accommodation'));

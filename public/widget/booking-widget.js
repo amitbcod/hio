@@ -81,7 +81,6 @@
                 <form id="bw-form">
                     <!-- Accommodation -->
                     <div class="bw-service" data-service-panel="accommodation">
-                        <div class="bw-row"><label class="bw-label">Destination</label><input class="bw-input" name="destination" type="text"></div>
                         <div class="bw-row"><label class="bw-label">Check-in</label><input class="bw-input" name="check_in" type="date"></div>
                         <div class="bw-row"><label class="bw-label">Check-out</label><input class="bw-input" name="check_out" type="date"></div>
                         <div class="bw-row"><label class="bw-label">Guests</label><input class="bw-input" name="guests" type="number" min="1" value="2"></div>
@@ -89,14 +88,11 @@
                     </div>
                     <!-- Activity -->
                     <div class="bw-service" data-service-panel="activity" style="display:none;">
-                        <div class="bw-row"><label class="bw-label">Destination</label><input class="bw-input" name="activity_destination" type="text"></div>
                         <div class="bw-row"><label class="bw-label">Activity date</label><input class="bw-input" name="activity_date" type="date"></div>
                         <div class="bw-row"><label class="bw-label">Travellers</label><input class="bw-input" name="travellers" type="number" min="1" value="1"></div>
                     </div>
                     <!-- Transport -->
                     <div class="bw-service" data-service-panel="transport" style="display:none;">
-                        <div class="bw-row"><label class="bw-label">Pickup location</label><input class="bw-input" name="pickup" type="text"></div>
-                        <div class="bw-row"><label class="bw-label">Drop location</label><input class="bw-input" name="dropoff" type="text"></div>
                         <div class="bw-row"><label class="bw-label">Pickup date</label><input class="bw-input" name="pickup_date" type="date"></div>
                         <div class="bw-row"><label class="bw-label">Pickup time</label><input class="bw-input" name="pickup_time" type="time"></div>
                         <div class="bw-row"><label class="bw-label">Passengers</label><input class="bw-input" name="passengers" type="number" min="1" value="2"></div>
@@ -119,7 +115,11 @@
 
         function switchService(service) {
             panel.querySelectorAll('.bw-service').forEach(div => {
-                div.style.display = div.getAttribute('data-service-panel') === service ? 'block' : 'none';
+                const active = div.getAttribute('data-service-panel') === service;
+                div.style.display = active ? 'block' : 'none';
+                div.querySelectorAll('input,select,textarea').forEach(input => {
+                    input.disabled = !active;
+                });
             });
             panel.setAttribute('data-current-service', service);
         }
@@ -154,8 +154,8 @@
             window.location.href = redirectUrl;
         });
 
-        // default current service
-        panel.setAttribute('data-current-service', 'accommodation');
+        // default current service and disable inactive service inputs
+        switchService('accommodation');
     }
 
 })();
