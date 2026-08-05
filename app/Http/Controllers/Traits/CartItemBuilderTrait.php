@@ -342,16 +342,13 @@ trait CartItemBuilderTrait
         } else {
             $totalPrice = $pricePerPassenger * $passengers;
             if (!blank($returnDate) && $returnPrice > 0) {
-                // For route-wise service, when a return date is selected, the return_price
-                // represents the total for the two-way journey. Use return_price only
-                // (per vehicle) instead of summing outbound + return prices.
-                if ((string) $serviceType === 'route') {
-                    $totalPrice = $returnPrice * $passengers;
-                    // clear pricePerPassenger to avoid misleading values elsewhere
-                    $pricePerPassenger = 0;
-                } else {
-                    $totalPrice += $returnPrice * $passengers;
-                }
+                // When a return trip is selected, the provided `return_price` is
+                // treated as the total for the two-way journey (per vehicle).
+                // Use `return_price * passengers` as the authoritative total
+                // instead of summing outbound + return prices.
+                $totalPrice = $returnPrice * $passengers;
+                // clear pricePerPassenger to avoid misleading values elsewhere
+                $pricePerPassenger = 0;
             }
         }
         
