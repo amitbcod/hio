@@ -36,6 +36,7 @@
             'check_out' => $filters['check_out'],
             'activity_date' => $filters['activity_date'],
             'adults' => $filters['adults'] ?? (int) request()->query('adults', 2),
+                
             'children' => $filters['children'] ?? (int) request()->query('children', 0),
             'infants' => $filters['infants'] ?? (int) request()->query('infants', 0),
             'rooms' => $filters['rooms'] ?? (int) request()->query('rooms', 1),
@@ -159,21 +160,45 @@
                                 <div class="transport-row-date">
                                     <div class="transport-field" style="flex: 1 1 160px;">
                                         <h5>{{ __('home.search.arrival_date_time') }}</h5>
-                                        <input type="date" name="arrival_date" class="category-search-input" value="{{ $filters['arrival_date'] ?? now()->format('Y-m-d') }}">
+                                        <div class="category-search-dates">
+                                            <input type="date" name="arrival_date" class="category-search-input" value="{{ $filters['arrival_date'] ?? now()->format('Y-m-d') }}">
+                                            <small class="category-search-date-display date-display-arrival_date">{{ !empty($filters['arrival_date']) ? \Carbon\Carbon::parse($filters['arrival_date'])->format('d/m/Y') : '' }}</small>
+                                        </div>
                                     </div>
                                     <div class="transport-field" style="flex: 1 1 120px;">
                                         <h5>&nbsp;</h5>
-                                        <input type="time" name="arrival_time" class="category-search-input" value="{{ $filters['arrival_time'] ?? '' }}">
+                                        <div class="custom-picker-wrapper time-picker" style="position:relative;">
+                                            <label class="booking-input booking-input-text booking-input-time" for="category-arrival_time" style="display:inline-flex;align-items:center;gap:6px;width:64px;justify-content:center;padding:6px 6px;">
+                                                <span class="time-value">{{ $filters['arrival_time'] ?? '' }}</span>
+                                                <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                                                    <circle cx="12" cy="12" r="9" stroke="#666" stroke-width="1" fill="none" />
+                                                    <path d="M12 8v5l3 2" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                                                </svg>
+                                            </label>
+                                            <input id="category-arrival_time" type="time" name="arrival_time" class="category-search-input booking-input-native" value="{{ $filters['arrival_time'] ?? '' }}" style="position:absolute;left:0;top:0;opacity:0;width:64px;height:36px;border:0;">
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="transport-row-date">
                                     <div class="transport-field" style="flex: 1 1 160px;">
                                         <h5>{{ __('home.search.return_date_time') }}</h5>
-                                        <input type="date" name="return_date" class="category-search-input" value="{{ $filters['return_date'] ?? '' }}">
+                                        <div class="category-search-dates">
+                                            <input type="date" name="return_date" class="category-search-input" value="{{ $filters['return_date'] ?? '' }}">
+                                            <small class="category-search-date-display date-display-return_date">{{ !empty($filters['return_date']) ? \Carbon\Carbon::parse($filters['return_date'])->format('d/m/Y') : '' }}</small>
+                                        </div>
                                     </div>
                                     <div class="transport-field" style="flex: 1 1 120px">
                                         <h5>&nbsp;</h5>
-                                        <input type="time" name="return_time" class="category-search-input" value="{{ $filters['return_time'] ?? '' }}">
+                                        <div class="custom-picker-wrapper time-picker" style="position:relative;">
+                                            <label class="booking-input booking-input-text booking-input-time" for="category-return_time" style="display:inline-flex;align-items:center;gap:6px;width:64px;justify-content:center;padding:6px 6px;">
+                                                <span class="time-value">{{ $filters['return_time'] ?? '' }}</span>
+                                                <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                                                    <circle cx="12" cy="12" r="9" stroke="#666" stroke-width="1" fill="none" />
+                                                    <path d="M12 8v5l3 2" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                                                </svg>
+                                            </label>
+                                            <input id="category-return_time" type="time" name="return_time" class="category-search-input booking-input-native" value="{{ $filters['return_time'] ?? '' }}" style="position:absolute;left:0;top:0;opacity:0;width:64px;height:36px;border:0;">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -184,6 +209,7 @@
                             <h5>{{ __('home.search.check_in') }}</h5>
                             <div class="category-search-dates">
                                 <input type="date" name="check_in" class="category-search-input" value="{{ $filters['check_in'] }}">
+                                <small class="category-search-date-display date-display-check_in">{{ !empty($filters['check_in']) ? \Carbon\Carbon::parse($filters['check_in'])->format('d/m/Y') : '' }}</small>
                             </div>
                         </div>
 
@@ -191,6 +217,7 @@
                             <h5>{{ __('home.search.check_out') }}</h5>
                             <div class="category-search-dates">
                                 <input type="date" name="check_out" class="category-search-input" value="{{ $filters['check_out'] }}">
+                                <small class="category-search-date-display date-display-check_out">{{ !empty($filters['check_out']) ? \Carbon\Carbon::parse($filters['check_out'])->format('d/m/Y') : '' }}</small>
                             </div>
                         </div>
 
@@ -199,6 +226,7 @@
                             <h5>{{ __('home.search.select_date') }}</h5>
                             <div class="category-search-dates">
                                 <input type="date" name="activity_date" class="category-search-input" value="{{ $filters['activity_date'] }}">
+                                <small class="category-search-date-display date-display-activity_date">{{ !empty($filters['activity_date']) ? \Carbon\Carbon::parse($filters['activity_date'])->format('d/m/Y') : '' }}</small>
                             </div>
                         </div>
 
@@ -454,6 +482,14 @@
             };
             let transportTomSelectInstances = {
                 from: null,
+
+    @push('styles')
+        <style>
+            .custom-picker-wrapper.time-picker { position: relative; }
+            .custom-picker-wrapper.time-picker .booking-input-text { position: relative; z-index: 1; cursor: pointer; background: #fff; padding: 6px 12px; border-radius: 6px; border: 1px solid #e5e5e5; min-height: 34px; display: inline-block; }
+            .custom-picker-wrapper.time-picker .booking-input-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 5; border: 0; background: transparent; }
+        </style>
+    @endpush
                 to: null,
             };
 
@@ -557,6 +593,36 @@
                 }
             };
 
+            const formatUiDate = function (value) {
+                if (!value) return '';
+                const [year, month, day] = value.split('-');
+                if (!year || !month || !day) return value;
+                return `${day}/${month}/${year}`;
+            };
+
+            const updateDateLabel = function (fieldName) {
+                const input = findInput(fieldName);
+                const label = document.querySelector(`.date-display-${fieldName}`);
+                if (!label) return;
+                label.textContent = input && input.value ? formatUiDate(input.value) : '';
+            };
+
+            const bindDateInputs = function () {
+                ['check_in', 'check_out', 'activity_date', 'arrival_date', 'return_date'].forEach((fieldName) => {
+                    const input = findInput(fieldName);
+                    if (!input) return;
+                    input.addEventListener('change', function () {
+                        updateDateLabel(fieldName);
+                    });
+                });
+            };
+
+            const setInitialDateLabels = function () {
+                ['check_in', 'check_out', 'activity_date', 'arrival_date', 'return_date'].forEach((fieldName) => {
+                    updateDateLabel(fieldName);
+                });
+            };
+
             // Update guest rooms summary text
             const updateGuestSummary = function () {
                 const adults = parseInt(findInput('adults')?.value || 0, 10);
@@ -629,6 +695,8 @@
             });
 
             // Initialize on first load
+            bindDateInputs();
+            setInitialDateLabels();
             updateCategoryFields();
             updateGuestSummary();
 
@@ -681,6 +749,37 @@
                 background: #fff;
                 font-size: 14px;
                 font-weight: normal;
+            }
+
+            .category-search-dates {
+                position: relative;
+            }
+
+            .category-search-date-display {
+                position: absolute;
+                top: 50%;
+                left: 0.75rem;
+                transform: translateY(-50%);
+                pointer-events: none;
+                display: block;
+                width: calc(100% - 1.5rem);
+                color: #111;
+                font-size: 0.95rem;
+                line-height: 1.4;
+                font-weight: 700;
+            }
+
+            .category-search-input[type="date"] {
+                color: transparent !important;
+                caret-color: transparent !important;
+            }
+
+            .category-search-input[type="date"]::-webkit-datetime-edit,
+            .category-search-input[type="date"]::-webkit-datetime-edit-year-field,
+            .category-search-input[type="date"]::-webkit-datetime-edit-month-field,
+            .category-search-input[type="date"]::-webkit-datetime-edit-day-field,
+            .category-search-input[type="date"]::-webkit-datetime-edit-text {
+                color: transparent !important;
             }
 
             /* .transport-row,

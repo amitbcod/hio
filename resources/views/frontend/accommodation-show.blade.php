@@ -8,8 +8,8 @@
         $booking = $accommodation['booking'] ?? [
             'check_in' => now()->toDateString(),
             'check_out' => now()->addDays(2)->toDateString(),
-            'check_in_display' => now()->format('d-m-Y'),
-            'check_out_display' => now()->addDays(2)->format('d-m-Y'),
+            'check_in_display' => now()->format('d/m/Y'),
+            'check_out_display' => now()->addDays(2)->format('d/m/Y'),
             'adults' => 2,
             'children' => 0,
             'infants' => 0,
@@ -114,11 +114,17 @@
                     <form method="GET" action="{{ route('frontend.accommodations.show', $accommodation['id']) }}" class="booking-form-grid">
                         <div class="booking-field">
                             <label>{{ __('accommodation.form.check_in') }}</label>
-                            <input type="date" name="check_in" value="{{ $booking['check_in'] }}" class="booking-input">
+                            <div class="custom-picker-wrapper date-picker">
+                                <div class="booking-input booking-input-text">{{ !empty($booking['check_in']) ? \Carbon\Carbon::parse($booking['check_in'])->format('d/m/Y') : '' }}</div>
+                                <input type="date" name="check_in" value="{{ $booking['check_in'] }}" class="booking-input booking-input-native" min="{{ date('Y-m-d') }}">
+                            </div>
                         </div>
                         <div class="booking-field">
                             <label>{{ __('accommodation.form.check_out') }}</label>
-                            <input type="date" name="check_out" value="{{ $booking['check_out'] }}" class="booking-input">
+                            <div class="custom-picker-wrapper date-picker">
+                                <div class="booking-input booking-input-text">{{ !empty($booking['check_out']) ? \Carbon\Carbon::parse($booking['check_out'])->format('d/m/Y') : '' }}</div>
+                                <input type="date" name="check_out" value="{{ $booking['check_out'] }}" class="booking-input booking-input-native" min="{{ date('Y-m-d') }}">
+                            </div>
                         </div>
                         <div class="booking-field">
                             <label>{{ __('accommodation.form.adults') }}</label>
@@ -1179,6 +1185,14 @@
 
             const capacityWarningText = {!! json_encode(__('accommodation.capacity_warning')) !!};
 
+    @push('styles')
+        <style>
+            .custom-picker-wrapper.date-picker { position: relative; }
+            .custom-picker-wrapper.date-picker .booking-input-text { position: relative; z-index: 2; cursor: pointer; }
+            .custom-picker-wrapper.date-picker .booking-input-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; background: transparent; z-index: 1; cursor: pointer; }
+        </style>
+    @endpush
+
             const updateRoomCapacityWarnings = () => {
                 const adults = Math.max(1, parseCount(adultsInput, 1));
                 const children = Math.max(0, parseCount(childrenInput, 0));
@@ -1238,6 +1252,43 @@
                 inputs.forEach((input) => input.addEventListener('input', updateRoomCapacityWarnings));
                 updateRoomCapacityWarnings();
             }
+        })();
+    </script>
+@endpush
+
+@push('scripts')
+    <script>
+        (function () {
+            const formatDate = function (v) {
+                if (!v) return '';
+                const parts = String(v).split('-');
+                if (parts.length !== 3) return v;
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            };
+
+            document.querySelectorAll('.custom-picker-wrapper.date-picker').forEach(wrapper => {
+                const native = wrapper.querySelector('input[type="date"]');
+                const display = wrapper.querySelector('.booking-input-text');
+                if (!native || !display) return;
+                const openPicker = function () {
+                    native.focus();
+                    if (typeof native.showPicker === 'function') {
+                        native.showPicker();
+                    } else {
+                        native.click();
+                    }
+                };
+                wrapper.addEventListener('click', function (e) { e.preventDefault(); openPicker(); });
+                display.addEventListener('click', function (e) { e.preventDefault(); openPicker(); });
+
+                const sync = function () {
+                    const v = formatDate(native.value);
+                    if (display.tagName === 'INPUT' || display.tagName === 'TEXTAREA') display.value = v; else display.textContent = v;
+                };
+                native.addEventListener('input', sync);
+                native.addEventListener('change', sync);
+                sync();
+            });
         })();
     </script>
 @endpush

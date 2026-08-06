@@ -97,7 +97,7 @@
                                             </td>
                                             <td style="padding:12px;">{{ $allotment->allotment }}</td>
                                             <td style="padding:12px;font-size:12px;">
-                                                {{ $allotment->calendar_enabled ? ($allotment->calendar_start?->format('d M Y') . ' - ' . $allotment->calendar_end?->format('d M Y')) : 'No date restriction' }}
+                                                {{ $allotment->calendar_enabled ? ($allotment->calendar_start?->format('d/m/Y') . ' - ' . $allotment->calendar_end?->format('d/m/Y')) : 'No date restriction' }}
                                             </td>
                                             <td style="padding:12px;">{{ $allotment->season ?? '-' }}</td>
                                             <td style="padding:12px;text-align:center;">
@@ -275,8 +275,8 @@
                                         <tr style="border-bottom:1px solid #e0e0e0;">
                                             <td style="padding:12px;">{{ $variantMap[$blackout->variant_id] ?? 'All Variants' }}</td>
                                             <td style="padding:12px;">{{ $blackout->season ?? '-' }}</td>
-                                            <td style="padding:12px;">{{ $blackout->start_date->format('d M Y') }}</td>
-                                            <td style="padding:12px;">{{ $blackout->end_date->format('d M Y') }}</td>
+                                            <td style="padding:12px;">{{ $blackout->start_date->format('d/m/Y') }}</td>
+                                            <td style="padding:12px;">{{ $blackout->end_date->format('d/m/Y') }}</td>
                                             <td style="padding:12px;text-align:center;">
                                                 <form action="{{ route('operator.activity.step10.blackout.delete', [$activity->id, $blackout->blackout_id]) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this blackout range?');">
                                                     @csrf

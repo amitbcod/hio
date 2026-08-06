@@ -10,6 +10,8 @@ class TransportBooking extends Model
     protected $fillable = [
         'transport_id',
         'driver_id',
+        'pickup_driver_id',
+        'return_driver_id',
         'traveler_account_id',
         'booking_reference',
         'guest_name',
@@ -67,6 +69,16 @@ class TransportBooking extends Model
     public function driver()
     {
         return $this->belongsTo(OperatorDriver::class, 'driver_id');
+    }
+
+    public function pickupDriver()
+    {
+        return $this->belongsTo(OperatorDriver::class, 'pickup_driver_id');
+    }
+
+    public function returnDriver()
+    {
+        return $this->belongsTo(OperatorDriver::class, 'return_driver_id');
     }
 
     // Many-to-many relationship with multiple drivers

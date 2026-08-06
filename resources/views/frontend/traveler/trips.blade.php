@@ -85,13 +85,62 @@
                                                     @endforeach
                                                 </div>
                                             </td>
-                                          <td data-label="{{ __('traveler.trips.dates') }}">
-                                            {{ $trip->start_date ? $trip->start_date->format('d M Y') : __('traveler.trip_detail.not_set') }}
+                                                                                    <td data-label="{{ __('traveler.trips.dates') }}">
+                                                @php
+                                                    $allDates = collect();
 
-                                            @if($trip->end_date)
-                                                - {{ $trip->end_date->format('d M Y') }}
-                                            @endif
-                                        </td>
+                                                    if ($trip->accommodationBookings && $trip->accommodationBookings->isNotEmpty()) {
+                                                        foreach ($trip->accommodationBookings as $booking) {
+                                                            if ($booking->check_in_date) {
+                                                                $allDates->push($booking->check_in_date);
+                                                            }
+                                                            if ($booking->check_out_date) {
+                                                                $allDates->push($booking->check_out_date);
+                                                            }
+                                                        }
+                                                    }
+
+                                                    if ($trip->activityBookings && $trip->activityBookings->isNotEmpty()) {
+                                                        foreach ($trip->activityBookings as $booking) {
+                                                            if ($booking->activity_date) {
+                                                                $allDates->push($booking->activity_date);
+                                                            }
+                                                        }
+                                                    }
+
+                                                    if ($trip->transportBookings && $trip->transportBookings->isNotEmpty()) {
+                                                        foreach ($trip->transportBookings as $booking) {
+                                                            if ($booking->pickup_date) {
+                                                                $allDates->push($booking->pickup_date);
+                                                            }
+                                                            if ($booking->return_date) {
+                                                                $allDates->push($booking->return_date);
+                                                            }
+                                                        }
+                                                    }
+
+                                                    $allDates = $allDates->filter()->sort();
+                                                    $dateLabel = null;
+                                                    if ($allDates->isNotEmpty()) {
+                                                        $firstDate = $allDates->first();
+                                                        $lastDate = $allDates->last();
+                                                        if ($firstDate->eq($lastDate)) {
+                                                            $dateLabel = $firstDate->format('d/m/Y');
+                                                        } else {
+                                                            $dateLabel = $firstDate->format('d/m/Y') . ' - ' . $lastDate->format('d/m/Y');
+                                                        }
+                                                    }
+                                                @endphp
+
+                                                @if($dateLabel)
+                                                    {{ $dateLabel }}
+                                                @else
+                                                    {{ $trip->start_date ? $trip->start_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}
+                                                    @if($trip->end_date)
+                                                        - {{ $trip->end_date->format('d/m/Y') }}
+                                                    @endif
+                                                @endif
+                                            </td>
                                             <td data-label="{{ __('traveler.trips.status') }}">
                                                 <span class="trip-status trip-status--{{ $trip->status }}">{{ ucfirst($trip->status) }}</span>
                                             </td>
@@ -181,10 +230,59 @@
                                                 </div>
                                             </td>
                                            <td data-label="{{ __('traveler.trips.dates') }}">
-                                                {{ $trip->start_date ? $trip->start_date->format('d M Y') : __('traveler.trip_detail.not_set') }}
+                                                @php
+                                                    $allDates = collect();
 
-                                                @if($trip->end_date)
-                                                    - {{ $trip->end_date->format('d M Y') }}
+                                                    if ($trip->accommodationBookings && $trip->accommodationBookings->isNotEmpty()) {
+                                                        foreach ($trip->accommodationBookings as $booking) {
+                                                            if ($booking->check_in_date) {
+                                                                $allDates->push($booking->check_in_date);
+                                                            }
+                                                            if ($booking->check_out_date) {
+                                                                $allDates->push($booking->check_out_date);
+                                                            }
+                                                        }
+                                                    }
+
+                                                    if ($trip->activityBookings && $trip->activityBookings->isNotEmpty()) {
+                                                        foreach ($trip->activityBookings as $booking) {
+                                                            if ($booking->activity_date) {
+                                                                $allDates->push($booking->activity_date);
+                                                            }
+                                                        }
+                                                    }
+
+                                                    if ($trip->transportBookings && $trip->transportBookings->isNotEmpty()) {
+                                                        foreach ($trip->transportBookings as $booking) {
+                                                            if ($booking->pickup_date) {
+                                                                $allDates->push($booking->pickup_date);
+                                                            }
+                                                            if ($booking->return_date) {
+                                                                $allDates->push($booking->return_date);
+                                                            }
+                                                        }
+                                                    }
+
+                                                    $allDates = $allDates->filter()->sort();
+                                                    $dateLabel = null;
+                                                    if ($allDates->isNotEmpty()) {
+                                                        $firstDate = $allDates->first();
+                                                        $lastDate = $allDates->last();
+                                                        if ($firstDate->eq($lastDate)) {
+                                                            $dateLabel = $firstDate->format('d/m/Y');
+                                                        } else {
+                                                            $dateLabel = $firstDate->format('d/m/Y') . ' - ' . $lastDate->format('d/m/Y');
+                                                        }
+                                                    }
+                                                @endphp
+
+                                                @if($dateLabel)
+                                                    {{ $dateLabel }}
+                                                @else
+                                                    {{ $trip->start_date ? $trip->start_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}
+                                                    @if($trip->end_date)
+                                                        - {{ $trip->end_date->format('d/m/Y') }}
+                                                    @endif
                                                 @endif
                                             </td>
                                             <td data-label="{{ __('traveler.trips.status') }}" align="center">

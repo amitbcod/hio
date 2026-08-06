@@ -8,7 +8,7 @@
         $booking = $transport['booking'] ?? [
             'pickup_date' => now()->format('Y-m-d'),
             'pickup_time' => '',
-            'pickup_date_display' => now()->format('d-m-Y'),
+            'pickup_date_display' => now()->format('d/m/Y'),
             'return_date' => '',
             'return_time' => '',
             'return_date_display' => '',
@@ -290,10 +290,10 @@
                             }
                         }
                     @endphp
-                    <form method="GET" action="{{ route('frontend.transports.show', $transport['id']) }}" class="booking-form-grid">
+                    <form method="GET" action="{{ route('frontend.transports.show', $transport['id']) }}" class="booking-form-grid" style="overflow:visible;">
                         <div class="booking-field">
                             <label>{{ __('home.search.departure_region') }}</label>
-                            <select id="transport-place-from" name="transport_from" class="booking-input">
+                            <select id="transport-place-from" name="transport_from" class="booking-input" style="position:relative;z-index:9999;background:#fff;">
                                 <option value="">{{ __('home.search.departure_region') }}</option>
                                 @foreach($transportRegionOptions as $regionKey => $regionName)
                                     <option value="{{ $regionName }}" {{ $selectedFromKey === $regionKey ? 'selected' : '' }}>{{ $regionName }}</option>
@@ -302,7 +302,7 @@
                         </div>
                         <div class="booking-field">
                             <label>{{ __('home.search.destination_region') }}</label>
-                            <select id="transport-place-to" name="transport_to" class="booking-input">
+                            <select id="transport-place-to" name="transport_to" class="booking-input" style="position:relative;z-index:9999;background:#fff;">
                                 <option value="">{{ __('home.search.destination_region') }}</option>
                                 @foreach($transportRegionOptions as $regionKey => $regionName)
                                     <option value="{{ $regionName }}" {{ $selectedToKey === $regionKey ? 'selected' : '' }}>{{ $regionName }}</option>
@@ -312,25 +312,41 @@
                         <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.pickup_date') }}</label>
                             <div class="custom-picker-wrapper date-picker">
-                                <input type="date" name="pickup_date" value="{{ $booking['pickup_date'] }}" class="booking-input booking-input-native booking-input-native-visible" min="{{ date('Y-m-d') }}">
+                                <div class="booking-input booking-input-text">{{ !empty($booking['pickup_date']) ? \Carbon\Carbon::parse($booking['pickup_date'])->format('d/m/Y') : '' }}</div>
+                                <input type="date" name="pickup_date" value="{{ $booking['pickup_date'] }}" class="booking-input booking-input-native" min="{{ date('Y-m-d') }}">
                             </div>
                         </div>
                         <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.pickup_time') }}</label>
-                            <div class="custom-picker-wrapper time-picker">
-                                <input type="time" name="pickup_time" value="{{ $booking['pickup_time'] }}" class="booking-input booking-input-native booking-input-native-visible">
+                            <div class="custom-picker-wrapper time-picker" style="position:relative;">
+                                <label for="transport-pickup_time" class="booking-input booking-input-text booking-input-time" style="display:inline-flex;align-items:center;gap:6px;width:64px;justify-content:center;padding:6px 6px;">
+                                    <span class="time-value">{{ $booking['pickup_time'] ?? '' }}</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                                        <circle cx="12" cy="12" r="9" stroke="#666" stroke-width="1" fill="none" />
+                                        <path d="M12 8v5l3 2" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                                    </svg>
+                                </label>
+                                <input id="transport-pickup_time" type="time" name="pickup_time" value="{{ $booking['pickup_time'] }}" class="booking-input booking-input-native" style="position:absolute;left:0;top:0;opacity:0;width:64px;height:36px;border:0;">
                             </div>
                         </div>
                         <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.return_date') }}</label>
                             <div class="custom-picker-wrapper date-picker">
-                                <input type="date" name="return_date" value="{{ $booking['return_date'] }}" class="booking-input booking-input-native booking-input-native-visible" min="{{ date('Y-m-d') }}">
+                                <div class="booking-input booking-input-text">{{ !empty($booking['return_date']) ? \Carbon\Carbon::parse($booking['return_date'])->format('d/m/Y') : '' }}</div>
+                                <input type="date" name="return_date" value="{{ $booking['return_date'] }}" class="booking-input booking-input-native" min="{{ date('Y-m-d') }}">
                             </div>
                         </div>
                         <div class="booking-field booking-field-inline">
                             <label>{{ __('transport.form.return_time') }}</label>
-                            <div class="custom-picker-wrapper time-picker">
-                                <input type="time" name="return_time" value="{{ $booking['return_time'] }}" class="booking-input booking-input-native booking-input-native-visible">
+                            <div class="custom-picker-wrapper time-picker" style="position:relative;">
+                                <label for="transport-return_time" class="booking-input booking-input-text booking-input-time" style="display:inline-flex;align-items:center;gap:6px;width:64px;justify-content:center;padding:6px 6px;">
+                                    <span class="time-value">{{ $booking['return_time'] ?? '' }}</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                                        <circle cx="12" cy="12" r="9" stroke="#666" stroke-width="1" fill="none" />
+                                        <path d="M12 8v5l3 2" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                                    </svg>
+                                </label>
+                                <input id="transport-return_time" type="time" name="return_time" value="{{ $booking['return_time'] }}" class="booking-input booking-input-native" style="position:absolute;left:0;top:0;opacity:0;width:64px;height:36px;border:0;">
                             </div>
                         </div>
                         <div class="booking-field">
@@ -796,7 +812,7 @@
             width: 100%;
             background: #fff;
             cursor: pointer;
-            pointer-events: none;
+            pointer-events: auto;
         }
 
         .booking-input-native {
@@ -832,6 +848,12 @@
             border: 1px solid var(--line) !important;
             padding: 0 12px !important;
             min-height: 42px !important;
+        }
+        .booking-input-text {
+            width: 100%;
+            background: #fff;
+            cursor: pointer;
+            pointer-events: auto;
         }
 
         .booking-input-native::-webkit-calendar-picker-indicator,
@@ -954,6 +976,36 @@
     </style>
 @endpush
 
+@push('styles')
+    <style>
+        .custom-picker-wrapper.date-picker { position: relative; }
+        .custom-picker-wrapper.date-picker .booking-input-text { position: relative; z-index: 1; cursor: pointer; }
+        .custom-picker-wrapper.date-picker .booking-input-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.01; border: 0; background: transparent; z-index: 5; cursor: pointer; }
+    </style>
+@endpush
+
+@push('styles')
+    <style>
+        /* TomSelect dropdown fixes: render into body and ensure opaque, above other content */
+        .ts-dropdown {
+            background: #fff !important;
+            z-index: 999999 !important;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08) !important;
+            border-radius: 8px !important;
+            max-height: 320px !important;
+            overflow: auto !important;
+        }
+        .ts-control {
+            background: #fff !important;
+        }
+        /* Fallback for native selects if TomSelect not initialized */
+        select.booking-input {
+            background: #fff !important;
+            z-index: 9999 !important;
+        }
+    </style>
+@endpush
+
 @push('scripts')
     <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
@@ -962,8 +1014,9 @@
             try {
                 const tmpFrom = document.getElementById('transport-place-from');
                 const tmpTo = document.getElementById('transport-place-to');
-                if (tmpFrom) new TomSelect(tmpFrom, {allowEmptyOption: true, create: false});
-                if (tmpTo) new TomSelect(tmpTo, {allowEmptyOption: true, create: false});
+                const tsOpts = {allowEmptyOption: true, create: false, dropdownParent: 'body', dropdownDirection: 'auto'};
+                if (tmpFrom) new TomSelect(tmpFrom, tsOpts);
+                if (tmpTo) new TomSelect(tmpTo, tsOpts);
             } catch (e) {
                 console.error('TomSelect init error', e);
             }
@@ -994,6 +1047,21 @@
             );
             const transportReturnLabel = @json(__('transport.return_price'));
             const booking = @json($booking ?? []);
+
+            const TRANSPORT_DEBUG = true;
+            const formatPickerDate = function(value, type) {
+                if (!value) {
+                    return '';
+                }
+                if (type === 'date') {
+                    const parts = String(value).split('-');
+                    if (parts.length !== 3) {
+                        return value;
+                    }
+                    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+                return value;
+            };
 
             function normalizeValue(value) {
                 if (!value) {
@@ -1088,9 +1156,14 @@
                 }
 
                 if (routePriceSummary) {
-                    const main = routePriceSummary ? `USD ${pricePerPassengerInput.value}` : '';
-                    const ret = (returnPriceInput.value && parseFloat(returnPriceInput.value) > 0) ? ` + ${transportReturnLabel} USD ${returnPriceInput.value}` : '';
-                    routePriceSummary.textContent = main + ret;
+                    // If a return price is set and a return date/value is present, show only the return price
+                    const hasReturnPrice = returnPriceInput && returnPriceInput.value && parseFloat(returnPriceInput.value) > 0;
+                    const hasReturnDate = (returnDateInput && returnDateInput.value) || (booking && booking.return_date);
+                    if (hasReturnPrice && hasReturnDate) {
+                        routePriceSummary.textContent = `USD ${parseFloat(returnPriceInput.value).toFixed(2)}`;
+                    } else {
+                        routePriceSummary.textContent = `USD ${pricePerPassengerInput.value}`;
+                    }
                 }
             }
 
@@ -1110,13 +1183,26 @@
                 const hiddenPickup = document.getElementById('booking-pickup-time');
                 const hiddenReturn = document.getElementById('booking-return-time');
 
+                const setPickerDisplayValue = function (displayElement, value, type) {
+                    const formattedValue = formatPickerDate(value, type) || '';
+                    if (!displayElement) {
+                        return;
+                    }
+                    if (displayElement.tagName === 'INPUT' || displayElement.tagName === 'TEXTAREA') {
+                        displayElement.value = formattedValue;
+                    } else {
+                        displayElement.textContent = formattedValue;
+                    }
+                };
+
                 const syncNativePicker = function (nativeInput, textInput, hiddenInput) {
                     if (!nativeInput || !textInput) {
                         return;
                     }
-                    textInput.value = nativeInput.value || '';
+                    setPickerDisplayValue(textInput, nativeInput.value, nativeInput.type);
                     const wrapper = nativeInput.closest('.custom-picker-wrapper');
                     const openPicker = function () {
+                        if (TRANSPORT_DEBUG) console.log('transport: openPicker', nativeInput.name);
                         nativeInput.focus();
                         if (typeof nativeInput.showPicker === 'function') {
                             nativeInput.showPicker();
@@ -1143,15 +1229,27 @@
                             }, 0);
                         }
                     });
-                    nativeInput.addEventListener('change', function () {
-                        textInput.value = nativeInput.value || '';
+                    // on blur sync final value
+                    nativeInput.addEventListener('blur', function () {
+                        setPickerDisplayValue(textInput, nativeInput.value, nativeInput.type);
+                        if (hiddenInput) hiddenInput.value = nativeInput.value || '';
+                        if (nativeInput.name === 'pickup_date' || nativeInput.name === 'return_date') {
+                            updateRouteFields();
+                        }
+                    });
+                    if (TRANSPORT_DEBUG) console.log('transport: syncNativePicker init', nativeInput.name);
+                    const nativeChangeHandler = function () {
+                        if (TRANSPORT_DEBUG) console.log('transport: nativeChangeHandler', nativeInput.name, nativeInput.value);
+                        setPickerDisplayValue(textInput, nativeInput.value, nativeInput.type);
                         if (hiddenInput) {
                             hiddenInput.value = nativeInput.value || '';
                         }
                         if (nativeInput.name === 'pickup_date' || nativeInput.name === 'return_date') {
                             updateRouteFields();
                         }
-                    });
+                    };
+                    nativeInput.addEventListener('change', nativeChangeHandler);
+                    nativeInput.addEventListener('input', nativeChangeHandler);
                 };
 
                 syncNativePicker(pickupDateInput, pickupDateText, hiddenPickupDate);
@@ -1259,8 +1357,9 @@
                     if (!travelerLoggedIn) {
                         ev.preventDefault();
                         ev.stopImmediatePropagation();
-                        // Ask user to log in or register first
-                        if (confirm('{{ addslashes(__('transport.validation.login_or_register_first')) }}')) {
+                        // Ask user to log in or register first (use JSON-escaped string to avoid syntax errors)
+                        const loginPrompt = @json(__('transport.validation.login_or_register_first'));
+                        if (confirm(loginPrompt)) {
                             // send to traveller login with redirect back
                             window.location.href = '{{ route('traveler.login') }}?redirect=' + encodeURIComponent(window.location.href);
                         }

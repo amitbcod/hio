@@ -86,7 +86,7 @@
                                                 @php
                                                     $rate = $rateMap[$variant->variant_id][$specificity][$seasonName] ?? null;
                                                     $sessionLabel = $rate && $rate->valid_from && $rate->valid_to
-                                                        ? $rate->valid_from->format('d M Y') . ' - ' . $rate->valid_to->format('d M Y')
+                                                        ? $rate->valid_from->format('d/m/Y') . ' - ' . $rate->valid_to->format('d/m/Y')
                                                         : 'Not set';
                                                 @endphp
                                                 <tr style="border-bottom:1px solid #e0e0e0;">

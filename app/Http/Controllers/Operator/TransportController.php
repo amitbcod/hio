@@ -1232,16 +1232,19 @@ class TransportController extends Controller
             'email as driver_email',
         ]);
 
-        $assignedDriverIds = $booking->drivers()->pluck('operator_drivers.id')->toArray();
+        $assignedPickupDriverId = $booking->pickup_driver_id;
+        $assignedReturnDriverId = $booking->return_driver_id;
 
         return response()->json([
             'drivers' => $drivers,
-            'assigned_driver_ids' => $assignedDriverIds,
+            'assigned_pickup_driver_id' => $assignedPickupDriverId,
+            'assigned_return_driver_id' => $assignedReturnDriverId,
+            'has_return_journey' => !empty($booking->return_date),
         ]);
     }
 
     /**
-     * Assign multiple drivers to a booking
+     * Assign drivers to a booking for pickup and return journeys
      */
     public function assignDrivers(Request $request, TransportBooking $booking)
     {
@@ -1256,22 +1259,30 @@ class TransportController extends Controller
         }
 
         $request->validate([
-            'driver_ids' => 'required|array|min:1',
-            'driver_ids.*' => 'integer|exists:operator_drivers,id',
+            'pickup_driver_id' => 'required|integer|exists:operator_drivers,id',
+            'return_driver_id' => 'nullable|integer|exists:operator_drivers,id',
         ]);
 
-        // Verify all drivers belong to this operator
-        $validDriverIds = OperatorDriver::where('operator_id', $operator->operator_id)
-            ->whereIn('id', $request->input('driver_ids'))
-            ->pluck('id')
-            ->toArray();
+        $selectedDriverIds = array_filter([
+            $request->input('pickup_driver_id'),
+            $request->input('return_driver_id'),
+        ]);
 
-        if (count($validDriverIds) !== count($request->input('driver_ids'))) {
-            return response()->json(['error' => 'Invalid driver selection'], 422);
+        if (!empty($selectedDriverIds)) {
+            $validDriverIds = OperatorDriver::where('operator_id', $operator->operator_id)
+                ->whereIn('id', $selectedDriverIds)
+                ->pluck('id')
+                ->toArray();
+
+            if (count($validDriverIds) !== count($selectedDriverIds)) {
+                return response()->json(['error' => 'Invalid driver selection'], 422);
+            }
         }
 
-        // Sync drivers (replaces existing assignments)
-        $booking->drivers()->sync($validDriverIds);
+        $booking->pickup_driver_id = $request->input('pickup_driver_id');
+        $booking->return_driver_id = $request->input('return_driver_id');
+        $booking->driver_id = $request->input('pickup_driver_id');
+        $booking->save();
 
         return response()->json([
             'success' => true,

@@ -7,7 +7,7 @@
     @php
         $booking = $activity['booking'] ?? [
             'activity_date' => now()->toDateString(),
-            'activity_date_display' => now()->format('d-m-Y'),
+            'activity_date_display' => now()->format('d/m/Y'),
             'participants' => 1,
         ];
         $availableRooms = $activity['available_rooms'] ?? [];
@@ -79,7 +79,10 @@
                     <form method="GET" action="{{ route('frontend.activities.show', $activity['id']) }}" class="booking-form-grid">
                         <div class="booking-field">
                             <label>{{ __('activity.form.activity_date') }}</label>
-                            <input type="date" name="activity_date" value="{{ $booking['activity_date'] }}" class="booking-input" min="{{ date('Y-m-d') }}">
+                            <div class="custom-picker-wrapper date-picker">
+                                <div class="booking-input booking-input-text">{{ !empty($booking['activity_date']) ? \Carbon\Carbon::parse($booking['activity_date'])->format('d/m/Y') : '' }}</div>
+                                <input type="date" name="activity_date" value="{{ $booking['activity_date'] }}" class="booking-input booking-input-native" min="{{ date('Y-m-d') }}">
+                            </div>
                         </div>
                         <div class="booking-field" style="{{ !($activity['allow_adults'] ?? true) ? 'opacity:0.5;pointer-events:none;' : '' }}">
                             <label>{{ __('activity.form.adults') }}{{ !($activity['allow_adults'] ?? true) ? ' (' . __('activity.not_allowed') . ')' : '' }}</label>
@@ -815,6 +818,39 @@
 
 @push('scripts')
     <script>
+        (function () {
+            const formatDate = function (v) {
+                if (!v) return '';
+                const parts = String(v).split('-');
+                if (parts.length !== 3) return v;
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            };
+
+            document.querySelectorAll('.custom-picker-wrapper.date-picker').forEach(wrapper => {
+                const native = wrapper.querySelector('input[type="date"]');
+                const display = wrapper.querySelector('.booking-input-text');
+                if (!native || !display) return;
+                const openPicker = function () {
+                    native.focus();
+                    if (typeof native.showPicker === 'function') {
+                        native.showPicker();
+                    } else {
+                        native.click();
+                    }
+                };
+                wrapper.addEventListener('click', function (e) { e.preventDefault(); openPicker(); });
+                display.addEventListener('click', function (e) { e.preventDefault(); openPicker(); });
+
+                const sync = function () {
+                    const v = formatDate(native.value);
+                    if (display.tagName === 'INPUT' || display.tagName === 'TEXTAREA') display.value = v; else display.textContent = v;
+                };
+                native.addEventListener('input', sync);
+                native.addEventListener('change', sync);
+                sync();
+            });
+        })();
+
         document.querySelectorAll('.detail-thumb').forEach(thumb => {
             thumb.addEventListener('click', function() {
                 const imageSrc = this.dataset.galleryImage;
@@ -1049,4 +1085,12 @@
             });
         });
     </script>
+@endpush
+
+@push('styles')
+    <style>
+        .custom-picker-wrapper.date-picker { position: relative; }
+        .custom-picker-wrapper.date-picker .booking-input-text { position: relative; z-index: 2; cursor: pointer; }
+        .custom-picker-wrapper.date-picker .booking-input-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; background: transparent; z-index: 1; cursor: pointer; }
+    </style>
 @endpush

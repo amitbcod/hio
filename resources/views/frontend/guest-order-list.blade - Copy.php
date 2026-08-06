@@ -44,7 +44,7 @@
                                         </h3>
                                         <p style="margin: 5px 0; color: #666; font-size: 14px;">
                                             <i class="fa-solid fa-calendar" style="color: #19b5b5; margin-right: 8px; width: 16px;"></i>
-                                            {{ $booking->check_in_date->format('d M Y') }} → {{ $booking->check_out_date->format('d M Y') }}
+                                            {{ $booking->check_in_date->format('d/m/Y') }} → {{ $booking->check_out_date->format('d/m/Y') }}
                                         </p>
                                         <p style="margin: 5px 0; color: #666; font-size: 14px;">
                                             <i class="fa-solid fa-user" style="color: #19b5b5; margin-right: 8px; width: 16px;"></i>
@@ -98,7 +98,7 @@
                                         @endif
                                         <p style="margin: 5px 0; color: #666; font-size: 14px;">
                                             <i class="fa-solid fa-calendar" style="color: #19b5b5; margin-right: 8px; width: 16px;"></i>
-                                            {{ $booking->activity_date->format('d M Y') }}
+                                            {{ $booking->activity_date->format('d/m/Y') }}
                                         </p>
                                         <p style="margin: 5px 0; color: #666; font-size: 14px;">
                                             <i class="fa-solid fa-user" style="color: #19b5b5; margin-right: 8px; width: 16px;"></i>

@@ -48,7 +48,12 @@
                                         <td>{{ optional($booking->booked_at)->format('M d, Y H:i') }}</td>
                                         <td>
                                             <a href="{{ route('operator.transport.booking.details', [$booking->transport_id, $booking->id]) }}" class="btn btn-sm btn-primary">Details</a>
-                                            <button class="btn btn-sm btn-info" onclick="openAssignDriverModal({{ $booking->id }})">Assign Driver</button>
+                                            @php
+                                                $viewAssigned = $booking->pickup_driver_id && (! $booking->return_date || $booking->return_driver_id);
+                                            @endphp
+                                            <button class="btn btn-sm btn-info" onclick="openAssignDriverModal({{ $booking->id }})">
+                                                {{ $viewAssigned ? 'View Assigned Drivers' : 'Assign Driver' }}
+                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -77,11 +82,17 @@
                 <form id="assignDriverForm">
                     @csrf
                     <div class="form-group">
-                        <label for="driverSelect">Select Drivers <span style="color: red;">*</span></label>
-                        <select id="driverSelect" name="driver_ids[]" multiple class="form-control" required style="height: 150px;">
-                            <!-- Options will be populated by JavaScript -->
+                        <label for="pickupDriverSelect">Pickup Driver <span style="color: red;">*</span></label>
+                        <select id="pickupDriverSelect" name="pickup_driver_id" class="form-control" required>
+                            <option value="">Select pickup driver</option>
                         </select>
-                        <small class="form-text text-muted">Hold Ctrl (Cmd on Mac) to select multiple drivers</small>
+                    </div>
+                    <div id="returnDriverGroup" class="form-group" style="display: none;">
+                        <label for="returnDriverSelect">Return Driver</label>
+                        <select id="returnDriverSelect" name="return_driver_id" class="form-control">
+                            <option value="">Select return driver</option>
+                        </select>
+                        <small class="form-text text-muted">Assign a separate return driver if this booking includes a return journey.</small>
                     </div>
                 </form>
             </div>
@@ -113,7 +124,7 @@ function openAssignDriverModal(bookingId) {
         })
         .then(data => {
             if (data.drivers) {
-                populateDriverSelect(data.drivers, data.assigned_driver_ids || []);
+                populateDriverSelects(data.drivers, data.assigned_pickup_driver_id, data.assigned_return_driver_id, data.has_return_journey);
                 $('#assignDriverModal').modal('show');
             } else {
                 throw new Error('No drivers payload');
@@ -125,19 +136,37 @@ function openAssignDriverModal(bookingId) {
         });
 }
 
-function populateDriverSelect(drivers, selectedIds = []) {
-    const select = document.getElementById('driverSelect');
-    select.innerHTML = '';
+function populateDriverSelects(drivers, selectedPickupId = null, selectedReturnId = null, hasReturnJourney = false) {
+    const pickupSelect = document.getElementById('pickupDriverSelect');
+    const returnSelect = document.getElementById('returnDriverSelect');
+    const returnGroup = document.getElementById('returnDriverGroup');
+    pickupSelect.innerHTML = '<option value="">Select pickup driver</option>';
+    returnSelect.innerHTML = '<option value="">Select return driver</option>';
 
     drivers.forEach(driver => {
-        const option = document.createElement('option');
-        option.value = driver.id;
-        option.text = `${driver.driver_name} (${driver.driver_phone || 'N/A'})`;
-        if (selectedIds.includes(driver.id)) {
-            option.selected = true;
+        const optionA = document.createElement('option');
+        optionA.value = driver.id;
+        optionA.text = `${driver.driver_name} (${driver.driver_phone || 'N/A'})`;
+        if (driver.id === selectedPickupId) {
+            optionA.selected = true;
         }
-        select.appendChild(option);
+        pickupSelect.appendChild(optionA);
+
+        const optionB = document.createElement('option');
+        optionB.value = driver.id;
+        optionB.text = `${driver.driver_name} (${driver.driver_phone || 'N/A'})`;
+        if (driver.id === selectedReturnId) {
+            optionB.selected = true;
+        }
+        returnSelect.appendChild(optionB);
     });
+
+    if (hasReturnJourney) {
+        returnGroup.style.display = 'block';
+    } else {
+        returnGroup.style.display = 'none';
+        returnSelect.value = '';
+    }
 }
 
 function closeAssignDriverModal() {
@@ -145,10 +174,11 @@ function closeAssignDriverModal() {
 }
 
 function saveDriverAssignment() {
-    const driverIds = Array.from(document.getElementById('driverSelect').selectedOptions).map(option => option.value);
+    const pickupDriverId = document.getElementById('pickupDriverSelect').value;
+    const returnDriverId = document.getElementById('returnDriverSelect').value || null;
 
-    if (driverIds.length === 0) {
-        alert('Please select at least one driver');
+    if (!pickupDriverId) {
+        alert('Please select a pickup driver');
         return;
     }
 
@@ -162,7 +192,8 @@ function saveDriverAssignment() {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}'
         },
         body: JSON.stringify({
-            driver_ids: driverIds
+            pickup_driver_id: pickupDriverId,
+            return_driver_id: returnDriverId,
         })
     })
     .then(response => {

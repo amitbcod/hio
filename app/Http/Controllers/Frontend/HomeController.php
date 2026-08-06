@@ -1652,8 +1652,8 @@ class HomeController extends Controller
         return [
             'check_in' => $checkIn->toDateString(),
             'check_out' => $checkOut->toDateString(),
-            'check_in_display' => $checkIn->format('d-m-Y'),
-            'check_out_display' => $checkOut->format('d-m-Y'),
+            'check_in_display' => $checkIn->format('d/m/Y'),
+            'check_out_display' => $checkOut->format('d/m/Y'),
             'adults' => 2,
             'children' => 0,
             'infants' => 0,
@@ -1688,8 +1688,8 @@ class HomeController extends Controller
         return [
             'check_in' => $checkIn->toDateString(),
             'check_out' => $checkOut->toDateString(),
-            'check_in_display' => $checkIn->format('d-m-Y'),
-            'check_out_display' => $checkOut->format('d-m-Y'),
+            'check_in_display' => $checkIn->format('d/m/Y'),
+            'check_out_display' => $checkOut->format('d/m/Y'),
             'adults' => $adults,
             'children' => $children,
             'infants' => $infants,
@@ -1712,7 +1712,7 @@ class HomeController extends Controller
 
         return [
             'activity_date' => $activityDate->toDateString(),
-            'activity_date_display' => $activityDate->format('d-m-Y'),
+            'activity_date_display' => $activityDate->format('d/m/Y'),
             'participants' => $participants,
             'adults' => $adults,
             'children' => $children,
@@ -3058,9 +3058,9 @@ class HomeController extends Controller
 
         return [
             'pickup_date' => $pickupDate->toDateString(),
-            'pickup_date_display' => $pickupDate->format('d-m-Y'),
+            'pickup_date_display' => $pickupDate->format('d/m/Y'),
             'return_date' => $returnDate ? $returnDate->toDateString() : '',
-            'return_date_display' => $returnDate ? $returnDate->format('d-m-Y') : '',
+            'return_date_display' => $returnDate ? $returnDate->format('d/m/Y') : '',
             'passengers' => $passengers,
             'pickup_time' => $pickupTime,
             'return_time' => $returnTime,

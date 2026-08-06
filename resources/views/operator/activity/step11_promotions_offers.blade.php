@@ -89,8 +89,8 @@
                                                     <span style="background:#fff3e0;color:#e65100;padding:4px 8px;border-radius:3px;font-weight:600;">${{ number_format($promotion->discount_value, 2) }}</span>
                                                 @endif
                                             </td>
-                                            <td style="padding:12px;">{{ $promotion->promo_valid_from->format('d M Y') }}</td>
-                                            <td style="padding:12px;">{{ $promotion->promo_valid_to->format('d M Y') }}</td>
+                                            <td style="padding:12px;">{{ $promotion->promo_valid_from->format('d/m/Y') }}</td>
+                                            <td style="padding:12px;">{{ $promotion->promo_valid_to->format('d/m/Y') }}</td>
                                             <td style="padding:12px;text-align:center;">
                                                 <span style="padding:4px 8px;border-radius:3px;font-size:11px;font-weight:600;background:{{ $promotion->approval_status === 'Published' ? '#c8e6c9' : ($promotion->approval_status === 'Pending Approval' ? '#fff9c4' : '#e0e0e0') }};color:{{ $promotion->approval_status === 'Published' ? '#1b5e20' : ($promotion->approval_status === 'Pending Approval' ? '#f57f17' : '#424242') }};">
                                                     {{ $promotion->approval_status }}

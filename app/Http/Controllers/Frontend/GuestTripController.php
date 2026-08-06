@@ -388,19 +388,19 @@ class GuestTripController extends Controller
                 '</tr>';
         }
 
-        $issueDate = now()->format('d M Y');
+        $issueDate = now()->format('d/m/Y');
         if ($isActivity) {
-            $serviceDate = optional($booking->activity_date)->format('d M Y');
-            $checkInDisplay = optional($booking->activity_date)->format('d M Y') . ' • ' . ($booking->activity_time ?? '-');
+            $serviceDate = optional($booking->activity_date)->format('d/m/Y');
+            $checkInDisplay = optional($booking->activity_date)->format('d/m/Y') . ' • ' . ($booking->activity_time ?? '-');
             $checkOutDisplay = $activity->duration ? e($activity->duration) : '-';
         } elseif ($isTransport) {
-            $serviceDate = trim((optional($booking->pickup_date)->format('d M Y') ?: '') . ' - ' . (optional($booking->return_date)->format('d M Y') ?: '')) ?: 'N/A';
-            $checkInDisplay = optional($booking->pickup_date)->format('d M Y') . ' • ' . ($booking->pickup_time ?? '-');
-            $checkOutDisplay = optional($booking->return_date)->format('d M Y') . ' • ' . ($booking->return_time ?? '-');
+            $serviceDate = trim((optional($booking->pickup_date)->format('d/m/Y') ?: '') . ' - ' . (optional($booking->return_date)->format('d/m/Y') ?: '')) ?: 'N/A';
+            $checkInDisplay = optional($booking->pickup_date)->format('d/m/Y') . ' • ' . ($booking->pickup_time ?? '-');
+            $checkOutDisplay = optional($booking->return_date)->format('d/m/Y') . ' • ' . ($booking->return_time ?? '-');
         } else {
-            $serviceDate = trim((optional($booking->check_in_date)->format('d M Y') ?: '') . ' - ' . (optional($booking->check_out_date)->format('d M Y') ?: '')) ?: 'N/A';
-            $checkInDisplay = optional($booking->check_in_date)->format('d M Y') . ' • From ' . ($booking->check_in_time ?? '14:00');
-            $checkOutDisplay = optional($booking->check_out_date)->format('d M Y') . ' • By ' . ($booking->check_out_time ?? '11:00');
+            $serviceDate = trim((optional($booking->check_in_date)->format('d/m/Y') ?: '') . ' - ' . (optional($booking->check_out_date)->format('d/m/Y') ?: '')) ?: 'N/A';
+            $checkInDisplay = optional($booking->check_in_date)->format('d/m/Y') . ' • From ' . ($booking->check_in_time ?? '14:00');
+            $checkOutDisplay = optional($booking->check_out_date)->format('d/m/Y') . ' • By ' . ($booking->check_out_time ?? '11:00');
         }
         $nights = '-';
         if ($isAccommodation && $booking->check_in_date && $booking->check_out_date) {
@@ -1136,7 +1136,7 @@ HTML;
 
         // Build invoice data
         $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad($trip->id, 6, '0', STR_PAD_LEFT);
-        $invoiceDate = now()->format('d M Y');
+        $invoiceDate = now()->format('d/m/Y');
         $bookingRef = 'B' . str_pad($trip->id, 4, '0', STR_PAD_LEFT);
 
         // Guest details - safe escaping
@@ -1208,8 +1208,8 @@ HTML;
                     'type' => 'Accommodation',
                     'name' => e($booking->accommodation->property_name ?? 'Accommodation'),
                     'location' => e($booking->accommodation->city ?? 'Mauritius'),
-                    'checkIn' => $booking->check_in_date ? $booking->check_in_date->format('d M Y') : 'N/A',
-                    'checkOut' => $booking->check_out_date ? $booking->check_out_date->format('d M Y') : 'N/A',
+                    'checkIn' => $booking->check_in_date ? $booking->check_in_date->format('d/m/Y') : 'N/A',
+                    'checkOut' => $booking->check_out_date ? $booking->check_out_date->format('d/m/Y') : 'N/A',
                     'description' => e(implode(' - ', array_filter($descriptionParts))),
                     'notes' => e(implode(' | ', $notesParts)),
                     'qty' => $nights,
@@ -1228,8 +1228,8 @@ HTML;
                     'type' => 'Activity',
                     'name' => e($booking->activity->activity_name ?? 'Activity'),
                     'location' => e($booking->activity->town ?? 'Mauritius'),
-                    'checkIn' => $booking->activity_date ? $booking->activity_date->format('d M Y') : 'N/A',
-                    'checkOut' => $booking->activity_date ? $booking->activity_date->format('d M Y') : 'N/A',
+                    'checkIn' => $booking->activity_date ? $booking->activity_date->format('d/m/Y') : 'N/A',
+                    'checkOut' => $booking->activity_date ? $booking->activity_date->format('d/m/Y') : 'N/A',
                     'description' => e($booking->variant_name ?? ($booking->activity->service_type ?? 'Activity')),
                     'notes' => e(($booking->variant_name ?? ($booking->activity->service_type ?? 'Activity')) . ' | ' . (($booking->guests ?? collect())->count() ?: 1) . ' pax'),
                     'qty' => 1,
@@ -1274,8 +1274,8 @@ HTML;
                     'type' => 'Transport',
                     'name' => e($booking->transport->vehicle_name ?? 'Transport'),
                     'location' => e($booking->route_to ?? $booking->transport->location ?? 'Mauritius'),
-                    'checkIn' => $booking->pickup_date ? $booking->pickup_date->format('d M Y') : 'N/A',
-                    'checkOut' => $booking->return_date ? $booking->return_date->format('d M Y') : 'N/A',
+                    'checkIn' => $booking->pickup_date ? $booking->pickup_date->format('d/m/Y') : 'N/A',
+                    'checkOut' => $booking->return_date ? $booking->return_date->format('d/m/Y') : 'N/A',
                     'description' => $description,
                     'notes' => e(($booking->transport->vehicle_type ?? 'Vehicle') . ' | Pickup: ' . ($booking->pickup_time ?? '-') . ' | Return: ' . ($booking->return_time ?? '-') . ' | Drop-off: ' . ($booking->dropoff_address ?? '-')),
                     'qty' => $quantity,

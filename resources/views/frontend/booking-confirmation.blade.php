@@ -105,18 +105,18 @@
                                 @if($booking->check_in_date)
                                     <div class="confirm-detail-item">
                                         <span class="detail-key">{{ __('booking.check_in') }}</span>
-                                        <span class="detail-val">{{ $booking->check_in_date->format('d M Y') }}</span>
+                                        <span class="detail-val">{{ $booking->check_in_date->format('d/m/Y') }}</span>
                                     </div>
                                     <div class="confirm-detail-item">
                                         <span class="detail-key">{{ __('booking.check_out') }}</span>
-                                        <span class="detail-val">{{ $booking->check_out_date->format('d M Y') }}</span>
+                                        <span class="detail-val">{{ $booking->check_out_date->format('d/m/Y') }}</span>
                                     </div>
                                 @endif
                             @elseif($type === 'activity')
                                 @if($booking->activity_date)
                                     <div class="confirm-detail-item">
                                         <span class="detail-key">{{ __('booking.activity_date') }}</span>
-                                        <span class="detail-val">{{ $booking->activity_date->format('d M Y') }}</span>
+                                        <span class="detail-val">{{ $booking->activity_date->format('d/m/Y') }}</span>
                                     </div>
                                 @endif
                            @elseif($type === 'transport')
@@ -126,7 +126,7 @@
                                 @if($booking->pickup_date)
                                     <div class="confirm-detail-item">
                                         <span class="detail-key">{{ __('booking.transport_pickup_date') }}</span>
-                                        <span class="detail-val">{{ $booking->pickup_date->format('d M Y') }}</span>
+                                        <span class="detail-val">{{ $booking->pickup_date->format('d/m/Y') }}</span>
                                     </div>
                                 @endif
                                 @if($booking->pickup_time)
@@ -138,7 +138,7 @@
                                 @if($booking->return_date)
                                     <div class="confirm-detail-item">
                                         <span class="detail-key">{{ __('booking.transport_return_date') }}</span>
-                                        <span class="detail-val">{{ $booking->return_date->format('d M Y') }}</span>
+                                        <span class="detail-val">{{ $booking->return_date->format('d/m/Y') }}</span>
                                     </div>
                                 @endif
                                 @if($booking->return_time)
@@ -197,7 +197,7 @@
                                 @if($transportBooking->pickup_date)
                                     <div class="confirm-detail-item">
                                         <span class="detail-key">Pickup Date</span>
-                                        <span class="detail-val">{{ $transportBooking->pickup_date->format('d M Y') }}</span>
+                                        <span class="detail-val">{{ $transportBooking->pickup_date->format('d/m/Y') }}</span>
                                     </div>
                                 @endif
                                 @if($transportBooking->pickup_time)
@@ -209,7 +209,7 @@
                                 @if($transportBooking->return_date)
                                     <div class="confirm-detail-item">
                                         <span class="detail-key">Return Date</span>
-                                        <span class="detail-val">{{ $transportBooking->return_date->format('d M Y') }}</span>
+                                        <span class="detail-val">{{ $transportBooking->return_date->format('d/m/Y') }}</span>
                                     </div>
                                 @endif
                                 @if($transportBooking->return_time)
@@ -247,7 +247,7 @@
             @if($transportBooking->pickup_date)
                 <div class="confirm-detail-item">
                     <span class="detail-key">{{ __('booking.transport_pickup_date') }}</span>
-                    <span class="detail-val">{{ $transportBooking->pickup_date->format('d M Y') }}</span>
+                    <span class="detail-val">{{ $transportBooking->pickup_date->format('d/m/Y') }}</span>
                 </div>
             @endif
 
@@ -261,7 +261,7 @@
             @if($transportBooking->return_date)
                 <div class="confirm-detail-item">
                     <span class="detail-key">{{ __('booking.transport_return_date') }}</span>
-                    <span class="detail-val">{{ $transportBooking->return_date->format('d M Y') }}</span>
+                    <span class="detail-val">{{ $transportBooking->return_date->format('d/m/Y') }}</span>
                 </div>
             @endif
 

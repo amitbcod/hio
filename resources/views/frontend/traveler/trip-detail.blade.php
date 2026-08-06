@@ -57,7 +57,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                         </svg>
-                        {{ $tripStartDate ? \Carbon\Carbon::parse($tripStartDate)->format('d M Y') : __('traveler.trip_detail.not_set') }}</p>
+                        {{ $tripStartDate ? \Carbon\Carbon::parse($tripStartDate)->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</p>
                 </div>
 
                 <div class="summary-card">
@@ -71,7 +71,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                         </svg>
-                        {{ $tripEndDate ? \Carbon\Carbon::parse($tripEndDate)->format('d M Y') : __('traveler.trip_detail.not_set') }}
+                        {{ $tripEndDate ? \Carbon\Carbon::parse($tripEndDate)->format('d/m/Y') : __('traveler.trip_detail.not_set') }}
                     </p>
                 </div>
             </div>
@@ -126,7 +126,7 @@
                                     <i class="fa-regular fa-calendar"></i>
                                     <span>
                                         {{ __('traveler.trip_detail.check_in') }}
-                                        <div class="detail-value">{{ $booking->check_in_date ? $booking->check_in_date->format('d M Y') : __('traveler.trip_detail.not_set') }}</div>
+                                        <div class="detail-value">{{ $booking->check_in_date ? $booking->check_in_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</div>
                                     </span>
                                 </div>
                             </div>
@@ -136,7 +136,7 @@
                                     <i class="fa-regular fa-calendar"></i>
                                     <span>
                                         {{ __('traveler.trip_detail.check_out') }}
-                                        <div class="detail-value">{{ $booking->check_out_date ? $booking->check_out_date->format('d M Y') : __('traveler.trip_detail.not_set') }}</div>
+                                        <div class="detail-value">{{ $booking->check_out_date ? $booking->check_out_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</div>
                                     </span>
                                 </div>
                             </div>
@@ -238,7 +238,7 @@
                                                     <i class="fa-regular fa-calendar"></i>
                                                     <span>{{ __('traveler.trip_detail.activity_date') }}
                                                         <div class="detail-value">
-                                                            {{ $booking->activity_date ? $booking->activity_date->format('d M Y') : __('traveler.trip_detail.not_set') }}
+                                                            {{ $booking->activity_date ? $booking->activity_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}
                                                         </div>
                                                     </span>
                                                 </div>
@@ -427,9 +427,13 @@
                                     <i class="fa-regular fa-calendar"></i>
                                     <span>
                                         {{ __('traveler.trip_detail.pickup') }}
-                                        <div class="detail-value">{{ $booking->pickup_date ? $booking->pickup_date->format('d M Y') : __('traveler.trip_detail.not_set') }}</div>
+                                        <div class="detail-value">{{ $booking->pickup_date ? $booking->pickup_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</div>
                                         @if(!empty($booking->pickup_time))
                                             <div class="detail-small">{{ $booking->pickup_time }}</div>
+                                        @endif
+                                        @if($booking->pickupDriver)
+                                            <div class="detail-small" style="margin-top: 6px; font-weight: 600;">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
+                                            <div class="detail-small">{{ $booking->pickupDriver->driver_name }}{{ $booking->pickupDriver->driver_phone ? ' • ' . $booking->pickupDriver->driver_phone : '' }}</div>
                                         @endif
                                     </span>
                                 </div>
@@ -440,9 +444,13 @@
                                     <i class="fa-regular fa-calendar"></i>
                                     <span>
                                         {{ __('traveler.trip_detail.return') }}
-                                        <div class="detail-value">{{ $booking->return_date ? $booking->return_date->format('d M Y') : __('traveler.trip_detail.not_set') }}</div>
+                                        <div class="detail-value">{{ $booking->return_date ? $booking->return_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</div>
                                         @if(!empty($booking->return_time))
                                             <div class="detail-small">{{ $booking->return_time }}</div>
+                                        @endif
+                                        @if($booking->returnDriver)
+                                            <div class="detail-small" style="margin-top: 6px; font-weight: 600;">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
+                                            <div class="detail-small">{{ $booking->returnDriver->driver_name }}{{ $booking->returnDriver->driver_phone ? ' • ' . $booking->returnDriver->driver_phone : '' }}</div>
                                         @endif
                                     </span>
                                 </div>
@@ -568,10 +576,10 @@
                                             {{ $booking->room ? $booking->room->room_name : __('traveler.trip_detail.not_set') }}
                                         </td>
                                         <td style="padding: 12px;">
-                                            {{ $booking->check_in_date->format('d M Y') }}
+                                            {{ $booking->check_in_date->format('d/m/Y') }}
                                         </td>
                                         <td style="padding: 12px;">
-                                            {{ $booking->check_out_date->format('d M Y') }}
+                                            {{ $booking->check_out_date->format('d/m/Y') }}
                                         </td>
                                         <td style="padding: 12px; text-align: center;">
                                             @php
@@ -649,7 +657,7 @@
                                             {{ $booking->variant_name ?? __('traveler.trip_detail.standard') }}
                                         </td>
                                         <td style="padding: 12px;">
-                                            {{ $booking->activity_date->format('d M Y') }}
+                                            {{ $booking->activity_date->format('d/m/Y') }}
                                         </td>
                                         <td style="padding: 12px; text-align: center;">
                                             @php

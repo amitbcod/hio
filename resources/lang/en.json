@@ -282,6 +282,7 @@
     "traveler.manage_guests.unknown": "Unknown",
     "traveler.manage_guests.no_dob": "No DOB",
     "traveler.manage_guests.delete": "Delete",
+    "traveler.trip_detail.assigned_driver": "Assigned Driver",
     "guest_trip.activity_bookings": "Activity Bookings",
     "guest_trip.title": "My Bookings",
     "guest_trip.meta_description": "View and manage your guest bookings",

@@ -234,6 +234,8 @@
     "profile.preferred_language": "Langue préférée *",
     "profile.select_country": "Sélectionnez le pays",
     "profile.select_nationality": "Sélectionnez la nationalité",
+    "profile.select_language": "Sélectionnez la langue",
+    "traveler.trip_detail.assigned_driver": "Chauffeur assigné",
     "cart.view": "Voir le panier",
     "cart.proceed_to_checkout": "Passer à la caisse",
     "cart.empty": "Votre panier est vide. Ajoutez une réservation pour la voir ici.",
