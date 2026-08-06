@@ -2975,6 +2975,26 @@ div#transport-price-summary {
     outline: 0;
 }
 
+.name-assigneddriver {
+    margin-top: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.5;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @media (max-width: 1120px) {
     div.detail-top-grid {

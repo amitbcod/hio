@@ -427,7 +427,7 @@
                                             <div class="detail-small">{{ $booking->pickup_time }}</div>
                                         @endif
                                         @if($booking->pickupDriver)
-                                            <div class="detail-small" style="margin-top: 6px; font-weight: 600;">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
+                                            <div class="name-assigneddriver">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
                                             <!-- <div class="detail-small">{{ $booking->pickupDriver->driver_name }}{{ $booking->pickupDriver->driver_phone ? ' • ' . $booking->pickupDriver->driver_phone : '' }}</div> -->
                                               <div class="detail-small">{{ $booking->pickupDriver->driver_name }}</div>
                                         @endif
@@ -860,7 +860,7 @@
                     align-items: start;
                     gap: 10px;
                     color: #666;
-                    margin-bottom: 10px;
+                    margin-bottom: 30px;
                 }
 
                 .detail-title i {
