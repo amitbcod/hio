@@ -1026,6 +1026,7 @@
                 font-weight:600;
                 color:#111827;
                 line-height:1.5;
+                text-transform: capitalize;
             }
 
             .detail-small{
