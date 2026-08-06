@@ -426,6 +426,12 @@
                                         @if(!empty($booking->pickup_time))
                                             <div class="detail-small">{{ $booking->pickup_time }}</div>
                                         @endif
+                                        
+                                    </span>
+                                </div>
+                                <div class="detail-title">
+                                    <<i class="fa-regular fa-user"></i>
+                                    <span>
                                         @if($booking->pickupDriver)
                                             <div class="name-assigneddriver">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
                                             <!-- <div class="detail-small">{{ $booking->pickupDriver->driver_name }}{{ $booking->pickupDriver->driver_phone ? ' • ' . $booking->pickupDriver->driver_phone : '' }}</div> -->
@@ -444,6 +450,12 @@
                                         @if(!empty($booking->return_time))
                                             <div class="detail-small">{{ $booking->return_time }}</div>
                                         @endif
+                                        
+                                    </span>
+                                </div>
+                                <div class="detail-title">
+                                    <i class="fa-regular fa-user"></i>
+                                    <span>
                                         @if($booking->returnDriver)
                                             <div class="name-assigneddriver">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
                                             <!-- <div class="detail-small">{{ $booking->returnDriver->driver_name }}{{ $booking->returnDriver->driver_phone ? ' • ' . $booking->returnDriver->driver_phone : '' }}</div> -->
