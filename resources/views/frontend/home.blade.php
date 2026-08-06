@@ -312,7 +312,7 @@
 @push('styles')
     <style>
         .custom-picker-wrapper.time-picker { position: relative; }
-        .custom-picker-wrapper.time-picker .booking-input-text { position: relative; z-index: 1; cursor: pointer; background: #fff; padding: 6px 12px; border-radius: 6px; border: 1px solid #e5e5e5; min-height: 34px; display: inline-block; }
+        .custom-picker-wrapper.time-picker .booking-input-text { position: relative; z-index: 1; cursor: pointer; background: transparent; padding: 6px 12px; border-radius: 6px; border: 1px solid #e5e5e5; min-height: 34px; display: inline-block; }
         .custom-picker-wrapper.time-picker .booking-input-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 5; border: 0; background: transparent; }
     </style>
 @endpush
