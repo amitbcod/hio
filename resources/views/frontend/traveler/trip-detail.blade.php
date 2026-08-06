@@ -445,7 +445,7 @@
                                             <div class="detail-small">{{ $booking->return_time }}</div>
                                         @endif
                                         @if($booking->returnDriver)
-                                            <div class="detail-small" style="margin-top: 6px; font-weight: 600;">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
+                                            <div class="name-assigneddriver">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
                                             <!-- <div class="detail-small">{{ $booking->returnDriver->driver_name }}{{ $booking->returnDriver->driver_phone ? ' • ' . $booking->returnDriver->driver_phone : '' }}</div> -->
                                                <div class="detail-small">{{ $booking->returnDriver->driver_name }}</div>
                                         @endif
