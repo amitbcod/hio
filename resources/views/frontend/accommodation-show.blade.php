@@ -51,7 +51,7 @@
             <div class="hero-meta-row">
                 <span class="hero-chip">{{ $accommodation['property_type'] ?: 'Accommodation' }}</span>
                 @if(!empty($accommodation['booking_confirmation_type']))
-                    <span class="hero-chip">{{ $accommodation['booking_confirmation_type'] }} booking</span>
+                    <!-- <span class="hero-chip">{{ $accommodation['booking_confirmation_type'] }} booking</span> -->
                 @endif
                 @if(!empty($ratingSummary['score_display']))
                     @php $accommodationStars = (int) round($ratingSummary['score_display']); @endphp
@@ -405,10 +405,10 @@
                             {{ __('accommodation.check_out') }}: {{ $accommodation['checkout_time'] ?: __('accommodation.checkin_as_booking_confirmation') }}
                         </p>
                     </div>
-                    <div>
+                    <!-- <div>
                         <h3>{{ __('accommodation.booking_type') }}</h3>
                         <p>{{ $accommodation['booking_confirmation_type'] ?: __('accommodation.booking_type_on_request') }}</p>
-                    </div>
+                    </div> -->
                 </div>
 
                 @if(!empty($accommodation['policy_highlights']))
