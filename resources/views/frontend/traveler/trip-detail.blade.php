@@ -924,7 +924,7 @@
                     }
 
                     .booking-details {
-                        grid-template-columns: 1fr 1fr;
+                        grid-template-columns: 0;
                         gap: 20px;
                     }
 
@@ -1170,6 +1170,10 @@
                     flex-direction:column;
                     align-items:flex-start;
                     gap:15px;
+                }
+
+                .detail-item {
+                    min-width: 260px;
                 }
             }
 
