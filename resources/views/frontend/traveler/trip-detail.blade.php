@@ -36,7 +36,10 @@
             <div class="trip-summary-grid"
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px;">
                 <div class="summary-card">
-                    <label>{{ __('traveler.trip_detail.status') }}</label>
+                    <label><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    {{ __('traveler.trip_detail.status') }}</label>
                     <p>
                         <span class="trip-status trip-status--{{ $trip->status }}"
                             style="display: inline-block; padding: 6px 12px; border-radius: 4px; background: {{ $trip->status === 'planned' ? '#e3f2fd' : ($trip->status === 'active' ? '#e8f5e9' : '#f3e5f5') }}; color: {{ $trip->status === 'planned' ? '#1976d2' : ($trip->status === 'active' ? '#388e3c' : '#7b1fa2') }};">
