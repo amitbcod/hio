@@ -15,12 +15,12 @@ return new class extends Migration
             Schema::table('transport_bookings', function (Blueprint $table) {
                 if (!Schema::hasColumn('transport_bookings', 'pickup_driver_id')) {
                     $table->unsignedBigInteger('pickup_driver_id')->nullable()->after('driver_id');
-                    $table->foreign('pickup_driver_id')->references('id')->on('operator_drivers')->onDelete('set null');
+                    $table->index('pickup_driver_id');
                 }
 
                 if (!Schema::hasColumn('transport_bookings', 'return_driver_id')) {
                     $table->unsignedBigInteger('return_driver_id')->nullable()->after('pickup_driver_id');
-                    $table->foreign('return_driver_id')->references('id')->on('operator_drivers')->onDelete('set null');
+                    $table->index('return_driver_id');
                 }
             });
         }
@@ -34,12 +34,10 @@ return new class extends Migration
         if (Schema::hasTable('transport_bookings')) {
             Schema::table('transport_bookings', function (Blueprint $table) {
                 if (Schema::hasColumn('transport_bookings', 'return_driver_id')) {
-                    $table->dropForeign(['return_driver_id']);
                     $table->dropColumn('return_driver_id');
                 }
 
                 if (Schema::hasColumn('transport_bookings', 'pickup_driver_id')) {
-                    $table->dropForeign(['pickup_driver_id']);
                     $table->dropColumn('pickup_driver_id');
                 }
             });
