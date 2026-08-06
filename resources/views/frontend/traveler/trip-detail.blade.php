@@ -240,8 +240,7 @@
                                             </div>
 
                                             <div class="detail-item">
-                                                <div class="detail-title">
-                                                    <i class="fa-solid fa-users"></i>
+                                                <div class="detail-title">                                                    <i class="fa-solid fa-users"></i>
                                                     <span>{{ __('traveler.trip_detail.participants') }}
                                                         <div class="detail-value">
                                                             @php
@@ -430,12 +429,12 @@
                                     </span>
                                 </div>
                                 <div class="detail-title">
-                                    <<i class="fa-regular fa-user"></i>
+                                    <i class="fa-regular fa-user"></i>
                                     <span>
                                         @if($booking->pickupDriver)
                                             <div class="name-assigneddriver">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
                                             <!-- <div class="detail-small">{{ $booking->pickupDriver->driver_name }}{{ $booking->pickupDriver->driver_phone ? ' • ' . $booking->pickupDriver->driver_phone : '' }}</div> -->
-                                              <div class="detail-small">{{ $booking->pickupDriver->driver_name }}</div>
+                                              <div class="detail-value">{{ $booking->pickupDriver->driver_name }}</div>
                                         @endif
                                     </span>
                                 </div>
@@ -459,7 +458,7 @@
                                         @if($booking->returnDriver)
                                             <div class="name-assigneddriver">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
                                             <!-- <div class="detail-small">{{ $booking->returnDriver->driver_name }}{{ $booking->returnDriver->driver_phone ? ' • ' . $booking->returnDriver->driver_phone : '' }}</div> -->
-                                               <div class="detail-small">{{ $booking->returnDriver->driver_name }}</div>
+                                               <div class="detail-value">{{ $booking->returnDriver->driver_name }}</div>
                                         @endif
                                     </span>
                                 </div>
