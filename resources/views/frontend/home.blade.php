@@ -223,14 +223,14 @@
                                         <div class="transport-field" style="flex: 1 1 120px;">
                                             <h5>&nbsp;</h5>
                                             <div class="custom-picker-wrapper time-picker" style="position:relative;">
-                                                    <label class="booking-input booking-input-text booking-input-time" for="home-arrival_time" style="display:inline-flex;align-items:center;gap:6px;width:64px;justify-content:center;padding:6px 6px;">
+                                                    <label class="booking-input booking-input-text booking-input-time" style="display:inline-flex;align-items:center;gap:6px;width:64px;justify-content:center;padding:6px 6px;cursor:pointer;">
                                                         <span class="time-value">{{ request()->query('arrival_time', '') }}</span>
                                                         <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
                                                             <circle cx="12" cy="12" r="9" stroke="#666" stroke-width="1" fill="none" />
                                                             <path d="M12 8v5l3 2" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
                                                         </svg>
                                                     </label>
-                                                    <input id="home-arrival_time" type="time" name="arrival_time" class="category-search-input booking-input-native" value="{{ request()->query('arrival_time', '') }}" style="position:absolute;left:0;top:0;opacity:0;width:64px;height:36px;border:0;">
+                                                    <input id="home-arrival_time" type="hidden" name="arrival_time" lang="en-GB" value="{{ request()->query('arrival_time', '') }}">
                                                 </div>
                                         </div>
                                     </div>
@@ -245,14 +245,14 @@
                                         <div class="transport-field" style="flex: 1 1 120px">
                                             <h5>&nbsp;</h5>
                                             <div class="custom-picker-wrapper time-picker" style="position:relative;">
-                                                <label class="booking-input booking-input-text booking-input-time" for="home-return_time" style="display:inline-flex;align-items:center;gap:6px;width:64px;justify-content:center;padding:6px 6px;">
+                                                <label class="booking-input booking-input-text booking-input-time" style="display:inline-flex;align-items:center;gap:6px;width:64px;justify-content:center;padding:6px 6px;cursor:pointer;">
                                                     <span class="time-value">{{ request()->query('return_time', '') }}</span>
                                                     <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
                                                         <circle cx="12" cy="12" r="9" stroke="#666" stroke-width="1" fill="none" />
                                                         <path d="M12 8v5l3 2" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
                                                     </svg>
                                                 </label>
-                                                <input id="home-return_time" type="time" name="return_time" class="category-search-input booking-input-native" value="{{ request()->query('return_time', '') }}" style="position:absolute;left:0;top:0;opacity:0;width:64px;height:36px;border:0;">
+                                                <input id="home-return_time" type="hidden" name="return_time" lang="en-GB" value="{{ request()->query('return_time', '') }}">
                                             </div>
                                         </div>
                                     </div>
@@ -273,21 +273,156 @@
     @push('scripts')
     <script>
             (function () {
-                const pad = v => String(v).padStart(2, '0');
-                function format24(v) {
-                    if (!v) return '';
-                    // v is like HH:MM
-                    return v;
-                }
-                document.querySelectorAll('.custom-picker-wrapper.time-picker').forEach(wrapper => {
-                    const native = wrapper.querySelector('input[type="time"]');
-                    const display = wrapper.querySelector('.booking-input-text');
-                    if (!native || !display) return;
-                    const sync = () => { display.textContent = format24(native.value || ''); };
-                    native.addEventListener('input', sync);
-                    native.addEventListener('change', sync);
-                    // allow clicks to reach the native input directly so the browser time picker opens
-                    sync();
+                const pad = (v) => String(v).padStart(2, '0');
+                const hours = Array.from({ length: 24 }, (_, i) => String(i + 1).padStart(2, '0'));
+                const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+
+                const normalizeTime = function (value) {
+                    if (!value) return '';
+                    const raw = String(value).trim();
+                    if (raw === '00:00' || raw === '24:00') {
+                        return '24:00';
+                    }
+
+                    const ampm = raw.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
+                    if (ampm) {
+                        let hour = parseInt(ampm[1], 10);
+                        const minute = ampm[2];
+                        const suffix = ampm[3].toLowerCase();
+                        if (suffix === 'pm' && hour < 12) hour += 12;
+                        if (suffix === 'am' && hour === 12) hour = 0;
+                        return `${pad(hour)}:${minute}`;
+                    }
+                    return raw;
+                };
+
+                const buildPopup = function (wrapper, input, display) {
+                    const popup = document.createElement('div');
+                    popup.className = 'custom-timepicker-popup';
+                    popup.innerHTML = `
+                        <div class="custom-timepicker-column">
+                            <label>Hour</label>
+                        </div>
+                        <div class="custom-timepicker-column">
+                            <label>Minute</label>
+                        </div>
+                        <div class="custom-timepicker-actions">
+                            <button type="button" class="custom-timepicker-ok">Set</button>
+                        </div>
+                    `;
+                    const hourSelect = document.createElement('select');
+                    const minuteSelect = document.createElement('select');
+                    hourSelect.className = 'custom-timepicker-select';
+                    minuteSelect.className = 'custom-timepicker-select';
+                    hours.forEach((hour) => {
+                        const option = document.createElement('option');
+                        option.value = hour;
+                        option.textContent = hour;
+                        hourSelect.appendChild(option);
+                    });
+                    minutes.forEach((minute) => {
+                        const option = document.createElement('option');
+                        option.value = minute;
+                        option.textContent = minute;
+                        minuteSelect.appendChild(option);
+                    });
+                    popup.querySelector('.custom-timepicker-column:nth-child(1)').appendChild(hourSelect);
+                    popup.querySelector('.custom-timepicker-column:nth-child(2)').appendChild(minuteSelect);
+                    const okButton = popup.querySelector('.custom-timepicker-ok');
+
+                    const setValue = function () {
+                        const hour = hourSelect.value;
+                        const minute = minuteSelect.value;
+                        const normalized = hour === '24' ? '24:00' : `${hour}:${minute}`;
+                        input.value = normalized;
+                        display.textContent = normalized;
+                        popup.classList.remove('open');
+                    };
+
+                    const closePopup = function () {
+                        popup.classList.remove('open');
+                    };
+
+                    const syncSelects = function () {
+                        const value = normalizeTime(input.value);
+                        const parts = value.split(':');
+                        let currentHour = parts[0] || '01';
+                        let currentMinute = parts[1] || '00';
+                        if (currentHour === '00') currentHour = '24';
+                        hourSelect.value = hours.includes(currentHour) ? currentHour : '01';
+                        minuteSelect.value = minutes.includes(currentMinute) ? currentMinute : '00';
+                    };
+
+                    okButton.addEventListener('click', function (event) {
+                        event.stopPropagation();
+                        setValue();
+                    });
+
+                    popup.addEventListener('click', function (event) {
+                        event.stopPropagation();
+                    });
+
+                    document.body.appendChild(popup);
+
+                    const positionPopup = function () {
+                        const popupHeight = popup.offsetHeight || 220;
+                        const popupWidth = popup.offsetWidth || 220;
+                        const wrapperRect = wrapper.getBoundingClientRect();
+                        let top = wrapperRect.bottom + 6;
+                        let left = wrapperRect.left;
+                        if (top + popupHeight > window.innerHeight && wrapperRect.top >= popupHeight + 10) {
+                            top = wrapperRect.top - popupHeight - 6;
+                        }
+                        if (left + popupWidth > window.innerWidth - 10) {
+                            left = Math.max(10, window.innerWidth - popupWidth - 10);
+                        }
+                        if (left < 10) {
+                            left = 10;
+                        }
+                        popup.style.position = 'fixed';
+                        popup.style.top = `${top}px`;
+                        popup.style.left = `${left}px`;
+                    };
+
+                    const openPopup = function () {
+                        document.querySelectorAll('.custom-timepicker-popup.open').forEach((openPopup) => openPopup.classList.remove('open'));
+                        popup.classList.add('open');
+                        positionPopup();
+                    };
+
+                    const togglePopup = function (event) {
+                        if (event) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        if (popup.classList.contains('open')) {
+                            closePopup();
+                            return;
+                        }
+                        syncSelects();
+                        openPopup();
+                    };
+
+                    const clickTarget = wrapper.querySelector('.booking-input-text') || display;
+                    if (clickTarget) {
+                        clickTarget.addEventListener('click', togglePopup);
+                    }
+
+                    document.addEventListener('click', function (event) {
+                        if (!wrapper.contains(event.target) && !popup.contains(event.target)) {
+                            closePopup();
+                        }
+                    });
+                };
+
+                document.querySelectorAll('.custom-picker-wrapper.time-picker').forEach((wrapper) => {
+                    const input = wrapper.querySelector('input[type="hidden"]');
+                    const display = wrapper.querySelector('.booking-input-text .time-value') || wrapper.querySelector('.booking-input-text');
+                    if (!input || !display) return;
+                    const currentValue = normalizeTime(input.value);
+                    input.value = currentValue;
+                    display.textContent = currentValue;
+                    buildPopup(wrapper, input, display);
                 });
             })();
         document.addEventListener('DOMContentLoaded', function () {
@@ -311,9 +446,16 @@
 
 @push('styles')
     <style>
-        .custom-picker-wrapper.time-picker { position: relative; }
-        .custom-picker-wrapper.time-picker .booking-input-text { position: relative; z-index: 1; cursor: pointer; background: #fff; padding: 6px 12px; border-radius: 6px; border: 1px solid #e5e5e5; min-height: 34px; display: inline-block; }
-        .custom-picker-wrapper.time-picker .booking-input-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 5; border: 0; background: transparent; }
+        .custom-picker-wrapper.time-picker { position: relative; z-index: 10020; }
+        .custom-picker-wrapper.time-picker .booking-input-text { position: relative; z-index: 10021; cursor: pointer; background: #fff; padding: 6px 12px; border-radius: 6px; border: 1px solid #e5e5e5; min-height: 34px; display: inline-flex; align-items: center; justify-content: center; }
+        .custom-picker-wrapper.time-picker .booking-input-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 10022; border: 0; background: transparent; }
+        .custom-timepicker-popup { position: fixed; top: 0; left: 0; z-index: 10030; background: #fff; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,0.12); padding: 12px; display: none; grid-template-columns: 1fr 1fr; gap: 10px; min-width: 220px; }
+        .custom-timepicker-popup.open { display: grid; }
+        .custom-timepicker-popup .custom-timepicker-column { display: flex; flex-direction: column; gap: 6px; }
+        .custom-timepicker-popup .custom-timepicker-column label { font-size: 12px; color: #666; }
+        .custom-timepicker-popup .custom-timepicker-select { width: 100%; min-width: 84px; padding: 6px 8px; border-radius: 6px; border: 1px solid #ccc; background: #fff; }
+        .custom-timepicker-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-top: 6px; }
+        .custom-timepicker-ok { border: 0; background: #0a84ff; color: #fff; padding: 7px 12px; border-radius: 6px; cursor: pointer; }
     </style>
 @endpush
 
