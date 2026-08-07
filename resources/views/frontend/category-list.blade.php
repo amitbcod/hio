@@ -125,7 +125,7 @@
                         @endpush
                         <div class="category-search-cell category-search-cell--transport" style="display: none;">
                             <div class="transport-row">
-                                <div class="transport-field" style="flex: 0 1 140px; min-width: 140px;">
+                                <div class="transport-field" style="flex: 0 1 210px; min-width: 210px;">
                                     <h5>{{ __('home.search.service_type') }}</h5>
                                     <select name="service_type" class="category-search-select">
                                         <option value="airport_transfer" {{ ($filters['service_type'] ?? 'airport_transfer') === 'airport_transfer' ? 'selected' : '' }}>Airport Transfer</option>
@@ -168,11 +168,11 @@
                                     <div class="transport-field" style="flex: 1 1 120px;">
                                         <h5>&nbsp;</h5>
                                         <div class="custom-picker-wrapper time-picker" style="position:relative;">
-                                            <label class="booking-input booking-input-text booking-input-time" style="display:inline-flex;align-items:center;gap:6px;width:64px;justify-content:center;padding:6px 6px;cursor:pointer;">
+                                            <label class="booking-input booking-input-text booking-input-time" style="">
                                                 <span class="time-value">{{ $filters['arrival_time'] ?? '' }}</span>
                                                 <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-                                                    <circle cx="12" cy="12" r="9" stroke="#666" stroke-width="1" fill="none" />
-                                                    <path d="M12 8v5l3 2" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                                                    <circle cx="12" cy="12" r="9" stroke="#181818" stroke-width="2" fill="none" />
+                                                    <path d="M12 8v5l3 2" stroke="#181818" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
                                                 </svg>
                                             </label>
                                             <input id="category-arrival_time" type="hidden" name="arrival_time" lang="en-GB" value="{{ $filters['arrival_time'] ?? '' }}">
@@ -190,11 +190,11 @@
                                     <div class="transport-field" style="flex: 1 1 120px">
                                         <h5>&nbsp;</h5>
                                         <div class="custom-picker-wrapper time-picker" style="position:relative;">
-                                            <label class="booking-input booking-input-text booking-input-time" style="display:inline-flex;align-items:center;gap:6px;width:64px;justify-content:center;padding:6px 6px;cursor:pointer;">
+                                            <label class="booking-input booking-input-text booking-input-time" style="">
                                                 <span class="time-value">{{ $filters['return_time'] ?? '' }}</span>
                                                 <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-                                                    <circle cx="12" cy="12" r="9" stroke="#666" stroke-width="1" fill="none" />
-                                                    <path d="M12 8v5l3 2" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                                                    <circle cx="12" cy="12" r="9" stroke="#181818" stroke-width="2" fill="none" />
+                                                    <path d="M12 8v5l3 2" stroke="#181818" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
                                                 </svg>
                                             </label>
                                             <input id="category-return_time" type="hidden" name="return_time" lang="en-GB" value="{{ $filters['return_time'] ?? '' }}">
@@ -710,8 +710,11 @@
 
     @push('styles')
         <style>
-            .custom-picker-wrapper.time-picker { position: relative; }
-            .custom-picker-wrapper.time-picker .booking-input-text { position: relative; z-index: 1; cursor: pointer; background: #fff; padding: 6px 12px; border-radius: 6px; border: 1px solid #e5e5e5; min-height: 34px; display: inline-block; }
+            .custom-picker-wrapper.time-picker { position: relative; z-index: 10020; display: flex;}
+            .custom-picker-wrapper.time-picker .booking-input-text { position: relative; z-index: 10021; cursor: pointer; background: transparent; padding: 0; border-radius: 0; border: 0px solid #e5e5e5; min-height: 22px; display: inline-flex; align-items: center; justify-content: center;gap: 6px;    font-weight: bold;  font-family: 'Open Sans'; font-size: 15px; text-align: left; flex: 1;}
+            .custom-picker-wrapper.time-picker .booking-input-text .time-value {
+            width:50px;
+            }
             .custom-picker-wrapper.time-picker .booking-input-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 5; border: 0; background: transparent; }
             /* Ensure time picker UI sits above adjacent native inputs */
             .custom-picker-wrapper.time-picker { z-index: 10010; }
@@ -993,7 +996,7 @@
             .category-search-date-display {
                 position: absolute;
                 top: 50%;
-                left: 0.75rem;
+                left: 0;
                 transform: translateY(-50%);
                 pointer-events: none;
                 display: block;
