@@ -36,7 +36,10 @@
             <div class="trip-summary-grid"
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px;">
                 <div class="summary-card">
-                    <label>{{ __('traveler.trip_detail.status') }}</label>
+                    <label><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    {{ __('traveler.trip_detail.status') }}</label>
                     <p>
                         <span class="trip-status trip-status--{{ $trip->status }}"
                             style="display: inline-block; padding: 6px 12px; border-radius: 4px; background: {{ $trip->status === 'planned' ? '#e3f2fd' : ($trip->status === 'active' ? '#e8f5e9' : '#f3e5f5') }}; color: {{ $trip->status === 'planned' ? '#1976d2' : ($trip->status === 'active' ? '#388e3c' : '#7b1fa2') }};">
@@ -52,11 +55,7 @@
                                 d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                         </svg>
                         {{ __('traveler.trip_detail.start_date') }}</label>
-                    <p><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
-                        </svg>
+                    <p>
                         {{ $tripStartDate ? \Carbon\Carbon::parse($tripStartDate)->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</p>
                 </div>
 
@@ -66,11 +65,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                         </svg> {{ __('traveler.trip_detail.end_date') }}</label>
-                    <p><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
-                        </svg>
+                    <p>
                         {{ $tripEndDate ? \Carbon\Carbon::parse($tripEndDate)->format('d/m/Y') : __('traveler.trip_detail.not_set') }}
                     </p>
                 </div>
@@ -245,8 +240,7 @@
                                             </div>
 
                                             <div class="detail-item">
-                                                <div class="detail-title">
-                                                    <i class="fa-solid fa-users"></i>
+                                                <div class="detail-title">                                                    <i class="fa-solid fa-users"></i>
                                                     <span>{{ __('traveler.trip_detail.participants') }}
                                                         <div class="detail-value">
                                                             @php
@@ -431,10 +425,16 @@
                                         @if(!empty($booking->pickup_time))
                                             <div class="detail-small">{{ $booking->pickup_time }}</div>
                                         @endif
+                                        
+                                    </span>
+                                </div>
+                                <div class="detail-title">
+                                    <i class="fa-regular fa-user"></i>
+                                    <span>
                                         @if($booking->pickupDriver)
-                                            <div class="detail-small" style="margin-top: 6px; font-weight: 600;">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
+                                            <div class="name-assigneddriver">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
                                             <!-- <div class="detail-small">{{ $booking->pickupDriver->driver_name }}{{ $booking->pickupDriver->driver_phone ? ' • ' . $booking->pickupDriver->driver_phone : '' }}</div> -->
-                                              <div class="detail-small">{{ $booking->pickupDriver->driver_name }}</div>
+                                              <div class="detail-value">{{ $booking->pickupDriver->driver_name }}</div>
                                         @endif
                                     </span>
                                 </div>
@@ -449,10 +449,16 @@
                                         @if(!empty($booking->return_time))
                                             <div class="detail-small">{{ $booking->return_time }}</div>
                                         @endif
+                                        
+                                    </span>
+                                </div>
+                                <div class="detail-title">
+                                    <i class="fa-regular fa-user"></i>
+                                    <span>
                                         @if($booking->returnDriver)
-                                            <div class="detail-small" style="margin-top: 6px; font-weight: 600;">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
+                                            <div class="name-assigneddriver">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
                                             <!-- <div class="detail-small">{{ $booking->returnDriver->driver_name }}{{ $booking->returnDriver->driver_phone ? ' • ' . $booking->returnDriver->driver_phone : '' }}</div> -->
-                                               <div class="detail-small">{{ $booking->returnDriver->driver_name }}</div>
+                                               <div class="detail-value">{{ $booking->returnDriver->driver_name }}</div>
                                         @endif
                                     </span>
                                 </div>
@@ -865,7 +871,7 @@
                     align-items: start;
                     gap: 10px;
                     color: #666;
-                    margin-bottom: 10px;
+                    margin-bottom: 30px;
                 }
 
                 .detail-title i {
@@ -918,7 +924,7 @@
                     }
 
                     .booking-details {
-                        grid-template-columns: 1fr 1fr;
+                        grid-template-columns: 0;
                         gap: 20px;
                     }
 
@@ -1020,6 +1026,7 @@
                 font-weight:600;
                 color:#111827;
                 line-height:1.5;
+                text-transform: capitalize;
             }
 
             .detail-small{
@@ -1163,6 +1170,10 @@
                     flex-direction:column;
                     align-items:flex-start;
                     gap:15px;
+                }
+
+                .detail-item {
+                    min-width: 260px;
                 }
             }
 

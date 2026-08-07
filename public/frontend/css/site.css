@@ -2317,7 +2317,7 @@ ol>ul>li {
     font-size: 17px;
     margin-bottom: 0;
     font-weight: 600;
-    margin-top: 4px;
+    margin-top: 14px;
 }
 
 .summary-card label {
@@ -2974,6 +2974,26 @@ div#transport-price-summary {
     box-shadow: none !important;
     outline: 0;
 }
+
+.name-assigneddriver {
+    /* margin-top: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.5; */
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 @media (max-width: 1120px) {
