@@ -44,7 +44,7 @@
                                 @foreach($serviceRoutes as $index => $route)
                                     @php $routeIndexValue = $loop->parent->index * 1000 + $index; @endphp
                                     <div class="route-card" data-service="{{ $serviceKey }}" style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;">
-                                        <h5 style="margin:0 0 8px 0;">{{ $route['route_from'] }} → {{ $route['route_to'] }}</h5>
+                                        <h5 style="margin:0 0 8px 0;">{{ $route['route_from'] }} → {{ $route['route_to'] }} / {{ $route['route_to'] }} → {{ $route['route_from'] }}</h5>
 
                                         <input type="hidden" name="routes[{{ $routeIndexValue }}][route_id]" value="{{ $route['route_id'] ?? '' }}">
                                         <input type="hidden" name="routes[{{ $routeIndexValue }}][service_type]" value="{{ $serviceKey }}">
