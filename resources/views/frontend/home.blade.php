@@ -446,8 +446,8 @@
 
 @push('styles')
     <style>
-        .custom-picker-wrapper.time-picker { position: relative; z-index: 10020; }
-        .custom-picker-wrapper.time-picker .booking-input-text { position: relative; z-index: 10021; cursor: pointer; background: transparent; padding: 0; border-radius: 0; border: 0px solid #e5e5e5; min-height: auto; display: inline-flex; align-items: center; justify-content: center;gap: 6px;    font-weight: bold;  font-family: 'Open Sans'; font-size: 15px; text-align: left; }
+        .custom-picker-wrapper.time-picker { position: relative; z-index: 10020; display: flex;}
+        .custom-picker-wrapper.time-picker .booking-input-text { position: relative; z-index: 10021; cursor: pointer; background: transparent; padding: 0; border-radius: 0; border: 0px solid #e5e5e5; min-height: auto; display: inline-flex; align-items: center; justify-content: center;gap: 6px;    font-weight: bold;  font-family: 'Open Sans'; font-size: 15px; text-align: left; flex: 1;}
         .custom-picker-wrapper.time-picker .booking-input-text .time-value {
             width:50px;
         }
