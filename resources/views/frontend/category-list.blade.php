@@ -125,7 +125,7 @@
                         @endpush
                         <div class="category-search-cell category-search-cell--transport" style="display: none;">
                             <div class="transport-row">
-                                <div class="transport-field" style="flex: 0 1 140px; min-width: 140px;">
+                                <div class="transport-field" style="flex: 0 1 210px; min-width: 210px;">
                                     <h5>{{ __('home.search.service_type') }}</h5>
                                     <select name="service_type" class="category-search-select">
                                         <option value="airport_transfer" {{ ($filters['service_type'] ?? 'airport_transfer') === 'airport_transfer' ? 'selected' : '' }}>Airport Transfer</option>
@@ -996,7 +996,7 @@
             .category-search-date-display {
                 position: absolute;
                 top: 50%;
-                left: 0.75rem;
+                left: 0;
                 transform: translateY(-50%);
                 pointer-events: none;
                 display: block;
