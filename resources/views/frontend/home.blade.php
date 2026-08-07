@@ -180,7 +180,7 @@
                             <!-- Transport: route, passengers and dates -->
                             <div class="category-search-cell category-search-cell--transport" style="display: none;">
                                 <div class="transport-row" style="">
-                                    <div class="transport-field" style="flex: 0 1 140px; min-width: 140px;">
+                                    <div class="transport-field" style="flex: 0 1 210px; min-width: 210px;">
                                         <h5>{{ __('home.search.service_type') }}</h5>
                                         <select name="service_type" class="category-search-select" id="home-service-type">
                                             <option value="airport_transfer" {{ request()->query('service_type','airport_transfer') === 'airport_transfer' ? 'selected' : '' }}>Airport Transfer</option>
@@ -223,7 +223,7 @@
                                         <div class="transport-field" style="flex: 1 1 120px;">
                                             <h5>&nbsp;</h5>
                                             <div class="custom-picker-wrapper time-picker" style="position:relative;">
-                                                    <label class="booking-input booking-input-text booking-input-time" style="display:inline-flex;align-items:center;gap:6px;width:64px;justify-content:center;padding:6px 6px;cursor:pointer;">
+                                                    <label class="booking-input booking-input-text booking-input-time" style="">
                                                         <span class="time-value">{{ request()->query('arrival_time', '') }}</span>
                                                         <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
                                                             <circle cx="12" cy="12" r="9" stroke="#666" stroke-width="1" fill="none" />
@@ -245,7 +245,7 @@
                                         <div class="transport-field" style="flex: 1 1 120px">
                                             <h5>&nbsp;</h5>
                                             <div class="custom-picker-wrapper time-picker" style="position:relative;">
-                                                <label class="booking-input booking-input-text booking-input-time" style="display:inline-flex;align-items:center;gap:6px;width:64px;justify-content:center;padding:6px 6px;cursor:pointer;">
+                                                <label class="booking-input booking-input-text booking-input-time" style="">
                                                     <span class="time-value">{{ request()->query('return_time', '') }}</span>
                                                     <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
                                                         <circle cx="12" cy="12" r="9" stroke="#666" stroke-width="1" fill="none" />
@@ -447,7 +447,10 @@
 @push('styles')
     <style>
         .custom-picker-wrapper.time-picker { position: relative; z-index: 10020; }
-        .custom-picker-wrapper.time-picker .booking-input-text { position: relative; z-index: 10021; cursor: pointer; background: #fff; padding: 6px 12px; border-radius: 6px; border: 1px solid #e5e5e5; min-height: 34px; display: inline-flex; align-items: center; justify-content: center; }
+        .custom-picker-wrapper.time-picker .booking-input-text { position: relative; z-index: 10021; cursor: pointer; background: transparent; padding: 0; border-radius: 0; border: 0px solid #e5e5e5; min-height: auto; display: inline-flex; align-items: center; justify-content: center;gap: 6px;    font-weight: bold;  font-family: 'Open Sans'; font-size: 15px; text-align: left; }
+        .custom-picker-wrapper.time-picker .booking-input-text .time-value {
+            width:50px;
+        }
         .custom-picker-wrapper.time-picker .booking-input-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 10022; border: 0; background: transparent; }
         .custom-timepicker-popup { position: fixed; top: 0; left: 0; z-index: 10030; background: #fff; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,0.12); padding: 12px; display: none; grid-template-columns: 1fr 1fr; gap: 10px; min-width: 220px; }
         .custom-timepicker-popup.open { display: grid; }
@@ -1214,7 +1217,7 @@
             .category-search-date-display {
                 position: absolute;
                 top: 50%;
-                left: 0.75rem;
+                left: 0;
                 transform: translateY(-50%);
                 pointer-events: none;
                 display: block;
