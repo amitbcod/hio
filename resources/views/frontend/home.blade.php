@@ -226,8 +226,8 @@
                                                     <label class="booking-input booking-input-text booking-input-time" style="">
                                                         <span class="time-value">{{ request()->query('arrival_time', '') }}</span>
                                                         <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-                                                            <circle cx="12" cy="12" r="9" stroke="#666" stroke-width="1" fill="none" />
-                                                            <path d="M12 8v5l3 2" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                                                            <circle cx="12" cy="12" r="9" stroke="#181818" stroke-width="2" fill="none" />
+                                                            <path d="M12 8v5l3 2" stroke="#181818" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
                                                         </svg>
                                                     </label>
                                                     <input id="home-arrival_time" type="hidden" name="arrival_time" lang="en-GB" value="{{ request()->query('arrival_time', '') }}">
@@ -248,8 +248,8 @@
                                                 <label class="booking-input booking-input-text booking-input-time" style="">
                                                     <span class="time-value">{{ request()->query('return_time', '') }}</span>
                                                     <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-                                                        <circle cx="12" cy="12" r="9" stroke="#666" stroke-width="1" fill="none" />
-                                                        <path d="M12 8v5l3 2" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                                                        <circle cx="12" cy="12" r="9" stroke="#181818" stroke-width="2" fill="none" />
+                                                        <path d="M12 8v5l3 2" stroke="#181818" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
                                                     </svg>
                                                 </label>
                                                 <input id="home-return_time" type="hidden" name="return_time" lang="en-GB" value="{{ request()->query('return_time', '') }}">
@@ -447,7 +447,7 @@
 @push('styles')
     <style>
         .custom-picker-wrapper.time-picker { position: relative; z-index: 10020; display: flex;}
-        .custom-picker-wrapper.time-picker .booking-input-text { position: relative; z-index: 10021; cursor: pointer; background: transparent; padding: 0; border-radius: 0; border: 0px solid #e5e5e5; min-height: auto; display: inline-flex; align-items: center; justify-content: center;gap: 6px;    font-weight: bold;  font-family: 'Open Sans'; font-size: 15px; text-align: left; flex: 1;}
+        .custom-picker-wrapper.time-picker .booking-input-text { position: relative; z-index: 10021; cursor: pointer; background: transparent; padding: 0; border-radius: 0; border: 0px solid #e5e5e5; min-height: 22px; display: inline-flex; align-items: center; justify-content: center;gap: 6px;    font-weight: bold;  font-family: 'Open Sans'; font-size: 15px; text-align: left; flex: 1;}
         .custom-picker-wrapper.time-picker .booking-input-text .time-value {
             width:50px;
         }
