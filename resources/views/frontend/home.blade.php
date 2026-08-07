@@ -224,7 +224,7 @@
                                             <h5>&nbsp;</h5>
                                             <div class="custom-picker-wrapper time-picker" style="position:relative;">
                                                     <label class="booking-input booking-input-text booking-input-time" style="">
-                                                        <span class="time-value">{{ request()->query('arrival_time', '') }}</span>
+                                                        <span class="time-value">{{ request()->query('arrival_time', '--:--') }}</span>
                                                         <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
                                                             <circle cx="12" cy="12" r="9" stroke="#181818" stroke-width="2" fill="none" />
                                                             <path d="M12 8v5l3 2" stroke="#181818" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
@@ -246,7 +246,7 @@
                                             <h5>&nbsp;</h5>
                                             <div class="custom-picker-wrapper time-picker" style="position:relative;">
                                                 <label class="booking-input booking-input-text booking-input-time" style="">
-                                                    <span class="time-value">{{ request()->query('return_time', '') }}</span>
+                                                    <span class="time-value">{{ request()->query('return_time', '--:--') }}</span>
                                                     <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
                                                         <circle cx="12" cy="12" r="9" stroke="#181818" stroke-width="2" fill="none" />
                                                         <path d="M12 8v5l3 2" stroke="#181818" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
