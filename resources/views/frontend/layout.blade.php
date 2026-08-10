@@ -278,15 +278,16 @@
             max-width: 740px;
             margin: 10px;
             font-size: 11px;
-            border: 1px solid #0095da;
+            border: 0px;
             padding: 0px 10px;
-            color: #0095da;
+            color: #ffffff;
+            background-color: #ff8a00;
         }
 
         .tax-notice strong {
             display: block;
             margin-bottom: 2px;
-            color:#0093d9
+            color:#ffffff
         }
 
         .operator-header {

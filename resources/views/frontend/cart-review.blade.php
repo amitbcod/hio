@@ -380,15 +380,16 @@ Please be informed that the tourism tax is not included in your booking total. T
         max-width: 740px;
     margin: 50px auto 0;
     font-size: 14px;
-    border: 1px solid #0095da;
+    border: 0px;
     padding: 10px 30px;
-    color: #0095da;
+    color: #ffffff;
+    background-color: #ff8a00;
 }
 
 .tax-notice strong {
     display: block;
     margin-bottom: 8px;
-    color:#0093d9
+    color:#ffffff
 }
 
 
