@@ -2991,7 +2991,7 @@ div#transport-price-summary {
     margin: 10px;
     font-size: 11px;
     border: 0;
-    padding: 0px 10px;
+    padding: 1px 10px;
     color: #ffffff;
     background-color: #ff8a00;
 }
