@@ -143,7 +143,7 @@
                                 </div>
                                 <div class="guest-rooms-selector">
                                     <div class="guest-rooms-row">
-                                        <label for="adults-field">{{ __('home.search.adults') }} <span>({{ __('home.search.adult_age_label') }})</span></label>
+                                        <label for="adults-field">{{ __('home.search.adults') }} <!--<span>({{ __('home.search.adult_age_label') }})</span>--></label>
                                         <div class="guest-rooms-counter">
                                             <button type="button" class="count-btn decrement" data-target="adults">−</button>
                                             <input id="adults-field" type="text" name="adults" value="{{ request()->query('adults', 2) }}" readonly>
@@ -167,7 +167,7 @@
                                         </div>
                                     </div>
                                     <div class="guest-rooms-row" id="rooms-row">
-                                        <label for="rooms-field">{{ __('home.search.rooms') }} <span>({{ __('home.search.rooms_limit_label') }})</span></label>
+                                        <label for="rooms-field">{{ __('home.search.rooms') }} <!--<span>({{ __('home.search.rooms_limit_label') }})</span> --></label>
                                         <div class="guest-rooms-counter">
                                             <button type="button" class="count-btn decrement" data-target="rooms">−</button>
                                             <input id="rooms-field" type="text" name="rooms" value="{{ request()->query('rooms', 1) }}" readonly>

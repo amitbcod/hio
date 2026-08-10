@@ -77,6 +77,35 @@
                                     $label = $item['variant_name'] ?? $item['title'] ?? 'Booking';
                                     $subLabel = '';
                                 }
+
+                                $checkInDisplay = $item['check_in_display'] ?? $item['pickup_date_display'] ?? '';
+                                $checkOutDisplay = $item['check_out_display'] ?? $item['return_date_display'] ?? '';
+                                $subLines = [];
+                                if ($isAccom) {
+                                    $personParts = [];
+                                    if ($adults > 0) {
+                                        $personParts[] = $adults . ' ' . ($adults === 1 ? 'adult' : 'adults');
+                                    }
+                                    if ($children > 0) {
+                                        $personParts[] = $children . ' ' . ($children === 1 ? 'child' : 'children');
+                                    }
+                                    if ($infants > 0) {
+                                        $personParts[] = $infants . ' ' . ($infants === 1 ? 'infant' : 'infants');
+                                    }
+                                    if (!empty($personParts)) {
+                                        $subLines[] = implode(' and ', $personParts);
+                                    }
+                                    if ($rooms > 0 && !empty($item['room_name'])) {
+                                        $roomName = trim($item['room_name']);
+                                        if ($roomName !== '' && stripos($roomName, 'room') === false) {
+                                            $roomName .= ' Room';
+                                        }
+                                        $subLines[] = $rooms . ' ' . $roomName;
+                                    }
+                                    if ($checkInDisplay && $checkOutDisplay) {
+                                        $subLines[] = 'From ' . $checkInDisplay . ' to ' . $checkOutDisplay;
+                                    }
+                                }
                             @endphp
 
                             <div class="cart-item-card">
@@ -98,9 +127,13 @@
                                             <span class="cart-item-badge">{{ $isAccom ? __('cart.type.stay') : ($isTransport ? __('cart.type.transport') : __('cart.type.activity')) }}</span>
                                             <h3 class="cart-item-title">{{ $item['title'] }}</h3>
                                             @if($isAccom && !empty($item['plan_label']))
-                                                <p class="cart-item-sub" style="color: #19b5b5; font-weight: 500;">{{ $item['plan_label'] }} • {{ $item['pricing_setting'] ?? 'Per Room/Night' }}</p>
+                                                <p class="cart-item-sub" style="color: #19b5b5; font-weight: 500;">{{ $item['plan_label'] }}</p>
                                             @endif
-                                            <p class="cart-item-sub">{{ $subLabel }}</p>
+                                                    @if($isAccom)
+                                                <p class="cart-item-sub">{!! implode('<br>', $subLines) !!}</p>
+                                            @else
+                                                <p class="cart-item-sub">{{ $subLabel }}</p>
+                                            @endif
                                         </div>
                                         <div class="cart-item-price-col">
                                             <div class="cart-item-price">
@@ -124,15 +157,17 @@
                                         $checkInValue = $item['check_in'] ?? $item['pickup_date'] ?? null;
                                         $checkOutValue = $item['check_out'] ?? $item['return_date'] ?? null;
                                     @endphp
-                                    <div class="cart-item-dates">
-                                        <span><i class="fa-regular fa-calendar"></i>
-                                            {{ $checkInDisplay }}
-                                        </span>
-                                        @if(!$isAccom || $checkInValue !== $checkOutValue)
-                                            <span class="cart-item-arrow">→</span>
-                                            <span>{{ $checkOutDisplay }}</span>
-                                        @endif
-                                    </div>
+                                    @if(!$isAccom)
+                                        <div class="cart-item-dates">
+                                            <span><i class="fa-regular fa-calendar"></i>
+                                                {{ $checkInDisplay }}
+                                            </span>
+                                            @if($checkInValue !== $checkOutValue)
+                                                <span class="cart-item-arrow">→</span>
+                                                <span>{{ $checkOutDisplay }}</span>
+                                            @endif
+                                        </div>
+                                    @endif
 
                                     @if($item['discount_amount'] > 0)
                                         <div class="cart-item-promo">
@@ -153,7 +188,7 @@
                                            class="cart-link">
                                             <i class="fa-solid fa-eye"></i> {{ __('cart.view_rules') }}
                                         </a>
-                                        @if($isAccom && !empty($item['accommodation_id']))
+                                        <!-- @if($isAccom && !empty($item['accommodation_id']))
                                             <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($item['title']) }}"
                                                target="_blank" rel="noopener" class="cart-link">
                                                 <i class="fa-solid fa-location-dot"></i> {{ __('cart.get_directions') }}
@@ -161,7 +196,7 @@
                                         @endif
                                         <a href="tel:+23052511153" class="cart-link">
                                             <i class="fa-solid fa-phone"></i> {{ __('cart.call_us') }}
-                                        </a>
+                                        </a> -->
 
                                         {{-- Remove --}}
                                         <form method="POST" action="{{ route('frontend.booking.cart.remove') }}" class="cart-remove-form">
@@ -197,7 +232,7 @@
                             <div class="summary-divider"></div>
 
                             {{-- Fare Summary --}}
-                            <h3 class="fare-heading">{{ __('cart.fare_summary') }}</h3>
+                            <!-- <h3 class="fare-heading">{{ __('cart.fare_summary') }}</h3> -->
 
                             <div class="fare-rows">
                                 @foreach($cart as $item)

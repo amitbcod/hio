@@ -238,7 +238,7 @@
                             </div>
                             <div class="guest-rooms-selector">
                                 <div class="guest-rooms-row">
-                                    <label for="category-adults-field">{{ __('home.search.adults') }} <span>({{ __('home.search.adult_age_label') }})</span></label>
+                                    <label for="category-adults-field">{{ __('home.search.adults') }} <!--<span>({{ __('home.search.adult_age_label') }})</span>--></label>
                                     <div class="guest-rooms-counter">
                                         <button type="button" class="count-btn decrement" data-target="adults">−</button>
                                         <input id="category-adults-field" type="text" name="adults" value="{{ (int) $filters['adults'] }}" readonly>
