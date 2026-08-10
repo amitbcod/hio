@@ -274,7 +274,21 @@
             border: 1px solid #f5c2c2;
         }
 
-        
+        .tax-notice {
+            max-width: 740px;
+            margin: 10px;
+            font-size: 11px;
+            border: 0px;
+            padding: 0px 10px;
+            color: #ffffff;
+            background-color: #ff8a00;
+        }
+
+        .tax-notice strong {
+            display: block;
+            margin-bottom: 2px;
+            color:#ffffff
+        }
 
         .operator-header {
             background: #ffffff;

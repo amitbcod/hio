@@ -2986,22 +2986,6 @@ div#transport-price-summary {
     line-height: 1.5; */
 }
 
-.tax-notice {
-    max-width: 740px;
-    margin: 10px;
-    font-size: 11px;
-    border: 0;
-    padding: 1px 10px;
-    color: #ffffff;
-    background-color: #ff8a00;
-}
-
-.tax-notice strong {
-    display: block;
-    margin-bottom: 2px;
-    color: #ffffff
-}
-
 
 
 
