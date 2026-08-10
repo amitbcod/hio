@@ -486,7 +486,7 @@ strong {
     outline: none;
     font-weight: bold;
     font-family: 'Open Sans';
-    font-size: 15px; 
+    font-size: 15px;
     text-align: left;
     border: 0;
 }
@@ -2322,7 +2322,7 @@ ol>ul>li {
 
 .summary-card label {
     font-size: 14px;
-        font-weight: 600;
+    font-weight: 600;
     text-transform: capitalize;
     color: #706f6f;
 }
@@ -2334,12 +2334,12 @@ ol>ul>li {
 }
 
 .cancel-btn {
-display: inline-block;
+    display: inline-block;
     background: #fadada;
     color: #c72626;
     padding: 8px 16px;
     border-radius: 8px;
-    font-weight: 600; 
+    font-weight: 600;
     margin-bottom: 15px;
     border: 0;
     cursor: pointer;
@@ -2348,7 +2348,7 @@ display: inline-block;
 }
 
 .right-section2 {
-        display: flex;
+    display: flex;
     flex-direction: column;
     align-items: normal;
     justify-content: center;
@@ -2361,7 +2361,10 @@ display: inline-block;
 .detail-gallery-card {
     padding: 16px;
 }
-.detail-gallery-card, .detail-booking-card, .detail-section-card {
+
+.detail-gallery-card,
+.detail-booking-card,
+.detail-section-card {
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 22px;
@@ -2954,7 +2957,7 @@ div.detail-top-grid {
 
 
 .detail-gallery-card {
-        position: sticky;
+    position: sticky;
     top: 96px;
 }
 
@@ -2965,10 +2968,10 @@ div.detail-top-grid {
 }
 
 div#transport-price-summary {
-    color: var(--ink); 
+    color: var(--ink);
     font-size: 18px;
     font-weight: 800;
-} 
+}
 
 .focus .ts-control {
     box-shadow: none !important;
@@ -2983,6 +2986,21 @@ div#transport-price-summary {
     line-height: 1.5; */
 }
 
+.tax-notice {
+    max-width: 740px;
+    margin: 10px;
+    font-size: 11px;
+    border: 0;
+    padding: 0px 10px;
+    color: #ffffff;
+    background-color: #ff8a00;
+}
+
+.tax-notice strong {
+    display: block;
+    margin-bottom: 2px;
+    color: #ffffff
+}
 
 
 
@@ -3265,12 +3283,13 @@ div#transport-price-summary {
     .toggle .arrow.up {
         transform: rotate(-135deg);
     }
+
     input.category-search-input {
         width: 100%;
     }
 
     .hero-slides {
-         min-height: 680px;
+        min-height: 680px;
     }
 
     .filter-note {
