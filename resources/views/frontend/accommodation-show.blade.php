@@ -84,11 +84,15 @@
                     @endif
                 @endif
             </h1>
-            <p>
+            <!-- <p>
                 {{ $accommodation['address'] ?: $accommodation['location'] }}
                 @if($startingRate)
                     • From {{ $startingCurrency }} {{ number_format((float) $startingRate, 2) }} / night
                 @endif
+            </p> -->
+            <p>
+                {{ $accommodation['address'] ?: $accommodation['location'] }}
+                
             </p>
         </div>
     </section>
@@ -97,7 +101,15 @@
         <div class="wrap">
             <div class="detail-top-grid">
                 <div class="detail-gallery-card">
-                    <img src="{{ $mainImage }}" alt="{{ $accommodation['title'] }}" id="detailMainImage" class="detail-main-image">
+                    <div class="detail-gallery-main">
+                        <button type="button" class="gallery-arrow gallery-arrow-left" aria-label="Previous image">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <img src="{{ $mainImage }}" alt="{{ $accommodation['title'] }}" id="detailMainImage" class="detail-main-image">
+                        <button type="button" class="gallery-arrow gallery-arrow-right" aria-label="Next image">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
 
                     @if(count($gallery) > 1)
                         <div class="detail-thumbs-row">
@@ -138,7 +150,12 @@
                             <label>{{ __('accommodation.form.infants') }}</label>
                             <input type="number" name="infants" min="0" value="{{ $booking['infants'] }}" class="booking-input">
                         </div>
+                        
+                        @if(!empty($accommodation['booking_confirmation_type']))
+                            <span class="hero-chip">{{ $accommodation['booking_confirmation_type'] }} booking</span> 
+                        @endif
 
+                        
                         <button type="submit" class="btn-primary booking-btn">{{ __('accommodation.form.update_search') }}</button>
                     </form>
 
@@ -161,20 +178,20 @@
                         @if(!empty($accommodation['map_link']))
                             <a href="{{ $accommodation['map_link'] }}" target="_blank" rel="noopener">{{ __('accommodation.get_directions') }}</a>
                         @endif
-                        @if(!empty($accommodation['contact_phone']))
+                        <!-- @if(!empty($accommodation['contact_phone']))
                             <a href="tel:{{ preg_replace('/\s+/', '', $accommodation['contact_phone']) }}">{{ __('accommodation.call_hotel') }}</a>
-                        @endif
+                        @endif -->
                     </div>
                 </aside>
             </div>
 
             <nav class="detail-anchor-nav">
                 <a href="#room-options">{{ __('accommodation.room_options') }}</a>
-                <a href="#amenities">{{ __('accommodation.amenities') }}</a>
+                <!-- <a href="#amenities">{{ __('accommodation.amenities') }}</a> -->
                 <a href="#reviews">{{ __('accommodation.reviews') }}</a>
                 <a href="#policies">{{ __('accommodation.policies') }}</a>
                 <a href="#location-map">{{ __('accommodation.location') }}</a>
-                <a href="#similar-properties">{{ __('accommodation.similar_properties') }}</a>
+                <!-- <a href="#similar-properties">{{ __('accommodation.similar_properties') }}</a> -->
             </nav>
 
             <div class="detail-section-card" id="room-options">
@@ -429,10 +446,10 @@
                     <div class="detail-text">{{ $accommodation['checkout_policy_text'] ?: __('accommodation.checkout_policy_fallback') }}</div>
                 </div>
 
-                <div class="policy-block">
+                <!-- <div class="policy-block">
                     <h3>{{ __('accommodation.terms_conditions') }}</h3>
                     <div class="detail-text">{{ $accommodation['terms_conditions_text'] ?: __('accommodation.terms_conditions_fallback') }}</div>
-                </div>
+                </div> -->
             </div>
 
             <div class="detail-section-card" id="location-map">
@@ -494,7 +511,7 @@
                 @endif
             </div>
 
-            @if(!empty($gallery))
+            <!-- @if(!empty($gallery))
                 <div class="detail-section-card">
                     <h2>{{ __('accommodation.photo_gallery') }}</h2>
                     <div class="gallery-grid detail-gallery-grid">
@@ -503,7 +520,7 @@
                         @endforeach
                     </div>
                 </div>
-            @endif
+            @endif -->
         </div>
     </section>
 @endsection
@@ -577,11 +594,45 @@
             padding: 16px;
         }
 
+        .detail-gallery-main {
+            position: relative;
+        }
+
         .detail-main-image {
             width: 100%;
             aspect-ratio: 16 / 8.5;
             object-fit: cover;
             border-radius: 16px;
+        }
+
+        .gallery-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0, 0, 0, 0.45);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2;
+            transition: background 0.2s ease;
+        }
+
+        .gallery-arrow:hover {
+            background: rgba(0, 0, 0, 0.65);
+        }
+
+        .gallery-arrow-left {
+            left: 12px;
+        }
+
+        .gallery-arrow-right {
+            right: 12px;
         }
 
         .detail-thumbs-row {
@@ -1146,24 +1197,50 @@
     <script>
         (() => {
             const mainImage = document.getElementById('detailMainImage');
-            const thumbButtons = document.querySelectorAll('[data-gallery-image]');
+            const thumbButtons = Array.from(document.querySelectorAll('.detail-thumb[data-gallery-image]'));
+            const prevArrow = document.querySelector('.gallery-arrow-left');
+            const nextArrow = document.querySelector('.gallery-arrow-right');
 
             if (!mainImage || !thumbButtons.length) {
                 return;
             }
 
-            thumbButtons.forEach((button) => {
-                button.addEventListener('click', () => {
-                    const image = button.getAttribute('data-gallery-image');
-                    if (!image) {
-                        return;
-                    }
+            const galleryImages = thumbButtons.map((button) => button.getAttribute('data-gallery-image')).filter(Boolean);
+            let activeIndex = galleryImages.findIndex((image) => image === mainImage.src);
+            if (activeIndex === -1) {
+                activeIndex = 0;
+            }
 
-                    mainImage.src = image;
-                    thumbButtons.forEach((item) => item.classList.remove('is-active'));
-                    button.classList.add('is-active');
+            const setActiveImage = (index) => {
+                activeIndex = ((index % galleryImages.length) + galleryImages.length) % galleryImages.length;
+                const image = galleryImages[activeIndex];
+                if (!image) {
+                    return;
+                }
+
+                mainImage.src = image;
+                thumbButtons.forEach((button, idx) => {
+                    button.classList.toggle('is-active', idx === activeIndex);
+                });
+            };
+
+            thumbButtons.forEach((button, index) => {
+                button.addEventListener('click', () => {
+                    setActiveImage(index);
                 });
             });
+
+            if (prevArrow) {
+                prevArrow.addEventListener('click', () => {
+                    setActiveImage(activeIndex - 1);
+                });
+            }
+
+            if (nextArrow) {
+                nextArrow.addEventListener('click', () => {
+                    setActiveImage(activeIndex + 1);
+                });
+            }
         })();
 
         // Scroll to room-options when search is updated and validate room availability on the detail page
