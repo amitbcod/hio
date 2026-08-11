@@ -1198,6 +1198,18 @@
                 const children = Math.max(0, parseCount(childrenInput, 0));
                 const infants = Math.max(0, parseCount(infantsInput, 0));
                 const effectiveGuests = adults + children + Math.max(0, infants - 1);
+                const roomsCount = (() => {
+                    const roomInput = document.querySelector('.room-booking-form input[name="rooms"]');
+                    if (roomInput) {
+                        const value = parseInt(roomInput.value, 10);
+                        if (!Number.isNaN(value) && value > 0) {
+                            return value;
+                        }
+                    }
+                    const params = new URLSearchParams(window.location.search);
+                    const queryValue = parseInt(params.get('rooms') || '', 10);
+                    return (!Number.isNaN(queryValue) && queryValue > 0) ? queryValue : 1;
+                })();
 
                 roomItems.forEach((item) => {
                     const roomAdults = parseInt(item.dataset.roomAdults, 10) || 0;
@@ -1207,10 +1219,15 @@
                     const warning = item.querySelector('.room-capacity-warning');
                     const bookButtons = Array.from(item.querySelectorAll('button[type="submit"]'));
 
-                    const isValid = roomAdults >= adults
-                        && roomChildren >= children
-                        && roomInfants >= infants
-                        && roomMaxPersons >= effectiveGuests;
+                    const totalRoomAdults = roomAdults * roomsCount;
+                    const totalRoomChildren = roomChildren * roomsCount;
+                    const totalRoomInfants = roomInfants * roomsCount;
+                    const totalRoomMaxPersons = roomMaxPersons * roomsCount;
+
+                    const isValid = totalRoomAdults >= adults
+                        && totalRoomChildren >= children
+                        && totalRoomInfants >= infants
+                        && totalRoomMaxPersons >= effectiveGuests;
 
                     if (!isValid) {
                         if (warning) {
