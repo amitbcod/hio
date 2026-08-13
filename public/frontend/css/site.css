@@ -37,6 +37,7 @@ body {
     font-family: 'Open Sans', Arial, sans-serif;
     color: var(--darker);
     background: #ffffff;
+    font-size: 16px;
 }
 
 a {
@@ -183,6 +184,7 @@ strong {
     padding: 10px 14px;
     border-radius: 999px;
     transition: 0.2s ease;
+        text-transform: capitalize;
 }
 
 .main-nav a:hover,
@@ -1355,7 +1357,7 @@ strong {
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 
