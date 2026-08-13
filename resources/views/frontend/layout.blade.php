@@ -44,12 +44,12 @@
             color: #ffffff;
         }
         .language-switcher a {
-            color: #ffffff;
+            color: var(--white);
             text-decoration: none;
             font-weight: 700;
         }
         .language-switcher a.active {
-            color: #fcad10;
+            color: var(--light-blue);
         }
         .language-switcher span {
             opacity: 1;

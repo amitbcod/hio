@@ -13,13 +13,14 @@
     --blue: #008dd7;
     --blue-dark: #0051a8;
     --white: #ffffff;
-    --blue-darker: #0f2034;
+    --blue-darker: #0D2144;
     --white: #ffffff;
     --brand-color: #b08a09;
     --brand-color-dark: #f3bf0e;
     --darker: #333333;
     --grey-light: #f2f1f6;
     --border-color: #e1e1e1;
+    --light-blue:#52b8e9;
 }
 
 * {
@@ -116,7 +117,7 @@ strong {
 
 .top-links a:hover,
 .top-link-button:hover {
-    color: var(--brand-color-dark);
+    color: var(--light-blue);
 }
 
 .site-header {
