@@ -11,6 +11,30 @@
             @endforeach
         </div>
     @endif
+    <h5 class="mt-3">Pending MPO Accounts</h5>
+    <table class="table">
+        <thead>
+            <tr><th>ID</th><th>Name</th><th>Email</th><th>Business</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            @forelse($pendingMpos ?? collect() as $mpo)
+                <tr>
+                    <td>{{ $mpo->id }}</td>
+                    <td>{{ $mpo->full_name ?? 'N/A' }}</td>
+                    <td>{{ $mpo->email }}</td>
+                    <td>{{ $mpo->business_legal_name ?? 'N/A' }}</td>
+                    <td>{{ $mpo->account_status }} / {{ $mpo->admin_approve_flag ? 'admin approved' : 'awaiting admin approval' }}</td>
+                    <td>
+                        <form method="POST" action="{{ route('admin.mpo.approve', $mpo) }}" style="display:inline">@csrf<button class="btn btn-sm btn-success">Approve</button></form>
+                        <form method="POST" action="{{ route('admin.mpo.reject', $mpo) }}" style="display:inline">@csrf<button class="btn btn-sm btn-danger">Reject</button></form>
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="6">No pending MPO approvals.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+
     <h5 class="mt-3">Pending Businesses</h5>
     <table class="table">
         <thead>

@@ -24,7 +24,13 @@ class ControllerVerificationRequested extends Mailable
     public function build()
     {
         $token = $this->verification->token;
-        $url = url("/operator/register/controller/verify/{$token}");
+        $prefix = '/operator';
+
+        if ($this->requester instanceof \App\Models\Mpo) {
+            $prefix = '/mpo';
+        }
+
+        $url = url("{$prefix}/register/controller/verify/{$token}");
 
         return $this->subject('HIO: Owner verification requested')
                     ->view('emails.controller_verification_requested')

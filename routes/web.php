@@ -7,6 +7,10 @@ use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 require base_path('routes/operator.php');
+// MPO registration routes
+if (file_exists(base_path('routes/mpo.php'))) {
+    require base_path('routes/mpo.php');
+}
 require base_path('routes/traveler.php');
 require base_path('routes/login_fallback.php');
 // Admin routes

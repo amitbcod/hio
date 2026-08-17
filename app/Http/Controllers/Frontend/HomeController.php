@@ -538,9 +538,16 @@ class HomeController extends Controller
             ->filter(fn (float $value) => $value > 0)
             ->min();
 
+        // If `regions` stores an id, resolve it to the region name; otherwise use the stored string or address
+        if (is_numeric($activity->regions)) {
+            $regionModel = \App\Models\Region::find((int) $activity->regions);
+            $activityRegionValue = $regionModel?->name ?? $activity->address ?? null;
+        } else {
+            $activityRegionValue = $activity->regions ?? $activity->address ?? null;
+        }
         $location = implode(' • ', array_filter([
             $activity->destination,
-            $activity->region,
+            $activityRegionValue,
             $activity->town,
         ]));
 
@@ -549,7 +556,7 @@ class HomeController extends Controller
             $activity->longitude !== null ? (float) $activity->longitude : null,
             implode(', ', array_filter([
                 $activity->town,
-                $activity->region,
+                $activityRegionValue,
                 $activity->destination,
                 'Mauritius',
             ]))
@@ -674,7 +681,7 @@ class HomeController extends Controller
             'service_type' => $activity->service_type,
             'meta' => $activity->service_type ?: 'Experience',
             'location' => $location ?: 'Mauritius',
-            'region' => $activity->region,
+            'region' => $activityRegionValue,
             'destination' => $activity->destination,
             'town' => $activity->town,
             'physical_level' => $activity->physical_level,
@@ -749,18 +756,24 @@ class HomeController extends Controller
         $shortDescription = $this->plainText(($locale === 'fr' ? ($accommodation->short_description_fr ?? null) : null) ?: $accommodation->short_description ?: ($locale === 'fr' ? ($accommodation->property_description_fr ?? null) : null) ?: $accommodation->property_description);
         $fullDescription = $this->plainText(($locale === 'fr' ? ($accommodation->property_description_fr ?? null) : null) ?: $accommodation->property_description ?: ($locale === 'fr' ? ($accommodation->short_description_fr ?? null) : null) ?: $accommodation->short_description);
 
-        $location = implode(' • ', array_filter([
-            $accommodation->region,
-            $accommodation->city,
-            $accommodation->country,
-        ]));
+        $locationParts = [];
+        if (!blank($accommodation->region)) {
+            $locationParts[] = 'Region: ' . $accommodation->region;
+        }
+        if (!blank($accommodation->state)) {
+            $locationParts[] = 'State: ' . $accommodation->state;
+        }
+        $locationParts[] = $accommodation->city;
+        $locationParts[] = $accommodation->country;
+        $location = implode(' • ', array_filter($locationParts));
 
-        $addressLine = implode(', ', array_filter([
-            $accommodation->address,
-            $accommodation->city,
-            $accommodation->region,
-            $accommodation->country,
-        ]));
+        $addressParts = [];
+        if (!blank($accommodation->address)) $addressParts[] = $accommodation->address;
+        if (!blank($accommodation->city)) $addressParts[] = $accommodation->city;
+        if (!blank($accommodation->region)) $addressParts[] = $accommodation->region;
+        if (!blank($accommodation->state)) $addressParts[] = $accommodation->state;
+        if (!blank($accommodation->country)) $addressParts[] = $accommodation->country;
+        $addressLine = implode(', ', array_filter($addressParts));
 
         $mapData = $this->buildMapData(
             $accommodation->latitude !== null ? (float) $accommodation->latitude : null,
@@ -2417,6 +2430,7 @@ class HomeController extends Controller
     {
         return [
             'region' => trim((string) $request->query('region', '')),
+            'state' => trim((string) $request->query('state', '')),
             'check_in' => (string) $request->query('check_in', now()->format('Y-m-d')),
             'check_out' => (string) $request->query('check_out', now()->addDays(2)->format('Y-m-d')),
             'activity_date' => (string) $request->query('activity_date', now()->format('Y-m-d')),
@@ -2454,6 +2468,16 @@ class HomeController extends Controller
             ->values()
             ->all();
 
+        $accommodationStates = $this->approvedAccommodationQuery()
+            ->whereNotNull('property_name')
+            ->pluck('state')
+            ->map(fn ($value) => trim((string) $value))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+
         $accommodationTypes = $this->approvedAccommodationQuery()
             ->whereNotNull('property_name')
             ->pluck('property_type')
@@ -2466,7 +2490,7 @@ class HomeController extends Controller
 
         $activityRegions = Activity::query()
             ->whereNotNull('activity_name')
-            ->pluck('region')
+            ->pluck('regions')
             ->map(fn ($value) => trim((string) $value))
             ->filter()
             ->unique()
@@ -2515,11 +2539,15 @@ class HomeController extends Controller
 
         return [
             'accommodation' => [
-                'regions' => $accommodationRegions,
+                // structured regions from regions table (use names)
+                'regions' => Region::orderBy('name')->pluck('name')->all(),
+                // legacy state text values collected from accommodations.state
+                'states' => $accommodationStates,
                 'types' => $accommodationTypes,
             ],
             'tours' => [
-                'regions' => $activityRegions,
+                // use structured regions from regions table (same as accommodation)
+                'regions' => Region::orderBy('name')->pluck('name')->all(),
                 'types' => $activityTypes,
             ],
             'transport' => [
@@ -2533,10 +2561,19 @@ class HomeController extends Controller
 
     private function applySearchFilters($items, string $category, array $filters)
     {
-        if ($filters['region'] !== '' && Str::lower($filters['region']) !== 'all') {
+        // If a structured region was selected (from regions table), filter by it first
+        if (!empty($filters['region']) && Str::lower($filters['region']) !== 'all') {
             $region = Str::lower($filters['region']);
             $items = $items->filter(function (array $item) use ($region) {
                 return Str::contains(Str::lower((string) ($item['location'] ?? '')), $region);
+            });
+        }
+
+        // Then apply state (legacy text) filter if provided
+        if (!empty($filters['state']) && Str::lower($filters['state']) !== 'all') {
+            $state = Str::lower($filters['state']);
+            $items = $items->filter(function (array $item) use ($state) {
+                return Str::contains(Str::lower((string) ($item['location'] ?? '')), $state);
             });
         }
 

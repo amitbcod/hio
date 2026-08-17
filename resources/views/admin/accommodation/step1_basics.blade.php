@@ -137,10 +137,20 @@
                                 @enderror
                             </div>
                             <div class="col-md-6">
-                                <label style="font-weight: 600; margin-bottom: 8px; display: block;">Region/State</label>
-                                <input type="text" name="region" class="form-control"
-                                    value="{{ old('region', $accommodation->region ?? '') }}"
-                                    placeholder="e.g., Northern">
+                                <label style="font-weight: 600; margin-bottom: 8px; display: block;">Region</label>
+                                <select name="region" class="form-control">
+                                    <option value="">Select Region</option>
+                                    @foreach(\App\Models\Region::orderBy('name')->pluck('name') as $regionName)
+                                        <option value="{{ $regionName }}" {{ old('region', $accommodation->region ?? '') === $regionName ? 'selected' : '' }}>{{ $regionName }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label style="font-weight: 600; margin-bottom: 8px; display: block;">State</label>
+                                <input type="text" name="state" class="form-control"
+                                    value="{{ old('state', $accommodation->state ?? '') }}"
+                                    placeholder="e.g., Northern - Central">
+                                @error('state')<small style="color:#dc3545;">{{ $message }}</small>@enderror
                             </div>
                         </div>
 

@@ -47,6 +47,7 @@ class Activity extends Model
         'languages_offered' => 'array',
         'gallery_images' => 'array',
         'vehicle_images' => 'array',
+        'regions' => 'integer',
         'add_ons_available' => 'boolean',
         'private_exclusive_option' => 'boolean',
         'allow_adults' => 'boolean',

@@ -8,6 +8,7 @@
         $heroImage = $results->first()['image'] ?? asset('images/holidays-io-logo.png');
         $clearFilterQuery = array_filter([
             'category' => $category,
+            'state' => $filters['state'] ?? null,
             'region' => $filters['region'],
             'check_in' => $filters['check_in'],
             'check_out' => $filters['check_out'],
@@ -35,6 +36,8 @@
             'check_in' => $filters['check_in'],
             'check_out' => $filters['check_out'],
             'activity_date' => $filters['activity_date'],
+            'region' => $filters['region'],
+            'state' => $filters['state'] ?? '',
             'adults' => $filters['adults'] ?? (int) request()->query('adults', 2),
                 
             'children' => $filters['children'] ?? (int) request()->query('children', 0),
@@ -108,14 +111,25 @@
 
               <div class="category-input-group">
                  <div class="category-input-group-inner">
-                        <div class="category-search-cell category-search-cell--region" style="flex: 0 1 280px; min-width: 280px">
-                            <h5>{{ __('home.search.region_area') }}</h5>
-                            <select name="region" class="category-search-select" data-search-region data-selected="{{ $filters['region'] }}">
-                                <option value="all" {{ $filters['region'] === 'all' || $filters['region'] === '' ? 'selected' : '' }}>{{ __('home.search.all') }}</option>
-                                @foreach($searchOptions[$category]['regions'] ?? [] as $region)
-                                    <option value="{{ $region }}" {{ $filters['region'] === $region ? 'selected' : '' }}>{{ $region }}</option>
-                                @endforeach
-                            </select>
+                        <div class="category-search-cell category-search-cell--region" style="flex: 0 1 360px; min-width: 360px; display:flex; gap:8px; align-items:flex-start;">
+                            <div style="flex:1">
+                                <h5 style="margin:0 0 6px 0">{{ __('home.search.region_area') }}</h5>
+                                <select name="region" class="category-search-select" data-search-region data-selected="{{ $filters['region'] ?? 'all' }}" style="width:100%;">
+                                    <option value="all" {{ $filters['region'] === 'all' || $filters['region'] === '' ? 'selected' : '' }}>{{ __('home.search.all') }}</option>
+                                    @foreach($searchOptions[$category]['regions'] ?? [] as $region)
+                                        <option value="{{ $region }}" {{ $filters['region'] === $region ? 'selected' : '' }}>{{ $region }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div style="flex:1">
+                                <h5 style="margin:0 0 6px 0">State</h5>
+                                <select name="state" class="category-search-select" data-search-state style="width:100%;">
+                                    <option value="">{{ __('home.search.all') }}</option>
+                                    @foreach($searchOptions[$category]['states'] ?? [] as $stateName)
+                                        <option value="{{ $stateName }}" {{ ($filters['state'] ?? '') === $stateName ? 'selected' : '' }}>{{ $stateName }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                         @push('styles')
                             <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
@@ -293,6 +307,7 @@
                     <form method="GET" action="{{ route('frontend.category.list') }}" class="category-filter-form">
                         <input type="hidden" name="operator_token" value="{{ request()->query('operator_token') }}">
                         <input type="hidden" name="category" value="{{ $category }}">
+                        <input type="hidden" name="state" value="{{ $filters['state'] ?? '' }}">
                         <input type="hidden" name="region" value="{{ $filters['region'] }}">
                         <input type="hidden" name="check_in" value="{{ $filters['check_in'] }}">
                         <input type="hidden" name="check_out" value="{{ $filters['check_out'] }}">

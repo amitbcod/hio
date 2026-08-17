@@ -120,6 +120,8 @@ class AccommodationController extends Controller
             'property_type' => 'required|string|in:' . implode(',', Accommodation::TYPES),
             'address' => 'required|string|max:500',
             'city' => 'required|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'region' => 'nullable|string|max:100',
             'country' => 'required|string|max:100',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
@@ -158,6 +160,7 @@ class AccommodationController extends Controller
         $accommodation->address = $request->address;
         $accommodation->city = $request->city;
         $accommodation->country = $request->country;
+        $accommodation->state = $request->state;
         $accommodation->region = $request->region;
         $accommodation->postal_code = $request->postal_code;
         $accommodation->latitude = $request->latitude;
@@ -279,6 +282,7 @@ class AccommodationController extends Controller
             'address' => $request->address,
             'city' => $request->city,
             'country' => $request->country,
+            'state' => $request->state,
             'region' => $request->region,
             'postal_code' => $request->postal_code,
             'latitude' => $request->latitude,
@@ -1873,6 +1877,7 @@ class AccommodationController extends Controller
                 'plan_id' => 'required|exists:accommodation_rates,id',
                 'adult_rate' => 'required|numeric|min:0',
                 'extra_adult_rate' => 'required|numeric|min:0',
+                'package_price' => 'nullable|numeric|min:0',
                 'extra_bed_rate' => 'nullable|numeric|min:0',
                 'children_rate' => 'required|numeric|min:0',
                 'infant_rate' => 'required|numeric|min:0',
@@ -1920,6 +1925,7 @@ class AccommodationController extends Controller
                 'base_rate' => $request->adult_rate,
                 'final_rate' => $request->adult_rate,
                 'extra_adult_rate' => $request->extra_adult_rate,
+                'package_price' => $request->package_price ?? null,
                 'extra_bed_rate' => $request->extra_bed_rate ?? 0,
                 'children_rate' => $request->children_rate,
                 'infant_rate' => $request->infant_rate,

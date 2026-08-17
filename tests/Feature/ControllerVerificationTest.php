@@ -11,6 +11,7 @@ use App\Mail\OwnerClaimedToRequester;
 use App\Models\Business;
 use App\Models\ControllerVerification;
 use App\Models\Operator;
+use App\Models\Mpo;
 use App\Models\AdminUser;
 
 class ControllerVerificationTest extends TestCase
@@ -134,6 +135,96 @@ class ControllerVerificationTest extends TestCase
         $this->assertNotNull($collab);
         $this->assertNotNull($collab->agreement_file);
         \Illuminate\Support\Facades\Storage::disk('public')->assertExists($collab->agreement_file);
+    }
+
+    public function test_mpo_registration_page_exposes_non_owner_owner_verification_fields()
+    {
+        $response = $this->get('/mpo/register');
+
+        $response->assertOk();
+        $response->assertSee('name="is_owner"', false);
+        $response->assertSee('name="owner_email"', false);
+        $response->assertSee('name="owner_full_name"', false);
+        $response->assertSee('name="owner_phone"', false);
+        $response->assertSee('_token', false);
+    }
+
+    public function test_mpo_owner_can_claim_and_activate_requester()
+    {
+        $business = Business::create([
+            'business_id' => Business::generateBusinessId(),
+            'legal_name' => 'MPO Claim Business',
+            'primary_contact_email' => 'mpo-requester@example.com',
+            'status' => 'pending',
+        ]);
+
+        $requester = Mpo::create([
+            'mpo_id' => uniqid('MP'),
+            'user_type' => 'MPO',
+            'is_owner' => 'no',
+            'email' => 'mpo-requester@example.com',
+            'phone' => '+123456789',
+            'full_name' => 'Requester MPO',
+            'business_legal_name' => 'MPO Claim Business',
+            'country_of_operation' => 'United Kingdom',
+            'account_status' => 'pending_verification',
+            'password_hash' => bcrypt('Password123!'),
+            'business_id' => $business->id,
+        ]);
+
+        $cv = ControllerVerification::create([
+            'token' => ControllerVerification::generateToken(),
+            'business_id' => $business->id,
+            'owner_email' => 'mpo-owner@example.com',
+            'owner_full_name' => 'MPO Owner',
+            'requester_operator_id' => $requester->mpo_id,
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $response = $this->post('/mpo/register/controller/verify/' . $cv->token . '/claim', [
+            'full_name' => 'MPO Owner',
+            'owner_email' => 'mpo-owner@example.com',
+            'password' => 'OwnerPass123!',
+            'password_confirmation' => 'OwnerPass123!',
+            'confirm_authority' => 'on',
+            'agreement_type' => 'Listing Only',
+            'agreement_confirm_name' => 'MPO Owner',
+        ]);
+
+        $response->assertRedirect(route('mpo.login'));
+        $this->assertEquals('accepted', $cv->fresh()->status);
+        $this->assertDatabaseHas('mpos', ['email' => 'mpo-owner@example.com', 'is_owner' => 'yes']);
+        $this->assertDatabaseHas('mpos', ['email' => 'mpo-requester@example.com', 'account_status' => 'active']);
+    }
+
+    public function test_mpo_requires_admin_approval_after_owner_verification()
+    {
+        session(['admin_id' => 1]);
+
+        $mpo = Mpo::create([
+            'mpo_id' => uniqid('MP'),
+            'user_type' => 'MPO',
+            'is_owner' => 'no',
+            'email' => 'mpo-admin-review@example.com',
+            'phone' => '+123456789',
+            'full_name' => 'Requester MPO',
+            'business_legal_name' => 'MPO Admin Review Business',
+            'country_of_operation' => 'United Kingdom',
+            'account_status' => 'pending_verification',
+            'operator_approve_flag' => 1,
+            'admin_approve_flag' => 0,
+            'password_hash' => bcrypt('Password123!'),
+        ]);
+
+        $response = $this->post(route('admin.mpo.approve', $mpo));
+
+        $response->assertRedirect(route('admin.dashboard'));
+        $this->assertDatabaseHas('mpos', [
+            'email' => 'mpo-admin-review@example.com',
+            'account_status' => 'active',
+            'operator_approve_flag' => 1,
+            'admin_approve_flag' => 1,
+        ]);
     }
 
     public function test_claim_with_expired_token_is_blocked()

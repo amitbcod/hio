@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\OperatorUser;
 use App\Models\Business;
+use App\Models\Mpo;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
@@ -189,7 +191,16 @@ class AuthController extends Controller
             'business_legal_name' => 'required',
             'country_of_operation' => 'required',
             'is_owner' => 'required|in:yes,no',
-            'email' => 'required|email|unique:operator_users,email',
+            'email' => ['required', 'email', function ($attribute, $value, $fail) {
+                $email = strtolower(trim((string) $value));
+                $exists = \App\Models\Operator::whereRaw('LOWER(email) = ?', [$email])->exists()
+                    || Mpo::whereRaw('LOWER(email) = ?', [$email])->exists()
+                    || OperatorUser::whereRaw('LOWER(email) = ?', [$email])->exists();
+
+                if ($exists) {
+                    $fail('This email is already registered to an Operator, MPO, or staff account. Please use a different email.');
+                }
+            }],
             'phone' => 'required',
             'full_name' => 'required',
             // Role is optional at registration time; if provided it should be a string (we assign roles later in the onboarding flow)
@@ -216,29 +227,52 @@ class AuthController extends Controller
         $request->validate($rules, [
             'password.regex' => 'Password must contain uppercase, lowercase, number, and special character.'
         ]);
-        
+
         if ($request->is_owner === 'no') {
             $verification_status = 'pending_verification';
-        }else{
+        } else {
             $verification_status = 'active';
         }
-        $operatorId = uniqid('OP');
-        $operator = \App\Models\Operator::create([
-            'operator_id' => $operatorId,
-            'user_type' => $request->user_type,
-            'is_owner' => $request->is_owner,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'full_name' => $request->full_name,
-            'business_legal_name' => $request->business_legal_name,
-            'agreement_type' => $request->agreement_type ?? null,
-            'booking_registration_type' => $request->agreement_type ?? null,
-            'account_status' => $verification_status,
-            'owner_full_name' => $request->is_owner === 'no' ? $request->owner_full_name : null,
-            'owner_email' => $request->is_owner === 'no' ? $request->owner_email : null,
-            'owner_phone' => $request->is_owner === 'no' ? $request->owner_phone : null,
-            'password_hash' => bcrypt($request->password),
-        ]);
+
+        $isMpo = $request->user_type === 'MPO';
+        $account = null;
+
+        if ($isMpo) {
+            $account = Mpo::create([
+                'mpo_id' => uniqid('MP'),
+                'user_type' => 'MPO',
+                'is_owner' => $request->is_owner,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'full_name' => $request->full_name,
+                'business_legal_name' => $request->business_legal_name,
+                'country_of_operation' => $request->country_of_operation,
+                'agreement_type' => $request->agreement_type ?? null,
+                'booking_registration_type' => $request->agreement_type ?? null,
+                'account_status' => $verification_status,
+                'owner_full_name' => $request->is_owner === 'no' ? $request->owner_full_name : null,
+                'owner_email' => $request->is_owner === 'no' ? $request->owner_email : null,
+                'owner_phone' => $request->is_owner === 'no' ? $request->owner_phone : null,
+                'password_hash' => bcrypt($request->password),
+            ]);
+        } else {
+            $account = \App\Models\Operator::create([
+                'operator_id' => uniqid('OP'),
+                'user_type' => $request->user_type,
+                'is_owner' => $request->is_owner,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'full_name' => $request->full_name,
+                'business_legal_name' => $request->business_legal_name,
+                'agreement_type' => $request->agreement_type ?? null,
+                'booking_registration_type' => $request->agreement_type ?? null,
+                'account_status' => $verification_status,
+                'owner_full_name' => $request->is_owner === 'no' ? $request->owner_full_name : null,
+                'owner_email' => $request->is_owner === 'no' ? $request->owner_email : null,
+                'owner_phone' => $request->is_owner === 'no' ? $request->owner_phone : null,
+                'password_hash' => bcrypt($request->password),
+            ]);
+        }
 
         // Create or link a Business record
         if ($request->is_owner === 'yes') {
@@ -271,7 +305,7 @@ class AuthController extends Controller
                         'business_id' => $business->id,
                         'owner_email' => $request->owner_email,
                         'owner_full_name' => $request->owner_full_name,
-                        'requester_operator_id' => $operator->operator_id,
+                        'requester_operator_id' => $isMpo ? $account->mpo_id : $account->operator_id,
                         'status' => 'pending',
                         'expires_at' => now()->addDays(7),
                     ]);
@@ -290,7 +324,7 @@ class AuthController extends Controller
                         'business_id' => $business->id,
                         'owner_email' => $request->owner_email,
                         'owner_full_name' => $request->owner_full_name,
-                        'requester_operator_id' => $operator->operator_id,
+                        'requester_operator_id' => $isMpo ? $account->mpo_id : $account->operator_id,
                         'status' => 'pending',
                         'expires_at' => now()->addDays(7),
                     ]);
@@ -302,12 +336,10 @@ class AuthController extends Controller
             }
         }
 
-        // Link operator to business
-        $operator->business_id = $business->id;
-        $operator->save();
+        // Link account to business
+        $account->business_id = $business->id;
+        $account->save();
 
-        // Optionally, log in the operator or redirect to login page
-        // \Illuminate\Support\Facades\Auth::login($operator);
         return redirect()->route('operator.register.step2');
     }
 }

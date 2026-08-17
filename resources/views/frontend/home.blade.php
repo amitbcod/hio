@@ -93,17 +93,25 @@
 
                     <div class="category-input-group">
                         <div class="category-input-group-inner">
-                            <div class="category-search-cell category-search-cell--region" style="{{ $selectedCategory === 'transport' ? 'display:none;' : '' }}; flex: 0 1 280px; min-width: 280px">
-                                <h5>{{ __('home.search.region_area') }}</h5>
-                                <select name="region" class="category-search-select" data-search-region
-                                    data-selected="{{ $filters['region'] }}">
-                                    <option value="all" {{ $filters['region'] === 'all' || $filters['region'] === '' ? 'selected' : '' }}>All</option>
-                                    @foreach($searchOptions[$selectedCategory]['regions'] ?? [] as $region)
-                                        <option value="{{ $region }}" {{ $filters['region'] === $region ? 'selected' : '' }}>
-                                            {{ $region }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                            <div class="category-search-cell category-search-cell--region" style="{{ $selectedCategory === 'transport' ? 'display:none;' : '' }}; flex: 0 1 360px; min-width: 360px; display:flex; gap:8px; align-items:flex-start;">
+                                <div style="flex:1">
+                                    <h5 style="margin:0 0 6px 0">{{ __('home.search.region_area') }}</h5>
+                                    <select name="region" class="category-search-select" data-search-region data-selected="{{ $filters['region'] ?? 'all' }}" style="width:100%;">
+                                        <option value="all" {{ $filters['region'] === 'all' || $filters['region'] === '' ? 'selected' : '' }}>All</option>
+                                        @foreach($searchOptions[$selectedCategory]['regions'] ?? [] as $region)
+                                            <option value="{{ $region }}" {{ $filters['region'] === $region ? 'selected' : '' }}>{{ $region }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div style="flex:1">
+                                    <h5 style="margin:0 0 6px 0">State</h5>
+                                    <select name="state" class="category-search-select" data-search-state style="width:100%;">
+                                        <option value="">{{ __('home.search.all') }}</option>
+                                        @foreach($searchOptions[$selectedCategory]['states'] ?? [] as $stateName)
+                                            <option value="{{ $stateName }}" {{ ($filters['state'] ?? '') === $stateName ? 'selected' : '' }}>{{ $stateName }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
 
                             <!-- Accommodation/Transport: Check-In and Check-Out -->

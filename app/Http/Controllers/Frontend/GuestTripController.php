@@ -438,13 +438,19 @@ class GuestTripController extends Controller
 
         $providerName = $accommodation->property_name ?? ($activity->activity_name ?? ($transport->vehicle_name ?? 'Service Provider'));
         if ($isActivity) {
+            if (is_numeric($activity->regions)) {
+                $regionModel = \App\Models\Region::find((int) $activity->regions);
+                $activityRegionValue = $regionModel?->name ?? $activity->address ?? null;
+            } else {
+                $activityRegionValue = $activity->regions ?? $activity->address ?? null;
+            }
             $providerAddress = trim(implode(', ', array_filter([
                 $activity->destination ?? null,
                 $activity->town ?? null,
-                $activity->region ?? null,
+                $activityRegionValue ?? null,
                 $operator->country ?? null,
             ])), ', ');
-            $locationLabel = $activity->town ?: ($activity->region ?: ($operator->country ?? 'Mauritius'));
+            $locationLabel = $activity->town ?: ($activityRegionValue ?: ($operator->country ?? 'Mauritius'));
             $emergencyContact = $activity->emergency_contact_phone ?? $operator->emergency_contact_phone ?? null;
             $receptionContact = $activity->reception_contact_phone ?? $operator->reception_contact_phone ?? null;
         } elseif ($isTransport) {

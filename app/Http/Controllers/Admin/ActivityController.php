@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 require_once __DIR__ . '/AdminViewRouteHelpers.php';
 
 use App\Models\Activity;
+use App\Models\Region;
 use App\Models\ActivityVariant;
 use App\Models\ActivityPromotion;
 use App\Models\ActivitySeoSocial;
@@ -156,6 +157,7 @@ class ActivityController extends Controller
             'teamCategories' => Activity::TEAM_CATEGORIES,
             'primaryThemes' => Activity::PRIMARY_THEMES,
             'bookingConfirmationTypes' => Activity::BOOKING_CONFIRMATION_TYPES,
+            'regions' => Region::orderBy('name')->pluck('name')->all(),
         ]);
     }
 
@@ -214,7 +216,16 @@ class ActivityController extends Controller
             $activity->price_range = $data['price_range'];
             $activity->primary_themes = $data['primary_themes'] ?? null;
             $activity->destination = $data['destination'] ?? null;
-            $activity->region = $data['region'] ?? null;
+            $activity->address = $data['region'] ?? null;
+            // persist region id when possible; if free-text region name provided, try to map to id
+            $regionsId = null;
+            if (!empty($data['regions'])) {
+                $regionsId = is_numeric($data['regions']) ? (int) $data['regions'] : null;
+            } elseif (!empty($data['region'])) {
+                $found = Region::where('name', trim($data['region']))->first();
+                $regionsId = $found ? (int) $found->id : null;
+            }
+            $activity->regions = $regionsId;
             $activity->town = $data['town'] ?? null;
             $activity->latitude = $data['latitude'];
             $activity->longitude = $data['longitude'];

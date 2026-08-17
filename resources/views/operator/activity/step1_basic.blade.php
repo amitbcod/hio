@@ -139,8 +139,17 @@
                                     <input type="text" name="destination" class="form-control" value="{{ old('destination', $activity->destination) }}">
                                 </div>
                                 <div class="col-md-4">
-                                    <label style="font-weight:600;">Region</label>
-                                    <input type="text" name="region" class="form-control" value="{{ old('region', $activity->region) }}">
+                                    <label style="font-weight:600;">Address</label>
+                                    <input type="text" name="region" class="form-control" value="{{ old('region', $activity->address) }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label style="font-weight:600;">Region (select)</label>
+                                    <select name="regions" class="form-control">
+                                        <option value="">-- Select Region --</option>
+                                        @foreach($regions as $id => $name)
+                                            <option value="{{ $id }}" {{ (string) old('regions', (string) $activity->regions) === (string) $id ? 'selected' : '' }}>{{ $name }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-4">
                                     <label style="font-weight:600;">Town</label>

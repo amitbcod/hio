@@ -9,6 +9,7 @@ use App\Models\Accommodation;
 use App\Models\Activity;
 use App\Models\Transport;
 use App\Models\Review;
+use App\Models\Mpo;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BusinessApproved;
 
@@ -58,11 +59,18 @@ class DashboardController extends Controller
             ->orderByRaw('COALESCE(submitted_for_approval_at, created_at) DESC')
             ->get();
 
+        $pendingMpos = Mpo::where(function ($query) {
+                $query->where('admin_approve_flag', 0)
+                    ->whereIn('account_status', ['pending_verification', 'active']);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         $feedbacks = Review::with(['trip.traveler'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('admin.dashboard.index', compact('businesses', 'pendingAccommodations', 'pendingActivities', 'pendingTransports', 'feedbacks'));
+        return view('admin.dashboard.index', compact('businesses', 'pendingAccommodations', 'pendingActivities', 'pendingTransports', 'pendingMpos', 'feedbacks'));
     }
 
     public function approveBusiness(Request $request, Business $business)
@@ -96,6 +104,30 @@ class DashboardController extends Controller
         $business->status = 'suspended';
         $business->save();
         return redirect()->route('admin.dashboard')->with('success', 'Business rejected/suspended.');
+    }
+
+    public function approveMpo(Request $request, Mpo $mpo)
+    {
+        if (!session('admin_id')) return redirect()->route('admin.login');
+
+        $mpo->account_status = 'active';
+        $mpo->admin_approve_flag = 1;
+        $mpo->approved_by = session('admin_id');
+        $mpo->approved_at = now();
+        $mpo->save();
+
+        return redirect()->route('admin.dashboard')->with('success', 'MPO account approved by admin.');
+    }
+
+    public function rejectMpo(Request $request, Mpo $mpo)
+    {
+        if (!session('admin_id')) return redirect()->route('admin.login');
+
+        $mpo->account_status = 'suspended';
+        $mpo->admin_approve_flag = 0;
+        $mpo->save();
+
+        return redirect()->route('admin.dashboard')->with('success', 'MPO account rejected by admin.');
     }
 
     public function approveAccommodation(Request $request, Accommodation $accommodation)

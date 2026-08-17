@@ -1004,7 +1004,7 @@
                         <div>
                             <label style="font-size:13px;color:#666;font-weight:600;">Location</label>
                             <p style="margin:4px 0 0 0;">
-                                {{ $activity->town }}{{ $activity->region ? ', ' . $activity->region : '' }}{{ $activity->destination ? ', ' . $activity->destination : '' }}
+                                {{ $activity->town }}{{ $activity->address ? ', ' . $activity->address : '' }}{{ $activity->regions ? ' (' . $activity->regions . ')' : '' }}{{ $activity->destination ? ', ' . $activity->destination : '' }}
                             </p>
                         </div>
                         <div>

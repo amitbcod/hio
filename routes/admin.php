@@ -17,6 +17,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('settings', [AdminSettingsController::class, 'update'])->name('settings.update');
     Route::post('businesses/{business}/approve', [DashboardController::class, 'approveBusiness'])->name('business.approve');
     Route::post('businesses/{business}/reject', [DashboardController::class, 'rejectBusiness'])->name('business.reject');
+    Route::post('mpos/{mpo}/approve', [DashboardController::class, 'approveMpo'])->name('mpo.approve');
+    Route::post('mpos/{mpo}/reject', [DashboardController::class, 'rejectMpo'])->name('mpo.reject');
     Route::post('accommodations/{accommodation}/approve', [DashboardController::class, 'approveAccommodation'])->name('accommodation.approve');
     Route::post('accommodations/{accommodation}/reject', [DashboardController::class, 'rejectAccommodation'])->name('accommodation.reject');
     Route::post('activities/{activity}/approve', [DashboardController::class, 'approveActivity'])->name('activity.approve');

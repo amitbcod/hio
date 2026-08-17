@@ -159,6 +159,38 @@
                         <button type="submit" class="btn-primary booking-btn">{{ __('accommodation.form.update_search') }}</button>
                     </form>
 
+                    @if(!Auth::guard('traveler')->check())
+                        <div class="detail-login-card">
+                            <h3>Traveler login</h3>
+                            <p>Sign in to continue with your accommodation booking.</p>
+
+                            @if($errors->any())
+                                <div class="detail-login-error">{{ $errors->first() }}</div>
+                            @endif
+
+                            <form method="POST" action="{{ route('traveler.login.store') }}" class="detail-login-form">
+                                @csrf
+                                <input type="hidden" name="redirect" value="{{ url()->full() }}">
+
+                                <div class="detail-login-field">
+                                    <label for="detail-login-email">Email</label>
+                                    <input id="detail-login-email" type="email" name="email" value="{{ old('email') }}" required>
+                                </div>
+
+                                <div class="detail-login-field">
+                                    <label for="detail-login-password">Password</label>
+                                    <input id="detail-login-password" type="password" name="password" required>
+                                </div>
+
+                                <button type="submit" class="btn-primary detail-login-btn">Login</button>
+                            </form>
+
+                            <p class="detail-login-meta">
+                                New traveler? <a href="{{ route('traveler.register') }}">Create account</a>
+                            </p>
+                        </div>
+                    @endif
+
                     <div class="booking-summary-line">
                         <span>
                             {{ $booking['adults'] }} {{ trans_choice('accommodation.summary.adults', $booking['adults']) }}
@@ -697,6 +729,84 @@
             font: inherit;
             color: var(--ink);
             background: var(--card);
+        }
+
+        .detail-login-card {
+            margin-top: 18px;
+            padding: 18px 16px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: rgba(25, 181, 181, 0.03);
+        }
+
+        .detail-login-card h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--ink);
+        }
+
+        .detail-login-card p {
+            margin: 8px 0 0;
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .detail-login-form {
+            margin-top: 14px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .detail-login-field {
+            display: grid;
+            gap: 6px;
+        }
+
+        .detail-login-field label {
+            font-size: 11px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .detail-login-field input {
+            width: 100%;
+            min-height: 42px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 0 12px;
+            font: inherit;
+            color: var(--ink);
+            background: #fff;
+        }
+
+        .detail-login-btn {
+            margin-top: 6px;
+            border: 0;
+            cursor: pointer;
+        }
+
+        .detail-login-error {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(217, 83, 79, 0.08);
+            border: 1px solid rgba(217, 83, 79, 0.2);
+            color: #8b1c1a;
+            font-size: 13px;
+        }
+
+        .detail-login-meta {
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        .detail-login-meta a {
+            color: var(--brand-dark);
+            font-weight: 700;
         }
 
         .booking-btn {

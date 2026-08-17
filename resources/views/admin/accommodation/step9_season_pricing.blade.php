@@ -42,6 +42,15 @@
                                                     <strong>✓ Default: USD {{ number_format($combo['default_pricing']->base_rate, 2) }}</strong>
                                                 </div>
                                             @else
+                                                        <div style="color:#e67e22;font-size:11px;margin-top:4px;">
+                                                            <strong>⚠ No default price set</strong>
+                                                        </div>
+                                                    @endif
+                                                    @if(!empty($combo['default_pricing']->package_price))
+                                                        <div style="color:#28a745;font-size:11px;margin-top:2px;">
+                                                            <small>Package: USD {{ number_format($combo['default_pricing']->package_price, 2) }}</small>
+                                                        </div>
+                                                    @endif
                                                 <div style="color:#e67e22;font-size:11px;margin-top:4px;">
                                                     <strong>⚠ No default price set</strong>
                                                 </div>
@@ -57,6 +66,7 @@
                                                         data-room-name="{{ $combo['room']->room_name }}"
                                                         data-plan-name="{{ $combo['plan']->rate_name }}"
                                                         data-adult-rate="{{ $combo['default_pricing']->base_rate }}"
+                                                        data-package-price="{{ $combo['default_pricing']->package_price ?? '' }}"
                                                         data-extra-adult-rate="{{ $combo['default_pricing']->extra_adult_rate }}"
                                                         data-extra-bed-rate="{{ $combo['default_pricing']->extra_bed_rate ?? 0 }}"
                                                         data-children-rate="{{ $combo['default_pricing']->children_rate }}"
@@ -237,6 +247,10 @@
                     <small style="display:block;margin-top:4px;color:#666;">This base room price covers configured adults, children, and infants occupancy.</small>
                 </div>
                 <div class="mb-3">
+                    <label style="font-weight:600;">Package Price (USD)</label>
+                    <input type="number" name="package_price" class="form-control" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="mb-3">
                     <label style="font-weight:600;">Extra Adult Rate (USD) *</label>
                     <input type="number" name="extra_adult_rate" class="form-control" step="0.01" min="0" required placeholder="0.00">
                 </div>
@@ -350,6 +364,7 @@
             const extraBedRate = parseFloat(btn.dataset.extraBedRate);
             const childrenRate = parseFloat(btn.dataset.childrenRate);
             const infantRate = parseFloat(btn.dataset.infantRate);
+            const packagePrice = btn.dataset.packagePrice ? parseFloat(btn.dataset.packagePrice) : '';
             
             document.getElementById('defaultPriceModalTitle').textContent = 'Edit Default Price';
             document.getElementById('defaultPriceSubmitBtn').textContent = 'Update Default Price';
@@ -364,6 +379,7 @@
             document.getElementById('defaultPriceForm').querySelector('input[name="extra_bed_rate"]').value = extraBedRate;
             document.getElementById('defaultPriceForm').querySelector('input[name="children_rate"]').value = childrenRate;
             document.getElementById('defaultPriceForm').querySelector('input[name="infant_rate"]').value = infantRate;
+            document.getElementById('defaultPriceForm').querySelector('input[name="package_price"]').value = packagePrice;
             document.getElementById('defaultPriceModal').style.display = 'flex';
         }
 

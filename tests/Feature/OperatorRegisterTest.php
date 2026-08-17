@@ -58,6 +58,71 @@ class OperatorRegisterTest extends TestCase
         ]);
     }
 
+    public function test_mpo_registration_creates_mpo_record_from_shared_operator_route()
+    {
+        $response = $this->post('/operator/register', [
+            'user_type' => 'MPO',
+            'business_legal_name' => 'MPO Test Ltd',
+            'country_of_operation' => 'Mauritius',
+            'is_owner' => 'yes',
+            'agreement_type' => 'Full Service',
+            'email' => 'mpo@example.com',
+            'phone' => '+23057000000',
+            'full_name' => 'MPO Owner',
+            'role' => 'Admin',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'terms' => 'on',
+        ]);
+
+        $response->assertRedirect(route('operator.register.step2'));
+
+        $this->assertDatabaseHas('mpos', [
+            'email' => 'mpo@example.com',
+            'user_type' => 'MPO',
+            'business_legal_name' => 'MPO Test Ltd',
+        ]);
+
+        $this->assertDatabaseMissing('operators', [
+            'email' => 'mpo@example.com',
+        ]);
+    }
+
+    public function test_mpo_registration_rejects_duplicate_email_across_all_account_tables()
+    {
+        \App\Models\Operator::create([
+            'operator_id' => uniqid('OP'),
+            'user_type' => 'Operator',
+            'is_owner' => 'yes',
+            'email' => 'duplicate@example.com',
+            'phone' => '+441234567890',
+            'full_name' => 'Existing Operator',
+            'business_legal_name' => 'Existing Business',
+            'account_status' => 'active',
+            'password_hash' => bcrypt('Password123!'),
+        ]);
+
+        $response = $this->from('/operator/register')->post('/operator/register', [
+            'user_type' => 'MPO',
+            'business_legal_name' => 'Duplicate MPO Ltd',
+            'country_of_operation' => 'Mauritius',
+            'is_owner' => 'yes',
+            'agreement_type' => 'Full Service',
+            'email' => 'duplicate@example.com',
+            'phone' => '+23057000001',
+            'full_name' => 'MPO Owner',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'terms' => 'on',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $response->assertSessionHas('errors', function ($errors) {
+            $messages = $errors->get('email');
+            return is_array($messages) && str_contains($messages[0], 'already registered');
+        });
+    }
+
     public function test_save_step5_updates_operator_agreement_type()
     {
         // create operator and login

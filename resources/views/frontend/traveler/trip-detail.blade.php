@@ -216,9 +216,10 @@
                                             @php
                                                 $activityLocation = '';
                                                 if ($booking->activity) {
+                                                    $activityRegionValue = $booking->activity->regions ?? $booking->activity->address ?? null;
                                                     $locationParts = array_filter([
                                                         $booking->activity->town,
-                                                        $booking->activity->region,
+                                                        $activityRegionValue,
                                                         $booking->activity->country,
                                                     ]);
                                                     $activityLocation = implode(', ', $locationParts);

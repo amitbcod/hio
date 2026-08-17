@@ -24,14 +24,29 @@ class ControllerVerification extends Model
 
     public function requester()
     {
-        return $this->hasOne(Operator::class, 'operator_id', 'requester_operator_id');
+        if (empty($this->requester_operator_id)) {
+            return null;
+        }
+
+        $operator = Operator::where('operator_id', $this->requester_operator_id)->first();
+        if ($operator) {
+            return $operator;
+        }
+
+        return Mpo::where('mpo_id', $this->requester_operator_id)->first();
     }
 
-    public function acceptBy(Operator $operator)
+    public function acceptBy($actor)
     {
-        \Log::info('ControllerVerification::acceptBy - start', ['cv_id' => $this->id, 'operator_id' => $operator->id]);
+        $actorId = null;
+        try {
+            $actorId = $actor->id ?? null;
+        } catch (\Exception $e) {
+            $actorId = null;
+        }
+        \Log::info('ControllerVerification::acceptBy - start', ['cv_id' => $this->id, 'actor_id' => $actorId]);
         $this->status = 'accepted';
-        $this->accepted_by = $operator->id;
+        $this->accepted_by = $actorId;
         $this->accepted_at = now();
 
         // first try Eloquent save
@@ -42,7 +57,7 @@ class ControllerVerification extends Model
         try {
             $updated = \DB::table($this->getTable())->where('id', $this->id)->update([
                 'status' => 'accepted',
-                'accepted_by' => $operator->id,
+                'accepted_by' => $actorId,
                 'accepted_at' => now(),
                 'updated_at' => now(),
             ]);

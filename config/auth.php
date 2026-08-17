@@ -48,6 +48,10 @@ return [
             'driver' => 'session',
             'provider' => 'operators',
         ],
+        'mpo' => [
+            'driver' => 'session',
+            'provider' => 'mpos',
+        ],
         'operator_staff' => [
             'driver' => 'session',
             'provider' => 'operator_users',
@@ -87,6 +91,10 @@ return [
         'operator_users' => [
             'driver' => 'eloquent',
             'model' => App\Models\OperatorUser::class,
+        ],
+        'mpos' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Mpo::class,
         ],
     ],
 

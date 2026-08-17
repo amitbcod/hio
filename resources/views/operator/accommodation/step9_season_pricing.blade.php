@@ -39,8 +39,13 @@
                                             </div>
                                             @if($combo['has_default'] && $combo['default_pricing'])
                                                 <div style="color:#28a745;font-size:11px;margin-top:4px;">
-                                                    <strong>✓ Default: USD {{ number_format($combo['default_pricing']->base_rate, 2) }}</strong>
+                                                    <strong>✓ Flat Rate : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;USD {{ number_format($combo['default_pricing']->base_rate, 2) }}</strong>
                                                 </div>
+                                                @if(!empty($combo['default_pricing']->package_price))
+                                                    <div style="color:#28a745;font-size:11px;margin-top:2px;">
+                                                        <strong>Package price : USD {{ number_format($combo['default_pricing']->package_price, 2) }}</strong>
+                                                    </div>
+                                                @endif
                                             @else
                                                 <div style="color:#e67e22;font-size:11px;margin-top:4px;">
                                                     <strong>⚠ No default price set</strong>
@@ -57,12 +62,13 @@
                                                         data-room-name="{{ $combo['room']->room_name }}"
                                                         data-plan-name="{{ $combo['plan']->rate_name }}"
                                                         data-adult-rate="{{ $combo['default_pricing']->base_rate }}"
+                                                        data-package-price="{{ $combo['default_pricing']->package_price ?? '' }}"
                                                         data-extra-adult-rate="{{ $combo['default_pricing']->extra_adult_rate }}"
                                                         data-extra-bed-rate="{{ $combo['default_pricing']->extra_bed_rate ?? 0 }}"
                                                         data-children-rate="{{ $combo['default_pricing']->children_rate }}"
                                                         data-infant-rate="{{ $combo['default_pricing']->infant_rate }}"
                                                         style="padding:6px 12px;background:#ff9800;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;text-decoration:none;text-align:center;">
-                                                        Edit Default Price
+                                                        Edit Flat Rate Price
                                                     </button>
                                                 @else
                                                     <button type="button" 
@@ -72,7 +78,7 @@
                                                         data-room-name="{{ $combo['room']->room_name }}"
                                                         data-plan-name="{{ $combo['plan']->rate_name }}"
                                                         style="padding:6px 12px;background:#19b5b5;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;text-decoration:none;text-align:center;">
-                                                        Set Default Price
+                                                        Set Flat Rate Price
                                                     </button>
                                                 @endif
                                                 <button type="button" 
@@ -223,7 +229,7 @@
     {{-- Modal for Setting Default Price --}}
     <div id="defaultPriceModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
         <div style="background:#fff;padding:24px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.2);width:90%;max-width:500px;max-height:80vh;overflow-y:auto;">
-            <h5 id="defaultPriceModalTitle" style="margin-top:0;margin-bottom:16px;font-weight:600;">Set Default Price</h5>
+            <h5 id="defaultPriceModalTitle" style="margin-top:0;margin-bottom:16px;font-weight:600;">Set Flat Rate Price</h5>
             <div id="defaultPriceInfo" style="background:#f9f9f9;padding:12px;border-radius:4px;margin-bottom:16px;font-size:12px;color:#666;"></div>
             
             <form id="defaultPriceForm" method="POST">
@@ -235,6 +241,10 @@
                     <label style="font-weight:600;">Room Rate (USD) *</label>
                     <input type="number" name="adult_rate" class="form-control" step="0.01" min="0" required placeholder="0.00">
                     <small style="display:block;margin-top:4px;color:#666;">This base room price covers configured adults, children, and infants occupancy.</small>
+                </div>
+                <div class="mb-3">
+                    <label style="font-weight:600;">Package Price (USD)</label>
+                    <input type="number" name="package_price" class="form-control" step="0.01" min="0" placeholder="0.00">
                 </div>
                 <div class="mb-3">
                     <label style="font-weight:600;">Extra Adult Rate (USD) *</label>
@@ -255,7 +265,7 @@
 
                 <div style="display:flex;gap:12px;justify-content:flex-end;">
                     <button type="button" onclick="closeDefaultPriceModal()" style="padding:8px 14px;background:#f0f0f0;color:#333;border:none;border-radius:4px;cursor:pointer;">Cancel</button>
-                    <button type="submit" id="defaultPriceSubmitBtn" style="padding:8px 14px;background:#19b5b5;color:#fff;border:none;border-radius:4px;cursor:pointer;">Save Default Price</button>
+                    <button type="submit" id="defaultPriceSubmitBtn" style="padding:8px 14px;background:#19b5b5;color:#fff;border:none;border-radius:4px;cursor:pointer;">Save Flat Rate Price</button>
                 </div>
             </form>
         </div>
@@ -328,8 +338,8 @@
             const roomName = btn.dataset.roomName;
             const planName = btn.dataset.planName;
             
-            document.getElementById('defaultPriceModalTitle').textContent = 'Set Default Price';
-            document.getElementById('defaultPriceSubmitBtn').textContent = 'Save Default Price';
+            document.getElementById('defaultPriceModalTitle').textContent = 'Set Flat Rate Price';
+            document.getElementById('defaultPriceSubmitBtn').textContent = 'Save Flat Rate Price';
             document.getElementById('defaultRoomId').value = roomId;
             document.getElementById('defaultPlanId').value = planId;
             document.getElementById('defaultPriceInfo').innerHTML = `
@@ -350,9 +360,10 @@
             const extraBedRate = parseFloat(btn.dataset.extraBedRate);
             const childrenRate = parseFloat(btn.dataset.childrenRate);
             const infantRate = parseFloat(btn.dataset.infantRate);
+            const packagePrice = btn.dataset.packagePrice ? parseFloat(btn.dataset.packagePrice) : '';
             
-            document.getElementById('defaultPriceModalTitle').textContent = 'Edit Default Price';
-            document.getElementById('defaultPriceSubmitBtn').textContent = 'Update Default Price';
+            document.getElementById('defaultPriceModalTitle').textContent = 'Edit Flat Rate Price';
+            document.getElementById('defaultPriceSubmitBtn').textContent = 'Update Flat Rate Price';
             document.getElementById('defaultRoomId').value = roomId;
             document.getElementById('defaultPlanId').value = planId;
             document.getElementById('defaultPriceInfo').innerHTML = `
@@ -364,6 +375,7 @@
             document.getElementById('defaultPriceForm').querySelector('input[name="extra_bed_rate"]').value = extraBedRate;
             document.getElementById('defaultPriceForm').querySelector('input[name="children_rate"]').value = childrenRate;
             document.getElementById('defaultPriceForm').querySelector('input[name="infant_rate"]').value = infantRate;
+            document.getElementById('defaultPriceForm').querySelector('input[name="package_price"]').value = packagePrice;
             document.getElementById('defaultPriceModal').style.display = 'flex';
         }
 

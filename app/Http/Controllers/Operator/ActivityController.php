@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Operator;
 
 use App\Models\Activity;
+use App\Models\Region;
 use App\Models\ActivityVariant;
 use App\Models\ActivityPromotion;
 use App\Models\ActivitySeoSocial;
@@ -119,6 +120,8 @@ class ActivityController extends Controller
             'teamCategories' => Activity::TEAM_CATEGORIES,
             'primaryThemes' => Activity::PRIMARY_THEMES,
             'bookingConfirmationTypes' => Activity::BOOKING_CONFIRMATION_TYPES,
+            // pass as id => name so the select returns region id for FK storage
+            'regions' => Region::orderBy('name')->pluck('name', 'id')->all(),
         ]);
     }
 
@@ -152,6 +155,7 @@ class ActivityController extends Controller
             'primary_themes.*' => 'in:' . implode(',', Activity::PRIMARY_THEMES),
             'destination' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',
+            'regions' => 'nullable|string|max:255',
             'town' => 'nullable|string|max:255',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
@@ -184,7 +188,18 @@ class ActivityController extends Controller
             $activity->price_range = $data['price_range'];
             $activity->primary_themes = $data['primary_themes'] ?? null;
             $activity->destination = $data['destination'] ?? null;
-            $activity->region = $data['region'] ?? null;
+            // store incoming `region` input into the DB column `address`
+            $activity->address = $data['region'] ?? null;
+            // store selected region id from regions table into `regions` column
+            // If the dropdown provides an id, cast to int. Otherwise attempt to map the free-text region name to an id.
+            $regionsId = null;
+            if (!empty($data['regions'])) {
+                $regionsId = is_numeric($data['regions']) ? (int) $data['regions'] : null;
+            } elseif (!empty($data['region'])) {
+                $found = Region::where('name', trim($data['region']))->first();
+                $regionsId = $found ? (int) $found->id : null;
+            }
+            $activity->regions = $regionsId;
             $activity->town = $data['town'] ?? null;
             $activity->latitude = $data['latitude'];
             $activity->longitude = $data['longitude'];
@@ -205,11 +220,16 @@ class ActivityController extends Controller
             $activity->allow_children = isset($data['allow_children']) && $data['allow_children'] ? true : false;
             $activity->allow_infants = isset($data['allow_infants']) && $data['allow_infants'] ? true : false;
 
-            // Mark step 1 as complete
-            $activity->completeStep('step1_basic');
+            // Log incoming region values before save
+            \Log::info('saveStep1Basic input', ['activity_id' => $activity->id, 'regions_input' => $data['regions'] ?? null, 'region_input' => $data['region'] ?? null]);
+
+            // Persist activity fields first
             $activity->save();
 
-            \Log::info('Activity Step 1 saved', ['activity_id' => $activity->id, 'operator_id' => $operator->id]);
+            // Mark step 1 as complete after saving other attributes
+            $activity->completeStep('step1_basic');
+
+            \Log::info('Activity Step 1 saved', ['activity_id' => $activity->id, 'operator_id' => $operator->id, 'regions_saved' => $activity->regions]);
 
             return redirect()->route('operator.activity.show', $activity->id)
                 ->with('success', 'Activity Step 1: Basic Information saved successfully!');
