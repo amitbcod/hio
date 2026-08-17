@@ -27,13 +27,15 @@
             justify-content: center;
             min-width: 20px;
             height: 20px;
-            margin-left: 6px;
+            margin-left: 0;
             padding: 0 6px;
             font-size: 12px;
             font-weight: 700;
             color: #fff;
-            background: #ff5a5f;
+            background: var(--orange);
             border-radius: 999px;
+            position: relative;
+            top: -3px;
         }
         .language-switcher {
             display: inline-flex;
@@ -44,12 +46,12 @@
             color: #ffffff;
         }
         .language-switcher a {
-            color: #ffffff;
+            color: var(--white);
             text-decoration: none;
             font-weight: 700;
         }
         .language-switcher a.active {
-            color: #fcad10;
+            color: var(--light-blue);
         }
         .language-switcher span {
             opacity: 1;
