@@ -3007,6 +3007,7 @@ div#transport-price-summary {
 
 
 
+
 @media (max-width: 1120px) {
     div.detail-top-grid {
         grid-template-columns: 1fr;
@@ -3287,5 +3288,10 @@ div#transport-price-summary {
 
     .filter-note {
         margin-top: 20px;
+    }
+    .category-search-cell--region {
+        flex: 0;
+        min-width: auto;
+        display: block;
     }
 }
