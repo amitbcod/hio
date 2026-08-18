@@ -3290,8 +3290,10 @@ div#transport-price-summary {
         margin-top: 20px;
     }
     .category-search-cell--region {
-        flex: 0;
-        min-width: auto;
-        display: block;
+        flex: 0 !important;
+        min-width: auto !important;
+        display: block !important;
     }
+    .div-region-state {
+    display: block;}
 }
