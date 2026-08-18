@@ -2990,7 +2990,12 @@ div#transport-price-summary {
     line-height: 1.5; */
 }
 
-
+.div-region-state {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    width: 100%;
+}
 
 
 
