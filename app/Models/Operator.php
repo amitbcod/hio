@@ -13,6 +13,9 @@ class Operator extends Model implements AuthenticatableContract
 
     protected $table = 'operators';
     protected $guarded = [];
+    protected $casts = [
+        'package_policy' => 'array',
+    ];
     public $timestamps = true;
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';

@@ -589,6 +589,8 @@ class TransportController extends Controller
             'routes.*.pricing.vehicle_type' => 'required|string|exists:transport_vehicle_types,name,is_active,1',
             'routes.*.pricing.default_price' => 'nullable|numeric|min:0',
             'routes.*.pricing.return_price' => 'nullable|numeric|min:0',
+            'routes.*.pricing.package_price' => 'nullable|numeric|min:0',
+            'routes.*.pricing.package_return_price' => 'nullable|numeric|min:0',
             'routes.*.pricing.seasonal' => 'nullable|array',
             'routes.*.pricing.seasonal.*.start' => 'nullable|date',
             'routes.*.pricing.seasonal.*.end' => 'nullable|date|after_or_equal:routes.*.pricing.seasonal.*.start',
@@ -603,11 +605,15 @@ class TransportController extends Controller
             foreach ($routes as $index => $routeData) {
                 $pricing = $routeData['pricing'] ?? [];
                 $defaultPrice = $pricing['default_price'] ?? null;
+                $packagePrice = $pricing['package_price'] ?? null;
                 $seasonals = $pricing['seasonal'] ?? [];
                 $returnPrice = $pricing['return_price'] ?? null;
+                $packageReturnPrice = $pricing['package_return_price'] ?? null;
 
                 $hasDefaultPrice = array_key_exists('default_price', $pricing) && $defaultPrice !== null && $defaultPrice !== '';
+                $hasPackagePrice = array_key_exists('package_price', $pricing) && $packagePrice !== null && $packagePrice !== '';
                 $hasReturnPrice = array_key_exists('return_price', $pricing) && $returnPrice !== null && $returnPrice !== '';
+                $hasPackageReturnPrice = array_key_exists('package_return_price', $pricing) && $packageReturnPrice !== null && $packageReturnPrice !== '';
                 $hasSeasonalValues = false;
 
                 foreach ($seasonals as $seasonal) {
@@ -628,8 +634,8 @@ class TransportController extends Controller
 
                 $activeRouteCount++;
 
-                if (!$hasSeasonalValues && !$hasDefaultPrice) {
-                    $validator->errors()->add("routes.{$index}.pricing.default_price", 'Default price is required when no seasonal pricing is provided.');
+                if (!$hasSeasonalValues && !$hasDefaultPrice && !$hasPackagePrice) {
+                    $validator->errors()->add("routes.{$index}.pricing.default_price", 'Single trip price or package single trip price is required when no seasonal pricing is provided.');
                 }
 
                 $ranges = [];
@@ -697,11 +703,15 @@ class TransportController extends Controller
         foreach ($data['routes'] as $index => $routeData) {
             $routePricing = $routeData['pricing'] ?? [];
             $defaultPrice = $routePricing['default_price'] ?? null;
+            $packagePrice = $routePricing['package_price'] ?? null;
             $returnPrice = $routePricing['return_price'] ?? null;
+            $packageReturnPrice = $routePricing['package_return_price'] ?? null;
             $seasonals = $routePricing['seasonal'] ?? [];
 
             $hasDefaultPrice = array_key_exists('default_price', $routePricing) && $defaultPrice !== null && $defaultPrice !== '';
+            $hasPackagePrice = array_key_exists('package_price', $routePricing) && $packagePrice !== null && $packagePrice !== '';
             $hasReturnPrice = array_key_exists('return_price', $routePricing) && $returnPrice !== null && $returnPrice !== '';
+            $hasPackageReturnPrice = array_key_exists('package_return_price', $routePricing) && $packageReturnPrice !== null && $packageReturnPrice !== '';
             $hasSeasonalValues = false;
             foreach ($seasonals as $seasonal) {
                 if (!is_array($seasonal)) {
@@ -715,7 +725,7 @@ class TransportController extends Controller
                 }
             }
 
-            if (!$hasDefaultPrice && !$hasReturnPrice && !$hasSeasonalValues) {
+            if (!$hasDefaultPrice && !$hasPackagePrice && !$hasReturnPrice && !$hasPackageReturnPrice && !$hasSeasonalValues) {
                 continue;
             }
 
@@ -723,6 +733,8 @@ class TransportController extends Controller
                 'vehicle_type' => $routePricing['vehicle_type'] ?? $transport->vehicle_type,
                 'default_price' => $defaultPrice !== '' ? $defaultPrice : null,
                 'return_price' => $returnPrice !== '' ? $returnPrice : null,
+                'package_price' => $packagePrice !== '' ? $packagePrice : null,
+                'package_return_price' => $packageReturnPrice !== '' ? $packageReturnPrice : null,
                 'seasonal' => array_values($seasonals),
             ];
 

@@ -157,8 +157,8 @@
                                                                 data-rate-id="{{ $rate->rate_id }}"
                                                                 data-variant-id="{{ $variant->variant_id }}"
                                                                 data-specificity="{{ $specificity }}"
-                                                                data-valid-from="{{ $rate->valid_from->format('Y-m-d') }}"
-                                                                data-valid-to="{{ $rate->valid_to->format('Y-m-d') }}"
+                                                                data-valid-from="{{ $rate?->valid_from ? $rate->valid_from->format('Y-m-d') : '' }}"
+                                                                data-valid-to="{{ $rate?->valid_to ? $rate->valid_to->format('Y-m-d') : '' }}"
                                                                 data-adult-rate="{{ $rate->adult_rate ?? '' }}"
                                                                 data-teen-rate="{{ $rate->teen_rate ?? '' }}"
                                                                 data-children-rate="{{ $rate->children_rate ?? '' }}"
@@ -173,8 +173,8 @@
                                                                 data-rate-id="{{ $rate->rate_id }}"
                                                                 data-variant-id="{{ $variant->variant_id }}"
                                                                 data-specificity="{{ $specificity }}"
-                                                                data-valid-from="{{ $rate->valid_from->format('Y-m-d') }}"
-                                                                data-valid-to="{{ $rate->valid_to->format('Y-m-d') }}"
+                                                                data-valid-from="{{ $rate?->valid_from ? $rate->valid_from->format('Y-m-d') : '' }}"
+                                                                data-valid-to="{{ $rate?->valid_to ? $rate->valid_to->format('Y-m-d') : '' }}"
                                                                 data-adult-rate="{{ $rate->adult_rate ?? '' }}"
                                                                 data-children-rate="{{ $rate->children_rate ?? '' }}"
                                                                 data-infant-rate="{{ $rate->infant_rate ?? '' }}"
@@ -256,12 +256,13 @@
                                     <option value="One Season">One Season</option>
                                     <option value="High">High</option>
                                     <option value="Low">Low</option>
-                                    <option value="Peak">Peak</option>
+                                        <option value="Peak">Peak</option>
+                                        <option value="Package">Package</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="row">
+                        <div class="row" id="dateRow">
                             <div class="col-md-6 mb-3">
                                 <label style="font-weight:600;font-size:13px;">Valid From *</label>
                                 <input type="date" name="valid_from" class="form-control" required style="font-size:13px;">
@@ -368,6 +369,26 @@
                     document.getElementById('perEquipmentSection').style.display = 'none';
                 }
             });
+
+            // Handle season change: hide date fields for Package
+            const seasonDisplay = document.getElementById('seasonDisplay');
+            function updateDateRowVisibility() {
+                const dateRow = document.getElementById('dateRow');
+                const validFrom = document.querySelector('input[name="valid_from"]');
+                const validTo = document.querySelector('input[name="valid_to"]');
+                if (seasonDisplay.value === 'Package') {
+                    if (dateRow) dateRow.style.display = 'none';
+                    if (validFrom) { validFrom.removeAttribute('required'); validFrom.value = ''; }
+                    if (validTo) { validTo.removeAttribute('required'); validTo.value = ''; }
+                } else {
+                    if (dateRow) dateRow.style.display = 'flex';
+                    if (validFrom) validFrom.setAttribute('required', 'required');
+                    if (validTo) validTo.setAttribute('required', 'required');
+                }
+            }
+            seasonDisplay.addEventListener('change', updateDateRowVisibility);
+            // initialize
+            updateDateRowVisibility();
 
             const rateForm = document.getElementById('rateForm');
             if (rateForm) {

@@ -301,6 +301,16 @@ class AccommodationController extends Controller
             'management_contact_email' => $request->management_contact_email,
             'management_contact_phone' => $request->management_contact_phone,
         ]);
+
+        // Save operator-level package policy if provided (operator-global, applies to all accommodations)
+        if ($request->has('package_policy')) {
+            try {
+                $operator->package_policy = $request->input('package_policy');
+                $operator->save();
+            } catch (\Exception $e) {
+                \Log::error('Failed to save operator package_policy', ['error' => $e->getMessage()]);
+            }
+        }
         
         return redirect()->route('operator.accommodation.show', $accommodation->id)
             ->with('success', 'Property basics updated successfully!');
@@ -1014,6 +1024,16 @@ class AccommodationController extends Controller
             'house_rules_template_id' => $request->house_rules_template_id ?? null,
         ]);
 
+        // Save operator-level package policy if provided (operator-global, applies to all accommodations)
+        if ($request->has('package_policy')) {
+            try {
+                $operator->package_policy = $request->input('package_policy');
+                $operator->save();
+            } catch (\Exception $e) {
+                \Log::error('Failed to save operator package_policy from step 6', ['error' => $e->getMessage()]);
+            }
+        }
+
         // Mark step complete
         $accommodation->completeStep('step6_policies');
 
@@ -1658,13 +1678,26 @@ class AccommodationController extends Controller
             $assignedPlans = $room->rates()->where('is_rate_plan', true)->get();
             foreach ($assignedPlans as $plan) {
                 // Check if default pricing exists for this room+plan combination
+                // Prefer the non-Package default (flat rate) when displaying the flat rate price.
                 $defaultPricing = AccommodationRate::where('accommodation_id', $accommodation->id)
                     ->where('room_id', $room->id)
                     ->where('rate_name', $plan->rate_name)
                     ->where('meal_plan', $plan->meal_plan)
                     ->where('pricing_setting', $plan->pricing_setting)
                     ->where('is_default', true)
+                    ->where('rate_type', '!=', 'Package')
                     ->first();
+
+                // If no non-Package default exists, fall back to any default (including Package)
+                if (!$defaultPricing) {
+                    $defaultPricing = AccommodationRate::where('accommodation_id', $accommodation->id)
+                        ->where('room_id', $room->id)
+                        ->where('rate_name', $plan->rate_name)
+                        ->where('meal_plan', $plan->meal_plan)
+                        ->where('pricing_setting', $plan->pricing_setting)
+                        ->where('is_default', true)
+                        ->first();
+                }
 
                 $roomPlanCombinations[] = [
                     'room' => $room,
@@ -1877,7 +1910,6 @@ class AccommodationController extends Controller
                 'plan_id' => 'required|exists:accommodation_rates,id',
                 'adult_rate' => 'required|numeric|min:0',
                 'extra_adult_rate' => 'required|numeric|min:0',
-                'package_price' => 'nullable|numeric|min:0',
                 'extra_bed_rate' => 'nullable|numeric|min:0',
                 'children_rate' => 'required|numeric|min:0',
                 'infant_rate' => 'required|numeric|min:0',
@@ -1903,12 +1935,14 @@ class AccommodationController extends Controller
             }
 
             // Remove any existing default pricing for this room+plan combination
+            // but do NOT remove Package-type default entries (they are stored separately)
             AccommodationRate::where('accommodation_id', $accommodation->id)
                 ->where('room_id', $room->id)
                 ->where('rate_name', $plan->rate_name)
                 ->where('meal_plan', $plan->meal_plan)
                 ->where('pricing_setting', $plan->pricing_setting)
                 ->where('is_default', true)
+                ->where('rate_type', '!=', 'Package')
                 ->delete();
 
             // Create default pricing entry
@@ -1925,7 +1959,7 @@ class AccommodationController extends Controller
                 'base_rate' => $request->adult_rate,
                 'final_rate' => $request->adult_rate,
                 'extra_adult_rate' => $request->extra_adult_rate,
-                'package_price' => $request->package_price ?? null,
+                // package_price no longer stored on default pricing; package prices stored separately
                 'extra_bed_rate' => $request->extra_bed_rate ?? 0,
                 'children_rate' => $request->children_rate,
                 'infant_rate' => $request->infant_rate,
@@ -1967,6 +2001,107 @@ class AccommodationController extends Controller
         $rooms = AccommodationRoom::where('accommodation_id', $accommodation->id)->get();
 
         return view('operator.accommodation.step9_season_pricing_edit', compact('accommodation', 'operator', 'pricing', 'rooms'));
+    }
+
+    /**
+     * Get package price for a room+plan (AJAX)
+     */
+    public function getPackagePrice(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $roomId = $request->query('room_id');
+        $planId = $request->query('plan_id');
+        if (!$roomId || !$planId) {
+            return response()->json(['success' => true, 'data' => null]);
+        }
+
+        $package = AccommodationRate::where('accommodation_id', $accommodation->id)
+            ->where('room_id', $roomId)
+            ->where('rate_name', function($q) use ($planId) {
+                $plan = AccommodationRate::find($planId);
+                $q->select('rate_name')->from('accommodation_rates')->where('id', $planId)->limit(1);
+            })
+            ->where('rate_type', 'Package')
+            ->where('is_default', true)
+            ->first();
+
+        return response()->json(['success' => true, 'data' => $package]);
+    }
+
+    /**
+     * Save package price for a room+plan
+     */
+    public function setPackagePrice(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $request->validate([
+                'room_id' => 'required|exists:accommodation_rooms,id',
+                'plan_id' => 'required|exists:accommodation_rates,id',
+                'package_room_price' => 'nullable|numeric|min:0',
+                'package_adult_price' => 'nullable|numeric|min:0',
+                'package_child_price' => 'nullable|numeric|min:0',
+                'package_infant_price' => 'nullable|numeric|min:0',
+            ]);
+
+            $room = AccommodationRoom::findOrFail($request->room_id);
+            $plan = AccommodationRate::findOrFail($request->plan_id);
+
+            // Remove existing package entries for this room+plan
+            AccommodationRate::where('accommodation_id', $accommodation->id)
+                ->where('room_id', $room->id)
+                ->where('rate_name', $plan->rate_name)
+                ->where('meal_plan', $plan->meal_plan)
+                ->where('pricing_setting', $plan->pricing_setting)
+                ->where('rate_type', 'Package')
+                ->where('is_default', true)
+                ->delete();
+
+            // Create package pricing entry
+            AccommodationRate::create([
+                'rate_id' => 'PKG' . strtoupper(uniqid()),
+                'accommodation_id' => $accommodation->id,
+                'room_id' => $room->id,
+                'rate_name' => $plan->rate_name,
+                'meal_plan' => $plan->meal_plan,
+                'pricing_setting' => $plan->pricing_setting,
+                'inclusions' => $plan->inclusions,
+                'is_rate_plan' => false,
+                'is_default' => true,
+                'base_rate' => $request->package_room_price ?? null,
+                'final_rate' => $request->package_room_price ?? null,
+                'extra_adult_rate' => $request->package_adult_price ?? null,
+                'extra_bed_rate' => 0,
+                'children_rate' => $request->package_child_price ?? null,
+                'infant_rate' => $request->package_infant_price ?? null,
+                'valid_from' => now()->toDateString(),
+                'valid_to' => now()->addYears(10)->toDateString(),
+                'rate_type' => 'Package',
+                'currency' => 'USD',
+                'is_active' => true,
+            ]);
+
+            $this->syncStep9PricingStatus($accommodation);
+
+            return response()->json(['success' => true, 'message' => 'Package price saved']);
+        } catch (\Exception $e) {
+            \Log::error('setPackagePrice error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     /**

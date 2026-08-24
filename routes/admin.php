@@ -6,9 +6,12 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SharedCartController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('login', [AdminAuthController::class, 'showLogin'])->name('login');
-    Route::post('login', [AdminAuthController::class, 'login']);
+// Public admin auth routes (no middleware)
+Route::get('admin/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
+Route::post('admin/login', [AdminAuthController::class, 'login']);
+
+// Protected admin routes - require admin session
+Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAuthMiddleware::class)->group(function () {
     Route::post('logout', [AdminAuthController::class, 'logout'])->name('logout');
 
     // simple session-based guard (controller checks session before actions)
@@ -235,6 +238,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('places/{place}/edit', [\App\Http\Controllers\Admin\PlaceController::class, 'edit'])->name('places.edit');
     Route::put('places/{place}', [\App\Http\Controllers\Admin\PlaceController::class, 'update'])->name('places.update');
     Route::delete('places/{place}', [\App\Http\Controllers\Admin\PlaceController::class, 'destroy'])->name('places.destroy');
+
+    // Admin package management (multi-step). Step 1: package creation
+    Route::get('packages', [\App\Http\Controllers\Admin\PackageController::class, 'index'])->name('packages.index');
+    Route::get('packages/create', [\App\Http\Controllers\Admin\PackageController::class, 'create'])->name('packages.create');
+    Route::post('packages', [\App\Http\Controllers\Admin\PackageController::class, 'store'])->name('packages.store');
+    Route::get('packages/{package}/edit', [\App\Http\Controllers\Admin\PackageController::class, 'edit'])->name('packages.edit');
+    Route::post('packages/{package}', [\App\Http\Controllers\Admin\PackageController::class, 'update'])->name('packages.update');
+    Route::get('packages/{package}/step2', [\App\Http\Controllers\Admin\PackageController::class, 'step2'])->name('packages.step2');
+    Route::post('packages/{package}/step2', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep2'])->name('packages.step2.store');
+    Route::get('packages/{package}/step3', [\App\Http\Controllers\Admin\PackageController::class, 'step3'])->name('packages.step3');
+    Route::post('packages/{package}/step3', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep3'])->name('packages.step3.store');
+    Route::get('packages/{package}/step4', [\App\Http\Controllers\Admin\PackageController::class, 'step4'])->name('packages.step4');
+    Route::post('packages/{package}/step4', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep4'])->name('packages.step4.store');
+    Route::get('packages/{package}/step5', [\App\Http\Controllers\Admin\PackageController::class, 'step5'])->name('packages.step5');
+    Route::post('packages/{package}/step5', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep5'])->name('packages.step5.store');
+    Route::get('packages/{package}/step6', [\App\Http\Controllers\Admin\PackageController::class, 'step6'])->name('packages.step6');
+    Route::post('packages/{package}/step6', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep6'])->name('packages.step6.store');
 
     Route::get('vehicle-types', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'index'])->name('vehicle-types.index');
     Route::get('vehicle-types/create', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'create'])->name('vehicle-types.create');

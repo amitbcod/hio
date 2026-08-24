@@ -1045,8 +1045,8 @@ class HomeController extends Controller
         if ($routes->isEmpty()) {
             $routes = collect($transport->routes_pricing ?? [])
                 ->map(function ($route) {
-                    $defaultPrice = isset($route['price']) ? (float) $route['price'] : null;
-                    $returnPrice = isset($route['return_price']) ? (float) $route['return_price'] : null;
+                    $defaultPrice = isset($route['price']) ? (float) $route['price'] : (isset($route['package_price']) ? (float) $route['package_price'] : null);
+                    $returnPrice = isset($route['return_price']) ? (float) $route['return_price'] : (isset($route['package_return_price']) ? (float) $route['package_return_price'] : null);
                     $seasonal = collect($route['seasonal'] ?? [])
                         ->map(function ($season) {
                             return [

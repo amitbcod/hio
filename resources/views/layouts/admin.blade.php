@@ -32,7 +32,11 @@
         <div class="container-fluid main-setion">
             <div class="row">
                 <div class="col-md-2 list-section">
-                    @include('admin._sidebar')
+                    @if(isset($sidebar) && view()->exists($sidebar))
+                        @include($sidebar)
+                    @else
+                        @include('admin._sidebar')
+                    @endif
                 </div>
                 <div class="col-md-10 login-full-section">
                     @yield('content')

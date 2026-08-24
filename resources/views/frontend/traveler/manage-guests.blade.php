@@ -1,6 +1,6 @@
 @extends('frontend.layout')
 
-@section('title', __('traveler.manage_guests.page_title', ['trip' => $trip->trip_name]))
+@section('title', 'Manage Guests | ' . $trip->trip_name)
 @section('meta_description', 'Manage guest details for your booking.')
 
 @push('styles')
@@ -187,40 +187,26 @@
     <div class="wrap">
         <div class="page-header">
             <div class="breadcrumbs">
-                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.show', ['otp' => $otp]) : route('traveler.trips') }}">{{ __('traveler.manage_guests.breadcrumb_trips') }}</a>
+                <a href="{{ route('traveler.trips') }}">Trips</a>
                 <span>/</span>
-                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip]) : route('traveler.trip.detail', $trip) }}">{{ $trip->trip_name }}</a>
+                <a href="{{ route('traveler.trip.detail', $trip) }}">{{ $trip->trip_name }}</a>
                 <span>/</span>
-                <span>{{ __('traveler.manage_guests.heading_short') }}</span>
+                <span>Manage Guests</span>
             </div>
-            <h1>{{ __('traveler.manage_guests.heading') }} {{ $booking->booking_reference }}</h1>
-            <p class="page-subtitle">{{ __('traveler.manage_guests.subtitle') }}</p>
+            <h1>Manage Guests for {{ $booking->booking_reference }}</h1>
+            <p class="page-subtitle">Update guest details for this booking.</p>
         </div>
 
         @php $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0); $addedCount = $booking->guests->count(); $canDownload = $bookedCount == $addedCount; @endphp
         <div class="manage-guests-card" style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-bottom: 30px;">
-            <form id="manageGuestsForm" method="POST" action="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.update-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.update-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}">
+            <form id="manageGuestsForm" method="POST" action="{{ route('traveler.trip.booking.update-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}">
                 @csrf
-                <div id="download-voucher-section"></div>
-                <p style="margin-bottom: 20px; font-weight: 600;margin-right:100px;">{{ __('traveler.manage_guests.booked') }}: {{ $bookedCount }} &nbsp;|&nbsp; {{ __('traveler.manage_guests.added') }}: <span id="added-count">{{ $booking->guests->count() }}</span></p>
-@if ($canDownload && ($booking instanceof \App\Models\AccommodationBooking))
-    <div style="margin-bottom: 10px;">
-        <a href="{{ isset($guestMode) && $guestMode 
-            ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) 
-            : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) 
-        }}"
-        target="_blank"
-        style="color: #007bff; text-decoration: none; display: inline-flex; align-items: center;">
-            
-            <i class="fa-solid fa-download" style="margin-right:5px;"></i> 
-            {{ __('traveler.manage_guests.download_voucher') }}
-        </a>
-    </div>
-@endif
+                <p style="margin-bottom: 20px; font-weight: 600;">Booked: {{ $bookedCount }} &nbsp;|&nbsp; Added: <span id="added-count">{{ $booking->guests->count() }}</span></p>
+
                 <div class="saved-guests-panel" style="border: 1px solid #dcdcdc; border-radius: 10px; padding: 18px; margin-bottom: 20px; background: #fafafa;">
-                    <h3 style="margin-top: 0;">{{ __('traveler.manage_guests.use_saved_details') }}</h3>
+                    <h3 style="margin-top: 0;">Use Saved Guest Details</h3>
                     @if($savedGuests->isEmpty())
-                        <p style="margin: 0 0 10px; color: #555;">{{ __('traveler.manage_guests.no_saved_profiles') }}</p>
+                        <p style="margin: 0 0 10px; color: #555;">No saved guest profiles found. Add a new guest below.</p>
                     @else
                         <div class="saved-guest-list" style="display: grid; gap: 10px;">
                             @foreach($savedGuests as $guest)
@@ -229,13 +215,21 @@
                                         <input type="checkbox" class="saved-guest-checkbox-input" data-relation="{{ $guest->relation ?? 'other' }}" data-gender="{{ $guest->gender ?? '' }}" data-first-name="{{ $guest->first_name }}" data-middle-name="{{ $guest->middle_name ?? '' }}" data-last-name="{{ $guest->last_name }}" data-dob="{{ $guest->dob }}" data-nationality="{{ $guest->nationality ?? '' }}" data-passport="{{ $guest->passport_number ?? '' }}" data-notes="{{ $guest->notes ?? '' }}">
                                         <div>
                                             <strong>{{ trim($guest->first_name . ' ' . ($guest->last_name ?? '')) }}</strong><br>
-                                            <small>{{ $guest->nationality ?? __('traveler.manage_guests.unknown') }} · {{ $guest->dob ? \Carbon\Carbon::parse($guest->dob)->format('d/m/Y') : __('traveler.manage_guests.no_dob') }}</small>
+                                            <small>{{ $guest->nationality ?? 'Unknown' }} · {{ $guest->dob ? \Carbon\Carbon::parse($guest->dob)->format('d/m/Y') : 'No DOB' }}</small>
                                         </div>
                                     </label>
+                                    @if($booking instanceof \App\Models\ActivityBooking && $activityTimeSlots->isNotEmpty())
+                                        <select class="saved-guest-time-slot form-input" disabled style="max-width: 220px;">
+                                            <option value="">Select time slot</option>
+                                            @foreach($activityTimeSlots as $slot)
+                                                <option value="{{ $slot->timeslot_id }}">{{ $slot->start_time }} - {{ $slot->end_time }}</option>
+                                            @endforeach
+                                        </select>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
-                        <button type="button" id="add-saved-guests-btn" class="btn btn-primary" style="margin-top: 12px;">{{ __('traveler.manage_guests.add_selected_saved_guests') }}</button>
+                        <button type="button" id="add-saved-guests-btn" class="btn btn-primary" style="margin-top: 12px;">Add selected saved guests</button>
                     @endif
                 </div>
 
@@ -245,26 +239,34 @@
                         <div class="guest-item-info">
                             <span class="guest-item-name" style="font-weight: 500; color: #333; display: block;">{{ trim($guest->first_name . ' ' . ($guest->last_name ?? '')) }}</span>
                             <span class="guest-item-age" style="font-size: 12px; color: #666; display: block;">{{ $guest->nationality ?? 'Unknown' }} · {{ $guest->dob ? \Carbon\Carbon::parse($guest->dob)->format('d/m/Y') : 'No DOB' }}</span>
-                            @if($booking instanceof \App\Models\ActivityBooking && isset($booking->activity_time_slot_id) && !empty($booking->activity_time_slot_id))
+                            @if($booking instanceof \App\Models\ActivityBooking && isset($booking->participant_time_slots[$guest->guest_number ?? ($index + 1)]))
                                 @php
-                                    $timeSlot = $activityTimeSlots->where('timeslot_id', $booking->activity_time_slot_id)->first();
+                                    $timeSlotId = $booking->participant_time_slots[$guest->guest_number ?? ($index + 1)];
+                                    $timeSlot = $activityTimeSlots->where('timeslot_id', $timeSlotId)->first();
                                 @endphp
                                 @if($timeSlot)
-                                    <span class="guest-item-timeslot" style="font-size: 12px; color: #007bff; display: block;">{{ __('traveler.manage_guests.time_slot') }}: {{ $timeSlot->start_time }} - {{ $timeSlot->end_time }}</span>
+                                    <span class="guest-item-timeslot" style="font-size: 12px; color: #007bff; display: block;">Time Slot: {{ $timeSlot->start_time }} - {{ $timeSlot->end_time }}</span>
                                 @endif
                             @endif
                         </div>
                         <div class="guest-item-actions" style="display: flex; gap: 10px; align-items: center;">
-                            <!-- <button type="button" class="btn-edit-guest" data-index="{{ $index }}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #0066cc; padding: 0;">
+                            <button type="button" class="btn-edit-guest" data-index="{{ $index }}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #0066cc; padding: 0;">
                                 <i class="fa-solid fa-pencil"></i> Edit
-                            </button> -->
+                            </button>
                             @if ($booking instanceof \App\Models\ActivityBooking && isset($guest->id) && $canDownload)
-                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) }}" target="_blank" style="font-size: 14px; color: #007bff; text-decoration: none; display: inline-flex; align-items: center;">
-                                    <i class="fa-solid fa-download"></i> {{ __('traveler.manage_guests.download_voucher') }}
-                                </a>
+                                @php
+                                    $hasTimeSlot = isset($booking->participant_time_slots[$guest->guest_number ?? ($index + 1)]) && !empty($booking->participant_time_slots[$guest->guest_number ?? ($index + 1)]);
+                                @endphp
+                                @if($hasTimeSlot)
+                                    <a href="{{ route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id]) }}" target="_blank" style="font-size: 14px; color: #007bff; text-decoration: none; display: inline-flex; align-items: center;">
+                                        <i class="fa-solid fa-download"></i> Download Voucher
+                                    </a>
+                                @else
+                                    <span style="font-size: 12px; color: #dc3545;">Time slot required for voucher</span>
+                                @endif
                             @endif
                             <button type="button" class="btn-remove-guest" data-index="{{ $index }}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #dc3545; padding: 0;">
-                                <i class="fa-solid fa-trash"></i> {{ __('traveler.manage_guests.delete') }}
+                                <i class="fa-solid fa-trash"></i> Delete
                             </button>
                         </div>
                     </div>
@@ -275,15 +277,16 @@
                     <!-- Guest forms will be generated here by JavaScript when needed -->
                 </div>
 
-                <button type="button" id="add-guest-btn" class="btn btn-secondary" style="margin-right: 10px;">+ {{ __('traveler.manage_guests.add_new_guest') }}</button>
-                <button type="submit" class="btn btn-primary">{{ __('traveler.manage_guests.save_changes') }}</button>
+                <button type="button" id="add-guest-btn" class="btn btn-secondary" style="margin-right: 10px;">+ Add New Guest</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
             </form>
 
-            
-           
+            @if ($canDownload && ($booking instanceof \App\Models\ActivityBooking || $booking instanceof \App\Models\AccommodationBooking))
+                <!-- <a href="{{ route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}" target="_blank" class="btn btn-primary" style="margin-top: 16px;">Download Voucher</a> -->
+            @endif
         </div>
 
-        <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.detail', ['otp' => $otp, 'trip' => $trip]) : route('traveler.trip.detail', $trip) }}" class="btn btn-secondary">&larr; {{ __('traveler.manage_guests.back_to_trip') }}</a>
+        <a href="{{ route('traveler.trip.detail', $trip) }}" class="btn btn-secondary">&larr; Back to Trip</a>
     </div>
 </section>
 
@@ -291,32 +294,32 @@
 <div id="addGuestModal" class="guest-modal-wrapper" style="display:none; position: fixed; inset: 0; z-index: 99999; align-items: center; justify-content: center; transform: none;">
     <div class="guest-modal-box">
         <div class="guest-modal-header">
-            <h2>{{ __('traveler.manage_guests.modal.add_guest') }}</h2>
+            <h2>Add Guest</h2>
             <button type="button" class="guest-modal-close" id="closeModalBtn">&times;</button>
         </div>
         <div class="guest-modal-body">
             <form id="addGuestForm">
                 <div class="form-grid" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px;">
                     <div class="form-group">
-                        <label for="modal_relation">{{ __('traveler.manage_guests.modal.relationship') }} <span class="req">*</span></label>
+                        <label for="modal_relation">Relationship <span class="req">*</span></label>
                         <select id="modal_relation" name="relation" required class="form-input">
-                            <option value="">{{ __('traveler.manage_guests.modal.select') }}</option>
-                            <option value="self">{{ __('traveler.manage_guests.modal.relation.self') }}</option>
-                            <option value="spouse">{{ __('traveler.manage_guests.modal.relation.spouse') }}</option>
-                            <option value="child">{{ __('traveler.manage_guests.modal.relation.child') }}</option>
-                            <option value="friend">{{ __('traveler.manage_guests.modal.relation.friend') }}</option>
-                            <option value="colleague">{{ __('traveler.manage_guests.modal.relation.colleague') }}</option>
-                            <option value="other">{{ __('traveler.manage_guests.modal.relation.other') }}</option>
+                            <option value="">Select</option>
+                            <option value="self">Self</option>
+                            <option value="spouse">Spouse</option>
+                            <option value="child">Child</option>
+                            <option value="friend">Friend</option>
+                            <option value="colleague">Colleague</option>
+                            <option value="other">Other</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="modal_gender">{{ __('traveler.manage_guests.modal.gender') }}</label>
+                        <label for="modal_gender">Gender</label>
                         <select id="modal_gender" name="gender" class="form-input">
-                            <option value="">{{ __('traveler.manage_guests.modal.select') }}</option>
-                            <option value="male">{{ __('traveler.manage_guests.modal.gender.male') }}</option>
-                            <option value="female">{{ __('traveler.manage_guests.modal.gender.female') }}</option>
-                            <option value="non_binary">{{ __('traveler.manage_guests.modal.gender.non_binary') }}</option>
-                            <option value="other">{{ __('traveler.manage_guests.modal.gender.other') }}</option>
+                            <option value="">Select</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="non_binary">Non-binary</option>
+                            <option value="other">Other</option>
                         </select>
                     </div>
                 </div>
@@ -357,6 +360,19 @@
                     <label for="modal_notes">Notes</label>
                     <textarea id="modal_notes" name="notes" class="form-input" rows="3"></textarea>
                 </div>
+                @if($booking instanceof \App\Models\ActivityBooking && $activityTimeSlots->isNotEmpty())
+
+                
+                <div class="form-group" style="margin-top: 15px;">
+                    <label for="modal_time_slot">Activity Time Slot <span class="req">*</span></label>
+                    <select id="modal_time_slot" name="time_slot" class="form-input">
+                        <option value="">Select time slot</option>
+                        @foreach($activityTimeSlots as $slot)
+                            <option value="{{ $slot->timeslot_id }}">{{ $slot->start_time }} - {{ $slot->end_time }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
                 <div class="form-group" style="margin-top: 15px;">
                     <label class="checkbox-label">
                         <input type="checkbox" id="modal_save_to_list" name="save_to_list">
@@ -374,7 +390,22 @@
 
 <script>
 
-    // Removed initial timeslot event listener - timeslots come from activity page
+    document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('saved-guest-checkbox-input')) {
+
+        const checkbox = e.target;
+        const row = checkbox.closest('.saved-guest-checkbox');
+        const select = row?.querySelector('.saved-guest-time-slot');
+
+        if (select) {
+            select.disabled = !checkbox.checked;
+
+            if (!checkbox.checked) {
+                select.value = ''; // reset only when unchecked
+            }
+        }
+    }
+});
 document.addEventListener('DOMContentLoaded', function() {
     const maxGuests = {{ $bookedCount }};
     const addGuestBtn = document.getElementById('add-guest-btn');
@@ -415,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     nationality: '',
                     passport_number: '',
                     notes: '',
-                    // time_slot: '', // Removed - timeslots come from activity page
+                    time_slot: '',
                 };
             }
         });
@@ -438,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nationality: guest.nationality || '',
             passport_number: guest.passport_number || '',
             notes: guest.notes || '',
-            // Removed time_slot assignment - timeslots are managed at booking level
+            time_slot: isActivityBooking ? (participantTimeSlots[guest.guest_number] || '') : '',
         };
     });
 
@@ -487,10 +518,14 @@ document.addEventListener('DOMContentLoaded', function() {
         return selectedValue;
     }*/
 
-    function getSavedGuestTimeSlot(input) {
-        // Timeslots are no longer selected here - they come from activity page
-        return '';
-    }
+        function getSavedGuestTimeSlot(input) {
+            const row = input.closest('.saved-guest-checkbox');
+            const select = row?.querySelector('.saved-guest-time-slot');
+
+            if (!select || select.disabled) return '';
+
+            return (select.value || '').trim();
+        }
 
     // Function to update checkbox states for saved guests
     function updateSavedGuestsCheckboxes() {
@@ -509,7 +544,16 @@ document.addEventListener('DOMContentLoaded', function() {
             checkbox.disabled = !isAdded && isFull;
 
             const label = checkbox.closest('.saved-guest-checkbox');
-            // Removed timeslot select handling
+            const timeSlotSelect = label?.querySelector('.saved-guest-time-slot');
+            if (timeSlotSelect) {
+                timeSlotSelect.disabled = !checkbox.checked;
+                if (!checkbox.checked) {
+                    timeSlotSelect.value = '';
+                    delete checkbox.dataset.timeSlot;
+                } else {
+                    getSavedGuestTimeSlot(checkbox);
+                }
+            }
 
             if (label) {
                 label.style.opacity = !isAdded && isFull ? '0.6' : '';
@@ -561,8 +605,25 @@ document.addEventListener('DOMContentLoaded', function() {
                  // console.log('input:', input);
                 //const selectedValue = getSavedGuestTimeSlot(input);
 
-                // Timeslots are now selected from activity page, no validation needed here
-                // All guests will use the same timeslot from the booking
+                const row = input.closest('.saved-guest-checkbox');
+                const select = row?.querySelector('.saved-guest-time-slot');
+
+                if (select && select.disabled) {
+                    select.disabled = false; // 🔥 force enable before reading
+                }
+
+                const selectedValue = getSavedGuestTimeSlot(input);
+
+                if (isActivityBooking && activityTimeSlots.length > 0) {
+                    const row = input.closest('.saved-guest-checkbox');
+                    const select = row?.querySelector('.saved-guest-time-slot');
+
+                    if (!select || !select.value || select.value === '') {
+                        const guestName = `${input.dataset.firstName || ''} ${input.dataset.lastName || ''}`.trim();
+                        alert(`Please select a time slot for ${guestName || 'the saved guest'} before adding.`);
+                        return;
+                    }
+                }
             }
 
             newGuests.forEach(input => {
@@ -578,7 +639,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     nationality: input.dataset.nationality || '',
                     passport_number: input.dataset.passport || '',
                     notes: input.dataset.notes || '',
-                    // time_slot: selectedValue || '', // Removed - timeslots come from activity page
+                    time_slot: selectedValue || '',
                 };
                 appendGuestItem(guestData[index], index);
             });
@@ -588,20 +649,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Removed syncSavedGuestTimeSlots function - timeslots come from activity page
+    function syncSavedGuestTimeSlots() {
+        document.querySelectorAll('.saved-guest-checkbox-input').forEach(input => {
+            getSavedGuestTimeSlot(input);
+        });
+    }
 
     // Initialize checkboxes on page load
     updateSavedGuestsCheckboxes();
-    // Removed syncSavedGuestTimeSlots() - timeslots come from activity page
+    syncSavedGuestTimeSlots();
 
     // Enable or disable timeslot select when saved guest checkbox changes
     document.addEventListener('change', function(e) {
         if (e.target.matches('.saved-guest-checkbox-input')) {
             const checkbox = e.target;
-            // Removed timeslot select handling - timeslots come from activity page
+            const timeSlotSelect = checkbox.closest('.saved-guest-checkbox')?.querySelector('.saved-guest-time-slot');
+            if (timeSlotSelect) {
+                timeSlotSelect.disabled = !checkbox.checked;
+                if (!checkbox.checked) {
+                    timeSlotSelect.value = '';
+                    delete checkbox.dataset.timeSlot;
+                } else {
+                    //checkbox.dataset.timeSlot = getSavedGuestTimeSlot(checkbox);
+                }
+            }
         }
 
-        // Removed timeslot select change handling
+        if (e.target.matches('.saved-guest-time-slot')) {
+            const timeSlotSelect = e.target;
+            const checkbox = timeSlotSelect.closest('.saved-guest-checkbox')?.querySelector('.saved-guest-checkbox-input');
+            if (checkbox) {
+               // checkbox.dataset.timeSlot = getSavedGuestTimeSlot(checkbox);
+            }
+        }
     });
 
     // Add guest button
@@ -659,7 +739,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nationality: document.getElementById('modal_nationality').value,
             passport_number: document.getElementById('modal_passport_number').value,
             notes: document.getElementById('modal_notes').value,
-            // time_slot: isActivityBooking ? document.getElementById('modal_time_slot').value : '', // Removed - timeslots come from activity page
+            time_slot: isActivityBooking ? document.getElementById('modal_time_slot').value : '',
         };
 
         const saveToList = saveToListCheckbox?.checked;
@@ -712,32 +792,24 @@ document.addEventListener('DOMContentLoaded', function() {
         const dobFormatted = guest.dob ? new Date(guest.dob).toLocaleDateString('en-GB') : 'No DOB';
         
         let timeSlotHtml = '';
-        // Removed timeSlotHtml generation - timeslots are displayed from booking level
+        if (isActivityBooking && guest.time_slot) {
+            //const timeSlot = activityTimeSlots.find(slot => slot.timeslot_id == guest.time_slot);
+           const timeSlot = activityTimeSlots.find(slot => slot.timeslot_id == guest.time_slot);
+            if (timeSlot) {
+                timeSlotHtml = `<span class="guest-item-timeslot" style="font-size: 12px; color: #007bff; display: block;">Time Slot: ${timeSlot.start_time} - ${timeSlot.end_time}</span>`;
+            }
+        }
         
-        // item.innerHTML = `
-        //     <div class="guest-item-info">
-        //         <span class="guest-item-name" style="font-weight: 500; color: #333; display: block;">${guestName}</span>
-        //         <span class="guest-item-age" style="font-size: 12px; color: #666; display: block;">${guest.nationality || 'Unknown'} · ${dobFormatted}</span>
-        //         ${timeSlotHtml}
-        //     </div>
-        //     <div class="guest-item-actions" style="display: flex; gap: 10px;">
-        //         <button type="button" class="btn-edit-guest" data-index="${index}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #0066cc; padding: 0;">
-        //             <i class="fa-solid fa-pencil"></i> Edit
-        //         </button>
-        //         <button type="button" class="btn-remove-guest" data-index="${index}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #dc3545; padding: 0;">
-        //             <i class="fa-solid fa-trash"></i> Delete
-        //         </button>
-        //     </div>
-        // `;
-
-         item.innerHTML = `
+        item.innerHTML = `
             <div class="guest-item-info">
                 <span class="guest-item-name" style="font-weight: 500; color: #333; display: block;">${guestName}</span>
                 <span class="guest-item-age" style="font-size: 12px; color: #666; display: block;">${guest.nationality || 'Unknown'} · ${dobFormatted}</span>
                 ${timeSlotHtml}
             </div>
             <div class="guest-item-actions" style="display: flex; gap: 10px;">
-                
+                <button type="button" class="btn-edit-guest" data-index="${index}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #0066cc; padding: 0;">
+                    <i class="fa-solid fa-pencil"></i> Edit
+                </button>
                 <button type="button" class="btn-remove-guest" data-index="${index}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #dc3545; padding: 0;">
                     <i class="fa-solid fa-trash"></i> Delete
                 </button>
@@ -779,7 +851,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('modal_nationality').value = guest.nationality || '';
         document.getElementById('modal_passport_number').value = guest.passport_number || '';
         document.getElementById('modal_notes').value = guest.notes || '';
-        // Removed modal_time_slot assignment - timeslots come from activity page
+        if (isActivityBooking) {
+            document.getElementById('modal_time_slot').value = guest.time_slot || '';
+        }
         openModal();
     }
 

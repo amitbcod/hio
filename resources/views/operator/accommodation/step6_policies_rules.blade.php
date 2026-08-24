@@ -11,6 +11,14 @@
                 <div style="background:#fff;border-radius:16px;padding:32px;box-shadow:0 2px 16px rgba(0,0,0,0.07);">
                     <h2 style="font-weight:700;margin-bottom:12px;">Step 6: Policies & Rules</h2>
 
+                    <div style="margin-bottom:18px;">
+                        <ul class="nav" id="policyTabs" style="display:flex;gap:8px;list-style:none;padding-left:0;margin-bottom:0;">
+                            <li><a href="#" class="btn btn-sm btn-light active" data-tab="policies" style="padding:6px 10px;">Policies & Rules</a></li>
+                            <li><a href="#" class="btn btn-sm btn-light" data-tab="package_policy" style="padding:6px 10px;">Package policy</a></li>
+                        </ul>
+                        <small style="display:block;margin-top:6px;color:#666;">Note: Package policy is saved at operator level and applies to all your accommodations.</small>
+                    </div>
+
                     @if($errors->any())
                         <div class="alert alert-danger"><ul style="margin-bottom:0;">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
                     @endif
@@ -24,13 +32,14 @@
                     <form method="POST" action="{{ route('operator.accommodation.saveStep6', $accommodation->id) }}">
                         @csrf
 
-                        <div style="margin-bottom:12px;">
-                            <label style="font-weight:600;">Property ID</label>
-                            <div><strong>{{ $accommodation->accommodation_id }}</strong></div>
-                        </div>
+                        <div id="policies_tab">
+                            <div style="margin-bottom:12px;">
+                                <label style="font-weight:600;">Property ID</label>
+                                <div><strong>{{ $accommodation->accommodation_id }}</strong></div>
+                            </div>
 
-                        {{-- Section 1: Check-in/Check-out --}}
-                        <div style="margin-bottom:24px;">
+                            {{-- Section 1: Check-in/Check-out --}}
+                            <div style="margin-bottom:24px;">
                             <h5 style="font-weight:600;margin-bottom:12px;">Check-in / Check-out</h5>
 
                             <div class="row mb-3">
@@ -406,7 +415,236 @@
                             </div>
                         </div>
 
+                        </div>
+
                         {{-- Buttons --}}
+                        @php
+                            $packagePolicy = is_array($operator->package_policy ?? null) ? $operator->package_policy : [];
+                            $staticPolicyValues = [
+                                'payment' => ['type' => '100% Payment'],
+                                'refund' => ['type' => 'Refund Policy'],
+                                'security_deposit' => ['type' => 'Required'],
+                                'house_rules' => ['type' => 'Applicable'],
+                            ];
+                        @endphp
+
+                        <div id="package_policy_tab" style="display:none;border-top:1px solid #eee;padding-top:20px;margin-bottom:24px;">
+                            <div style="background:#f7faff;border:1px solid #dfeaf9;border-radius:10px;padding:12px 16px;margin-bottom:12px;">
+                                <div style="font-weight:700;color:#1d5ec7;">Package Policy Summary</div>
+                            </div>
+
+                            <div style="border:1px solid #e4e7eb;border-radius:10px;overflow:hidden;background:#fff;">
+                                <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                                    <thead style="background:#f7f7f7;">
+                                        <tr>
+                                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:10%;font-size:13px;color:#333;">Policy</th>
+                                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:15%;font-size:13px;color:#333;">Details (Type)</th>
+                                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">Before Deadline</th>
+                                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">After Deadline</th>
+                                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:24%;font-size:13px;color:#333;">Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            $policyRows = [
+                                                'cancellation' => [
+                                                    'label' => 'Cancellation',
+                                                    'types' => ['Flexible', 'Moderate', 'Strict', 'Package (Default)', 'Group', 'Non-Refundable', 'No Show'],
+                                                    'beforeOptions' => ['100% Refund', '50% Refund', '20% Refund', '0% Refund'],
+                                                    'afterOptions' => ['100% Refund', '50% Refund', '20% Refund', '0% Refund'],
+                                                    'notesFallback' => '',
+                                                ],
+                                                'amendments' => [
+                                                    'label' => 'Amendments',
+                                                    'types' => ['Moderate', 'Flexible', 'Strict'],
+                                                    'beforeOptions' => ['Available', 'Not Available'],
+                                                    'afterOptions' => ['Available', 'Not Available'],
+                                                    'notesFallback' => '',
+                                                ],
+                                                'postponement' => [
+                                                    'label' => 'Postponement',
+                                                    'types' => ['Moderate', 'Flexible', 'Strict'],
+                                                    'beforeOptions' => ['Available', 'Not Available'],
+                                                    'afterOptions' => ['Available', 'Not Available'],
+                                                    'notesFallback' => '',
+                                                ],
+                                                'payment' => [
+                                                    'label' => 'Payment',
+                                                    'types' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],
+                                                    'beforeOptions' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],
+                                                    'afterOptions' => [],
+                                                    'staticAfterDash' => true,
+                                                    'notesFallback' => '',
+                                                ],
+                                                'refund' => [
+                                                    'label' => 'Refund',
+                                                    'types' => ['Refund Policy'],
+                                                    'beforeOptions' => [],
+                                                    'afterOptions' => [],
+                                                    'staticBeforeDash' => true,
+                                                    'staticAfterDash' => true,
+                                                    'notesFallback' => '',
+                                                ],
+                                                'security_deposit' => [
+                                                    'label' => 'Security Deposit',
+                                                    'types' => ['Required'],
+                                                    'beforeOptions' => [],
+                                                    'afterOptions' => [],
+                                                    'beforeType' => 'text',
+                                                    'staticAfterDash' => true,
+                                                    'notesFallback' => '',
+                                                ],
+                                                'house_rules' => [
+                                                    'label' => 'House & Gen. Rules',
+                                                    'types' => ['Applicable'],
+                                                    'beforeOptions' => [],
+                                                    'afterOptions' => [],
+                                                    'beforeType' => 'text',
+                                                    'staticAfterDash' => true,
+                                                    'notesFallback' => '',
+                                                ],
+                                            ];
+                                        @endphp
+
+                                        @foreach($policyRows as $key => $meta)
+                                            <tr>
+                                                <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;font-weight:600;color:#2b2d31;">{{ $meta['label'] }}</td>
+                                                <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
+                                                    @if(in_array($key, ['payment', 'refund', 'security_deposit', 'house_rules'], true))
+                                                        <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;">
+                                                            {{ old('package_policy.' . $key . '.type', $packagePolicy[$key]['type'] ?? $meta['types'][0]) }}
+                                                        </div>
+                                                    @else
+                                                        <select name="package_policy[{{ $key }}][type]" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;">
+                                                            <option value="">Select</option>
+                                                            @foreach($meta['types'] as $type)
+                                                                <option value="{{ $type }}" {{ old('package_policy.' . $key . '.type', $packagePolicy[$key]['type'] ?? '') == $type ? 'selected' : '' }}>{{ $type }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    @endif
+                                                </td>
+                                                <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
+                                                    @php
+                                                        $beforeDeadlineLabel = null;
+                                                        if ($key === 'cancellation') {
+                                                            $beforeDeadlineLabel = 'Before 30 days:';
+                                                        } elseif (in_array($key, ['amendments', 'postponement'], true)) {
+                                                            $beforeDeadlineLabel = 'Before 48 hours:';
+                                                        }
+                                                    @endphp
+                                                    @if($beforeDeadlineLabel)
+                                                        <div style="display:flex;align-items:center;gap:8px;">
+                                                            <span style="white-space:nowrap;color:#333;font-weight:500;">{{ $beforeDeadlineLabel }}</span>
+                                                            @if(($meta['staticBeforeDash'] ?? false))
+                                                                <div style="min-height:36px;display:flex;align-items:center;color:#666;">-</div>
+                                                            @elseif(($meta['beforeType'] ?? null) === 'text')
+                                                                @if($key === 'security_deposit')
+                                                                    <div style="display:flex;align-items:center;min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;overflow:hidden;">
+                                                                        <span style="display:inline-flex;align-items:center;justify-content:center;height:100%;padding:0 10px;background:#f0f5ff;color:#2b2d31;font-weight:600;border-right:1px solid #dfeaf9;">USD</span>
+                                                                        <input type="text" name="package_policy[{{ $key }}][before_deadline]" value="{{ old('package_policy.' . $key . '.before_deadline', $packagePolicy[$key]['before_deadline'] ?? '') }}" class="form-control" style="border:none;box-shadow:none;min-height:36px;">
+                                                                    </div>
+                                                                @else
+                                                                    <input type="text" name="package_policy[{{ $key }}][before_deadline]" value="{{ old('package_policy.' . $key . '.before_deadline', $packagePolicy[$key]['before_deadline'] ?? '') }}" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;">
+                                                                @endif
+                                                            @else
+                                                                <select name="package_policy[{{ $key }}][before_deadline]" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;">
+                                                                    @php
+                                                                        $beforeDeadlineOptions = $meta['beforeOptions'] ?? [];
+                                                                        $beforeDeadlineValue = old('package_policy.' . $key . '.before_deadline', $packagePolicy[$key]['before_deadline'] ?? ($beforeDeadlineOptions[0] ?? ''));
+                                                                    @endphp
+                                                                    @foreach($beforeDeadlineOptions as $option)
+                                                                        <option value="{{ $option }}" {{ $beforeDeadlineValue == $option ? 'selected' : '' }}>{{ $option }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            @endif
+                                                        </div>
+                                                    @else
+                                                        @if(($meta['staticBeforeDash'] ?? false))
+                                                            <div style="min-height:36px;display:flex;align-items:center;color:#666;">-</div>
+                                                        @elseif(($meta['beforeType'] ?? null) === 'text')
+                                                            @if($key === 'security_deposit')
+                                                                <div style="display:flex;align-items:center;min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;overflow:hidden;">
+                                                                    <span style="display:inline-flex;align-items:center;justify-content:center;height:100%;padding:0 10px;background:#f0f5ff;color:#2b2d31;font-weight:600;border-right:1px solid #dfeaf9;">USD</span>
+                                                                    <input type="text" name="package_policy[{{ $key }}][before_deadline]" value="{{ old('package_policy.' . $key . '.before_deadline', $packagePolicy[$key]['before_deadline'] ?? '') }}" class="form-control" style="border:none;box-shadow:none;min-height:36px;">
+                                                                </div>
+                                                            @else
+                                                                <input type="text" name="package_policy[{{ $key }}][before_deadline]" value="{{ old('package_policy.' . $key . '.before_deadline', $packagePolicy[$key]['before_deadline'] ?? '') }}" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;">
+                                                            @endif
+                                                        @else
+                                                            <select name="package_policy[{{ $key }}][before_deadline]" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;">
+                                                                @php
+                                                                    $beforeDeadlineOptions = $meta['beforeOptions'] ?? [];
+                                                                    $beforeDeadlineValue = old('package_policy.' . $key . '.before_deadline', $packagePolicy[$key]['before_deadline'] ?? ($beforeDeadlineOptions[0] ?? ''));
+                                                                @endphp
+                                                                @foreach($beforeDeadlineOptions as $option)
+                                                                    <option value="{{ $option }}" {{ $beforeDeadlineValue == $option ? 'selected' : '' }}>{{ $option }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        @endif
+                                                    @endif
+                                                </td>
+                                                <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
+                                                    @php
+                                                        $afterDeadlineLabel = null;
+                                                        if ($key === 'cancellation') {
+                                                            $afterDeadlineLabel = 'Within 30 days:';
+                                                        } elseif (in_array($key, ['amendments', 'postponement'], true)) {
+                                                            $afterDeadlineLabel = 'Within 48 hours:';
+                                                        }
+                                                    @endphp
+                                                    @if($afterDeadlineLabel)
+                                                        <div style="display:flex;align-items:center;gap:8px;">
+                                                            <span style="white-space:nowrap;color:#333;font-weight:500;">{{ $afterDeadlineLabel }}</span>
+                                                            @if(($meta['staticAfterDash'] ?? false))
+                                                                <div style="min-height:36px;display:flex;align-items:center;color:#666;">-</div>
+                                                            @else
+                                                                <select name="package_policy[{{ $key }}][after_deadline]" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;">
+                                                                    @php
+                                                                        $afterDeadlineOptions = $meta['afterOptions'] ?? [];
+                                                                        $afterDeadlineValue = old('package_policy.' . $key . '.after_deadline', $packagePolicy[$key]['after_deadline'] ?? ($afterDeadlineOptions[0] ?? ''));
+                                                                    @endphp
+                                                                    @foreach($afterDeadlineOptions as $option)
+                                                                        <option value="{{ $option }}" {{ $afterDeadlineValue == $option ? 'selected' : '' }}>{{ $option }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            @endif
+                                                        </div>
+                                                    @else
+                                                        @if(($meta['staticAfterDash'] ?? false))
+                                                            <div style="min-height:36px;display:flex;align-items:center;color:#666;">-</div>
+                                                        @else
+                                                            <select name="package_policy[{{ $key }}][after_deadline]" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;">
+                                                                @php
+                                                                    $afterDeadlineOptions = $meta['afterOptions'] ?? [];
+                                                                    $afterDeadlineValue = old('package_policy.' . $key . '.after_deadline', $packagePolicy[$key]['after_deadline'] ?? ($afterDeadlineOptions[0] ?? ''));
+                                                                @endphp
+                                                                @foreach($afterDeadlineOptions as $option)
+                                                                    <option value="{{ $option }}" {{ $afterDeadlineValue == $option ? 'selected' : '' }}>{{ $option }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        @endif
+                                                    @endif
+                                                </td>
+                                                <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
+                                                    <textarea name="package_policy[{{ $key }}][notes]" rows="2" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;resize:vertical;">{{ old('package_policy.' . $key . '.notes', $packagePolicy[$key]['notes'] ?? $meta['notesFallback']) }}</textarea>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style="margin-top:16px;border:1px solid #e4e7eb;border-radius:10px;padding:12px 14px;background:#f7f7f7;">
+                                <div style="font-weight:600;color:#333;margin-bottom:8px;">Booking Notes</div>
+                                <textarea name="package_policy[booking_notes]" rows="3" class="form-control" style="border:1px solid #dfeaf9;border-radius:6px;resize:vertical;">{{ old('package_policy.booking_notes', $packagePolicy['booking_notes'] ?? '') }}</textarea>
+                            </div>
+
+                            <div style="margin-top:16px;border:1px solid #e4e7eb;border-radius:10px;padding:12px 14px;background:#f7f7f7;">
+                                <div style="font-weight:600;color:#333;margin-bottom:8px;">Package Notes</div>
+                                <textarea name="package_policy[package_notes]" rows="3" class="form-control" style="border:1px solid #dfeaf9;border-radius:6px;resize:vertical;">{{ old('package_policy.package_notes', $packagePolicy['package_notes'] ?? '') }}</textarea>
+                            </div>
+                        </div>
+
                         <div style="display:flex;justify-content:space-between;gap:12px;">
                             <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" class="btn" style="background:#f0f0f0;color:#333;padding:8px 12px;border-radius:4px;">← Back</a>
                             <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:8px 14px;border-radius:4px;">Save Policies & Rules</button>
@@ -640,6 +878,38 @@
         if (houseRulesCustomRadio) houseRulesCustomRadio.addEventListener('change', updateHouseRulesFields);
         if (houseRulesTemplateRadio) houseRulesTemplateRadio.addEventListener('change', updateHouseRulesFields);
         updateHouseRulesFields();
+    });
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab switching for policy tabs
+        const tabs = document.querySelectorAll('#policyTabs a[data-tab]');
+        const packageTab = document.getElementById('package_policy_tab');
+
+        const policiesTab = document.getElementById('policies_tab');
+
+        if (tabs && packageTab && policiesTab) {
+            tabs.forEach(function(tab) {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const which = tab.getAttribute('data-tab');
+
+                    if (which === 'package_policy') {
+                        packageTab.style.display = 'block';
+                        policiesTab.style.display = 'none';
+                    } else {
+                        packageTab.style.display = 'none';
+                        policiesTab.style.display = 'block';
+                    }
+
+                    const form = document.querySelector('form');
+                    if (form) form.scrollIntoView({behavior: 'smooth'});
+                });
+            });
+        }
     });
     </script>
     @endpush

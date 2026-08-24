@@ -73,9 +73,19 @@
                                                 <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][return_price]" class="form-control" value="{{ $pricing['return_price'] ?? '' }}" min="0" step="0.01"></div>
                                             </div>
 
+                                            <div class="row mb-3">
+                                                <div class="col-md-4"><label class="form-label">Package single trip price </label></div>
+                                                <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][package_price]" class="form-control" value="{{ $pricing['package_price'] ?? '' }}" min="0" step="0.01"></div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <div class="col-md-4"><label class="form-label">Package return trip price </label></div>
+                                                <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][package_return_price]" class="form-control" value="{{ $pricing['package_return_price'] ?? '' }}" min="0" step="0.01"></div>
+                                            </div>
+
                                             <div class="mt-3">
                                                 <label class="form-label">Seasonal Prices</label>
-                                                <p class="text-muted small mb-2">If a seasonal date range matches the booking date, that price will be used. Otherwise the default single trip price is applied.</p>
+                                                <p class="text-muted small mb-2">If a seasonal date range matches the booking date, that price will be used. Otherwise the single trip price is applied.</p>
                                                 <div class="seasonal-list" data-index="{{ $routeIndexValue }}">
                                                     @php $seasonalEntries = $pricing['seasonal'] ?? []; @endphp
                                                     @foreach($seasonalEntries as $seasonIndex => $season)
@@ -193,11 +203,12 @@
             ranges.push({start: startDate, end: endDate});
         }
 
-        const defaultPriceInput = document.querySelector(`input[name="routes[${routeIndex}][pricing][default_price]"]`);
+        const defaultPriceInput = document.querySelector(`input[name="routes[${routeIndex}][pricing][default_price]"]`)
+            || document.querySelector(`input[name="routes[${routeIndex}][pricing][package_price]"]`);
         const defaultPrice = defaultPriceInput ? defaultPriceInput.value : '';
 
         if (!hasValue && defaultPrice.trim() === '') {
-            showRouteError(routeIndex, 'Either default price or seasonal pricing is required.');
+            showRouteError(routeIndex, 'Either regular single trip price or package price is required.');
             return false;
         }
 
