@@ -64,7 +64,7 @@
         .traveler-auth-head h1 {
             margin: 0;
             font-size: 34px;
-            font-family: 'Roboto Slab', Georgia, serif;
+            /* font-family: 'Roboto Slab', Georgia, serif; */
         }
         .traveler-auth-head p {
             margin: 10px 0 0;

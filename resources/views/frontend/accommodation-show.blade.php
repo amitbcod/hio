@@ -876,7 +876,7 @@
 
         .detail-section-card h2 {
             margin: 0 0 16px;
-            font-family: 'Roboto Slab', Georgia, serif;
+            /* font-family: 'Roboto Slab', Georgia, serif; */
             font-size: 28px;
         }
 
@@ -904,7 +904,7 @@
         .room-option-left h3 {
             margin: 0;
             font-size: 20px;
-            font-family: 'Roboto Slab', Georgia, serif;
+            /* font-family: 'Roboto Slab', Georgia, serif; */
             color: var(--ink);
         }
 
@@ -1103,7 +1103,7 @@
             color: var(--brand-dark);
             font-size: 28px;
             font-weight: 800;
-            font-family: 'Roboto Slab', Georgia, serif;
+            /* font-family: 'Roboto Slab', Georgia, serif; */
         }
 
         .rating-overview strong {
@@ -1221,7 +1221,7 @@
             margin: 0;
             font-size: 17px;
             color: var(--ink);
-            font-family: 'Roboto Slab', Georgia, serif;
+            /* font-family: 'Roboto Slab', Georgia, serif; */
         }
 
         .similar-body p {
