@@ -616,6 +616,148 @@ class ActivityController extends Controller
                 ->with('error', 'Failed to delete variant: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Save Operations & Staffing
+     */
+    public function saveOperationsStaffing(Request $request, $id)
+    {
+        $activity = Activity::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($activity->operator_id !== $operator->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'variant_id' => 'required|exists:activity_variants,variant_id',
+            'age_groups' => 'required|array|min:1',
+            'age_groups.*' => 'string',
+            'pickup_options' => 'nullable|string',
+            'dropoff_options' => 'nullable|string',
+            'accessibility_features' => 'nullable|array',
+            'accessibility_features.*' => 'string',
+            'crew_guide_count' => 'nullable|integer|min:1',
+            'crew_guide_requirements' => 'nullable|string',
+            'special_equipment_notes' => 'nullable|string',
+        ]);
+
+        try {
+            $variant = \App\Models\ActivityVariant::findOrFail($validated['variant_id']);
+            $opsContactName = $activity->management_contact_name ?? '';
+            $opsContactMobile = $activity->management_contact_mobile ?? '';
+
+            $operationsStaffing = \App\Models\ActivityOperationsStaffing::where('activity_id', $activity->id)
+                ->where('variant_id', $validated['variant_id'])
+                ->first();
+
+            if (!$operationsStaffing) {
+                $operationsStaffing = new \App\Models\ActivityOperationsStaffing();
+                $operationsStaffing->activity_id = $activity->id;
+                $operationsStaffing->service_id = $activity->service_id;
+                $operationsStaffing->variant_id = $validated['variant_id'];
+                $operationsStaffing->variant_equipment_id = $variant->variant_equipment_id;
+            }
+
+            $operationsStaffing->age_groups = $validated['age_groups'];
+            $operationsStaffing->pickup_options = $validated['pickup_options'] ?? null;
+            $operationsStaffing->dropoff_options = $validated['dropoff_options'] ?? null;
+            $operationsStaffing->accessibility_features = $validated['accessibility_features'] ?? [];
+            $operationsStaffing->crew_guide_count = $validated['crew_guide_count'] ?? null;
+            $operationsStaffing->ops_contact_name = $opsContactName;
+            $operationsStaffing->ops_contact_mobile = $opsContactMobile;
+            $operationsStaffing->crew_guide_requirements = $validated['crew_guide_requirements'] ?? null;
+            $operationsStaffing->special_equipment_notes = $validated['special_equipment_notes'] ?? null;
+            $operationsStaffing->save();
+
+            return back()->with('success', 'Operations & Staffing saved successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Operations & Staffing save error', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Failed to save operations & staffing: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete Operations & Staffing
+     */
+    public function deleteOperationsStaffing(Request $request, $id, $operationId)
+    {
+        $activity = Activity::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($activity->operator_id !== $operator->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $operationsStaffing = \App\Models\ActivityOperationsStaffing::findOrFail($operationId);
+
+            if ($operationsStaffing->activity_id !== $activity->id) {
+                abort(403, 'Unauthorized action.');
+            }
+
+            $operationsStaffing->delete();
+
+            return back()->with('success', 'Operations & Staffing deleted successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Operations & Staffing delete error', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Failed to delete operations & staffing: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update Operations & Staffing
+     */
+    public function updateOperationsStaffing(Request $request, $id, $operationId)
+    {
+        $activity = Activity::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($activity->operator_id !== $operator->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'variant_id' => 'required|exists:activity_variants,variant_id',
+            'age_groups' => 'required|array|min:1',
+            'age_groups.*' => 'string',
+            'pickup_options' => 'nullable|string',
+            'dropoff_options' => 'nullable|string',
+            'accessibility_features' => 'nullable|array',
+            'accessibility_features.*' => 'string',
+            'crew_guide_count' => 'nullable|integer|min:1',
+            'crew_guide_requirements' => 'nullable|string',
+            'special_equipment_notes' => 'nullable|string',
+        ]);
+
+        try {
+            $operationsStaffing = \App\Models\ActivityOperationsStaffing::findOrFail($operationId);
+
+            if ($operationsStaffing->activity_id !== $activity->id) {
+                abort(403, 'Unauthorized action.');
+            }
+
+            $variant = \App\Models\ActivityVariant::findOrFail($validated['variant_id']);
+            $opsContactName = $activity->management_contact_name ?? '';
+            $opsContactMobile = $activity->management_contact_mobile ?? '';
+
+            $operationsStaffing->age_groups = $validated['age_groups'];
+            $operationsStaffing->pickup_options = $validated['pickup_options'] ?? null;
+            $operationsStaffing->dropoff_options = $validated['dropoff_options'] ?? null;
+            $operationsStaffing->accessibility_features = $validated['accessibility_features'] ?? [];
+            $operationsStaffing->crew_guide_count = $validated['crew_guide_count'] ?? null;
+            $operationsStaffing->ops_contact_name = $opsContactName;
+            $operationsStaffing->ops_contact_mobile = $opsContactMobile;
+            $operationsStaffing->crew_guide_requirements = $validated['crew_guide_requirements'] ?? null;
+            $operationsStaffing->special_equipment_notes = $validated['special_equipment_notes'] ?? null;
+            $operationsStaffing->save();
+
+            return back()->with('success', 'Operations & Staffing updated successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Operations & Staffing update error', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Failed to update operations & staffing: ' . $e->getMessage());
+        }
+    }
     /**
      * Step 4: Legal & Compliance
      */
