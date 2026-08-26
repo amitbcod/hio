@@ -255,6 +255,8 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     Route::post('packages/{package}/step5', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep5'])->name('packages.step5.store');
     Route::get('packages/{package}/step6', [\App\Http\Controllers\Admin\PackageController::class, 'step6'])->name('packages.step6');
     Route::post('packages/{package}/step6', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep6'])->name('packages.step6.store');
+    Route::get('packages/{package}/step7', [\App\Http\Controllers\Admin\PackageController::class, 'step7'])->name('packages.step7');
+    Route::post('packages/{package}/step7', [\App\Http\Controllers\Admin\PackageController::class, 'saveStep7'])->name('packages.step7.save');
 
     Route::get('vehicle-types', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'index'])->name('vehicle-types.index');
     Route::get('vehicle-types/create', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'create'])->name('vehicle-types.create');

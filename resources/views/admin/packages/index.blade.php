@@ -10,6 +10,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
+                    <th>Status</th>
                     <th>Days</th>
                     <th>Available From</th>
                     <th>Available To</th>
@@ -21,6 +22,11 @@
                 <tr>
                     <td>{{ $p->id }}</td>
                     <td>{{ $p->name }}</td>
+                    <td>
+                        <span class="badge {{ $p->status === 'published' ? 'bg-success' : 'bg-warning text-dark' }}">
+                            {{ ucfirst($p->status ?? 'draft') }}
+                        </span>
+                    </td>
                     <td>{{ $p->no_of_days }}</td>
                     <td>{{ optional($p->available_from)->toDateString() }}</td>
                     <td>{{ optional($p->available_to)->toDateString() }}</td>

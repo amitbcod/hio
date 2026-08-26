@@ -100,39 +100,21 @@ class PackageController extends Controller
         // Load base collections for transports (no date specific)
         $transports = $trnQuery->get();
 
-        // For each date compute available accommodations and activities
+        // For each date, show all active approved listings so package creation can select any valid option
+        // without being restricted to date-specific inventory rows alone.
         $availableAccommodations = [];
         $availableActivities = [];
 
         foreach ($dates as $dIndex => $date) {
-            if ($date) {
-                $accIds = \App\Models\AccommodationInventory::whereDate('date', $date)->pluck('accommodation_id')->unique()->toArray();
-                if (!empty($accIds)) {
-                    $availableAccommodations[$dIndex] = \App\Models\Accommodation::whereIn('id', $accIds)->where('status', 'Active')->get();
-                } else {
-                    // fallback: show all active accommodations when no inventory records found for the date
-                    $availableAccommodations[$dIndex] = \App\Models\Accommodation::where('status', 'Active')->get();
-                }
+            $availableAccommodations[$dIndex] = \App\Models\Accommodation::query()
+                ->where('approval_status', 'Approved')
+                ->where('status', 'Active')
+                ->get();
 
-                $actIds = \App\Models\ActivityAllotment::whereDate('inventory_date', $date)
-                    ->pluck('activity_id')->unique()->toArray();
-                // also include calendar enabled ranges
-                $calendarIds = \App\Models\ActivityAllotment::where('calendar_enabled', true)
-                    ->whereDate('calendar_start', '<=', $date)
-                    ->whereDate('calendar_end', '>=', $date)
-                    ->pluck('activity_id')->unique()->toArray();
-
-                $allActIds = array_unique(array_merge($actIds, $calendarIds));
-                if (!empty($allActIds)) {
-                    $availableActivities[$dIndex] = \App\Models\Activity::whereIn('id', $allActIds)->where('status', 'Active')->get();
-                } else {
-                    // fallback: show all active activities when no allotments/calendar found for the date
-                    $availableActivities[$dIndex] = \App\Models\Activity::where('status', 'Active')->get();
-                }
-            } else {
-                $availableAccommodations[$dIndex] = \App\Models\Accommodation::where('status', 'Active')->get();
-                $availableActivities[$dIndex] = \App\Models\Activity::where('status', 'Active')->get();
-            }
+            $availableActivities[$dIndex] = \App\Models\Activity::query()
+                ->where('approval_status', 'Approved')
+                ->where('status', 'Active')
+                ->get();
         }
 
         return view('admin.packages.step2', compact('package', 'dates', 'availableAccommodations', 'availableActivities', 'transports'));
@@ -854,6 +836,290 @@ class PackageController extends Controller
         $package->itinerary = $itinerary;
         $package->save();
 
-        return redirect()->route('admin.packages.index')->with('success', 'Day-wise itinerary saved.');
+        return redirect()->route('admin.packages.step7', $package->id)->with('success', 'Day-wise itinerary saved.');
+    }
+
+    public function step7(Package $package)
+    {
+        $itinerary = $package->itinerary ?? [];
+        $effectivePolicy = $this->buildEffectivePackagePolicy($package, $itinerary);
+
+        $days = (int) ($package->no_of_days ?? 0);
+        $dates = [];
+        if ($days > 0 && $package->available_from) {
+            $start = \Carbon\Carbon::parse($package->available_from);
+            for ($i = 0; $i < $days; $i++) {
+                $dates[] = $start->copy()->addDays($i)->toDateString();
+            }
+        } else {
+            for ($i = 0; $i < max(1, $days); $i++) {
+                $dates[] = null;
+            }
+        }
+
+        return view('admin.packages.step7', compact('package', 'dates', 'effectivePolicy'));
+    }
+
+    public function saveStep7(Package $package, Request $request)
+    {
+        $data = $request->validate([
+            'action' => 'required|string|in:draft,published',
+        ]);
+
+        $package->status = $data['action'];
+        $package->save();
+
+        if ($data['action'] === 'published') {
+            return redirect()->route('admin.packages.index')->with('success', 'Package status updated to Published.');
+        }
+
+        return redirect()->route('admin.packages.index')->with('success', 'Package status updated to Draft.');
+    }
+
+    protected function buildEffectivePackagePolicy(Package $package, array $itinerary = []): array
+    {
+        $days = max(1, (int) ($package->no_of_days ?? 0));
+        $dates = [];
+        if ($days > 0 && $package->available_from) {
+            $start = \Carbon\Carbon::parse($package->available_from);
+            for ($i = 0; $i < $days; $i++) {
+                $dates[] = $start->copy()->addDays($i)->toDateString();
+            }
+        } else {
+            for ($i = 0; $i < $days; $i++) {
+                $dates[] = null;
+            }
+        }
+
+        $dayPolicies = [];
+        foreach ($dates as $index => $date) {
+            $accommodationId = $itinerary[$index]['accommodation'] ?? null;
+            if (!$accommodationId) {
+                continue;
+            }
+
+            $accommodation = \App\Models\Accommodation::with('operator')->find($accommodationId);
+            if (!$accommodation || !$accommodation->operator) {
+                continue;
+            }
+
+            $policy = is_array($accommodation->operator->package_policy ?? null) ? $accommodation->operator->package_policy : [];
+            if (!empty($policy)) {
+                $dayPolicies[] = $policy;
+            }
+        }
+
+        $baseRows = [
+            'cancellation' => [
+                'label' => 'Cancellation',
+                'types' => ['Flexible', 'Moderate', 'Strict', 'Package (Default)', 'Group', 'Non-Refundable', 'No Show'],
+                'beforeOptions' => ['100% Refund', '50% Refund', '20% Refund', '0% Refund'],
+                'afterOptions' => ['100% Refund', '50% Refund', '20% Refund', '0% Refund'],
+            ],
+            'amendments' => [
+                'label' => 'Amendments',
+                'types' => ['Strict', 'Moderate', 'Flexible'],
+                'beforeOptions' => ['Available', 'Not Available'],
+                'afterOptions' => ['Available', 'Not Available'],
+            ],
+            'postponement' => [
+                'label' => 'Postponement',
+                'types' => ['Strict', 'Moderate', 'Flexible'],
+                'beforeOptions' => ['Available', 'Not Available'],
+                'afterOptions' => ['Available', 'Not Available'],
+            ],
+            'payment' => [
+                'label' => 'Payment',
+                'types' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],
+                'beforeOptions' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],
+            ],
+            'refund' => [
+                'label' => 'Refund',
+                'types' => ['Refund Policy'],
+            ],
+            'security_deposit' => [
+                'label' => 'Security Deposit',
+                'types' => ['Required'],
+            ],
+            'house_rules' => [
+                'label' => 'House & Gen. Rules',
+                'types' => ['Applicable'],
+            ],
+        ];
+
+        $result = [];
+        foreach ($baseRows as $key => $meta) {
+            $typeValues = [];
+            $beforeValues = [];
+            $afterValues = [];
+            $notesValues = [];
+            foreach ($dayPolicies as $policy) {
+                $entry = $policy[$key] ?? [];
+                if (!is_array($entry)) {
+                    continue;
+                }
+
+                if (isset($entry['type']) && trim((string) $entry['type']) !== '') {
+                    $typeValues[] = trim((string) $entry['type']);
+                }
+                if (isset($entry['before_deadline']) && trim((string) $entry['before_deadline']) !== '') {
+                    $beforeValues[] = trim((string) $entry['before_deadline']);
+                }
+                if (isset($entry['after_deadline']) && trim((string) $entry['after_deadline']) !== '') {
+                    $afterValues[] = trim((string) $entry['after_deadline']);
+                }
+                if (isset($entry['notes']) && trim((string) $entry['notes']) !== '') {
+                    $notesValues[] = trim((string) $entry['notes']);
+                }
+            }
+
+            $result[$key] = [
+                'type' => $this->selectPreferredPolicyValue($key, $typeValues, $meta['types'] ?? []),
+                'before_deadline' => $this->selectDeadlinePreference($beforeValues, $meta['beforeOptions'] ?? [], $key),
+                'after_deadline' => $this->selectDeadlinePreference($afterValues, $meta['afterOptions'] ?? [], $key),
+                'notes' => $this->selectNoteValue($notesValues),
+            ];
+        }
+
+        $bookingNotes = [];
+        $packageNotes = [];
+        foreach ($dayPolicies as $policy) {
+            if (!empty($policy['booking_notes'])) {
+                $bookingNotes[] = trim((string) $policy['booking_notes']);
+            }
+            if (!empty($policy['package_notes'])) {
+                $packageNotes[] = trim((string) $policy['package_notes']);
+            }
+        }
+
+        $result['booking_notes'] = $this->selectNoteValue($bookingNotes);
+        $result['package_notes'] = $this->selectNoteValue($packageNotes);
+
+        return $result;
+    }
+
+    protected function selectPreferredPolicyValue(string $key, array $values, array $fallbackOrder = []): string
+    {
+        $normalizedValues = array_values(array_filter(array_map(function ($value) {
+            return trim((string) $value);
+        }, $values)));
+
+        if (empty($normalizedValues)) {
+            return $fallbackOrder[0] ?? '-';
+        }
+
+        $severityMap = [
+            'cancellation' => [
+                'flexible' => 0,
+                'moderate' => 1,
+                'strict' => 2,
+                'package (default)' => 3,
+                'group' => 4,
+                'non-refundable' => 5,
+                'no show' => 6,
+            ],
+            'amendments' => [
+                'flexible' => 0,
+                'moderate' => 1,
+                'strict' => 2,
+            ],
+            'postponement' => [
+                'flexible' => 0,
+                'moderate' => 1,
+                'strict' => 2,
+            ],
+        ];
+
+        $map = $severityMap[$key] ?? null;
+        if ($map !== null) {
+            $bestValue = $normalizedValues[0];
+            $bestScore = -1;
+
+            foreach ($normalizedValues as $value) {
+                $normalizedKey = strtolower(trim((string) $value));
+                if (isset($map[$normalizedKey])) {
+                    $score = $map[$normalizedKey];
+                    if ($score > $bestScore) {
+                        $bestValue = $value;
+                        $bestScore = $score;
+                    }
+                }
+            }
+
+            return $bestValue;
+        }
+
+        return $normalizedValues[0];
+    }
+
+    protected function selectDeadlinePreference(array $values, array $fallbackOrder = [], ?string $key = null): string
+    {
+        $normalized = array_values(array_filter(array_map(function ($value) {
+            $trimmed = trim((string) $value);
+            return $trimmed !== '' ? $trimmed : null;
+        }, $values)));
+
+        if (empty($normalized)) {
+            return $fallbackOrder[0] ?? '-';
+        }
+
+        if (in_array($key, ['amendments', 'postponement'], true)) {
+            foreach ($normalized as $value) {
+                if (strtolower(trim((string) $value)) === 'not available') {
+                    return 'Not Available';
+                }
+            }
+        }
+
+        $ranked = [];
+        foreach ($normalized as $value) {
+            $percent = $this->extractPercentageValue($value);
+            $ranked[] = ['value' => $value, 'percent' => $percent];
+        }
+
+        usort($ranked, function ($a, $b) {
+            return $b['percent'] <=> $a['percent'];
+        });
+
+        return $ranked[0]['value'];
+    }
+
+    protected function extractPercentageValue(string $value): float
+    {
+        if (preg_match('/(\d+(?:\.\d+)?)\s*%/i', $value, $matches)) {
+            return (float) $matches[1];
+        }
+
+        if (stripos($value, 'not available') !== false) {
+            return 1000;
+        }
+
+        if (stripos($value, 'available') !== false) {
+            return 0;
+        }
+
+        return 1000;
+    }
+
+    protected function selectNoteValue(array $values): string
+    {
+        $filtered = array_values(array_filter(array_map(function ($value) {
+            $trimmed = trim((string) $value);
+            return $trimmed !== '' ? $trimmed : null;
+        }, $values)));
+
+        if (empty($filtered)) {
+            return '';
+        }
+
+        $unique = [];
+        foreach ($filtered as $value) {
+            $key = strtolower($value);
+            if (!isset($unique[$key])) {
+                $unique[$key] = $value;
+            }
+        }
+
+        return implode(' | ', array_values($unique));
     }
 }

@@ -1850,4 +1850,65 @@ class ActivityController extends Controller
             return back()->with('error', 'Failed to delete promotion: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Show booking listing for operator's activities
+     */
+    public function bookingList(Request $request)
+    {
+        $operator = auth()->user();
+
+        $activityIds = Activity::where('operator_id', $operator->id)->pluck('id');
+
+        $bookings = \App\Models\ActivityBooking::whereIn('activity_id', $activityIds)
+            ->with(['activity', 'guests'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('operator.activity.booking_list', compact('bookings'));
+    }
+
+    /**
+     * Show booking details for a specific booking
+     */
+    public function bookingDetails($bookingId)
+    {
+        $operator = auth()->user();
+
+        $activityIds = Activity::where('operator_id', $operator->id)->pluck('id');
+
+        $booking = \App\Models\ActivityBooking::whereIn('activity_id', $activityIds)
+            ->where('id', $bookingId)
+            ->with(['activity', 'guests'])
+            ->firstOrFail();
+
+        return view('operator.activity.booking_details', compact('booking'));
+    }
+
+    /**
+     * Update booking status for activity bookings
+     */
+    public function updateBookingStatus(Request $request, $bookingId)
+    {
+        $operator = auth()->user();
+
+        $activityIds = Activity::where('operator_id', $operator->id)->pluck('id');
+
+        $booking = \App\Models\ActivityBooking::whereIn('activity_id', $activityIds)
+            ->where('id', $bookingId)
+            ->firstOrFail();
+
+        $request->validate([
+            'booking_status' => 'required|in:Confirmed,Cancelled',
+        ]);
+
+        if ($booking->booking_status === 'Cancelled') {
+            return back()->with('error', 'Cancelled bookings cannot be updated.');
+        }
+
+        $booking->booking_status = $request->input('booking_status');
+        $booking->save();
+
+        return back()->with('success', 'Booking status updated to ' . $booking->booking_status . '.');
+    }
 }

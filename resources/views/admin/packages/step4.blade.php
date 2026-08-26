@@ -159,7 +159,7 @@
                                             $rowPackageValue = $selectedPackage ?: (count($rowPackageOptions) ? $rowPackageOptions[0]['value'] : '');
                                         @endphp
 
-                                        <div class="pricing-row row align-items-center py-3" data-service="accommodation" data-row-key="{{ $rowKey }}" data-base-price="{{ $rowItem['base'] }}" data-package-price="{{ $rowItem['packageOptions'][0]['price'] ?? 0 }}" style="border-top:1px solid #edf2f6;">
+                                        <div class="pricing-row row align-items-center py-3" data-service="accommodation" data-row-key="{{ $rowKey }}" data-base-price="{{ $rowItem['base'] }}" data-package-exists="{{ !empty($rowPackageOptions) ? 1 : 0 }}" data-package-price="{{ $rowPackageOptions[0]['price'] ?? 0 }}" style="border-top:1px solid #edf2f6;">
                                             <div class="col-md-6">
                                                 <div class="fw-semibold text-dark" style="font-size:0.96rem;">{{ $rowItem['label'] }}</div>
                                             </div>
@@ -392,6 +392,34 @@
         const modeSelect = document.querySelector('.pricing-mode-select[data-service="' + service + '"]');
         const discountInput = document.querySelector('.discount-percent[data-service="' + service + '"]');
 
+        // Accommodation rows: if package mode is selected but no package value is present,
+        // fall back to the standard flat rate instead of showing a blank/zero value.
+        if (service === 'accommodation' && !row.dataset.rateSpecificity) {
+            const baseInput = row.querySelector('.base-price');
+            const result = row.querySelector('.final-price');
+            if (!baseInput || !result) return;
+
+            const baseValue = Number((baseInput.dataset.base || baseInput.value || 0).toString().replace(/[$,]/g, '')) || 0;
+            let finalValue = baseValue;
+            const packageExists = row.dataset.packageExists === '1' || false;
+            const packageValue = Number(row.dataset.packagePrice || 0) || 0;
+
+            if (modeSelect && modeSelect.value === 'package_rate') {
+                if (packageExists && packageValue > 0) {
+                    finalValue = packageValue;
+                } else {
+                    finalValue = baseValue;
+                }
+            } else if (discountInput) {
+                const percent = Number(discountInput.value || 0);
+                finalValue = baseValue - (baseValue * percent / 100);
+            }
+
+            result.textContent = formatCurrency(finalValue);
+            result.style.color = (modeSelect && modeSelect.value === 'package_rate' && (!packageExists || packageValue <= 0)) ? '#1e88e5' : '#198754';
+            return;
+        }
+
         // Equipment specificity: single base -> single final
         if (row.dataset.rateSpecificity === 'Per Equipment') {
             const baseInput = row.querySelector('.base-price');
@@ -421,6 +449,7 @@
                 finalValue = baseValue - (baseValue * percent / 100);
             }
             result.textContent = formatCurrency(finalValue);
+            result.style.color = (modeSelect && modeSelect.value === 'package_rate' && (!row.dataset.packageExists || Number(row.dataset.packagePrice || 0) <= 0)) ? '#1e88e5' : '#198754';
             return;
         }
 

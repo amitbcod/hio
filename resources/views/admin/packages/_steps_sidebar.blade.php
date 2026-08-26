@@ -6,8 +6,7 @@
         ['label' => 'Step 4: Pricing & Rate Plan', 'route' => (isset($package) && $package->exists) ? route('admin.packages.step4', $package->id) : '#'],
         ['label' => 'Step 5: Content & CMS', 'route' => (isset($package) && $package->exists) ? route('admin.packages.step5', $package->id) : '#'],
         ['label' => 'Step 6: Day-wise Itinerary', 'route' => (isset($package) && $package->exists) ? route('admin.packages.step6', $package->id) : '#'],
-        ['label' => 'Step 7: Payment & Policies', 'route' => '#'],
-        ['label' => 'Step 8: Review & Publish', 'route' => '#'],
+        ['label' => 'Step 7: Payment & Policies', 'route' => (isset($package) && $package->exists) ? route('admin.packages.step7', $package->id) : '#'],
     ]; @endphp
 
     <div style="background:#fff;border-radius:8px;padding:12px;">

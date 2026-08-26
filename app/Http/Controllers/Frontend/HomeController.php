@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Accommodation;
 use App\Models\AccommodationRate;
+use App\Models\AccommodationRoom;
 use App\Models\Activity;
 use App\Models\ActivityBooking;
 use App\Models\BookingWidget;
+use App\Models\Package;
 use App\Models\Place;
 use App\Models\Region;
 use App\Models\Transport;
@@ -304,6 +306,407 @@ class HomeController extends Controller
             'sidebarDefinitions' => $sidebarDefinitions,
             'sidebarSelections' => $sidebarSelections,
         ]);
+    }
+
+    public function packageList(Request $request)
+    {
+        $region = trim((string) $request->query('region', 'all'));
+        $travelingDateRaw = $request->query('traveling_date');
+        $travelingDate = null;
+
+        if (!empty($travelingDateRaw)) {
+            foreach (['d/m/Y', 'Y-m-d', 'm/d/Y', 'd-m-Y', 'Y/m/d'] as $format) {
+                try {
+                    $travelingDate = Carbon::createFromFormat($format, $travelingDateRaw)->format('d/m/Y');
+                    break;
+                } catch (\Exception $e) {
+                    $travelingDate = $travelingDateRaw;
+                }
+            }
+        }
+
+        $adults = max(1, (int) $request->query('adults', 2));
+        $children = max(0, (int) $request->query('children', 0));
+        $infants = max(0, (int) $request->query('infants', 0));
+        $roomsRequired = max(1, (int) $request->query('rooms', 1));
+
+        $packages = Package::query()
+            ->where('status', 'published')
+            ->latest('updated_at')
+            ->get()
+            ->filter(function (Package $package) use ($region, $travelingDate, $adults, $children, $infants, $roomsRequired) {
+                return $this->packageMatchesGuestCriteria($package, $region, $travelingDate, $adults, $children, $infants, $roomsRequired);
+            })
+            ->values();
+
+        $regionOptions = \App\Models\Region::query()
+            ->orderBy('name')
+            ->pluck('name')
+            ->map(fn ($value) => trim((string) $value))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        return view('frontend.packages-list', [
+            'packages' => $packages,
+            'regionOptions' => $regionOptions,
+            'region' => $region,
+            'travelingDate' => $travelingDate,
+            'adults' => $adults,
+            'children' => $children,
+            'infants' => $infants,
+            'roomsRequired' => $roomsRequired,
+        ]);
+    }
+
+    public function showPackage(Package $package)
+    {
+        abort_if(blank($package->name), 404);
+        abort_if((string) ($package->status ?? '') !== 'published', 404);
+
+        $itineraryData = $package->itinerary ?? [];
+        $content = $itineraryData['content'] ?? [];
+        $dayDescriptions = $itineraryData['day_descriptions'] ?? [];
+
+        $gallery = collect();
+        $itineraryDays = [];
+
+        foreach ($itineraryData as $dayIndex => $dayEntry) {
+            if (!is_array($dayEntry) || is_string($dayIndex)) {
+                continue;
+            }
+
+            $dayImages = collect();
+            $dayLabel = 'Day ' . ((int) $dayIndex + 1);
+
+            foreach (['accommodation', 'activity', 'transport'] as $itemType) {
+                $recordId = $dayEntry[$itemType] ?? null;
+                if (blank($recordId)) {
+                    continue;
+                }
+
+                $model = match ($itemType) {
+                    'accommodation' => Accommodation::find((int) $recordId),
+                    'activity' => Activity::find((int) $recordId),
+                    'transport' => Transport::find((int) $recordId),
+                    default => null,
+                };
+
+                if (!$model) {
+                    continue;
+                }
+
+                $modelImages = collect();
+
+                if ($itemType === 'accommodation') {
+                    $modelImages = $model->media()->pluck('path');
+                } elseif ($itemType === 'activity') {
+                    $modelImages = collect(array_merge(
+                        (array) ($model->gallery_images ?? []),
+                        (array) ($model->vehicle_images ?? []),
+                        [$model->hero_banner_image ?? null]
+                    ));
+                } else {
+                    $modelImages = collect(array_merge(
+                        (array) ($model->gallery_images ?? []),
+                        [$model->hero_banner_image ?? null]
+                    ));
+                }
+
+                $assetPaths = $modelImages
+                    ->filter(fn ($value) => is_string($value) && trim($value) !== '')
+                    ->map(function ($value) use ($itemType, $model) {
+                        if (is_array($value)) {
+                            $value = $value['image'] ?? $value['path'] ?? null;
+                        }
+
+                        if (is_string($value) && str_starts_with($value, 'http')) {
+                            return $value;
+                        }
+
+                        if ($itemType === 'accommodation' && is_string($value)) {
+                            return $this->storageAsset($value) ?? $this->storageAsset('storage/' . $value);
+                        }
+
+                        return $this->storageAsset($value);
+                    })
+                    ->filter()
+                    ->values();
+
+                $dayImages = $dayImages->merge($assetPaths);
+                $gallery = $gallery->merge($assetPaths);
+            }
+
+            $itineraryDays[] = [
+                'day' => (int) $dayIndex + 1,
+                'label' => $dayLabel,
+                'description' => $dayDescriptions[$dayIndex] ?? '',
+                'images' => $dayImages->unique()->values()->all(),
+            ];
+        }
+
+        if ($gallery->isEmpty()) {
+            $gallery = collect($content['gallery'] ?? [])
+                ->map(fn ($path) => $this->storageAsset($path) ?? asset('storage/' . ltrim((string) $path, '/')))
+                ->filter()
+                ->values();
+        }
+
+        $summary = $this->buildPackageSummary($package, $itineraryDays, $content);
+        $packagePrice = $this->calculatePackageGuestPrice($package, 2, 0, 0);
+
+        $packageData = [
+            'id' => $package->id,
+            'name' => $package->name,
+            'no_of_days' => (int) ($package->no_of_days ?? max(1, count($itineraryDays))),
+            'no_of_nights' => (int) ($package->no_of_nights ?? max(0, (int) ($package->no_of_days ?? max(1, count($itineraryDays))) - 1)),
+            'short_description' => $content['short_description'] ?? '',
+            'full_description' => $content['full_description'] ?? '',
+            'inclusions' => $content['inclusions'] ?? '',
+            'exclusions' => $content['exclusions'] ?? '',
+            'gallery' => $gallery->unique()->values()->all(),
+            'image' => $gallery->first() ?? asset('images/holidays-io-logo.png'),
+            'itinerary_days' => $itineraryDays,
+            'price' => round($packagePrice, 2),
+            'location' => $summary['location'],
+            'days_label' => $summary['days_label'],
+            'hotel_count' => $summary['hotel_count'],
+            'activity_count' => $summary['activity_count'],
+            'meal_count' => $summary['meal_count'],
+        ];
+
+        return view('frontend.package-show', [
+            'package' => $packageData,
+        ]);
+    }
+
+    private function buildPackageSummary(Package $package, array $itineraryDays, array $content = []): array
+    {
+        $itinerary = $package->itinerary ?? [];
+        $days = max(1, (int) ($package->no_of_days ?? count($itineraryDays)));
+
+        $hotelIds = [];
+        $activityIds = [];
+        $mealMatches = [];
+
+        foreach ($itinerary as $dayIndex => $dayEntry) {
+            if (!is_array($dayEntry) || is_string($dayIndex)) {
+                continue;
+            }
+
+            $accommodationId = $dayEntry['accommodation'] ?? null;
+            if (!blank($accommodationId)) {
+                $hotelIds[] = (int) $accommodationId;
+            }
+
+            $activityId = $dayEntry['activity'] ?? null;
+            if (!blank($activityId)) {
+                $activityIds[] = (int) $activityId;
+            }
+
+            $mealText = trim((string) ($dayEntry['meal_plan'] ?? ''));
+            if ($mealText !== '') {
+                $mealMatches[] = $mealText;
+            }
+        }
+
+        $mealTextSource = trim((string) (($content['inclusions'] ?? '') ?: ($content['full_description'] ?? '')));
+        if ($mealTextSource !== '') {
+            preg_match_all('/\b(breakfast|brunch|lunch|dinner|snacks|meal|meals)\b/i', $mealTextSource, $mealMatchesFromText);
+            $mealMatches = array_merge($mealMatches, $mealMatchesFromText[0]);
+        }
+
+        $location = 'Mauritius';
+        foreach ($itinerary as $dayEntry) {
+            if (!is_array($dayEntry)) {
+                continue;
+            }
+
+            $accommodationId = $dayEntry['accommodation'] ?? null;
+            if (blank($accommodationId)) {
+                continue;
+            }
+
+            $accommodation = Accommodation::find((int) $accommodationId);
+            if (!$accommodation) {
+                continue;
+            }
+
+            $region = trim((string) ($accommodation->region ?? ''));
+            if ($region !== '') {
+                $location = $region;
+                break;
+            }
+        }
+
+        $hotelCount = count(array_values(array_unique(array_filter($hotelIds, fn ($id) => (int) $id > 0))));
+        $activityCount = count(array_values(array_unique(array_filter($activityIds, fn ($id) => (int) $id > 0))));
+        $mealCount = count(array_values(array_unique(array_map('strtolower', array_filter($mealMatches, fn ($value) => is_string($value) && trim($value) !== '')))));
+
+        if ($mealCount < 1) {
+            $mealCount = max(1, $days * 2);
+        }
+
+        return [
+            'location' => $location,
+            'days_label' => $days . ' Day Plan',
+            'hotel_count' => max(1, $hotelCount ?: 1),
+            'activity_count' => max(1, $activityCount ?: 1),
+            'meal_count' => $mealCount,
+        ];
+    }
+
+    private function calculatePackageGuestPrice(Package $package, int $adults = 2, int $children = 0, int $infants = 0): float
+    {
+        $itinerary = $package->itinerary ?? [];
+        $total = 0.0;
+        $guestMultiplier = max(1, $adults) + (max(0, $children) * 0.6) + (max(0, $infants) * 0.2);
+
+        foreach ($itinerary as $dayIndex => $dayEntry) {
+            if (!is_array($dayEntry) || is_string($dayIndex)) {
+                continue;
+            }
+
+            $accommodationId = $dayEntry['accommodation'] ?? null;
+            if (blank($accommodationId)) {
+                continue;
+            }
+
+            $selectedRoomIds = array_values(array_filter(array_map('intval', (array) ($dayEntry['rooms'] ?? []))));
+            $roomRate = 0.0;
+
+            if (empty($selectedRoomIds)) {
+                $selectedRoomIds = AccommodationRoom::where('accommodation_id', (int) $accommodationId)
+                    ->pluck('id')
+                    ->all();
+            }
+
+            foreach ($selectedRoomIds as $roomId) {
+                $room = AccommodationRoom::find((int) $roomId);
+                if (!$room) {
+                    continue;
+                }
+
+                $rate = $room->rates()
+                    ->where('is_rate_plan', true)
+                    ->orderByDesc('updated_at')
+                    ->first();
+
+                if (!$rate) {
+                    $rate = AccommodationRate::where('accommodation_id', (int) $accommodationId)
+                        ->where(function ($query) use ($room) {
+                            $query->whereNull('room_id')->orWhere('room_id', $room->id);
+                        })
+                        ->where('is_rate_plan', true)
+                        ->orderByDesc('updated_at')
+                        ->first();
+                }
+
+                if (!$rate) {
+                    continue;
+                }
+
+                $candidate = (float) ($rate->final_rate ?? $rate->base_rate ?? 0);
+                if ($candidate > $roomRate) {
+                    $roomRate = $candidate;
+                }
+            }
+
+            if ($roomRate > 0) {
+                $total += $roomRate * $guestMultiplier;
+            }
+        }
+
+        if ($total <= 0) {
+            $total = max(1500, (float) ($package->no_of_days ?? 3) * 1000);
+        }
+
+        return round($total, 2);
+    }
+
+    private function matchesPackageGuestCapacity($rooms, int $adults, int $children = 0, int $requiredRooms = 1): bool
+    {
+        $rooms = collect($rooms);
+
+        if ($rooms->isEmpty() || $requiredRooms < 1) {
+            return false;
+        }
+
+        $requiredAdultsPerRoom = (int) ceil($adults / max(1, $requiredRooms));
+        $requiredChildrenPerRoom = (int) ceil($children / max(1, $requiredRooms));
+        $availableRoomUnits = 0;
+
+        foreach ($rooms as $room) {
+            if (!$room) {
+                continue;
+            }
+
+            $roomAdults = max(0, (int) ($room->capacity ?? 0));
+            $roomChildren = max(0, (int) ($room->children_capacity ?? 0));
+            $quantity = max(1, (int) ($room->quantity ?? 1));
+
+            if ($requiredAdultsPerRoom <= $roomAdults && $requiredChildrenPerRoom <= $roomChildren) {
+                $availableRoomUnits += $quantity;
+            }
+        }
+
+        return $availableRoomUnits >= $requiredRooms;
+    }
+
+    private function packageMatchesGuestCriteria(Package $package, string $region, ?string $travelingDate, int $adults, int $children, int $infants, int $roomsRequired): bool
+    {
+        $itinerary = $package->itinerary ?? [];
+        $selectedAccommodations = [];
+
+        foreach ($itinerary as $dayData) {
+            if (!is_array($dayData)) {
+                continue;
+            }
+
+            $accommodationId = $dayData['accommodation'] ?? null;
+            if (!empty($accommodationId)) {
+                $selectedAccommodations[] = (int) $accommodationId;
+            }
+        }
+
+        $selectedAccommodations = array_values(array_unique(array_filter($selectedAccommodations, fn ($id) => $id > 0)));
+        if (empty($selectedAccommodations)) {
+            return false;
+        }
+
+        if ($region !== '' && $region !== 'all') {
+            $matchesRegion = false;
+            foreach ($selectedAccommodations as $accommodationId) {
+                $accommodation = \App\Models\Accommodation::find($accommodationId);
+                if (!$accommodation) {
+                    continue;
+                }
+
+                $regionValue = trim((string) ($accommodation->region ?? ''));
+                if ($regionValue !== '' && strcasecmp($regionValue, $region) === 0) {
+                    $matchesRegion = true;
+                    break;
+                }
+            }
+
+            if (!$matchesRegion) {
+                return false;
+            }
+        }
+
+        foreach ($selectedAccommodations as $accommodationId) {
+            $accommodation = \App\Models\Accommodation::with('rooms')->find($accommodationId);
+            if (!$accommodation || $accommodation->rooms->isEmpty()) {
+                continue;
+            }
+
+            if ($this->matchesPackageGuestCapacity($accommodation->rooms, $adults, $children + $infants, $roomsRequired)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function showActivity(Request $request, Activity $activity)

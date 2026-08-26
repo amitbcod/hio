@@ -31,6 +31,8 @@ Route::get('/terms-and-conditions', [PageController::class, 'termsAndConditions'
 Route::get('/privacy-policy', [PageController::class, 'privacyPolicy'])->name('frontend.privacy-policy');
 Route::get('/pages/{slug}', [\App\Http\Controllers\Frontend\StaticPageController::class, 'show'])->name('frontend.static-pages.show');
 Route::get('/category-list', [HomeController::class, 'categoryList'])->name('frontend.category.list');
+Route::get('/packages', [HomeController::class, 'packageList'])->name('frontend.packages.list');
+Route::get('/packages/{package}', [HomeController::class, 'showPackage'])->name('frontend.packages.show');
 Route::get('/activities/{activity}', [HomeController::class, 'showActivity'])->name('frontend.activities.show');
 Route::get('/accommodations/{accommodation}', [HomeController::class, 'showAccommodation'])->name('frontend.accommodations.show');
 Route::get('/transports/{transport}', [HomeController::class, 'showTransport'])->name('frontend.transports.show');

@@ -569,6 +569,7 @@
                     <ul>
                         <li><a href="{{ route('frontend.home', $operatorQuery) }}#accommodations-section">{{ __('footer.accommodation') }}</a></li>
                         <li><a href="{{ route('frontend.home', $operatorQuery) }}#activities-section">{{ __('footer.activities') }}</a></li>
+                        <li><a href="{{ route('frontend.packages.list', $operatorQuery) }}">Packages</a></li>
                         <li><a href="{{ route('frontend.home', array_merge(['category' => 'transport'], $operatorQuery)) }}#discover-mauritius">{{ __('footer.transport') }}</a></li>
                         <li><a href="{{ route('frontend.home', $operatorQuery) }}#discover-mauritius">{{ __('footer.discover_mauritius') }}</a></li>
                         <li><a href="{{ url('/operator/accommodation') }}">{{ __('footer.operator') }}</a></li>
