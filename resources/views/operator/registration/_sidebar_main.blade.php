@@ -129,7 +129,7 @@
 
     @else
         {{-- Show Registration Sidebar for Non-Approved Business --}}
-        <div style="padding: 24px 0 8px 24px; font-weight: bold; letter-spacing: 1px; font-size: 18px;">PROFILE CREATION</div>
+        <h3 class="sidebar-title">PROFILE CREATION</h3>
         <ul style="list-style: none; padding: 0; margin: 0;">
             @php 
                 $isHeadOfDepartment = auth('operator_staff')->check();
