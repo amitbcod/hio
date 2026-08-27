@@ -265,6 +265,14 @@ select.form-control {
     background-position: top;
 }
 
+h3.sidebar-title {
+    color: #fff;
+    font-size: 20px;
+    text-transform: capitalize;
+    padding-left: 26px;
+    padding-top: 10px;
+}
+
 #sidebar div,
 #sidebar ul,
 #sidebar li {
