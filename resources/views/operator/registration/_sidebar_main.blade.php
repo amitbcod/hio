@@ -199,7 +199,7 @@
                         @if($isAccessible)
                             <a href="{{ route($info['route']) }}" style="display: flex; align-items: center; padding: 10px; color: #fff; text-decoration: none; background: {{ $displayCurrentStep == $step ? '#ff8a00' : 'transparent' }}; border-radius: 5px; font-weight: {{ $displayCurrentStep == $step ? 'bold' : 'normal' }}; cursor: pointer;">
                                 @if(!$isHeadOfDepartment)
-                                <span style="display: inline-block; width: 28px; height: 28px; background: #fff; color: #ff8a00; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; margin-right: 12px;">{{ $step }}</span>
+                                <span style="display: inline-block; width: 28px; height: 28px; background: #fff; color: {{ $displayCurrentStep == $step ? '#ff8a00' : '#1b4053'; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; margin-right: 12px;">{{ $step }}</span>
                                 @endif
                                 {{ $info['label'] }}
                             </a>
