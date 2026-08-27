@@ -13,7 +13,7 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light mb-0">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-0">
         <button class="hamburger" onclick="toggleSidebar()">
             <i class="fa-solid fa-bars"></i>
         </button>
