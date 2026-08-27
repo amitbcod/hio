@@ -210,7 +210,7 @@
                             </span>
                         @endif
                     @else
-                        <span style="display: flex; align-items: center; padding: 10px; color: #fff; background: transparent; border-radius: 5px; font-weight: bold;">
+                        <span style="display: flex; align-items: center; padding: 10px; color: #fff; background: transparent; border-radius: 5px; font-weight: normal;">
                             <span style="display: inline-block; width: 28px; height: 28px; background: #fff; color: #1b4053; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; margin-right: 12px;">{{ $step }}</span>
                             {{ $info['label'] }}
                         </span>
