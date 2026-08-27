@@ -197,21 +197,21 @@
                     @endphp
                     @if($info['route'])
                         @if($isAccessible)
-                            <a href="{{ route($info['route']) }}" style="display: flex; align-items: center; padding: 12px 24px; color: #fff; text-decoration: none; background: {{ $displayCurrentStep == $step ? '#0e7c7b' : 'transparent' }}; border-radius: 0 16px 16px 0; font-weight: {{ $displayCurrentStep == $step ? 'bold' : 'normal' }}; cursor: pointer;">
+                            <a href="{{ route($info['route']) }}" style="display: flex; align-items: center; padding: 10px; color: #fff; text-decoration: none; background: {{ $displayCurrentStep == $step ? '#ff8a00' : 'transparent' }}; border-radius: 5px; font-weight: {{ $displayCurrentStep == $step ? 'bold' : 'normal' }}; cursor: pointer;">
                                 @if(!$isHeadOfDepartment)
                                 <span style="display: inline-block; width: 28px; height: 28px; background: #fff; color: #19b5b5; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; margin-right: 12px;">{{ $step }}</span>
                                 @endif
                                 {{ $info['label'] }}
                             </a>
                         @else
-                            <span style="display: flex; align-items: center; padding: 12px 24px; color: rgba(255,255,255,0.5); background: transparent; border-radius: 0 16px 16px 0; font-weight: normal; cursor: not-allowed;">
-                                <span style="display: inline-block; width: 28px; height: 28px; background: rgba(255,255,255,0.5); color: #19b5b5; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; margin-right: 12px;">{{ $step }}</span>
+                            <span style="display: flex; align-items: center; padding: 10px; color: rgba(255,255,255,0.5); background: transparent; border-radius: 5px; font-weight: normal; cursor: not-allowed;">
+                                <span style="display: inline-block; width: 28px; height: 28px; background: rgba(255,255,255,0.5); color: #1b4053; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; margin-right: 12px;">{{ $step }}</span>
                                 {{ $info['label'] }} (Locked)
                             </span>
                         @endif
                     @else
-                        <span style="display: flex; align-items: center; padding: 12px 24px; color: #fff; background: transparent; border-radius: 0 16px 16px 0; font-weight: bold;">
-                            <span style="display: inline-block; width: 28px; height: 28px; background: #fff; color: #19b5b5; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; margin-right: 12px;">{{ $step }}</span>
+                        <span style="display: flex; align-items: center; padding: 10px; color: #fff; background: transparent; border-radius: 5px; font-weight: bold;">
+                            <span style="display: inline-block; width: 28px; height: 28px; background: #fff; color: #1b4053; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; margin-right: 12px;">{{ $step }}</span>
                             {{ $info['label'] }}
                         </span>
                     @endif
