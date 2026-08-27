@@ -91,19 +91,19 @@
                             @if($isAccessible)
                                 <a href="{{ route($info['route']) }}" style="display: flex; align-items: center; padding: 8px 24px; color: #ffffff; text-decoration: none; background: transparent; border-radius: 0; font-weight: normal; cursor: pointer; font-size: 12px;">
                                     @if(!$isHeadOfDepartment)
-                                    <span style="display: inline-block; width: 22px; height: 22px; background: #19b5b5; color: #fff; border-radius: 50%; text-align: center; line-height: 22px; font-weight: bold; margin-right: 8px; font-size: 11px;">{{ $step }}</span>
+                                    <span style="display: inline-block; width: 22px; height: 22px; background: #1b4053; color: #fff; border-radius: 50%; text-align: center; line-height: 22px; font-weight: bold; margin-right: 8px; font-size: 11px;">{{ $step }}</span>
                                     @endif
                                     {{ $info['label'] }}
                                 </a>
                             @else
                                 <span style="display: flex; align-items: center; padding: 8px 24px; color: rgba(51,51,51,0.5); background: transparent; border-radius: 0; font-weight: normal; cursor: not-allowed; font-size: 12px;">
-                                    <span style="display: inline-block; width: 22px; height: 22px; background: rgba(25,181,181,0.3); color: #19b5b5; border-radius: 50%; text-align: center; line-height: 22px; font-weight: bold; margin-right: 8px; font-size: 11px;">{{ $step }}</span>
+                                    <span style="display: inline-block; width: 22px; height: 22px; background: rgba(25,181,181,0.3); color: #1b4053; border-radius: 50%; text-align: center; line-height: 22px; font-weight: bold; margin-right: 8px; font-size: 11px;">{{ $step }}</span>
                                     {{ $info['label'] }}
                                 </span>
                             @endif
                         @else
                             <span style="display: flex; align-items: center; padding: 8px 24px; color: #ffffff; background: transparent; border-radius: 0; font-weight: bold; font-size: 12px;">
-                                <span style="display: inline-block; width: 22px; height: 22px; background: #19b5b5; color: #fff; border-radius: 50%; text-align: center; line-height: 22px; font-weight: bold; margin-right: 8px; font-size: 11px;">{{ $step }}</span>
+                                <span style="display: inline-block; width: 22px; height: 22px; background: #1b4053; color: #fff; border-radius: 50%; text-align: center; line-height: 22px; font-weight: bold; margin-right: 8px; font-size: 11px;">{{ $step }}</span>
                                 {{ $info['label'] }}
                             </span>
                         @endif
@@ -199,7 +199,7 @@
                         @if($isAccessible)
                             <a href="{{ route($info['route']) }}" style="display: flex; align-items: center; padding: 10px; color: #fff; text-decoration: none; background: {{ $displayCurrentStep == $step ? '#ff8a00' : 'transparent' }}; border-radius: 5px; font-weight: {{ $displayCurrentStep == $step ? 'bold' : 'normal' }}; cursor: pointer;">
                                 @if(!$isHeadOfDepartment)
-                                <span style="display: inline-block; width: 28px; height: 28px; background: #fff; color: #19b5b5; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; margin-right: 12px;">{{ $step }}</span>
+                                <span style="display: inline-block; width: 28px; height: 28px; background: #fff; color: #ff8a00; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; margin-right: 12px;">{{ $step }}</span>
                                 @endif
                                 {{ $info['label'] }}
                             </a>
