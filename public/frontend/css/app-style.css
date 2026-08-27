@@ -259,8 +259,12 @@ select.form-control {
 } */
 #sidebar,
 .col-md-3.net-section {
-    background: #4c938d !important;
+    /* background: #4c938d !important; */
     padding-top: 20px !important;
+    background-image:url('https://hio.whuso.in/images/sidebar-bkg.jpg');
+    background-position: top;
+    position: relative;
+    top: 0;
 }
 
 #sidebar div,
