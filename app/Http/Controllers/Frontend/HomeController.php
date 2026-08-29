@@ -330,14 +330,26 @@ class HomeController extends Controller
         $infants = max(0, (int) $request->query('infants', 0));
         $roomsRequired = max(1, (int) $request->query('rooms', 1));
 
-        $packages = Package::query()
+        $allPackages = Package::query()
             ->where('status', 'published')
             ->latest('updated_at')
-            ->get()
+            ->get();
+
+        $packages = $allPackages
             ->filter(function (Package $package) use ($region, $travelingDate, $adults, $children, $infants, $roomsRequired) {
                 return $this->packageMatchesGuestCriteria($package, $region, $travelingDate, $adults, $children, $infants, $roomsRequired);
             })
             ->values();
+
+        $selectedPropertyTypes = $this->normalizeFilterValues($request->query('property_type', []));
+        $selectedMealPlans = $this->normalizeFilterValues($request->query('meal_plan', []));
+
+        if (!empty($selectedPropertyTypes) || !empty($selectedMealPlans)) {
+            $packages = $this->applyPackageSidebarFilters($packages, [
+                'property_type' => $selectedPropertyTypes,
+                'meal_plan' => $selectedMealPlans,
+            ]);
+        }
 
         $regionOptions = \App\Models\Region::query()
             ->orderBy('name')
@@ -348,6 +360,8 @@ class HomeController extends Controller
             ->values()
             ->all();
 
+        $packageFilterOptions = $this->buildPackageFilterOptions($packages);
+
         return view('frontend.packages-list', [
             'packages' => $packages,
             'regionOptions' => $regionOptions,
@@ -357,7 +371,179 @@ class HomeController extends Controller
             'children' => $children,
             'infants' => $infants,
             'roomsRequired' => $roomsRequired,
+            'packageFilterOptions' => $packageFilterOptions,
+            'selectedPropertyTypes' => $selectedPropertyTypes,
+            'selectedMealPlans' => $selectedMealPlans,
         ]);
+    }
+
+    private function buildPackageFilterOptions($packages): array
+    {
+        $propertyTypeCounts = [];
+        $mealPlanCounts = [];
+
+        foreach ($packages as $package) {
+            $itinerary = $package->itinerary ?? [];
+
+            foreach ($itinerary as $dayIndex => $dayEntry) {
+                if (!is_array($dayEntry) || is_string($dayIndex)) {
+                    continue;
+                }
+
+                $accommodationId = $dayEntry['accommodation'] ?? null;
+                if (blank($accommodationId)) {
+                    continue;
+                }
+
+                $accommodation = Accommodation::with('rooms')->find((int) $accommodationId);
+                if (!$accommodation) {
+                    continue;
+                }
+
+                $propertyType = trim((string) ($accommodation->property_type ?? ''));
+                if ($propertyType !== '') {
+                    $propertyTypeCounts[$propertyType] = ($propertyTypeCounts[$propertyType] ?? 0) + 1;
+                }
+
+                $roomIds = array_values(array_filter(array_map('intval', (array) ($dayEntry['rooms'] ?? []))));
+                $rooms = !empty($roomIds)
+                    ? $accommodation->rooms()->whereIn('id', $roomIds)->get()
+                    : $accommodation->rooms()->get();
+
+                foreach ($rooms as $room) {
+                    $mealPlans = $this->resolveRoomMealPlans($room);
+
+                    foreach ($mealPlans as $mealPlan) {
+                        if ($mealPlan === '') {
+                            continue;
+                        }
+
+                        $mealPlanCounts[$mealPlan] = ($mealPlanCounts[$mealPlan] ?? 0) + 1;
+                    }
+                }
+            }
+        }
+
+        $propertyOptions = collect($propertyTypeCounts)
+            ->map(fn ($count, $value) => ['value' => $value, 'count' => $count])
+            ->sortBy(function (array $option) {
+                $preferredOrder = array_flip(Accommodation::TYPES);
+                return $preferredOrder[$option['value']] ?? (count($preferredOrder) + 1000 + crc32($option['value']));
+            })
+            ->values()
+            ->all();
+
+        $mealOptions = collect($mealPlanCounts)
+            ->map(fn ($count, $value) => ['value' => $value, 'count' => $count])
+            ->sortBy(fn (array $option) => strtolower((string) $option['value']))
+            ->values()
+            ->all();
+
+        return [
+            'property_types' => $propertyOptions,
+            'meal_plans' => $mealOptions,
+        ];
+    }
+
+    private function applyPackageSidebarFilters($packages, array $sidebarSelections)
+    {
+        if ($packages instanceof \Illuminate\Support\Collection) {
+            $filtered = $packages;
+        } else {
+            $filtered = collect($packages);
+        }
+
+        if (!empty($sidebarSelections['property_type'] ?? [])) {
+            $selected = $sidebarSelections['property_type'];
+            $filtered = $filtered->filter(function (Package $package) use ($selected) {
+                foreach ($package->itinerary ?? [] as $dayEntry) {
+                    if (!is_array($dayEntry)) {
+                        continue;
+                    }
+
+                    $accommodationId = $dayEntry['accommodation'] ?? null;
+                    if (blank($accommodationId)) {
+                        continue;
+                    }
+
+                    $accommodation = Accommodation::find((int) $accommodationId);
+                    if ($accommodation && in_array((string) ($accommodation->property_type ?? ''), $selected, true)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
+        }
+
+        if (!empty($sidebarSelections['meal_plan'] ?? [])) {
+            $selected = $sidebarSelections['meal_plan'];
+            $filtered = $filtered->filter(function (Package $package) use ($selected) {
+                foreach ($package->itinerary ?? [] as $dayEntry) {
+                    if (!is_array($dayEntry)) {
+                        continue;
+                    }
+
+                    $accommodationId = $dayEntry['accommodation'] ?? null;
+                    if (blank($accommodationId)) {
+                        continue;
+                    }
+
+                    $accommodation = Accommodation::with('rooms')->find((int) $accommodationId);
+                    if (!$accommodation) {
+                        continue;
+                    }
+
+                    $roomIds = array_values(array_filter(array_map('intval', (array) ($dayEntry['rooms'] ?? []))));
+                    $rooms = !empty($roomIds)
+                        ? $accommodation->rooms()->whereIn('id', $roomIds)->get()
+                        : $accommodation->rooms()->get();
+
+                    foreach ($rooms as $room) {
+                        $mealPlans = $this->resolveRoomMealPlans($room);
+
+                        if (count(array_intersect($selected, $mealPlans)) > 0) {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            });
+        }
+
+        return $filtered->values();
+    }
+
+    private function resolveRoomMealPlans($room): array
+    {
+        if (!$room || !method_exists($room, 'rates')) {
+            return [];
+        }
+
+        $ratePlans = $room->rates();
+
+        if ($ratePlans instanceof \Illuminate\Database\Eloquent\Collection || $ratePlans instanceof \Illuminate\Support\Collection) {
+            $items = $ratePlans;
+        } elseif (is_array($ratePlans)) {
+            $items = collect($ratePlans);
+        } elseif (method_exists($ratePlans, 'where') && method_exists($ratePlans, 'get')) {
+            $items = $ratePlans
+                ->where('is_rate_plan', true)
+                ->whereNotNull('meal_plan')
+                ->get();
+        } else {
+            $items = collect($ratePlans);
+        }
+
+        return collect($items)
+            ->filter(fn ($rate) => is_object($rate) && !empty($rate->is_rate_plan) && !blank($rate->meal_plan ?? null))
+            ->pluck('meal_plan')
+            ->map(fn ($value) => trim((string) $value))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public function showPackage(Package $package)
@@ -455,6 +641,7 @@ class HomeController extends Controller
 
         $summary = $this->buildPackageSummary($package, $itineraryDays, $content);
         $packagePrice = $this->calculatePackageGuestPrice($package, 2, 0, 0);
+        $effectivePolicy = $this->buildEffectivePackagePolicy($package, $itineraryData);
 
         $packageData = [
             'id' => $package->id,
@@ -474,11 +661,245 @@ class HomeController extends Controller
             'hotel_count' => $summary['hotel_count'],
             'activity_count' => $summary['activity_count'],
             'meal_count' => $summary['meal_count'],
+            'effective_policy' => $effectivePolicy,
         ];
 
         return view('frontend.package-show', [
             'package' => $packageData,
         ]);
+    }
+
+    private function buildEffectivePackagePolicy(Package $package, array $itinerary = []): array
+    {
+        $days = max(1, (int) ($package->no_of_days ?? 0));
+        $dates = [];
+
+        if ($days > 0 && $package->available_from) {
+            $start = Carbon::parse($package->available_from);
+            for ($i = 0; $i < $days; $i++) {
+                $dates[] = $start->copy()->addDays($i)->toDateString();
+            }
+        } else {
+            for ($i = 0; $i < $days; $i++) {
+                $dates[] = null;
+            }
+        }
+
+        $dayPolicies = [];
+        foreach ($dates as $index => $date) {
+            $accommodationId = $itinerary[$index]['accommodation'] ?? null;
+            if (!$accommodationId) {
+                continue;
+            }
+
+            $accommodation = Accommodation::with('operator')->find($accommodationId);
+            if (!$accommodation || !$accommodation->operator) {
+                continue;
+            }
+
+            $policy = is_array($accommodation->operator->package_policy ?? null) ? $accommodation->operator->package_policy : [];
+            if (!empty($policy)) {
+                $dayPolicies[] = $policy;
+            }
+        }
+
+        $baseRows = [
+            'cancellation' => [
+                'label' => 'Cancellation',
+                'types' => ['Flexible', 'Moderate', 'Strict', 'Package (Default)', 'Group', 'Non-Refundable', 'No Show'],
+                'beforeOptions' => ['100% Refund', '50% Refund', '20% Refund', '0% Refund'],
+                'afterOptions' => ['100% Refund', '50% Refund', '20% Refund', '0% Refund'],
+            ],
+            'amendments' => [
+                'label' => 'Amendments',
+                'types' => ['Strict', 'Moderate', 'Flexible'],
+                'beforeOptions' => ['Available', 'Not Available'],
+                'afterOptions' => ['Available', 'Not Available'],
+            ],
+            'postponement' => [
+                'label' => 'Postponement',
+                'types' => ['Strict', 'Moderate', 'Flexible'],
+                'beforeOptions' => ['Available', 'Not Available'],
+                'afterOptions' => ['Available', 'Not Available'],
+            ],
+            'payment' => [
+                'label' => 'Payment',
+                'types' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],
+                'beforeOptions' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],
+            ],
+            'refund' => [
+                'label' => 'Refund',
+                'types' => ['Refund Policy'],
+            ],
+            'security_deposit' => [
+                'label' => 'Security Deposit',
+                'types' => ['Required'],
+            ],
+            'house_rules' => [
+                'label' => 'House & Gen. Rules',
+                'types' => ['Applicable'],
+            ],
+        ];
+
+        $result = [];
+        foreach ($baseRows as $key => $meta) {
+            $typeValues = [];
+            $beforeValues = [];
+            $afterValues = [];
+            $notesValues = [];
+
+            foreach ($dayPolicies as $policy) {
+                $entry = $policy[$key] ?? [];
+                if (!is_array($entry)) {
+                    continue;
+                }
+
+                if (isset($entry['type']) && trim((string) $entry['type']) !== '') {
+                    $typeValues[] = trim((string) $entry['type']);
+                }
+                if (isset($entry['before_deadline']) && trim((string) $entry['before_deadline']) !== '') {
+                    $beforeValues[] = trim((string) $entry['before_deadline']);
+                }
+                if (isset($entry['after_deadline']) && trim((string) $entry['after_deadline']) !== '') {
+                    $afterValues[] = trim((string) $entry['after_deadline']);
+                }
+                if (isset($entry['notes']) && trim((string) $entry['notes']) !== '') {
+                    $notesValues[] = trim((string) $entry['notes']);
+                }
+            }
+
+            $result[$key] = [
+                'type' => $this->selectPreferredPolicyValue($key, $typeValues, $meta['types'] ?? []),
+                'before_deadline' => $this->selectDeadlinePreference($beforeValues, $meta['beforeOptions'] ?? [], $key),
+                'after_deadline' => $this->selectDeadlinePreference($afterValues, $meta['afterOptions'] ?? [], $key),
+                'notes' => $this->selectNoteValue($notesValues),
+            ];
+        }
+
+        $bookingNotes = [];
+        $packageNotes = [];
+        foreach ($dayPolicies as $policy) {
+            if (!empty($policy['booking_notes'])) {
+                $bookingNotes[] = trim((string) $policy['booking_notes']);
+            }
+            if (!empty($policy['package_notes'])) {
+                $packageNotes[] = trim((string) $policy['package_notes']);
+            }
+        }
+
+        $result['booking_notes'] = $this->selectNoteValue($bookingNotes);
+        $result['package_notes'] = $this->selectNoteValue($packageNotes);
+
+        return $result;
+    }
+
+    private function selectPreferredPolicyValue(string $key, array $values, array $fallbackOrder = []): string
+    {
+        $normalizedValues = array_values(array_filter(array_map(function ($value) {
+            return trim((string) $value);
+        }, $values)));
+
+        if (empty($normalizedValues)) {
+            return $fallbackOrder[0] ?? '-';
+        }
+
+        $severityMap = [
+            'cancellation' => [
+                'flexible' => 0,
+                'moderate' => 1,
+                'strict' => 2,
+                'package (default)' => 3,
+                'group' => 4,
+                'non-refundable' => 5,
+                'no show' => 6,
+            ],
+            'amendments' => [
+                'flexible' => 0,
+                'moderate' => 1,
+                'strict' => 2,
+            ],
+            'postponement' => [
+                'flexible' => 0,
+                'moderate' => 1,
+                'strict' => 2,
+            ],
+        ];
+
+        $map = $severityMap[$key] ?? null;
+        if ($map !== null) {
+            $bestValue = $normalizedValues[0];
+            $bestScore = -1;
+
+            foreach ($normalizedValues as $value) {
+                $normalizedKey = strtolower(trim((string) $value));
+                if (isset($map[$normalizedKey])) {
+                    $score = $map[$normalizedKey];
+                    if ($score > $bestScore) {
+                        $bestValue = $value;
+                        $bestScore = $score;
+                    }
+                }
+            }
+
+            return $bestValue;
+        }
+
+        return $normalizedValues[0];
+    }
+
+    private function selectDeadlinePreference(array $values, array $fallbackOrder = [], ?string $key = null): string
+    {
+        $normalized = array_values(array_filter(array_map(function ($value) {
+            $trimmed = trim((string) $value);
+            return $trimmed !== '' ? $trimmed : null;
+        }, $values)));
+
+        if (empty($normalized)) {
+            return $fallbackOrder[0] ?? '-';
+        }
+
+        if (in_array($key, ['amendments', 'postponement'], true)) {
+            foreach ($normalized as $value) {
+                if (strtolower(trim((string) $value)) === 'not available') {
+                    return 'Not Available';
+                }
+            }
+        }
+
+        $ranked = [];
+        foreach ($normalized as $value) {
+            $percent = $this->extractPercentageValue($value);
+            $ranked[] = ['value' => $value, 'percent' => $percent];
+        }
+
+        usort($ranked, function ($a, $b) {
+            return $b['percent'] <=> $a['percent'];
+        });
+
+        return $ranked[0]['value'];
+    }
+
+    private function selectNoteValue(array $values): string
+    {
+        $normalized = array_values(array_filter(array_map(function ($value) {
+            $trimmed = trim((string) $value);
+            return $trimmed !== '' ? $trimmed : null;
+        }, $values)));
+
+        if (empty($normalized)) {
+            return '';
+        }
+
+        return implode('; ', $normalized);
+    }
+
+    private function extractPercentageValue(string $value): int
+    {
+        if (preg_match('/(\d+(?:\.\d+)?)\s*%/', strtolower((string) $value), $matches)) {
+            return (int) round((float) $matches[1]);
+        }
+
+        return 0;
     }
 
     private function buildPackageSummary(Package $package, array $itineraryDays, array $content = []): array

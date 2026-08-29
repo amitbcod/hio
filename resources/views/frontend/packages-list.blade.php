@@ -193,17 +193,32 @@
                 <h3 style="margin:0 0 18px; font-size: 18px; font-weight: 700; color:#273246;">Filter by</h3>
                 <div style="margin-bottom:22px;">
                     <div style="font-weight:700; color:#2d3748; margin-bottom:10px;">Property Type</div>
-                    <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; color:#4a5568;"><span style="display:flex; align-items:center; gap:8px;"><input type="checkbox"> Apartment</span><span style="color:#6b7280;">(1)</span></label>
-                    <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; color:#4a5568;"><span style="display:flex; align-items:center; gap:8px;"><input type="checkbox"> Villa</span><span style="color:#6b7280;">(2)</span></label>
-                    <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; color:#4a5568;"><span style="display:flex; align-items:center; gap:8px;"><input type="checkbox"> Resort</span><span style="color:#6b7280;">(3)</span></label>
-                    <label style="display:flex; align-items:center; justify-content:space-between; color:#4a5568;"><span style="display:flex; align-items:center; gap:8px;"><input type="checkbox"> Other</span><span style="color:#6b7280;">(1)</span></label>
+                    @forelse($packageFilterOptions['property_types'] ?? [] as $option)
+                        <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; color:#4a5568;">
+                            <span style="display:flex; align-items:center; gap:8px;">
+                                <input type="checkbox" name="property_type[]" value="{{ $option['value'] }}" {{ in_array((string) $option['value'], $selectedPropertyTypes ?? [], true) ? 'checked' : '' }}>
+                                {{ $option['value'] }}
+                            </span>
+                            <span style="color:#6b7280;">({{ $option['count'] }})</span>
+                        </label>
+                    @empty
+                        <div style="color:#6b7280; font-size:14px;">No property types available.</div>
+                    @endforelse
                 </div>
 
                 <div style="margin-bottom:22px;">
                     <div style="font-weight:700; color:#2d3748; margin-bottom:10px;">Meal Plan</div>
-                    <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; color:#4a5568;"><span style="display:flex; align-items:center; gap:8px;"><input type="checkbox"> Room Only</span><span style="color:#6b7280;">(3)</span></label>
-                    <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; color:#4a5568;"><span style="display:flex; align-items:center; gap:8px;"><input type="checkbox"> Breakfast</span><span style="color:#6b7280;">(4)</span></label>
-                    <label style="display:flex; align-items:center; justify-content:space-between; color:#4a5568;"><span style="display:flex; align-items:center; gap:8px;"><input type="checkbox"> Half Board</span><span style="color:#6b7280;">(1)</span></label>
+                    @forelse($packageFilterOptions['meal_plans'] ?? [] as $option)
+                        <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; color:#4a5568;">
+                            <span style="display:flex; align-items:center; gap:8px;">
+                                <input type="checkbox" name="meal_plan[]" value="{{ $option['value'] }}" {{ in_array((string) $option['value'], $selectedMealPlans ?? [], true) ? 'checked' : '' }}>
+                                {{ $option['value'] }}
+                            </span>
+                            <span style="color:#6b7280;">({{ $option['count'] }})</span>
+                        </label>
+                    @empty
+                        <div style="color:#6b7280; font-size:14px;">No meal plans available.</div>
+                    @endforelse
                 </div>
 
                 <div style="margin-bottom:22px;">

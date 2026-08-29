@@ -13,7 +13,14 @@
                     class="btn btn-secondary-outline">&larr; {{ __('traveler.trip_detail.back_to_trips') }}</a>
                 <div class="trip-id">
                     <h2>{{ __('traveler.trip_detail.heading') }} <strong>#{{ $trip->id }}</strong></h2>
-                    <!-- <p style="color: #666; font-size: 1rem; margin: 5px 0; padding: 12px 16px; background: #fff3e0; border-left: 4px solid #ff9500; display: inline-block; border-radius: 4px;">Trip ID: <strong>#{{ $trip->id }}</strong></p> -->
+                    @php
+                        $tripIsPackage = $trip->bookings
+                            ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
+                            ->contains(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');
+                    @endphp
+                    @if($tripIsPackage)
+                        <p style="color: #b45309; font-size: 0.9rem; font-weight: 700; margin: 8px 0 0; padding: 8px 12px; background: #fff3e0; border-left: 4px solid #f59e0b; border-radius: 4px; display: inline-block;">Package Trip</p>
+                    @endif
 
                     @php
                         $tripHasEnded = $tripEndDate && \Carbon\Carbon::parse($tripEndDate)->isPast();
@@ -71,265 +78,153 @@
                 </div>
             </div>
 
-            <!-- New Accommodation Bookings Section (dynamic) -->
-            @if($accommodationBookings->count() > 0)
-                @foreach($accommodationBookings as $booking)
-                    <div class="booking-card dynamic-card">
-                        <div class="booking-header">
+            @if(!empty($packageDetails) && $packageDetails->count() > 0)
+                <div class="booking-card dynamic-card">
+                    <div class="booking-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:12px;">
                             <div class="header-icon">
-                                <i class="fa-solid fa-bed"></i>
+                                <i class="fa-solid fa-suitcase-rolling"></i>
                             </div>
-                            <h2>{{ __('traveler.trip_detail.accommodation_booking') }}</h2>
+                            <h2>Package Services</h2>
                         </div>
-
-                        <div class="booking-content">
-                            <div class="left-section">
-                                @php
-                                    $heroMedia = $booking->accommodation && $booking->accommodation->media ? $booking->accommodation->media->firstWhere('media_type', 'hero') : null;
-                                    $img = $heroMedia && $heroMedia->path ? asset('storage/' . $heroMedia->path) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600';
-                                @endphp
-                                <img src="{{ $img }}" alt="{{ $booking->accommodation->property_name ?? __('traveler.trip_detail.accommodation') }}" class="property-img">
-                                <div class="property-info">
-                                    <h3>{{ $booking->accommodation ? $booking->accommodation->property_name : __('traveler.trip_detail.not_set') }}</h3>
-                                    <div class="type">{{ $booking->room ? $booking->room->room_name : '' }}</div>
-
-                                    <div class="ref-label">{{ __('traveler.trip_detail.booking_ref') }}</div>
-                                    <div class="ref-no">{{ $booking->booking_reference }}</div>
-                                </div>
+                        @if(!empty($packageBookingReference))
+                            <div style="font-size:0.82rem; font-weight:700; color:#374151; background:#eef2ff; border:1px solid #c7d2fe; border-radius:999px; padding:6px 10px; letter-spacing:0.02em;">
+                                Booking Ref {{ $packageBookingReference }}
                             </div>
-                            @php
-                                $cancelDate = $booking->check_in_date ?? $booking->activity_date;
-                                $canCancel = in_array($booking->booking_status, ['Confirmed', 'Pending']) && $cancelDate && $cancelDate->gt(\Carbon\Carbon::today());
-                            @endphp
-                            <div class="right-section2">
-                                <div class="status">
-                                    {{ $booking->booking_status ?? 'Pending' }}
+                        @endif
+                    </div>
+
+                    @foreach($packageDetails as $day)
+                        @php $dayServices = $day['services'] ?? collect(); @endphp
+                        @if($dayServices->isNotEmpty())
+                            <div style="border: 1px solid #e5e7eb; border-radius: 12px; margin: 18px 0; padding: 18px; background: #fff;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+                                    <div style="font-size:1.05rem; font-weight:700; color:#1f2937;">
+                                        Day {{ $day['day'] }}
+                                    </div>
+                                    <div style="font-size:0.92rem; color:#6b7280;">
+                                        {{ $day['date'] ?? '' }}
+                                    </div>
                                 </div>
-                                @if($canCancel && (!isset($guestMode) || !$guestMode))
-                                    <form method="POST" action="{{ route('traveler.trip.booking.cancel', ['trip' => $trip->id, 'booking' => $booking->id]) }}" onsubmit="return confirm('{{ __('traveler.trip_cancel_confirm') }}');">
-                                        @csrf
-                                        <button type="submit" class="cancel-btn">
-                                            {{ __('traveler.trip_cancel_button') }}
-                                        </button>
-                                    </form>
+
+                                @foreach($dayServices as $service)
+                                    @php
+                                        $serviceType = $service['type'] ?? 'service';
+                                        $serviceTitle = $service['title'] ?? ucfirst($serviceType);
+                                    @endphp
+                                    <div class="booking-content" style="margin-bottom:12px; border:1px solid #f0f0f0; border-radius:10px; padding:14px; background:#fafafa; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+                                        <div class="left-section" style="display:flex; align-items:center; gap:14px; flex:1 1 320px; min-width:0;">
+                                            <img src="{{ $service['image'] ?? 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800' }}" alt="{{ $serviceTitle }}" class="property-img">
+                                            <div class="property-info" style="min-width:0;">
+                                                <h3>{{ $serviceTitle }}</h3>
+                                                @if(!empty($service['subtitle']))
+                                                    <div class="subtitle">{{ $service['subtitle'] }}</div>
+                                                @endif
+                                                @if(!empty($service['location']))
+                                                    <div class="type">{{ $service['location'] }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <div class="right-section2" style="display:flex; flex-direction:column; align-items:flex-end; justify-content:flex-start; min-width:210px; gap:10px; flex:0 0 220px;">
+                                            <div class="status">{{ $service['service_label'] ?? ucfirst($serviceType) }}</div>
+                                            <div class="booking-details" style="width:100%; border-top:1px solid #f0f0f0; padding-top:10px; display:flex; flex-direction:column; gap:8px;">
+                                                <div class="detail-item" style="display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;">
+                                                    <div class="detail-title" style="display:flex; align-items:center; gap:8px; color:#374151; font-size:0.9rem;">
+                                                        <i class="fa-solid fa-users"></i>
+                                                        <span>{{ __('traveler.trip_detail.guests') }}</span>
+                                                    </div>
+                                                    <div class="detail-value" style="text-align:right; color:#111827; font-size:0.9rem;">
+                                                        {{ __('traveler.trip_detail.booked') }}: {{ $service['booked_count'] ?? 1 }}<br>
+                                                        {{ __('traveler.trip_detail.added') }}: {{ $service['added_count'] ?? 0 }}
+                                                    </div>
+                                                </div>
+
+                                                <div class="detail-item" style="display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;">
+                                                    <div class="detail-title" style="display:flex; align-items:center; gap:8px; color:#374151; font-size:0.9rem;">
+                                                        <i class="fa-regular fa-credit-card"></i>
+                                                        <span>{{ __('traveler.trip_detail.amount') }}</span>
+                                                    </div>
+                                                    <div class="detail-value" style="text-align:right; color:#111827; font-size:0.9rem; font-weight:700;">
+                                                        {{ $service['currency'] ?? 'USD' }} {{ number_format((float) ($service['amount'] ?? 0), 2) }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="actions" style="margin: 0 0 12px; display:flex; justify-content:flex-end; gap:8px;">
+                                        @if(!empty($service['manage_route']) && ($service['type'] ?? '') !== 'transport')
+                                            <a href="{{ $service['manage_route'] }}" class="btn btn-manage">
+                                                <i class="fa-solid fa-gear"></i>
+                                                {{ __('traveler.trip_detail.manage') }}
+                                            </a>
+                                        @endif
+                                        <a href="{{ $service['voucher_route'] ?? '#' }}" class="btn btn-sm btn-secondary btn-download">
+                                            <i class="fa-solid fa-download"></i>
+                                            {{ __('traveler.trip_detail.download_voucher') }}
+                                        </a>
+                                    </div>
+                                @endforeach
+
+                                @if(!empty($day['meal_plan']))
+                                    <div class="booking-details" style="margin-top: 10px; border-top: 1px solid #f0f0f0; padding-top: 10px;">
+                                        <div class="detail-item" style="flex-basis:100%;">
+                                            <div class="detail-title">
+                                                <i class="fa-solid fa-utensils"></i>
+                                                <span>
+                                                    Meal Plan
+                                                    <div class="detail-value">{{ $day['meal_plan'] }}</div>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 @endif
                             </div>
-                        </div>
-                        <div class="booking-details">
-                            <div class="detail-item">
-                                <div class="detail-title">
-                                    <i class="fa-regular fa-calendar"></i>
-                                    <span>
-                                        {{ __('traveler.trip_detail.check_in') }}
-                                        <div class="detail-value">{{ $booking->check_in_date ? $booking->check_in_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</div>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="detail-item">
-                                <div class="detail-title">
-                                    <i class="fa-regular fa-calendar"></i>
-                                    <span>
-                                        {{ __('traveler.trip_detail.check_out') }}
-                                        <div class="detail-value">{{ $booking->check_out_date ? $booking->check_out_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</div>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="detail-item">
-                                <div class="detail-title">
-                                    <i class="fa-solid fa-users"></i>
-                                    <span>
-                                        {{ __('traveler.trip_detail.guests') }}
-                                        <div class="detail-value">
-                                            @php
-                                                $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
-                                                $addedCount = $booking->guests->count();
-                                            @endphp
-                                            {{ __('traveler.trip_detail.booked') }}: {{ $bookedCount }}<br>
-                                            {{ __('traveler.trip_detail.added') }}: {{ $addedCount }}
-                                        </div>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="detail-item">
-                                <div class="detail-title">
-                                    <i class="fa-regular fa-credit-card"></i>
-                                    <span>
-                                        {{ __('traveler.trip_detail.amount') }}
-                                        <div class="detail-value">
-                                            {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
-                                        </div>
-                                    </span>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="actions">
-                            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-manage">
-                                <i class="fa-solid fa-gear"></i>
-                                {{ __('traveler.trip_detail.manage') }}
-                            </a>
-
-                            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-secondary btn-download">
-                                <i class="fa-solid fa-download"></i>
-                                {{ __('traveler.trip_detail.download_voucher') }}
-                            </a>
-                        </div>
-                    </div>
-                @endforeach
+                        @endif
+                    @endforeach
+                </div>
             @endif
 
+            @php
+                $hasPackageTrip = !empty($packageDetails) && $packageDetails->count() > 0;
+            @endphp
 
-            <!-- New Activity Bookings Section (dynamic) -->
-            @if($activityBookings->count() > 0)
-                @foreach($activityBookings as $booking)
-                    <div class="activity-card dynamic-card">
-                        <div class="activity-card-body">
+            @if(!$hasPackageTrip)
+                <!-- New Accommodation Bookings Section (dynamic) -->
+                @if($accommodationBookings->count() > 0)
+                    @foreach($accommodationBookings as $booking)
+                        <div class="booking-card dynamic-card">
                             <div class="booking-header">
                                 <div class="header-icon">
-                                    <i class="fa-solid fa-person-hiking"></i>
+                                    <i class="fa-solid fa-bed"></i>
                                 </div>
-                                <h2>{{ $booking->activity ? $booking->activity->activity_name : __('traveler.trip_detail.activity_booking') }}</h2>
+                                <h2>{{ __('traveler.trip_detail.accommodation_booking') }}</h2>
                             </div>
 
                             <div class="booking-content">
                                 <div class="left-section">
                                     @php
-                                        $img = null;
-                                        if ($booking->activity) {
-                                            if (!empty($booking->activity->hero_banner_image)) {
-                                                $img = asset('storage/' . $booking->activity->hero_banner_image);
-                                            } elseif (!empty($booking->activity->gallery_images) && is_array($booking->activity->gallery_images) && !empty($booking->activity->gallery_images[0])) {
-                                                $img = asset('storage/' . $booking->activity->gallery_images[0]);
-                                            }
-                                        }
-                                        $img = $img ?? 'https://images.unsplash.com/photo-1528127269322-539801943592?w=500';
+                                        $heroMedia = $booking->accommodation && $booking->accommodation->media ? $booking->accommodation->media->firstWhere('media_type', 'hero') : null;
+                                        $img = $heroMedia && $heroMedia->path ? asset('storage/' . $heroMedia->path) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600';
                                     @endphp
-                                    <img src="{{ $img }}" class="property-img" alt="{{ $booking->activity->activity_name ?? 'Activity' }}">
+                                    <img src="{{ $img }}" alt="{{ $booking->accommodation->property_name ?? __('traveler.trip_detail.accommodation') }}" class="property-img">
+                                    <div class="property-info">
+                                        <h3>{{ $booking->accommodation ? $booking->accommodation->property_name : __('traveler.trip_detail.not_set') }}</h3>
+                                        <div class="type">{{ $booking->room ? $booking->room->room_name : '' }}</div>
 
-                                    <div>
-                                        <div class="activity-info">
-                                            <h3>{{ $booking->variant_name ?: ($booking->activity ? $booking->activity->activity_name : __('traveler.trip_detail.not_set')) }}</h3>
-                                            @php
-                                                $activityLocation = '';
-                                                if ($booking->activity) {
-                                                    $activityRegionValue = $booking->activity->regions ?? $booking->activity->address ?? null;
-                                                    $locationParts = array_filter([
-                                                        $booking->activity->town,
-                                                        $activityRegionValue,
-                                                        $booking->activity->country,
-                                                    ]);
-                                                    $activityLocation = implode(', ', $locationParts);
-                                                }
-                                            @endphp
-                                            <div class="subtitle">{{ $activityLocation }}</div>
-                                        </div>
-
-                                        <div class="booking-details">
-                                            <div class="detail-item">
-                                                <div class="detail-title">
-                                                    <i class="fa-regular fa-calendar"></i>
-                                                    <span>{{ __('traveler.trip_detail.activity_date') }}
-                                                        <div class="detail-value">
-                                                            {{ $booking->activity_date ? $booking->activity_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}
-                                                        </div>
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div class="detail-item">
-                                                <div class="detail-title">                                                    <i class="fa-solid fa-users"></i>
-                                                    <span>{{ __('traveler.trip_detail.participants') }}
-                                                        <div class="detail-value">
-                                                            @php
-                                                                $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
-                                                                $addedCount = $booking->guests->count();
-                                                            @endphp
-                                                            {{ __('traveler.trip_detail.booked') }}: {{ $bookedCount }}<br>
-                                                            {{ __('traveler.trip_detail.added') }}: {{ $addedCount }}
-                                                        </div>
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <!-- <div class="detail-item">
-                                                <div class="detail-title">
-                                                    <i class="fa-regular fa-clock"></i>
-                                                    <span>{{ __('traveler.trip_detail.time_slot') }}
-                                                        <div class="detail-value">
-                                                            @php
-                                                                $slot = $booking->activity_time_slot_id && $booking->activity && $booking->activity->schedulingTimeSlots 
-                                                                    ? $booking->activity->schedulingTimeSlots->firstWhere('timeslot_id', $booking->activity_time_slot_id) 
-                                                                    : null;
-                                                            @endphp
-                                                            @if($slot)
-                                                                {{ $slot->start_time }} - {{ $slot->end_time }}
-                                                            @else
-                                                                {{ $booking->time_slot ?? ($booking->start_time && $booking->end_time ? $booking->start_time . ' - ' . $booking->end_time : '-') }}
-                                                            @endif
-                                                        </div>
-                                                        @if(!empty($booking->duration))
-                                                            <div class="detail-small">{{ __('traveler.trip_detail.duration') }}: {{ $booking->duration }}</div>
-                                                        @endif
-                                                    </span>
-                                                </div>
-                                            </div> -->
-                                            <div class="detail-item">
-                                                <div class="detail-title">
-                                                    <i class="fa-regular fa-clock"></i>
-                                                    <span>
-                                                        {{ __('traveler.trip_detail.time_slot') }}
-
-                                                        <div class="detail-value">
-                                                            @php
-                                                                $slot = $booking->activity_time_slot_id && $booking->activity && $booking->activity->schedulingTimeSlots
-                                                                    ? $booking->activity->schedulingTimeSlots->firstWhere('timeslot_id', $booking->activity_time_slot_id)
-                                                                    : null;
-                                                            @endphp
-
-                                                            @if($slot)
-                                                                {{ date('H:i', strtotime($slot->start_time)) }} - {{ date('H:i', strtotime($slot->end_time)) }}
-                                                            @else
-                                                                @if($booking->time_slot)
-                                                                    {{ $booking->time_slot }}
-                                                                @elseif($booking->start_time && $booking->end_time)
-                                                                    {{ date('H:i', strtotime($booking->start_time)) }} - {{ date('H:i', strtotime($booking->end_time)) }}
-                                                                @else
-                                                                    -
-                                                                @endif
-                                                            @endif
-                                                        </div>
-
-                                                        @if(!empty($booking->duration))
-                                                            <div class="detail-small">
-                                                                {{ __('traveler.trip_detail.duration') }}: {{ $booking->duration }}
-                                                            </div>
-                                                        @endif
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="detail-item">
-                                                <div class="detail-title">
-                                                    <span>{{ __('traveler.trip_detail.amount') }}
-                                                        <div class="amount">
-                                                            {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
-                                                        </div>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <div class="ref-label">{{ __('traveler.trip_detail.booking_ref') }}</div>
+                                        <div class="ref-no">{{ $booking->booking_reference }}</div>
                                     </div>
                                 </div>
-
                                 @php
                                     $cancelDate = $booking->check_in_date ?? $booking->activity_date;
                                     $canCancel = in_array($booking->booking_status, ['Confirmed', 'Pending']) && $cancelDate && $cancelDate->gt(\Carbon\Carbon::today());
                                 @endphp
-                                <div class="right-section">
-                                    <div class="status">{{ $booking->booking_status ?? __('traveler.trip_detail.not_set') }}</div>
+                                <div class="right-section2">
+                                    <div class="status">
+                                        {{ $booking->booking_status ?? 'Pending' }}
+                                    </div>
                                     @if($canCancel && (!isset($guestMode) || !$guestMode))
                                         <form method="POST" action="{{ route('traveler.trip.booking.cancel', ['trip' => $trip->id, 'booking' => $booking->id]) }}" onsubmit="return confirm('{{ __('traveler.trip_cancel_confirm') }}');">
                                             @csrf
@@ -338,191 +233,383 @@
                                             </button>
                                         </form>
                                     @endif
-                                    <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="manage-link">
-                                        {{ __('traveler.trip_detail.manage') }}
-                                        <i class="fa-solid fa-angle-right"></i>
-                                    </a>
+                                </div>
+                            </div>
+                            <div class="booking-details">
+                                <div class="detail-item">
+                                    <div class="detail-title">
+                                        <i class="fa-regular fa-calendar"></i>
+                                        <span>
+                                            {{ __('traveler.trip_detail.check_in') }}
+                                            <div class="detail-value">{{ $booking->check_in_date ? $booking->check_in_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</div>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="detail-item">
+                                    <div class="detail-title">
+                                        <i class="fa-regular fa-calendar"></i>
+                                        <span>
+                                            {{ __('traveler.trip_detail.check_out') }}
+                                            <div class="detail-value">{{ $booking->check_out_date ? $booking->check_out_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</div>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="detail-item">
+                                    <div class="detail-title">
+                                        <i class="fa-solid fa-users"></i>
+                                        <span>
+                                            {{ __('traveler.trip_detail.guests') }}
+                                            <div class="detail-value">
+                                                @php
+                                                    $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
+                                                    $addedCount = $booking->guests->count();
+                                                @endphp
+                                                {{ __('traveler.trip_detail.booked') }}: {{ $bookedCount }}<br>
+                                                {{ __('traveler.trip_detail.added') }}: {{ $addedCount }}
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="detail-item">
+                                    <div class="detail-title">
+                                        <i class="fa-regular fa-credit-card"></i>
+                                        <span>
+                                            {{ __('traveler.trip_detail.amount') }}
+                                            <div class="detail-value">
+                                                {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="actions">
+                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-manage">
+                                    <i class="fa-solid fa-gear"></i>
+                                    {{ __('traveler.trip_detail.manage') }}
+                                </a>
+
+                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-secondary btn-download">
+                                    <i class="fa-solid fa-download"></i>
+                                    {{ __('traveler.trip_detail.download_voucher') }}
+                                </a>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+
+                <!-- New Activity Bookings Section (dynamic) -->
+                @if($activityBookings->count() > 0)
+                    @foreach($activityBookings as $booking)
+                        <div class="activity-card dynamic-card">
+                            <div class="activity-card-body">
+                                <div class="booking-header">
+                                    <div class="header-icon">
+                                        <i class="fa-solid fa-person-hiking"></i>
+                                    </div>
+                                    <h2>{{ $booking->activity ? $booking->activity->activity_name : __('traveler.trip_detail.activity_booking') }}</h2>
+                                </div>
+
+                                <div class="booking-content">
+                                    <div class="left-section">
+                                        @php
+                                            $img = null;
+                                            if ($booking->activity) {
+                                                if (!empty($booking->activity->hero_banner_image)) {
+                                                    $img = asset('storage/' . $booking->activity->hero_banner_image);
+                                                } elseif (!empty($booking->activity->gallery_images) && is_array($booking->activity->gallery_images) && !empty($booking->activity->gallery_images[0])) {
+                                                    $img = asset('storage/' . $booking->activity->gallery_images[0]);
+                                                }
+                                            }
+                                            $img = $img ?? 'https://images.unsplash.com/photo-1528127269322-539801943592?w=500';
+                                        @endphp
+                                        <img src="{{ $img }}" class="property-img" alt="{{ $booking->activity->activity_name ?? 'Activity' }}">
+
+                                        <div>
+                                            <div class="activity-info">
+                                                <h3>{{ $booking->variant_name ?: ($booking->activity ? $booking->activity->activity_name : __('traveler.trip_detail.not_set')) }}</h3>
+                                                @php
+                                                    $activityLocation = '';
+                                                    if ($booking->activity) {
+                                                        $activityRegionValue = $booking->activity->regions ?? $booking->activity->address ?? null;
+                                                        $locationParts = array_filter([
+                                                            $booking->activity->town,
+                                                            $activityRegionValue,
+                                                            $booking->activity->country,
+                                                        ]);
+                                                        $activityLocation = implode(', ', $locationParts);
+                                                    }
+                                                @endphp
+                                                <div class="subtitle">{{ $activityLocation }}</div>
+                                            </div>
+
+                                            <div class="booking-details">
+                                                <div class="detail-item">
+                                                    <div class="detail-title">
+                                                        <i class="fa-regular fa-calendar"></i>
+                                                        <span>{{ __('traveler.trip_detail.activity_date') }}
+                                                            <div class="detail-value">
+                                                                {{ $booking->activity_date ? $booking->activity_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}
+                                                            </div>
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="detail-item">
+                                                    <div class="detail-title"><i class="fa-solid fa-users"></i>
+                                                        <span>{{ __('traveler.trip_detail.participants') }}
+                                                            <div class="detail-value">
+                                                                @php
+                                                                    $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
+                                                                    $addedCount = $booking->guests->count();
+                                                                @endphp
+                                                                {{ __('traveler.trip_detail.booked') }}: {{ $bookedCount }}<br>
+                                                                {{ __('traveler.trip_detail.added') }}: {{ $addedCount }}
+                                                            </div>
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="detail-item">
+                                                    <div class="detail-title">
+                                                        <i class="fa-regular fa-clock"></i>
+                                                        <span>
+                                                            {{ __('traveler.trip_detail.time_slot') }}
+                                                            <div class="detail-value">
+                                                                @php
+                                                                    $slot = $booking->activity_time_slot_id && $booking->activity && $booking->activity->schedulingTimeSlots
+                                                                        ? $booking->activity->schedulingTimeSlots->firstWhere('timeslot_id', $booking->activity_time_slot_id)
+                                                                        : null;
+                                                                @endphp
+
+                                                                @if($slot)
+                                                                    {{ date('H:i', strtotime($slot->start_time)) }} - {{ date('H:i', strtotime($slot->end_time)) }}
+                                                                @else
+                                                                    @if($booking->time_slot)
+                                                                        {{ $booking->time_slot }}
+                                                                    @elseif($booking->start_time && $booking->end_time)
+                                                                        {{ date('H:i', strtotime($booking->start_time)) }} - {{ date('H:i', strtotime($booking->end_time)) }}
+                                                                    @else
+                                                                        -
+                                                                    @endif
+                                                                @endif
+                                                            </div>
+
+                                                            @if(!empty($booking->duration))
+                                                                <div class="detail-small">
+                                                                    {{ __('traveler.trip_detail.duration') }}: {{ $booking->duration }}
+                                                                </div>
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <div class="detail-title">
+                                                        <span>{{ __('traveler.trip_detail.amount') }}
+                                                            <div class="amount">
+                                                                {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
+                                                            </div>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @php
+                                        $cancelDate = $booking->check_in_date ?? $booking->activity_date;
+                                        $canCancel = in_array($booking->booking_status, ['Confirmed', 'Pending']) && $cancelDate && $cancelDate->gt(\Carbon\Carbon::today());
+                                    @endphp
+                                    <div class="right-section">
+                                        <div class="status">{{ $booking->booking_status ?? __('traveler.trip_detail.not_set') }}</div>
+                                        @if($canCancel && (!isset($guestMode) || !$guestMode))
+                                            <form method="POST" action="{{ route('traveler.trip.booking.cancel', ['trip' => $trip->id, 'booking' => $booking->id]) }}" onsubmit="return confirm('{{ __('traveler.trip_cancel_confirm') }}');">
+                                                @csrf
+                                                <button type="submit" class="cancel-btn">
+                                                    {{ __('traveler.trip_cancel_button') }}
+                                                </button>
+                                            </form>
+                                        @endif
+                                        <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="manage-link">
+                                            {{ __('traveler.trip_detail.manage') }}
+                                            <i class="fa-solid fa-angle-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="timeslot-box" style="display:none">
+                                    <div>
+                                        <div class="timeslot-title">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                            <span>{{ __('traveler.trip_detail.time_slot_details') }}
+                                                @if(!empty($booking->time_slot_notes))
+                                                    <p>{!! nl2br(e($booking->time_slot_notes)) !!}</p>
+                                                @endif
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="kayak-icon">
+                                        <img src="{{ asset('images/boat.png') }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+
+                @if(isset($transportBookings) && $transportBookings->count() > 0)
+                    @foreach($transportBookings as $booking)
+                        @php
+                            $transportImg = null;
+                            if ($booking->transport) {
+                                if (!empty($booking->transport->gallery_images) && is_array($booking->transport->gallery_images) && !empty($booking->transport->gallery_images[0])) {
+                                    $transportImg = asset('storage/' . $booking->transport->gallery_images[0]);
+                                }
+                            }
+                            $transportImg = $transportImg ?? 'https://images.unsplash.com/photo-1521033719794-41049d18c355?w=600';
+                        @endphp
+
+                        <div class="booking-card dynamic-card transport-card">
+                            <div class="booking-header">
+                                <div class="header-icon">
+                                    <i class="fa-solid fa-bus"></i>
+                                </div>
+                                <h2>{{ __('traveler.trip_detail.transport_booking') }}</h2>
+                            </div>
+
+                            <div class="booking-content">
+                                <div class="left-section">
+                                    <img src="{{ $transportImg }}" alt="{{ $booking->transport?->vehicle_name ?? __('traveler.trip_detail.transport') }}" class="property-img">
+                                    <div class="property-info">
+                                        <h3>{{ $booking->transport?->vehicle_name ?? __('traveler.trip_detail.transport') }}</h3>
+                                        @if(!empty($booking->transport?->vehicle_type))
+                                            <div class="subtitle">{{ $booking->transport->vehicle_type }}</div>
+                                        @endif
+                                        @php
+                                            $displayType = $booking->service_type_display ?? '-';
+                                        @endphp
+                                        <div class="subtitle" style="font-weight:600;color:#4a4a4a;">{{ $displayType }}</div>
+                                        <div class="type">{{ trim(($booking->route_from ?? '') . ' → ' . ($booking->route_to ?? '')) }}</div>
+
+                                        <div class="ref-label">{{ __('traveler.trip_detail.booking_ref') }}</div>
+                                        <div class="ref-no">{{ $booking->booking_reference }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="right-section2">
+                                    <div class="status">
+                                        {{ $booking->booking_status ?? 'Pending' }}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="timeslot-box" style="display:none">
-                                <div>
-                                    <div class="timeslot-title">
-                                        <i class="fa-solid fa-circle-info"></i>
-                                        <span>{{ __('traveler.trip_detail.time_slot_details') }}
-                                            @if(!empty($booking->time_slot_notes))
-                                                <p>{!! nl2br(e($booking->time_slot_notes)) !!}</p>
+                            <div class="booking-details">
+                                <div class="detail-item">
+                                    <div class="detail-title">
+                                        <i class="fa-regular fa-calendar"></i>
+                                        <span>
+                                            {{ __('traveler.trip_detail.pickup') }}
+                                            <div class="detail-value">{{ $booking->pickup_date ? $booking->pickup_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</div>
+                                            @if(!empty($booking->pickup_time))
+                                                <div class="detail-small">{{ $booking->pickup_time }}</div>
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <div class="detail-title">
+                                        <i class="fa-regular fa-user"></i>
+                                        <span>
+                                            @if($booking->pickupDriver)
+                                                <div class="name-assigneddriver">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
+                                                <div class="detail-value">{{ $booking->pickupDriver->driver_name }}</div>
                                             @endif
                                         </span>
                                     </div>
                                 </div>
-                                <div class="kayak-icon">
-                                    <img src="{{ asset('images/boat.png') }}">
+
+                                <div class="detail-item">
+                                    <div class="detail-title">
+                                        <i class="fa-regular fa-calendar"></i>
+                                        <span>
+                                            {{ __('traveler.trip_detail.return') }}
+                                            <div class="detail-value">{{ $booking->return_date ? $booking->return_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</div>
+                                            @if(!empty($booking->return_time))
+                                                <div class="detail-small">{{ $booking->return_time }}</div>
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <div class="detail-title">
+                                        <i class="fa-regular fa-user"></i>
+                                        <span>
+                                            @if($booking->returnDriver)
+                                                <div class="name-assigneddriver">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
+                                                <div class="detail-value">{{ $booking->returnDriver->driver_name }}</div>
+                                            @endif
+                                        </span>
+                                    </div>
                                 </div>
+
+                                <div class="detail-item">
+                                    <div class="detail-title">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                        <span>
+                                            {{ __('traveler.trip_detail.pickup_address') }}
+                                            <div class="detail-value">{{ $booking->pickup_address ? $booking->pickup_address : __('traveler.trip_detail.not_set') }}</div>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="detail-item">
+                                    <div class="detail-title">
+                                        <i class="fa-solid fa-map-pin"></i>
+                                        <span>
+                                            {{ __('traveler.trip_detail.dropoff_address') }}
+                                            <div class="detail-value">{{ $booking->dropoff_address ? $booking->dropoff_address : __('traveler.trip_detail.not_set') }}</div>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="detail-item">
+                                    <div class="detail-title">
+                                        <i class="fa-solid fa-users"></i>
+                                        <span>
+                                            {{ __('traveler.trip_detail.passengers') }}
+                                            <div class="detail-value">
+                                                {{ $booking->total_passengers ?? (($booking->adults ?? 0) + ($booking->children ?? 0)) }}
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="detail-item">
+                                    <div class="detail-title">
+                                        <i class="fa-regular fa-credit-card"></i>
+                                        <span>
+                                            {{ __('traveler.trip_detail.amount') }}
+                                            <div class="detail-value">
+                                                {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="actions">
+                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-secondary btn-download">
+                                    <i class="fa-solid fa-download"></i>
+                                    {{ __('traveler.trip_detail.download_voucher') }}
+                                </a>
                             </div>
                         </div>
+                    @endforeach
+                @endif
 
-                        <!-- <div class="activity-footer">
-                            <a href="#">{{ __('traveler.trip_detail.view_all_activities', ['count' => $activityBookings->count()]) }} <i class="fa-solid fa-angle-down"></i></a>
-                        </div> -->
-                    </div>
-                @endforeach
-            @endif
-
-            @if(isset($transportBookings) && $transportBookings->count() > 0)
-                @foreach($transportBookings as $booking)
-                    @php
-                        $transportImg = null;
-                        if ($booking->transport) {
-                            if (!empty($booking->transport->gallery_images) && is_array($booking->transport->gallery_images) && !empty($booking->transport->gallery_images[0])) {
-                                $transportImg = asset('storage/' . $booking->transport->gallery_images[0]);
-                            }
-                        }
-                        $transportImg = $transportImg ?? 'https://images.unsplash.com/photo-1521033719794-41049d18c355?w=600';
-                    @endphp
-
-                    <div class="booking-card dynamic-card transport-card">
-                        <div class="booking-header">
-                            <div class="header-icon">
-                                <i class="fa-solid fa-bus"></i>
-                            </div>
-                            <h2>{{ __('traveler.trip_detail.transport_booking') }}</h2>
-                        </div>
-
-                        <div class="booking-content">
-                            <div class="left-section">
-                                <img src="{{ $transportImg }}" alt="{{ $booking->transport?->vehicle_name ?? __('traveler.trip_detail.transport') }}" class="property-img">
-                                <div class="property-info">
-                                    <h3>{{ $booking->transport?->vehicle_name ?? __('traveler.trip_detail.transport') }}</h3>
-                                    @if(!empty($booking->transport?->vehicle_type))
-                                        <div class="subtitle">{{ $booking->transport->vehicle_type }}</div>
-                                    @endif
-                                    @php
-                                        // Show persisted display value or a dash for older rows without service_type
-                                        $displayType = $booking->service_type_display ?? '-';
-                                    @endphp
-                                    <div class="subtitle" style="font-weight:600;color:#4a4a4a;">{{ $displayType }}</div>
-                                    <div class="type">{{ trim(($booking->route_from ?? '') . ' → ' . ($booking->route_to ?? '')) }}</div>
-
-                                    <div class="ref-label">{{ __('traveler.trip_detail.booking_ref') }}</div>
-                                    <div class="ref-no">{{ $booking->booking_reference }}</div>
-                                </div>
-                            </div>
-
-                            <div class="right-section2">
-                                <div class="status">
-                                    {{ $booking->booking_status ?? 'Pending' }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="booking-details">
-                            <div class="detail-item">
-                                <div class="detail-title">
-                                    <i class="fa-regular fa-calendar"></i>
-                                    <span>
-                                        {{ __('traveler.trip_detail.pickup') }}
-                                        <div class="detail-value">{{ $booking->pickup_date ? $booking->pickup_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</div>
-                                        @if(!empty($booking->pickup_time))
-                                            <div class="detail-small">{{ $booking->pickup_time }}</div>
-                                        @endif
-                                        
-                                    </span>
-                                </div>
-                                <div class="detail-title">
-                                    <i class="fa-regular fa-user"></i>
-                                    <span>
-                                        @if($booking->pickupDriver)
-                                            <div class="name-assigneddriver">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
-                                            <!-- <div class="detail-small">{{ $booking->pickupDriver->driver_name }}{{ $booking->pickupDriver->driver_phone ? ' • ' . $booking->pickupDriver->driver_phone : '' }}</div> -->
-                                              <div class="detail-value">{{ $booking->pickupDriver->driver_name }}</div>
-                                        @endif
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="detail-item">
-                                <div class="detail-title">
-                                    <i class="fa-regular fa-calendar"></i>
-                                    <span>
-                                        {{ __('traveler.trip_detail.return') }}
-                                        <div class="detail-value">{{ $booking->return_date ? $booking->return_date->format('d/m/Y') : __('traveler.trip_detail.not_set') }}</div>
-                                        @if(!empty($booking->return_time))
-                                            <div class="detail-small">{{ $booking->return_time }}</div>
-                                        @endif
-                                        
-                                    </span>
-                                </div>
-                                <div class="detail-title">
-                                    <i class="fa-regular fa-user"></i>
-                                    <span>
-                                        @if($booking->returnDriver)
-                                            <div class="name-assigneddriver">{{ __('traveler.trip_detail.assigned_driver') }}:</div>
-                                            <!-- <div class="detail-small">{{ $booking->returnDriver->driver_name }}{{ $booking->returnDriver->driver_phone ? ' • ' . $booking->returnDriver->driver_phone : '' }}</div> -->
-                                               <div class="detail-value">{{ $booking->returnDriver->driver_name }}</div>
-                                        @endif
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="detail-item">
-                                <div class="detail-title">
-                                    <i class="fa-solid fa-location-dot"></i>
-                                    <span>
-                                        {{ __('traveler.trip_detail.pickup_address') }}
-                                        <div class="detail-value">{{ $booking->pickup_address ? $booking->pickup_address : __('traveler.trip_detail.not_set') }}</div>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="detail-item">
-                                <div class="detail-title">
-                                    <i class="fa-solid fa-map-pin"></i>
-                                    <span>
-                                        {{ __('traveler.trip_detail.dropoff_address') }}
-                                        <div class="detail-value">{{ $booking->dropoff_address ? $booking->dropoff_address : __('traveler.trip_detail.not_set') }}</div>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="detail-item">
-                                <div class="detail-title">
-                                    <i class="fa-solid fa-users"></i>
-                                    <span>
-                                        {{ __('traveler.trip_detail.passengers') }}
-                                        <div class="detail-value">
-                                            {{ $booking->total_passengers ?? (($booking->adults ?? 0) + ($booking->children ?? 0)) }}
-                                        </div>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="detail-item">
-                                <div class="detail-title">
-                                    <i class="fa-regular fa-credit-card"></i>
-                                    <span>
-                                        {{ __('traveler.trip_detail.amount') }}
-                                        <div class="detail-value">
-                                            {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
-                                        </div>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="actions">
-                            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}" class="btn btn-sm btn-secondary btn-download">
-                                <i class="fa-solid fa-download"></i>
-                                {{ __('traveler.trip_detail.download_voucher') }}
-                            </a>
-                        </div>
-                    </div>
-                @endforeach
-            @endif
-
-            <!-- add more services section (uses same forms as legacy) -->
-            <div class="services-card dynamic-card">
-                <div class="services-header">
+                <!-- add more services section (uses same forms as legacy) -->
+                <div class="services-card dynamic-card">
+                    <div class="services-header">
                         <h2>{{ __('traveler.trip_detail.add_more_services') }}</h2>
                     </div>
 
@@ -547,204 +634,198 @@
                         <div style="color:#666;">{{ __('traveler.trip_detail.services_unavailable') }}</div>
                     @endif
                 </div>
-            </div>
 
-
-
-
-            <!-- Accommodation Bookings Section -->
-            @if($accommodationBookings->count() > 0)
-                <div class="bookings-section legacy-hidden"
-                    style="margin-bottom: 40px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px;">
-                    <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
-                        {{ __('traveler.trip_detail.accommodation_bookings') }}</h3>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
-                            <thead>
-                                <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.booking_ref') }}</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.accommodation') }}</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.room') }}</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.check_in') }}</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.check_out') }}</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.guests') }}</th>
-                                    <th style="padding: 12px; text-align: right; font-weight: 600;">{{ __('traveler.trip_detail.amount') }}</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.status') }}</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.action') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($accommodationBookings as $booking)
-                                    <tr style="border-bottom: 1px solid #e0e0e0; transition: background 0.2s;">
-                                        <td style="padding: 12px; font-weight: 600; color: #ff9500;">
-                                            {{ $booking->booking_reference }}</td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->accommodation ? $booking->accommodation->property_name : __('traveler.trip_detail.not_set') }}
-                                        </td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->room ? $booking->room->room_name : __('traveler.trip_detail.not_set') }}
-                                        </td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->check_in_date->format('d/m/Y') }}
-                                        </td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->check_out_date->format('d/m/Y') }}
-                                        </td>
-                                        <td style="padding: 12px; text-align: center;">
-                                            @php
-                                                $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
-                                                $addedCount = $booking->guests->count();
-                                            @endphp
-                                            <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
-                                            <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
-
-                                        </td>
-                                        <td style="padding: 12px; text-align: right; font-weight: 600;">
-                                            {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
-                                        </td>
-                                        <td style="padding: 12px; text-align: center;">
-                                            <span
-                                                style="display: inline-block; padding: 4px 10px; background: {{ $booking->booking_status === 'Confirmed' ? '#e8f5e9' : ($booking->booking_status === 'Pending' ? '#fff3e0' : '#ffebee') }}; color: {{ $booking->booking_status === 'Confirmed' ? '#2e7d32' : ($booking->booking_status === 'Pending' ? '#e65100' : '#c62828') }}; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
-                                                {{ $booking->booking_status }}
-                                            </span>
-                                        </td>
-                                        <td
-                                            style="padding: 12px; text-align: center; display:flex; justify-content:center; gap: 8px; flex-wrap:wrap;">
-                                            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
-                                                class="btn btn-sm btn-outline-primary"
-                                                style="margin-top: 5px;font-weight: 600; color: #ff9500;">{{ __('traveler.trip_detail.manage') }}</a>
-                                            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
-                                                class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">{{ __('traveler.trip_detail.download_voucher') }}</a>
-                                            @php
-                                                $cancelDate = $booking->check_in_date ?? $booking->activity_date;
-                                                $canCancel = in_array($booking->booking_status, ['Confirmed', 'Pending']) && $cancelDate && $cancelDate->gt(\Carbon\Carbon::today());
-                                            @endphp
-                                            @if($canCancel && (!isset($guestMode) || !$guestMode))
-                                                <form method="POST" action="{{ route('traveler.trip.booking.cancel', ['trip' => $trip->id, 'booking' => $booking->id]) }}" style="display:inline; margin-top:5px;">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ __('traveler.trip_cancel_confirm') }}');" style="font-weight: 600;">{{ __('traveler.trip_cancel_button') }}</button>
-                                                </form>
-                                            @endif
-                                        </td>
+                <!-- Accommodation Bookings Section -->
+                @if($accommodationBookings->count() > 0)
+                    <div class="bookings-section legacy-hidden"
+                        style="margin-bottom: 40px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px;">
+                        <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
+                            {{ __('traveler.trip_detail.accommodation_bookings') }}</h3>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                                <thead>
+                                    <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
+                                        <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.booking_ref') }}</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.accommodation') }}</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.room') }}</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.check_in') }}</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.check_out') }}</th>
+                                        <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.guests') }}</th>
+                                        <th style="padding: 12px; text-align: right; font-weight: 600;">{{ __('traveler.trip_detail.amount') }}</th>
+                                        <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.status') }}</th>
+                                        <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.action') }}</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            @endif
-
-            <!-- Activity Bookings Section -->
-            @if($activityBookings->count() > 0)
-                <div class="bookings-section legacy-hidden"
-                    style="margin-bottom: 40px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px;">
-                    <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
-                        {{ __('traveler.trip_detail.activity_bookings') }}</h3>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
-                            <thead>
-                                <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.booking_ref') }}</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.activity') }}</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.variant') }}</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.activity_date') }}</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.participants') }}</th>
-                                    <th style="padding: 12px; text-align: right; font-weight: 600;">{{ __('traveler.trip_detail.amount') }}</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.status') }}</th>
-                                    <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.action') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($activityBookings as $booking)
-                                    <tr style="border-bottom: 1px solid #e0e0e0; transition: background 0.2s;">
-                                        <td style="padding: 12px; font-weight: 600; color: #ff9500;">
-                                            {{ $booking->booking_reference }}</td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->activity ? $booking->activity->activity_name : __('traveler.trip_detail.not_set') }}
-                                        </td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->variant_name ?? __('traveler.trip_detail.standard') }}
-                                        </td>
-                                        <td style="padding: 12px;">
-                                            {{ $booking->activity_date->format('d/m/Y') }}
-                                        </td>
-                                        <td style="padding: 12px; text-align: center;">
-                                            @php
-                                                $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
-                                                $addedCount = $booking->guests->count();
-                                            @endphp
-                                            <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
-                                            <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
-                                        </td>
-                                        <td style="padding: 12px; text-align: right; font-weight: 600;">
-                                            {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
-                                        </td>
-                                        <td style="padding: 12px; text-align: center;">
-                                            <span
-                                                style="display: inline-block; padding: 4px 10px; background: {{ $booking->booking_status === 'Confirmed' ? '#e8f5e9' : ($booking->booking_status === 'Pending' ? '#fff3e0' : '#ffebee') }}; color: {{ $booking->booking_status === 'Confirmed' ? '#2e7d32' : ($booking->booking_status === 'Pending' ? '#e65100' : '#c62828') }}; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
-                                                {{ $booking->booking_status }}
-                                            </span>
-                                        </td>
-                                        <td
-                                            style="padding: 12px; text-align: center; display:flex; justify-content:center; gap: 8px; flex-wrap:wrap;">
-                                            <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
-                                                class="btn btn-sm btn-outline-primary"
-                                                style="margin-top: 5px;font-weight: 600; color: #ff9500;">{{ __('traveler.trip_detail.manage') }}</a>
-                                            @if($booking->guests->count() > 0)
-                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}#download-voucher-section"
+                                </thead>
+                                <tbody>
+                                    @foreach($accommodationBookings as $booking)
+                                        <tr style="border-bottom: 1px solid #e0e0e0; transition: background 0.2s;">
+                                            <td style="padding: 12px; font-weight: 600; color: #ff9500;">
+                                                {{ $booking->booking_reference }}</td>
+                                            <td style="padding: 12px;">
+                                                {{ $booking->accommodation ? $booking->accommodation->property_name : __('traveler.trip_detail.not_set') }}
+                                            </td>
+                                            <td style="padding: 12px;">
+                                                {{ $booking->room ? $booking->room->room_name : __('traveler.trip_detail.not_set') }}
+                                            </td>
+                                            <td style="padding: 12px;">
+                                                {{ $booking->check_in_date->format('d/m/Y') }}
+                                            </td>
+                                            <td style="padding: 12px;">
+                                                {{ $booking->check_out_date->format('d/m/Y') }}
+                                            </td>
+                                            <td style="padding: 12px; text-align: center;">
+                                                @php
+                                                    $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
+                                                    $addedCount = $booking->guests->count();
+                                                @endphp
+                                                <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
+                                                <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
+                                            </td>
+                                            <td style="padding: 12px; text-align: right; font-weight: 600;">
+                                                {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
+                                            </td>
+                                            <td style="padding: 12px; text-align: center;">
+                                                <span
+                                                    style="display: inline-block; padding: 4px 10px; background: {{ $booking->booking_status === 'Confirmed' ? '#e8f5e9' : ($booking->booking_status === 'Pending' ? '#fff3e0' : '#ffebee') }}; color: {{ $booking->booking_status === 'Confirmed' ? '#2e7d32' : ($booking->booking_status === 'Pending' ? '#e65100' : '#c62828') }}; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
+                                                    {{ $booking->booking_status }}
+                                                </span>
+                                            </td>
+                                            <td style="padding: 12px; text-align: center; display:flex; justify-content:center; gap: 8px; flex-wrap:wrap;">
+                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
+                                                    class="btn btn-sm btn-outline-primary"
+                                                    style="margin-top: 5px;font-weight: 600; color: #ff9500;">{{ __('traveler.trip_detail.manage') }}</a>
+                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
                                                     class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">{{ __('traveler.trip_detail.download_voucher') }}</a>
-                                            @endif
-                                            @php
-                                                $cancelDate = $booking->check_in_date ?? $booking->activity_date;
-                                                $canCancel = in_array($booking->booking_status, ['Confirmed', 'Pending']) && $cancelDate && $cancelDate->gt(\Carbon\Carbon::today());
-                                            @endphp
-                                            @if($canCancel && (!isset($guestMode) || !$guestMode))
-                                                <form method="POST" action="{{ route('traveler.trip.booking.cancel', ['trip' => $trip->id, 'booking' => $booking->id]) }}" style="display:inline; margin-top:5px;">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ __('traveler.trip_cancel_confirm') }}');" style="font-weight: 600;">{{ __('traveler.trip_cancel_button') }}</button>
-                                                </form>
-                                            @endif
-                                        </td>
+                                                @php
+                                                    $cancelDate = $booking->check_in_date ?? $booking->activity_date;
+                                                    $canCancel = in_array($booking->booking_status, ['Confirmed', 'Pending']) && $cancelDate && $cancelDate->gt(\Carbon\Carbon::today());
+                                                @endphp
+                                                @if($canCancel && (!isset($guestMode) || !$guestMode))
+                                                    <form method="POST" action="{{ route('traveler.trip.booking.cancel', ['trip' => $trip->id, 'booking' => $booking->id]) }}" style="display:inline; margin-top:5px;">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ __('traveler.trip_cancel_confirm') }}');" style="font-weight: 600;">{{ __('traveler.trip_cancel_button') }}</button>
+                                                    </form>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Activity Bookings Section -->
+                @if($activityBookings->count() > 0)
+                    <div class="bookings-section legacy-hidden"
+                        style="margin-bottom: 40px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px;">
+                        <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
+                            {{ __('traveler.trip_detail.activity_bookings') }}</h3>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                                <thead>
+                                    <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
+                                        <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.booking_ref') }}</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.activity') }}</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.variant') }}</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600;">{{ __('traveler.trip_detail.activity_date') }}</th>
+                                        <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.participants') }}</th>
+                                        <th style="padding: 12px; text-align: right; font-weight: 600;">{{ __('traveler.trip_detail.amount') }}</th>
+                                        <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.status') }}</th>
+                                        <th style="padding: 12px; text-align: center; font-weight: 600;">{{ __('traveler.trip_detail.action') }}</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach($activityBookings as $booking)
+                                        <tr style="border-bottom: 1px solid #e0e0e0; transition: background 0.2s;">
+                                            <td style="padding: 12px; font-weight: 600; color: #ff9500;">
+                                                {{ $booking->booking_reference }}</td>
+                                            <td style="padding: 12px;">
+                                                {{ $booking->activity ? $booking->activity->activity_name : __('traveler.trip_detail.not_set') }}
+                                            </td>
+                                            <td style="padding: 12px;">
+                                                {{ $booking->variant_name ?? __('traveler.trip_detail.standard') }}
+                                            </td>
+                                            <td style="padding: 12px;">
+                                                {{ $booking->activity_date->format('d/m/Y') }}
+                                            </td>
+                                            <td style="padding: 12px; text-align: center;">
+                                                @php
+                                                    $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0);
+                                                    $addedCount = $booking->guests->count();
+                                                @endphp
+                                                <div style="font-weight: 600;">Booked: {{ $bookedCount }}</div>
+                                                <div style="margin-bottom: 8px;">Added: {{ $addedCount }}</div>
+                                            </td>
+                                            <td style="padding: 12px; text-align: right; font-weight: 600;">
+                                                {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
+                                            </td>
+                                            <td style="padding: 12px; text-align: center;">
+                                                <span
+                                                    style="display: inline-block; padding: 4px 10px; background: {{ $booking->booking_status === 'Confirmed' ? '#e8f5e9' : ($booking->booking_status === 'Pending' ? '#fff3e0' : '#ffebee') }}; color: {{ $booking->booking_status === 'Confirmed' ? '#2e7d32' : ($booking->booking_status === 'Pending' ? '#e65100' : '#c62828') }}; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
+                                                    {{ $booking->booking_status }}
+                                                </span>
+                                            </td>
+                                            <td style="padding: 12px; text-align: center; display:flex; justify-content:center; gap: 8px; flex-wrap:wrap;">
+                                                <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}"
+                                                    class="btn btn-sm btn-outline-primary"
+                                                    style="margin-top: 5px;font-weight: 600; color: #ff9500;">{{ __('traveler.trip_detail.manage') }}</a>
+                                                @if($booking->guests->count() > 0)
+                                                    <a href="{{ isset($guestMode) && $guestMode ? route('traveler.guest-trip.trip.booking.manage-guests', ['otp' => $otp, 'trip' => $trip->id, 'booking' => $booking->id]) : route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}#download-voucher-section"
+                                                        class="btn btn-sm btn-secondary" style="margin-top: 5px;font-weight: 600;">{{ __('traveler.trip_detail.download_voucher') }}</a>
+                                                @endif
+                                                @php
+                                                    $cancelDate = $booking->check_in_date ?? $booking->activity_date;
+                                                    $canCancel = in_array($booking->booking_status, ['Confirmed', 'Pending']) && $cancelDate && $cancelDate->gt(\Carbon\Carbon::today());
+                                                @endphp
+                                                @if($canCancel && (!isset($guestMode) || !$guestMode))
+                                                    <form method="POST" action="{{ route('traveler.trip.booking.cancel', ['trip' => $trip->id, 'booking' => $booking->id]) }}" style="display:inline; margin-top:5px;">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ __('traveler.trip_cancel_confirm') }}');" style="font-weight: 600;">{{ __('traveler.trip_cancel_button') }}</button>
+                                                    </form>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
-            @endif
+                @endif
 
-            <!-- No Bookings Message -->
-            @if($accommodationBookings->count() === 0 && $activityBookings->count() === 0 && (!isset($transportBookings) || $transportBookings->count() === 0))
-                <div style="background: #f9f9f9; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 30px;">
-                    <p style="color: #999; font-size: 1.1rem; margin: 0;">{{ __('traveler.trip_detail.no_bookings') }}</p>
-                </div>
-            @endif
-
-            @if((!isset($guestMode) || !$guestMode) && !in_array($trip->status, ['completed', 'cancelled']))
-                <!-- Add Services Section -->
-                <div class="trip-actions-section legacy-hidden"
-                    style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-top: 30px;">
-                    <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
-                        {{ __('traveler.trip_detail.add_more_services') }}</h3>
-                    <p style="color: #666; margin-bottom: 20px;">{{ __('traveler.trip_detail.add_more_services_description') }}
-                    </p>
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                        <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display: inline;">
-                            @csrf
-                            <button type="submit" class="btn btn-primary" name="service_type" value="accommodation"
-                                style="padding: 12px 24px; background: #ff9500; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.3s;">
-                                {{ __('traveler.trip_detail.add_accommodation') }}
-                            </button>
-                        </form>
-                        <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display: inline;">
-                            @csrf
-                            <button type="submit" class="btn btn-primary" name="service_type" value="activity"
-                                style="padding: 12px 24px; background: #2196F3; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.3s;">
-                                {{ __('traveler.trip_detail.add_activity') }}
-                            </button>
-                        </form>
+                <!-- No Bookings Message -->
+                @if($accommodationBookings->count() === 0 && $activityBookings->count() === 0 && (!isset($transportBookings) || $transportBookings->count() === 0))
+                    <div style="background: #f9f9f9; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 30px;">
+                        <p style="color: #999; font-size: 1.1rem; margin: 0;">{{ __('traveler.trip_detail.no_bookings') }}</p>
                     </div>
-                </div>
+                @endif
+
+                @if((!isset($guestMode) || !$guestMode) && !in_array($trip->status, ['completed', 'cancelled']))
+                    <!-- Add Services Section -->
+                    <div class="trip-actions-section legacy-hidden"
+                        style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-top: 30px;">
+                        <h3 style="font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #ff9500; padding-bottom: 10px;">
+                            {{ __('traveler.trip_detail.add_more_services') }}</h3>
+                        <p style="color: #666; margin-bottom: 20px;">{{ __('traveler.trip_detail.add_more_services_description') }}
+                        </p>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display: inline;">
+                                @csrf
+                                <button type="submit" class="btn btn-primary" name="service_type" value="accommodation"
+                                    style="padding: 12px 24px; background: #ff9500; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.3s;">
+                                    {{ __('traveler.trip_detail.add_accommodation') }}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ route('traveler.trip.add-service', $trip) }}" style="display: inline;">
+                                @csrf
+                                <button type="submit" class="btn btn-primary" name="service_type" value="activity"
+                                    style="padding: 12px 24px; background: #2196F3; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.3s;">
+                                    {{ __('traveler.trip_detail.add_activity') }}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @endif
             @endif
 
             <!-- Back to Trips -->

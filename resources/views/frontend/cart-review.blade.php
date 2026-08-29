@@ -52,6 +52,7 @@
                                 $isAccom = $item['type'] === 'accommodation';
                                 $isActivity = $item['type'] === 'activity';
                                 $isTransport = $item['type'] === 'transport';
+                                $isPackage = ($item['type'] ?? null) === 'package';
                                 $nights  = (int) ($item['nights'] ?? 1);
                                 $rooms   = (int) ($item['rooms'] ?? 1);
                                 $adults  = (int) ($item['adults'] ?? 0);
@@ -73,6 +74,9 @@
                                 } else if ($isTransport) {
                                     $label = __('cart.type.transport') . ' · ' . trim((string) (($item['route_from'] ?? '') . ($item['route_to'] ? ' → ' . $item['route_to'] : '')));
                                     $subLabel = __('home.search.passengers') . ': ' . ($item['passengers'] ?? '1');
+                                } else if ($isPackage) {
+                                    $label = 'Package · ' . ($item['package_name'] ?? $item['title'] ?? 'Package');
+                                    $subLabel = ($item['check_in_display'] ?? '') . ($item['check_out_display'] ?? '') ? (($item['check_in_display'] ?? '') . ' - ' . ($item['check_out_display'] ?? '')) : '';
                                 } else {
                                     $label = $item['variant_name'] ?? $item['title'] ?? 'Booking';
                                     $subLabel = '';
@@ -124,7 +128,7 @@
                                 <div class="cart-item-body">
                                     <div class="cart-item-top">
                                         <div>
-                                            <span class="cart-item-badge">{{ $isAccom ? __('cart.type.stay') : ($isTransport ? __('cart.type.transport') : __('cart.type.activity')) }}</span>
+                                            <span class="cart-item-badge">{{ $isPackage ? 'Package' : ($isAccom ? __('cart.type.stay') : ($isTransport ? __('cart.type.transport') : __('cart.type.activity'))) }}</span>
                                             <h3 class="cart-item-title">{{ $item['title'] }}</h3>
                                             @if($isAccom && !empty($item['plan_label']))
                                                 <p class="cart-item-sub" style="color: #19b5b5; font-weight: 500;">{{ $item['plan_label'] }}</p>
@@ -180,14 +184,24 @@
                                     @endif
 
                                     <div class="cart-item-actions">
-                                        <a href="{{ $isAccom
-                                            ? route('frontend.accommodations.show', $item['accommodation_id'])
-                                            : ($isActivity
-                                                ? route('frontend.activities.show', $item['activity_id'])
-                                                : route('frontend.transports.show', $item['transport_id'] ?? null)) }}"
-                                           class="cart-link">
-                                            <i class="fa-solid fa-eye"></i> {{ __('cart.view_rules') }}
-                                        </a>
+                                        @php
+                                            $detailRoute = null;
+                                            if ($isAccom && !empty($item['accommodation_id'])) {
+                                                $detailRoute = route('frontend.accommodations.show', $item['accommodation_id']);
+                                            } elseif ($isActivity && !empty($item['activity_id'])) {
+                                                $detailRoute = route('frontend.activities.show', $item['activity_id']);
+                                            } elseif ($isTransport && !empty($item['transport_id'])) {
+                                                $detailRoute = route('frontend.transports.show', $item['transport_id']);
+                                            } elseif ($isPackage && !empty($item['package_id'])) {
+                                                $detailRoute = route('frontend.packages.show', $item['package_id']);
+                                            }
+                                        @endphp
+
+                                        @if($detailRoute)
+                                            <a href="{{ $detailRoute }}" class="cart-link">
+                                                <i class="fa-solid fa-eye"></i> {{ __('cart.view_rules') }}
+                                            </a>
+                                        @endif
                                         <!-- @if($isAccom && !empty($item['accommodation_id']))
                                             <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($item['title']) }}"
                                                target="_blank" rel="noopener" class="cart-link">
@@ -237,12 +251,16 @@
                             <div class="fare-rows">
                                 @foreach($cart as $item)
                                     @php
+                                        $itemType = $item['type'] ?? null;
                                         $nights = (int) ($item['nights'] ?? 1);
                                         $rooms  = (int) ($item['rooms'] ?? 1);
-                                        if ($item['type'] === 'accommodation') {
+
+                                        if ($itemType === 'accommodation') {
                                             $label = trans_choice('cart.rooms', $rooms, ['count' => $rooms]) . ' · ' . trans_choice('cart.nights', $nights, ['count' => $nights]);
-                                        } else if ($item['type'] === 'activity') {
+                                        } elseif ($itemType === 'activity') {
                                             $label = __('cart.type.activity') . ': ' . ($item['variant_name'] ?? $item['title']);
+                                        } elseif ($itemType === 'package') {
+                                            $label = 'Package: ' . ($item['package_name'] ?? $item['title'] ?? 'Package');
                                         } else {
                                             $transportServiceType = trim((string) ($item['service_type'] ?? ''));
                                             $transportServiceTypeLabel = '';
@@ -252,7 +270,9 @@
                                                     ? $translatedServiceType
                                                     : ucwords(str_replace(['_', '-'], ' ', $transportServiceType));
                                             }
-                                            $routeLabel = trim((string) (($item['route_from'] ?? '') . ($item['route_to'] ? ' → ' . $item['route_to'] : '')));
+                                            $routeFrom = trim((string) ($item['route_from'] ?? ''));
+                                            $routeTo = trim((string) ($item['route_to'] ?? ''));
+                                            $routeLabel = trim($routeFrom . ($routeTo !== '' ? ' → ' . $routeTo : ''));
                                             $label = __('cart.type.transport') . ': ' . ($transportServiceTypeLabel ?: __('cart.type.transport'));
                                             if ($routeLabel !== '') {
                                                 $label .= ' · ' . $routeLabel;

@@ -630,10 +630,14 @@
                                                     @if(!empty($item['vehicle_type']))
                                                         <span><i class="fa-solid fa-car-side"></i> {{ $item['vehicle_type'] }}</span>
                                                     @endif
+                                                @elseif($item['type'] === 'package')
+                                                    @php $participantCount = ($item['participants'] ?? (($item['adults'] ?? 0) + ($item['children'] ?? 0))); @endphp
+                                                    <span><i class="fa-solid fa-user"></i> {{ $participantCount }} participant{{ $participantCount != 1 ? 's' : '' }}</span>
+                                                    <span><i class="fa-solid fa-box-open"></i> {{ $item['package_name'] ?? $item['title'] ?? 'Package' }}</span>
                                                 @else
                                                     @php $participantCount = ($item['participants'] ?? (($item['adults'] ?? 0) + ($item['children'] ?? 0))); @endphp
                                                     <span><i class="fa-solid fa-user"></i> {{ $participantCount }} participant{{ $participantCount != 1 ? 's' : '' }}</span>
-                                                    <span><i class="fa-solid fa-person-hiking"></i> {{ $item['variant_name'] ?: 'Standard' }}</span>
+                                                    <span><i class="fa-solid fa-person-hiking"></i> {{ $item['variant_name'] ?? 'Standard' }}</span>
                                                 @endif
                                                 <span><i class="fa-solid fa-money-bill-wave"></i> {{ $item['currency'] }} {{ number_format($item['net_amount'], 2) }}</span>
                                             </div>
@@ -678,11 +682,22 @@
                         <div class="fare-rows">
                             @foreach($cart as $item)
                                 @php
+                                    $itemType = $item['type'] ?? null;
                                     $nights = (int) ($item['nights'] ?? 1);
                                     $rooms  = (int) ($item['rooms'] ?? 1);
-                                    $lbl = $item['type'] === 'accommodation'
-                                        ? $rooms . ' Room' . ($rooms !== 1 ? 's' : '') . ' · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '')
-                                        : ($item['variant_name'] ?? $item['title'] ?? 'Item');
+
+                                    if ($itemType === 'accommodation') {
+                                        $lbl = $rooms . ' Room' . ($rooms !== 1 ? 's' : '') . ' · ' . $nights . ' Night' . ($nights !== 1 ? 's' : '');
+                                    } elseif ($itemType === 'package') {
+                                        $lbl = 'Package · ' . ($item['package_name'] ?? $item['title'] ?? 'Package');
+                                    } elseif ($itemType === 'transport') {
+                                        $routeFrom = trim((string) ($item['route_from'] ?? ''));
+                                        $routeTo = trim((string) ($item['route_to'] ?? ''));
+                                        $routeLabel = trim($routeFrom . ($routeTo !== '' ? ' → ' . $routeTo : ''));
+                                        $lbl = 'Transport' . ($routeLabel !== '' ? ' · ' . $routeLabel : '');
+                                    } else {
+                                        $lbl = $item['variant_name'] ?? $item['title'] ?? 'Item';
+                                    }
                                 @endphp
                                 <div class="fare-row">
                                     <span>{{ $lbl }}</span>

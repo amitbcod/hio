@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('booking_line_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('booking_id')->constrained('bookings')->onDelete('cascade');
-            $table->enum('service_type', ['accommodation', 'activity', 'transport']);
+            $table->enum('service_type', ['accommodation', 'activity', 'transport', 'package']);
             $table->unsignedBigInteger('service_id'); // Foreign key to respective service table
             $table->integer('quantity')->default(1);
             $table->decimal('price', 10, 2);

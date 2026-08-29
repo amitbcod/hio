@@ -19,9 +19,15 @@ class TripController extends Controller
     {
         $traveler = auth('traveler')->user();
         $trips = Trip::where('traveler_account_id', $traveler->id)
-            ->with(['accommodationBookings', 'activityBookings', 'transportBookings'])
+            ->with(['accommodationBookings', 'activityBookings', 'transportBookings', 'bookings.lineItems'])
             ->orderBy('created_at', 'desc')
             ->get();
+
+        foreach ($trips as $trip) {
+            $trip->is_package_trip = $trip->bookings
+                ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
+                ->contains(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');
+        }
 
         // Classify trips into ongoing and past
         $classified = TripStatusService::classifyTrips($trips);
@@ -38,6 +44,108 @@ class TripController extends Controller
             abort(403);
         }
         $trip->load('bookings.lineItems.travellers', 'travellers');
+
+        $packageLineItem = $trip->bookings
+            ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
+            ->first(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');
+
+        $packageDetails = collect();
+        $packageBookingReference = null;
+        if ($packageLineItem && !empty($packageLineItem->service_id)) {
+            $package = \App\Models\Package::find($packageLineItem->service_id);
+            $packageBookingReference = 'PACKAGE-' . ($packageLineItem->id ?? $trip->id);
+            if ($package) {
+                $tripStartDate = $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today();
+                $rawItinerary = is_array($package->itinerary ?? null) ? $package->itinerary : [];
+                $guestCount = max(1, $trip->travellers ? $trip->travellers->count() : 1);
+
+                $packageDetails = collect($rawItinerary)
+                    ->filter(fn ($entry, $key) => is_array($entry) && (is_numeric($key) || preg_match('/^\d+$/', (string) $key)))
+                    ->map(function ($entry, $key) use ($tripStartDate, $packageLineItem, $trip, $guestCount, $package) {
+                        $dayNumber = is_numeric($key) ? ((int) $key + 1) : ((int) ($entry['day'] ?? $key + 1));
+                        $accommodation = !empty($entry['accommodation'])
+                            ? \App\Models\Accommodation::with('rooms')->find((int) $entry['accommodation'])
+                            : null;
+                        $activity = !empty($entry['activity'])
+                            ? \App\Models\Activity::find((int) $entry['activity'])
+                            : null;
+                        $transport = !empty($entry['transport'])
+                            ? \App\Models\Transport::with('routes')->find((int) $entry['transport'])
+                            : null;
+
+                        $serviceRoutes = [
+                            'manage_route' => route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $packageLineItem->id]),
+                            'voucher_route' => route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $packageLineItem->id]),
+                        ];
+
+                        $services = collect();
+
+                        if ($accommodation) {
+                            $services->push([
+                                'type' => 'accommodation',
+                                'service_label' => 'Accommodation',
+                                'title' => $accommodation->property_name ?? 'Accommodation',
+                                'subtitle' => $accommodation->property_type ?? 'Accommodation',
+                                'location' => $accommodation->location ?? $accommodation->region ?? '',
+                                'image' => $this->resolvePackageServiceImage($accommodation, 'accommodation'),
+                                'model' => $accommodation,
+                                'booked_count' => max(1, $guestCount),
+                                'added_count' => 0,
+                                'currency' => $packageLineItem->currency ?? 'USD',
+                                'amount' => $this->resolvePackageAccommodationAmount($accommodation, $entry),
+                                'manage_route' => route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'accommodation']),
+                                'voucher_route' => route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'accommodation']),
+                            ]);
+                        }
+
+                        if ($activity) {
+                            $services->push([
+                                'type' => 'activity',
+                                'service_label' => 'Activity',
+                                'title' => $activity->activity_name ?? 'Activity',
+                                'subtitle' => $activity->town ?? 'Included activity',
+                                'location' => trim((string) (($activity->town ?? '') . ($activity->country ? ', ' . $activity->country : ''))),
+                                'image' => $this->resolvePackageServiceImage($activity, 'activity'),
+                                'model' => $activity,
+                                'booked_count' => max(1, $guestCount),
+                                'added_count' => 0,
+                                'currency' => $packageLineItem->currency ?? 'USD',
+                                'amount' => $this->resolvePackageActivityAmount($activity, $entry, $guestCount),
+                                'manage_route' => route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'activity']),
+                                'voucher_route' => route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'activity']),
+                            ]);
+                        }
+
+                        if ($transport) {
+                            $services->push([
+                                'type' => 'transport',
+                                'service_label' => 'Transport',
+                                'title' => $transport->vehicle_name ?? 'Transport',
+                                'subtitle' => $transport->vehicle_type ?? 'Transport',
+                                'location' => trim((string) (($transport->route_from ?? '') . ($transport->route_to ? ' - ' . $transport->route_to : ''))),
+                                'image' => $this->resolvePackageServiceImage($transport, 'transport'),
+                                'model' => $transport,
+                                'booked_count' => max(1, $guestCount),
+                                'added_count' => 0,
+                                'currency' => $packageLineItem->currency ?? 'USD',
+                                'amount' => $this->resolvePackageTransportAmount($transport, $entry, $guestCount),
+                                'manage_route' => null,
+                                'voucher_route' => route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'transport']),
+                            ]);
+                        }
+
+                        return [
+                            'day' => $dayNumber,
+                            'date' => $tripStartDate->copy()->addDays(max(0, $dayNumber - 1))->format('d/m/Y'),
+                            'label' => $entry['label'] ?? 'Day ' . $dayNumber,
+                            'meal_plan' => $entry['meal_plan'] ?? null,
+                            'services' => $services,
+                        ];
+                    })
+                    ->filter(fn ($day) => !empty($day['services']) && $day['services']->isNotEmpty())
+                    ->values();
+            }
+        }
         
         // Load associated accommodation and activity bookings (exclude guest bookings)
         $accommodationBookings = \App\Models\AccommodationBooking::where('trip_id', $trip->id)
@@ -89,7 +197,165 @@ class TripController extends Controller
         $tripStartDate = !empty($allDates) ? min($allDates) : $trip->start_date;
         $tripEndDate = !empty($allDates) ? max($allDates) : $trip->end_date;
         
-        return view('frontend.traveler.trip-detail', compact('trip', 'accommodationBookings', 'activityBookings', 'transportBookings', 'tripStartDate', 'tripEndDate'));
+        return view('frontend.traveler.trip-detail', compact('trip', 'accommodationBookings', 'activityBookings', 'transportBookings', 'packageDetails', 'packageBookingReference', 'tripStartDate', 'tripEndDate'));
+    }
+
+    private function resolvePackageServiceImage($model, string $type): string
+    {
+        if ($model === null) {
+            return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800';
+        }
+
+        if ($type === 'accommodation') {
+            if ($model->media && $model->media->isNotEmpty()) {
+                $hero = $model->media->firstWhere('media_type', 'hero');
+                if ($hero && !empty($hero->path)) {
+                    return asset('storage/' . $hero->path);
+                }
+            }
+            return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600';
+        }
+
+        if ($type === 'activity') {
+            if (!empty($model->hero_banner_image)) {
+                return asset('storage/' . $model->hero_banner_image);
+            }
+            if (!empty($model->gallery_images) && is_array($model->gallery_images) && !empty($model->gallery_images[0])) {
+                return asset('storage/' . $model->gallery_images[0]);
+            }
+            return 'https://images.unsplash.com/photo-1528127269322-539801943592?w=500';
+        }
+
+        if (!empty($model->gallery_images) && is_array($model->gallery_images) && !empty($model->gallery_images[0])) {
+            return asset('storage/' . $model->gallery_images[0]);
+        }
+
+        return 'https://images.unsplash.com/photo-1521033719794-41049d18c355?w=600';
+    }
+
+    protected function resolvePackageServiceType(array $itinerary, ?string $requestedServiceType): ?string
+    {
+        $allowedPackageTypes = ['accommodation', 'activity', 'transport'];
+        $requested = is_string($requestedServiceType) ? strtolower(trim($requestedServiceType)) : '';
+
+        if ($requested !== '' && in_array($requested, $allowedPackageTypes, true)) {
+            return $requested;
+        }
+
+        foreach ($itinerary as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+
+            foreach ($allowedPackageTypes as $serviceType) {
+                if (!empty($entry[$serviceType])) {
+                    return $serviceType;
+                }
+            }
+        }
+
+        return $requested !== '' && in_array($requested, $allowedPackageTypes, true) ? $requested : 'accommodation';
+    }
+
+    private function resolvePackageAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry): float
+    {
+        $roomIds = array_values(array_filter(array_map('intval', (array) ($entry['rooms'] ?? []))));
+        if (empty($roomIds)) {
+            $roomIds = \App\Models\AccommodationRoom::where('accommodation_id', $accommodation->id)->pluck('id')->all();
+        }
+
+        $bestAmount = 0.0;
+        foreach ($roomIds as $roomId) {
+            $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
+                ->where('room_id', $roomId)
+                ->where('rate_type', 'Package')
+                ->orderByDesc('updated_at')
+                ->first();
+
+            if (!$rate) {
+                $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
+                    ->where('room_id', $roomId)
+                    ->where(function ($query) {
+                        $query->where('rate_type', 'Package')->orWhere('is_default', true);
+                    })
+                    ->orderByDesc('updated_at')
+                    ->first();
+            }
+
+            $candidate = (float) ($rate->base_rate ?? $rate->final_rate ?? $rate->extra_adult_rate ?? $rate->children_rate ?? 0);
+            if ($candidate > $bestAmount) {
+                $bestAmount = $candidate;
+            }
+        }
+
+        return round($bestAmount, 2);
+    }
+
+    private function resolvePackageActivityAmount(\App\Models\Activity $activity, array $entry, int $guestCount): float
+    {
+        $selection = $entry['activity_selection'] ?? [];
+        if (!is_array($selection)) {
+            $selection = $selection ? [$selection] : [];
+        }
+
+        $unitAmount = 0.0;
+        foreach (array_values(array_filter(array_map('trim', $selection))) as $selected) {
+            if (!str_contains((string) $selected, '|')) {
+                continue;
+            }
+
+            [$variantId, $rateSpecificity] = array_pad(explode('|', (string) $selected, 2), 2, null);
+            $rate = \App\Models\ActivityRate::where('activity_id', $activity->id)
+                ->where('variant_id', $variantId)
+                ->where('rate_specificity', $rateSpecificity)
+                ->where('season', 'Package')
+                ->orderByDesc('updated_at')
+                ->first();
+
+            if ($rate) {
+                $candidate = (float) ($rate->adult_rate ?? $rate->children_rate ?? $rate->infant_rate ?? $rate->equipment_rate ?? $rate->base_rate ?? 0);
+                if ($candidate > $unitAmount) {
+                    $unitAmount = $candidate;
+                }
+            }
+        }
+
+        if ($unitAmount <= 0) {
+            $rate = \App\Models\ActivityRate::where('activity_id', $activity->id)
+                ->where('season', 'Package')
+                ->orderByDesc('updated_at')
+                ->first();
+
+            if ($rate) {
+                $unitAmount = (float) ($rate->adult_rate ?? $rate->children_rate ?? $rate->infant_rate ?? $rate->equipment_rate ?? $rate->base_rate ?? 0);
+            }
+        }
+
+        return round($unitAmount > 0 ? $unitAmount * max(1, $guestCount) : 0.0, 2);
+    }
+
+    private function resolvePackageTransportAmount(\App\Models\Transport $transport, array $entry, int $guestCount): float
+    {
+        $bestAmount = 0.0;
+        $routes = $transport->routes ?? collect();
+
+        foreach ($routes as $route) {
+            $pricing = is_array($route->pricing ?? null) ? $route->pricing : (is_string($route->pricing ?? null) ? json_decode($route->pricing, true) : []);
+            $candidate = (float) ($pricing['package_price'] ?? $pricing['price'] ?? $pricing['default_price'] ?? $pricing['package_return_price'] ?? 0);
+            if ($candidate > $bestAmount) {
+                $bestAmount = $candidate;
+            }
+        }
+
+        if ($bestAmount <= 0) {
+            $route = $transport->routes()->first();
+            if ($route) {
+                $pricing = is_array($route->pricing ?? null) ? $route->pricing : (is_string($route->pricing ?? null) ? json_decode($route->pricing, true) : []);
+                $bestAmount = (float) ($pricing['package_price'] ?? $pricing['price'] ?? $pricing['default_price'] ?? $pricing['package_return_price'] ?? 0);
+            }
+        }
+
+        return round($bestAmount > 0 ? $bestAmount * max(1, $guestCount) : 0.0, 2);
     }
 
     public function cancelBooking(Trip $trip, $bookingId)
@@ -124,19 +390,220 @@ class TripController extends Controller
         return back()->with('success', __('traveler.booking_cancelled_success'));
     }
 
-    public function manageGuests(Trip $trip, $bookingId)
+    public function manageGuests(Trip $trip, $bookingId, \Illuminate\Http\Request $request = null)
     {
         $traveler = auth('traveler')->user();
         if ($trip->traveler_account_id !== $traveler->id) {
             abort(403);
         }
 
-        // Find the booking
-        $booking = \App\Models\AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->with('guests')->first();
-        if (!$booking) {
-            $booking = \App\Models\ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->with('guests')->first();
+        // Log the raw incoming request so we can see the full URL and query params.
+        \Log::info('RAW VOUCHER REQUEST', [
+          'full_url' => $request?->fullUrl(),
+          'url' => $request?->url(),
+          'query_string' => $request?->getQueryString(),
+          'query_params' => $request?->query(),
+          'service_type' => $request?->query('service_type'),
+          'request_method' => $request?->method(),
+        ]);
+
+        $serviceType = strtolower((string) ($request?->query('service_type') ?? ''));
+
+        // Also log various ways of reading the parameter from the Laravel Request for debugging.
+        \Log::info('SERVICE TYPE DEBUG', [
+          'query_service_type' => $request?->query('service_type'),
+          'input_service_type' => $request?->input('service_type'),
+          'get_service_type' => $request?->get('service_type'),
+          'route_service_type' => $request?->route('service_type'),
+          'all_query' => $request?->query(),
+          'all_input' => $request?->all(),
+        ]);
+
+        $packageLineItem = \App\Models\BookingLineItem::where('id', $bookingId)
+            ->with('booking')
+            ->first();
+
+        if ($packageLineItem && $packageLineItem->booking && (int) $packageLineItem->booking->trip_id === (int) $trip->id && ($packageLineItem->service_type ?? null) === 'package') {
+            $booking = null;
+        } else {
+            $packageLineItem = null;
+            $booking = \App\Models\AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->with('guests')->first();
+            if (!$booking) {
+                $booking = \App\Models\ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->with('guests')->first();
+            }
+            if (!$booking) {
+                $booking = TransportBooking::where('id', $bookingId)->where('trip_id', $trip->id)->with('guests')->first();
+            }
         }
-        if (!$booking) {
+
+        if (!$booking && $packageLineItem && $packageLineItem->service_type === 'package') {
+            $package = \App\Models\Package::find($packageLineItem->service_id);
+            $travellerCollection = $packageLineItem->travellers()->get();
+            $guestCollection = $travellerCollection->map(function ($traveller) {
+                $fullName = trim((string) ($traveller->name ?? ''));
+                $parts = preg_split('/\s+/', $fullName, -1, PREG_SPLIT_NO_EMPTY);
+
+                return (object) [
+                    'first_name' => $parts[0] ?? '',
+                    'middle_name' => '',
+                    'last_name' => implode(' ', array_slice($parts, 1)),
+                    'dob' => $traveller->date_of_birth ? $traveller->date_of_birth->format('Y-m-d') : null,
+                    'gender' => null,
+                    'nationality' => null,
+                    'passport_number' => null,
+                    'notes' => null,
+                    'guest_number' => 1,
+                ];
+            })->values();
+
+            $serviceEntry = null;
+            if ($package && is_array($package->itinerary ?? null)) {
+                foreach ($package->itinerary as $entry) {
+                    if (!is_array($entry)) {
+                        continue;
+                    }
+                    if ($serviceType === 'accommodation' && !empty($entry['accommodation'])) {
+                        $serviceEntry = $entry;
+                        break;
+                    }
+                    if ($serviceType === 'activity' && !empty($entry['activity'])) {
+                        $serviceEntry = $entry;
+                        break;
+                    }
+                    if ($serviceType === 'transport' && !empty($entry['transport'])) {
+                        $serviceEntry = $entry;
+                        break;
+                    }
+                }
+            }
+
+            if ($serviceType === 'activity' && $package && !empty($package->itinerary)) {
+                $activityId = null;
+                foreach ($package->itinerary as $entry) {
+                    if (is_array($entry) && !empty($entry['activity'])) {
+                        $activityId = (int) $entry['activity'];
+                        break;
+                    }
+                }
+
+                $activity = $activityId ? \App\Models\Activity::find($activityId) : null;
+                if ($activity) {
+                    $booking = new \App\Models\ActivityBooking([
+                        'id' => $packageLineItem->id,
+                        'trip_id' => $trip->id,
+                        'booking_reference' => 'PACKAGE-' . $packageLineItem->id,
+                        'booking_status' => $packageLineItem->status ?? 'Pending',
+                        'total_amount' => $packageLineItem->price ?? 0,
+                        'currency' => $packageLineItem->currency ?? 'USD',
+                        'adults' => max(1, $travellerCollection->count()),
+                        'children' => 0,
+                        'variant_name' => $activity->activity_name ?? 'Package Activity',
+                        'activity_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today(),
+                    ]);
+                    $booking->setRelation('activity', $activity);
+                    $booking->setRelation('guests', $guestCollection);
+                } else {
+                    $booking = (object) [
+                        'id' => $packageLineItem->id,
+                        'booking_reference' => 'PACKAGE-' . $packageLineItem->id,
+                        'guests' => $guestCollection,
+                        'adults' => max(1, $trip->travellers ? $trip->travellers->count() : 1),
+                        'children' => 0,
+                        'booking_status' => $packageLineItem->status ?? 'Pending',
+                        'total_amount' => $packageLineItem->price ?? 0,
+                        'currency' => 'USD',
+                    ];
+                }
+            } elseif ($serviceType === 'accommodation' && $package && !empty($package->itinerary)) {
+                $accommodationId = null;
+                foreach ($package->itinerary as $entry) {
+                    if (is_array($entry) && !empty($entry['accommodation'])) {
+                        $accommodationId = (int) $entry['accommodation'];
+                        break;
+                    }
+                }
+
+                $accommodation = $accommodationId ? \App\Models\Accommodation::with('rooms')->find($accommodationId) : null;
+                if ($accommodation) {
+                    $booking = new \App\Models\AccommodationBooking([
+                        'id' => $packageLineItem->id,
+                        'trip_id' => $trip->id,
+                        'booking_reference' => 'PACKAGE-' . $packageLineItem->id,
+                        'booking_status' => $packageLineItem->status ?? 'Pending',
+                        'total_amount' => $packageLineItem->price ?? 0,
+                        'currency' => $packageLineItem->currency ?? 'USD',
+                        'adults' => max(1, $travellerCollection->count()),
+                        'children' => 0,
+                        'check_in_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today(),
+                        'check_out_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date)->addDay() : \Carbon\Carbon::today()->addDay(),
+                    ]);
+                    $booking->setRelation('accommodation', $accommodation);
+                    $booking->setRelation('room', $accommodation->rooms->first());
+                    $booking->setRelation('guests', $guestCollection);
+                } else {
+                    $booking = (object) [
+                        'id' => $packageLineItem->id,
+                        'booking_reference' => 'PACKAGE-' . $packageLineItem->id,
+                        'guests' => $guestCollection,
+                        'adults' => max(1, $trip->travellers ? $trip->travellers->count() : 1),
+                        'children' => 0,
+                        'booking_status' => $packageLineItem->status ?? 'Pending',
+                        'total_amount' => $packageLineItem->price ?? 0,
+                        'currency' => 'USD',
+                    ];
+                }
+            } elseif ($serviceType === 'transport' && $package && !empty($package->itinerary)) {
+                $transportId = null;
+                foreach ($package->itinerary as $entry) {
+                    if (is_array($entry) && !empty($entry['transport'])) {
+                        $transportId = (int) $entry['transport'];
+                        break;
+                    }
+                }
+
+                $transport = $transportId ? \App\Models\Transport::with('routes')->find($transportId) : null;
+                if ($transport) {
+                    $booking = new TransportBooking([
+                        'id' => $packageLineItem->id,
+                        'trip_id' => $trip->id,
+                        'booking_reference' => 'PACKAGE-' . $packageLineItem->id,
+                        'booking_status' => $packageLineItem->status ?? 'Pending',
+                        'total_amount' => $packageLineItem->price ?? 0,
+                        'currency' => $packageLineItem->currency ?? 'USD',
+                        'pickup_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today(),
+                        'return_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date)->addDay() : \Carbon\Carbon::today()->addDay(),
+                        'route_from' => $transport->route_from ?? null,
+                        'route_to' => $transport->route_to ?? null,
+                        'pickup_time' => $transport->pickup_time ?? null,
+                        'return_time' => $transport->return_time ?? null,
+                    ]);
+                    $booking->setRelation('transport', $transport);
+                    $booking->setRelation('guests', $guestCollection);
+                } else {
+                    $booking = (object) [
+                        'id' => $packageLineItem->id,
+                        'booking_reference' => 'PACKAGE-' . $packageLineItem->id,
+                        'guests' => $guestCollection,
+                        'adults' => max(1, $trip->travellers ? $trip->travellers->count() : 1),
+                        'children' => 0,
+                        'booking_status' => $packageLineItem->status ?? 'Pending',
+                        'total_amount' => $packageLineItem->price ?? 0,
+                        'currency' => 'USD',
+                    ];
+                }
+            } else {
+                $booking = (object) [
+                    'id' => $packageLineItem->id,
+                    'booking_reference' => 'PACKAGE-' . $packageLineItem->id,
+                    'guests' => $guestCollection,
+                    'adults' => max(1, $trip->travellers ? $trip->travellers->count() : 1),
+                    'children' => 0,
+                    'booking_status' => $packageLineItem->status ?? 'Pending',
+                    'total_amount' => $packageLineItem->price ?? 0,
+                    'currency' => 'USD',
+                ];
+            }
+        } else {
             abort(404);
         }
 
@@ -187,31 +654,175 @@ class TripController extends Controller
         return view('frontend.traveler.manage-guests', compact('trip', 'booking', 'savedGuests', 'countries', 'activityTimeSlots'));
     }
 
-    public function downloadVoucher(Trip $trip, $bookingId, $guestId = null)
+    public function downloadVoucher(Request $request, Trip $trip, $bookingId, $guestId = null)
     {
-        $traveler = auth('traveler')->user();
+      \Log::info('VOUCHER REQUEST OBJECT DEBUG', [
+        'request_class' => $request ? get_class($request) : null,
+        'full_url' => $request?->fullUrl(),
+        'query_string' => $request?->getQueryString(),
+        'query_params' => $request?->query(),
+        'service_type' => $request?->query('service_type'),
+      ]);
+
+      $traveler = auth('traveler')->user();
         if ($trip->traveler_account_id !== $traveler->id) {
             abort(403);
         }
 
-        // Find the booking (accommodation or activity)
-        $booking = \App\Models\AccommodationBooking::where('id', $bookingId)
+        $serviceType = strtolower((string) ($request?->query('service_type') ?? ''));
+        $allowedPackageTypes = ['accommodation', 'activity', 'transport'];
+
+        $packageLineItem = \App\Models\BookingLineItem::where('id', $bookingId)
+          ->with('booking')
+          ->first();
+
+        // Debug log to help diagnose package vs normal booking lookup
+        \Log::info('Voucher download debug', [
+          'booking_id' => $bookingId,
+          'service_type' => $serviceType,
+          'package_line_item_id' => $packageLineItem?->id,
+          'package_line_item_service_type' => $packageLineItem?->service_type,
+          'package_service_id' => $packageLineItem?->service_id,
+          'trip_id' => $trip->id,
+          'package_line_item_trip_id' => $packageLineItem?->booking?->trip_id,
+        ]);
+
+        // Treat this as a package when the BookingLineItem explicitly records service_type === 'package'.
+        // Do not rely on the presence of a related booking record for package detection.
+        if ($packageLineItem && (($packageLineItem->service_type ?? null) === 'package')) {
+          // If a booking relation exists, validate it belongs to this trip; otherwise continue without relying on it.
+          if (isset($packageLineItem->booking) && (int) $packageLineItem->booking->trip_id !== (int) $trip->id) {
+            abort(404);
+          }
+          $booking = null;
+        } else {
+          $packageLineItem = null;
+          // Find the booking (accommodation, activity, or transport). Package line items must win first when they share an ID.
+          $booking = \App\Models\AccommodationBooking::where('id', $bookingId)
             ->where('trip_id', $trip->id)
             ->with(['accommodation', 'room', 'guests'])
             ->first();
 
-        if (!$booking) {
+          if (!$booking) {
             $booking = \App\Models\ActivityBooking::where('id', $bookingId)
-                ->where('trip_id', $trip->id)
-                ->with(['activity.operator', 'activity.operationsStaffing', 'activity.schedulingTimeSlots', 'guests'])
-                ->first();
+              ->where('trip_id', $trip->id)
+              ->with(['activity.operator', 'activity.operationsStaffing', 'activity.schedulingTimeSlots', 'guests'])
+              ->first();
+          }
+
+          if (!$booking) {
+            $booking = TransportBooking::where('id', $bookingId)
+              ->where('trip_id', $trip->id)
+              ->with(['transport.operator', 'driver', 'guests'])
+              ->first();
+          }
         }
 
-        if (!$booking) {
-            $booking = TransportBooking::where('id', $bookingId)
-                ->where('trip_id', $trip->id)
-                ->with(['transport.operator', 'driver', 'guests'])
-                ->first();
+        if (!$booking && $packageLineItem && $packageLineItem->service_type === 'package') {
+            $package = \App\Models\Package::find($packageLineItem->service_id);
+            if (!$package) {
+                abort(404);
+            }
+
+            $packageItinerary = is_array($package->itinerary ?? null) ? $package->itinerary : [];
+            // For debugging: require an explicit service_type in the URL for package vouchers.
+            if ($serviceType === '') {
+              \Log::error('PACKAGE VOUCHER: service_type missing', [
+                'full_url' => $request?->fullUrl(),
+                'query_string' => $request?->getQueryString(),
+                'query_params' => $request?->query(),
+                'booking_id' => $bookingId,
+              ]);
+
+              abort(400, 'service_type is required for package voucher');
+            }
+
+            // If a service_type was supplied, ensure it's valid for package vouchers.
+            if (!in_array($serviceType, $allowedPackageTypes, true)) {
+                abort(404);
+            }
+
+            $packageEntry = null;
+            foreach ($packageItinerary as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+
+                if ($serviceType === 'accommodation' && !empty($entry['accommodation'])) {
+                    $packageEntry = $entry;
+                    break;
+                }
+                if ($serviceType === 'activity' && !empty($entry['activity'])) {
+                    $packageEntry = $entry;
+                    break;
+                }
+                if ($serviceType === 'transport' && !empty($entry['transport'])) {
+                    $packageEntry = $entry;
+                    break;
+                }
+            }
+
+            $activity = $serviceType === 'activity' && $packageEntry && !empty($packageEntry['activity'])
+                ? \App\Models\Activity::find((int) $packageEntry['activity'])
+                : null;
+            $accommodation = $serviceType === 'accommodation' && $packageEntry && !empty($packageEntry['accommodation'])
+                ? \App\Models\Accommodation::with('rooms')->find((int) $packageEntry['accommodation'])
+                : null;
+            $transport = $serviceType === 'transport' && $packageEntry && !empty($packageEntry['transport'])
+                ? \App\Models\Transport::with('routes')->find((int) $packageEntry['transport'])
+                : null;
+
+            if ($serviceType === 'activity' && $activity) {
+                $booking = new \App\Models\ActivityBooking([
+                    'id' => $packageLineItem->id,
+                    'trip_id' => $trip->id,
+                    'booking_reference' => 'PACKAGE-' . $packageLineItem->id,
+                    'booking_status' => $packageLineItem->status ?? 'Pending',
+                    'total_amount' => $packageLineItem->price ?? 0,
+                    'currency' => $packageLineItem->currency ?? 'USD',
+                    'activity_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today(),
+                    'adults' => max(1, $packageLineItem->travellers()->count()),
+                    'children' => 0,
+                    'variant_name' => $activity->activity_name ?? 'Package Activity',
+                ]);
+                $booking->setRelation('activity', $activity);
+                $booking->setRelation('guests', $packageLineItem->travellers()->get());
+            } elseif ($serviceType === 'accommodation' && $accommodation) {
+                $booking = new \App\Models\AccommodationBooking([
+                    'id' => $packageLineItem->id,
+                    'trip_id' => $trip->id,
+                    'booking_reference' => 'PACKAGE-' . $packageLineItem->id,
+                    'booking_status' => $packageLineItem->status ?? 'Pending',
+                    'total_amount' => $packageLineItem->price ?? 0,
+                    'currency' => $packageLineItem->currency ?? 'USD',
+                    'check_in_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today(),
+                    'check_out_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date)->addDay() : \Carbon\Carbon::today()->addDay(),
+                    'adults' => max(1, $packageLineItem->travellers()->count()),
+                    'children' => 0,
+                ]);
+                $booking->setRelation('accommodation', $accommodation);
+                $booking->setRelation('room', $accommodation->rooms->first());
+                $booking->setRelation('guests', $packageLineItem->travellers()->get());
+            } elseif ($serviceType === 'transport' && $transport) {
+                $booking = new TransportBooking([
+                    'id' => $packageLineItem->id,
+                    'trip_id' => $trip->id,
+                    'booking_reference' => 'PACKAGE-' . $packageLineItem->id,
+                    'booking_status' => $packageLineItem->status ?? 'Pending',
+                    'total_amount' => $packageLineItem->price ?? 0,
+                    'currency' => $packageLineItem->currency ?? 'USD',
+                    'pickup_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today(),
+                    'return_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date)->addDay() : \Carbon\Carbon::today()->addDay(),
+                    'route_from' => $transport->route_from ?? null,
+                    'route_to' => $transport->route_to ?? null,
+                    'pickup_time' => $transport->pickup_time ?? null,
+                    'return_time' => $transport->return_time ?? null,
+                ]);
+                $booking->setRelation('transport', $transport);
+                $booking->setRelation('guests', $packageLineItem->travellers()->get());
+            } elseif ($serviceType !== '' && !in_array($serviceType, $allowedPackageTypes, true)) {
+                abort(404);
+            }
         }
 
         if (!$booking) {
@@ -368,8 +979,9 @@ class TripController extends Controller
 
         $guestsForVoucher = $voucherGuest ? [$voucherGuest] : $booking->guests->all();
         
-        // For activity bookings, check if time slots are required and present
-        if ($isActivity && !$voucherGuest) {
+        // For single-service activity bookings, the traveler already chose the slot during booking.
+        // Requiring a second slot selection in the manage screen blocks valid vouchers.
+        if ($isActivity && !$voucherGuest && !empty($booking->participant_time_slots) && is_array($booking->participant_time_slots)) {
             $participantTimeSlots = $booking->participant_time_slots ?? [];
             $missingTimeSlots = [];
             foreach ($guestsForVoucher as $index => $guest) {
@@ -521,9 +1133,11 @@ class TripController extends Controller
         $companyBrnSafe = e($company['brn_number']);
         $companyLogoHtml = $this->renderAdminCompanyLogoHtml($company['logo_path'], $company['business_name']);
 
+        // Use the original route parameter $bookingId when generating voucher URLs
+        // (some package-based booking models may not have a populated ->id attribute).
         $voucherUrl = $guestId
-            ? route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guestId], true)
-            : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id], true);
+          ? route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $bookingId, 'guest' => $guestId], true)
+          : route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $bookingId], true);
 
         $roomType = $isTransport ? ($transport->vehicle_name ?? '-') : ($room->room_name ?? $booking->room_name ?? '-');
         $occupancy = $isTransport
@@ -957,6 +1571,41 @@ HTML;
             $booking = \App\Models\ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->first();
         }
         if (!$booking) {
+            $packageLineItem = \App\Models\BookingLineItem::where('id', $bookingId)
+                ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id))
+                ->first();
+
+            if ($packageLineItem && $packageLineItem->service_type === 'package') {
+                $packageLineItem->travellers()->detach();
+
+                $guestInput = $request->input('guests', []);
+                foreach (array_values((array) $guestInput) as $index => $guestData) {
+                    $firstName = trim((string) ($guestData['first_name'] ?? ''));
+                    $lastName = trim((string) ($guestData['last_name'] ?? ''));
+                    $fullName = trim($firstName . ' ' . $lastName);
+
+                    if ($fullName === '') {
+                        continue;
+                    }
+
+                    $traveller = \App\Models\Traveller::create([
+                        'trip_id' => $trip->id,
+                        'name' => $fullName,
+                        'email' => null,
+                        'phone' => null,
+                        'date_of_birth' => isset($guestData['dob']) && $guestData['dob'] ? \Carbon\Carbon::parse($guestData['dob'])->format('Y-m-d') : null,
+                        'relationship' => 'guest',
+                    ]);
+
+                    \App\Models\BliTravellerAllocation::create([
+                        'bli_id' => $packageLineItem->id,
+                        'traveller_id' => $traveller->id,
+                    ]);
+                }
+
+                return redirect()->route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $packageLineItem->id])->with('success', 'Guests updated successfully.');
+            }
+
             abort(404);
         }
 
@@ -1016,10 +1665,84 @@ HTML;
         $accommodationBookings = $trip->accommodationBookings ?? collect();
         $activityBookings = $trip->activityBookings ?? collect();
         $transportBookings = $trip->transportBookings()->with(['transport'])->get() ?? collect();
-        
+        $packageLineItem = $trip->bookings
+            ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
+            ->first(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');
+
         $allBookings = $accommodationBookings->merge($activityBookings)->merge($transportBookings);
-        
-        if ($allBookings->isEmpty()) {
+
+        if ($packageLineItem && $packageLineItem->service_id) {
+            $package = \App\Models\Package::find($packageLineItem->service_id);
+            $invoiceItems = [];
+            $subtotal = 0.0;
+
+            if ($package && is_array($package->itinerary ?? null)) {
+                foreach ($package->itinerary as $dayEntry) {
+                    if (!is_array($dayEntry)) {
+                        continue;
+                    }
+
+                    foreach (['accommodation', 'activity', 'transport'] as $type) {
+                        if (empty($dayEntry[$type])) {
+                            continue;
+                        }
+
+                        $serviceId = (int) $dayEntry[$type];
+                        $itemName = null;
+                        $date = $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today();
+                        $amount = 0.0;
+
+                        if ($type === 'accommodation') {
+                            $model = \App\Models\Accommodation::find($serviceId);
+                            $itemName = $model->property_name ?? 'Accommodation';
+                            $amount = $this->resolvePackageAccommodationAmount($model, $dayEntry);
+                        } elseif ($type === 'activity') {
+                            $model = \App\Models\Activity::find($serviceId);
+                            $itemName = $model->activity_name ?? 'Activity';
+                            $amount = $this->resolvePackageActivityAmount($model, $dayEntry, max(1, $trip->travellers ? $trip->travellers->count() : 1));
+                        } elseif ($type === 'transport') {
+                            $model = \App\Models\Transport::with('routes')->find($serviceId);
+                            $itemName = $model->vehicle_name ?? 'Transport';
+                            $amount = $this->resolvePackageTransportAmount($model, $dayEntry, max(1, $trip->travellers ? $trip->travellers->count() : 1));
+                        }
+
+                        if ($amount <= 0 || !$itemName) {
+                            continue;
+                        }
+
+                        $invoiceItems[] = [
+                            'type' => ucfirst($type),
+                            'name' => e($itemName),
+                            'location' => e($type === 'transport' ? ($model->route_from ?? '') . ($model->route_to ? ' - ' . $model->route_to : '') : ($model->town ?? 'Mauritius')),
+                            'checkIn' => $date->format('d/m/Y'),
+                            'checkOut' => $date->copy()->addDay()->format('d/m/Y'),
+                            'description' => e($itemName),
+                            'notes' => e('Package service'),
+                            'qty' => 1,
+                            'unitPrice' => $amount,
+                            'total' => $amount,
+                        ];
+                        $subtotal += $amount;
+                    }
+                }
+            }
+
+            if (empty($invoiceItems)) {
+                $invoiceItems = [[
+                    'type' => 'Package',
+                    'name' => e($package->name ?? 'Package'),
+                    'location' => e('Mauritius'),
+                    'checkIn' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date)->format('d/m/Y') : 'N/A',
+                    'checkOut' => $trip->end_date ? \Carbon\Carbon::parse($trip->end_date)->format('d/m/Y') : 'N/A',
+                    'description' => e('Package booking'),
+                    'notes' => e('Package service'),
+                    'qty' => 1,
+                    'unitPrice' => (float) ($packageLineItem->price ?? 0),
+                    'total' => (float) ($packageLineItem->price ?? 0),
+                ]];
+                $subtotal = (float) ($packageLineItem->price ?? 0);
+            }
+        } elseif ($allBookings->isEmpty()) {
             abort(404);
         }
 

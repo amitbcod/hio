@@ -42,6 +42,13 @@
                                     @foreach($ongoingTrips as $trip)
                                         @php
                                             $serviceTypes = collect();
+                                            $tripIsPackage = $trip->is_package_trip ?? $trip->bookings
+                                                ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
+                                                ->contains(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');
+
+                                            if ($tripIsPackage) {
+                                                $serviceTypes->push('Package');
+                                            }
                                             
                                             if ($trip->accommodationBookings && $trip->accommodationBookings->isNotEmpty()) {
                                                 $serviceTypes->push('Accommodation');
@@ -65,7 +72,9 @@
                                             <td data-label="{{ __('traveler.trips.trip_label') }}">
                                                 <div class="trip-name-cell">
                                                     <strong>#{{ $trip->id }}</strong>
-                                                    <!-- <span>{{ __('traveler.trips.trip_label') }}</span> -->
+                                                    @if($tripIsPackage)
+                                                        <span style="display:inline-block; margin-left:8px; font-size:12px; padding:4px 8px; border-radius:999px; background:#fff3e0; color:#b45309; font-weight:700;">Package Trip</span>
+                                                    @endif
                                                 </div>
                                             </td>
                                             <td data-label="{{ __('traveler.trips.service_type') }}">
@@ -185,7 +194,15 @@
                                 <tbody>
                                     @foreach($pastTrips as $trip)
                                         @php
+                                            $tripIsPackage = $trip->is_package_trip ?? $trip->bookings
+                                                ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
+                                                ->contains(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');
+
                                             $serviceTypes = collect();
+
+                                            if ($tripIsPackage) {
+                                                $serviceTypes->push('Package');
+                                            }
                                             
                                             if ($trip->accommodationBookings && $trip->accommodationBookings->isNotEmpty()) {
                                                 $serviceTypes->push('Accommodation');
@@ -209,6 +226,9 @@
                                             <td data-label="{{ __('traveler.trips.trip_label') }}">
                                                 <div class="trip-name-cell">
                                                     <strong> #{{ $trip->id }}</strong>
+                                                    @if($tripIsPackage)
+                                                        <span style="display:inline-block; margin-left:8px; font-size:12px; padding:4px 8px; border-radius:999px; background:#fff3e0; color:#b45309; font-weight:700;">Package Trip</span>
+                                                    @endif
                                                     <!-- <span>{{ __('traveler.trips.trip_label') }}</span> -->
                                                 </div>
                                             </td>
@@ -216,7 +236,9 @@
                                                 <div class="service-type-badges">
                                                     @foreach($serviceTypes as $type)
                                                         <span class="service-badge">
-                                                            @if($type === 'Accommodation')
+                                                            @if($type === 'Package')
+                                                                Package
+                                                            @elseif($type === 'Accommodation')
                                                                 {{ __('traveler.trips.service_type_accommodation') }}
                                                             @elseif($type === 'Activity')
                                                                 {{ __('traveler.trips.service_type_activity') }}

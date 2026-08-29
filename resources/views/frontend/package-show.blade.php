@@ -81,26 +81,91 @@
 
             <aside style="background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px 18px 16px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
                 <div style="font-size:30px; font-weight:800; color:#1f2a37; margin-bottom: 18px;">$ {{ number_format((float) $package['price'], 2) }}</div>
-                <button type="button" style="width:100%; background:#f39b4a; border:none; border-radius:8px; color:#fff; font-size:18px; font-weight:800; padding:14px 16px; cursor:pointer; text-transform: uppercase; letter-spacing: .05em;">Proceed to payment</button>
+                <form method="POST" action="{{ route('frontend.booking.cart.add') }}">
+                    @csrf
+                    <input type="hidden" name="type" value="package">
+                    <input type="hidden" name="package_id" value="{{ $package['id'] }}">
+                    <input type="hidden" name="package_name" value="{{ $package['name'] }}">
+                    <input type="hidden" name="package_total_price" value="{{ $package['price'] }}">
+                    <input type="hidden" name="currency" value="USD">
+                    <input type="hidden" name="package_image" value="{{ $package['image'] }}">
+                    <input type="hidden" name="nights" value="{{ $package['no_of_nights'] }}">
+                    <input type="hidden" name="days" value="{{ $package['no_of_days'] }}">
+                    <button type="submit" style="width:100%; background:#f39b4a; border:none; border-radius:8px; color:#fff; font-size:18px; font-weight:800; padding:14px 16px; cursor:pointer; text-transform: uppercase; letter-spacing: .05em;">Add to cart</button>
+                </form>
             </aside>
         </div>
 
         <div class="package-tab-panel" id="tab-policies" style="display:none; background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:22px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
-            @if(!empty($package['inclusions']) || !empty($package['exclusions']))
-                <div style="display:grid; gap:18px;">
-                    @if(!empty($package['inclusions']))
-                        <div>
-                            <h3 style="margin:0 0 8px; font-size:18px; color:#1f2a37;">Inclusions</h3>
-                            <div style="color:#475467; line-height:1.8; white-space:pre-line;">{{ $package['inclusions'] }}</div>
-                        </div>
-                    @endif
-                    @if(!empty($package['exclusions']))
-                        <div>
-                            <h3 style="margin:0 0 8px; font-size:18px; color:#1f2a37;">Exclusions</h3>
-                            <div style="color:#475467; line-height:1.8; white-space:pre-line;">{{ $package['exclusions'] }}</div>
-                        </div>
-                    @endif
+            @php
+                $policyRows = [
+                    'cancellation' => ['label' => 'Cancellation'],
+                    'amendments' => ['label' => 'Amendments'],
+                    'postponement' => ['label' => 'Postponement'],
+                    'payment' => ['label' => 'Payment'],
+                    'refund' => ['label' => 'Refund'],
+                    'security_deposit' => ['label' => 'Security Deposit'],
+                    'house_rules' => ['label' => 'House & Gen. Rules'],
+                ];
+                $effectivePolicy = $package['effective_policy'] ?? [];
+            @endphp
+
+            @if(!empty($effectivePolicy))
+                <div style="border:1px solid #e4e7eb;border-radius:10px;overflow:hidden;background:#fff;">
+                    <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                        <thead style="background:#f7f7f7;">
+                            <tr>
+                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:10%;font-size:13px;color:#333;">Policy</th>
+                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:15%;font-size:13px;color:#333;">Details (Type)</th>
+                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">Before Deadline</th>
+                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">After Deadline</th>
+                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:24%;font-size:13px;color:#333;">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($policyRows as $key => $meta)
+                                @php
+                                    $row = $effectivePolicy[$key] ?? ['type' => '-', 'before_deadline' => '-', 'after_deadline' => '-', 'notes' => ''];
+                                @endphp
+                                <tr>
+                                    <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;font-weight:600;color:#2b2d31;">{{ $meta['label'] }}</td>
+                                    <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
+                                        <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;">{{ $row['type'] ?? '-' }}</div>
+                                    </td>
+                                    <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
+                                        @php $beforeValue = $row['before_deadline'] ?? '-'; @endphp
+                                        <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;">{{ $beforeValue }}</div>
+                                    </td>
+                                    <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
+                                        @php $afterValue = $row['after_deadline'] ?? '-'; @endphp
+                                        <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;">{{ $afterValue }}</div>
+                                    </td>
+                                    <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
+                                        <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;white-space:pre-wrap;">{{ $row['notes'] ?? '' }}</div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
+
+                @if(!empty($effectivePolicy['booking_notes']) || !empty($effectivePolicy['package_notes']))
+                    <div style="margin-top:18px; display:grid; gap:12px;">
+                        @if(!empty($effectivePolicy['booking_notes']))
+                            <div style="border:1px solid #e4e7eb;border-radius:10px;padding:12px 14px;background:#f7f7f7;">
+                                <div style="font-weight:600;color:#333;margin-bottom:8px;">Booking Notes</div>
+                                <div style="padding:10px 12px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;white-space:pre-wrap;">{{ $effectivePolicy['booking_notes'] }}</div>
+                            </div>
+                        @endif
+
+                        @if(!empty($effectivePolicy['package_notes']))
+                            <div style="border:1px solid #e4e7eb;border-radius:10px;padding:12px 14px;background:#f7f7f7;">
+                                <div style="font-weight:600;color:#333;margin-bottom:8px;">Package Notes</div>
+                                <div style="padding:10px 12px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;white-space:pre-wrap;">{{ $effectivePolicy['package_notes'] }}</div>
+                            </div>
+                        @endif
+                    </div>
+                @endif
             @else
                 <p style="margin:0; color:#475467;">Package policies are not yet defined for this listing.</p>
             @endif

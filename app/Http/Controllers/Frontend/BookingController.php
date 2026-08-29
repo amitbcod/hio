@@ -91,10 +91,22 @@ class BookingController extends Controller
 
         $cart = $this->resolveCart();
 
+        try {
+            $this->validateCartItemCompatibility($cart, $type);
+        } catch (\RuntimeException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
+
+            return back()->with('error', $e->getMessage());
+        }
+
         if ($type === 'accommodation') {
             $item = $this->buildAccommodationCartItem($request);
         } elseif ($type === 'activity') {
             $item = $this->buildActivityCartItem($request);
+        } elseif ($type === 'package') {
+            $item = $this->buildPackageCartItem($request);
         } elseif ($type === 'transport') {
             $validator = Validator::make($request->all(), [
                 'route_from' => ['required', 'string'],
@@ -273,6 +285,51 @@ class BookingController extends Controller
 
         return redirect()->route('frontend.booking.cart')
             ->with('success', __('cart.item_added'));
+    }
+
+    private function validateCartItemCompatibility(array $cart, string $incomingType): void
+    {
+        // A cart can contain both package and non-package items when a guest cart is merged
+        // with a logged-in traveler cart. This is a valid business flow and should not break
+        // checkout or trip creation, so we only enforce item-level validation at the add-to-cart
+        // stage when specific downstream logic requires exclusivity.
+    }
+
+    private function buildPackageCartItem(Request $request): array
+    {
+        $packageId = (int) $request->input('package_id');
+        $packageName = trim((string) $request->input('package_name', 'Package'));
+        $packageTotal = (float) $request->input('package_total_price', $request->input('total_price', 0));
+        $currency = $request->input('currency', 'USD');
+        $image = $request->input('package_image', $request->input('image', ''));
+        $nights = max(1, (int) $request->input('nights', $request->input('no_of_nights', 1)));
+        $days = max(1, (int) $request->input('days', $request->input('no_of_days', $nights)));
+        $startDate = $request->input('package_start_date') ?: now()->toDateString();
+        $endDate = $request->input('package_end_date') ?: Carbon::parse($startDate)->addDays(max(1, $days - 1))->toDateString();
+
+        return [
+            'cart_key' => uniqid('pkg_', true),
+            'type' => 'package',
+            'package_id' => $packageId,
+            'package_name' => $packageName,
+            'title' => $packageName ?: 'Package Trip',
+            'image' => $image,
+            'check_in' => $startDate,
+            'check_out' => $endDate,
+            'check_in_display' => Carbon::parse($startDate)->format('d/m/Y'),
+            'check_out_display' => Carbon::parse($endDate)->format('d/m/Y'),
+            'nights' => $nights,
+            'days' => $days,
+            'adults' => max(1, (int) $request->input('adults', 2)),
+            'children' => max(0, (int) $request->input('children', 0)),
+            'infants' => max(0, (int) $request->input('infants', 0)),
+            'total_price' => $packageTotal,
+            'currency' => $currency,
+            'discount_amount' => 0.0,
+            'tax_amount' => 0.0,
+            'fee_amount' => 0.0,
+            'net_amount' => $packageTotal,
+        ];
     }
 
     private function buildAccommodationCartItem(Request $request): array
@@ -1157,6 +1214,13 @@ class BookingController extends Controller
         $tripData = [];
 
         foreach ($cart as $item) {
+            if (($item['type'] ?? null) === 'package') {
+                $tripData['start_date'] = $item['check_in'] ?? null;
+                $tripData['end_date'] = $item['check_out'] ?? null;
+                $tripData['title'] = 'Package Trip';
+                break;
+            }
+
             if ($item['type'] === 'accommodation') {
                 $tripData['start_date'] = $item['check_in'];
                 $tripData['end_date'] = $item['check_out'];
@@ -1233,7 +1297,41 @@ class BookingController extends Controller
 
             $guestName = trim(($primaryGuest['first_name'] ?? '') . ' ' . ($primaryGuest['middle_name'] ?? '') . ' ' . ($primaryGuest['last_name'] ?? '')) ?: ($travelerAccount?->full_name ?? $travelerAccount?->email ?? 'Guest');
 
-            if ($item['type'] === 'accommodation') {
+            if ($item['type'] === 'package') {
+                $packageBooking = Booking::create([
+                    'trip_id' => $tripId,
+                    'operator_id' => null,
+                    'total_amount' => $item['net_amount'],
+                    'status' => 'pending',
+                ]);
+                $tripBookingIds[] = $packageBooking->id;
+
+                $packageLine = BookingLineItem::create([
+                    'booking_id' => $packageBooking->id,
+                    'service_type' => 'package',
+                    'service_id' => $item['package_id'],
+                    'quantity' => 1,
+                    'price' => $item['net_amount'],
+                    'start_date' => $item['check_in'],
+                    'end_date' => $item['check_out'],
+                    'status' => 'active',
+                ]);
+
+                if ($tripId) {
+                    foreach ($itemGuests as $guest) {
+                        $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                        $traveller = Traveller::where('trip_id', $tripId)->where('name', $fullName)->first();
+                        if ($traveller) {
+                            BliTravellerAllocation::create([
+                                'bli_id' => $packageLine->id,
+                                'traveller_id' => $traveller->id,
+                            ]);
+                        }
+                    }
+                }
+
+                continue;
+            } elseif ($item['type'] === 'accommodation') {
                 $booking = AccommodationBooking::create([
                     'booking_reference' => $ref,
                     'accommodation_id'  => $item['accommodation_id'],
@@ -2179,6 +2277,7 @@ class BookingController extends Controller
         return match ($item['type'] ?? null) {
             'transport' => max(1, (int) ($item['passengers'] ?? 1)),
             'activity' => (int) ($item['participants'] ?? (($item['adults'] ?? 0) + ($item['children'] ?? 0) + ($item['infants'] ?? 0))),
+            'package' => max(1, (int) (($item['adults'] ?? 0) + ($item['children'] ?? 0) + ($item['infants'] ?? 0))),
             default => (int) (($item['adults'] ?? 0) + ($item['children'] ?? 0) + ($item['infants'] ?? 0)),
         };
     }
@@ -2285,6 +2384,7 @@ class BookingController extends Controller
         $prefix = match ($type) {
             'accommodation' => 'ACC',
             'transport'     => 'TRS',
+            'package'       => 'PKG',
             default         => 'ACT',
         };
         $datePart = $date ? Carbon::parse($date)->format('Ymd') : now()->format('Ymd');
@@ -2294,6 +2394,7 @@ class BookingController extends Controller
             $existingCount = match ($type) {
                 'accommodation' => AccommodationBooking::where('trip_id', $tripId)->count(),
                 'transport'     => TransportBooking::where('trip_id', $tripId)->count(),
+                'package'       => Booking::where('trip_id', $tripId)->count(),
                 default         => ActivityBooking::where('trip_id', $tripId)->count(),
             };
 
@@ -2308,7 +2409,8 @@ class BookingController extends Controller
             while (
                 ($type === 'accommodation' && AccommodationBooking::where('booking_reference', $candidate)->exists()) ||
                 ($type === 'activity' && ActivityBooking::where('booking_reference', $candidate)->exists()) ||
-                ($type === 'transport' && TransportBooking::where('booking_reference', $candidate)->exists())
+                ($type === 'transport' && TransportBooking::where('booking_reference', $candidate)->exists()) ||
+                ($type === 'package' && Booking::where('id', $candidate)->exists())
             ) {
                 $candidate = sprintf('%s-%02d', $baseRef, $suffix++);
             }
