@@ -92,7 +92,7 @@ class TripController extends Controller
                                 'booked_count' => max(1, $guestCount),
                                 'added_count' => 0,
                                 'currency' => $packageLineItem->currency ?? 'USD',
-                                'amount' => $this->resolvePackageAccommodationAmount($accommodation, $entry),
+                                  'amount' => $this->resolvePackageAccommodationAmount($accommodation, $entry, $package),
                                 'manage_route' => route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'accommodation']),
                                 'voucher_route' => route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'accommodation']),
                             ]);
@@ -110,7 +110,7 @@ class TripController extends Controller
                                 'booked_count' => max(1, $guestCount),
                                 'added_count' => 0,
                                 'currency' => $packageLineItem->currency ?? 'USD',
-                                'amount' => $this->resolvePackageActivityAmount($activity, $entry, $guestCount),
+                                'amount' => $this->resolvePackageActivityAmount($activity, $entry, $guestCount, $package),
                                 'manage_route' => route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'activity']),
                                 'voucher_route' => route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'activity']),
                             ]);
@@ -128,7 +128,7 @@ class TripController extends Controller
                                 'booked_count' => max(1, $guestCount),
                                 'added_count' => 0,
                                 'currency' => $packageLineItem->currency ?? 'USD',
-                                'amount' => $this->resolvePackageTransportAmount($transport, $entry, $guestCount),
+                                'amount' => $this->resolvePackageTransportAmount($transport, $entry, $guestCount, $package),
                                 'manage_route' => null,
                                 'voucher_route' => route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'transport']),
                             ]);
@@ -257,105 +257,231 @@ class TripController extends Controller
         return $requested !== '' && in_array($requested, $allowedPackageTypes, true) ? $requested : 'accommodation';
     }
 
-    private function resolvePackageAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry): float
+    private function resolvePackageAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry, ?\App\Models\Package $package = null): float
     {
-        $roomIds = array_values(array_filter(array_map('intval', (array) ($entry['rooms'] ?? []))));
-        if (empty($roomIds)) {
-            $roomIds = \App\Models\AccommodationRoom::where('accommodation_id', $accommodation->id)->pluck('id')->all();
-        }
+      $roomIds = array_values(array_filter(array_map('intval', (array) ($entry['rooms'] ?? []))));
+      if (empty($roomIds)) {
+        $roomIds = \App\Models\AccommodationRoom::where('accommodation_id', $accommodation->id)->pluck('id')->all();
+      }
 
-        $bestAmount = 0.0;
-        foreach ($roomIds as $roomId) {
-            $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
+      $bestAmount = 0.0;
+      $globalMode = $package && is_array($package->itinerary ?? null) ? ($package->itinerary['pricing_modes']['accommodation'] ?? 'discount_offer') : 'discount_offer';
+      $globalDiscount = $package && is_array($package->itinerary ?? null) ? (float) ($package->itinerary['discounts']['accommodation'] ?? 20) : 20.0;
+      $dayPricing = is_array($entry['pricing'] ?? null) ? $entry['pricing'] : [];
+
+      foreach ($roomIds as $roomId) {
+        $candidate = 0.0;
+
+        $roomPricing = $dayPricing[$roomId] ?? [];
+        $roomMode = $roomPricing['mode'] ?? $globalMode;
+        $selectedPackage = $roomPricing['selected_package'] ?? null;
+        $roomDiscount = is_numeric($roomPricing['discount_percent'] ?? null) ? (float) $roomPricing['discount_percent'] : $globalDiscount;
+
+        // Package-rate selected explicitly for this room
+        if ($roomMode === 'package_rate') {
+          if (!empty($selectedPackage)) {
+            // try numeric id first
+            if (is_numeric($selectedPackage)) {
+              $rate = \App\Models\AccommodationRate::find((int) $selectedPackage);
+            } else {
+              $rate = null;
+            }
+            if (empty($rate)) {
+              $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
                 ->where('room_id', $roomId)
                 ->where('rate_type', 'Package')
                 ->orderByDesc('updated_at')
                 ->first();
-
-            if (!$rate) {
-                $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
-                    ->where('room_id', $roomId)
-                    ->where(function ($query) {
-                        $query->where('rate_type', 'Package')->orWhere('is_default', true);
-                    })
-                    ->orderByDesc('updated_at')
-                    ->first();
             }
-
-            $candidate = (float) ($rate->base_rate ?? $rate->final_rate ?? $rate->extra_adult_rate ?? $rate->children_rate ?? 0);
-            if ($candidate > $bestAmount) {
-                $bestAmount = $candidate;
+            if ($rate) {
+              $candidate = (float) ($rate->base_rate ?? $rate->final_rate ?? 0);
             }
+          } else {
+            // Global package mode, pick any package rate provided by operator
+            $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
+              ->where('room_id', $roomId)
+              ->where('rate_type', 'Package')
+              ->orderByDesc('updated_at')
+              ->first();
+            if ($rate) {
+              $candidate = (float) ($rate->base_rate ?? $rate->final_rate ?? 0);
+            }
+          }
         }
 
-        return round($bestAmount, 2);
+        // If no package candidate, prefer seasonal/default non-package rates
+        if ($candidate <= 0) {
+          $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
+            ->where('room_id', $roomId)
+            ->where(function ($q) { $q->where('rate_type', '!=', 'Package')->orWhereNull('rate_type'); })
+            ->where('is_rate_plan', false)
+            ->orderByDesc('valid_from')
+            ->first();
+
+          if (!$rate) {
+            $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
+              ->where('room_id', $roomId)
+              ->where('is_rate_plan', false)
+              ->orderByDesc('valid_from')
+              ->first();
+          }
+
+          if ($rate) {
+            $base = (float) ($rate->base_rate ?? $rate->final_rate ?? 0);
+            if ($roomMode === 'discount_offer' && $roomDiscount > 0 && $roomDiscount <= 100) {
+              $base = $base - ($base * $roomDiscount / 100.0);
+            }
+            $candidate = $base;
+          }
+        }
+
+        if ($candidate > $bestAmount) {
+          $bestAmount = $candidate;
+        }
+      }
+
+      return round(max(0.0, $bestAmount), 2);
     }
 
-    private function resolvePackageActivityAmount(\App\Models\Activity $activity, array $entry, int $guestCount): float
+    private function resolvePackageActivityAmount(\App\Models\Activity $activity, array $entry, int $guestCount, ?\App\Models\Package $package = null): float
     {
-        $selection = $entry['activity_selection'] ?? [];
-        if (!is_array($selection)) {
-            $selection = $selection ? [$selection] : [];
-        }
+      $selection = $entry['activity_selection'] ?? [];
+      if (!is_array($selection)) {
+        $selection = $selection ? [$selection] : [];
+      }
 
-        $unitAmount = 0.0;
-        foreach (array_values(array_filter(array_map('trim', $selection))) as $selected) {
-            if (!str_contains((string) $selected, '|')) {
-                continue;
+      $globalMode = $package && is_array($package->itinerary ?? null) ? ($package->itinerary['pricing_modes']['activity'] ?? 'discount_offer') : 'discount_offer';
+      $globalDiscount = $package && is_array($package->itinerary ?? null) ? (float) ($package->itinerary['discounts']['activity'] ?? 10) : 10.0;
+
+      $totalUnit = 0.0;
+      foreach (array_values(array_filter(array_map('trim', $selection))) as $selected) {
+        $perSelected = 0.0;
+        if (!str_contains((string) $selected, '|')) {
+          // legacy id selection - try to pick a package or seasonal rate
+          $variant = \App\Models\ActivityVariant::where('activity_id', $activity->id)->first();
+          if ($variant) {
+            $rates = \App\Models\ActivityRate::where('activity_id', $activity->id)
+              ->where('variant_id', $variant->variant_id)
+              ->orderByDesc('created_at')
+              ->get();
+            $rate = $rates->firstWhere('season', 'Package') ?: $rates->first();
+            if ($rate) {
+              $perSelected = (float) ($rate->adult_rate ?? $rate->base_rate ?? 0);
             }
+          }
+        } else {
+          [$variantId, $rateSpecificity] = array_pad(explode('|', (string) $selected, 2), 2, null);
 
-            [$variantId, $rateSpecificity] = array_pad(explode('|', (string) $selected, 2), 2, null);
+          // If package mode, prefer package-season rates for the specific variant/specificity
+          if ($globalMode === 'package_rate') {
             $rate = \App\Models\ActivityRate::where('activity_id', $activity->id)
+              ->where('variant_id', $variantId)
+              ->where('rate_specificity', $rateSpecificity)
+              ->where('season', 'Package')
+              ->orderByDesc('updated_at')
+              ->first();
+            if ($rate) {
+              $perSelected = (float) ($rate->adult_rate ?? $rate->base_rate ?? 0);
+            }
+          }
+
+          // Fallback to non-package seasonal/default rates
+          if ($perSelected <= 0) {
+            $ratesCollection = \App\Models\ActivityRate::where('activity_id', $activity->id)
+              ->where('variant_id', $variantId)
+              ->where('season', '!=', 'Package')
+              ->orderByDesc('created_at')
+              ->get();
+
+            if ($ratesCollection->isEmpty()) {
+              $ratesCollection = \App\Models\ActivityRate::where('activity_id', $activity->id)
                 ->where('variant_id', $variantId)
-                ->where('rate_specificity', $rateSpecificity)
-                ->where('season', 'Package')
-                ->orderByDesc('updated_at')
-                ->first();
-
-            if ($rate) {
-                $candidate = (float) ($rate->adult_rate ?? $rate->children_rate ?? $rate->infant_rate ?? $rate->equipment_rate ?? $rate->base_rate ?? 0);
-                if ($candidate > $unitAmount) {
-                    $unitAmount = $candidate;
-                }
+                ->orderByDesc('created_at')
+                ->get();
             }
+
+            if ($ratesCollection->isNotEmpty()) {
+              $grouped = $ratesCollection->groupBy(function ($r) { return $r->season ?: 'One Season'; })
+                ->map(fn($g) => $g->first())->values();
+              $rate = $grouped->first();
+              if ($rate) {
+                $perSelected = (float) ($rate->adult_rate ?? $rate->base_rate ?? 0);
+              }
+            }
+          }
         }
 
-        if ($unitAmount <= 0) {
-            $rate = \App\Models\ActivityRate::where('activity_id', $activity->id)
-                ->where('season', 'Package')
-                ->orderByDesc('updated_at')
-                ->first();
-
-            if ($rate) {
-                $unitAmount = (float) ($rate->adult_rate ?? $rate->children_rate ?? $rate->infant_rate ?? $rate->equipment_rate ?? $rate->base_rate ?? 0);
-            }
+        if ($perSelected > 0) {
+          $totalUnit += $perSelected;
         }
+      }
 
-        return round($unitAmount > 0 ? $unitAmount * max(1, $guestCount) : 0.0, 2);
+      // If nothing selected, try to pick a package or seasonal default for the activity
+      if ($totalUnit <= 0) {
+        if ($globalMode === 'package_rate') {
+          $rate = \App\Models\ActivityRate::where('activity_id', $activity->id)
+            ->where('season', 'Package')
+            ->orderByDesc('updated_at')
+            ->first();
+          if ($rate) $totalUnit = (float) ($rate->adult_rate ?? $rate->base_rate ?? 0);
+        }
+        if ($totalUnit <= 0) {
+          $rate = \App\Models\ActivityRate::where('activity_id', $activity->id)
+            ->where('season', '!=', 'Package')
+            ->orderByDesc('created_at')
+            ->first();
+          if ($rate) $totalUnit = (float) ($rate->adult_rate ?? $rate->base_rate ?? 0);
+        }
+      }
+
+      // Apply discount if in discount mode
+      if ($globalMode === 'discount_offer' && $totalUnit > 0) {
+        $pct = $globalDiscount;
+        if (is_numeric($pct) && $pct > 0 && $pct <= 100) {
+          $totalUnit = $totalUnit - ($totalUnit * $pct / 100.0);
+        }
+      }
+
+      return round($totalUnit > 0 ? $totalUnit * max(1, $guestCount) : 0.0, 2);
     }
 
-    private function resolvePackageTransportAmount(\App\Models\Transport $transport, array $entry, int $guestCount): float
+    private function resolvePackageTransportAmount(\App\Models\Transport $transport, array $entry, int $guestCount, ?\App\Models\Package $package = null): float
     {
-        $bestAmount = 0.0;
-        $routes = $transport->routes ?? collect();
+      $bestAmount = 0.0;
+      $routes = $transport->routes ?? collect();
+      $globalMode = $package && is_array($package->itinerary ?? null) ? ($package->itinerary['pricing_modes']['transport'] ?? 'discount_offer') : 'discount_offer';
+      $globalDiscount = $package && is_array($package->itinerary ?? null) ? (float) ($package->itinerary['discounts']['transport'] ?? 5) : 5.0;
 
-        foreach ($routes as $route) {
-            $pricing = is_array($route->pricing ?? null) ? $route->pricing : (is_string($route->pricing ?? null) ? json_decode($route->pricing, true) : []);
-            $candidate = (float) ($pricing['package_price'] ?? $pricing['price'] ?? $pricing['default_price'] ?? $pricing['package_return_price'] ?? 0);
-            if ($candidate > $bestAmount) {
-                $bestAmount = $candidate;
-            }
+      foreach ($routes as $route) {
+        $pricing = is_array($route->pricing ?? null) ? $route->pricing : (is_string($route->pricing ?? null) ? json_decode($route->pricing, true) : []);
+
+        $candidate = 0.0;
+        if ($globalMode === 'package_rate') {
+          $candidate = (float) ($pricing['package_price'] ?? $pricing['package_return_price'] ?? 0);
         }
 
-        if ($bestAmount <= 0) {
-            $route = $transport->routes()->first();
-            if ($route) {
-                $pricing = is_array($route->pricing ?? null) ? $route->pricing : (is_string($route->pricing ?? null) ? json_decode($route->pricing, true) : []);
-                $bestAmount = (float) ($pricing['package_price'] ?? $pricing['price'] ?? $pricing['default_price'] ?? $pricing['package_return_price'] ?? 0);
-            }
+        if ($candidate <= 0) {
+          $base = (float) ($pricing['price'] ?? $pricing['default_price'] ?? $pricing['single'] ?? 0);
+          if ($globalMode === 'discount_offer' && $globalDiscount > 0 && $globalDiscount <= 100) {
+            $base = $base - ($base * $globalDiscount / 100.0);
+          }
+          $candidate = $base;
         }
 
-        return round($bestAmount > 0 ? $bestAmount * max(1, $guestCount) : 0.0, 2);
+        if ($candidate > $bestAmount) {
+          $bestAmount = $candidate;
+        }
+      }
+
+      if ($bestAmount <= 0) {
+        $route = $transport->routes()->first();
+        if ($route) {
+          $pricing = is_array($route->pricing ?? null) ? $route->pricing : (is_string($route->pricing ?? null) ? json_decode($route->pricing, true) : []);
+          $bestAmount = (float) ($pricing['package_price'] ?? $pricing['price'] ?? $pricing['default_price'] ?? 0);
+        }
+      }
+
+      return round($bestAmount > 0 ? $bestAmount * max(1, $guestCount) : 0.0, 2);
     }
 
     public function cancelBooking(Trip $trip, $bookingId)
@@ -1626,7 +1752,7 @@ HTML;
                     $services->push([
                       'type' => 'accommodation',
                       'model' => $accommodation,
-                      'amount' => $this->resolvePackageAccommodationAmount($accommodation, $entry),
+                      'amount' => $this->resolvePackageAccommodationAmount($accommodation, $entry, $package),
                       'label' => $accommodation->property_name ?? 'Accommodation',
                     ]);
                   }
@@ -1635,7 +1761,7 @@ HTML;
                     $services->push([
                       'type' => 'activity',
                       'model' => $activity,
-                      'amount' => $this->resolvePackageActivityAmount($activity, $entry, $guestCount),
+                      'amount' => $this->resolvePackageActivityAmount($activity, $entry, $guestCount, $package),
                       'label' => $activity->activity_name ?? 'Activity',
                     ]);
                   }
@@ -1644,7 +1770,7 @@ HTML;
                     $services->push([
                       'type' => 'transport',
                       'model' => $transport,
-                      'amount' => $this->resolvePackageTransportAmount($transport, $entry, $guestCount),
+                      'amount' => $this->resolvePackageTransportAmount($transport, $entry, $guestCount, $package),
                       'label' => $transport->vehicle_name ?? 'Transport',
                     ]);
                   }
