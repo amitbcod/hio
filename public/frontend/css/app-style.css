@@ -470,9 +470,10 @@ button.btn.btn-sm.btn-danger {
 }
 
 #sidebar + div {
-    margin:0 1.5%;
+    margin:30px 1.5%;
         background: #fff;
     border-radius: 10px;
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075) !important;
 }
 
 
