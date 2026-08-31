@@ -1,6 +1,10 @@
+body {
+    background: #fbfbfa;
+}
+
 .col-md-3.net-section {
     padding: 0;
-    width: 20%;
+    width: 22%;
     overflow-y: auto;
     background: #4c938d;
     padding-bottom: 30px;
@@ -51,9 +55,9 @@ select.form-control {
 }
 
 .media-fixed {
-    margin-top: 36px;
-    padding: 50px;
-    box-shadow: 0 30px 60px rgb(0 0 0 / 17%);
+    /* margin-top: 36px; */
+    padding: 20px 10px;
+    /* box-shadow: 0 30px 60px rgb(0 0 0 / 17%); */
     width: 100%;
 
 }
@@ -73,14 +77,14 @@ select.form-control {
 
 .box {
     background: #fff;
-    width: 300px;
+    width: 90%;
     height: 300px;
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
     flex-direction: column;
-    box-shadow: 0 30px 60px rgb(145 119 119 / 40%);
+    /* box-shadow: 0 30px 60px rgb(145 119 119 / 40%); */
     transition: transform .2s;
    
 }
@@ -252,7 +256,8 @@ select.form-control {
 .col-md-3.align-items-center.justify-content-center {
     position: absolute;
     right: 0;
-    top: 35px;
+    /* top: 35px; */
+    margin-top: 30px;
 }
 /* button.btn.btn-success {
     margin-top: 10px;
@@ -263,6 +268,8 @@ select.form-control {
     padding: 15px;
     background-image:url('https://hio.whuso.in/images/sidebar-bkg.jpg');
     background-position: top;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 h3.sidebar-title {
@@ -462,7 +469,23 @@ button.btn.btn-sm.btn-danger {
 /* Hover effect */
 .form-card input[type="file"]::file-selector-button:hover {
   background: #d6d6df;
-} 
+}
+
+#sidebar + div {
+    margin:30px 1.5%;
+        background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075) !important;
+}
+
+
+
+
+
+
+
+
+
 
 
 @media (min-width: 1200px) {

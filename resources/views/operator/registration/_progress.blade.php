@@ -21,8 +21,8 @@
     $displayPercent = isset($completionPercent) ? min(100, $completionPercent + (100/9)) : 0;
 @endphp
 
-<div class="col-md-3 align-items-center justify-content-center" style="min-height: 90vh;margin-top: 60px;">
-    <div class="box">
+<div class="col-md-3 align-items-center justify-content-center" style="">
+    <div class="box shadow-sm">
         <div class="percent">
             <svg width="150" height="150">
                 

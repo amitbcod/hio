@@ -5,7 +5,7 @@
 
 @section('content')
     @php $currentStep = 2; @endphp
-<div id="sidebar" class="col-md-3 net-section">
+    <div id="sidebar" class="col-md-3 net-section">
         @include('operator.registration._sidebar', ['currentStep' => $currentStep, 'progress' => $progress ?? null])
     </div>
     <div class="col-md-6 align-items-center justify-content-center" style="min-height: 90vh;">
