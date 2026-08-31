@@ -190,7 +190,7 @@
                 $hasPackageTrip = !empty($packageDetails) && $packageDetails->count() > 0;
             @endphp
 
-            @if(!$hasPackageTrip)
+            {{-- Always show bookings (including accommodation) even for package trips so services appear after package days --}}
                 <!-- New Accommodation Bookings Section (dynamic) -->
                 @if($accommodationBookings->count() > 0)
                     @foreach($accommodationBookings as $booking)
@@ -826,7 +826,6 @@
                         </div>
                     </div>
                 @endif
-            @endif
 
             <!-- Back to Trips -->
             <div style="margin-top: 30px; text-align: center;">
