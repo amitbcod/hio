@@ -534,12 +534,12 @@ code {
 }
 
 .btn-secondary {
-    background-color: var(--dark-blue);
+    background-color: var(--orange);
     color: var(--white);
 }
 
 .btn-secondary:hover, .btn-secondary:active, .btn-secondary:focus {
-    background-color: var(--dark-blue-hover) !important;
+    background-color: var(--orange-hover) !important;
     color: var(--white) !important;
 }
 
