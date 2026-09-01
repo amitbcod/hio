@@ -416,8 +416,8 @@ span.dropdownArrow {
 }
 
 .add-button-section button.btn.btn-primary {
-    background: #c4a745;
-    border: 1px solid #c4a745;
+    /* background: #c4a745;
+    border: 1px solid #c4a745; */
 }
 
 button.btn.btn-sm.btn-warning.editUserBtn {
@@ -431,8 +431,8 @@ button.btn.btn-sm.btn-danger {
 }
 
 .review-section {
-    margin-top: 30px;
-     margin-bottom: 30px;
+    /* margin-top: 30px;
+     margin-bottom: 30px; */
 }
 
 .media-fixed h2 {

@@ -19,8 +19,8 @@
     <div id="sidebar" class="col-md-3 net-section">
         @include('operator.registration._sidebar', ['currentStep' => $currentStep, 'progress' => $progress ?? null])
     </div>
-    <div class="col-md-6 d-flex justify-content-center" style="min-height: 90vh;">
-        <div class="review-section" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px 32px 24px 32px; width: 100%; max-width: 900px;">
+    <div class="col-md-6 d-flex justify-content-center" style="">
+        <div class="review-section container-middle">
             <h2 style="font-weight: bold; margin-bottom: 24px;">STATUS REVIEW</h2>
             <div class="alert alert-info">Please review all your information before submitting.</div>
             <form method="POST" action="{{ route('operator.status.submit') }}">
@@ -102,7 +102,7 @@
                      
             @if(!$business || $business->status !== 'active')
                 <div class="text-end mt-4">
-                    <button type="submit" class="btn btn-success px-4">
+                    <button type="submit" class="btn btn-primary">
                         Submit for Approval
                     </button>
                 </div>

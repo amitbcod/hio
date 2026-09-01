@@ -77,9 +77,10 @@
                         <option value="System Administrator" {{ (old('assigned_operator_role', $system->assigned_operator_role ?? '') == 'System Administrator') ? 'selected' : '' }}>System Administrator</option>
                     </select>
                 </div>
-                <div class="back-section d-flex justify-content-between mt-4">
-                    <button type="submit" class="btn btn-success">Save System Settings</button>
-                    <a href="{{ url()->previous() }}" class="btn btn-secondary">Back</a>
+                <div class="back-section mt-4">
+                <a href="{{ url()->previous() }}" class="btn btn-secondary">Back</a>    
+                <button type="submit" class="btn btn-primary">Save System Settings</button>
+                    
                 </div>
             </form>
         </div>

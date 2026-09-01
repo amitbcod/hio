@@ -23,8 +23,8 @@
     <div id="sidebar" class="col-md-3 mb-3 mb-md-0 net-section">
         @include('operator.registration._sidebar', ['currentStep' => $currentStep, 'progress' => $progress ?? null])
     </div>
-    <div class="col-md-6 d-flex align-items-center justify-content-center" style="min-height: 90vh;">
-        <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px 32px 24px 32px; width: 100%; max-width: 700px; margin-top:30px;">
+    <div class="col-md-6 d-flex align-items-center justify-content-center" style="">
+        <div class="container-middle">
             <h2 style="font-weight: bold; margin-bottom: 24px;">ACCOUNTING & PAYOUTS</h2>
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
