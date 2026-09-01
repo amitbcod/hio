@@ -7,7 +7,7 @@
                 @include('operator.registration._sidebar_main')
             </div>
             <div class="col-md-9 my-pro">
-                <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 40px;margin-top: 40px;">
+                <div class="container-middle">
                     
                     {{-- Header --}}
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
