@@ -4,6 +4,7 @@
   --white: #ffffff;
   --orange-hover: #ed8000;
   --dark-blue-hover: #003487;
+  --green: rgb(14, 105, 14);
 }
 
 body {
@@ -508,13 +509,13 @@ code {
 }
 
 .btn-info:hover, .btn-info:active, .btn-info:focus {
-    background-color: var(--dark-blue-hover);
-    color: var(--white);
+    background-color: var(--dark-blue-hover) !important;
+    color: var(--white) !important;
 }
 
 .btn-success:hover, .btn-secondary:active, .btn-secondary:focus {
-    background-color: var(--orange-hover);
-    color: var(--white);
+    background-color: var(--orange-hover) !important;
+    color: var(--white) I !important;
 }
 
 .btn {
@@ -527,8 +528,8 @@ code {
 }
 
 .btn-primary:hover, .btn-primary:active, .btn-primary:focus {
-    background-color: var(--dark-blue-hover);
-    color: var(--white);
+    background-color: var(--dark-blue-hover) !important;
+    color: var(--white) !important;
 }
 
 .btn-secondary {
@@ -537,8 +538,8 @@ code {
 }
 
 .btn-secondary:hover, .btn-secondary:active, .btn-secondary:focus {
-    background-color: var(--dark-blue-hover);
-    color: var(--white);
+    background-color: var(--dark-blue-hover) !important;
+    color: var(--white) !important;
 }
 
 
