@@ -2,6 +2,8 @@
   --dark-blue: #0D2144;
   --orange: #ff8a00;
   --white: #ffffff;
+  --orange-hover: #ed8000;
+  --dark-blue-hover: #051631;
 }
 
 body {
@@ -503,6 +505,20 @@ code {
 .btn-success {
     background-color: var(--orange);
     color: var(--white);
+}
+
+.btn-info:hover {
+    background-color: var(--dark-blue-hover);
+    color: var(--white);
+}
+
+.btn-success:hover {
+    background-color: var(--orange-hover);
+    color: var(--white);
+}
+
+.btn {
+    border: 0;
 }
 
 
