@@ -161,12 +161,12 @@
 </div>
 
 <div class="alert alert-info">
-Permissions are assigned at the <strong>Role level</strong>. To set permissions for a role, go to <a href="{{ route('operator.roles.index') }}">Manage Roles</a> and click "Manage Permissions" for the desired role.
+Permissions are assigned at the <strong>Role level</strong>. To set permissions for a role, go to <a class="link-orange" href="{{ route('operator.roles.index') }}">Manage Roles</a> and click "Manage Permissions" for the desired role.
 </div>
 
 </div>
 <div class="modal-footer">
-<button type="submit" class="btn btn-success">Save</button>
+<button type="submit" class="btn btn-primary">Save</button>
 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 </div>
 </div>

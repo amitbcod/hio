@@ -545,6 +545,9 @@ code {
     color: var(--white) !important;
 }
 
+.link-orange {
+    color: var(--orange);
+}
 
 
 
