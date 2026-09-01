@@ -516,7 +516,7 @@ code {
 
 .btn-success:hover, .btn-secondary:active, .btn-secondary:focus {
     background-color: var(--green-hover) !important;
-    color: var(--white) I !important;
+    color: var(--white) !important;
 }
 
 .btn {
