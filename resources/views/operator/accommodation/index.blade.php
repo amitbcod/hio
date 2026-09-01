@@ -16,10 +16,10 @@
                             <p style="color: #666; margin-bottom: 0;">Manage and set up your properties</p>
                         </div>
                         <div class="book-section" style="display: flex; gap: 12px;">
-                            <a href="{{ route('operator.accommodation.bookings') }}" class="btn" style="background: #17a2b8; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
+                            <a href="{{ route('operator.accommodation.bookings') }}" class="btn btn-secondary d-flex align-items-center" >
                                 📅 View Bookings
                             </a>
-                            <a href="{{ route('operator.accommodation.create') }}" class="btn" style="background: #19b5b5; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
+                            <a href="{{ route('operator.accommodation.create') }}" class="btn btn-primary d-flex align-items-center" >
                                 + Add New Property
                             </a>
                         </div>
