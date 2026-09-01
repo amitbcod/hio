@@ -3,7 +3,7 @@
   --orange: #ff8a00;
   --white: #ffffff;
   --orange-hover: #ed8000;
-  --dark-blue-hover: #051631;
+  --dark-blue-hover: #003487;
 }
 
 body {
@@ -507,12 +507,12 @@ code {
     color: var(--white);
 }
 
-.btn-info:hover {
+.btn-info:hover, .btn-info:active, .btn-info:focus {
     background-color: var(--dark-blue-hover);
     color: var(--white);
 }
 
-.btn-success:hover {
+.btn-success:hover, .btn-secondary:active, .btn-secondary:focus {
     background-color: var(--orange-hover);
     color: var(--white);
 }
@@ -521,6 +521,25 @@ code {
     border: 0;
 }
 
+.btn-primary {
+    background-color: var(--dark-blue);
+    color: var(--white);
+}
+
+.btn-primary:hover, .btn-primary:active, .btn-primary:focus {
+    background-color: var(--dark-blue-hover);
+    color: var(--white);
+}
+
+.btn-secondary {
+    background-color: var(--dark-blue);
+    color: var(--white);
+}
+
+.btn-secondary:hover, .btn-secondary:active, .btn-secondary:focus {
+    background-color: var(--dark-blue-hover);
+    color: var(--white);
+}
 
 
 
