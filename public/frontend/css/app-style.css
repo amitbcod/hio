@@ -1,3 +1,9 @@
+:root {
+  --dark-blue: #0D2144;
+  --orange: #ff8a00;
+  --white: #ffffff;
+}
+
 body {
     background: #fbfbfa;
 }
@@ -28,9 +34,9 @@ main {
 }
 
 button.btn.btn-info {
-    background: #19b5b5;
+    /* background: #19b5b5;
     color: #fff;
-        margin-bottom: 10px;
+        margin-bottom: 10px; */
 }
 
 .progress-section {
@@ -487,6 +493,17 @@ code {
     padding:20px 10px;
 }
 
+/** button **/
+
+.btn-info {
+    background-color: var(--dark-blue);
+    color: var(--white);
+}
+
+.btn-success {
+    background-color: var(--orange);
+    color: var(--white);
+}
 
 
 

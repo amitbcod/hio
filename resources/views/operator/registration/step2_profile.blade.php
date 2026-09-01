@@ -88,7 +88,7 @@
                 </div>
 
                 <div class="form-group mt-3">
-                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#legalComplianceModal">Advanced Settings</button>
+                    <button type="button" class="btn btn-info mb-3" data-bs-toggle="modal" data-bs-target="#legalComplianceModal">Advanced Settings</button>
                     <button type="submit" class="btn btn-success">Save and Continue</button>
                 </div>
             </form>

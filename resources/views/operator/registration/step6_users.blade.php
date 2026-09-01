@@ -25,8 +25,8 @@
     </div>
 
     {{-- Main Content --}}
-    <div class="col-md-6 d-flex align-items-start justify-content-center" style="min-height:90vh; margin-top: 40px;">
-        <div class="team-member-new">
+    <div class="col-md-6 d-flex align-items-start justify-content-center" style="">
+        <div class="container-middle team-member-new">
 
             <h2 class="mb-4 fw-bold">USERS & STAFF MANAGEMENT</h2>
 
