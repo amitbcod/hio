@@ -96,6 +96,7 @@ select.form-control {
     flex-direction: column;
     /* box-shadow: 0 30px 60px rgb(145 119 119 / 40%); */
     transition: transform .2s;
+    border-radius: 10px;
    
 }
 
@@ -379,8 +380,8 @@ span.dropdownArrow {
 } */
 
 .add-section button.btn.btn-primary {
-    border: 1px solid #bd9e32;
-    background: #bd9e32;
+    /* border: 1px solid #bd9e32;
+    background: #bd9e32; */
 }
 
 .back-section a.btn.btn-secondary
@@ -410,7 +411,7 @@ span.dropdownArrow {
     color: #fff;
 }
 .back-section a.btn.btn-secondary {
-    padding: 10px 20px !important;
+    /* padding: 10px 20px !important; */
    
 }
 
@@ -495,6 +496,7 @@ code {
 
 .container-middle {
     padding:20px 10px;
+    width: 100%;
 }
 
 /** button **/

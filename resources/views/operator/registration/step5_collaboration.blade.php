@@ -139,8 +139,8 @@
                     </div>
                 </div>
                 <div class="form-group mt-3">
-                    <button type="submit" class="btn btn-success">Save Agreement</button>
-                    <a href="{{ url()->previous() }}" class="btn btn-secondary">Back</a>
+                <a href="{{ url()->previous() }}" class="btn btn-secondary">Back</a>    
+                <button type="submit" class="btn btn-primary">Save Agreement</button>
                 </div>
             </form>
         </div>

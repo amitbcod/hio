@@ -44,7 +44,7 @@
                         Add New User
                     </button>
                     @if(!empty(auth()->user()->business_id))
-                        <a href="{{ route('operator.roles.index') }}" class="btn btn-outline-secondary ms-2">Manage Roles</a>
+                        <a href="{{ route('operator.roles.index') }}" class="btn btn-secondary ms-2">Manage Roles</a>
                     @endif
                 </div>
                 @if(!auth('operator_staff')->check())
