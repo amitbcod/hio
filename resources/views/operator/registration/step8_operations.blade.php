@@ -137,8 +137,9 @@
                                 <input type="email" name="emergency_contact_email" class="form-control" required value="{{ old('emergency_contact_email', $serviceOps?->emergency_contact_email) }}">
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        
                         <a href="{{ route('operator.register.step7') }}" class="btn btn-secondary ms-2">Back</a>
+                        <button type="submit" class="btn btn-primary">Save</button>
                     </div>
                 </div>
             </form>

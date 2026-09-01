@@ -33,10 +33,10 @@
             
             <div>
                 @auth
-                    <span class="me-3">{{ auth()->user()->email }}</span>
+                    <span class="me-3 fw-bold">{{ auth()->user()->email }}</span>
                     <form action="{{ route('operator.logout') }}" method="POST" style="display:inline;">
                         @csrf
-                        <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Logout</button>
                     </form>
                 @endauth
             </div>
