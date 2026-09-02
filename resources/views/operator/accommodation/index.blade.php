@@ -116,10 +116,10 @@
 
                                             {{-- Actions --}}
                                             <div style="display: flex; gap: 8px;">
-                                                <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" class="btn" style="flex: 1; background: #19b5b5; color: #fff; border: none; padding: 8px; border-radius: 4px; font-weight: 600; font-size: 12px; text-align: center; text-decoration: none;">
+                                                <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" class="btn btn-secondary" style="">
                                                     Continue Setup
                                                 </a>
-                                                <a href="{{ route('operator.accommodation.step1.edit', $accommodation->id) }}" class="btn" style="flex: 1; background: #f0f0f0; color: #333; border: none; padding: 8px; border-radius: 4px; font-weight: 600; font-size: 12px; text-align: center; text-decoration: none;">
+                                                <a href="{{ route('operator.accommodation.step1.edit', $accommodation->id) }}" class="btn btn-primary" style="">
                                                     Edit Basics
                                                 </a>
                                             </div>
