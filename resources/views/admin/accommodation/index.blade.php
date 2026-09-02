@@ -46,7 +46,7 @@
                                 <div class="col-md-6 mb-4">
                                     <div style="background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; transition: all 0.3s;">
                                         {{-- Card Header with Status --}}
-                                        <div style="background: linear-gradient(135deg, #19b5b5, #139999); color: #fff; padding: 16px;">
+                                        <div class="box-title-bg">
                                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                                 <div>
                                                     <h5 style="font-weight: 600; margin-bottom: 4px;">{{ $accommodation->property_name }}</h5>

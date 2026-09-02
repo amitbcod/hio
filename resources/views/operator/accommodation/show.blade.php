@@ -10,7 +10,7 @@
                 <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07);">
                     
                     {{-- Header with Property Info --}}
-                    <div style="background: linear-gradient(135deg, #19b5b5, #139999); color: #fff; padding: 32px; border-radius: 16px 16px 0 0;">
+                    <div class="box-title-bg">
                         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
                             <div>
                                 <h2 style="font-weight: bold; margin-bottom: 8px;">{{ $accommodation->property_name }}</h2>

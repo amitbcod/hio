@@ -6,6 +6,7 @@
   --dark-blue-hover: #003487;
   --green: rgb(18, 116, 18);
   --green-hover: rgb(1, 61, 1);
+  --blue: #0170be;
 }
 
 body {
@@ -549,6 +550,14 @@ code {
     color: var(--orange);
 }
 
+/************************************************/
+
+.box-title-bg {
+    background-color: var(--blue);
+    color:var(--white);
+    padding:16px;
+    border-radius: 16px 16px 0 0;
+}
 
 
 
