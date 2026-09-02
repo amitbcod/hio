@@ -35,12 +35,12 @@
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; border-bottom: 1px solid #dfe3e8; margin-bottom: 20px;">
-            <div style="display:flex; gap:26px; align-items:end;">
-                <button type="button" class="package-tab active" data-tab="itinerary" style="padding: 12px 0; border:none; background:none; border-bottom: 3px solid #1f9ae5; color:#1f9ae5; font-size:14px; font-weight:800; letter-spacing: .12em; text-transform: uppercase; cursor:pointer;">Itinerary</button>
-                <button type="button" class="package-tab" data-tab="policies" style="padding: 12px 0; border:none; background:none; color:#475467; font-size:14px; font-weight:800; letter-spacing: .12em; text-transform: uppercase; cursor:pointer;">Policies</button>
-                <button type="button" class="package-tab" data-tab="summary" style="padding: 12px 0; border:none; background:none; color:#475467; font-size:14px; font-weight:800; letter-spacing: .12em; text-transform: uppercase; cursor:pointer;">Summary</button>
+                <div style="display:flex; gap:26px; align-items:end;">
+                <button type="button" class="package-tab active" data-tab="itinerary" style="padding: 12px 0; border:none; background:none; border-bottom: 3px solid #1f9ae5; color:#1f9ae5; font-size:14px; font-weight:800; letter-spacing: .12em; text-transform: uppercase; cursor:pointer;">{{ __('package.tab.itinerary') }}</button>
+                <button type="button" class="package-tab" data-tab="policies" style="padding: 12px 0; border:none; background:none; color:#475467; font-size:14px; font-weight:800; letter-spacing: .12em; text-transform: uppercase; cursor:pointer;">{{ __('package.tab.policies') }}</button>
+                <button type="button" class="package-tab" data-tab="summary" style="padding: 12px 0; border:none; background:none; color:#475467; font-size:14px; font-weight:800; letter-spacing: .12em; text-transform: uppercase; cursor:pointer;">{{ __('package.tab.summary') }}</button>
             </div>
-            <div style="font-size: 14px; color:#475467;">Share</div>
+            <div style="font-size: 14px; color:#475467;">{{ __('package.share') }}</div>
         </div>
 
         <div class="package-tab-panel" id="tab-itinerary" style="display:grid; grid-template-columns: minmax(0,1.9fr) 360px; gap:22px; align-items:flex-start;">
@@ -52,17 +52,17 @@
                 @endphp
                 <div style="display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
                     <span style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #a7d6f5; border-radius:999px; color:#1f9ae5; background:#edf7ff; font-size: 12px; font-weight:800; letter-spacing: .08em; text-transform: uppercase;">{{ $package['days_label'] }}</span>
-                    <span style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #d0d5dd; border-radius:999px; color:#475467; background:#f5f7fa; font-size: 12px; font-weight:800; letter-spacing: .08em; text-transform: uppercase;">{{ $hotelCount }} Hotel{{ $hotelCount === 1 ? '' : 's' }}</span>
-                    <span style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #d0d5dd; border-radius:999px; color:#475467; background:#f5f7fa; font-size: 12px; font-weight:800; letter-spacing: .08em; text-transform: uppercase;">{{ $activityCount }} Activity{{ $activityCount === 1 ? '' : 'ies' }}</span>
-                    <span style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #d0d5dd; border-radius:999px; color:#475467; background:#f5f7fa; font-size: 12px; font-weight:800; letter-spacing: .08em; text-transform: uppercase;">{{ $mealCount }} Meal{{ $mealCount === 1 ? '' : 's' }}</span>
+                    <span style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #d0d5dd; border-radius:999px; color:#475467; background:#f5f7fa; font-size: 12px; font-weight:800; letter-spacing: .08em; text-transform: uppercase;">{{ trans_choice('package.hotels', $hotelCount, ['count' => $hotelCount]) }}</span>
+                    <span style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #d0d5dd; border-radius:999px; color:#475467; background:#f5f7fa; font-size: 12px; font-weight:800; letter-spacing: .08em; text-transform: uppercase;">{{ trans_choice('package.activities', $activityCount, ['count' => $activityCount]) }}</span>
+                    <span style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #d0d5dd; border-radius:999px; color:#475467; background:#f5f7fa; font-size: 12px; font-weight:800; letter-spacing: .08em; text-transform: uppercase;">{{ trans_choice('package.meals', $mealCount, ['count' => $mealCount]) }}</span>
                 </div>
 
                 @foreach($itineraryDays as $day)
                     <div style="border:1px solid #e5e7eb; border-radius:12px; background:#fafafa; padding:14px 14px 12px; margin-bottom: 12px;">
-                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                            <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:26px; border-radius:6px; background:#f7d8c8; color:#cf6b2a; font-size:12px; font-weight:900;">Day {{ $day['day'] }}</span>
-                            <strong style="font-weight:800; color:#1f2a37;">{{ $day['label'] }}</strong>
-                        </div>
+                                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                                    <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:26px; border-radius:6px; background:#f7d8c8; color:#cf6b2a; font-size:12px; font-weight:900;">{{ __('package.day') }} {{ $day['day'] }}</span>
+                                    <strong style="font-weight:800; color:#1f2a37;">{{ $day['label'] }}</strong>
+                                </div>
 
                         @if(!empty($day['description']))
                             <div style="margin-bottom:10px; color:#475467; line-height:1.7; white-space:pre-line;">{{ $day['description'] }}</div>
@@ -73,6 +73,62 @@
                                 @foreach(array_slice($day['images'], 0, 4) as $image)
                                     <img src="{{ $image }}" alt="Day {{ $day['day'] }}" style="width:100%; height:90px; object-fit:cover; border-radius:8px; border:1px solid #e5e7eb;">
                                 @endforeach
+                            </div>
+                        @endif
+                        {{-- Day-wise service details --}}
+                        @if(!empty($day['accommodation']))
+                            <div style="margin-top:12px; padding:12px; border-radius:8px; background:#fff; border:1px solid #eef2f6;">
+                                <div style="font-weight:800; color:#1f2a37; margin-bottom:6px;">Accommodation</div>
+                                <div style="color:#475467; margin-bottom:6px;">{{ $day['accommodation']['property_name'] }} · {{ $day['accommodation']['property_type'] }}</div>
+                                <div style="font-size:13px; color:#556; margin-bottom:6px;">Location: {{ $day['accommodation']['location'] }}</div>
+                                @if(!empty($day['accommodation']['star_rating']))
+                                    <div style="font-size:13px; color:#556; margin-bottom:6px;">Rating: {{ $day['accommodation']['star_rating'] }}</div>
+                                @endif
+                                @if(!empty($day['accommodation']['meal_plans']))
+                                    <div style="font-size:13px; color:#333; margin-top:6px; font-weight:600;">Meal Plans:</div>
+                                    <ul style="margin:6px 0 0 18px; color:#475467;">
+                                        @foreach($day['accommodation']['meal_plans'] as $mp)
+                                            <li>{{ $mp }}</li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                            </div>
+                        @endif
+
+                        @if(!empty($day['activity']))
+                            <div style="margin-top:12px; padding:12px; border-radius:8px; background:#fff; border:1px solid #eef2f6;">
+                                <div style="font-weight:800; color:#1f2a37; margin-bottom:6px;">Activity</div>
+                                <div style="color:#475467; margin-bottom:6px;">{{ $day['activity']['activity_name'] }} @if(!empty($day['activity']['town'])) · {{ $day['activity']['town'] }} @endif</div>
+                                @if(!empty($day['activity']['time']))
+                                    <div style="font-size:13px; color:#556;">Time: {{ $day['activity']['time'] }}</div>
+                                @endif
+                                @if(!empty($day['activity']['duration']))
+                                    <div style="font-size:13px; color:#556;">Duration: {{ $day['activity']['duration'] }}</div>
+                                @endif
+                                @if(!empty($day['activity']['notes']))
+                                    <div style="margin-top:8px; color:#475467; white-space:pre-line;">{{ $day['activity']['notes'] }}</div>
+                                @endif
+                            </div>
+                        @endif
+
+                        @if(!empty($day['transport']))
+                            <div style="margin-top:12px; padding:12px; border-radius:8px; background:#fff; border:1px solid #eef2f6;">
+                                <div style="font-weight:800; color:#1f2a37; margin-bottom:6px;">Transport</div>
+                                <div style="color:#475467; margin-bottom:6px;">{{ $day['transport']['vehicle_name'] }} · {{ $day['transport']['vehicle_type'] }}</div>
+                                @if(!empty($day['transport']['pickup_time']))
+                                    <div style="font-size:13px; color:#556;">Pickup: {{ $day['transport']['pickup_time'] }}</div>
+                                @endif
+                                @if(!empty($day['transport']['return_time']))
+                                    <div style="font-size:13px; color:#556;">Return: {{ $day['transport']['return_time'] }}</div>
+                                @endif
+                                @if(!empty($day['transport']['routes']))
+                                    <div style="margin-top:8px; font-size:13px; color:#333; font-weight:600;">Route(s):</div>
+                                    <ul style="margin:6px 0 0 18px; color:#475467;">
+                                        @foreach($day['transport']['routes'] as $r)
+                                            <li>{{ $r['from'] }} @if(!empty($r['to'])) → {{ $r['to'] }} @endif @if(!empty($r['pricing']['price'])) · {{ $r['pricing']['price'] }} @endif</li>
+                                        @endforeach
+                                    </ul>
+                                @endif
                             </div>
                         @endif
                     </div>
@@ -86,12 +142,23 @@
                     <input type="hidden" name="type" value="package">
                     <input type="hidden" name="package_id" value="{{ $package['id'] }}">
                     <input type="hidden" name="package_name" value="{{ $package['name'] }}">
-                    <input type="hidden" name="package_total_price" value="{{ $package['price'] }}">
+                    <input type="hidden" name="package_total_price" id="package_total_price" value="{{ $package['price'] }}">
                     <input type="hidden" name="currency" value="USD">
                     <input type="hidden" name="package_image" value="{{ $package['image'] }}">
                     <input type="hidden" name="nights" value="{{ $package['no_of_nights'] }}">
                     <input type="hidden" name="days" value="{{ $package['no_of_days'] }}">
-                    <button type="submit" style="width:100%; background:#f39b4a; border:none; border-radius:8px; color:#fff; font-size:18px; font-weight:800; padding:14px 16px; cursor:pointer; text-transform: uppercase; letter-spacing: .05em;">Add to cart</button>
+                    {{-- Preserve user-selected package start date when adding to cart --}}
+                    @php
+                        $packageStartDate = request()->query('traveling_date') ?: (request()->query('check_in') ?: null);
+                    @endphp
+                    @if(!empty($packageStartDate))
+                        <input type="hidden" name="package_start_date" value="{{ $packageStartDate }}">
+                    @endif
+                    {{-- include guest selectors for user to change and recalc via query params if needed --}}
+                    <input type="hidden" name="adults" value="{{ request()->query('adults', 2) }}">
+                    <input type="hidden" name="children" value="{{ request()->query('children', 0) }}">
+                    <input type="hidden" name="infants" value="{{ request()->query('infants', 0) }}">
+                    <button type="submit" style="width:100%; background:#f39b4a; border:none; border-radius:8px; color:#fff; font-size:18px; font-weight:800; padding:14px 16px; cursor:pointer; text-transform: uppercase; letter-spacing: .05em;">{{ __('package.add_to_cart') }}</button>
                 </form>
             </aside>
         </div>
@@ -99,13 +166,13 @@
         <div class="package-tab-panel" id="tab-policies" style="display:none; background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:22px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
             @php
                 $policyRows = [
-                    'cancellation' => ['label' => 'Cancellation'],
-                    'amendments' => ['label' => 'Amendments'],
-                    'postponement' => ['label' => 'Postponement'],
-                    'payment' => ['label' => 'Payment'],
-                    'refund' => ['label' => 'Refund'],
-                    'security_deposit' => ['label' => 'Security Deposit'],
-                    'house_rules' => ['label' => 'House & Gen. Rules'],
+                    'cancellation' => ['label' => __('package.policy.cancellation')],
+                    'amendments' => ['label' => __('package.policy.amendments')],
+                    'postponement' => ['label' => __('package.policy.postponement')],
+                    'payment' => ['label' => __('package.policy.payment')],
+                    'refund' => ['label' => __('package.policy.refund')],
+                    'security_deposit' => ['label' => __('package.policy.security_deposit')],
+                    'house_rules' => ['label' => __('package.policy.house_rules')],
                 ];
                 $effectivePolicy = $package['effective_policy'] ?? [];
             @endphp
@@ -115,11 +182,11 @@
                     <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
                         <thead style="background:#f7f7f7;">
                             <tr>
-                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:10%;font-size:13px;color:#333;">Policy</th>
-                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:15%;font-size:13px;color:#333;">Details (Type)</th>
-                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">Before Deadline</th>
-                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">After Deadline</th>
-                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:24%;font-size:13px;color:#333;">Notes</th>
+                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:10%;font-size:13px;color:#333;">{{ __('package.policy.table.policy') }}</th>
+                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:15%;font-size:13px;color:#333;">{{ __('package.policy.table.details') }}</th>
+                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">{{ __('package.policy.table.before_deadline') }}</th>
+                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">{{ __('package.policy.table.after_deadline') }}</th>
+                                <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:24%;font-size:13px;color:#333;">{{ __('package.policy.table.notes') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -153,21 +220,21 @@
                     <div style="margin-top:18px; display:grid; gap:12px;">
                         @if(!empty($effectivePolicy['booking_notes']))
                             <div style="border:1px solid #e4e7eb;border-radius:10px;padding:12px 14px;background:#f7f7f7;">
-                                <div style="font-weight:600;color:#333;margin-bottom:8px;">Booking Notes</div>
+                                <div style="font-weight:600;color:#333;margin-bottom:8px;">{{ __('package.booking_notes') }}</div>
                                 <div style="padding:10px 12px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;white-space:pre-wrap;">{{ $effectivePolicy['booking_notes'] }}</div>
                             </div>
                         @endif
 
                         @if(!empty($effectivePolicy['package_notes']))
                             <div style="border:1px solid #e4e7eb;border-radius:10px;padding:12px 14px;background:#f7f7f7;">
-                                <div style="font-weight:600;color:#333;margin-bottom:8px;">Package Notes</div>
+                                <div style="font-weight:600;color:#333;margin-bottom:8px;">{{ __('package.package_notes') }}</div>
                                 <div style="padding:10px 12px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;white-space:pre-wrap;">{{ $effectivePolicy['package_notes'] }}</div>
                             </div>
                         @endif
                     </div>
                 @endif
             @else
-                <p style="margin:0; color:#475467;">Package policies are not yet defined for this listing.</p>
+                <p style="margin:0; color:#475467;">{{ __('package.policies_not_defined') }}</p>
             @endif
         </div>
 
@@ -175,7 +242,7 @@
             @if(!empty($package['full_description']))
                 <div style="color:#475467; line-height:1.8; white-space:pre-line;">{{ $package['full_description'] }}</div>
             @else
-                <p style="margin:0; color:#475467;">No summary available for this package.</p>
+                <p style="margin:0; color:#475467;">{{ __('package.no_summary') }}</p>
             @endif
         </div>
     </div>
