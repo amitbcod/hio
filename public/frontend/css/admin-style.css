@@ -21,6 +21,10 @@
      width: 100%;
  }
 
+  button.btn.btn-primary:hover, button.btn.btn-primary:active  {
+        background-color: #c98f14 !important;
+  }
+
  a {
     color: rgb(65 176 170);
     text-decoration: none;
@@ -148,11 +152,11 @@ a:hover {
  }
 
  a.btn.btn-primary:hover {
-    background: #106460;
+    background: #c98f14 !important;
 }
 
  a.btn.btn-primary:active {
-     background-color: #c6ac50;
+     background-color: #c98f14;
  }
 
  a.btn.btn-sm.btn-secondary {
