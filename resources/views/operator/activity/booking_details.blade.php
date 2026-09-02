@@ -16,7 +16,7 @@
                             <p style="color: #666; margin-bottom: 0;">Booking Reference: {{ $booking->booking_reference }}</p>
                         </div>
                         <div style="display: flex; gap: 12px;">
-                            <a href="{{ route('operator.activity.bookings') }}" class="btn" style="background: #6c757d; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
+                            <a href="{{ route('operator.activity.bookings') }}" class="btn btn-outline-blue" style="">
                                 ← Back to Bookings
                             </a>
                             <span class="badge" style="background: {{ $booking->booking_status === 'Confirmed' ? '#28a745' : ($booking->booking_status === 'Pending' ? '#ffc107' : '#dc3545') }}; color: #fff; font-size: 14px; padding: 8px 16px;">
@@ -220,7 +220,7 @@
                     {{-- Action Buttons --}}
                     <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
                         <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                            <a href="{{ route('operator.activity.bookings') }}" class="btn" style="background: #6c757d; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
+                            <a href="{{ route('operator.activity.bookings') }}" class="btn btn-outline-blue" style="">
                                 ← Back to All Bookings
                             </a>
 
