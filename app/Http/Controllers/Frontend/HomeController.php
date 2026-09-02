@@ -546,6 +546,20 @@ class HomeController extends Controller
             ->all();
     }
 
+    private function collectMealPlansFromRooms($rooms): array
+    {
+        if (empty($rooms)) return [];
+        $all = [];
+        foreach ($rooms as $room) {
+            $plans = $this->resolveRoomMealPlans($room);
+            foreach ($plans as $p) {
+                if ($p !== '') $all[] = $p;
+            }
+        }
+
+        return collect($all)->unique()->values()->all();
+    }
+
     public function showPackage(Package $package)
     {
         abort_if(blank($package->name), 404);
@@ -624,11 +638,172 @@ class HomeController extends Controller
                 $gallery = $gallery->merge($assetPaths);
             }
 
+            // Build detailed service info for this day
+            $accommodationDetails = null;
+            $activityDetails = null;
+            $transportDetails = null;
+
+            // Accommodation details
+            $accId = $dayEntry['accommodation'] ?? null;
+            if (!blank($accId)) {
+                $accModel = Accommodation::with(['rooms', 'media', 'operator'])->find((int) $accId);
+                if ($accModel) {
+                    $roomIds = array_values(array_filter(array_map('intval', (array) ($dayEntry['rooms'] ?? []))));
+                    $rooms = !empty($roomIds) ? $accModel->rooms()->whereIn('id', $roomIds)->get() : $accModel->rooms()->get();
+
+                    $accommodationDetails = [
+                        'id' => $accModel->id,
+                        'property_name' => $accModel->property_name ?? '',
+                        'property_type' => $accModel->property_type ?? '',
+                        'location' => $accModel->location ?? $accModel->region ?? '',
+                        'address' => $accModel->address ?? '',
+                        'star_rating' => $accModel->star_rating ?? null,
+                        'operator' => $accModel->operator ? ['id' => $accModel->operator->id, 'name' => $accModel->operator->name ?? ''] : null,
+                        'meal_plans' => $this->collectMealPlansFromRooms($rooms),
+                        'rooms' => $rooms->map(fn($r) => [
+                            'id' => $r->id,
+                            'room_name' => $r->room_name ?? '',
+                            'max_occupancy' => $r->max_occupancy ?? null,
+                            'beds' => $r->beds ?? null,
+                        ])->values()->all(),
+                    ];
+                }
+            }
+
+            // Activity details
+            $actId = $dayEntry['activity'] ?? null;
+            if (!blank($actId)) {
+                $actModel = Activity::with(['operator'])->find((int) $actId);
+                if ($actModel) {
+                    $activityDetails = [
+                        'id' => $actModel->id,
+                        'activity_name' => $actModel->activity_name ?? '',
+                        'town' => $actModel->town ?? '',
+                        'country' => $actModel->country ?? '',
+                        'duration' => $actModel->duration ?? null,
+                        'meeting_point' => $dayEntry['activity_meeting_point'] ?? $actModel->meeting_point ?? null,
+                        'time' => $dayEntry['activity_time'] ?? null,
+                        'notes' => $dayEntry['activity_notes'] ?? ($actModel->excerpt ?? ''),
+                        'operator' => $actModel->operator ? ['id' => $actModel->operator->id, 'name' => $actModel->operator->name ?? ''] : null,
+                    ];
+                }
+            }
+
+            // Transport details
+            $transId = $dayEntry['transport'] ?? null;
+            if (!blank($transId)) {
+                $transModel = Transport::with(['routes'])->find((int) $transId);
+                if ($transModel) {
+                    // Determine selected route ids from itinerary day entry if present.
+                    // Prefer admin-saved transport_schedule (step3/step4) which stores per-service route keys with a 'selected' flag.
+                    // collect selected identifiers as strings so we can match either numeric `id` or string `route_id`
+                    $selectedRouteIdentifiers = [];
+
+                    if (!empty($dayEntry['transport_schedule']) && is_array($dayEntry['transport_schedule'])) {
+                        foreach ($dayEntry['transport_schedule'] as $svcKey => $svcGroup) {
+                            if (!is_array($svcGroup)) continue;
+                            foreach ($svcGroup as $routeKey => $routeData) {
+                                // routeKey is often the route id, but may be a generated key like "service-0".
+                                $isSelected = false;
+                                if (is_array($routeData)) {
+                                    if (!empty($routeData['selected']) || !empty($routeData['selected_route'])) {
+                                        $isSelected = true;
+                                    }
+                                } elseif (is_string($routeData) && is_numeric($routeData)) {
+                                    // legacy single value
+                                    $isSelected = true;
+                                }
+
+                                if ($isSelected) {
+                                    // prefer the explicit route id value stored on the route data
+                                    if (is_array($routeData) && !empty($routeData['route_id'])) {
+                                        $selectedRouteIdentifiers[] = (string) $routeData['route_id'];
+                                    } elseif (is_array($routeData) && !empty($routeData['selected_route'])) {
+                                        $selectedRouteIdentifiers[] = (string) $routeData['selected_route'];
+                                    } else {
+                                        // routeKey may itself be the route_id (string) or numeric id
+                                        $selectedRouteIdentifiers[] = (string) $routeKey;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Fallback: support other common keys if transport_schedule didn't contain explicit selections
+                    if (empty($selectedRouteIdentifiers)) {
+                        $possibleKeys = ['transport_routes', 'transport_route_ids', 'routes', 'selected_routes', 'selected_transport_routes', 'route_ids'];
+                        foreach ($possibleKeys as $k) {
+                            if (!empty($dayEntry[$k])) {
+                                if (is_array($dayEntry[$k])) {
+                                    foreach ($dayEntry[$k] as $item) {
+                                        if (is_numeric($item)) $selectedRouteIdentifiers[] = (string) $item;
+                                        elseif (is_array($item) && !empty($item['id'])) $selectedRouteIdentifiers[] = (string) $item['id'];
+                                        elseif (is_string($item)) $selectedRouteIdentifiers[] = $item;
+                                    }
+                                } elseif (is_numeric($dayEntry[$k])) {
+                                    $selectedRouteIdentifiers[] = (string) $dayEntry[$k];
+                                } elseif (is_string($dayEntry[$k])) {
+                                    $selectedRouteIdentifiers[] = $dayEntry[$k];
+                                }
+                            }
+                        }
+                    }
+
+                    $allRoutes = $transModel->routes ?? collect();
+
+                    // If admin provided explicit route ids, filter to those; otherwise try to match by route_from/route_to values
+                    if (!empty($selectedRouteIdentifiers)) {
+                        // Match either numeric `id` or string `route_id` stored on routes.
+                        $idsMap = array_values(array_unique($selectedRouteIdentifiers));
+                        $routes = $allRoutes->filter(function ($r) use ($idsMap) {
+                            $ridNum = (string) ($r->id ?? '');
+                            $ridStr = (string) ($r->route_id ?? '');
+                            return in_array($ridNum, $idsMap, true) || in_array($ridStr, $idsMap, true);
+                        })->values();
+                    } else {
+                        // Support legacy keys where dayEntry may store route_from/route_to strings
+                        $matchFrom = $dayEntry['route_from'] ?? null;
+                        $matchTo = $dayEntry['route_to'] ?? null;
+                        if ($matchFrom || $matchTo) {
+                            $routes = $allRoutes->filter(function ($r) use ($matchFrom, $matchTo) {
+                                $from = trim((string) ($r->route_from ?? ''));
+                                $to = trim((string) ($r->route_to ?? ''));
+                                if ($matchFrom && $matchTo) {
+                                    return strcasecmp($from, $matchFrom) === 0 && strcasecmp($to, $matchTo) === 0;
+                                }
+                                if ($matchFrom) return strcasecmp($from, $matchFrom) === 0;
+                                return $matchTo ? strcasecmp($to, $matchTo) === 0 : false;
+                            })->values();
+                        } else {
+                            // Fallback: use routes explicitly stored on the day (if any) as objects, else include only routes that appear in the package pricing section
+                            $routes = $allRoutes;
+                        }
+                    }
+
+                    $transportDetails = [
+                        'id' => $transModel->id,
+                        'vehicle_name' => $transModel->vehicle_name ?? '',
+                        'vehicle_type' => $transModel->vehicle_type ?? '',
+                        'pickup_time' => $dayEntry['pickup_time'] ?? null,
+                        'return_time' => $dayEntry['return_time'] ?? null,
+                        'routes' => $routes->map(fn($r) => [
+                            'id' => $r->id ?? null,
+                            'from' => $r->route_from ?? '',
+                            'to' => $r->route_to ?? '',
+                            'pricing' => is_array($r->pricing ?? null) ? $r->pricing : (is_string($r->pricing ?? null) ? json_decode($r->pricing, true) : []),
+                        ])->values()->all(),
+                    ];
+                }
+            }
+
             $itineraryDays[] = [
                 'day' => (int) $dayIndex + 1,
                 'label' => $dayLabel,
                 'description' => $dayDescriptions[$dayIndex] ?? '',
                 'images' => $dayImages->unique()->values()->all(),
+                'accommodation' => $accommodationDetails,
+                'activity' => $activityDetails,
+                'transport' => $transportDetails,
             ];
         }
 
@@ -640,7 +815,12 @@ class HomeController extends Controller
         }
 
         $summary = $this->buildPackageSummary($package, $itineraryDays, $content);
-        $packagePrice = $this->calculatePackageGuestPrice($package, 2, 0, 0);
+        // Use authoritative pricing service to calculate package price
+        $pricingService = new \App\Services\PackagePricingService();
+        $adults = max(1, (int) request()->query('adults', 2));
+        $children = max(0, (int) request()->query('children', 0));
+        $infants = max(0, (int) request()->query('infants', 0));
+        $packagePrice = $pricingService->calculatePackageTotal($package, $adults, $children, $infants);
         $effectivePolicy = $this->buildEffectivePackagePolicy($package, $itineraryData);
 
         $packageData = [

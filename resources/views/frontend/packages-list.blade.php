@@ -1,18 +1,18 @@
 @extends('frontend.layout')
 
-@section('title', 'Packages')
+@section('title', __('package.list.title'))
 
 @section('content')
 @php
     $packages = $packages ?? collect();
-    $guestSummary = trim((string) (($adults ?? 2) . ' Adults • ' . (($children ?? 0)) . ' Children • ' . (($infants ?? 0)) . ' Infants • ' . (($roomsRequired ?? 1)) . ' Rooms'));
+    $guestSummary = trim((string) (($adults ?? 2) . ' Adults • ' . (($children ?? 0)) . ' Children • ' . (($infants ?? 0)) . ' Infants'));
 @endphp
 
 <section class="page-main-search" style="padding: 32px 0 24px; background: #f5f5f3;">
     <div class="wrap2" style="max-width: 1200px; margin: 0 auto;">
         <form method="GET" action="{{ route('frontend.packages.list') }}" style="display:flex; align-items:stretch; gap:0; background:#f4f3f1; border:1px solid #d9d5d0; border-radius:10px; overflow:visible; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
             <div style="flex:1; padding:16px 18px; border-right:1px solid #d9d5d0; background:#f1f0ee;">
-                <div style="font-size:12px; color:#475467; margin-bottom:8px;">Region / Area</div>
+                <div style="font-size:12px; color:#475467; margin-bottom:8px;">{{ __('home.search.region_area') }}</div>
                 <select name="region" style="width:100%; border:none; background:transparent; font-size:18px; color:#1f2937; font-weight:600; outline:none; appearance:none;">
                     <option value="all" {{ ($region ?? 'all') === 'all' ? 'selected' : '' }}>All</option>
                     @foreach($regionOptions ?? [] as $option)
@@ -22,7 +22,7 @@
             </div>
 
             <div style="flex:1; padding:16px 18px; border-right:1px solid #d9d5d0; background:#f1f0ee;">
-                <div style="font-size:12px; color:#475467; margin-bottom:8px;">Travelling Date</div>
+                <div style="font-size:12px; color:#475467; margin-bottom:8px;">{{ __('package.travelling_date') }}</div>
                 <div style="display:flex; flex-direction:column; gap:4px; position:relative;">
                     <div style="display:flex; align-items:center; gap:8px; position:relative;">
                         <input
@@ -49,13 +49,13 @@
 
             <div style="flex:2; padding:16px 18px; background:#f1f0ee; display:flex; align-items:center; justify-content:space-between; gap:14px; position:relative;">
                 <div style="flex:1;">
-                    <div style="font-size:12px; color:#475467; margin-bottom:8px;">Guests</div>
+                    <div style="font-size:12px; color:#475467; margin-bottom:8px;">{{ __('package.guests') }}</div>
                     <div id="package-guest-summary" style="font-size:18px; color:#1f2937; font-weight:600; cursor:pointer; user-select:none;">
-                        {{ $adults ?? 2 }} Adults • {{ $children ?? 0 }} Children • {{ $infants ?? 0 }} Infants • {{ $roomsRequired ?? 1 }} Rooms
+                        {{ $adults ?? 2 }} {{ __('home.search.adults') }} • {{ $children ?? 0 }} {{ __('home.search.children') }} • {{ $infants ?? 0 }} {{ __('home.search.infants') }}
                     </div>
                     <div class="guest-rooms-selector" style="position:absolute; right:160px; top:52px; width:280px; background:#fff; border:1px solid #d9d5d0; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.08); padding:14px 16px; display:none; z-index:20;">
                         <div class="guest-rooms-row" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-                            <label style="font-size:14px; color:#334155;">Adults</label>
+                            <label style="font-size:14px; color:#334155;">{{ __('home.search.adults') }}</label>
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <button type="button" class="count-btn decrement" data-target="adults" style="width:26px; height:26px; border-radius:50%; border:1px solid #d1d5db; background:#fff; cursor:pointer;">−</button>
                                 <input type="text" name="adults" value="{{ $adults ?? 2 }}" readonly style="width:32px; text-align:center; border:none; background:transparent; font-weight:700; color:#1f2937;">
@@ -63,7 +63,7 @@
                             </div>
                         </div>
                         <div class="guest-rooms-row" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-                            <label style="font-size:14px; color:#334155;">Children</label>
+                            <label style="font-size:14px; color:#334155;">{{ __('home.search.children') }}</label>
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <button type="button" class="count-btn decrement" data-target="children" style="width:26px; height:26px; border-radius:50%; border:1px solid #d1d5db; background:#fff; cursor:pointer;">−</button>
                                 <input type="text" name="children" value="{{ $children ?? 0 }}" readonly style="width:32px; text-align:center; border:none; background:transparent; font-weight:700; color:#1f2937;">
@@ -71,25 +71,18 @@
                             </div>
                         </div>
                         <div class="guest-rooms-row" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-                            <label style="font-size:14px; color:#334155;">Infants</label>
+                            <label style="font-size:14px; color:#334155;">{{ __('home.search.infants') }}</label>
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <button type="button" class="count-btn decrement" data-target="infants" style="width:26px; height:26px; border-radius:50%; border:1px solid #d1d5db; background:#fff; cursor:pointer;">−</button>
                                 <input type="text" name="infants" value="{{ $infants ?? 0 }}" readonly style="width:32px; text-align:center; border:none; background:transparent; font-weight:700; color:#1f2937;">
                                 <button type="button" class="count-btn increment" data-target="infants" style="width:26px; height:26px; border-radius:50%; border:1px solid #d1d5db; background:#fff; cursor:pointer;">+</button>
                             </div>
                         </div>
-                        <div class="guest-rooms-row" style="display:flex; align-items:center; justify-content:space-between;">
-                            <label style="font-size:14px; color:#334155;">Rooms</label>
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <button type="button" class="count-btn decrement" data-target="rooms" style="width:26px; height:26px; border-radius:50%; border:1px solid #d1d5db; background:#fff; cursor:pointer;">−</button>
-                                <input type="text" name="rooms" value="{{ $roomsRequired ?? 1 }}" readonly style="width:32px; text-align:center; border:none; background:transparent; font-weight:700; color:#1f2937;">
-                                <button type="button" class="count-btn increment" data-target="rooms" style="width:26px; height:26px; border-radius:50%; border:1px solid #d1d5db; background:#fff; cursor:pointer;">+</button>
-                            </div>
-                        </div>
+                        <!-- rooms selector removed per request: only adults/children/infants needed -->
                     </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
-                    <button type="submit" style="background:#f39b4a; border:none; border-radius:8px; color:#fff; font-weight:800; font-size:18px; padding:12px 24px; cursor:pointer; min-width:150px;">Proceed</button>
+                    <button type="submit" style="background:#f39b4a; border:none; border-radius:8px; color:#fff; font-weight:800; font-size:18px; padding:12px 24px; cursor:pointer; min-width:150px;">{{ __('home.search.proceed') }}</button>
                 </div>
             </div>
         </form>
@@ -145,9 +138,8 @@
                     const adults = parseInt(findInput('adults')?.value || 2, 10);
                     const children = parseInt(findInput('children')?.value || 0, 10);
                     const infants = parseInt(findInput('infants')?.value || 0, 10);
-                    const rooms = parseInt(findInput('rooms')?.value || 1, 10);
                     if (summary) {
-                        summary.textContent = `${adults} Adults • ${children} Children • ${infants} Infants • ${rooms} Rooms`;
+                        summary.textContent = `${adults} Adults • ${children} Children • ${infants} Infants`;
                     }
                 };
 
@@ -176,7 +168,7 @@
                         if (button.classList.contains('increment')) {
                             value += 1;
                         } else {
-                            value = Math.max(target === 'adults' || target === 'rooms' ? 1 : 0, value - 1);
+                            value = Math.max(target === 'adults' ? 1 : 0, value - 1);
                         }
 
                         input.value = value;
@@ -190,9 +182,9 @@
 
         <div class="package-list-shell" style="display:flex; gap:24px; align-items:flex-start; margin-top:24px;">
             <aside class="package-filter-panel" style="width: 290px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
-                <h3 style="margin:0 0 18px; font-size: 18px; font-weight: 700; color:#273246;">Filter by</h3>
+                <h3 style="margin:0 0 18px; font-size: 18px; font-weight: 700; color:#273246;">{{ __('filters.by') }}</h3>
                 <div style="margin-bottom:22px;">
-                    <div style="font-weight:700; color:#2d3748; margin-bottom:10px;">Property Type</div>
+                    <div style="font-weight:700; color:#2d3748; margin-bottom:10px;">{{ __('category.filter.property_type') }}</div>
                     @forelse($packageFilterOptions['property_types'] ?? [] as $option)
                         <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; color:#4a5568;">
                             <span style="display:flex; align-items:center; gap:8px;">
@@ -207,7 +199,7 @@
                 </div>
 
                 <div style="margin-bottom:22px;">
-                    <div style="font-weight:700; color:#2d3748; margin-bottom:10px;">Meal Plan</div>
+                    <div style="font-weight:700; color:#2d3748; margin-bottom:10px;">{{ __('category.filter.meal_plan') }}</div>
                     @forelse($packageFilterOptions['meal_plans'] ?? [] as $option)
                         <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; color:#4a5568;">
                             <span style="display:flex; align-items:center; gap:8px;">
@@ -221,21 +213,16 @@
                     @endforelse
                 </div>
 
-                <div style="margin-bottom:22px;">
-                    <div style="font-weight:700; color:#2d3748; margin-bottom:10px;">Budget Range</div>
-                    <label style="display:flex; align-items:center; justify-content:space-between; color:#4a5568;"><span style="display:flex; align-items:center; gap:8px;"><input type="checkbox"> Budget</span><span style="color:#6b7280;">(7)</span></label>
-                </div>
-
                 <div style="display:flex; flex-direction:column; gap:10px; margin-top:18px;">
-                    <button type="button" style="background:#f39b4a; border:none; border-radius:8px; color:#fff; font-weight:700; padding:12px 16px; cursor:pointer;">Apply filters</button>
-                    <button type="button" style="background:none; border:none; color:#4a5568; text-decoration:underline; cursor:pointer;">Clear filters</button>
+                    <button type="button" style="background:#f39b4a; border:none; border-radius:8px; color:#fff; font-weight:700; padding:12px 16px; cursor:pointer;">{{ __('filters.apply') }}</button>
+                    <button type="button" style="background:none; border:none; color:#4a5568; text-decoration:underline; cursor:pointer;">{{ __('filters.clear') }}</button>
                 </div>
             </aside>
 
             <div style="flex:1; min-width:0;">
                 <div style="background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px 22px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
-                    <h2 style="margin:0; font-size: 26px; color:#1f2a37; font-weight:800;">Mauritius Vacation Packages</h2>
-                    <div style="margin-top:8px; color:#667085; font-size:14px;">{{ $packages->count() }} listings found</div>
+                    <h2 style="margin:0; font-size: 26px; color:#1f2a37; font-weight:800;">{{ __('package.list.title') }}</h2>
+                    <div style="margin-top:8px; color:#667085; font-size:14px;">{{ trans_choice('package.listings_found', $packages->count(), ['count' => $packages->count()]) }}</div>
                 </div>
 
                 @forelse($packages as $package)
@@ -275,7 +262,7 @@
                                                 {{ $regionText ?: 'Mauritius' }}
                                             </span>
                                         </div>
-                                        <div style="font-size:13px; color:#4d5a66; white-space:nowrap;">{{ $roomsRequired ?? 1 }} Available</div>
+                                        <div style="font-size:13px; color:#4d5a66; white-space:nowrap;">{{ trans_choice('category.available_label', $roomsRequired ?? 1, ['count' => $roomsRequired ?? 1]) }}</div>
                                     </div>
 
                                     <h3 style="margin:0; font-size: 20px; line-height: 1.3; color:#f39b4a; font-weight:800;">
@@ -283,24 +270,38 @@
                                     </h3>
 
                                     <div style="margin-top:10px; color:#4d5a66; font-size:15px;">
-                                        {{ $days }} nights
+                                        {{ trans_choice('cart.nights', $days, ['count' => $days]) }}
                                     </div>
                                 </div>
 
                                 <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; margin-top:16px;">
                                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                                        <span style="display:inline-block; padding:7px 12px; border-radius:16px; background:#dfeaf3; color:#2d4b5f; font-size:12px; font-weight:600;">Accommodation</span>
-                                        <span style="display:inline-block; padding:7px 12px; border-radius:16px; background:#dfeaf3; color:#2d4b5f; font-size:12px; font-weight:600;">Activity</span>
-                                        <span style="display:inline-block; padding:7px 12px; border-radius:16px; background:#dfeaf3; color:#2d4b5f; font-size:12px; font-weight:600;">Private Transfer</span>
+                                        <span style="display:inline-block; padding:7px 12px; border-radius:16px; background:#dfeaf3; color:#2d4b5f; font-size:12px; font-weight:600;">{{ __('package.badge.accommodation') }}</span>
+                                        <span style="display:inline-block; padding:7px 12px; border-radius:16px; background:#dfeaf3; color:#2d4b5f; font-size:12px; font-weight:600;">{{ __('package.badge.activity') }}</span>
+                                        <span style="display:inline-block; padding:7px 12px; border-radius:16px; background:#dfeaf3; color:#2d4b5f; font-size:12px; font-weight:600;">{{ __('package.badge.transfer') }}</span>
                                     </div>
 
-                                    <a href="{{ route('frontend.packages.show', $package->id) }}" style="display:inline-block; background:#f39b4a; color:#fff; border-radius:8px; padding:10px 18px; text-decoration:none; font-weight:700;">View Details</a>
+                                    @php
+                                        $query = [];
+                                        if (!empty($travelingDate)) {
+                                            try {
+                                                $query['traveling_date'] = \Carbon\Carbon::createFromFormat('d/m/Y', $travelingDate)->format('Y-m-d');
+                                            } catch (\Exception $e) {
+                                                $query['traveling_date'] = $travelingDate;
+                                            }
+                                        }
+                                        $query['adults'] = $adults ?? 2;
+                                        $query['children'] = $children ?? 0;
+                                        $query['infants'] = $infants ?? 0;
+                                        $packageUrl = route('frontend.packages.show', $package->id) . (!empty($query) ? ('?' . http_build_query($query)) : '');
+                                    @endphp
+                                    <a href="{{ $packageUrl }}" style="display:inline-block; background:#f39b4a; color:#fff; border-radius:8px; padding:10px 18px; text-decoration:none; font-weight:700;">{{ __('home.view_details') }}</a>
                                 </div>
                             </div>
                         </div>
                     </article>
                 @empty
-                    <div style="padding:30px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; text-align:center; color:#667085;">No published packages available yet.</div>
+                    <div style="padding:30px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; text-align:center; color:#667085;">{{ __('package.no_published') }}</div>
                 @endforelse
             </div>
         </div>

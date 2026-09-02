@@ -18,6 +18,9 @@
             </div>
 
             <div style="border:1px solid #e4e7eb;border-radius:10px;overflow:hidden;background:#fff;">
+                <form method="POST" action="{{ route('admin.packages.step7.save', $package->id) }}">
+                    @csrf
+                    <input type="hidden" name="action" value="draft">
                 <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
                     <thead style="background:#f7f7f7;">
                         <tr>
@@ -48,14 +51,31 @@
                             <tr>
                                 <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;font-weight:600;color:#2b2d31;">{{ $meta['label'] }}</td>
                                 <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
-                                    @if(in_array($key, ['payment', 'refund', 'security_deposit', 'house_rules'], true))
-                                        <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;">
-                                            {{ $row['type'] ?? '-' }}
-                                        </div>
+                                    @php
+                                        $options = $policyOptions[$key]['types'] ?? null;
+                                        $currentType = $row['type'] ?? '-';
+                                    @endphp
+                                    @php
+                                        $readonlyKeys = ['payment','refund','security_deposit','house_rules'];
+                                    @endphp
+                                    @if(in_array($key, $readonlyKeys, true))
+                                        <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;">{{ $row['type'] ?? '-' }}</div>
                                     @else
-                                        <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;">
-                                            {{ $row['type'] ?? '-' }}
-                                        </div>
+                                        @if(is_array($options))
+                                            @php
+                                                $baselineType = strtolower(trim((string) ($effectivePolicy[$key]['type'] ?? $effectivePolicy['cancellation']['type'] ?? 'package (default)')));
+                                                $map = $severityMaps[$key] ?? null;
+                                                $baselineScore = $map[$baselineType] ?? ($map['package (default)'] ?? 0);
+                                            @endphp
+                                            <select name="policies[{{ $key }}][type]" class="form-select" style="min-width:180px;">
+                                                @foreach($options as $opt)
+                                                    @php $optKey = strtolower(trim((string)$opt)); $optScore = $map[$optKey] ?? null; @endphp
+                                                    <option value="{{ $opt }}" @if(trim((string)$opt) === trim((string)$currentType)) selected @endif @if($optScore !== null && $optScore < $baselineScore) disabled @endif>{{ $opt }}</option>
+                                                @endforeach
+                                            </select>
+                                        @else
+                                            <input type="text" name="policies[{{ $key }}][type]" value="{{ $currentType }}" class="form-control" />
+                                        @endif
                                     @endif
                                 </td>
                                 <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
@@ -63,13 +83,32 @@
                                         $beforeValue = $row['before_deadline'] ?? '-';
                                         $beforeLabel = ($key === 'cancellation') ? 'Before 30 days:' : (($key === 'amendments' || $key === 'postponement') ? 'Before 48 hours:' : null);
                                     @endphp
+                                    @php $beforeOptions = $policyOptions[$key]['beforeOptions'] ?? null; @endphp
                                     @if($beforeLabel)
                                         <div style="display:flex;align-items:center;gap:8px;">
                                             <span style="white-space:nowrap;color:#333;font-weight:500;">{{ $beforeLabel }}</span>
-                                            <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;flex:1;">{{ $beforeValue }}</div>
+                                            @if(is_array($beforeOptions))
+                                                <select name="policies[{{ $key }}][before_deadline]" class="form-select" style="flex:1;">
+                                                    @foreach($beforeOptions as $opt)
+                                                        <option value="{{ $opt }}" @if(trim((string)$opt) === trim((string)$beforeValue)) selected @endif>{{ $opt }}</option>
+                                                    @endforeach
+                                                </select>
+                                            @else
+                                                <input type="text" name="policies[{{ $key }}][before_deadline]" value="{{ $beforeValue }}" class="form-control" />
+                                            @endif
                                         </div>
                                     @else
-                                        <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;">{{ $beforeValue }}</div>
+                                        <div>
+                                            @if(is_array($beforeOptions))
+                                                <select name="policies[{{ $key }}][before_deadline]" class="form-select">
+                                                    @foreach($beforeOptions as $opt)
+                                                        <option value="{{ $opt }}" @if(trim((string)$opt) === trim((string)$beforeValue)) selected @endif>{{ $opt }}</option>
+                                                    @endforeach
+                                                </select>
+                                            @else
+                                                <input type="text" name="policies[{{ $key }}][before_deadline]" value="{{ $beforeValue }}" class="form-control" />
+                                            @endif
+                                        </div>
                                     @endif
                                 </td>
                                 <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
@@ -77,17 +116,36 @@
                                         $afterValue = $row['after_deadline'] ?? '-';
                                         $afterLabel = ($key === 'cancellation') ? 'Within 30 days:' : (($key === 'amendments' || $key === 'postponement') ? 'Within 48 hours:' : null);
                                     @endphp
+                                    @php $afterOptions = $policyOptions[$key]['afterOptions'] ?? null; @endphp
                                     @if($afterLabel)
                                         <div style="display:flex;align-items:center;gap:8px;">
                                             <span style="white-space:nowrap;color:#333;font-weight:500;">{{ $afterLabel }}</span>
-                                            <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;flex:1;">{{ $afterValue }}</div>
+                                            @if(is_array($afterOptions))
+                                                <select name="policies[{{ $key }}][after_deadline]" class="form-select" style="flex:1;">
+                                                    @foreach($afterOptions as $opt)
+                                                        <option value="{{ $opt }}" @if(trim((string)$opt) === trim((string)$afterValue)) selected @endif>{{ $opt }}</option>
+                                                    @endforeach
+                                                </select>
+                                            @else
+                                                <input type="text" name="policies[{{ $key }}][after_deadline]" value="{{ $afterValue }}" class="form-control" />
+                                            @endif
                                         </div>
                                     @else
-                                        <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;">{{ $afterValue }}</div>
+                                        <div>
+                                            @if(is_array($afterOptions))
+                                                <select name="policies[{{ $key }}][after_deadline]" class="form-select">
+                                                    @foreach($afterOptions as $opt)
+                                                        <option value="{{ $opt }}" @if(trim((string)$opt) === trim((string)$afterValue)) selected @endif>{{ $opt }}</option>
+                                                    @endforeach
+                                                </select>
+                                            @else
+                                                <input type="text" name="policies[{{ $key }}][after_deadline]" value="{{ $afterValue }}" class="form-control" />
+                                            @endif
+                                        </div>
                                     @endif
                                 </td>
                                 <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
-                                    <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;white-space:pre-wrap;">{{ $row['notes'] ?? '' }}</div>
+                                    <input type="text" name="policies[{{ $key }}][notes]" value="{{ $row['notes'] ?? '' }}" class="form-control" />
                                 </td>
                             </tr>
                         @endforeach
@@ -97,28 +155,22 @@
 
             <div style="margin-top:16px;border:1px solid #e4e7eb;border-radius:10px;padding:12px 14px;background:#f7f7f7;">
                 <div style="font-weight:600;color:#333;margin-bottom:8px;">Booking Notes</div>
-                <div style="padding:10px 12px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;white-space:pre-wrap;">{{ $effectivePolicy['booking_notes'] ?? '' }}</div>
+                <textarea name="booking_notes" class="form-control" rows="3">{{ $effectivePolicy['booking_notes'] ?? '' }}</textarea>
             </div>
 
             <div style="margin-top:16px;border:1px solid #e4e7eb;border-radius:10px;padding:12px 14px;background:#f7f7f7;">
                 <div style="font-weight:600;color:#333;margin-bottom:8px;">Package Notes</div>
-                <div style="padding:10px 12px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;white-space:pre-wrap;">{{ $effectivePolicy['package_notes'] ?? '' }}</div>
+                <textarea name="package_notes" class="form-control" rows="3">{{ $effectivePolicy['package_notes'] ?? '' }}</textarea>
             </div>
 
             <div class="d-flex justify-content-between mt-4 align-items-center">
                 <a href="{{ route('admin.packages.step6', $package->id) }}" class="btn btn-outline-secondary">Back</a>
 
                 <div class="d-flex gap-2">
-                    <form method="POST" action="{{ route('admin.packages.step7.save', $package->id) }}" style="display:inline;">
-                        @csrf
-                        <input type="hidden" name="action" value="draft">
-                        <button type="submit" class="btn btn-outline-primary">Save as Draft</button>
-                    </form>
-
-                    <form method="POST" action="{{ route('admin.packages.step7.save', $package->id) }}" style="display:inline;">
-                        @csrf
-                        <input type="hidden" name="action" value="published">
-                        <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to publish this package?')">Save and Publish</button>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-outline-primary" name="action" value="draft">Save as Draft</button>
+                        <button type="submit" class="btn btn-success" name="action" value="published" onclick="return confirm('Are you sure you want to publish this package?')">Save and Publish</button>
+                    </div>
                     </form>
                 </div>
             </div>

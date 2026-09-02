@@ -107,6 +107,22 @@ class BookingController extends Controller
             $item = $this->buildActivityCartItem($request);
         } elseif ($type === 'package') {
             $item = $this->buildPackageCartItem($request);
+            // Before allowing package into cart, verify underlying accommodation inventory
+            try {
+                $availabilityError = $this->checkPackageAvailabilityForCartItem($item);
+                if ($availabilityError) {
+                    if ($request->expectsJson()) {
+                        return response()->json(['success' => false, 'message' => $availabilityError], 422);
+                    }
+                    return back()->withInput()->with('error', $availabilityError);
+                }
+            } catch (\Exception $e) {
+                Log::error('Package availability check failed', ['error' => $e->getMessage(), 'package_id' => $item['package_id'] ?? null]);
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Failed to validate package availability. Please try again.'], 422);
+                }
+                return back()->withInput()->with('error', 'Failed to validate package availability. Please try again.');
+            }
         } elseif ($type === 'transport') {
             $validator = Validator::make($request->all(), [
                 'route_from' => ['required', 'string'],
@@ -300,6 +316,17 @@ class BookingController extends Controller
         $packageId = (int) $request->input('package_id');
         $packageName = trim((string) $request->input('package_name', 'Package'));
         $packageTotal = (float) $request->input('package_total_price', $request->input('total_price', 0));
+        // If client didn't send a total, compute authoritative server-side using PackagePricingService
+        if (empty($packageTotal) && $packageId) {
+            $package = \App\Models\Package::find($packageId);
+            if ($package) {
+                $pricingService = new \App\Services\PackagePricingService();
+                $adults = max(1, (int) $request->input('adults', 2));
+                $children = max(0, (int) $request->input('children', 0));
+                $infants = max(0, (int) $request->input('infants', 0));
+                $packageTotal = $pricingService->calculatePackageTotal($package, $adults, $children, $infants);
+            }
+        }
         $currency = $request->input('currency', 'USD');
         $image = $request->input('package_image', $request->input('image', ''));
         $nights = max(1, (int) $request->input('nights', $request->input('no_of_nights', 1)));
@@ -437,6 +464,206 @@ class BookingController extends Controller
         ];
     }
 
+    /**
+     * Reserve inventory for a room between two dates (inclusive).
+     * Throws \RuntimeException when insufficient inventory is available.
+     */
+    private function reserveInventoryForRange(int $accommodationId, ?int $roomId, \Carbon\Carbon $start, \Carbon\Carbon $end, int $roomsRequired): void
+    {
+        $cursorStart = $start->copy();
+        $cursorEnd = $end->copy();
+
+        DB::transaction(function () use ($accommodationId, $roomId, $cursorStart, $cursorEnd, $roomsRequired) {
+            $cursor = $cursorStart->copy();
+            while ($cursor->lte($cursorEnd)) {
+                $dateKey = $cursor->toDateString();
+
+                $inventory = AccommodationInventory::where('accommodation_id', $accommodationId)
+                    ->where('room_id', $roomId)
+                    ->where('date', $dateKey)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$inventory) {
+                    // determine fallback sellable units from room or accommodation
+                    $roomModel = $roomId ? AccommodationRoom::find($roomId) : null;
+                    $sellable = $roomModel ? (int) ($roomModel->allotment ?? $roomModel->quantity ?? 0) : 0;
+
+                    if ($roomsRequired > $sellable) {
+                        throw new \RuntimeException('Insufficient inventory for ' . $dateKey);
+                    }
+
+                    AccommodationInventory::create([
+                        'accommodation_id' => $accommodationId,
+                        'room_id' => $roomId,
+                        'date' => $dateKey,
+                        'sellable_units' => $sellable,
+                        'sold_units' => $roomsRequired,
+                        'available_units' => max(0, $sellable - $roomsRequired),
+                    ]);
+                } else {
+                    $currentSellable = (int) ($inventory->sellable_units ?? 0);
+                    $currentSold = (int) ($inventory->sold_units ?? 0);
+                    if (($currentSold + $roomsRequired) > $currentSellable) {
+                        throw new \RuntimeException('Insufficient inventory for ' . $dateKey);
+                    }
+
+                    $inventory->sold_units = $currentSold + $roomsRequired;
+                    $inventory->available_units = max(0, $currentSellable - $inventory->sold_units);
+                    $inventory->save();
+                }
+
+                $cursor->addDay();
+            }
+        });
+    }
+
+    /**
+     * Helper: find minimal rooms required given a set of room models and guest counts.
+     */
+    private function findMinimalRequiredRooms($rooms, int $adults, int $children = 0, int $infants = 0): int
+    {
+        $roomsCollection = collect($rooms);
+        $maxUnits = $roomsCollection->sum(function ($r) {
+            return max(1, (int) ($r->quantity ?? 1));
+        });
+
+        $childrenTotal = $children + $infants;
+
+        for ($r = 1; $r <= max(1, $maxUnits); $r++) {
+            $requiredAdultsPerRoom = (int) ceil($adults / max(1, $r));
+            $requiredChildrenPerRoom = (int) ceil($childrenTotal / max(1, $r));
+
+            $availableRoomUnits = 0;
+            foreach ($roomsCollection as $room) {
+                if (!$room) continue;
+                $roomAdults = max(0, (int) ($room->capacity ?? 0));
+                $roomChildren = max(0, (int) ($room->children_capacity ?? 0));
+                $quantity = max(1, (int) ($room->quantity ?? 1));
+
+                if ($requiredAdultsPerRoom <= $roomAdults && $requiredChildrenPerRoom <= $roomChildren) {
+                    $availableRoomUnits += $quantity;
+                }
+            }
+
+            if ($availableRoomUnits >= $r) {
+                return $r;
+            }
+        }
+
+        // fallback to 1
+        return 1;
+    }
+
+    /**
+     * Greedy allocate room counts across available room types to reach requiredRooms.
+     * Returns map room_id => count.
+     */
+    private function allocateRoomsGreedy($rooms, int $requiredRooms): array
+    {
+        $rooms = collect($rooms)->map(function ($r) {
+            return [
+                'id' => (int) $r->id,
+                'capacity' => (int) ($r->max_person_capacity ?? ((int) ($r->capacity ?? 0) + (int) ($r->children_capacity ?? 0) + max(0, ((int) ($r->infant_capacity ?? 0) - 1)))),
+                'quantity' => max(1, (int) ($r->quantity ?? 1)),
+            ];
+        })->sortByDesc('capacity')->values();
+
+        $alloc = [];
+        $remaining = $requiredRooms;
+        foreach ($rooms as $room) {
+            if ($remaining <= 0) break;
+            $take = min($room['quantity'], $remaining);
+            if ($take > 0) {
+                $alloc[$room['id']] = $take;
+                $remaining -= $take;
+            }
+        }
+
+        if ($remaining > 0) {
+            // If still remaining, expand by adding 1 from largest capacity rooms until satisfied
+            foreach ($rooms as $room) {
+                if ($remaining <= 0) break;
+                $alloc[$room['id']] = ($alloc[$room['id']] ?? 0) + 1;
+                $remaining--;
+            }
+        }
+
+        return $alloc;
+    }
+
+    /**
+     * Check package availability for a cart item without reserving inventory.
+     * Returns null when available, or an error message string when insufficient.
+     */
+    private function checkPackageAvailabilityForCartItem(array $item): ?string
+    {
+        $packageId = (int) ($item['package_id'] ?? 0);
+        if (!$packageId) return null;
+
+        $package = \App\Models\Package::find($packageId);
+        if (!$package) return null;
+
+        $itinerary = $package->itinerary ?? [];
+        if (!is_array($itinerary) || empty($itinerary)) return null;
+
+        $packageStart = Carbon::parse($item['check_in']);
+        $adults = max(0, (int) ($item['adults'] ?? 0));
+        $children = max(0, (int) ($item['children'] ?? 0));
+        $infants = max(0, (int) ($item['infants'] ?? 0));
+
+        foreach ($itinerary as $dayIndex => $dayEntry) {
+            if (!is_array($dayEntry)) continue;
+            $accommodationId = (int) ($dayEntry['accommodation'] ?? 0);
+            $roomIds = array_values(array_filter(array_map('intval', (array) ($dayEntry['rooms'] ?? []))));
+            if (!$accommodationId || empty($roomIds)) continue;
+
+            $dayDate = $packageStart->copy()->addDays((int) $dayIndex);
+            $start = $dayDate->copy();
+            $end = $dayDate->copy();
+
+            // load room models
+            $rooms = \App\Models\AccommodationRoom::where('accommodation_id', $accommodationId)
+                ->whereIn('id', $roomIds)
+                ->get();
+
+            if ($rooms->isEmpty()) continue;
+
+            $requiredRooms = $this->findMinimalRequiredRooms($rooms, $adults, $children, $infants);
+            $allocation = $this->allocateRoomsGreedy($rooms, $requiredRooms);
+
+            foreach ($allocation as $roomId => $count) {
+                // For each date (single night), ensure available units >= count
+                $cursor = $start->copy();
+                while ($cursor->lte($end)) {
+                    $dateKey = $cursor->toDateString();
+
+                    $inventory = AccommodationInventory::where('accommodation_id', $accommodationId)
+                        ->where('room_id', $roomId)
+                        ->where('date', $dateKey)
+                        ->first();
+
+                    if (!$inventory) {
+                        $roomModel = AccommodationRoom::find($roomId);
+                        $sellable = $roomModel ? (int) ($roomModel->allotment ?? $roomModel->quantity ?? 0) : 0;
+                        if ($count > $sellable) {
+                            return 'Insufficient inventory for ' . $dateKey;
+                        }
+                    } else {
+                        $available = max(0, (int) ($inventory->sellable_units ?? 0) - (int) ($inventory->sold_units ?? 0));
+                        if ($count > $available) {
+                            return 'Insufficient inventory for ' . $dateKey;
+                        }
+                    }
+
+                    $cursor->addDay();
+                }
+            }
+        }
+
+        return null;
+    }
+
     private function detectTransportAvailabilityConflict(array $bookingData, ?int $ignoreBookingId = null): ?array
     {
         $transportId = (int) ($bookingData['transport_id'] ?? 0);
@@ -475,7 +702,6 @@ class BookingController extends Controller
             $tripMinutes = (int) ($pair->trip_time_minutes ?? 0);
             $bufferMinutes = (int) ($pair->buffer_time_minutes ?? 0);
         }
-
         $totalMinutes = $tripMinutes + $bufferMinutes;
         if ($totalMinutes <= 0) {
             // fallback to conservative default if no route pair configured
@@ -1121,97 +1347,22 @@ class BookingController extends Controller
 
         $primaryGuests = isset($guestsInput[0]) ? [$guestsInput[0]] : [];
         $primaryGuests = collect($primaryGuests)
-            ->filter(function ($guest) {
-                return is_array($guest) && (
-                    !empty(trim($guest['first_name'] ?? '')) ||
-                    !empty(trim($guest['last_name'] ?? '')) ||
-                    !empty(trim($guest['dob'] ?? ''))
+            ->filter(function ($g) {
+                return is_array($g) && (
+                    !empty(trim($g['first_name'] ?? '')) ||
+                    !empty(trim($g['last_name'] ?? '')) ||
+                    !empty(trim($g['dob'] ?? '')) ||
+                    !empty(trim($g['email'] ?? ''))
                 );
             })
             ->values()
             ->all();
 
-        // Extract global additional guests (indices 1,2,3...)
-        $globalAdditionalGuests = [];
-        $i = 1;
-        while (isset($guestsInput[$i])) {
-            $globalAdditionalGuests[] = $guestsInput[$i];
-            $i++;
-        }
-        $globalAdditionalGuests = collect($globalAdditionalGuests)
-            ->filter(function ($guest) {
-                return is_array($guest) && (
-                    !empty(trim($guest['first_name'] ?? '')) ||
-                    !empty(trim($guest['last_name'] ?? '')) ||
-                    !empty(trim($guest['dob'] ?? ''))
-                );
-            })
-            ->values()
-            ->all();
-
-        $allAdditionalGuests = [];
-        foreach ($cart as $item) {
-            $itemGuestsForValidation = isset($guestsInput[$item['cart_key']]) ? collect($guestsInput[$item['cart_key']])
-                ->filter(function ($guest) {
-                    return is_array($guest) && (
-                        !empty(trim($guest['first_name'] ?? '')) ||
-                        !empty(trim($guest['last_name'] ?? '')) ||
-                        !empty(trim($guest['dob'] ?? ''))
-                    );
-                })
-                ->values()
-                ->all() : [];
-
-            $allAdditionalGuests = array_merge($allAdditionalGuests, $itemGuestsForValidation);
-        }
-
-        $allAdditionalGuests = array_merge($allAdditionalGuests, $globalAdditionalGuests);
-
-        // Only validate guest details if they are provided (optional for guest checkout)
-        if (!empty($allAdditionalGuests)) {
-            Validator::make(['guests' => $allAdditionalGuests], [
-                'guests' => 'array',
-                'guests.*.relation' => 'required|in:self,spouse,child,friend,colleague,other',
-                'guests.*.first_name' => 'required|string|max:100',
-                'guests.*.middle_name' => 'nullable|string|max:100',
-                'guests.*.last_name' => 'required|string|max:100',
-                'guests.*.dob' => 'required|date|before:today',
-                'guests.*.gender' => 'nullable|in:male,female,non_binary,other,Mr,Mrs,Miss,Ms,Mx,Other',
-                'guests.*.nationality' => 'required|string|max:100',
-                'guests.*.passport_number' => 'nullable|string|max:100',
-                'guests.*.notes' => 'nullable|string|max:1000',
-            ])->validate();
-        }
-
-        if (!empty($primaryGuests)) {
-            Validator::make(['guests' => $primaryGuests], [
-                'guests' => 'array',
-                'guests.*.relation' => 'required|in:self,spouse,child,friend,colleague,other',
-                'guests.*.first_name' => 'required|string|max:100',
-                'guests.*.middle_name' => 'nullable|string|max:100',
-                'guests.*.last_name' => 'required|string|max:100',
-                'guests.*.dob' => 'required|date|before:today',
-                'guests.*.gender' => 'nullable|in:male,female,non_binary,other,Mr,Mrs,Miss,Ms,Mx,Other',
-                'guests.*.nationality' => 'required|string|max:100',
-                'guests.*.passport_number' => 'nullable|string|max:100',
-                'guests.*.notes' => 'nullable|string|max:1000',
-            ])->validate();
-        }
-        $guestEmail = $request->input('guest_email');
-        $guestPhone = $request->input('guest_phone');
-        $special    = $request->input('special_requests', '');
-
-        // Use the first item's currency / grand total
-        $summary = $this->buildCartSummary($cart);
-        $bookingRefs = [];
-        $guestOtp = null;
-        $tripBookingIds = [];
-        $firstNotificationBooking = null;
-        $operatorNotificationBookings = []; // operator email => booking
-
-        // Get or create Trip ID
-        $travelerAccount = Auth::guard('traveler')->user();
         $tripData = [];
+        $guestOtp = null;
+        $bookingRefs = [];
+        $tripBookingIds = [];
+        $summary = $this->buildCartSummary($cart);
 
         foreach ($cart as $item) {
             if (($item['type'] ?? null) === 'package') {
@@ -1330,6 +1481,121 @@ class BookingController extends Controller
                     }
                 }
 
+                // Reserve accommodation inventory for package itinerary (if any)
+                try {
+                    $package = \App\Models\Package::find($item['package_id']);
+                    if ($package && is_array($package->itinerary ?? null)) {
+                        $itinerary = $package->itinerary ?? [];
+                        $packageStart = \Carbon\Carbon::parse($item['check_in']);
+
+                        // We'll collect underlying accommodation booking refs created for this package
+                        $packageBookingRefs = [];
+
+                        // Collect all reservation operations first to validate availability in one transaction
+                        DB::transaction(function () use ($itinerary, $packageStart, $item, $tripId, $packageBooking, $packageLine, $itemGuests, $travelerAccountId, $primaryGuest, $guestEmail, $guestPhone, $isGuestCheckout, $guestOtp, &$packageBookingRefs) {
+                            // For each day in itinerary, if accommodation selected, compute allocation and reserve
+                            foreach ($itinerary as $dayIndex => $dayEntry) {
+                                if (!is_array($dayEntry)) continue;
+                                $accommodationId = (int) ($dayEntry['accommodation'] ?? 0);
+                                $roomIds = array_values(array_filter(array_map('intval', (array) ($dayEntry['rooms'] ?? []))));
+                                if (!$accommodationId || empty($roomIds)) continue;
+
+                                $dayDate = $packageStart->copy()->addDays((int) $dayIndex);
+                                $start = $dayDate->copy();
+                                $end = $dayDate->copy();
+
+                                // load room models
+                                $rooms = \App\Models\AccommodationRoom::where('accommodation_id', $accommodationId)
+                                    ->whereIn('id', $roomIds)
+                                    ->get();
+
+                                if ($rooms->isEmpty()) continue;
+
+                                // Determine minimal required rooms to cover guests for this package item
+                                $adults = max(0, (int) ($item['adults'] ?? 0));
+                                $children = max(0, (int) ($item['children'] ?? 0));
+                                $infants = max(0, (int) ($item['infants'] ?? 0));
+
+                                $requiredRooms = $this->findMinimalRequiredRooms($rooms, $adults, $children, $infants);
+
+                                // Allocate rooms (greedy). returns map room_id => count
+                                $allocation = $this->allocateRoomsGreedy($rooms, $requiredRooms);
+
+                                // Reserve inventory for each allocated room type for the single night
+                                foreach ($allocation as $roomId => $count) {
+                                    $this->reserveInventoryForRange($accommodationId, $roomId, $start, $end, $count);
+
+                                    // Create underlying AccommodationBooking record linked to trip/package
+                                    $ref = $this->generateBookingRef('accommodation', $tripId, $start->toDateString());
+                                    $booking = AccommodationBooking::create([
+                                        'booking_reference' => $ref,
+                                        'accommodation_id' => $accommodationId,
+                                        'room_id' => $roomId,
+                                        'guest_name' => trim(($primaryGuest['first_name'] ?? '') . ' ' . ($primaryGuest['middle_name'] ?? '') . ' ' . ($primaryGuest['last_name'] ?? '')) ?: ($item['package_name'] ?? 'Package Guest'),
+                                        'traveler_account_id' => $travelerAccountId,
+                                        'traveler_relation' => $primaryGuest['relation'] ?? null,
+                                        'traveler_first_name' => $primaryGuest['first_name'] ?? null,
+                                        'traveler_middle_name' => $primaryGuest['middle_name'] ?? null,
+                                        'traveler_last_name' => $primaryGuest['last_name'] ?? null,
+                                        'traveler_dob' => $primaryGuest['dob'] ?? null,
+                                        'traveler_gender' => $primaryGuest['gender'] ?? null,
+                                        'traveler_nationality' => $primaryGuest['nationality'] ?? null,
+                                        'traveler_passport_number' => $primaryGuest['passport_number'] ?? null,
+                                        'traveler_notes' => $primaryGuest['notes'] ?? null,
+                                        'guest_email' => $guestEmail,
+                                        'check_in_date' => $start->toDateString(),
+                                        'check_out_date' => $end->copy()->addDay()->toDateString(),
+                                        'rooms_booked' => $count,
+                                        'adults' => $adults,
+                                        'children' => $children,
+                                        'booking_status' => 'Pending',
+                                        'total_amount' => 0,
+                                        'currency' => $item['currency'] ?? 'USD',
+                                        'source_channel' => 'Package',
+                                        'booked_at' => now(),
+                                        'trip_id' => $tripId,
+                                        'guest_otp_token_id' => $guestOtp?->id ?? null,
+                                        'is_guest' => $isGuestCheckout ? 1 : 0,
+                                        'rate_plan_id' => $item['rate_plan_id'] ?? null,
+                                        'rate_name' => $item['rate_name'] ?? null,
+                                        'pricing_setting' => $item['pricing_setting'] ?? null,
+                                        'plan_label' => $item['plan_label'] ?? null,
+                                        'meal_plan' => $item['meal_plan'] ?? $item['plan_label'] ?? null,
+                                        'plan_inclusions' => !empty($item['plan_inclusions']) ? json_encode($item['plan_inclusions']) : null,
+                                    ]);
+
+                                    // Track created booking refs for package so confirmation can use them
+                                    $packageBookingRefs[] = $booking->booking_reference;
+
+                                    // Link travellers if trip exists
+                                    if ($tripId && !empty($itemGuests)) {
+                                        foreach ($itemGuests as $guest) {
+                                            $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                                            $traveller = Traveller::where('trip_id', $tripId)->where('name', $fullName)->first();
+                                            if ($traveller) {
+                                                BliTravellerAllocation::create([
+                                                    'bli_id' => $packageLine->id,
+                                                    'traveller_id' => $traveller->id,
+                                                ]);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+                        // Merge any created underlying booking refs into the global booking refs so
+                        // the confirmation redirect has a valid primary reference.
+                        if (!empty($packageBookingRefs)) {
+                            $bookingRefs = array_merge($bookingRefs, $packageBookingRefs);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // log and fail the entire package checkout
+                    Log::error('Package accommodation reservation failed', ['error' => $e->getMessage(), 'package_id' => $item['package_id'] ?? null]);
+                    return back()->with('error', 'Failed to reserve package accommodation: ' . $e->getMessage());
+                }
+
                 continue;
             } elseif ($item['type'] === 'accommodation') {
                 $booking = AccommodationBooking::create([
@@ -1396,42 +1662,7 @@ class BookingController extends Controller
                         $end = $start;
                     }
 
-                    // Determine base sellable units fallback from room or accommodation
-                    $roomModel = $booking->room_id ? AccommodationRoom::find($booking->room_id) : null;
-                    $baseSellableFallback = $roomModel ? (int) ($roomModel->allotment ?? $roomModel->quantity ?? 0) : 0;
-
-                    DB::transaction(function () use ($booking, $start, $end, $roomsBooked, $baseSellableFallback) {
-                        $cursor = $start->copy();
-                        while ($cursor->lte($end)) {
-                            $dateKey = $cursor->toDateString();
-
-                            $inventory = AccommodationInventory::where('accommodation_id', $booking->accommodation_id)
-                                ->where('room_id', $booking->room_id)
-                                ->where('date', $dateKey)
-                                ->lockForUpdate()
-                                ->first();
-
-                            if (!$inventory) {
-                                $sellable = $baseSellableFallback;
-                                $sold = $roomsBooked;
-                                $available = max(0, $sellable - $sold);
-                                AccommodationInventory::create([
-                                    'accommodation_id' => $booking->accommodation_id,
-                                    'room_id' => $booking->room_id,
-                                    'date' => $dateKey,
-                                    'sellable_units' => $sellable,
-                                    'sold_units' => $sold,
-                                    'available_units' => $available,
-                                ]);
-                            } else {
-                                $inventory->sold_units = (int) ($inventory->sold_units ?? 0) + $roomsBooked;
-                                $inventory->available_units = max(0, (int) ($inventory->sellable_units ?? 0) - (int) $inventory->sold_units);
-                                $inventory->save();
-                            }
-
-                            $cursor->addDay();
-                        }
-                    });
+                    $this->reserveInventoryForRange($booking->accommodation_id, $booking->room_id, $start, $end, $roomsBooked);
                 } catch (\Exception $e) {
                     Log::error('Failed to update inventory for booking creation', ['error' => $e->getMessage(), 'booking_id' => $booking->id]);
                 }
