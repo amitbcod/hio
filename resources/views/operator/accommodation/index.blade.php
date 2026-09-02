@@ -116,10 +116,10 @@
 
                                             {{-- Actions --}}
                                             <div style="display: flex; gap: 8px;">
-                                                <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" class="btn btn-secondary" style="">
+                                                <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" class="btn btn-primary" style="flex:1">
                                                     Continue Setup
                                                 </a>
-                                                <a href="{{ route('operator.accommodation.step1.edit', $accommodation->id) }}" class="btn btn-primary" style="">
+                                                <a href="{{ route('operator.accommodation.step1.edit', $accommodation->id) }}" class="btn btn-outline-blue" style="flex:1">
                                                     Edit Basics
                                                 </a>
                                             </div>
