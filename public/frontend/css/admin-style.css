@@ -15,11 +15,15 @@
  }
 
  button.btn.btn-primary {
-     background: #41b0aa;
+     background: #fcb216;
      font-weight: 600 !important;
      border: none;
      width: 100%;
  }
+
+  button.btn.btn-primary:hover, button.btn.btn-primary:active  {
+        background-color: #c98f14 !important;
+  }
 
  a {
     color: rgb(65 176 170);
@@ -143,16 +147,16 @@ a:hover {
  }
 
  a.btn.btn-primary {
-     background: #41b0aa;
+     background: #fcb216;
      border: none;
  }
 
  a.btn.btn-primary:hover {
-    background: #106460;
+    background: #c98f14 !important;
 }
 
  a.btn.btn-primary:active {
-     background-color: #c6ac50;
+     background-color: #c98f14;
  }
 
  a.btn.btn-sm.btn-secondary {
@@ -247,7 +251,9 @@ nav[aria-label="Pagination Navigation"] > div + div > div + div > span > span > 
     
 }
 
-
+.container.mt-5 {
+    margin-top: 0 !important;
+}
 
 
 

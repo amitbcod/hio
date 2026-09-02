@@ -25,8 +25,8 @@
     </div>
 
     {{-- Main Content --}}
-    <div class="col-md-6 d-flex align-items-start justify-content-center" style="min-height:90vh; margin-top: 40px;">
-        <div class="team-member-new">
+    <div class="col-md-6 d-flex align-items-start justify-content-center" style="">
+        <div class="container-middle team-member-new">
 
             <h2 class="mb-4 fw-bold">USERS & STAFF MANAGEMENT</h2>
 
@@ -44,7 +44,7 @@
                         Add New User
                     </button>
                     @if(!empty(auth()->user()->business_id))
-                        <a href="{{ route('operator.roles.index') }}" class="btn btn-outline-secondary ms-2">Manage Roles</a>
+                        <a href="{{ route('operator.roles.index') }}" class="btn btn-secondary ms-2">Manage Roles</a>
                     @endif
                 </div>
                 @if(!auth('operator_staff')->check())
@@ -161,12 +161,12 @@
 </div>
 
 <div class="alert alert-info">
-Permissions are assigned at the <strong>Role level</strong>. To set permissions for a role, go to <a href="{{ route('operator.roles.index') }}">Manage Roles</a> and click "Manage Permissions" for the desired role.
+Permissions are assigned at the <strong>Role level</strong>. To set permissions for a role, go to <a class="link-orange" href="{{ route('operator.roles.index') }}">Manage Roles</a> and click "Manage Permissions" for the desired role.
 </div>
 
 </div>
 <div class="modal-footer">
-<button type="submit" class="btn btn-success">Save</button>
+<button type="submit" class="btn btn-primary">Save</button>
 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 </div>
 </div>

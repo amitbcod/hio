@@ -1,3 +1,14 @@
+:root {
+  --dark-blue: #0D2144;
+  --orange: #ff8a00;
+  --white: #ffffff;
+  --orange-hover: #ed8000;
+  --dark-blue-hover: #003487;
+  --green: rgb(18, 116, 18);
+  --green-hover: rgb(1, 61, 1);
+  --blue: #0170be;
+}
+
 body {
     background: #fbfbfa;
 }
@@ -28,9 +39,9 @@ main {
 }
 
 button.btn.btn-info {
-    background: #19b5b5;
+    /* background: #19b5b5;
     color: #fff;
-        margin-bottom: 10px;
+        margin-bottom: 10px; */
 }
 
 .progress-section {
@@ -86,6 +97,7 @@ select.form-control {
     flex-direction: column;
     /* box-shadow: 0 30px 60px rgb(145 119 119 / 40%); */
     transition: transform .2s;
+    border-radius: 10px;
    
 }
 
@@ -369,8 +381,8 @@ span.dropdownArrow {
 } */
 
 .add-section button.btn.btn-primary {
-    border: 1px solid #bd9e32;
-    background: #bd9e32;
+    /* border: 1px solid #bd9e32;
+    background: #bd9e32; */
 }
 
 .back-section a.btn.btn-secondary
@@ -400,13 +412,13 @@ span.dropdownArrow {
     color: #fff;
 }
 .back-section a.btn.btn-secondary {
-    padding: 10px 20px !important;
+    /* padding: 10px 20px !important; */
    
 }
 
 .add-button-section button.btn.btn-primary {
-    background: #c4a745;
-    border: 1px solid #c4a745;
+    /* background: #c4a745;
+    border: 1px solid #c4a745; */
 }
 
 button.btn.btn-sm.btn-warning.editUserBtn {
@@ -420,8 +432,8 @@ button.btn.btn-sm.btn-danger {
 }
 
 .review-section {
-    margin-top: 30px;
-     margin-bottom: 30px;
+    /* margin-top: 30px;
+     margin-bottom: 30px; */
 }
 
 .media-fixed h2 {
@@ -483,10 +495,69 @@ code {
     color: #ff8a00;
 }
 
+.container-middle {
+    padding:20px 10px;
+    width: 100%;
+}
 
+/** button **/
 
+.btn-info {
+    background-color: var(--dark-blue);
+    color: var(--white);
+}
 
+.btn-info:hover, .btn-info:active, .btn-info:focus {
+    background-color: var(--dark-blue-hover) !important;
+    color: var(--white) !important;
+}
 
+.btn-success {
+    background-color: var(--green);
+    color: var(--white);
+}
+
+.btn-success:hover, .btn-secondary:active, .btn-secondary:focus {
+    background-color: var(--green-hover) !important;
+    color: var(--white) !important;
+}
+
+.btn {
+    border: 0;
+}
+
+.btn-primary {
+    background-color: var(--orange);
+    color: var(--white);
+}
+
+.btn-primary:hover, .btn-primary:active, .btn-primary:focus {
+    background-color: var(--orange-hover) !important;
+    color: var(--white) !important;
+}
+
+.btn-secondary {
+    background-color: var(--dark-blue);
+    color: var(--white);
+}
+
+.btn-secondary:hover, .btn-secondary:active, .btn-secondary:focus {
+    background-color: var(--dark-blue-hover) !important;
+    color: var(--white) !important;
+}
+
+.link-orange {
+    color: var(--orange);
+}
+
+/************************************************/
+
+.box-title-bg {
+    background-color: var(--blue);
+    color:var(--white);
+    padding:16px;
+    border-radius: 16px 16px 0 0;
+}
 
 
 

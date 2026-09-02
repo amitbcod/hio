@@ -7,7 +7,7 @@
                 @include('operator.registration._sidebar_main')
             </div>
             <div class="col-md-9 my-pro">
-                <div style="background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 40px;margin-top: 40px;">
+                <div class="container-middle">
                     
                     {{-- Header --}}
                     <div class="properties-section" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
@@ -16,10 +16,10 @@
                             <p style="color: #666; margin-bottom: 0;">Manage and set up your properties</p>
                         </div>
                         <div class="book-section" style="display: flex; gap: 12px;">
-                            <a href="{{ route('admin.accommodation.bookings') }}" class="btn" style="background: #17a2b8; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
+                            <a href="{{ route('admin.accommodation.bookings') }}" class="btn btn-secondary d-flex align-items-center">
                                 📅 View Bookings
                             </a>
-                            <a href="{{ route('admin.accommodation.create') }}" class="btn" style="background: #19b5b5; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
+                            <a href="{{ route('admin.accommodation.create') }}" class="btn btn-primary d-flex align-items-center">
                                 + Add New Property
                             </a>
                         </div>
@@ -46,7 +46,7 @@
                                 <div class="col-md-6 mb-4">
                                     <div style="background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; transition: all 0.3s;">
                                         {{-- Card Header with Status --}}
-                                        <div style="background: linear-gradient(135deg, #19b5b5, #139999); color: #fff; padding: 16px;">
+                                        <div class="box-title-bg">
                                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                                 <div>
                                                     <h5 style="font-weight: 600; margin-bottom: 4px;">{{ $accommodation->property_name }}</h5>

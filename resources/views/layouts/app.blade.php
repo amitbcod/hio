@@ -13,11 +13,11 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-0">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-0 p-2">
         <button class="hamburger" onclick="toggleSidebar()">
             <i class="fa-solid fa-bars"></i>
         </button>
-        <div class="container d-flex justify-content-between align-items-center">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
             <a class="navbar-brand d-flex align-items-center" href="{{ url('/operator/accommodation') }}">
               
                 <img src="{{ asset('images/holidays-io-logo.png') }}" alt="Logo" width="130px">
@@ -33,10 +33,10 @@
             
             <div>
                 @auth
-                    <span class="me-3">{{ auth()->user()->email }}</span>
+                    <span class="me-3 fw-bold">{{ auth()->user()->email }}</span>
                     <form action="{{ route('operator.logout') }}" method="POST" style="display:inline;">
                         @csrf
-                        <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Logout</button>
                     </form>
                 @endauth
             </div>
