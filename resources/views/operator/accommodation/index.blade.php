@@ -69,10 +69,10 @@
                                             <div style="margin-bottom: 16px;">
                                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                                                     <span style="font-weight: 600; font-size: 12px;">Setup Progress</span>
-                                                    <span style="font-weight: bold; color: #19b5b5; font-size: 12px;">{{ $accommodation->getCompletionPercentage() }}%</span>
+                                                    <span style="font-weight: bold; color: #0170be; font-size: 12px;">{{ $accommodation->getCompletionPercentage() }}%</span>
                                                 </div>
                                                 <div style="height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden;">
-                                                    <div style="height: 100%; background: #19b5b5; width: {{ $accommodation->getCompletionPercentage() }}%; transition: width 0.3s;"></div>
+                                                    <div style="height: 100%; background: #0170be; width: {{ $accommodation->getCompletionPercentage() }}%; transition: width 0.3s;"></div>
                                                 </div>
                                             </div>
 
