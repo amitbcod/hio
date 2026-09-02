@@ -6,7 +6,7 @@
             <div class="col-md-3 net-section">
                 @include('operator.registration._sidebar_main')
             </div>
-            <div class="col-md-9 my-pro">
+            <div class="col-md-9 my-pro div-box">
                 <div class="container-middle">
                     
                     {{-- Header --}}
@@ -15,7 +15,7 @@
                             <h2 style="font-weight: bold; margin-bottom: 8px;">Accommodation Bookings</h2>
                             <p style="color: #666; margin-bottom: 0;">View and manage all bookings for your properties</p>
                         </div>
-                        <a href="{{ route('operator.accommodation.index') }}" class="btn" style="background: #19b5b5; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
+                        <a href="{{ route('operator.accommodation.index') }}" class="btn btn-outline-blue" style="">
                             Back to Properties
                         </a>
                     </div>
@@ -75,7 +75,7 @@
                                             </td>
                                             <td>{{ $booking->created_at->format('M d, Y H:i') }}</td>
                                             <td>
-                                                <a href="{{ route('operator.accommodation.booking.details', $booking->id) }}" class="btn btn-sm" style="background: #19b5b5; color: #fff; border: none;">View Details</a>
+                                                <a href="{{ route('operator.accommodation.booking.details', $booking->id) }}" class="btn btn-sm btn-secondary" style="">View Details</a>
                                             </td>
                                         </tr>
                                     @endforeach

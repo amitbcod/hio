@@ -571,7 +571,12 @@ code {
     border-radius: 16px 16px 0 0;
 }
 
-
+.div-box {
+    margin: 30px 1.5%;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075) !important;
+}
 
 
 
