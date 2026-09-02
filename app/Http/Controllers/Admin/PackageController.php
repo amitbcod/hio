@@ -857,15 +857,129 @@ class PackageController extends Controller
             }
         }
 
-        return view('admin.packages.step7', compact('package', 'dates', 'effectivePolicy'));
+        // Provide option lists for editable selects in the view
+        $policyOptions = [
+            'cancellation' => [
+                'types' => ['Flexible', 'Moderate', 'Strict', 'Package (Default)', 'Group', 'Non-Refundable', 'No Show'],
+                'beforeOptions' => ['100% Refund', '50% Refund', '20% Refund', '0% Refund'],
+                'afterOptions' => ['100% Refund', '50% Refund', '20% Refund', '0% Refund'],
+            ],
+            'amendments' => [
+                'types' => ['Flexible', 'Moderate', 'Strict'],
+                'beforeOptions' => ['Available', 'Not Available'],
+                'afterOptions' => ['Available', 'Not Available'],
+            ],
+            'postponement' => [
+                'types' => ['Flexible', 'Moderate', 'Strict'],
+                'beforeOptions' => ['Available', 'Not Available'],
+                'afterOptions' => ['Available', 'Not Available'],
+            ],
+            'payment' => [
+                'types' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],
+                'beforeOptions' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],
+            ],
+            'refund' => [
+                'types' => ['Refund Policy'],
+            ],
+            'security_deposit' => [
+                'types' => ['Required'],
+            ],
+            'house_rules' => [
+                'types' => ['Applicable'],
+            ],
+        ];
+
+        $severityMaps = [
+            'cancellation' => [
+                'flexible' => 0,
+                'moderate' => 1,
+                'strict' => 2,
+                'package (default)' => 3,
+                'group' => 4,
+                'non-refundable' => 5,
+                'no show' => 6,
+            ],
+            'amendments' => [
+                'flexible' => 0,
+                'moderate' => 1,
+                'strict' => 2,
+            ],
+            'postponement' => [
+                'flexible' => 0,
+                'moderate' => 1,
+                'strict' => 2,
+            ],
+        ];
+
+        return view('admin.packages.step7', compact('package', 'dates', 'effectivePolicy', 'policyOptions', 'severityMaps'));
     }
 
     public function saveStep7(Package $package, Request $request)
     {
         $data = $request->validate([
             'action' => 'required|string|in:draft,published',
+            'policies' => 'nullable|array',
+            'policies.*' => 'nullable|array',
+            'booking_notes' => 'nullable|string',
+            'package_notes' => 'nullable|string',
         ]);
 
+        // If admin provided policy overrides, validate severity rules against effective package defaults
+        $policies = $data['policies'] ?? [];
+        if (!empty($policies)) {
+            $currentEffective = $this->buildEffectivePackagePolicy($package, $package->itinerary ?? []);
+            $severityMap = [
+                'cancellation' => [
+                    'flexible' => 0,
+                    'moderate' => 1,
+                    'strict' => 2,
+                    'package (default)' => 3,
+                    'group' => 4,
+                    'non-refundable' => 5,
+                    'no show' => 6,
+                ],
+                'amendments' => [
+                    'flexible' => 0,
+                    'moderate' => 1,
+                    'strict' => 2,
+                ],
+                'postponement' => [
+                    'flexible' => 0,
+                    'moderate' => 1,
+                    'strict' => 2,
+                ],
+            ];
+
+            foreach ($severityMap as $key => $map) {
+                if (!isset($policies[$key]['type'])) continue;
+                $selected = strtolower(trim((string) $policies[$key]['type']));
+                $selectedScore = $map[$selected] ?? null;
+                $baselineType = strtolower(trim((string) ($currentEffective[$key]['type'] ?? 'package (default)')));
+                $baselineScore = $map[$baselineType] ?? ($map['package (default)'] ?? 0);
+                if ($selectedScore === null) {
+                    return back()->withInput()->with('error', "Invalid {$key} policy selected.");
+                }
+                if ($selectedScore < $baselineScore) {
+                    return back()->withInput()->with('error', ucfirst($key) . ' policy cannot be less severe than the current package default.');
+                }
+            }
+        }
+
+        // Persist overrides inside itinerary to avoid DB migrations
+        $itinerary = $package->itinerary ?? [];
+        if (!empty($policies)) {
+            $itinerary['package_policy_overrides'] = $policies;
+        }
+        if (!empty($data['booking_notes'])) {
+            $itinerary['package_policy_overrides'] = $itinerary['package_policy_overrides'] ?? [];
+            $itinerary['package_policy_overrides']['booking_notes'] = trim((string) $data['booking_notes']);
+        }
+        if (!empty($data['package_notes'])) {
+            $itinerary['package_policy_overrides'] = $itinerary['package_policy_overrides'] ?? [];
+            $itinerary['package_policy_overrides']['package_notes'] = trim((string) $data['package_notes']);
+        }
+
+        $package->itinerary = $itinerary;
         $package->status = $data['action'];
         $package->save();
 
@@ -994,6 +1108,35 @@ class PackageController extends Controller
 
         $result['booking_notes'] = $this->selectNoteValue($bookingNotes);
         $result['package_notes'] = $this->selectNoteValue($packageNotes);
+
+        // Apply package-level overrides stored in itinerary if present
+        $overrides = $itinerary['package_policy_overrides'] ?? null;
+        if (is_array($overrides)) {
+            foreach ($overrides as $key => $override) {
+                if ($key === 'booking_notes' || $key === 'package_notes') continue;
+                if (!isset($result[$key])) continue;
+                if (!is_array($override)) continue;
+                if (isset($override['type']) && trim((string) $override['type']) !== '') {
+                    $result[$key]['type'] = trim((string) $override['type']);
+                }
+                if (isset($override['before_deadline']) && trim((string) $override['before_deadline']) !== '') {
+                    $result[$key]['before_deadline'] = trim((string) $override['before_deadline']);
+                }
+                if (isset($override['after_deadline']) && trim((string) $override['after_deadline']) !== '') {
+                    $result[$key]['after_deadline'] = trim((string) $override['after_deadline']);
+                }
+                if (isset($override['notes']) && trim((string) $override['notes']) !== '') {
+                    $result[$key]['notes'] = trim((string) $override['notes']);
+                }
+            }
+
+            if (!empty($overrides['booking_notes'])) {
+                $result['booking_notes'] = trim((string) $overrides['booking_notes']);
+            }
+            if (!empty($overrides['package_notes'])) {
+                $result['package_notes'] = trim((string) $overrides['package_notes']);
+            }
+        }
 
         return $result;
     }
