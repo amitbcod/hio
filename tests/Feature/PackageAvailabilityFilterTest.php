@@ -111,4 +111,32 @@ class PackageAvailabilityFilterTest extends TestCase
         $this->assertContains('Half Board', $mealPlans);
         $this->assertNotContains('Room Only', $mealPlans);
     }
+
+    public function test_package_list_view_keeps_meal_plan_filter_but_removes_budget_range(): void
+    {
+        $html = view('frontend.packages-list', [
+            'packages' => collect(),
+            'regionOptions' => [],
+            'region' => 'all',
+            'travelingDate' => null,
+            'adults' => 2,
+            'children' => 0,
+            'infants' => 0,
+            'roomsRequired' => 1,
+            'packageFilterOptions' => [
+                'property_types' => [],
+                'meal_plans' => [
+                    ['value' => 'Breakfast', 'count' => 2],
+                    ['value' => 'Full Board', 'count' => 1],
+                ],
+            ],
+            'selectedPropertyTypes' => [],
+            'selectedMealPlans' => [],
+        ])->render();
+
+        $this->assertStringContainsString('Meal Plan', $html);
+        $this->assertStringContainsString('Breakfast', $html);
+        $this->assertStringContainsString('Full Board', $html);
+        $this->assertStringNotContainsString('Budget Range', $html);
+    }
 }

@@ -213,11 +213,6 @@
                     @endforelse
                 </div>
 
-                <div style="margin-bottom:22px;">
-                    <div style="font-weight:700; color:#2d3748; margin-bottom:10px;">{{ __('category.filter.budget') }}</div>
-                    <label style="display:flex; align-items:center; justify-content:space-between; color:#4a5568;"><span style="display:flex; align-items:center; gap:8px;"><input type="checkbox"> Budget</span><span style="color:#6b7280;">(7)</span></label>
-                </div>
-
                 <div style="display:flex; flex-direction:column; gap:10px; margin-top:18px;">
                     <button type="button" style="background:#f39b4a; border:none; border-radius:8px; color:#fff; font-weight:700; padding:12px 16px; cursor:pointer;">{{ __('filters.apply') }}</button>
                     <button type="button" style="background:none; border:none; color:#4a5568; text-decoration:underline; cursor:pointer;">{{ __('filters.clear') }}</button>
