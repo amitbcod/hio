@@ -546,6 +546,18 @@ code {
     color: var(--white) !important;
 }
 
+.btn-outline-blue {
+    background-color: var(--white);
+    border:1px solid var(--blue);
+    color: var(--blue);
+}
+
+.btn-outline-blue:hover, .btn-outline-blue:active {
+    background-color: var(--blue);
+    border:1px solid var(--blue);
+    color: var(--white);
+}
+
 .link-orange {
     color: var(--orange);
 }
@@ -558,6 +570,8 @@ code {
     padding:16px;
     border-radius: 16px 16px 0 0;
 }
+
+
 
 
 
