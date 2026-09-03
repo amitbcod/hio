@@ -328,7 +328,7 @@ class HomeController extends Controller
         $adults = max(1, (int) $request->query('adults', 2));
         $children = max(0, (int) $request->query('children', 0));
         $infants = max(0, (int) $request->query('infants', 0));
-        $roomsRequired = max(1, (int) $request->query('rooms', 1));
+        $roomsRequired = max(0, (int) $request->query('rooms', 0));
 
         $allPackages = Package::query()
             ->where('status', 'published')
@@ -340,6 +340,25 @@ class HomeController extends Controller
                 return $this->packageMatchesGuestCriteria($package, $region, $travelingDate, $adults, $children, $infants, $roomsRequired);
             })
             ->values();
+
+        // Additional admin-controlled pax filter: packages declare minimum_pax and maximum_pax
+        // Admin defines pax as adults + children (infants are excluded). Only show packages
+        // whose min/max range contains the selected adults+children.
+        $selectedPax = max(0, $adults) + max(0, $children);
+        $packages = $packages->filter(function (Package $package) use ($selectedPax) {
+            $min = (int) ($package->minimum_pax ?? 0);
+            $max = $package->maximum_pax !== null ? (int) $package->maximum_pax : null;
+
+            if ($min > 0 && $selectedPax < $min) {
+                return false;
+            }
+
+            if ($max !== null && $selectedPax > $max) {
+                return false;
+            }
+
+            return true;
+        })->values();
 
         $selectedPropertyTypes = $this->normalizeFilterValues($request->query('property_type', []));
         $selectedMealPlans = $this->normalizeFilterValues($request->query('meal_plan', []));
@@ -412,6 +431,15 @@ class HomeController extends Controller
 
                 foreach ($rooms as $room) {
                     $mealPlans = $this->resolveRoomMealPlans($room);
+
+                    \Log::info('Package meal plan debug', [
+                        'package_id' => $package->id ?? null,
+                        'day_index' => $dayIndex,
+                        'accommodation_id' => $accommodationId,
+                        'room_ids' => $roomIds,
+                        'room_id' => $room->id ?? null,
+                        'meal_plans' => $mealPlans,
+                    ]);
 
                     foreach ($mealPlans as $mealPlan) {
                         if ($mealPlan === '') {
@@ -527,17 +555,44 @@ class HomeController extends Controller
             $items = $ratePlans;
         } elseif (is_array($ratePlans)) {
             $items = collect($ratePlans);
-        } elseif (method_exists($ratePlans, 'where') && method_exists($ratePlans, 'get')) {
-            $items = $ratePlans
-                ->where('is_rate_plan', true)
-                ->whereNotNull('meal_plan')
-                ->get();
+        } elseif (is_object($ratePlans) && method_exists($ratePlans, 'get')) {
+            $items = $ratePlans->get();
         } else {
             $items = collect($ratePlans);
         }
 
         return collect($items)
-            ->filter(fn ($rate) => is_object($rate) && !empty($rate->is_rate_plan) && !blank($rate->meal_plan ?? null))
+            ->filter(function ($rate) {
+                if (!is_object($rate)) {
+                    return false;
+                }
+
+                if ($rate instanceof \Illuminate\Database\Eloquent\Builder || $rate instanceof \Illuminate\Database\Query\Builder) {
+                    return false;
+                }
+
+                return !blank($rate->meal_plan ?? null);
+            })
+            ->filter(function ($rate) {
+                if (!is_object($rate) || $rate instanceof \Illuminate\Database\Eloquent\Builder || $rate instanceof \Illuminate\Database\Query\Builder) {
+                    return false;
+                }
+
+                $flag = $rate->is_rate_plan ?? null;
+
+                if (is_string($flag)) {
+                    $flag = in_array(strtolower($flag), ['1', 'true', 'yes'], true);
+                }
+
+                if ($flag === true || $flag === 1 || $flag === '1') {
+                    return true;
+                }
+
+                // Legacy / inconsistent room-specific plan rows may still carry the meal plan,
+                // even when the boolean flag is not set correctly. Those rows are still valid
+                // for the frontend package filter and must be counted.
+                return property_exists($rate, 'room_id') && !blank($rate->room_id ?? null);
+            })
             ->pluck('meal_plan')
             ->map(fn ($value) => trim((string) $value))
             ->filter()
@@ -660,12 +715,21 @@ class HomeController extends Controller
                         'star_rating' => $accModel->star_rating ?? null,
                         'operator' => $accModel->operator ? ['id' => $accModel->operator->id, 'name' => $accModel->operator->name ?? ''] : null,
                         'meal_plans' => $this->collectMealPlansFromRooms($rooms),
-                        'rooms' => $rooms->map(fn($r) => [
-                            'id' => $r->id,
-                            'room_name' => $r->room_name ?? '',
-                            'max_occupancy' => $r->max_occupancy ?? null,
-                            'beds' => $r->beds ?? null,
-                        ])->values()->all(),
+                        'rooms' => $rooms->map(function ($r) {
+                            return [
+                                'id' => $r->id,
+                                'room_name' => $r->room_name ?? '',
+                                'room_type' => $r->room_type ?? '',
+                                'capacity' => (int) ($r->capacity ?? 0),
+                                'children_capacity' => (int) ($r->children_capacity ?? 0),
+                                'infant_capacity' => (int) ($r->infant_capacity ?? 0),
+                                'max_person_capacity' => (int) ($r->max_person_capacity ?? ($r->capacity ?? 0)),
+                                'allotment' => (int) ($r->allotment ?? $r->quantity ?? 1),
+                                'quantity' => (int) ($r->quantity ?? $r->allotment ?? 1),
+                                'max_occupancy' => $r->max_occupancy ?? null,
+                                'beds' => $r->beds ?? null,
+                            ];
+                        })->values()->all(),
                     ];
                 }
             }
@@ -1158,6 +1222,94 @@ class HomeController extends Controller
         ];
     }
 
+    public static function roomMatchesSelectedGuestRequirements($room, int $adults, int $children = 0, int $infants = 0, int $selectedRooms = 1): bool
+    {
+        if (!$room) {
+            return false;
+        }
+
+        $selectedRooms = max(1, $selectedRooms);
+        $roomAsArray = is_array($room) ? $room : (array) $room;
+        $roomAdults = max(0, (int) ($roomAsArray['capacity'] ?? $roomAsArray['adult_capacity'] ?? $roomAsArray['adults_capacity'] ?? 0));
+        $roomChildren = max(0, (int) ($roomAsArray['children_capacity'] ?? $roomAsArray['kids_capacity'] ?? 0));
+        $roomInfants = max(0, (int) ($roomAsArray['infant_capacity'] ?? $roomAsArray['babies_capacity'] ?? 0));
+        $roomMaxPersons = max(
+            0,
+            (int) ($roomAsArray['max_person_capacity'] ?? ($roomAdults + $roomChildren + max(0, $roomInfants - 1)))
+        );
+
+        $requiredAdultsPerRoom = (int) ceil($adults / $selectedRooms);
+        $requiredChildrenPerRoom = (int) ceil($children / $selectedRooms);
+        $requiredInfantsPerRoom = (int) ceil($infants / $selectedRooms);
+        $requiredTotalPerRoom = (int) ceil(($adults + $children + $infants) / $selectedRooms);
+
+        return $roomAdults >= $requiredAdultsPerRoom
+            && $roomChildren >= $requiredChildrenPerRoom
+            && $roomInfants >= $requiredInfantsPerRoom
+            && $roomMaxPersons >= $requiredTotalPerRoom;
+    }
+
+    private function roomMatchesGuestRequirements($room, int $adults, int $children = 0, int $infants = 0): bool
+    {
+        return self::roomMatchesSelectedGuestRequirements($room, $adults, $children, $infants, 1);
+    }
+
+    private function accommodationRoomCatalogMatchesGuestRequirements(array $roomCatalog, int $adults, int $children = 0, int $infants = 0, int $requiredRooms = 1): bool
+    {
+        $requiredRooms = max(1, $requiredRooms);
+        $roomCatalog = collect($roomCatalog)->filter(fn ($room) => is_array($room) || is_object($room));
+
+        if ($roomCatalog->isEmpty()) {
+            return false;
+        }
+
+        $totalGuests = $adults + $children + $infants;
+        $requiredAdultsPerRoom = (int) ceil($adults / max(1, $requiredRooms));
+        $requiredChildrenPerRoom = (int) ceil($children / max(1, $requiredRooms));
+        $requiredInfantsPerRoom = (int) ceil($infants / max(1, $requiredRooms));
+        $requiredGuestTotalPerRoom = (int) ceil($totalGuests / max(1, $requiredRooms));
+        $availableRoomUnits = 0;
+
+        foreach ($roomCatalog as $room) {
+            $roomAdults = max(0, (int) (($room['capacity'] ?? $room->capacity ?? 0)));
+            $roomChildren = max(0, (int) (($room['children_capacity'] ?? $room->children_capacity ?? 0)));
+            $roomInfants = max(0, (int) (($room['infant_capacity'] ?? $room->infant_capacity ?? 0)));
+            $roomMaxPersons = max(
+                0,
+                (int) (($room['max_person_capacity'] ?? $room->max_person_capacity ?? ($roomAdults + $roomChildren + max(0, $roomInfants - 1))))
+            );
+            $quantity = max(1, (int) (($room['quantity'] ?? $room['allotment'] ?? $room->quantity ?? $room->allotment ?? 1)));
+
+            if ($requiredAdultsPerRoom <= $roomAdults
+                && $requiredChildrenPerRoom <= $roomChildren
+                && $requiredInfantsPerRoom <= $roomInfants
+                && $requiredGuestTotalPerRoom <= $roomMaxPersons) {
+                $availableRoomUnits += $quantity;
+            }
+        }
+
+        return $availableRoomUnits >= $requiredRooms;
+    }
+
+    private function selectBestMatchingAccommodationRoom($rooms, int $adults, int $children = 0, int $infants = 0)
+    {
+        $candidates = collect($rooms)
+            ->filter(fn ($room) => $this->roomMatchesGuestRequirements($room, $adults, $children, $infants))
+            ->values();
+
+        if ($candidates->isEmpty()) {
+            return null;
+        }
+
+        return $candidates->sortByDesc(function ($room) {
+            $roomAdults = max(0, (int) ($room->capacity ?? 0));
+            $roomChildren = max(0, (int) ($room->children_capacity ?? 0));
+            $roomInfants = max(0, (int) ($room->infant_capacity ?? 0));
+            $roomMaxPersons = max(0, (int) ($room->max_person_capacity ?? ($roomAdults + $roomChildren + max(0, $roomInfants - 1))));
+            return (($roomMaxPersons * 1000) + ($roomAdults * 100) + ($roomChildren * 10) + $roomInfants);
+        })->first();
+    }
+
     private function calculatePackageGuestPrice(Package $package, int $adults = 2, int $children = 0, int $infants = 0): float
     {
         $itinerary = $package->itinerary ?? [];
@@ -1175,7 +1327,7 @@ class HomeController extends Controller
             }
 
             $selectedRoomIds = array_values(array_filter(array_map('intval', (array) ($dayEntry['rooms'] ?? []))));
-            $roomRate = 0.0;
+            $rooms = collect();
 
             if (empty($selectedRoomIds)) {
                 $selectedRoomIds = AccommodationRoom::where('accommodation_id', (int) $accommodationId)
@@ -1185,10 +1337,16 @@ class HomeController extends Controller
 
             foreach ($selectedRoomIds as $roomId) {
                 $room = AccommodationRoom::find((int) $roomId);
-                if (!$room) {
-                    continue;
+                if ($room) {
+                    $rooms->push($room);
                 }
+            }
 
+            $matchedRoom = $this->selectBestMatchingAccommodationRoom($rooms, $adults, $children, $infants);
+            $roomRate = 0.0;
+
+            $candidateRooms = $matchedRoom ? collect([$matchedRoom]) : $rooms;
+            foreach ($candidateRooms as $room) {
                 $rate = $room->rates()
                     ->where('is_rate_plan', true)
                     ->orderByDesc('updated_at')
@@ -1226,28 +1384,75 @@ class HomeController extends Controller
         return round($total, 2);
     }
 
+    private function calculateMinimalRequiredRoomsForGuests($rooms, int $adults, int $children = 0, int $infants = 0): int
+    {
+        $rooms = collect($rooms)->filter(fn ($room) => $room !== null);
+
+        if ($rooms->isEmpty()) {
+            return 1;
+        }
+
+        $totalGuests = $adults + $children + $infants;
+        $maxUnits = $rooms->sum(fn ($room) => max(1, (int) ($room->allotment ?? $room->quantity ?? 1)));
+
+        for ($requiredRooms = 1; $requiredRooms <= max(1, $maxUnits); $requiredRooms++) {
+            $requiredAdultsPerRoom = (int) ceil($adults / max(1, $requiredRooms));
+            $requiredChildrenPerRoom = (int) ceil($children / max(1, $requiredRooms));
+            $requiredInfantsPerRoom = (int) ceil($infants / max(1, $requiredRooms));
+            $requiredGuestTotalPerRoom = (int) ceil($totalGuests / max(1, $requiredRooms));
+            $availableRoomUnits = 0;
+
+            foreach ($rooms as $room) {
+                $roomAdults = max(0, (int) ($room->capacity ?? 0));
+                $roomChildren = max(0, (int) ($room->children_capacity ?? 0));
+                $roomInfants = max(0, (int) ($room->infant_capacity ?? 0));
+                $roomMaxPersons = max(0, (int) ($room->max_person_capacity ?? ($roomAdults + $roomChildren + max(0, $roomInfants - 1))));
+                $quantity = max(1, (int) ($room->allotment ?? $room->quantity ?? 1));
+
+                if ($requiredAdultsPerRoom <= $roomAdults
+                    && $requiredChildrenPerRoom <= $roomChildren
+                    && $requiredInfantsPerRoom <= $roomInfants
+                    && $requiredGuestTotalPerRoom <= $roomMaxPersons) {
+                    $availableRoomUnits += $quantity;
+                }
+            }
+
+            if ($availableRoomUnits >= $requiredRooms) {
+                return $requiredRooms;
+            }
+        }
+
+        return max(1, (int) ceil($totalGuests / max(1, $rooms->max(fn ($room) => max(1, (int) ($room->max_person_capacity ?? 1))))));
+    }
+
     private function matchesPackageGuestCapacity($rooms, int $adults, int $children = 0, int $requiredRooms = 1): bool
     {
-        $rooms = collect($rooms);
+        $rooms = collect($rooms)->filter(fn ($room) => $room !== null);
 
-        if ($rooms->isEmpty() || $requiredRooms < 1) {
+        if ($rooms->isEmpty()) {
             return false;
         }
 
+        if ($requiredRooms < 1) {
+            $requiredRooms = $this->calculateMinimalRequiredRoomsForGuests($rooms, $adults, $children, 0);
+        }
+
+        $totalGuests = $adults + $children;
         $requiredAdultsPerRoom = (int) ceil($adults / max(1, $requiredRooms));
-        $requiredChildrenPerRoom = (int) ceil($children / max(1, $requiredRooms));
+        $requiredGuestTotalPerRoom = (int) ceil($totalGuests / max(1, $requiredRooms));
         $availableRoomUnits = 0;
 
         foreach ($rooms as $room) {
-            if (!$room) {
-                continue;
-            }
-
             $roomAdults = max(0, (int) ($room->capacity ?? 0));
             $roomChildren = max(0, (int) ($room->children_capacity ?? 0));
-            $quantity = max(1, (int) ($room->quantity ?? 1));
+            $roomInfants = max(0, (int) ($room->infant_capacity ?? 0));
+            $roomMaxPersons = max(0, (int) ($room->max_person_capacity ?? ($roomAdults + $roomChildren + max(0, $roomInfants - 1))));
+            $quantity = max(1, (int) ($room->allotment ?? $room->quantity ?? 1));
 
-            if ($requiredAdultsPerRoom <= $roomAdults && $requiredChildrenPerRoom <= $roomChildren) {
+            if ($requiredAdultsPerRoom <= $roomAdults
+                && $requiredGuestTotalPerRoom <= $roomMaxPersons
+                && ($children === 0 || $requiredGuestTotalPerRoom <= $roomMaxPersons)
+                && $roomInfants >= 0) {
                 $availableRoomUnits += $quantity;
             }
         }
@@ -1302,7 +1507,11 @@ class HomeController extends Controller
                 continue;
             }
 
-            if ($this->matchesPackageGuestCapacity($accommodation->rooms, $adults, $children + $infants, $roomsRequired)) {
+            $requiredRoomsForAccommodation = $roomsRequired > 0
+                ? $roomsRequired
+                : $this->calculateMinimalRequiredRoomsForGuests($accommodation->rooms, $adults, $children, $infants);
+
+            if ($this->matchesPackageGuestCapacity($accommodation->rooms, $adults, $children + $infants, $requiredRoomsForAccommodation)) {
                 return true;
             }
         }
@@ -2702,6 +2911,8 @@ class HomeController extends Controller
         $infants = max(0, (int) $request->query('infants', 0));
         $nights = max(1, $checkIn->diffInDays($checkOut));
 
+        $rooms = max(1, (int) $request->query('rooms', 1));
+
         return [
             'check_in' => $checkIn->toDateString(),
             'check_out' => $checkOut->toDateString(),
@@ -2710,6 +2921,7 @@ class HomeController extends Controller
             'adults' => $adults,
             'children' => $children,
             'infants' => $infants,
+            'rooms' => $rooms,
             'total_guests' => $adults + $children + $infants,
             'nights' => $nights,
         ];
@@ -2825,7 +3037,7 @@ class HomeController extends Controller
         });
         $allowGlobalFallback = $activeRooms->count() <= 1;
         $globalRates = $rates->filter(function ($rate) {
-            return empty($rate->room_id);
+            return empty($rate->room_id) && filter_var($rate->is_rate_plan ?? false, FILTER_VALIDATE_BOOLEAN);
         });
 
         $inventoryByRoomDate = [];
@@ -2881,7 +3093,14 @@ class HomeController extends Controller
             }
 
             $roomRates = $rates->filter(function ($rate) use ($room) {
-                return (int) ($rate->room_id ?? 0) === (int) $room->id;
+                return (int) ($rate->room_id ?? 0) === (int) $room->id
+                    && filter_var($rate->is_rate_plan ?? false, FILTER_VALIDATE_BOOLEAN);
+            });
+
+            $defaultRoomRates = $rates->filter(function ($rate) use ($room) {
+                return (int) ($rate->room_id ?? 0) === (int) $room->id
+                    && !filter_var($rate->is_rate_plan ?? false, FILTER_VALIDATE_BOOLEAN)
+                    && filter_var($rate->is_default ?? false, FILTER_VALIDATE_BOOLEAN);
             });
 
             $candidateRates = $roomRates->isNotEmpty() ? $roomRates : $globalRates;
@@ -2897,9 +3116,25 @@ class HomeController extends Controller
 
                 foreach ($groupedByPricingSetting as $pricingSetting => $settingRates) {
                     $bestRateData = $settingRates
-                        ->map(function ($rate) use ($bookingContext, $room) {
+                        ->map(function ($rate) use ($bookingContext, $room, $defaultRoomRates) {
+                            $effectiveRate = $rate;
+                            if (($rate->final_rate ?? $rate->base_rate ?? 0) <= 0 || ($rate->final_rate ?? $rate->base_rate ?? 0) === null) {
+                                $defaultMatch = $defaultRoomRates
+                                    ->filter(function ($defaultRate) use ($rate) {
+                                        return trim((string) ($defaultRate->rate_name ?? '')) === trim((string) ($rate->rate_name ?? ''))
+                                            && trim((string) ($defaultRate->meal_plan ?? '')) === trim((string) ($rate->meal_plan ?? ''))
+                                            && trim((string) ($defaultRate->pricing_setting ?? '')) === trim((string) ($rate->pricing_setting ?? ''));
+                                    })
+                                    ->sortByDesc(fn ($defaultRate) => (float) ($defaultRate->final_rate ?? $defaultRate->base_rate ?? 0))
+                                    ->first();
+
+                                if ($defaultMatch) {
+                                    $effectiveRate = $defaultMatch;
+                                }
+                            }
+
                             $nightly = $this->calculateAccommodationNightlyTotal(
-                                $rate,
+                                $effectiveRate,
                                 (int) $bookingContext['adults'],
                                 (int) $bookingContext['children'],
                                 (int) ($bookingContext['infants'] ?? 0),
@@ -2909,7 +3144,7 @@ class HomeController extends Controller
                             );
 
                             return [
-                                'rate' => $rate,
+                                'rate' => $effectiveRate,
                                 'nightly' => $nightly,
                             ];
                         })
@@ -2947,9 +3182,25 @@ class HomeController extends Controller
 
                 foreach ($groupedByPricingSetting as $pricingSetting => $settingRates) {
                     $bestRateData = $settingRates
-                        ->map(function ($rate) use ($bookingContext, $room) {
+                        ->map(function ($rate) use ($bookingContext, $room, $defaultRoomRates) {
+                            $effectiveRate = $rate;
+                            if (($rate->final_rate ?? $rate->base_rate ?? 0) <= 0 || ($rate->final_rate ?? $rate->base_rate ?? 0) === null) {
+                                $defaultMatch = $defaultRoomRates
+                                    ->filter(function ($defaultRate) use ($rate) {
+                                        return trim((string) ($defaultRate->rate_name ?? '')) === trim((string) ($rate->rate_name ?? ''))
+                                            && trim((string) ($defaultRate->meal_plan ?? '')) === trim((string) ($rate->meal_plan ?? ''))
+                                            && trim((string) ($defaultRate->pricing_setting ?? '')) === trim((string) ($rate->pricing_setting ?? ''));
+                                    })
+                                    ->sortByDesc(fn ($defaultRate) => (float) ($defaultRate->final_rate ?? $defaultRate->base_rate ?? 0))
+                                    ->first();
+
+                                if ($defaultMatch) {
+                                    $effectiveRate = $defaultMatch;
+                                }
+                            }
+
                             $nightly = $this->calculateAccommodationNightlyTotal(
-                                $rate,
+                                $effectiveRate,
                                 (int) $bookingContext['adults'],
                                 (int) $bookingContext['children'],
                                 (int) ($bookingContext['infants'] ?? 0),
@@ -2959,7 +3210,7 @@ class HomeController extends Controller
                             );
 
                             return [
-                                'rate' => $rate,
+                                'rate' => $effectiveRate,
                                 'nightly' => $nightly,
                             ];
                         })
@@ -3003,6 +3254,11 @@ class HomeController extends Controller
                 ? (int) $room->allotment
                 : (int) ($room->quantity ?? 0);
             $baseUnits = $baseUnits > 0 ? $baseUnits : 1;
+
+            $placeholderRate = $rates->filter(function ($rate) use ($room) {
+                return (int) ($rate->room_id ?? 0) === (int) $room->id
+                    && filter_var($rate->is_rate_plan ?? false, FILTER_VALIDATE_BOOLEAN);
+            })->first();
 
             $minimumAvailable = null;
 
@@ -3054,26 +3310,29 @@ class HomeController extends Controller
 
             // Add a pricing option for each applicable plan
             if (empty($pricingOptions)) {
-                // Fallback: use base_price if no rates available
-                $nightlyPrice = $room->base_price !== null ? (float) $room->base_price : null;
-                if ($nightlyPrice !== null && $nightlyPrice > 0) {
-                    $totalPrice = round($nightlyPrice * (int) $bookingContext['nights'], 2);
-                    $results[] = [
-                        'room_id' => (int) $room->id,
-                        'room_name' => (string) ($room->room_name ?: ($room->room_type ?: 'Room')),
-                        'room_type' => $room->room_type,
-                        'quantity' => $quantity,
-                        'nightly_price' => $nightlyPrice,
-                        'total_price' => $totalPrice,
-                        'currency' => $accommodation->currency_code ?? 'USD',
-                        'pricing_setting' => 'Per Room/Night',
-                        'plan_label' => 'Standard Rate',
-                        'rate_id' => null,
-                        'rate_name' => null,
-                        'meal_plan' => null,
-                        'inclusions' => null,
-                    ];
-                }
+                $fallbackPrice = $room->base_price !== null ? (float) $room->base_price : null;
+                $fallbackTotal = $fallbackPrice !== null && $fallbackPrice > 0
+                    ? round($fallbackPrice * (int) $bookingContext['nights'], 2)
+                    : null;
+                $planLabel = $placeholderRate && !blank($placeholderRate->rate_name)
+                    ? trim((string) $placeholderRate->rate_name)
+                    : 'Standard Rate';
+
+                $results[] = [
+                    'room_id' => (int) $room->id,
+                    'room_name' => (string) ($room->room_name ?: ($room->room_type ?: 'Room')),
+                    'room_type' => $room->room_type,
+                    'quantity' => $quantity,
+                    'nightly_price' => $fallbackPrice,
+                    'total_price' => $fallbackTotal,
+                    'currency' => $accommodation->currency_code ?? 'USD',
+                    'pricing_setting' => 'Per Room/Night',
+                    'plan_label' => $planLabel,
+                    'rate_id' => $placeholderRate ? $placeholderRate->id : null,
+                    'rate_name' => $placeholderRate ? (string) ($placeholderRate->rate_name ?? '') : null,
+                    'meal_plan' => $placeholderRate ? ($placeholderRate->meal_plan ?? null) : null,
+                    'inclusions' => $placeholderRate && !empty($placeholderRate->inclusions) ? $placeholderRate->inclusions : null,
+                ];
             } else {
                 // Add each pricing option as a separate item
                 foreach ($pricingOptions as $option) {
@@ -3704,25 +3963,23 @@ class HomeController extends Controller
             $adults = $filters['adults'];
             $children = $filters['children'];
             $infants = $filters['infants'] ?? 0;
-            $effectivePersons = $adults + $children + max(0, $infants - 1);
+            $requiredRooms = max(1, (int) ($filters['rooms'] ?? 1));
 
-            $items = $items->filter(function (array $item) use ($adults, $children, $infants, $effectivePersons) {
+            $items = $items->filter(function (array $item) use ($adults, $children, $infants, $requiredRooms) {
                 $roomCatalog = $item['room_catalog'] ?? [];
-                foreach ($roomCatalog as $room) {
-                    $roomAdults = (int) ($room['capacity'] ?? 0);
-                    $roomChildren = (int) ($room['children_capacity'] ?? 0);
-                    $roomInfants = (int) ($room['infant_capacity'] ?? 0);
-                    $roomMaxPersons = (int) ($room['max_person_capacity'] ?? ($roomAdults + $roomChildren + max(0, $roomInfants - 1)));
 
-                    if ($roomAdults >= $adults
-                        && $roomChildren >= $children
-                        && $roomInfants >= $infants
-                        && $roomMaxPersons >= $effectivePersons) {
+                if (!is_array($roomCatalog) && !($roomCatalog instanceof \Traversable)) {
+                    return false;
+                }
+
+                foreach ($roomCatalog as $room) {
+                    $roomArray = is_array($room) ? $room : (array) $room;
+                    if ($this->accommodationRoomCatalogMatchesGuestRequirements([$roomArray], $adults, $children, $infants, $requiredRooms)) {
                         return true;
                     }
                 }
 
-                return false;
+                return $this->accommodationRoomCatalogMatchesGuestRequirements($roomCatalog, $adults, $children, $infants, $requiredRooms);
             });
         }
 

@@ -155,9 +155,62 @@
                         <input type="hidden" name="package_start_date" value="{{ $packageStartDate }}">
                     @endif
                     {{-- include guest selectors for user to change and recalc via query params if needed --}}
-                    <input type="hidden" name="adults" value="{{ request()->query('adults', 2) }}">
-                    <input type="hidden" name="children" value="{{ request()->query('children', 0) }}">
-                    <input type="hidden" name="infants" value="{{ request()->query('infants', 0) }}">
+                    @php
+                        $packageAdults = max(1, (int) request()->query('adults', 2));
+                        $packageChildren = max(0, (int) request()->query('children', 0));
+                        $packageInfants = max(0, (int) request()->query('infants', 0));
+                        $packageRoomsRequired = 1;
+                        $packageRoomCatalog = collect($itineraryDays ?? [])->pluck('accommodation.rooms')->flatten(1)->filter();
+                        if ($packageRoomCatalog->isNotEmpty()) {
+                            $maxPackageRoomUnits = max(1, (int) $packageRoomCatalog->count());
+                            for ($candidateRooms = 1; $candidateRooms <= $maxPackageRoomUnits; $candidateRooms++) {
+                                $availableUnits = 0;
+                                foreach ($packageRoomCatalog as $room) {
+                                    if (\App\Http\Controllers\Frontend\HomeController::roomMatchesSelectedGuestRequirements(
+                                        $room,
+                                        $packageAdults,
+                                        $packageChildren,
+                                        $packageInfants,
+                                        $candidateRooms
+                                    )) {
+                                        $availableUnits += max(1, (int) ($room->allotment ?? $room->quantity ?? 1));
+                                    }
+                                }
+                                if ($availableUnits >= $candidateRooms) {
+                                    $packageRoomsRequired = $candidateRooms;
+                                    break;
+                                }
+                            }
+                        }
+                        $packageRoomsRequired = max(1, $packageRoomsRequired);
+                    @endphp
+                    @php
+                        $packagePlanLabel = '';
+                        $packageMealPlan = '';
+                        foreach (($itineraryDays ?? []) as $day) {
+                            $mealPlans = $day['accommodation']['meal_plans'] ?? [];
+                            if (!empty($mealPlans)) {
+                                $packageMealPlan = trim((string) collect($mealPlans)->first());
+                                if ($packageMealPlan !== '') {
+                                    $packagePlanLabel = $packageMealPlan;
+                                    break;
+                                }
+                            }
+                        }
+                        if ($packagePlanLabel === '') {
+                            $packageMealPlan = 'Breakfast';
+                            $packagePlanLabel = 'Breakfast';
+                        }
+                    @endphp
+                    <input type="hidden" name="adults" value="{{ $packageAdults }}">
+                    <input type="hidden" name="children" value="{{ $packageChildren }}">
+                    <input type="hidden" name="infants" value="{{ $packageInfants }}">
+                    <input type="hidden" name="rooms" value="{{ $packageRoomsRequired }}">
+                    <input type="hidden" name="rooms_required" value="{{ $packageRoomsRequired }}">
+                    <input type="hidden" name="room_name" value="Standard Room">
+                    <input type="hidden" name="plan_label" value="{{ $packagePlanLabel }}">
+                    <input type="hidden" name="rate_name" value="Package">
+                    <input type="hidden" name="meal_plan" value="{{ $packageMealPlan }}">
                     <button type="submit" style="width:100%; background:#f39b4a; border:none; border-radius:8px; color:#fff; font-size:18px; font-weight:800; padding:14px 16px; cursor:pointer; text-transform: uppercase; letter-spacing: .05em;">{{ __('package.add_to_cart') }}</button>
                 </form>
             </aside>

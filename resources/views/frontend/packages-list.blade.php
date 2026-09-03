@@ -181,7 +181,7 @@
         </script>
 
         <div class="package-list-shell" style="display:flex; gap:24px; align-items:flex-start; margin-top:24px;">
-            <aside class="package-filter-panel" style="width: 290px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+            <!-- <aside class="package-filter-panel" style="width: 290px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
                 <h3 style="margin:0 0 18px; font-size: 18px; font-weight: 700; color:#273246;">{{ __('filters.by') }}</h3>
                 <div style="margin-bottom:22px;">
                     <div style="font-weight:700; color:#2d3748; margin-bottom:10px;">{{ __('category.filter.property_type') }}</div>
@@ -217,7 +217,7 @@
                     <button type="button" style="background:#f39b4a; border:none; border-radius:8px; color:#fff; font-weight:700; padding:12px 16px; cursor:pointer;">{{ __('filters.apply') }}</button>
                     <button type="button" style="background:none; border:none; color:#4a5568; text-decoration:underline; cursor:pointer;">{{ __('filters.clear') }}</button>
                 </div>
-            </aside>
+            </aside> -->
 
             <div style="flex:1; min-width:0;">
                 <div style="background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px 22px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
@@ -225,13 +225,21 @@
                     <div style="margin-top:8px; color:#667085; font-size:14px;">{{ trans_choice('package.listings_found', $packages->count(), ['count' => $packages->count()]) }}</div>
                 </div>
 
+                    @if($packages->isEmpty())
+                        <div style="margin-top:12px; padding:12px; background:#fff7ed; border:1px solid #fde3c6; color:#7a4a00; border-radius:8px;">
+                            No packages match the selected number of travellers (Adults + Children). Try adjusting the guest counts or travel date.
+                        </div>
+                    @endif
+
                 @forelse($packages as $package)
                     @php
                         $content = $package->itinerary['content'] ?? [];
                         $gallery = $content['gallery'] ?? [];
                         $mainImage = !empty($gallery) ? asset('storage/' . $gallery[0]) : asset('images/holidays-io-logo.png');
                         $title = $package->name ?: 'Package';
-                        $days = (int) ($package->no_of_days ?? 0);
+                        $days = max(0, (int) ($package->no_of_days ?? 0));
+                        $nights = max(0, (int) ($package->no_of_nights ?? max(0, $days - 1)));
+                        $daysNightsLabel = ($days > 0 || $nights > 0) ? sprintf('%dD%dN', $days, $nights) : '';
                     @endphp
 
                     <article style="margin-top:20px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
@@ -268,6 +276,12 @@
                                     <h3 style="margin:0; font-size: 20px; line-height: 1.3; color:#f39b4a; font-weight:800;">
                                         {{ $title }}
                                     </h3>
+
+                                    @if(!empty($daysNightsLabel))
+                                        <div style="margin-top:10px; display:inline-block; padding:6px 10px; border-radius:999px; background:#fff7ed; color:#b45309; font-size:12px; font-weight:700; letter-spacing:0.04em;">
+                                            {{ $daysNightsLabel }}
+                                        </div>
+                                    @endif
 
                                     <div style="margin-top:10px; color:#4d5a66; font-size:15px;">
                                         {{ trans_choice('cart.nights', $days, ['count' => $days]) }}

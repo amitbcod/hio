@@ -334,6 +334,167 @@ class BookingController extends Controller
         $startDate = $request->input('package_start_date') ?: now()->toDateString();
         $endDate = $request->input('package_end_date') ?: Carbon::parse($startDate)->addDays(max(1, $days - 1))->toDateString();
 
+        $adults = max(1, (int) $request->input('adults', 2));
+        $children = max(0, (int) $request->input('children', 0));
+        $infants = max(0, (int) $request->input('infants', 0));
+
+        $roomName = trim((string) $request->input('room_name', 'Standard Room'));
+        if ($roomName === '') {
+            $roomName = 'Standard Room';
+        }
+
+        $planLabel = trim((string) $request->input('plan_label', ''));
+        $rateName = trim((string) $request->input('rate_name', ''));
+        $mealPlan = trim((string) $request->input('meal_plan', ''));
+        if ($planLabel === '' && $rateName !== '') {
+            $planLabel = $rateName;
+            if ($mealPlan !== '') {
+                $planLabel .= ' - ' . $mealPlan;
+            }
+        } elseif ($planLabel === '' && $mealPlan !== '') {
+            $planLabel = $mealPlan;
+        }
+
+        $requestedRooms = max(1, (int) $request->input('rooms', $request->input('rooms_required', 1)));
+        $roomsRequired = $requestedRooms;
+        $fallbackGuestRoomEstimate = max(1, (int) ceil(($adults + $children + $infants) / 3));
+
+        if ($packageId && \Illuminate\Support\Facades\Schema::hasTable('packages')) {
+            $package = \App\Models\Package::find($packageId);
+            if ($package) {
+                $selectedAccommodations = [];
+                foreach ($package->itinerary ?? [] as $dayData) {
+                    if (!is_array($dayData) || !isset($dayData['accommodation'])) {
+                        continue;
+                    }
+                    $accommodationId = (int) $dayData['accommodation'];
+                    if ($accommodationId > 0) {
+                        $selectedAccommodations[] = $accommodationId;
+                    }
+                }
+
+                if (!empty($selectedAccommodations)) {
+                    $accommodationId = (int) array_values(array_unique($selectedAccommodations))[0];
+                    $accommodation = \App\Models\Accommodation::with('rooms')->find($accommodationId);
+                    if ($accommodation && !$accommodation->rooms->isEmpty()) {
+                        $fallbackGuestRoomEstimate = 1;
+                        for ($candidateRooms = 1; $candidateRooms <= max(1, (int) $accommodation->rooms->count()); $candidateRooms++) {
+                            $availableUnits = 0;
+                            foreach ($accommodation->rooms as $room) {
+                                if (\App\Http\Controllers\Frontend\HomeController::roomMatchesSelectedGuestRequirements(
+                                    $room,
+                                    $adults,
+                                    $children,
+                                    $infants,
+                                    $candidateRooms
+                                )) {
+                                    $availableUnits += max(1, (int) ($room->allotment ?? $room->quantity ?? 1));
+                                }
+                            }
+
+                            if ($availableUnits >= $candidateRooms) {
+                                $fallbackGuestRoomEstimate = $candidateRooms;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $minimumRequiredRooms = max($fallbackGuestRoomEstimate, 1);
+
+        if ($packageId && \Illuminate\Support\Facades\Schema::hasTable('packages')) {
+            $package = \App\Models\Package::find($packageId);
+            if ($package) {
+                $selectedAccommodations = [];
+                foreach ($package->itinerary ?? [] as $dayData) {
+                    if (!is_array($dayData) || !isset($dayData['accommodation'])) {
+                        continue;
+                    }
+                    $accommodationId = (int) $dayData['accommodation'];
+                    if ($accommodationId > 0) {
+                        $selectedAccommodations[] = $accommodationId;
+                    }
+                }
+
+                if (!empty($selectedAccommodations)) {
+                    $accommodationId = (int) array_values(array_unique($selectedAccommodations))[0];
+                    $accommodation = \App\Models\Accommodation::with('rooms')->find($accommodationId);
+                    if ($accommodation && !$accommodation->rooms->isEmpty()) {
+                        $maxRoomUnits = max(1, (int) $accommodation->rooms->sum(fn ($room) => max(1, (int) ($room->allotment ?? $room->quantity ?? 1))));
+                        $minimumRequiredRooms = 1;
+
+                        for ($candidateRooms = 1; $candidateRooms <= $maxRoomUnits; $candidateRooms++) {
+                            $availableUnits = 0;
+                            foreach ($accommodation->rooms as $room) {
+                                if (\App\Http\Controllers\Frontend\HomeController::roomMatchesSelectedGuestRequirements(
+                                    $room,
+                                    $adults,
+                                    $children,
+                                    $infants,
+                                    $candidateRooms
+                                )) {
+                                    $availableUnits += max(1, (int) ($room->allotment ?? $room->quantity ?? 1));
+                                }
+                            }
+
+                            if ($availableUnits >= $candidateRooms) {
+                                $minimumRequiredRooms = $candidateRooms;
+                                break;
+                            }
+                        }
+
+                        $minimumRequiredRooms = max($minimumRequiredRooms, $fallbackGuestRoomEstimate);
+
+                        $roomsRequired = max($requestedRooms, $minimumRequiredRooms);
+
+                        if ($roomsRequired > 1 && $accommodation->rooms->isNotEmpty()) {
+                            $preferredRoom = $accommodation->rooms
+                                ->filter(function ($room) use ($adults, $children, $infants) {
+                                    return \App\Http\Controllers\Frontend\HomeController::roomMatchesSelectedGuestRequirements($room, $adults, $children, $infants, 1)
+                                        || \App\Http\Controllers\Frontend\HomeController::roomMatchesSelectedGuestRequirements($room, $adults, $children, $infants, 2);
+                                })
+                                ->sortByDesc(function ($room) {
+                                    return max(0, (int) ($room->max_person_capacity ?? ($room->capacity ?? 0)));
+                                })
+                                ->first();
+
+                            if ($preferredRoom) {
+                                $roomName = trim((string) ($preferredRoom->room_name ?: ($preferredRoom->room_type ?: 'Standard Room')));
+                                if ($roomName === '') {
+                                    $roomName = 'Standard Room';
+                                }
+                            }
+                        }
+
+                        $preferredRoom = $accommodation->rooms
+                            ->filter(function ($room) use ($adults, $children, $infants) {
+                                $roomAdults = max(0, (int) ($room->capacity ?? 0));
+                                $roomChildren = max(0, (int) ($room->children_capacity ?? 0));
+                                $roomInfants = max(0, (int) ($room->infant_capacity ?? 0));
+                                $roomMax = max(0, (int) ($room->max_person_capacity ?? ($roomAdults + $roomChildren + max(0, $roomInfants - 1))));
+                                return $roomAdults >= $adults
+                                    && $roomChildren >= $children
+                                    && $roomInfants >= $infants
+                                    && $roomMax >= ($adults + $children + $infants);
+                            })
+                            ->sortByDesc(function ($room) {
+                                return max(0, (int) ($room->max_person_capacity ?? ($room->capacity ?? 0)));
+                            })
+                            ->first();
+
+                        if ($preferredRoom) {
+                            $roomName = trim((string) ($preferredRoom->room_name ?: ($preferredRoom->room_type ?: 'Standard Room')));
+                            if ($roomName === '') {
+                                $roomName = 'Standard Room';
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         return [
             'cart_key' => uniqid('pkg_', true),
             'type' => 'package',
@@ -347,9 +508,14 @@ class BookingController extends Controller
             'check_out_display' => Carbon::parse($endDate)->format('d/m/Y'),
             'nights' => $nights,
             'days' => $days,
-            'adults' => max(1, (int) $request->input('adults', 2)),
-            'children' => max(0, (int) $request->input('children', 0)),
-            'infants' => max(0, (int) $request->input('infants', 0)),
+            'adults' => $adults,
+            'children' => $children,
+            'infants' => $infants,
+            'rooms' => $roomsRequired,
+            'room_name' => $roomName,
+            'plan_label' => $planLabel,
+            'rate_name' => $rateName,
+            'meal_plan' => $mealPlan,
             'total_price' => $packageTotal,
             'currency' => $currency,
             'discount_amount' => 0.0,
@@ -519,29 +685,80 @@ class BookingController extends Controller
     }
 
     /**
+     * Check whether a room can host the travellers in a single bedroom.
+     */
+    private function roomMatchesGuestRequirements($room, int $adults, int $children = 0, int $infants = 0): bool
+    {
+        if (!$room) {
+            return false;
+        }
+
+        $roomAdults = max(0, (int) ($room->capacity ?? 0));
+        $roomChildren = max(0, (int) ($room->children_capacity ?? 0));
+        $roomInfants = max(0, (int) ($room->infant_capacity ?? 0));
+        $roomMaxPersons = max(
+            0,
+            (int) ($room->max_person_capacity ?? ($roomAdults + $roomChildren + max(0, $roomInfants - 1)))
+        );
+
+        $totalGuests = $adults + $children + $infants;
+
+        return $roomAdults >= $adults
+            && $roomChildren >= $children
+            && $roomInfants >= $infants
+            && $roomMaxPersons >= $totalGuests;
+    }
+
+    private function selectBestMatchingRoomForGuests($rooms, int $adults, int $children = 0, int $infants = 0)
+    {
+        $candidates = collect($rooms)
+            ->filter(fn ($room) => $this->roomMatchesGuestRequirements($room, $adults, $children, $infants))
+            ->values();
+
+        if ($candidates->isEmpty()) {
+            return null;
+        }
+
+        return $candidates->sortByDesc(function ($room) {
+            $roomAdults = max(0, (int) ($room->capacity ?? 0));
+            $roomChildren = max(0, (int) ($room->children_capacity ?? 0));
+            $roomInfants = max(0, (int) ($room->infant_capacity ?? 0));
+            $roomMaxPersons = max(0, (int) ($room->max_person_capacity ?? ($roomAdults + $roomChildren + max(0, $roomInfants - 1))));
+            return (($roomMaxPersons * 1000) + ($roomAdults * 100) + ($roomChildren * 10) + $roomInfants);
+        })->first();
+    }
+
+    /**
      * Helper: find minimal rooms required given a set of room models and guest counts.
      */
     private function findMinimalRequiredRooms($rooms, int $adults, int $children = 0, int $infants = 0): int
     {
-        $roomsCollection = collect($rooms);
+        $roomsCollection = collect($rooms)->filter(fn ($room) => $room && $this->roomMatchesGuestRequirements($room, max(0, $adults), max(0, $children), max(0, $infants)));
         $maxUnits = $roomsCollection->sum(function ($r) {
             return max(1, (int) ($r->quantity ?? 1));
         });
 
-        $childrenTotal = $children + $infants;
+        $totalGuests = $adults + $children + $infants;
 
         for ($r = 1; $r <= max(1, $maxUnits); $r++) {
             $requiredAdultsPerRoom = (int) ceil($adults / max(1, $r));
-            $requiredChildrenPerRoom = (int) ceil($childrenTotal / max(1, $r));
+            $requiredChildrenPerRoom = (int) ceil($children / max(1, $r));
+            $requiredInfantsPerRoom = (int) ceil($infants / max(1, $r));
+            $requiredGuestsPerRoom = (int) ceil($totalGuests / max(1, $r));
 
             $availableRoomUnits = 0;
             foreach ($roomsCollection as $room) {
                 if (!$room) continue;
                 $roomAdults = max(0, (int) ($room->capacity ?? 0));
                 $roomChildren = max(0, (int) ($room->children_capacity ?? 0));
+                $roomInfants = max(0, (int) ($room->infant_capacity ?? 0));
+                $roomMaxPersons = max(0, (int) ($room->max_person_capacity ?? ($roomAdults + $roomChildren + max(0, $roomInfants - 1))));
                 $quantity = max(1, (int) ($room->quantity ?? 1));
 
-                if ($requiredAdultsPerRoom <= $roomAdults && $requiredChildrenPerRoom <= $roomChildren) {
+                if ($requiredAdultsPerRoom <= $roomAdults
+                    && $requiredChildrenPerRoom <= $roomChildren
+                    && $requiredInfantsPerRoom <= $roomInfants
+                    && $requiredGuestsPerRoom <= $roomMaxPersons) {
                     $availableRoomUnits += $quantity;
                 }
             }
@@ -551,27 +768,43 @@ class BookingController extends Controller
             }
         }
 
-        // fallback to 1
-        return 1;
+        return max(1, $roomsCollection->count() > 0 ? 1 : 1);
     }
 
     /**
      * Greedy allocate room counts across available room types to reach requiredRooms.
      * Returns map room_id => count.
      */
-    private function allocateRoomsGreedy($rooms, int $requiredRooms): array
+    private function allocateRoomsGreedy($rooms, int $requiredRooms, int $adults = 0, int $children = 0, int $infants = 0): array
     {
-        $rooms = collect($rooms)->map(function ($r) {
-            return [
-                'id' => (int) $r->id,
-                'capacity' => (int) ($r->max_person_capacity ?? ((int) ($r->capacity ?? 0) + (int) ($r->children_capacity ?? 0) + max(0, ((int) ($r->infant_capacity ?? 0) - 1)))),
-                'quantity' => max(1, (int) ($r->quantity ?? 1)),
-            ];
-        })->sortByDesc('capacity')->values();
+        $eligibleRooms = collect($rooms)
+            ->filter(function ($r) use ($adults, $children, $infants) {
+                return $this->roomMatchesGuestRequirements($r, $adults, $children, $infants)
+                    || (bool) $this->selectBestMatchingRoomForGuests(collect([$r]), $adults, $children, $infants);
+            })
+            ->map(function ($r) {
+                return [
+                    'id' => (int) $r->id,
+                    'capacity' => (int) ($r->max_person_capacity ?? ((int) ($r->capacity ?? 0) + (int) ($r->children_capacity ?? 0) + max(0, ((int) ($r->infant_capacity ?? 0) - 1)))),
+                    'quantity' => max(1, (int) ($r->quantity ?? 1)),
+                ];
+            })
+            ->sortByDesc('capacity')
+            ->values();
+
+        if ($eligibleRooms->isEmpty()) {
+            $eligibleRooms = collect($rooms)->map(function ($r) {
+                return [
+                    'id' => (int) $r->id,
+                    'capacity' => (int) ($r->max_person_capacity ?? ((int) ($r->capacity ?? 0) + (int) ($r->children_capacity ?? 0) + max(0, ((int) ($r->infant_capacity ?? 0) - 1)))),
+                    'quantity' => max(1, (int) ($r->quantity ?? 1)),
+                ];
+            })->sortByDesc('capacity')->values();
+        }
 
         $alloc = [];
         $remaining = $requiredRooms;
-        foreach ($rooms as $room) {
+        foreach ($eligibleRooms as $room) {
             if ($remaining <= 0) break;
             $take = min($room['quantity'], $remaining);
             if ($take > 0) {
@@ -581,8 +814,7 @@ class BookingController extends Controller
         }
 
         if ($remaining > 0) {
-            // If still remaining, expand by adding 1 from largest capacity rooms until satisfied
-            foreach ($rooms as $room) {
+            foreach ($eligibleRooms as $room) {
                 if ($remaining <= 0) break;
                 $alloc[$room['id']] = ($alloc[$room['id']] ?? 0) + 1;
                 $remaining--;
@@ -1518,8 +1750,8 @@ class BookingController extends Controller
 
                                 $requiredRooms = $this->findMinimalRequiredRooms($rooms, $adults, $children, $infants);
 
-                                // Allocate rooms (greedy). returns map room_id => count
-                                $allocation = $this->allocateRoomsGreedy($rooms, $requiredRooms);
+                                // Allocate only rooms that actually fit the traveller profile.
+                                $allocation = $this->allocateRoomsGreedy($rooms, $requiredRooms, $adults, $children, $infants);
 
                                 // Reserve inventory for each allocated room type for the single night
                                 foreach ($allocation as $roomId => $count) {

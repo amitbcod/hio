@@ -150,6 +150,10 @@
                             <label>{{ __('accommodation.form.infants') }}</label>
                             <input type="number" name="infants" min="0" value="{{ $booking['infants'] }}" class="booking-input">
                         </div>
+                        <div class="booking-field">
+                            <label>Rooms</label>
+                            <input type="number" name="rooms" min="1" value="{{ request()->query('rooms', $booking['rooms'] ?? 1) }}" class="booking-input">
+                        </div>
                         
                         @if(!empty($accommodation['booking_confirmation_type']))
                             <span class="hero-chip">{{ $accommodation['booking_confirmation_type'] }} booking</span> 
@@ -242,11 +246,22 @@
                                 $nights = max(1, (int) ($booking['nights'] ?? 1));
                                 $firstVariant = $roomVariants->first();
                             @endphp
+                            @php
+                                $selectedRoomsCount = max(1, (int) request()->query('rooms', $booking['rooms'] ?? 1));
+                                $roomIsValidForSelectedGuests = App\Http\Controllers\Frontend\HomeController::roomMatchesSelectedGuestRequirements(
+                                    $roomDetail,
+                                    (int) ($booking['adults'] ?? 1),
+                                    (int) ($booking['children'] ?? 0),
+                                    (int) ($booking['infants'] ?? 0),
+                                    $selectedRoomsCount
+                                );
+                            @endphp
                             <div class="room-option-item"
                                 data-room-adults="{{ (int) ($roomDetail['capacity'] ?? 0) }}"
                                 data-room-children="{{ (int) ($roomDetail['children_capacity'] ?? 0) }}"
                                 data-room-infants="{{ (int) ($roomDetail['infant_capacity'] ?? 0) }}"
-                                data-room-max-persons="{{ (int) ($roomDetail['max_person_capacity'] ?? ((int) ($roomDetail['capacity'] ?? 0) + (int) ($roomDetail['children_capacity'] ?? 0) + max(0, ((int) ($roomDetail['infant_capacity'] ?? 0) - 1)))) }}">
+                                data-room-max-persons="{{ (int) ($roomDetail['max_person_capacity'] ?? ((int) ($roomDetail['capacity'] ?? 0) + (int) ($roomDetail['children_capacity'] ?? 0) + max(0, ((int) ($roomDetail['infant_capacity'] ?? 0) - 1)))) }}"
+                                data-room-valid="{{ $roomIsValidForSelectedGuests ? 'true' : 'false' }}">
                                 <div class="room-option-left">
                                     <h3>{{ $firstVariant['room_name'] }}</h3>
                                     <p class="room-option-sub">
@@ -1360,6 +1375,7 @@
             const adultsInput = document.querySelector('input[name="adults"]');
             const childrenInput = document.querySelector('input[name="children"]');
             const infantsInput = document.querySelector('input[name="infants"]');
+            const roomsInput = document.querySelector('input[name="rooms"]');
             const roomItems = Array.from(document.querySelectorAll('.room-option-item'));
 
             const parseCount = (input, fallback = 0) => {
@@ -1384,15 +1400,20 @@
                 const adults = Math.max(1, parseCount(adultsInput, 1));
                 const children = Math.max(0, parseCount(childrenInput, 0));
                 const infants = Math.max(0, parseCount(infantsInput, 0));
-                const effectiveGuests = adults + children + Math.max(0, infants - 1);
                 const roomsCount = (() => {
-                    const roomInput = document.querySelector('.room-booking-form input[name="rooms"]');
-                    if (roomInput) {
-                        const value = parseInt(roomInput.value, 10);
+                    const preferred = roomsInput ? parseInt(roomsInput.value, 10) : NaN;
+                    if (!Number.isNaN(preferred) && preferred > 0) {
+                        return preferred;
+                    }
+
+                    const roomFormInput = document.querySelector('.room-booking-form input[name="rooms"]');
+                    if (roomFormInput) {
+                        const value = parseInt(roomFormInput.value, 10);
                         if (!Number.isNaN(value) && value > 0) {
                             return value;
                         }
                     }
+
                     const params = new URLSearchParams(window.location.search);
                     const queryValue = parseInt(params.get('rooms') || '', 10);
                     return (!Number.isNaN(queryValue) && queryValue > 0) ? queryValue : 1;
@@ -1405,16 +1426,15 @@
                     const roomMaxPersons = parseInt(item.dataset.roomMaxPersons, 10) || 0;
                     const warning = item.querySelector('.room-capacity-warning');
                     const bookButtons = Array.from(item.querySelectorAll('button[type="submit"]'));
+                    const requiredAdultsPerRoom = Math.ceil(adults / roomsCount);
+                    const requiredChildrenPerRoom = Math.ceil(children / roomsCount);
+                    const requiredInfantsPerRoom = Math.ceil(infants / roomsCount);
+                    const requiredTotalPerRoom = Math.ceil((adults + children + infants) / roomsCount);
 
-                    const totalRoomAdults = roomAdults * roomsCount;
-                    const totalRoomChildren = roomChildren * roomsCount;
-                    const totalRoomInfants = roomInfants * roomsCount;
-                    const totalRoomMaxPersons = roomMaxPersons * roomsCount;
-
-                    const isValid = totalRoomAdults >= adults
-                        && totalRoomChildren >= children
-                        && totalRoomInfants >= infants
-                        && totalRoomMaxPersons >= effectiveGuests;
+                    const isValid = roomAdults >= requiredAdultsPerRoom
+                        && roomChildren >= requiredChildrenPerRoom
+                        && roomInfants >= requiredInfantsPerRoom
+                        && roomMaxPersons >= requiredTotalPerRoom;
 
                     if (!isValid) {
                         if (warning) {
@@ -1451,8 +1471,8 @@
                 });
             }
 
-            if (adultsInput || childrenInput || infantsInput) {
-                const inputs = [adultsInput, childrenInput, infantsInput].filter(Boolean);
+            if (adultsInput || childrenInput || infantsInput || roomsInput) {
+                const inputs = [adultsInput, childrenInput, infantsInput, roomsInput].filter(Boolean);
                 inputs.forEach((input) => input.addEventListener('input', updateRoomCapacityWarnings));
                 updateRoomCapacityWarnings();
             }

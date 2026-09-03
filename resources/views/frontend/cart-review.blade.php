@@ -59,15 +59,24 @@
                                 $children = (int) ($item['children'] ?? 0);
                                 $infants = (int) ($item['infants'] ?? 0);
                                 if ($isAccom) {
+                                    $roomNameRaw = trim((string) ($item['room_name'] ?? 'Room'));
+                                    $roomNameForDisplay = $roomNameRaw !== '' ? $roomNameRaw : 'Room';
+                                    if (!preg_match('/\broom\b/i', $roomNameForDisplay)) {
+                                        $roomNameForDisplay .= ' Room';
+                                    }
+                                    $roomBookedLabel = $rooms > 1
+                                        ? $rooms . ' ' . $roomNameForDisplay . 's booked'
+                                        : $rooms . ' ' . $roomNameForDisplay . ' booked';
+
                                     $roomLabel = trans_choice('cart.rooms', $rooms, ['count' => $rooms]);
                                     $nightLabel = trans_choice('cart.nights', $nights, ['count' => $nights]);
-                                    $label = $roomLabel . ' · ' . $nightLabel . ' · ' . ($item['room_name'] ?? __('traveler.trip_detail.room'));
+                                    $label = $roomLabel . ' · ' . $nightLabel . ' · ' . $roomNameForDisplay;
                                     $subParts = [];
                                     if ($adults > 0) $subParts[] = trans_choice('accommodation.summary.adults', $adults, ['count' => $adults]);
                                     if ($children > 0) $subParts[] = trans_choice('accommodation.summary.children', $children, ['count' => $children]);
                                     if ($infants > 0) $subParts[] = trans_choice('accommodation.summary.infants', $infants, ['count' => $infants]);
                                     $subLabel = implode(', ', $subParts);
-                                    $subLabel = $subLabel ? ($subLabel . ' · ' . $rooms . '× ' . ($item['room_name'] ?? __('traveler.trip_detail.room'))) : '';
+                                    $subLabel = $subLabel ? ($subLabel . ' · ' . $roomBookedLabel) : $roomBookedLabel;
                                 } else if ($isActivity) {
                                     $label = __('cart.type.activity') . ' · ' . ($item['variant_name'] ?? $item['title'] ?? __('traveler.trip_detail.standard'));
                                     $subLabel = $adults > 0 ? trans_choice('accommodation.summary.adults', $adults, ['count' => $adults]) : '';
@@ -85,7 +94,7 @@
                                 $checkInDisplay = $item['check_in_display'] ?? $item['pickup_date_display'] ?? '';
                                 $checkOutDisplay = $item['check_out_display'] ?? $item['return_date_display'] ?? '';
                                 $subLines = [];
-                                if ($isAccom) {
+                                if ($isAccom || $isPackage) {
                                     $personParts = [];
                                     if ($adults > 0) {
                                         $personParts[] = $adults . ' ' . ($adults === 1 ? 'adult' : 'adults');
@@ -99,12 +108,17 @@
                                     if (!empty($personParts)) {
                                         $subLines[] = implode(' and ', $personParts);
                                     }
-                                    if ($rooms > 0 && !empty($item['room_name'])) {
-                                        $roomName = trim($item['room_name']);
-                                        if ($roomName !== '' && stripos($roomName, 'room') === false) {
-                                            $roomName .= ' Room';
-                                        }
-                                        $subLines[] = $rooms . ' ' . $roomName;
+                                    $roomName = trim((string) ($item['room_name'] ?? 'Standard Room'));
+                                    if ($roomName === '') {
+                                        $roomName = 'Room';
+                                    }
+                                    if (stripos($roomName, 'room') === false) {
+                                        $roomName .= ' Room';
+                                    }
+                                    if ($rooms > 0) {
+                                        $subLines[] = $rooms > 1
+                                            ? $rooms . ' ' . $roomName . 's booked'
+                                            : $rooms . ' ' . $roomName . ' booked';
                                     }
                                     if ($checkInDisplay && $checkOutDisplay) {
                                         $subLines[] = 'From ' . $checkInDisplay . ' to ' . $checkOutDisplay;
@@ -130,14 +144,23 @@
                                         <div>
                                             <span class="cart-item-badge">{{ $isPackage ? 'Package' : ($isAccom ? __('cart.type.stay') : ($isTransport ? __('cart.type.transport') : __('cart.type.activity'))) }}</span>
                                             <h3 class="cart-item-title">{{ $item['title'] }}</h3>
-                                            @if($isAccom && !empty($item['plan_label']))
-                                                <p class="cart-item-sub" style="color: #19b5b5; font-weight: 500;">{{ $item['plan_label'] }}</p>
-                                            @endif
-                                                    @if($isAccom)
-                                                <p class="cart-item-sub">{!! implode('<br>', $subLines) !!}</p>
-                                            @else
-                                                <p class="cart-item-sub">{{ $subLabel }}</p>
-                                            @endif
+                                            @php
+                                    $planLabel = trim((string) ($item['plan_label'] ?? ''));
+                                    if ($planLabel === '' && !empty($item['rate_name'])) {
+                                        $planLabel = trim((string) $item['rate_name']);
+                                        if (!empty($item['meal_plan'])) {
+                                            $planLabel .= ' - ' . trim((string) $item['meal_plan']);
+                                        }
+                                    }
+                                @endphp
+                                @if(($isAccom || $isPackage) && !empty($planLabel))
+                                    <p class="cart-item-sub" style="color: #19b5b5; font-weight: 500;">{{ $planLabel }}</p>
+                                @endif
+                                @if($isAccom || $isPackage)
+                                    <p class="cart-item-sub">{!! implode('<br>', $subLines) !!}</p>
+                                @else
+                                    <p class="cart-item-sub">{{ $subLabel }}</p>
+                                @endif
                                         </div>
                                         <div class="cart-item-price-col">
                                             <div class="cart-item-price">
@@ -256,7 +279,17 @@
                                         $rooms  = (int) ($item['rooms'] ?? 1);
 
                                         if ($itemType === 'accommodation') {
-                                            $label = trans_choice('cart.rooms', $rooms, ['count' => $rooms]) . ' · ' . trans_choice('cart.nights', $nights, ['count' => $nights]);
+                                            $roomName = trim((string) ($item['room_name'] ?? 'Room'));
+                                            if ($roomName === '') {
+                                                $roomName = 'Room';
+                                            }
+                                            if (stripos($roomName, 'room') === false) {
+                                                $roomName .= ' Room';
+                                            }
+                                            $roomCountLabel = $rooms > 1
+                                                ? $rooms . ' ' . $roomName . 's booked'
+                                                : $rooms . ' ' . $roomName . ' booked';
+                                            $label = $roomCountLabel . ' · ' . trans_choice('cart.nights', $nights, ['count' => $nights]);
                                         } elseif ($itemType === 'activity') {
                                             $label = __('cart.type.activity') . ': ' . ($item['variant_name'] ?? $item['title']);
                                         } elseif ($itemType === 'package') {
