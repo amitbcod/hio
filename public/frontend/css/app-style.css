@@ -546,6 +546,18 @@ code {
     color: var(--white) !important;
 }
 
+.btn-outline-blue {
+    background-color: var(--white);
+    border:1px solid var(--blue);
+    color: var(--blue);
+}
+
+.btn-outline-blue:hover, .btn-outline-blue:active {
+    background-color: var(--blue);
+    border:1px solid var(--blue);
+    color: var(--white);
+}
+
 .link-orange {
     color: var(--orange);
 }
@@ -557,6 +569,13 @@ code {
     color:var(--white);
     padding:16px;
     border-radius: 16px 16px 0 0;
+}
+
+.div-box {
+    margin: 30px 1.5%;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075) !important;
 }
 
 

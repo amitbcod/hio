@@ -69,10 +69,10 @@
                                             <div style="margin-bottom: 16px;">
                                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                                                     <span style="font-weight: 600; font-size: 12px;">Setup Progress</span>
-                                                    <span style="font-weight: bold; color: #19b5b5; font-size: 12px;">{{ $accommodation->getCompletionPercentage() }}%</span>
+                                                    <span style="font-weight: bold; color: #0170be; font-size: 12px;">{{ $accommodation->getCompletionPercentage() }}%</span>
                                                 </div>
                                                 <div style="height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden;">
-                                                    <div style="height: 100%; background: #19b5b5; width: {{ $accommodation->getCompletionPercentage() }}%; transition: width 0.3s;"></div>
+                                                    <div style="height: 100%; background: #0170be; width: {{ $accommodation->getCompletionPercentage() }}%; transition: width 0.3s;"></div>
                                                 </div>
                                             </div>
 
@@ -93,22 +93,22 @@
                                             <div style="margin-bottom: 16px;">
                                                 <p style="font-weight: 600; font-size: 12px; margin-bottom: 8px;">Essential Steps:</p>
                                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
-                                                    <div style="background: {{ $accommodation->step1_basics ? '#e8f5e9' : '#ffebee' }}; padding: 8px; border-radius: 4px; text-align: center;">
+                                                    <div style="background: {{ $accommodation->step1_basics ? '#d3e7f5' : '#ffebee' }}; padding: 8px; border-radius: 4px; text-align: center;">
                                                         {{ $accommodation->step1_basics ? '✓' : '○' }} Basics
                                                     </div>
-                                                    <div style="background: {{ $accommodation->step2_legal ? '#e8f5e9' : '#ffebee' }}; padding: 8px; border-radius: 4px; text-align: center;">
+                                                    <div style="background: {{ $accommodation->step2_legal ? '#d3e7f5' : '#ffebee' }}; padding: 8px; border-radius: 4px; text-align: center;">
                                                         {{ $accommodation->step2_legal ? '✓' : '○' }} Legal
                                                     </div>
-                                                    <div style="background: {{ $accommodation->step3_media ? '#e8f5e9' : '#ffebee' }}; padding: 8px; border-radius: 4px; text-align: center;">
+                                                    <div style="background: {{ $accommodation->step3_media ? '#d3e7f5' : '#ffebee' }}; padding: 8px; border-radius: 4px; text-align: center;">
                                                         {{ $accommodation->step3_media ? '✓' : '○' }} Media
                                                     </div>
-                                                    <div style="background: {{ $accommodation->step4_rooms ? '#e8f5e9' : '#ffebee' }}; padding: 8px; border-radius: 4px; text-align: center;">
+                                                    <div style="background: {{ $accommodation->step4_rooms ? '#d3e7f5' : '#ffebee' }}; padding: 8px; border-radius: 4px; text-align: center;">
                                                         {{ $accommodation->step4_rooms ? '✓' : '○' }} Rooms
                                                     </div>
-                                                    <div style="background: {{ $accommodation->step5_rates ? '#e8f5e9' : '#ffebee' }}; padding: 8px; border-radius: 4px; text-align: center;">
+                                                    <div style="background: {{ $accommodation->step5_rates ? '#d3e7f5' : '#ffebee' }}; padding: 8px; border-radius: 4px; text-align: center;">
                                                         {{ $accommodation->step5_rates ? '✓' : '○' }} Rates
                                                     </div>
-                                                    <div style="background: {{ $accommodation->step6_policies ? '#e8f5e9' : '#ffebee' }}; padding: 8px; border-radius: 4px; text-align: center;">
+                                                    <div style="background: {{ $accommodation->step6_policies ? '#d3e7f5' : '#ffebee' }}; padding: 8px; border-radius: 4px; text-align: center;">
                                                         {{ $accommodation->step6_policies ? '✓' : '○' }} Policies
                                                     </div>
                                                 </div>
@@ -116,10 +116,10 @@
 
                                             {{-- Actions --}}
                                             <div style="display: flex; gap: 8px;">
-                                                <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" class="btn" style="flex: 1; background: #19b5b5; color: #fff; border: none; padding: 8px; border-radius: 4px; font-weight: 600; font-size: 12px; text-align: center; text-decoration: none;">
+                                                <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" class="btn btn-primary" style="flex:1">
                                                     Continue Setup
                                                 </a>
-                                                <a href="{{ route('operator.accommodation.step1.edit', $accommodation->id) }}" class="btn" style="flex: 1; background: #f0f0f0; color: #333; border: none; padding: 8px; border-radius: 4px; font-weight: 600; font-size: 12px; text-align: center; text-decoration: none;">
+                                                <a href="{{ route('operator.accommodation.step1.edit', $accommodation->id) }}" class="btn btn-outline-blue" style="flex:1">
                                                     Edit Basics
                                                 </a>
                                             </div>
