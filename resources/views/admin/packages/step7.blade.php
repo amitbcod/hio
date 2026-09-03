@@ -28,7 +28,7 @@
                             <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:15%;font-size:13px;color:#333;">Details (Type)</th>
                             <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">Before Deadline</th>
                             <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">After Deadline</th>
-                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:24%;font-size:13px;color:#333;">Notes</th>
+                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">Notes</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -169,7 +169,7 @@
                 <div class="d-flex gap-2">
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-outline-primary" name="action" value="draft">Save as Draft</button>
-                        <button type="submit" class="btn btn-success" name="action" value="published" onclick="return confirm('Are you sure you want to publish this package?')">Save and Publish</button>
+                        <button type="submit" class="btn btn-primary" name="action" value="published" onclick="return confirm('Are you sure you want to publish this package?')">Save and Publish</button>
                     </div>
                     </form>
                 </div>
