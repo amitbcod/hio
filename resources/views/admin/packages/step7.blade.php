@@ -4,15 +4,16 @@
 
 @section('content')
 <div class="container mt-4 mb-5">
-    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px; overflow:hidden;">
-        <div class="card-body p-4">
-            <h2 class="mb-1 fw-bold" style="font-size:2rem; color:#1f2a37;">Step 7: Payment & Policies</h2>
-            <p class="mb-0 text-muted">Effective package policy summary across the selected accommodations/operators for this package.</p>
-        </div>
-    </div>
+
 
     <div class="card border-0 shadow-sm" style="border-radius:14px; overflow:hidden;">
         <div class="card-body p-4">
+
+            <div class="">
+            <h2 class="mb-1 fw-bold" style="font-size:2rem; color:#1f2a37;">Step 7: Payment & Policies</h2>
+            <p class="mb-0 text-muted">Effective package policy summary across the selected accommodations/operators for this package.</p>
+        </div>
+        
             <div style="background:#f7faff;border:1px solid #dfeaf9;border-radius:10px;padding:12px 16px;margin-bottom:12px;">
                 <div style="font-weight:700;color:#1d5ec7;">Package Policy Summary</div>
             </div>
