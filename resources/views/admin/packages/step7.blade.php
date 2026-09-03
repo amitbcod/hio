@@ -169,7 +169,7 @@
                 <div class="d-flex gap-2">
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-outline-primary" name="action" value="draft">Save as Draft</button>
-                        <button type="submit" class="btn btn-primary" name="action" value="published" onclick="return confirm('Are you sure you want to publish this package?')">Save and Publish</button>
+                        <button type="submit" class="btn btn-primary" style="flex:1" name="action" value="published" onclick="return confirm('Are you sure you want to publish this package?')">Save and Publish</button>
                     </div>
                     </form>
                 </div>
