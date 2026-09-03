@@ -10,12 +10,69 @@
 @endphp
 
 <section style="padding: 28px 0 40px; background: #f4f3f1;">
+    <style>
+        .package-sidebar { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px; box-shadow:0 1px 2px rgba(0,0,0,0.03); }
+        .package-price { font-size:30px; font-weight:800; color:#1f2a37; margin-bottom: 18px; }
+        .search-controls { margin-bottom:14px; }
+        .search-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+        .travel-date { flex: 1 1 180px; min-width:140px; }
+        .travel-date input { width:100%; padding:9px 10px; border-radius:8px; border:1px solid #e6eef6; box-sizing:border-box; }
+        .guests-panel { display:flex; gap:10px; align-items:center; flex: 1 1 260px; min-width:200px; flex-wrap:wrap; }
+        .guest-group { display:flex; align-items:center; gap:8px; background:#fafafa; padding:6px 8px; border-radius:10px; border:1px solid #eef2f6; }
+        .guest-label { font-size:12px; color:#475467; margin-right:6px; }
+        .guest-btn { width:30px; height:30px; border-radius:50%; border:1px solid #d1d5db; background:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; font-weight:700; }
+        .guest-input { width:40px; text-align:center; border:none; background:transparent; font-weight:800; }
+        .update-search-btn { background:#f39b4a; border:none; border-radius:8px; color:#fff; font-weight:800; padding:10px 14px; cursor:pointer; flex:0 0 auto; }
+        .add-to-cart-btn { width:100%; background:#f39b4a; border:none; border-radius:8px; color:#fff; font-size:18px; font-weight:800; padding:14px 16px; cursor:pointer; text-transform: uppercase; letter-spacing: .05em; }
+        .package-sidebar.sticky { position:sticky; top:24px; }
+    </style>
     <div class="wrap2" style="max-width: 1200px; margin: 0 auto;">
         <h1 style="margin: 0 0 6px; font-size: 38px; line-height: 1.2; font-weight: 900; color: #1f2a37; letter-spacing: -0.03em;">{{ $package['name'] }}</h1>
         <div style="display:flex; align-items:center; gap:10px; font-size: 13px; color:#6b7280; margin-bottom: 20px;">
             <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; background:#f0f1f2; font-weight:600; color:#475467;">{{ $package['location'] }}</span>
             <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; background:#f0f1f2; font-weight:600; color:#475467;">{{ $package['days_label'] }}</span>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const incBtns = document.querySelectorAll('.count-btn-increment, .guest-btn.count-btn-increment');
+                const decBtns = document.querySelectorAll('.count-btn-decrement, .guest-btn.count-btn-decrement');
+
+                const updateInput = (name, delta) => {
+                    // prefer visible input first
+                    const visible = document.querySelector(`form[method="GET"] input[name="${name}"]`);
+                    const hidden = document.querySelector(`form[method="POST"] input[name="${name}"]`);
+                    const input = visible || hidden;
+                    if (!input) return;
+                    let value = parseInt(input.value || '0', 10);
+                    value = Math.max(name === 'adults' ? 1 : 0, value + delta);
+                    if (visible) visible.value = value;
+                    if (hidden) hidden.value = value;
+                };
+
+                incBtns.forEach(btn => btn.addEventListener('click', () => updateInput(btn.dataset.target, 1)));
+                decBtns.forEach(btn => btn.addEventListener('click', () => updateInput(btn.dataset.target, -1)));
+
+                // sync visible values into hidden inputs on add-to-cart submit
+                const addToCartForm = document.querySelector('form[method="POST"][action*="booking/cart"]');
+                if (addToCartForm) {
+                    addToCartForm.addEventListener('submit', function (e) {
+                        const getForm = document.querySelector('form[method="GET"]');
+                        if (getForm) {
+                            ['adults','children','infants'].forEach(name => {
+                                const visible = getForm.querySelector(`input[name="${name}"]`);
+                                const hidden = addToCartForm.querySelector(`input[name="${name}"]`);
+                                if (visible && hidden) hidden.value = visible.value;
+                            });
+                            // traveling date
+                            const visibleDate = getForm.querySelector('#traveling-date-native-detail');
+                            const hiddenDate = addToCartForm.querySelector('input[name="package_start_date"]');
+                            if (visibleDate && hiddenDate) hiddenDate.value = visibleDate.value;
+                        }
+                    });
+                }
+            });
+        </script>
 
         <div style="display:grid; grid-template-columns: 1.7fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 18px;">
             <div style="grid-column: span 1; border-radius: 14px; overflow:hidden; min-height: 320px; background:#e5e7eb;">
@@ -135,8 +192,71 @@
                 @endforeach
             </div>
 
-            <aside style="background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px 18px 16px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
-                <div style="font-size:30px; font-weight:800; color:#1f2a37; margin-bottom: 18px;">$ {{ number_format((float) $package['price'], 2) }}</div>
+            <aside class="package-sidebar sticky">
+                <div class="package-price">$ {{ number_format((float) $package['price'], 2) }}</div>
+
+                {{-- Search controls: Traveling Date + Guests (adults+children+infants) --}}
+                <form method="GET" action="{{ url()->current() }}" style="margin-bottom:12px;">
+                    @php
+                        $reqTraveling = request()->query('traveling_date') ?: request()->query('check_in') ?: '';
+                        $travNative = '';
+                        try {
+                            if (!empty($reqTraveling)) {
+                                $travNative = \Carbon\Carbon::createFromFormat('d/m/Y', $reqTraveling)->format('Y-m-d');
+                            }
+                        } catch (\Exception $e) {
+                            try {
+                                if (!empty($reqTraveling)) {
+                                    $travNative = \Carbon\Carbon::parse($reqTraveling)->format('Y-m-d');
+                                }
+                            } catch (\Exception $e) {
+                                $travNative = '';
+                            }
+                        }
+                    @endphp
+
+                    <div class="search-controls">
+                        <div class="search-row">
+                            <div class="travel-date" style="flex:1;">
+                                <label class="guest-label">Travelling Date</label>
+                                <input type="date" name="traveling_date" id="traveling-date-native-detail" value="{{ $travNative }}">
+                            </div>
+
+                            <div style="flex:1;">
+                                <label class="guest-label">Guests</label>
+                                <div class="guests-panel">
+                                    <div class="guest-group">
+                                        <div class="guest-label">Adult</div>
+                                        <button type="button" class="guest-btn count-btn-decrement" data-target="adults">−</button>
+                                        <input type="text" name="adults" value="{{ request()->query('adults', 2) }}" readonly class="guest-input">
+                                        <button type="button" class="guest-btn count-btn-increment" data-target="adults">+</button>
+                                    </div>
+
+                                    <div class="guest-group">
+                                        <div class="guest-label">Children</div>
+                                        <button type="button" class="guest-btn count-btn-decrement" data-target="children">−</button>
+                                        <input type="text" name="children" value="{{ request()->query('children', 0) }}" readonly class="guest-input">
+                                        <button type="button" class="guest-btn count-btn-increment" data-target="children">+</button>
+                                    </div>
+
+                                    <div class="guest-group">
+                                        <div class="guest-label">Infants</div>
+                                        <button type="button" class="guest-btn count-btn-decrement" data-target="infants">−</button>
+                                        <input type="text" name="infants" value="{{ request()->query('infants', 0) }}" readonly class="guest-input">
+                                        <button type="button" class="guest-btn count-btn-increment" data-target="infants">+</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <button type="submit" class="update-search-btn">Update search</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                {{-- End search controls --}}
+
                 <form method="POST" action="{{ route('frontend.booking.cart.add') }}">
                     @csrf
                     <input type="hidden" name="type" value="package">
@@ -211,7 +331,7 @@
                     <input type="hidden" name="plan_label" value="{{ $packagePlanLabel }}">
                     <input type="hidden" name="rate_name" value="Package">
                     <input type="hidden" name="meal_plan" value="{{ $packageMealPlan }}">
-                    <button type="submit" style="width:100%; background:#f39b4a; border:none; border-radius:8px; color:#fff; font-size:18px; font-weight:800; padding:14px 16px; cursor:pointer; text-transform: uppercase; letter-spacing: .05em;">{{ __('package.add_to_cart') }}</button>
+                    <button type="submit" class="add-to-cart-btn">{{ __('package.add_to_cart') }}</button>
                 </form>
             </aside>
         </div>
