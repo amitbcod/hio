@@ -284,6 +284,10 @@ select.form-control {
     background-size: cover;
 }
 
+#sidebar {
+    width:22%;
+}
+
 h3.sidebar-title {
     color: #fff;
     font-size: 18px;
