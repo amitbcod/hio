@@ -1369,6 +1369,178 @@ class ActivityController extends Controller
             'rates' => $rates,
         ]);
     }
+
+    /**
+     * Store Rate
+     */
+    public function storeRate(Request $request, $id)
+    {
+        $activity = Activity::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($activity->operator_id !== $operator->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'variant_id' => 'required|exists:activity_variants,variant_id',
+            'season' => 'nullable|string|max:100',
+            'valid_from' => 'nullable|date|date_format:Y-m-d|required_if:season,One Season|required_if:season,High|required_if:season,Low|required_if:season,Peak',
+            'valid_to' => 'nullable|date|date_format:Y-m-d|after_or_equal:valid_from|required_if:season,One Season|required_if:season,High|required_if:season,Low|required_if:season,Peak',
+            'rate_specificity' => 'required|in:Per Person,Per Equipment',
+            'adult_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
+            'children_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
+            'infant_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
+            'equipment_rate' => 'nullable|required_if:rate_specificity,Per Equipment|numeric|min:0',
+            'private_exclusive_rate' => 'nullable|numeric|min:0',
+        ]);
+
+        try {
+            $variant = \App\Models\ActivityVariant::findOrFail($validated['variant_id']);
+
+            $rate = new \App\Models\ActivityRate();
+            $rate->service_id = (string) $activity->id;
+            $rate->activity_id = $activity->id;
+            $rate->variant_id = $validated['variant_id'];
+            $rate->variant_name = $variant->variant_name ?? '';
+            $rate->season = $validated['season'] ?? 'One Season';
+            $rate->valid_from = $validated['valid_from'];
+            $rate->valid_to = $validated['valid_to'];
+            $rate->rate_specificity = $validated['rate_specificity'];
+            $rate->adult_rate = $validated['adult_rate'] ?? null;
+            $rate->children_rate = $validated['children_rate'] ?? null;
+            $rate->infant_rate = $validated['infant_rate'] ?? null;
+            $rate->equipment_rate = $validated['equipment_rate'] ?? null;
+            $rate->private_exclusive_rate = $validated['private_exclusive_rate'] ?? null;
+            $rate->save();
+
+            $activity->refresh();
+            $activity->update(['step9_rates' => 1]);
+
+            return back()->with('success', 'Rate saved successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Operator activity rate save error', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Failed to save rate: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Edit Rate
+     */
+    public function editRate($id, $rateId)
+    {
+        $activity = Activity::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($activity->operator_id !== $operator->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $rate = \App\Models\ActivityRate::findOrFail($rateId);
+
+        if ($rate->activity_id !== $activity->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $variants = \App\Models\ActivityVariant::where('activity_id', $activity->id)->get();
+        $rates = \App\Models\ActivityRate::where('activity_id', $activity->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('operator.activity.step9_rates', [
+            'activity' => $activity,
+            'variants' => $variants,
+            'rates' => $rates,
+            'editingRate' => $rate,
+        ]);
+    }
+
+    /**
+     * Update Rate
+     */
+    public function updateRate(Request $request, $id, $rateId)
+    {
+        $activity = Activity::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($activity->operator_id !== $operator->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'variant_id' => 'required|exists:activity_variants,variant_id',
+            'season' => 'nullable|string|max:100',
+            'valid_from' => 'nullable|date|date_format:Y-m-d|required_if:season,One Season|required_if:season,High|required_if:season,Low|required_if:season,Peak',
+            'valid_to' => 'nullable|date|date_format:Y-m-d|after_or_equal:valid_from|required_if:season,One Season|required_if:season,High|required_if:season,Low|required_if:season,Peak',
+            'rate_specificity' => 'required|in:Per Person,Per Equipment',
+            'adult_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
+            'children_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
+            'infant_rate' => 'nullable|required_if:rate_specificity,Per Person|numeric|min:0',
+            'equipment_rate' => 'nullable|required_if:rate_specificity,Per Equipment|numeric|min:0',
+            'private_exclusive_rate' => 'nullable|numeric|min:0',
+        ]);
+
+        try {
+            $rate = \App\Models\ActivityRate::findOrFail($rateId);
+
+            if ($rate->activity_id !== $activity->id) {
+                abort(403, 'Unauthorized action.');
+            }
+
+            $variant = \App\Models\ActivityVariant::findOrFail($validated['variant_id']);
+
+            $rate->variant_id = $validated['variant_id'];
+            $rate->variant_name = $variant->variant_name ?? '';
+            $rate->season = $validated['season'] ?? 'One Season';
+            $rate->valid_from = $validated['valid_from'];
+            $rate->valid_to = $validated['valid_to'];
+            $rate->rate_specificity = $validated['rate_specificity'];
+            $rate->adult_rate = $validated['adult_rate'] ?? null;
+            $rate->children_rate = $validated['children_rate'] ?? null;
+            $rate->infant_rate = $validated['infant_rate'] ?? null;
+            $rate->equipment_rate = $validated['equipment_rate'] ?? null;
+            $rate->private_exclusive_rate = $validated['private_exclusive_rate'] ?? null;
+            $rate->save();
+
+            return back()->with('success', 'Rate updated successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Operator activity rate update error', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Failed to update rate: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete Rate
+     */
+    public function deleteRate(Request $request, $id, $rateId)
+    {
+        $activity = Activity::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($activity->operator_id !== $operator->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $rate = \App\Models\ActivityRate::findOrFail($rateId);
+
+            if ($rate->activity_id !== $activity->id) {
+                abort(403, 'Unauthorized action.');
+            }
+
+            $rate->delete();
+
+            $remainingRates = \App\Models\ActivityRate::where('activity_id', $activity->id)->count();
+            if ($remainingRates === 0) {
+                $activity->update(['step9_rates' => 0]);
+            }
+
+            return back()->with('success', 'Rate deleted successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Operator activity rate delete error', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Failed to delete rate: ' . $e->getMessage());
+        }
+    }
     /**
      * Step 10: Show Allotment
      */

@@ -287,25 +287,77 @@
                                     $packageReturn = isset($pricing['package_return_price']) ? (float) $pricing['package_return_price'] : 0;
                                     $seasonal = $pricing['seasonal'] ?? [];
 
+
                                     // try to find saved schedule for this route regardless of service key
                                     $savedRouteSchedule = [];
+                                    $direction = null; // 'fwd', 'rev', 'both', 'single'
                                     if (!empty($itinerary[$dayIndex]['transport_schedule']) && is_array($itinerary[$dayIndex]['transport_schedule'])) {
                                         foreach ($itinerary[$dayIndex]['transport_schedule'] as $svcKey => $svcGroup) {
-                                            $routeKey = $route->route_id ?? ($svcKey . '-' . ($route->id ?? ''));
-                                            if (isset($svcGroup[$routeKey])) {
-                                                $savedRouteSchedule = $svcGroup[$routeKey];
+                                            // possible keys: route_id, route_id-fwd, route_id-rev, numeric id, id-fwd, id-rev
+                                            $foundFwd = null; $foundRev = null; $foundSingle = null;
+                                            foreach ($svcGroup as $k => $v) {
+                                                // determine if this entry was actually selected
+                                                $isSelected = false;
+                                                if (is_array($v)) {
+                                                    $isSelected = !empty($v['selected']) || !empty($v['selected_route']);
+                                                } else {
+                                                    $isSelected = !empty($v) || $v === '0' || $v === 0;
+                                                }
+
+                                                if (!$isSelected) {
+                                                    // skip non-selected entries
+                                                    continue;
+                                                }
+
+                                                if ($k === ($route->route_id ?? null) || $k === ($route->id ?? null) || (is_string($k) && $k === (string) ($route->id ?? null))) {
+                                                    $foundSingle = $v;
+                                                }
+                                                if (is_string($k) && (str_ends_with($k, '-fwd') || str_ends_with($k, '-rev'))) {
+                                                    $base = preg_replace('/-(fwd|rev)$/', '', $k);
+                                                    if ((string) $base === (string) ($route->route_id ?? $route->id)) {
+                                                        if (str_ends_with($k, '-fwd')) $foundFwd = $v; else $foundRev = $v;
+                                                    }
+                                                }
+                                            }
+
+                                            if ($foundFwd !== null && $foundRev !== null) {
+                                                // both directions selected -> treat as return
+                                                $savedRouteSchedule = array_merge(is_array($foundFwd) ? $foundFwd : [], is_array($foundRev) ? $foundRev : []);
+                                                $savedRouteSchedule['add_return'] = true;
+                                                $direction = 'both';
                                                 break;
                                             }
-                                            // fallback: check by route numeric id key
-                                            if (isset($svcGroup[$route->id])) {
-                                                $savedRouteSchedule = $svcGroup[$route->id];
+
+                                            if ($foundSingle !== null) {
+                                                $savedRouteSchedule = is_array($foundSingle) ? $foundSingle : [];
+                                                $direction = 'single';
+                                                break;
+                                            }
+
+                                            if ($foundFwd !== null) {
+                                                $savedRouteSchedule = is_array($foundFwd) ? $foundFwd : [];
+                                                $direction = 'fwd';
+                                                break;
+                                            }
+
+                                            if ($foundRev !== null) {
+                                                $savedRouteSchedule = is_array($foundRev) ? $foundRev : [];
+                                                $direction = 'rev';
                                                 break;
                                             }
                                         }
                                     }
 
                                     $addReturn = !empty($savedRouteSchedule['add_return']);
-                                    $selected = !empty($savedRouteSchedule['selected']) || !empty($savedRouteSchedule['selected_route']);
+                                    $selected = !empty($savedRouteSchedule) && (
+                                        !empty($savedRouteSchedule['selected']) || !empty($savedRouteSchedule['selected_route']) || !empty($savedRouteSchedule['add_return'])
+                                    );
+
+                                    // determine display direction: if explicitly reverse-only selected, show reverse
+                                    $isReverse = ($direction === 'rev');
+                                    // if both selected (return) or fwd/single, default to forward display
+                                    $displayFrom = $isReverse ? ($route->route_to ?? '') : ($route->route_from ?? '');
+                                    $displayTo = $isReverse ? ($route->route_from ?? '') : ($route->route_to ?? '');
 
                                     // if route not selected in step3, skip displaying it
                                     if (!$selected) {
@@ -316,7 +368,7 @@
                                 @endphp
 
                                 <div class="border rounded-3 p-2 mb-2">
-                                    <div class="fw-semibold small mb-1">{{ $serviceLabel }} · Route: {{ $route->route_from ?? '' }} → {{ $route->route_to ?? '' }}</div>
+                                    <div class="fw-semibold small mb-1">{{ $serviceLabel }} · Route: {{ $displayFrom }} → {{ $displayTo }}</div>
 
                                     @php $rows = []; @endphp
                                     @if($default > 0)
@@ -342,7 +394,7 @@
                                         <div class="pricing-row row align-items-center py-2" data-service="transport" data-rate-specificity="Per Equipment" data-package-exists="{{ (($r['package'] ?? 0) > 0 || ($packageReturn ?? 0) > 0) ? 1 : 0 }}" data-package-price="{{ $r['package'] ?? 0 }}" data-package-return="{{ $packageReturn ?? 0 }}" data-add-return="{{ $addReturn ? 1 : 0 }}" data-base-price="{{ $displayBase }}" style="border-top:1px solid #edf2f6;">
                                             <div class="col-md-6">
                                                 <div class="fw-semibold">{{ $r['label'] }}</div>
-                                                <div class="small text-muted">Route: {{ $route->route_from ?? '' }} → {{ $route->route_to ?? '' }}</div>
+                                                <div class="small text-muted">Route: {{ $displayFrom }} → {{ $displayTo }}</div>
                                             </div>
                                             <div class="col-md-3">
                                                 {{-- show return price if add_return selected, else show single --}}

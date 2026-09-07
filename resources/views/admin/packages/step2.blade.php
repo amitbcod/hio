@@ -22,19 +22,35 @@
                 <div style="border:1px solid #eee;border-radius:8px;padding:14px;margin-bottom:12px;">
                     <h6 style="margin:0 0 8px 0;font-weight:700;">Day {{ $i + 1 }}</h6>
                     <div class="row">
-                        <div class="col-md-4">
-                            <label class="form-label">Accommodation</label>
-                            <select name="itinerary[{{ $i }}][accommodation]" class="form-select accommodation-select" data-day-index="{{ $i }}">
-                                <option value="">-- Select accommodation --</option>
-                                @foreach($availableAccommodations[$i] ?? [] as $acc)
-                                    @php
-                                        $title = $acc->property_name ?? $acc->name ?? optional($acc->business)->name ?? ('Accommodation #' . $acc->id);
-                                        $type = $acc->property_type ?? null;
-                                        $selectedAcc = $itinerary[$i]['accommodation'] ?? '';
-                                    @endphp
-                                    <option value="{{ $acc->id }}" {{ $selectedAcc == $acc->id ? 'selected' : '' }}>{{ $title }}@if($type) ({{ $type }}) @endif</option>
-                                @endforeach
-                            </select>
+                            <div class="col-md-4">
+                                <label class="form-label">Accommodation</label>
+
+                                <div class="mb-2 small text-muted">Show: 
+                                    <div class="btn-group ms-2" role="group" aria-label="accommodation-filter-{{ $i }}">
+                                        <input type="radio" class="btn-check acc-filter" name="acc_filter_{{ $i }}" id="acc_filter_{{ $i }}_all" autocomplete="off" value="all" checked>
+                                        <label class="btn btn-outline-secondary btn-sm" for="acc_filter_{{ $i }}_all">All</label>
+
+                                        <input type="radio" class="btn-check acc-filter" name="acc_filter_{{ $i }}" id="acc_filter_{{ $i }}_having" autocomplete="off" value="having">
+                                        <label class="btn btn-outline-secondary btn-sm" for="acc_filter_{{ $i }}_having">Having package price</label>
+
+                                        <input type="radio" class="btn-check acc-filter" name="acc_filter_{{ $i }}" id="acc_filter_{{ $i }}_not" autocomplete="off" value="not">
+                                        <label class="btn btn-outline-secondary btn-sm" for="acc_filter_{{ $i }}_not">Not having package price</label>
+                                    </div>
+                                </div>
+
+                                <select name="itinerary[{{ $i }}][accommodation]" class="form-select accommodation-select" data-day-index="{{ $i }}">
+                                    <option value="">-- Select accommodation --</option>
+                                    @foreach($availableAccommodations[$i] ?? [] as $accEntry)
+                                        @php
+                                            $acc = $accEntry['model'];
+                                            $hasPkg = !empty($accEntry['has_package']) ? 1 : 0;
+                                            $title = $acc->property_name ?? $acc->name ?? optional($acc->business)->name ?? ('Accommodation #' . $acc->id);
+                                            $type = $acc->property_type ?? null;
+                                            $selectedAcc = $itinerary[$i]['accommodation'] ?? '';
+                                        @endphp
+                                        <option value="{{ $acc->id }}" data-has-package="{{ $hasPkg }}" {{ $selectedAcc == $acc->id ? 'selected' : '' }}>{{ $title }}@if($type) ({{ $type }}) @endif</option>
+                                    @endforeach
+                                </select>
                             @if($i === 0)
                                 <div style="margin-top:6px;">
                                     <a href="#" id="apply-acc-all">Apply to all days</a>
@@ -43,26 +59,53 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Activity</label>
+                            <div class="mb-2 small text-muted">Show: 
+                                <div class="btn-group ms-2" role="group" aria-label="activity-filter-{{ $i }}">
+                                    <input type="radio" class="btn-check act-filter" name="act_filter_{{ $i }}" id="act_filter_{{ $i }}_all" autocomplete="off" value="all" checked>
+                                    <label class="btn btn-outline-secondary btn-sm" for="act_filter_{{ $i }}_all">All</label>
+
+                                    <input type="radio" class="btn-check act-filter" name="act_filter_{{ $i }}" id="act_filter_{{ $i }}_having" autocomplete="off" value="having">
+                                    <label class="btn btn-outline-secondary btn-sm" for="act_filter_{{ $i }}_having">Having package price</label>
+
+                                    <input type="radio" class="btn-check act-filter" name="act_filter_{{ $i }}" id="act_filter_{{ $i }}_not" autocomplete="off" value="not">
+                                    <label class="btn btn-outline-secondary btn-sm" for="act_filter_{{ $i }}_not">Not having package price</label>
+                                </div>
+                            </div>
                             <select name="itinerary[{{ $i }}][activity]" class="form-select activity-select" data-day-index="{{ $i }}">
                                 <option value="">-- Select activity --</option>
                                 @php $selectedAct = $itinerary[$i]['activity'] ?? ''; @endphp
-                                @foreach($availableActivities[$i] ?? [] as $act)
-                                    <option value="{{ $act->id }}" {{ $selectedAct == $act->id ? 'selected' : '' }}>{{ $act->activity_name ?? $act->name ?? 'Activity #' . $act->id }}</option>
+                                @foreach($availableActivities[$i] ?? [] as $actEntry)
+                                    @php $act = $actEntry['model']; $hasPkg = !empty($actEntry['has_package']) ? 1 : 0; @endphp
+                                    <option value="{{ $act->id }}" data-has-package="{{ $hasPkg }}" {{ $selectedAct == $act->id ? 'selected' : '' }}>{{ $act->activity_name ?? $act->name ?? 'Activity #' . $act->id }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Transport</label>
+                            <div class="mb-2 small text-muted">Show: 
+                                <div class="btn-group ms-2" role="group" aria-label="transport-filter-{{ $i }}">
+                                    <input type="radio" class="btn-check trn-filter" name="trn_filter_{{ $i }}" id="trn_filter_{{ $i }}_all" autocomplete="off" value="all" checked>
+                                    <label class="btn btn-outline-secondary btn-sm" for="trn_filter_{{ $i }}_all">All</label>
+
+                                    <input type="radio" class="btn-check trn-filter" name="trn_filter_{{ $i }}" id="trn_filter_{{ $i }}_having" autocomplete="off" value="having">
+                                    <label class="btn btn-outline-secondary btn-sm" for="trn_filter_{{ $i }}_having">Having package price</label>
+
+                                    <input type="radio" class="btn-check trn-filter" name="trn_filter_{{ $i }}" id="trn_filter_{{ $i }}_not" autocomplete="off" value="not">
+                                    <label class="btn btn-outline-secondary btn-sm" for="trn_filter_{{ $i }}_not">Not having package price</label>
+                                </div>
+                            </div>
                             <select name="itinerary[{{ $i }}][transport]" class="form-select transport-select" data-day-index="{{ $i }}">
                                 <option value="">-- Select transport --</option>
                                 @php $selectedTrn = $itinerary[$i]['transport'] ?? ''; @endphp
-                                @foreach($transports as $t)
+                                @foreach($transports as $tEntry)
                                     @php
+                                        $t = $tEntry['model'];
+                                        $hasPkg = !empty($tEntry['has_package']) ? 1 : 0;
                                         $reg = $t->registration_number ?? null;
                                         $veh = $t->vehicle_type ?? null;
                                         $label = $reg ? ($reg . ($veh ? ' (' . $veh . ')' : '')) : ($t->name ?? 'Transport #' . $t->id);
                                     @endphp
-                                    <option value="{{ $t->id }}" {{ $selectedTrn == $t->id ? 'selected' : '' }}>{{ $label }}</option>
+                                    <option value="{{ $t->id }}" data-has-package="{{ $hasPkg }}" {{ $selectedTrn == $t->id ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -94,6 +137,61 @@
                     width: '100%',
                     placeholder: '-- Select --',
                     allowClear: true,
+                });
+
+                // cache original options for each select to enable client-side filtering
+                function cacheOptions($select) {
+                    const opts = [];
+                    $select.find('option').each(function() {
+                        opts.push({ value: this.value, text: $(this).text(), has: $(this).data('has-package') == 1 ? 1 : 0, selected: $(this).is(':selected') });
+                    });
+                    $select.data('origOptions', opts);
+                }
+
+                $('.accommodation-select, .activity-select, .transport-select').each(function() {
+                    cacheOptions($(this));
+                });
+
+                function applyFilter($select, mode) {
+                    const orig = $select.data('origOptions') || [];
+                    // destroy select2, rebuild options
+                    $select.select2('destroy');
+                    $select.empty();
+                    $select.append($('<option>', { value: '', text: '-- Select --' }));
+                    orig.forEach(function(o) {
+                        const keep = (mode === 'all') || (mode === 'having' && o.has === 1) || (mode === 'not' && o.has === 0);
+                        if (keep) {
+                            const opt = $('<option>', { value: o.value, text: o.text }).attr('data-has-package', o.has);
+                            if (o.selected) opt.prop('selected', true);
+                            $select.append(opt);
+                        }
+                    });
+                    $select.select2({ theme: 'bootstrap5', width: '100%', placeholder: '-- Select --', allowClear: true });
+                }
+
+                // handle radio change events per day
+                $(document).on('change', '.acc-filter', function() {
+                    const name = $(this).attr('name');
+                    const day = name.replace('acc_filter_', '');
+                    const mode = $(this).val();
+                    const $sel = $('.accommodation-select[data-day-index="' + day + '"]');
+                    applyFilter($sel, mode);
+                });
+
+                $(document).on('change', '.act-filter', function() {
+                    const name = $(this).attr('name');
+                    const day = name.replace('act_filter_', '');
+                    const mode = $(this).val();
+                    const $sel = $('.activity-select[data-day-index="' + day + '"]');
+                    applyFilter($sel, mode);
+                });
+
+                $(document).on('change', '.trn-filter', function() {
+                    const name = $(this).attr('name');
+                    const day = name.replace('trn_filter_', '');
+                    const mode = $(this).val();
+                    const $sel = $('.transport-select[data-day-index="' + day + '"]');
+                    applyFilter($sel, mode);
                 });
 
                 // Apply accommodation from first day to all remaining days

@@ -183,29 +183,49 @@
                                             @else
                                                 @foreach($serviceGroup['routes'] as $routeIndex => $route)
                                                     @php
-                                                        $routeKey = $route->route_id ?? ($serviceKey . '-' . $routeIndex);
-                                                        $routeLabel = (($route->route_from ?? $route->pickup_value ?? 'From') . ' → ' . ($route->route_to ?? $route->dropoff_value ?? 'To'));
-                                                        $savedRouteSchedule = $itinerary[$i]['transport_schedule'][$serviceKey][$routeKey] ?? [];
-                                                        $routeSelected = !empty($savedRouteSchedule['selected']) || !empty($savedRouteSchedule['selected_route']);
-                                                        $addReturnChecked = !empty($savedRouteSchedule['add_return']);
-                                                        $savedStartHour = $savedRouteSchedule['start_hour'] ?? '';
-                                                        $savedStartMin = $savedRouteSchedule['start_min'] ?? '';
+                                                        $baseKey = $route->route_id ?? ($serviceKey . '-' . $routeIndex);
+                                                        $forwardKey = $baseKey . '-fwd';
+                                                        $reverseKey = $baseKey . '-rev';
+                                                        $from = $route->route_from ?? $route->pickup_value ?? 'From';
+                                                        $to = $route->route_to ?? $route->dropoff_value ?? 'To';
+                                                        // Try to read saved schedules for either direction (support legacy keys)
+                                                        $savedFwd = $itinerary[$i]['transport_schedule'][$serviceKey][$forwardKey] ?? $itinerary[$i]['transport_schedule'][$serviceKey][$baseKey] ?? [];
+                                                        $savedRev = $itinerary[$i]['transport_schedule'][$serviceKey][$reverseKey] ?? [];
+                                                        $savedFwdStartHour = $savedFwd['start_hour'] ?? '';
+                                                        $savedFwdStartMin = $savedFwd['start_min'] ?? '';
+                                                        $savedRevStartHour = $savedRev['start_hour'] ?? '';
+                                                        $savedRevStartMin = $savedRev['start_min'] ?? '';
+                                                        $fwdSelected = !empty($savedFwd['selected']) || !empty($savedFwd['selected_route']);
+                                                        $revSelected = !empty($savedRev['selected']) || !empty($savedRev['selected_route']);
                                                     @endphp
-                                                    <div class="transport-route-row {{ $routeSelected ? 'route-selected' : '' }}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;border:1px solid {{ $routeSelected ? '#2bb673' : '#e0e0e0' }};border-radius:8px;margin-bottom:8px;background:{{ $routeSelected ? '#eefaf3' : '#fff' }};flex-wrap:wrap;">
-                                                        <div style="font-weight:600;">{{ $routeLabel }}</div>
+
+                                                    {{-- Forward direction row --}}
+                                                    <div class="transport-route-row {{ $fwdSelected ? 'route-selected' : '' }}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;border:1px solid {{ $fwdSelected ? '#2bb673' : '#e0e0e0' }};border-radius:8px;margin-bottom:8px;background:{{ $fwdSelected ? '#eefaf3' : '#fff' }};flex-wrap:wrap;">
+                                                        <div style="font-weight:600;">{{ $from }} → {{ $to }}</div>
                                                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                                                             <label style="margin:0;font-size:12px;color:#555;display:flex;align-items:center;gap:6px;">
                                                                 <span>Start Time:</span>
-                                                                <input type="text" name="itinerary[{{ $i }}][transport_schedule][{{ $serviceKey }}][{{ $routeKey }}][start_hour]" value="{{ old('itinerary.' . $i . '.transport_schedule.' . $serviceKey . '.' . $routeKey . '.start_hour', $savedStartHour) }}" maxlength="2" pattern="[0-9]{2}" placeholder="HH" style="width:52px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;text-align:center;">
+                                                                <input type="text" name="itinerary[{{ $i }}][transport_schedule][{{ $serviceKey }}][{{ $forwardKey }}][start_hour]" value="{{ old('itinerary.' . $i . '.transport_schedule.' . $serviceKey . '.' . $forwardKey . '.start_hour', $savedFwdStartHour) }}" maxlength="2" pattern="[0-9]{2}" placeholder="HH" style="width:52px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;text-align:center;">
                                                                 <span>:</span>
-                                                                <input type="text" name="itinerary[{{ $i }}][transport_schedule][{{ $serviceKey }}][{{ $routeKey }}][start_min]" value="{{ old('itinerary.' . $i . '.transport_schedule.' . $serviceKey . '.' . $routeKey . '.start_min', $savedStartMin) }}" maxlength="2" pattern="[0-9]{2}" placeholder="MM" style="width:52px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;text-align:center;">
+                                                                <input type="text" name="itinerary[{{ $i }}][transport_schedule][{{ $serviceKey }}][{{ $forwardKey }}][start_min]" value="{{ old('itinerary.' . $i . '.transport_schedule.' . $serviceKey . '.' . $forwardKey . '.start_min', $savedFwdStartMin) }}" maxlength="2" pattern="[0-9]{2}" placeholder="MM" style="width:52px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;text-align:center;">
                                                             </label>
+                                                            <input type="checkbox" id="route-selected-{{ $i }}-{{ $serviceKey }}-{{ $forwardKey }}" name="itinerary[{{ $i }}][transport_schedule][{{ $serviceKey }}][{{ $forwardKey }}][selected]" value="1" {{ $fwdSelected ? 'checked' : '' }} style="display:none;">
+                                                            <button type="button" class="btn btn-sm transport-route-select {{ $fwdSelected ? 'btn-success' : 'btn-outline-success' }}" data-toggle-target="route-selected-{{ $i }}-{{ $serviceKey }}-{{ $forwardKey }}">{{ $fwdSelected ? 'Selected' : 'Select' }}</button>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Reverse direction row --}}
+                                                    <div class="transport-route-row {{ $revSelected ? 'route-selected' : '' }}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;border:1px solid {{ $revSelected ? '#2bb673' : '#e0e0e0' }};border-radius:8px;margin-bottom:8px;background:{{ $revSelected ? '#eefaf3' : '#fff' }};flex-wrap:wrap;">
+                                                        <div style="font-weight:600;">{{ $to }} → {{ $from }}</div>
+                                                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                                                             <label style="margin:0;font-size:12px;color:#555;display:flex;align-items:center;gap:6px;">
-                                                                <input type="checkbox" name="itinerary[{{ $i }}][transport_schedule][{{ $serviceKey }}][{{ $routeKey }}][add_return]" value="1" {{ $addReturnChecked ? 'checked' : '' }}>
-                                                                <span>Add Return</span>
+                                                                <span>Start Time:</span>
+                                                                <input type="text" name="itinerary[{{ $i }}][transport_schedule][{{ $serviceKey }}][{{ $reverseKey }}][start_hour]" value="{{ old('itinerary.' . $i . '.transport_schedule.' . $serviceKey . '.' . $reverseKey . '.start_hour', $savedRevStartHour) }}" maxlength="2" pattern="[0-9]{2}" placeholder="HH" style="width:52px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;text-align:center;">
+                                                                <span>:</span>
+                                                                <input type="text" name="itinerary[{{ $i }}][transport_schedule][{{ $serviceKey }}][{{ $reverseKey }}][start_min]" value="{{ old('itinerary.' . $i . '.transport_schedule.' . $serviceKey . '.' . $reverseKey . '.start_min', $savedRevStartMin) }}" maxlength="2" pattern="[0-9]{2}" placeholder="MM" style="width:52px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;text-align:center;">
                                                             </label>
-                                                            <input type="checkbox" id="route-selected-{{ $i }}-{{ $serviceKey }}-{{ $routeKey }}" name="itinerary[{{ $i }}][transport_schedule][{{ $serviceKey }}][{{ $routeKey }}][selected]" value="1" {{ $routeSelected ? 'checked' : '' }} style="display:none;">
-                                                            <button type="button" class="btn btn-sm transport-route-select {{ $routeSelected ? 'btn-success' : 'btn-outline-success' }}" data-toggle-target="route-selected-{{ $i }}-{{ $serviceKey }}-{{ $routeKey }}">{{ $routeSelected ? 'Selected' : 'Select' }}</button>
+                                                            <input type="checkbox" id="route-selected-{{ $i }}-{{ $serviceKey }}-{{ $reverseKey }}" name="itinerary[{{ $i }}][transport_schedule][{{ $serviceKey }}][{{ $reverseKey }}][selected]" value="1" {{ $revSelected ? 'checked' : '' }} style="display:none;">
+                                                            <button type="button" class="btn btn-sm transport-route-select {{ $revSelected ? 'btn-success' : 'btn-outline-success' }}" data-toggle-target="route-selected-{{ $i }}-{{ $serviceKey }}-{{ $reverseKey }}">{{ $revSelected ? 'Selected' : 'Select' }}</button>
                                                         </div>
                                                     </div>
                                                 @endforeach

@@ -5,9 +5,89 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Package;
+use Illuminate\Support\Facades\Log;
 
 class PackageController extends Controller
 {
+    protected function activityVariantHasPackageRates($rates): bool
+    {
+        if (!is_array($rates) || empty($rates)) {
+            return false;
+        }
+
+        $specificities = [];
+        foreach ($rates as $rate) {
+            if (!is_array($rate)) {
+                continue;
+            }
+
+            $season = trim((string) ($rate['season'] ?? ''));
+            $specificity = trim((string) ($rate['rate_specificity'] ?? ''));
+
+            if ($season === 'Package') {
+                if ($specificity !== '') {
+                    $specificities[$specificity] = true;
+                }
+                continue;
+            }
+
+            if ($specificity !== '') {
+                $specificities[$specificity] = $specificities[$specificity] ?? false;
+            }
+        }
+
+        if ($specificities === []) {
+            return false;
+        }
+
+        foreach ($specificities as $specificity => $hasPackage) {
+            if (!$hasPackage) {
+                return false;
+            }
+        }
+
+        // A variant is considered to have package pricing only if every non-package specificity also has a matching Package-season rate.
+        $packageSpecificities = [];
+        foreach ($rates as $rate) {
+            if (!is_array($rate)) {
+                continue;
+            }
+
+            $season = trim((string) ($rate['season'] ?? ''));
+            $specificity = trim((string) ($rate['rate_specificity'] ?? ''));
+
+            if ($season === 'Package' && $specificity !== '') {
+                $packageSpecificities[$specificity] = true;
+            }
+        }
+
+        foreach ($specificities as $specificity => $hasSpecificity) {
+            if ($hasSpecificity === false || empty($packageSpecificities[$specificity])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected function transportRoutesHavePackagePrice($routes): bool
+    {
+        if (!is_array($routes) || $routes === []) {
+            return false;
+        }
+
+        foreach ($routes as $route) {
+            $pricing = is_array($route) ? ($route['pricing'] ?? []) : [];
+            $packagePrice = $pricing['package_price'] ?? null;
+
+            if ($packagePrice === null || $packagePrice === '' || !is_numeric($packagePrice)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function index()
     {
         $packages = Package::latest()->paginate(20);
@@ -106,15 +186,69 @@ class PackageController extends Controller
         $availableActivities = [];
 
         foreach ($dates as $dIndex => $date) {
-            $availableAccommodations[$dIndex] = \App\Models\Accommodation::query()
+            $accList = \App\Models\Accommodation::query()
                 ->where('approval_status', 'Approved')
                 ->where('status', 'Active')
                 ->get();
 
-            $availableActivities[$dIndex] = \App\Models\Activity::query()
+            // determine has_package for each accommodation: all rooms must have at least one package price entry
+            $accWithFlag = [];
+            foreach ($accList as $acc) {
+                $rooms = $acc->rooms()->get();
+                $allRoomsHave = true;
+                foreach ($rooms as $room) {
+                    // Package pricing for accommodations is stored as a Package-type pricing entry
+                    $hasPkg = \App\Models\AccommodationRate::where('accommodation_id', $acc->id)
+                        ->where('room_id', $room->id)
+                        ->where('rate_type', 'Package')
+                        ->where('is_default', true)
+                        ->exists();
+                    if (!$hasPkg) { $allRoomsHave = false; break; }
+                }
+                $accWithFlag[] = ['model' => $acc, 'has_package' => $allRoomsHave];
+            }
+            $availableAccommodations[$dIndex] = collect($accWithFlag);
+
+            $actList = \App\Models\Activity::query()
                 ->where('approval_status', 'Approved')
                 ->where('status', 'Active')
                 ->get();
+
+            // determine has_package for activities: all variants must have package price entries
+            $actWithFlag = [];
+            foreach ($actList as $act) {
+                $variants = \App\Models\ActivityVariant::where('activity_id', $act->id)->get();
+                $allVariantsHave = true;
+                foreach ($variants as $variant) {
+                    $variantRates = \App\Models\ActivityRate::where('activity_id', $act->id)
+                        ->where('variant_id', $variant->variant_id)
+                        ->get()
+                        ->map(function ($rate) {
+                            return [
+                                'season' => (string) ($rate->season ?? ''),
+                                'rate_specificity' => (string) ($rate->rate_specificity ?? ''),
+                            ];
+                        })
+                        ->all();
+
+                    if (!$this->activityVariantHasPackageRates($variantRates)) {
+                        $allVariantsHave = false;
+                        break;
+                    }
+                }
+                $actWithFlag[] = ['model' => $act, 'has_package' => $allVariantsHave];
+            }
+            $availableActivities[$dIndex] = collect($actWithFlag);
+        }
+
+        // Transports: load transports once and compute has_package flag per transport (all routes must have package_price)
+        $transportsRaw = $trnQuery->get();
+        $transports = collect();
+        foreach ($transportsRaw as $t) {
+            $routes = $t->routes()->get()->map(function ($r) {
+                return ['pricing' => (array) ($r->pricing ?? [])];
+            })->all();
+            $transports->push(['model' => $t, 'has_package' => $this->transportRoutesHavePackagePrice($routes)]);
         }
 
         return view('admin.packages.step2', compact('package', 'dates', 'availableAccommodations', 'availableActivities', 'transports'));
@@ -638,13 +772,70 @@ class PackageController extends Controller
                 continue;
             }
 
+            // Determine which routes were selected in Step 3 for this day (support -fwd / -rev keys and legacy numeric/route_id keys)
+            $selectedRouteKeys = [];
+            if (!empty($dayIt['transport_schedule']) && is_array($dayIt['transport_schedule'])) {
+                foreach ($dayIt['transport_schedule'] as $svcGroup) {
+                    if (!is_array($svcGroup)) continue;
+                    foreach ($svcGroup as $k => $v) {
+                        // consider selections: array with selected flag, or non-empty value
+                        $isSelected = false;
+                        if (is_array($v)) {
+                            $isSelected = !empty($v['selected']) || !empty($v['selected_route']);
+                        } else {
+                            $isSelected = !empty($v) || $v === '0' || $v === 0;
+                        }
+                        if (!$isSelected) continue;
+
+                        if (is_string($k) && (str_ends_with($k, '-fwd') || str_ends_with($k, '-rev'))) {
+                            $base = preg_replace('/-(fwd|rev)$/', '', $k);
+                            $selectedRouteKeys[$base] = true;
+                        } else {
+                            $selectedRouteKeys[(string) $k] = true;
+                        }
+                    }
+                }
+            }
+
+            // Debug: log the raw transport_schedule and selected keys so we can diagnose
+            try {
+                Log::debug('AdminPackageStep4 - transport_schedule', ['package_id' => $package->id, 'day' => $index, 'transport_schedule' => $dayIt['transport_schedule'] ?? null, 'selectedRouteKeys' => array_keys($selectedRouteKeys)]);
+            } catch (\Throwable $e) {
+                // ignore logging errors
+            }
+
             $routes = [];
             foreach ($transport->routes as $route) {
                 $pricing = is_array($route->pricing) ? $route->pricing : (is_string($route->pricing) ? json_decode($route->pricing, true) : []);
-                $routes[] = [
-                    'route' => $route,
-                    'pricing' => $pricing,
-                ];
+
+                // Determine route identifiers to match against selected keys
+                $ridStr = (string) ($route->route_id ?? '');
+                $ridNum = (string) ($route->id ?? '');
+
+                // If no explicit selections found for the day, include all routes (backwards compatibility)
+                if (empty($selectedRouteKeys)) {
+                    $routes[] = ['route' => $route, 'pricing' => $pricing];
+                    continue;
+                }
+
+                // If route matches any selected key (by route_id or numeric id), include it
+                if (!empty($ridStr) && isset($selectedRouteKeys[$ridStr])) {
+                    $routes[] = ['route' => $route, 'pricing' => $pricing];
+                    continue;
+                }
+                if (!empty($ridNum) && isset($selectedRouteKeys[$ridNum])) {
+                    $routes[] = ['route' => $route, 'pricing' => $pricing];
+                    continue;
+                }
+
+                // Also allow matching by base keys that may be stored as strings like TRN-AIRPORT-NORTH
+                foreach (array_keys($selectedRouteKeys) as $skey) {
+                    if ($skey === '') continue;
+                    if (is_string($skey) && (!empty($ridStr) && strcasecmp($skey, $ridStr) === 0)) {
+                        $routes[] = ['route' => $route, 'pricing' => $pricing];
+                        break;
+                    }
+                }
             }
 
             $transportPricingByDay[$index] = ['transport' => $transport, 'routes' => $routes];

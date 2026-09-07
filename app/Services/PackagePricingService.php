@@ -36,10 +36,21 @@ class PackagePricingService
         $items = [];
 
         $dayCounter = 0;
-        foreach ($itinerary as $entry) {
+        $maxPackageDays = (int) ($package->no_of_days ?? 0);
+        foreach ($itinerary as $dayIndex => $entry) {
           if (!is_array($entry)) {
             continue;
           }
+
+          $numericDayIndex = (int) $dayIndex;
+          if ($numericDayIndex < 0) {
+            continue;
+          }
+
+          if ($maxPackageDays > 0 && ($numericDayIndex + 1) > $maxPackageDays) {
+            continue;
+          }
+
           $dayCounter++;
           $dayNumber = $dayCounter;
             $accommodation = !empty($entry['accommodation']) ? Accommodation::with('rooms')->find((int) $entry['accommodation']) : null;
@@ -75,25 +86,65 @@ class PackagePricingService
 
               // transport_schedule format (admin UI) may contain nested groups with selected flags or route_id values
               if (!empty($entry['transport_schedule']) && is_array($entry['transport_schedule'])) {
+                // Collect raw selections first so we can detect paired -fwd / -rev picks
+                $rawSelections = [];
                 foreach ($entry['transport_schedule'] as $svcGroup) {
                   if (!is_array($svcGroup)) continue;
                   foreach ($svcGroup as $routeKey => $routeData) {
+                    // Only consider explicit selections
+                    $isSelected = false;
                     if (is_array($routeData)) {
-                      if (!empty($routeData['selected']) || !empty($routeData['selected_route'])) {
-                        $meta = ['key' => $routeKey, 'add_return' => !empty($routeData['add_return'])];
-                        if (!empty($routeData['route_id'])) {
-                          $meta['route_id'] = $routeData['route_id'];
-                        }
-                        if (!empty($routeData['selected_route'])) {
-                          $meta['selected_route'] = $routeData['selected_route'];
-                        }
-                        if (is_numeric($routeKey)) {
-                          $meta['id'] = (int) $routeKey;
-                        }
-                        $selectedRoutes[] = $meta;
+                      $isSelected = !empty($routeData['selected']) || !empty($routeData['selected_route']);
+                    } else {
+                      $isSelected = !empty($routeData);
+                    }
+                    if (!$isSelected) continue;
+
+                    // Determine direction suffix (if any)
+                    $dir = 'single';
+                    $base = $routeKey;
+                    if (is_string($routeKey)) {
+                      if (str_ends_with($routeKey, '-fwd')) {
+                        $dir = 'fwd';
+                        $base = substr($routeKey, 0, -4);
+                      } elseif (str_ends_with($routeKey, '-rev')) {
+                        $dir = 'rev';
+                        $base = substr($routeKey, 0, -4);
                       }
+                    }
+
+                    $rawSelections[] = ['base' => $base, 'dir' => $dir, 'key' => $routeKey, 'data' => $routeData];
+                  }
+                }
+
+                // Group by base key to detect return selections (both fwd & rev)
+                $grouped = [];
+                foreach ($rawSelections as $rs) {
+                  $b = (string) ($rs['base'] ?? '');
+                  if (!isset($grouped[$b])) $grouped[$b] = ['fwd' => null, 'rev' => null, 'single' => null];
+                  $grouped[$b][$rs['dir']] = $rs;
+                }
+
+                foreach ($grouped as $baseKey => $g) {
+                  // If both forward and reverse selected, treat as a single selection with add_return = true
+                  if (!empty($g['fwd']) && !empty($g['rev'])) {
+                    $routeData = $g['fwd']['data'] ?? $g['rev']['data'] ?? [];
+                    $meta = ['key' => $baseKey, 'add_return' => true];
+                    if (is_array($routeData) && !empty($routeData['route_id'])) $meta['route_id'] = $routeData['route_id'];
+                    $selectedRoutes[] = $meta;
+                  } else {
+                    // Single selection (either explicit single key or only one direction)
+                    $sel = $g['single'] ?? $g['fwd'] ?? $g['rev'];
+                    if (!$sel) continue;
+                    $routeKey = $sel['key'];
+                    $routeData = $sel['data'];
+                    if (is_array($routeData)) {
+                      $meta = ['key' => $routeKey, 'add_return' => false];
+                      if (!empty($routeData['route_id'])) $meta['route_id'] = $routeData['route_id'];
+                      if (!empty($routeData['selected_route'])) $meta['selected_route'] = $routeData['selected_route'];
+                      if (is_numeric($routeKey)) $meta['id'] = (int) $routeKey;
+                      $selectedRoutes[] = $meta;
                     } elseif (!empty($routeData)) {
-                      // could be numeric id or route_id string
                       $meta = ['key' => $routeKey, 'value' => $routeData, 'add_return' => false];
                       if (is_numeric($routeData)) $meta['id'] = (int) $routeData; else $meta['route_id'] = (string) $routeData;
                       $selectedRoutes[] = $meta;
@@ -155,30 +206,49 @@ class PackagePricingService
                   $rid = $sr['id'] ?? ($sr['route_id'] ?? ($sr['key'] ?? null));
                   $wantReturn = !empty($sr['add_return']);
                   $routeModel = null;
+
                   if (is_numeric($rid)) {
                     $routeModel = \App\Models\TransportRoute::find((int) $rid);
                   }
+
                   if (!$routeModel && is_string($rid)) {
-                    // try matching by route_id string column
-                    $routeModel = \App\Models\TransportRoute::where('route_id', (string) $rid)->first();
+                    $normalizedRid = $this->normalizeTransportRouteKey((string) $rid);
+                    $routeModel = \App\Models\TransportRoute::where('route_id', (string) $rid)->first()
+                        ?? \App\Models\TransportRoute::where('route_id', $normalizedRid)->first();
                   }
-                    // Fallback: if route_id lookup failed and rid looks like a TRN-* key, try to parse tokens and match by route_from/route_to
-                    if (!$routeModel && is_string($rid)) {
-                      $tokens = preg_split('/[-_]/', $rid, -1, PREG_SPLIT_NO_EMPTY);
-                      $from = null; $to = null;
-                      if (count($tokens) >= 2) {
-                        $to = array_pop($tokens);
-                        $from = array_pop($tokens);
-                      } elseif (count($tokens) === 1) {
-                        $to = array_pop($tokens);
-                      }
-                      if ($from || $to) {
-                        $q = \App\Models\TransportRoute::query();
-                        if ($from) $q->whereRaw('LOWER(route_from) LIKE ?', ['%' . strtolower($from) . '%']);
-                        if ($to) $q->whereRaw('LOWER(route_to) LIKE ?', ['%' . strtolower($to) . '%']);
-                        $routeModel = $q->first();
-                      }
+
+                  if (!$routeModel && is_string($rid)) {
+                    $normalizedRid = $this->normalizeTransportRouteKey((string) $rid);
+                    $routeModel = \App\Models\TransportRoute::query()
+                        ->whereRaw('LOWER(route_id) = ?', [strtolower($normalizedRid)])
+                        ->first();
+                  }
+
+                  if (!$routeModel && is_string($rid)) {
+                    $normalizedRid = $this->normalizeTransportRouteKey((string) $rid);
+                    $routeModel = \App\Models\TransportRoute::query()->where(function ($q) use ($normalizedRid) {
+                        $q->whereRaw('LOWER(route_id) LIKE ?', ['%' . strtolower($normalizedRid) . '%'])
+                          ->orWhereRaw('LOWER(route_from) LIKE ?', ['%' . strtolower($normalizedRid) . '%'])
+                          ->orWhereRaw('LOWER(route_to) LIKE ?', ['%' . strtolower($normalizedRid) . '%']);
+                    })->first();
+                  }
+
+                  if (!$routeModel && is_string($rid)) {
+                    $tokens = preg_split('/[-_]/', $this->normalizeTransportRouteKey((string) $rid), -1, PREG_SPLIT_NO_EMPTY);
+                    $from = null; $to = null;
+                    if (count($tokens) >= 2) {
+                      $to = array_pop($tokens);
+                      $from = array_pop($tokens);
+                    } elseif (count($tokens) === 1) {
+                      $to = array_pop($tokens);
                     }
+                    if ($from || $to) {
+                      $q = \App\Models\TransportRoute::query();
+                      if ($from) $q->whereRaw('LOWER(route_from) LIKE ?', ['%' . strtolower($from) . '%']);
+                      if ($to) $q->whereRaw('LOWER(route_to) LIKE ?', ['%' . strtolower($to) . '%']);
+                      $routeModel = $q->first();
+                    }
+                  }
                   if (!$routeModel) continue;
                   // Price using package_rate mode preference and whether return was requested for this selection
                   $amount = $this->resolveTransportRouteAmount($routeModel, $guestCount, $package, $wantReturn);
@@ -261,6 +331,22 @@ class PackagePricingService
             'total' => round($total, 2),
             'items' => $items,
         ];
+    }
+
+    protected function normalizeTransportRouteKey(string $key): string
+    {
+        if ($key === '') {
+            return $key;
+        }
+
+        $value = trim($key);
+        foreach (['-fwd', '-rev'] as $suffix) {
+            if (str_ends_with($value, $suffix)) {
+                return substr($value, 0, -strlen($suffix));
+            }
+        }
+
+        return $value;
     }
 
     private function roomMatchesGuestRequirements($room, int $adults, int $children = 0, int $infants = 0): bool

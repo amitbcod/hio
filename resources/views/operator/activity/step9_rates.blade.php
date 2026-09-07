@@ -340,6 +340,33 @@
     </div>
 
     <script>
+        function updateDateRowVisibility() {
+            const seasonDisplay = document.getElementById('seasonDisplay');
+            const dateRow = document.getElementById('dateRow');
+            const validFrom = document.querySelector('input[name="valid_from"]');
+            const validTo = document.querySelector('input[name="valid_to"]');
+
+            if (!seasonDisplay) {
+                return;
+            }
+
+            if (seasonDisplay.value === 'Package') {
+                if (dateRow) dateRow.style.display = 'none';
+                if (validFrom) {
+                    validFrom.removeAttribute('required');
+                    validFrom.value = '';
+                }
+                if (validTo) {
+                    validTo.removeAttribute('required');
+                    validTo.value = '';
+                }
+            } else {
+                if (dateRow) dateRow.style.display = 'flex';
+                if (validFrom) validFrom.setAttribute('required', 'required');
+                if (validTo) validTo.setAttribute('required', 'required');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // Handle Set/Edit Rate buttons
             document.querySelectorAll('.rate-action').forEach(button => {
@@ -370,24 +397,10 @@
                 }
             });
 
-            // Handle season change: hide date fields for Package
             const seasonDisplay = document.getElementById('seasonDisplay');
-            function updateDateRowVisibility() {
-                const dateRow = document.getElementById('dateRow');
-                const validFrom = document.querySelector('input[name="valid_from"]');
-                const validTo = document.querySelector('input[name="valid_to"]');
-                if (seasonDisplay.value === 'Package') {
-                    if (dateRow) dateRow.style.display = 'none';
-                    if (validFrom) { validFrom.removeAttribute('required'); validFrom.value = ''; }
-                    if (validTo) { validTo.removeAttribute('required'); validTo.value = ''; }
-                } else {
-                    if (dateRow) dateRow.style.display = 'flex';
-                    if (validFrom) validFrom.setAttribute('required', 'required');
-                    if (validTo) validTo.setAttribute('required', 'required');
-                }
+            if (seasonDisplay) {
+                seasonDisplay.addEventListener('change', updateDateRowVisibility);
             }
-            seasonDisplay.addEventListener('change', updateDateRowVisibility);
-            // initialize
             updateDateRowVisibility();
 
             const rateForm = document.getElementById('rateForm');
@@ -422,6 +435,7 @@
             document.getElementById('rateForm').reset();
             document.getElementById('perPersonSection').style.display = 'none';
             document.getElementById('perEquipmentSection').style.display = 'none';
+            updateDateRowVisibility();
         }
 
         function openRateForm(data, isDuplicate = false) {
@@ -447,7 +461,9 @@
                 document.getElementById('seasonDisplay').value = data.season || 'One Season';
                 document.getElementById('seasonValue').value = data.season || 'One Season';
             }
-            
+
+            updateDateRowVisibility();
+
             document.getElementById('rateSpecificity').value = data.specificity;
             document.getElementById('rateSpecificityValue').value = data.specificity;
 
