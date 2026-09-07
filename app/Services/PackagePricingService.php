@@ -38,7 +38,7 @@ class PackagePricingService
         $dayCounter = 0;
         $maxPackageDays = (int) ($package->no_of_days ?? 0);
         foreach ($itinerary as $dayIndex => $entry) {
-          if (!is_array($entry)) {
+          if (!is_array($entry) || !$this->isMeaningfulPackageDayEntry($entry)) {
             continue;
           }
 
@@ -69,14 +69,17 @@ class PackagePricingService
             }
 
             if ($activity) {
-                $amount = $this->resolvePackageActivityAmount($activity, $entry, $guestCount, $package, $adults, $children, $infants);
-                $total += $amount;
-                $items[] = [
-                    'day' => $dayNumber,
-                    'type' => 'Activity',
-                    'name' => $this->buildActivityLabel($activity, $entry),
-                    'amount' => round($amount, 2),
-                ];
+                $activityName = trim((string) ($activity->activity_name ?? ''));
+                if ($activityName !== '' && !preg_match('/^(activity)$/i', $activityName)) {
+                    $amount = $this->resolvePackageActivityAmount($activity, $entry, $guestCount, $package, $adults, $children, $infants);
+                    $total += $amount;
+                    $items[] = [
+                        'day' => $dayNumber,
+                        'type' => 'Activity',
+                        'name' => $this->buildActivityLabel($activity, $entry),
+                        'amount' => round($amount, 2),
+                    ];
+                }
             }
 
             if (!empty($entry['transport']) || !empty($entry['transport_schedule'])) {
@@ -347,6 +350,58 @@ class PackagePricingService
         }
 
         return $value;
+    }
+
+    private function isMeaningfulPackageDayEntry(array $entry): bool
+    {
+        if (empty($entry)) {
+            return false;
+        }
+
+        $knownDayKeys = ['accommodation', 'activity', 'transport', 'rooms', 'transport_schedule', 'activity_selection', 'selected_route', 'route_ids', 'routes'];
+        foreach ($knownDayKeys as $key) {
+            if (!array_key_exists($key, $entry)) {
+                continue;
+            }
+
+            $value = $entry[$key];
+            if ($value === null || $value === '' || $value === []) {
+                continue;
+            }
+
+            if (is_array($value)) {
+                foreach ($value as $nested) {
+                    if (is_array($nested)) {
+                        if ($this->isMeaningfulPackageDayEntry($nested)) {
+                            return true;
+                        }
+                        continue;
+                    }
+
+                    if ($nested !== null && $nested !== '' && $nested !== false && $nested !== 'N/A' && $nested !== 'n/a') {
+                        return true;
+                    }
+                }
+                continue;
+            }
+
+            if (is_string($value)) {
+                $trimmed = trim($value);
+                if (preg_match('/^(n\\/?a|na|null|none|\s*)$/i', $trimmed)) {
+                    continue;
+                }
+
+                if ($key === 'activity' && preg_match('/^(activity)$/i', $trimmed)) {
+                    continue;
+                }
+            }
+
+            if (is_string($value) || is_numeric($value) || is_bool($value)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function roomMatchesGuestRequirements($room, int $adults, int $children = 0, int $infants = 0): bool

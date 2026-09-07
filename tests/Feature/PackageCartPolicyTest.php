@@ -66,4 +66,22 @@ class PackageCartPolicyTest extends TestCase
         $this->assertSame('request', $downloadParams[3]->getName());
         $this->assertSame('request', $manageParams[1]->getName());
     }
+
+    public function test_package_generated_bookings_are_filtered_out_of_trip_detail_display(): void
+    {
+        $controller = new \App\Http\Controllers\Frontend\TripController();
+        $method = new ReflectionMethod($controller, 'filterPackageGeneratedBookings');
+        $method->setAccessible(true);
+
+        $bookings = collect([
+            (object) ['id' => 1, 'source_channel' => 'Package'],
+            (object) ['id' => 2, 'source_channel' => 'Manual'],
+            (object) ['id' => 3, 'source_channel' => 'package'],
+        ]);
+
+        $filtered = $method->invoke($controller, $bookings, true);
+
+        $this->assertCount(1, $filtered);
+        $this->assertSame(2, $filtered->first()->id);
+    }
 }

@@ -460,6 +460,7 @@
     "traveler.settings.two_factor_authentication": "Authentification à deux facteurs (2FA)",
     "traveler.settings.two_factor_description": "Ajoutez une couche de sécurité supplémentaire à votre compte.",
     "traveler.settings.enable_2fa": "Activer l'authentification à deux facteurs",
+    "traveler.settings.enable_two_factor": "Activer l'authentification à deux facteurs",
     "traveler.settings.select_method": "Sélectionner la méthode",
     "traveler.settings.method.email": "Email",
     "traveler.settings.method.sms": "SMS",

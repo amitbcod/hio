@@ -11,9 +11,9 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-light mb-0">
         <div class="container d-flex justify-content-between align-items-center">
-            <!-- <a class="navbar-brand" href="#">Admin Portal</a> -->
-            <a class="navbar-brand" href="#"><img src="https://hio.whuso.in/public/images/holidays-io-logo.png"
-                    alt="Logo" width="130px"></a>
+            <a class="navbar-brand" href="{{ route('admin.dashboard') }}">
+                <img src="https://hio.whuso.in/public/images/holidays-io-logo.png" alt="Logo" width="130px">
+            </a>
             <div>
                 @if(session('admin_id'))
                     @php $admin = \App\Models\AdminUser::find(session('admin_id')); @endphp

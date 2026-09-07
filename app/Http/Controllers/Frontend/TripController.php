@@ -149,23 +149,23 @@ class TripController extends Controller
         }
         
         // Load associated accommodation and activity bookings (exclude guest bookings)
-        $accommodationBookings = \App\Models\AccommodationBooking::where('trip_id', $trip->id)
+        $accommodationBookings = $this->filterPackageGeneratedBookings(\App\Models\AccommodationBooking::where('trip_id', $trip->id)
             ->where('is_guest', 0)
             ->with(['accommodation', 'room', 'guests'])
             ->orderBy('check_in_date', 'asc')
-            ->get();
+            ->get());
         
-        $activityBookings = \App\Models\ActivityBooking::where('trip_id', $trip->id)
+        $activityBookings = $this->filterPackageGeneratedBookings(\App\Models\ActivityBooking::where('trip_id', $trip->id)
             ->where('is_guest', 0)
             ->with(['activity', 'guests'])
             ->orderBy('activity_date', 'asc')
-            ->get();
+            ->get());
 
-        $transportBookings = TransportBooking::where('trip_id', $trip->id)
+        $transportBookings = $this->filterPackageGeneratedBookings(TransportBooking::where('trip_id', $trip->id)
             ->where('is_guest', 0)
             ->with(['transport', 'pickupDriver', 'returnDriver'])
             ->orderBy('pickup_date', 'asc')
-            ->get();
+            ->get());
 
         // Prepare `service_type_display` only if the booking has a persisted `service_type`.
         foreach ($transportBookings as $tb) {
@@ -199,6 +199,17 @@ class TripController extends Controller
         $tripEndDate = !empty($allDates) ? max($allDates) : $trip->end_date;
         
         return view('frontend.traveler.trip-detail', compact('trip', 'accommodationBookings', 'activityBookings', 'transportBookings', 'packageDetails', 'packageBookingReference', 'tripStartDate', 'tripEndDate'));
+    }
+
+    protected function filterPackageGeneratedBookings($bookings)
+    {
+        $items = collect($bookings ?? []);
+
+        return $items->reject(function ($booking) {
+            $sourceChannel = strtolower(trim((string) data_get($booking, 'source_channel', '')));
+
+            return $sourceChannel === 'package';
+        })->values();
     }
 
     private function resolvePackageServiceImage($model, string $type): string
@@ -1506,9 +1517,9 @@ HTML;
         }
 
         // Get all bookings for the trip
-        $accommodationBookings = $trip->accommodationBookings ?? collect();
-        $activityBookings = $trip->activityBookings ?? collect();
-        $transportBookings = $trip->transportBookings()->with(['transport'])->get() ?? collect();
+        $accommodationBookings = $this->filterPackageGeneratedBookings($trip->accommodationBookings ?? collect());
+        $activityBookings = $this->filterPackageGeneratedBookings($trip->activityBookings ?? collect());
+        $transportBookings = $this->filterPackageGeneratedBookings($trip->transportBookings()->with(['transport'])->get() ?? collect());
         $packageLineItem = $trip->bookings
             ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
             ->first(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');

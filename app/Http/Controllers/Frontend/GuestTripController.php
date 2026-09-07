@@ -76,20 +76,20 @@ class GuestTripController extends Controller
 
         $trip->load('bookings.lineItems.travellers', 'travellers');
 
-        $accommodationBookings = AccommodationBooking::where('trip_id', $trip->id)
+        $accommodationBookings = (new \App\Http\Controllers\Frontend\TripController())->filterPackageGeneratedBookings(AccommodationBooking::where('trip_id', $trip->id)
             ->with(['accommodation', 'room', 'guests'])
             ->orderBy('check_in_date', 'asc')
-            ->get();
+            ->get());
 
-        $activityBookings = ActivityBooking::where('trip_id', $trip->id)
+        $activityBookings = (new \App\Http\Controllers\Frontend\TripController())->filterPackageGeneratedBookings(ActivityBooking::where('trip_id', $trip->id)
             ->with(['activity', 'guests'])
             ->orderBy('activity_date', 'asc')
-            ->get();
+            ->get());
 
-        $transportBookings = TransportBooking::where('trip_id', $trip->id)
+        $transportBookings = (new \App\Http\Controllers\Frontend\TripController())->filterPackageGeneratedBookings(TransportBooking::where('trip_id', $trip->id)
             ->with(['transport', 'driver'])
             ->orderBy('pickup_date', 'asc')
-            ->get();
+            ->get());
 
         // Prepare `service_type_display` only if the booking has a persisted `service_type`.
         foreach ($transportBookings as $tb) {

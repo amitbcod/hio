@@ -127,4 +127,61 @@ class PackagePolicyAggregationTest extends TestCase
         $this->assertSame(12, $method->invoke($controller, '12'));
     }
 
+    public function test_package_metadata_arrays_are_not_treated_as_real_itinerary_days()
+    {
+        $controller = new \App\Http\Controllers\Frontend\BookingController();
+        $method = new ReflectionMethod($controller, 'isMeaningfulPackageDayEntry');
+        $method->setAccessible(true);
+
+        $metadataEntry = [
+            'content' => ['title' => 'package title'],
+            'discounts' => ['activity' => 10],
+            'pricing_modes' => ['activity' => 'discount_offer'],
+        ];
+
+        $this->assertFalse($method->invoke($controller, $metadataEntry));
+
+        $placeholderActivityEntry = [
+            'activity' => 'Activity',
+            'variant_id' => '1',
+        ];
+
+        $this->assertFalse($method->invoke($controller, $placeholderActivityEntry));
+
+        $realDayEntry = [
+            'accommodation' => '1',
+            'activity' => '2',
+            'transport' => '3',
+            'rooms' => [1, 2],
+        ];
+
+        $this->assertTrue($method->invoke($controller, $realDayEntry));
+    }
+
+    public function test_package_pricing_service_ignores_metadata_only_itinerary_rows()
+    {
+        $package = new \App\Models\Package();
+        $package->id = 1;
+        $package->name = 'Amit test';
+        $package->no_of_days = 2;
+        $package->itinerary = [
+            0 => [
+                'content' => ['title' => 'package title'],
+                'discounts' => ['activity' => 10],
+                'pricing_modes' => ['activity' => 'discount_offer'],
+            ],
+            1 => [
+                'content' => ['title' => 'package title'],
+                'discounts' => ['activity' => 10],
+                'pricing_modes' => ['activity' => 'discount_offer'],
+            ],
+        ];
+
+        $service = new \App\Services\PackagePricingService();
+        $breakdown = $service->calculatePackageTotalDetailed($package, 2, 0, 0);
+
+        $this->assertSame(0.0, (float) $breakdown['total']);
+        $this->assertSame([], $breakdown['items']);
+    }
+
 }

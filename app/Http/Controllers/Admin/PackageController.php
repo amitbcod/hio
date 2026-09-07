@@ -903,7 +903,7 @@ class PackageController extends Controller
         $package->itinerary = $itinerary;
         $package->save();
 
-        return redirect()->route('admin.packages.index')->with('success', 'Package pricing saved.');
+        return redirect()->route('admin.packages.step5', $package->id)->with('success', 'Package pricing saved.');
     }
 
     /**
@@ -990,7 +990,7 @@ class PackageController extends Controller
         $package->itinerary = $itinerary;
         $package->save();
 
-        return redirect()->route('admin.packages.index')->with('success', 'Step 5 saved.');
+        return redirect()->route('admin.packages.step6', $package->id)->with('success', 'Step 5 saved.');
     }
 
     /**

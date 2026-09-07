@@ -1849,8 +1849,9 @@ class BookingController extends Controller
                                 if ($activityId) {
                                     try {
                                         $activity = Activity::with('schedulingTimeSlots')->find($activityId);
-                                        if (!$activity) {
-                                            \Log::warning('Skipping package activity booking with invalid activity id', ['package_id' => $item['package_id'] ?? null, 'dayIndex' => $dayIndex, 'activityId' => $activityId]);
+                                        $activityName = trim((string) ($activity->activity_name ?? ''));
+                                        if (!$activity || $activityName === '' || preg_match('/^(activity)$/i', $activityName)) {
+                                            \Log::warning('Skipping package activity booking with invalid or placeholder activity', ['package_id' => $item['package_id'] ?? null, 'dayIndex' => $dayIndex, 'activityId' => $activityId, 'activity_name' => $activityName]);
                                             continue;
                                         }
 
@@ -3235,34 +3236,50 @@ class BookingController extends Controller
             return false;
         }
 
-        foreach (['accommodation', 'activity', 'transport', 'rooms', 'transport_schedule', 'activity_selection', 'selected_route', 'route_ids', 'routes'] as $key) {
-            $value = $dayEntry[$key] ?? null;
-            if ($value === null || $value === '' || $value === []) {
-                continue;
-            }
+        $knownDayKeys = ['accommodation', 'activity', 'transport', 'rooms', 'transport_schedule', 'activity_selection', 'selected_route', 'route_ids', 'routes'];
+        $hasDayKey = false;
 
-            if (is_array($value)) {
-                foreach ($value as $nested) {
-                    if (is_array($nested)) {
-                        if ($this->isMeaningfulPackageDayEntry($nested)) {
+        foreach ($knownDayKeys as $key) {
+            if (array_key_exists($key, $dayEntry)) {
+                $hasDayKey = true;
+                $value = $dayEntry[$key];
+
+                if ($value === null || $value === '' || $value === []) {
+                    continue;
+                }
+
+                if (is_array($value)) {
+                    foreach ($value as $nested) {
+                        if (is_array($nested)) {
+                            if ($this->isMeaningfulPackageDayEntry($nested)) {
+                                return true;
+                            }
+                        } elseif ($nested !== null && $nested !== '' && $nested !== false && $nested !== 'N/A' && $nested !== 'n/a') {
                             return true;
                         }
-                    } elseif ($nested !== null && $nested !== '' && $nested !== false && $nested !== 'N/A' && $nested !== 'n/a') {
-                        return true;
+                    }
+                    continue;
+                }
+
+                if (is_string($value)) {
+                    $trimmed = trim($value);
+                    if (preg_match('/^(n\\/?a|na|null|none|\s*)$/i', $trimmed)) {
+                        continue;
+                    }
+
+                    if ($key === 'activity' && preg_match('/^(activity)$/i', $trimmed)) {
+                        continue;
                     }
                 }
-                continue;
-            }
 
-            if (is_string($value) && preg_match('/^(n\\/?a|na|null|none|\s*)$/i', trim($value))) {
-                continue;
-            }
-
-            if (is_string($value) || is_numeric($value) || is_bool($value)) {
-                return true;
+                if (is_string($value) || is_numeric($value) || is_bool($value)) {
+                    return true;
+                }
             }
         }
 
+        // Ignore top-level package metadata containers like content, discounts, pricing_modes, etc.
+        // They are not itinerary day rows and must never create package activity bookings.
         return false;
     }
 
