@@ -28,7 +28,7 @@
                             <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:15%;font-size:13px;color:#333;">Details (Type)</th>
                             <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">Before Deadline</th>
                             <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">After Deadline</th>
-                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:24%;font-size:13px;color:#333;">Notes</th>
+                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">Notes</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -67,7 +67,7 @@
                                                 $map = $severityMaps[$key] ?? null;
                                                 $baselineScore = $map[$baselineType] ?? ($map['package (default)'] ?? 0);
                                             @endphp
-                                            <select name="policies[{{ $key }}][type]" class="form-select" style="min-width:180px;">
+                                            <select name="policies[{{ $key }}][type]" class="form-select">
                                                 @foreach($options as $opt)
                                                     @php $optKey = strtolower(trim((string)$opt)); $optScore = $map[$optKey] ?? null; @endphp
                                                     <option value="{{ $opt }}" @if(trim((string)$opt) === trim((string)$currentType)) selected @endif @if($optScore !== null && $optScore < $baselineScore) disabled @endif>{{ $opt }}</option>
@@ -169,7 +169,7 @@
                 <div class="d-flex gap-2">
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-outline-primary" name="action" value="draft">Save as Draft</button>
-                        <button type="submit" class="btn btn-success" name="action" value="published" onclick="return confirm('Are you sure you want to publish this package?')">Save and Publish</button>
+                        <button type="submit" class="btn btn-primary" style="flex:1" name="action" value="published" onclick="return confirm('Are you sure you want to publish this package?')">Save and Publish</button>
                     </div>
                     </form>
                 </div>
