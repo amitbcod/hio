@@ -15,10 +15,44 @@ class Operator extends Model implements AuthenticatableContract
     protected $guarded = [];
     protected $casts = [
         'package_policy' => 'array',
+        'group_policy' => 'array',
     ];
     public $timestamps = true;
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $operator) {
+            if (empty($operator->package_policy)) {
+                $operator->package_policy = AdminUser::defaultPackagePolicy();
+            }
+
+            if (empty($operator->group_policy)) {
+                $operator->group_policy = AdminUser::defaultGroupPolicy();
+            }
+        });
+    }
+
+    public function effectivePackagePolicy(): array
+    {
+        $value = $this->package_policy;
+        if (is_array($value) && !empty($value)) {
+            return $value;
+        }
+
+        return AdminUser::defaultPackagePolicy();
+    }
+
+    public function effectiveGroupPolicy(): array
+    {
+        $value = $this->group_policy;
+        if (is_array($value) && !empty($value)) {
+            return $value;
+        }
+
+        return AdminUser::defaultGroupPolicy();
+    }
 
     /**
      * Business relationship: an operator belongs to a business.

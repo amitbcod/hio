@@ -15,12 +15,16 @@
     <!-- <a href="{{ route('admin.accommodation.create') }}" class="list-group-item list-group-item-action {{ request()->is('admin/accommodations/create*') ? 'active' : '' }}">Create Accommodation</a> -->
     <a href="{{ route('admin.activity.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/activity*') ? 'active' : '' }}">Activities</a>
     <a href="{{ route('admin.packages.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/packages*') ? 'active' : '' }}">Packages</a>
+    <a href="{{ route('admin.groups.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/groups*') ? 'active' : '' }}">Groups</a>
     <!-- <a href="{{ route('admin.activity.create') }}" class="list-group-item list-group-item-action {{ request()->is('admin/activity/create*') ? 'active' : '' }}">Create Activity</a> -->
     <a href="{{ route('admin.accommodation.bookings') }}" class="list-group-item list-group-item-action {{ request()->is('admin/accommodation/bookings*') ? 'active' : '' }}">Accommodation Bookings</a>
     <a href="{{ route('admin.activity.bookings') }}" class="list-group-item list-group-item-action {{ request()->is('admin/activity/bookings*') ? 'active' : '' }}">Activity Bookings</a>
     <a href="{{ route('admin.transport.bookings') }}" class="list-group-item list-group-item-action {{ request()->is('admin/transport/bookings*') ? 'active' : '' }}">Transport Bookings</a>
     <a href="{{ route('admin.payment-transactions.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/payment-transactions*') ? 'active' : '' }}">Payment Transactions</a>
     <a href="{{ route('admin.shared-carts.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/shared-carts*') ? 'active' : '' }}">Shared Cart Links</a>
+    <div class="list-group-item list-group-item-action font-weight-bold">Policy</div>
+    <a href="{{ route('admin.policy.package-default-policy') }}" class="list-group-item list-group-item-action {{ request()->is('admin/policy/package-default-policy*') ? 'active' : '' }}">Package Default Policy</a>
+    <a href="{{ route('admin.policy.group-default-policy') }}" class="list-group-item list-group-item-action {{ request()->is('admin/policy/group-default-policy*') ? 'active' : '' }}">Group Default Policy</a>
     @if(Route::has('admin.policy-templates.index'))
         <a href="{{ route('admin.policy-templates.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/policy-templates*') ? 'active' : '' }} font-weight-bold">HIO Policy Templates</a>
     @else

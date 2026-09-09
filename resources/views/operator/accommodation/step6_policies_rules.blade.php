@@ -15,8 +15,9 @@
                         <ul class="nav" id="policyTabs" style="display:flex;gap:8px;list-style:none;padding-left:0;margin-bottom:0;">
                             <li><a href="#" class="btn btn-sm btn-light active" data-tab="policies" style="padding:6px 10px;">Policies & Rules</a></li>
                             <li><a href="#" class="btn btn-sm btn-light" data-tab="package_policy" style="padding:6px 10px;">Package policy</a></li>
+                            <li><a href="#" class="btn btn-sm btn-light" data-tab="group_policy" style="padding:6px 10px;">Group policy</a></li>
                         </ul>
-                        <small style="display:block;margin-top:6px;color:#666;">Note: Package policy is saved at operator level and applies to all your accommodations.</small>
+                        <small style="display:block;margin-top:6px;color:#666;">Note: Package and Group policy are both saved at operator level and apply to all your offerings.</small>
                     </div>
 
                     @if($errors->any())
@@ -419,7 +420,14 @@
 
                         {{-- Buttons --}}
                         @php
-                            $packagePolicy = is_array($operator->package_policy ?? null) ? $operator->package_policy : [];
+                            $defaultPackagePolicy = is_array(\App\Models\AdminUser::defaultPackagePolicy()) ? \App\Models\AdminUser::defaultPackagePolicy() : [];
+                            $defaultGroupPolicy = is_array(\App\Models\AdminUser::defaultGroupPolicy()) ? \App\Models\AdminUser::defaultGroupPolicy() : [];
+                            $packagePolicy = !empty($operator->package_policy) && is_array($operator->package_policy)
+                                ? $operator->package_policy
+                                : $defaultPackagePolicy;
+                            $groupPolicy = !empty($operator->group_policy) && is_array($operator->group_policy)
+                                ? $operator->group_policy
+                                : $defaultGroupPolicy;
                             $staticPolicyValues = [
                                 'payment' => ['type' => '100% Payment'],
                                 'refund' => ['type' => 'Refund Policy'],
@@ -642,6 +650,94 @@
                             <div style="margin-top:16px;border:1px solid #e4e7eb;border-radius:10px;padding:12px 14px;background:#f7f7f7;">
                                 <div style="font-weight:600;color:#333;margin-bottom:8px;">Package Notes</div>
                                 <textarea name="package_policy[package_notes]" rows="3" class="form-control" style="border:1px solid #dfeaf9;border-radius:6px;resize:vertical;">{{ old('package_policy.package_notes', $packagePolicy['package_notes'] ?? '') }}</textarea>
+                            </div>
+                        </div>
+
+                        <div id="group_policy_tab" style="display:none;border-top:1px solid #eee;padding-top:20px;margin-bottom:24px;">
+                            <div style="background:#f7faff;border:1px solid #dfeaf9;border-radius:10px;padding:12px 16px;margin-bottom:12px;">
+                                <div style="font-weight:700;color:#1d5ec7;">Group Policy Summary</div>
+                            </div>
+
+                            <div style="border:1px solid #e4e7eb;border-radius:10px;overflow:hidden;background:#fff;">
+                                <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                                    <thead style="background:#f7f7f7;">
+                                        <tr>
+                                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:10%;font-size:13px;color:#333;">Policy</th>
+                                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:15%;font-size:13px;color:#333;">Details (Type)</th>
+                                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">Before Deadline</th>
+                                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:20%;font-size:13px;color:#333;">After Deadline</th>
+                                            <th style="padding:12px 10px;text-align:left;border-bottom:1px solid #e4e7eb;width:24%;font-size:13px;color:#333;">Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            $groupPolicyRows = [
+                                                'cancellation' => ['label' => 'Cancellation','types' => ['Flexible', 'Moderate', 'Strict', 'Package (Default)', 'Group', 'Non-Refundable', 'No Show'],'beforeOptions' => ['100% Refund', '50% Refund', '20% Refund', '0% Refund'],'afterOptions' => ['100% Refund', '50% Refund', '20% Refund', '0% Refund']],
+                                                'amendments' => ['label' => 'Amendments','types' => ['Moderate', 'Flexible', 'Strict'],'beforeOptions' => ['Available', 'Not Available'],'afterOptions' => ['Available', 'Not Available']],
+                                                'postponement' => ['label' => 'Postponement','types' => ['Moderate', 'Flexible', 'Strict'],'beforeOptions' => ['Available', 'Not Available'],'afterOptions' => ['Available', 'Not Available']],
+                                                'payment' => ['label' => 'Payment','types' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],'beforeOptions' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],'afterOptions' => []],
+                                                'refund' => ['label' => 'Refund','types' => ['Refund Policy'],'beforeOptions' => [],'afterOptions' => []],
+                                                'security_deposit' => ['label' => 'Security Deposit','types' => ['Required'],'beforeOptions' => [],'afterOptions' => []],
+                                                'house_rules' => ['label' => 'House & Gen. Rules','types' => ['Applicable'],'beforeOptions' => [],'afterOptions' => []],
+                                            ];
+                                        @endphp
+
+                                        @foreach($groupPolicyRows as $key => $meta)
+                                            <tr>
+                                                <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;font-weight:600;color:#2b2d31;">{{ $meta['label'] }}</td>
+                                                <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
+                                                    @if(in_array($key, ['payment', 'refund', 'security_deposit', 'house_rules'], true))
+                                                        <div style="padding:6px 10px;border:1px solid #dfeaf9;border-radius:6px;background:#f8fbff;min-height:36px;display:flex;align-items:center;">
+                                                            {{ old('group_policy.' . $key . '.type', $groupPolicy[$key]['type'] ?? $meta['types'][0]) }}
+                                                        </div>
+                                                    @else
+                                                        <select name="group_policy[{{ $key }}][type]" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;">
+                                                            <option value="">Select</option>
+                                                            @foreach($meta['types'] as $type)
+                                                                <option value="{{ $type }}" {{ old('group_policy.' . $key . '.type', $groupPolicy[$key]['type'] ?? '') == $type ? 'selected' : '' }}>{{ $type }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    @endif
+                                                </td>
+                                                <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
+                                                    @if(($meta['beforeOptions'] ?? []) !== [])
+                                                        <select name="group_policy[{{ $key }}][before_deadline]" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;">
+                                                            @foreach(($meta['beforeOptions'] ?? []) as $option)
+                                                                <option value="{{ $option }}" {{ old('group_policy.' . $key . '.before_deadline', $groupPolicy[$key]['before_deadline'] ?? ($meta['beforeOptions'][0] ?? '')) == $option ? 'selected' : '' }}>{{ $option }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    @else
+                                                        <input type="text" name="group_policy[{{ $key }}][before_deadline]" value="{{ old('group_policy.' . $key . '.before_deadline', $groupPolicy[$key]['before_deadline'] ?? '') }}" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;">
+                                                    @endif
+                                                </td>
+                                                <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
+                                                    @if(($meta['afterOptions'] ?? []) !== [])
+                                                        <select name="group_policy[{{ $key }}][after_deadline]" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;">
+                                                            @foreach(($meta['afterOptions'] ?? []) as $option)
+                                                                <option value="{{ $option }}" {{ old('group_policy.' . $key . '.after_deadline', $groupPolicy[$key]['after_deadline'] ?? ($meta['afterOptions'][0] ?? '')) == $option ? 'selected' : '' }}>{{ $option }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    @else
+                                                        <input type="text" name="group_policy[{{ $key }}][after_deadline]" value="{{ old('group_policy.' . $key . '.after_deadline', $groupPolicy[$key]['after_deadline'] ?? '') }}" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;background:#fff;">
+                                                    @endif
+                                                </td>
+                                                <td style="padding:12px 10px;border-bottom:1px solid #edf0f2;">
+                                                    <textarea name="group_policy[{{ $key }}][notes]" rows="2" class="form-control" style="min-height:36px;border:1px solid #dfeaf9;border-radius:6px;resize:vertical;">{{ old('group_policy.' . $key . '.notes', $groupPolicy[$key]['notes'] ?? '') }}</textarea>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style="margin-top:16px;border:1px solid #e4e7eb;border-radius:10px;padding:12px 14px;background:#f7f7f7;">
+                                <div style="font-weight:600;color:#333;margin-bottom:8px;">Booking Notes</div>
+                                <textarea name="group_policy[booking_notes]" rows="3" class="form-control" style="border:1px solid #dfeaf9;border-radius:6px;resize:vertical;">{{ old('group_policy.booking_notes', $groupPolicy['booking_notes'] ?? '') }}</textarea>
+                            </div>
+
+                            <div style="margin-top:16px;border:1px solid #e4e7eb;border-radius:10px;padding:12px 14px;background:#f7f7f7;">
+                                <div style="font-weight:600;color:#333;margin-bottom:8px;">Group Notes</div>
+                                <textarea name="group_policy[group_notes]" rows="3" class="form-control" style="border:1px solid #dfeaf9;border-radius:6px;resize:vertical;">{{ old('group_policy.group_notes', $groupPolicy['group_notes'] ?? '') }}</textarea>
                             </div>
                         </div>
 
@@ -886,10 +982,10 @@
         // Tab switching for policy tabs
         const tabs = document.querySelectorAll('#policyTabs a[data-tab]');
         const packageTab = document.getElementById('package_policy_tab');
-
+        const groupTab = document.getElementById('group_policy_tab');
         const policiesTab = document.getElementById('policies_tab');
 
-        if (tabs && packageTab && policiesTab) {
+        if (tabs && packageTab && groupTab && policiesTab) {
             tabs.forEach(function(tab) {
                 tab.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -899,9 +995,15 @@
 
                     if (which === 'package_policy') {
                         packageTab.style.display = 'block';
+                        groupTab.style.display = 'none';
+                        policiesTab.style.display = 'none';
+                    } else if (which === 'group_policy') {
+                        packageTab.style.display = 'none';
+                        groupTab.style.display = 'block';
                         policiesTab.style.display = 'none';
                     } else {
                         packageTab.style.display = 'none';
+                        groupTab.style.display = 'none';
                         policiesTab.style.display = 'block';
                     }
 

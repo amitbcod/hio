@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Group;
 use Illuminate\Http\Request;
-use App\Models\Package;
 use Illuminate\Support\Facades\Log;
 
-class PackageController extends Controller
+class GroupController extends Controller
 {
     protected function activityVariantHasPackageRates($rates): bool
     {
@@ -46,7 +46,6 @@ class PackageController extends Controller
             }
         }
 
-        // A variant is considered to have package pricing only if every non-package specificity also has a matching Package-season rate.
         $packageSpecificities = [];
         foreach ($rates as $rate) {
             if (!is_array($rate)) {
@@ -90,27 +89,27 @@ class PackageController extends Controller
 
     public function index()
     {
-        $packages = Package::latest()->paginate(20);
-        return view('admin.packages.index', compact('packages'));
+        $groups = Group::latest()->paginate(20);
+        return view('admin.groups.index', compact('groups'));
     }
 
     public function create()
     {
-        // ensure the view always has a $package variable (empty model for create)
-        $package = new Package();
-        return view('admin.packages.create-step1', compact('package'));
+        $group = new Group();
+        return view('admin.groups.create-step1', compact('group'));
     }
 
-    public function edit(Package $package)
+    public function edit(Group $group)
     {
-        // show the same step1 view but with package data
-        return view('admin.packages.create-step1', compact('package'));
+        return view('admin.groups.create-step1', compact('group'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
+            'group_type' => 'required|string|in:Open Group,Closed Group',
+            'closed_group_client' => 'nullable|required_if:group_type,Closed Group|string|max:255',
             'no_of_days' => 'nullable|integer|min:0',
             'no_of_nights' => 'nullable|integer|min:0',
             'booking_cutoff_days' => 'nullable|integer|min:0',
@@ -121,16 +120,17 @@ class PackageController extends Controller
         ]);
 
         $data['created_by'] = session('admin_id') ?? null;
+        $group = Group::create($data);
 
-        $package = Package::create($data);
-
-        return redirect()->route('admin.packages.step2', $package->id)->with('success', 'Step 1 saved. Proceed to Step 2.');
+        return redirect()->route('admin.groups.step2', $group->id)->with('success', 'Step 1 saved. Proceed to Step 2.');
     }
 
-    public function update(Request $request, Package $package)
+    public function update(Request $request, Group $group)
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
+            'group_type' => 'required|string|in:Open Group,Closed Group',
+            'closed_group_client' => 'nullable|required_if:group_type,Closed Group|string|max:255',
             'no_of_days' => 'nullable|integer|min:0',
             'no_of_nights' => 'nullable|integer|min:0',
             'booking_cutoff_days' => 'nullable|integer|min:0',
@@ -140,18 +140,17 @@ class PackageController extends Controller
             'maximum_pax' => 'nullable|integer|min:1',
         ]);
 
-        $package->update($data);
+        $group->update($data);
 
-        return redirect()->route('admin.packages.step2', $package->id)->with('success', 'Step 1 updated. Proceed to Step 2.');
+        return redirect()->route('admin.groups.step2', $group->id)->with('success', 'Step 1 updated. Proceed to Step 2.');
     }
 
-    public function step2(Package $package, Request $request)
+    public function step2(Group $group, Request $request)
     {
-        // Determine days
-        $days = (int) ($package->no_of_days ?? 0);
+        $days = (int) ($group->no_of_days ?? 0);
         $dates = [];
-        if ($days > 0 && $package->available_from) {
-            $start = \Carbon\Carbon::parse($package->available_from);
+        if ($days > 0 && $group->available_from) {
+            $start = \Carbon\Carbon::parse($group->available_from);
             for ($i = 0; $i < $days; $i++) {
                 $dates[] = $start->copy()->addDays($i)->toDateString();
             }
@@ -161,43 +160,32 @@ class PackageController extends Controller
             }
         }
 
-        // Filtered lists
         $accQuery = \App\Models\Accommodation::query()->where('status', 'Active');
         $actQuery = \App\Models\Activity::query()->where('status', 'Active');
         $trnQuery = \App\Models\Transport::query()->where('status', 'Active');
 
-        // apply simple search filters
         if ($request->filled('q_accommodation')) {
-            $accQuery->where('name', 'like', '%'.$request->get('q_accommodation').'%');
+            $accQuery->where('name', 'like', '%' . $request->get('q_accommodation') . '%');
         }
         if ($request->filled('q_activity')) {
-            $actQuery->where('activity_name', 'like', '%'.$request->get('q_activity').'%');
+            $actQuery->where('activity_name', 'like', '%' . $request->get('q_activity') . '%');
         }
         if ($request->filled('q_transport')) {
-            $trnQuery->where('name', 'like', '%'.$request->get('q_transport').'%');
+            $trnQuery->where('name', 'like', '%' . $request->get('q_transport') . '%');
         }
 
-        // Load base collections for transports (no date specific)
         $transports = $trnQuery->get();
 
-        // For each date, show all active approved listings so package creation can select any valid option
-        // without being restricted to date-specific inventory rows alone.
         $availableAccommodations = [];
         $availableActivities = [];
 
         foreach ($dates as $dIndex => $date) {
-            $accList = \App\Models\Accommodation::query()
-                ->where('approval_status', 'Approved')
-                ->where('status', 'Active')
-                ->get();
-
-            // determine has_package for each accommodation: all rooms must have at least one package price entry
+            $accList = \App\Models\Accommodation::query()->where('approval_status', 'Approved')->where('status', 'Active')->get();
             $accWithFlag = [];
             foreach ($accList as $acc) {
                 $rooms = $acc->rooms()->get();
                 $allRoomsHave = true;
                 foreach ($rooms as $room) {
-                    // Package pricing for accommodations is stored as a Package-type pricing entry
                     $hasPkg = \App\Models\AccommodationRate::where('accommodation_id', $acc->id)
                         ->where('room_id', $room->id)
                         ->where('rate_type', 'Package')
@@ -209,12 +197,7 @@ class PackageController extends Controller
             }
             $availableAccommodations[$dIndex] = collect($accWithFlag);
 
-            $actList = \App\Models\Activity::query()
-                ->where('approval_status', 'Approved')
-                ->where('status', 'Active')
-                ->get();
-
-            // determine has_package for activities: all variants must have package price entries
+            $actList = \App\Models\Activity::query()->where('approval_status', 'Approved')->where('status', 'Active')->get();
             $actWithFlag = [];
             foreach ($actList as $act) {
                 $variants = \App\Models\ActivityVariant::where('activity_id', $act->id)->get();
@@ -241,7 +224,6 @@ class PackageController extends Controller
             $availableActivities[$dIndex] = collect($actWithFlag);
         }
 
-        // Transports: load transports once and compute has_package flag per transport (all routes must have package_price)
         $transportsRaw = $trnQuery->get();
         $transports = collect();
         foreach ($transportsRaw as $t) {
@@ -251,16 +233,16 @@ class PackageController extends Controller
             $transports->push(['model' => $t, 'has_package' => $this->transportRoutesHavePackagePrice($routes)]);
         }
 
-        return view('admin.packages.step2', compact('package', 'dates', 'availableAccommodations', 'availableActivities', 'transports'));
+        return view('admin.groups.step2', compact('group', 'dates', 'availableAccommodations', 'availableActivities', 'transports'));
     }
 
-    public function storeStep2(Package $package, Request $request)
+    public function storeStep2(Group $group, Request $request)
     {
         $data = $request->validate([
             'itinerary' => 'required|array',
         ]);
 
-        $existingItinerary = $package->itinerary ?? [];
+        $existingItinerary = $group->itinerary ?? [];
         $postedItinerary = $data['itinerary'];
         $mergedItinerary = $existingItinerary;
 
@@ -283,23 +265,18 @@ class PackageController extends Controller
             }
         }
 
-        // Keep any previously saved values for days not included in the current post.
-        $package->itinerary = $mergedItinerary;
-        $package->save();
+        $group->itinerary = $mergedItinerary;
+        $group->save();
 
-        return redirect()->route('admin.packages.step3', $package->id)->with('success', 'Package itinerary saved.');
+        return redirect()->route('admin.groups.step3', $group->id)->with('success', 'Group itinerary saved.');
     }
 
-    /**
-     * Step 3 - Allocation (Accommodation rooms)
-     */
-    public function step3(Package $package, Request $request)
+    public function step3(Group $group, Request $request)
     {
-        // build dates as in step2
-        $days = (int) ($package->no_of_days ?? 0);
+        $days = (int) ($group->no_of_days ?? 0);
         $dates = [];
-        if ($days > 0 && $package->available_from) {
-            $start = \Carbon\Carbon::parse($package->available_from);
+        if ($days > 0 && $group->available_from) {
+            $start = \Carbon\Carbon::parse($group->available_from);
             for ($i = 0; $i < $days; $i++) {
                 $dates[] = $start->copy()->addDays($i)->toDateString();
             }
@@ -309,9 +286,7 @@ class PackageController extends Controller
             }
         }
 
-        $itinerary = $package->itinerary ?? [];
-
-        // For each day, load the selected activity so Step 3 can display it above allocations
+        $itinerary = $group->itinerary ?? [];
         $activityByDay = [];
         $accommodationByDay = [];
         $activityVariantPricingByDay = [];
@@ -341,10 +316,7 @@ class PackageController extends Controller
                 $transportRoutes = $transportByDay[$index]->routes()->get();
                 foreach ($serviceDefinitions as $serviceKey => $serviceLabel) {
                     $routes = $transportRoutes->where('service_type', $serviceKey)->values()->all();
-                    $transportGroups[$serviceKey] = [
-                        'label' => $serviceLabel,
-                        'routes' => $routes,
-                    ];
+                    $transportGroups[$serviceKey] = ['label' => $serviceLabel, 'routes' => $routes];
 
                     if (empty($defaultTransportService) && !empty($routes)) {
                         $defaultTransportService = $serviceKey;
@@ -353,10 +325,7 @@ class PackageController extends Controller
 
                 $additionalRoutes = $transportRoutes->filter(fn ($route) => !isset($serviceDefinitions[$route->service_type ?? '']))->groupBy('service_type');
                 foreach ($additionalRoutes as $serviceKey => $routes) {
-                    $transportGroups[$serviceKey] = [
-                        'label' => ucfirst(str_replace('_', ' ', $serviceKey)),
-                        'routes' => $routes->values()->all(),
-                    ];
+                    $transportGroups[$serviceKey] = ['label' => ucfirst(str_replace('_', ' ', $serviceKey)), 'routes' => $routes->values()->all()];
                     if (empty($defaultTransportService) && !empty($routes)) {
                         $defaultTransportService = $serviceKey;
                     }
@@ -367,15 +336,11 @@ class PackageController extends Controller
                 }
             }
 
-            $transportServiceGroupsByDay[$index] = [
-                'groups' => $transportGroups,
-                'default' => $defaultTransportService,
-            ];
+            $transportServiceGroupsByDay[$index] = ['groups' => $transportGroups, 'default' => $defaultTransportService];
 
             if ($activityId) {
                 $variants = \App\Models\ActivityVariant::where('activity_id', $activityId)->get();
                 $options = [];
-
                 foreach ($variants as $variant) {
                     $pricingOptions = \App\Models\ActivityRate::where('activity_id', $activityId)
                         ->where('variant_id', $variant->variant_id)
@@ -399,14 +364,12 @@ class PackageController extends Controller
                         ];
                     }
                 }
-
                 $activityVariantPricingByDay[$index] = $options;
             } else {
                 $activityVariantPricingByDay[$index] = [];
             }
         }
 
-        // For each day, load rooms for the accommodation selected in step2
         $roomsByDay = [];
         $mealPlans = [];
         $propertyTypes = [];
@@ -419,7 +382,6 @@ class PackageController extends Controller
                     $rooms = $acc->rooms()->get();
                     $roomsByDay[$index] = $rooms;
 
-                    // collect all rate plans (rate_name) for this accommodation
                     $accRatePlans = \App\Models\AccommodationRate::where('accommodation_id', $acc->id)
                         ->whereNotNull('rate_name')
                         ->pluck('rate_name')
@@ -427,11 +389,11 @@ class PackageController extends Controller
                         ->filter()
                         ->values()
                         ->toArray();
+
                     if (!empty($accRatePlans)) {
                         $mealPlans = array_values(array_unique(array_merge($mealPlans, $accRatePlans)));
                     }
 
-                    // collect property type
                     if ($acc->property_type) {
                         $propertyTypes[] = $acc->property_type;
                     }
@@ -445,22 +407,22 @@ class PackageController extends Controller
 
         $propertyTypes = array_values(array_unique($propertyTypes));
 
-        return view('admin.packages.step3', compact('package', 'dates', 'roomsByDay', 'mealPlans', 'propertyTypes', 'activityByDay', 'accommodationByDay', 'activityVariantPricingByDay', 'transportByDay', 'transportServiceGroupsByDay'));
+        return view('admin.groups.step3', compact('group', 'dates', 'roomsByDay', 'mealPlans', 'propertyTypes', 'activityByDay', 'accommodationByDay', 'activityVariantPricingByDay', 'transportByDay', 'transportServiceGroupsByDay'));
     }
 
-    public function storeStep3(Package $package, Request $request)
+    public function storeStep3(Group $group, Request $request)
     {
         $data = $request->validate([
             'allocations' => 'nullable|array',
+            'itinerary' => 'nullable|array',
         ]);
 
         $alloc = $data['allocations'] ?? [];
-
-        $itinerary = $package->itinerary ?? [];
+        $itinerary = $group->itinerary ?? [];
         $daySelections = $request->input('itinerary', []);
 
         foreach ($daySelections as $dayIndex => $dayData) {
-            if (!isset($itinerary[$dayIndex])) {
+            if (!isset($itinerary[$dayIndex]) || !is_array($itinerary[$dayIndex])) {
                 $itinerary[$dayIndex] = [];
             }
 
@@ -491,28 +453,27 @@ class PackageController extends Controller
             }
         }
 
-        // attach selected room ids to itinerary per day
         foreach ($alloc as $dayIndex => $dayData) {
             if (!isset($itinerary[$dayIndex])) {
                 $itinerary[$dayIndex] = [];
             }
+
             $rooms = $dayData['rooms'] ?? [];
-            // ensure numeric ids
             $itinerary[$dayIndex]['rooms'] = array_values(array_map('intval', $rooms));
         }
 
-        $package->itinerary = $itinerary;
-        $package->save();
+        $group->itinerary = $itinerary;
+        $group->save();
 
-        return redirect()->route('admin.packages.step4', $package->id)->with('success', 'Accommodation allocation saved.');
+        return redirect()->route('admin.groups.step4', $group->id)->with('success', 'Accommodation allocation saved.');
     }
 
-    public function step4(Package $package)
+    public function step4(Group $group)
     {
-        $days = (int) ($package->no_of_days ?? 0);
+        $days = (int) ($group->no_of_days ?? 0);
         $dates = [];
-        if ($days > 0 && $package->available_from) {
-            $start = \Carbon\Carbon::parse($package->available_from);
+        if ($days > 0 && $group->available_from) {
+            $start = \Carbon\Carbon::parse($group->available_from);
             for ($i = 0; $i < $days; $i++) {
                 $dates[] = $start->copy()->addDays($i)->toDateString();
             }
@@ -522,7 +483,7 @@ class PackageController extends Controller
             }
         }
 
-        $itinerary = $package->itinerary ?? [];
+        $itinerary = $group->itinerary ?? [];
         $pricingByDay = [];
 
         foreach ($dates as $index => $date) {
@@ -562,7 +523,7 @@ class PackageController extends Controller
                         ->where('pricing_setting', $plan->pricing_setting)
                         ->where('is_rate_plan', false)
                         ->where('is_default', true)
-                            ->where('rate_type', '!=', 'Package')
+                        ->where('rate_type', '!=', 'Package')
                         ->orderBy('valid_from')
                         ->first();
 
@@ -614,11 +575,8 @@ class PackageController extends Controller
             }
         }
 
-        // Build activity selections and pricing for each day (from itinerary)
         $activitySelectionsByDay = [];
         $activityPricingByDay = [];
-
-        // Build transport pricing info for each day (read-only display of operator-set prices)
         $transportPricingByDay = [];
 
         foreach ($dates as $index => $date) {
@@ -631,18 +589,15 @@ class PackageController extends Controller
             $activitySelectionsByDay[$index] = $selectedSelections;
             $activityPricingByDay[$index] = [];
 
-            // If selections exist in form variant_id|pricing_option, parse them and show only matching rates
             if (!empty($selectedSelections)) {
                 foreach ($selectedSelections as $sel) {
                     if (strpos($sel, '|') === false) {
-                        // legacy: maybe activity id stored; try to load activity and include all variants
                         $activity = \App\Models\Activity::find($sel);
                         if (!$activity) continue;
 
                         $variants = \App\Models\ActivityVariant::where('activity_id', $activity->id)->get();
                         $variantEntries = [];
                         foreach ($variants as $variant) {
-                            // prefer showing explicit seasonal rates (non-package) for the activity
                             $ratesCollection = \App\Models\ActivityRate::where('activity_id', $activity->id)
                                 ->where('variant_id', $variant->variant_id)
                                 ->where('season', '!=', 'Package')
@@ -656,14 +611,10 @@ class PackageController extends Controller
                                     ->get();
                             }
 
-                            // Group by season key and prefer the latest entry per season (operator shows latest)
-                            $rates = $ratesCollection->groupBy(function ($r) {
-                                return $r->season ?: 'One Season';
-                            })->map(function ($group) {
-                                return $group->first();
-                            })->values()->unique('rate_id')->values();
+                            $rates = $ratesCollection->groupBy(fn ($r) => $r->season ?: 'One Season')
+                                ->map(fn ($group) => $group->first())
+                                ->values()->unique('rate_id')->values();
 
-                            // also collect any package-season rates for this variant keyed by specificity
                             $packageRatesMap = \App\Models\ActivityRate::where('activity_id', $activity->id)
                                 ->where('variant_id', $variant->variant_id)
                                 ->where('season', 'Package')
@@ -677,7 +628,7 @@ class PackageController extends Controller
                         continue;
                     }
 
-                    list($variantId, $pricingOption) = explode('|', $sel, 2);
+                    [$variantId, $pricingOption] = explode('|', $sel, 2);
                     $variantId = trim($variantId);
                     $pricingOption = trim($pricingOption);
 
@@ -687,22 +638,16 @@ class PackageController extends Controller
                     $activity = \App\Models\Activity::find($variant->activity_id);
                     if (!$activity) continue;
 
-                    // When a specific variant|pricing option is selected, return all non-package rates
-                    // for that variant+specificity (seasonal + defaults), excluding rates with rate_type = 'Package'.
                     $ratesCollection = \App\Models\ActivityRate::where('activity_id', $activity->id)
                         ->where('variant_id', $variant->variant_id)
-                        ->when($pricingOption, function ($q) use ($pricingOption) {
-                            return $q->where('rate_specificity', $pricingOption);
-                        })
+                        ->when($pricingOption, fn ($q) => $q->where('rate_specificity', $pricingOption))
                         ->where('season', '!=', 'Package')
                         ->orderBy('created_at', 'desc')
                         ->get();
 
-                    $rates = $ratesCollection->groupBy(function ($r) {
-                        return $r->season ?: 'One Season';
-                    })->map(function ($group) {
-                        return $group->first();
-                    })->values()->unique('rate_id')->values();
+                    $rates = $ratesCollection->groupBy(fn ($r) => $r->season ?: 'One Season')
+                        ->map(fn ($group) => $group->first())
+                        ->values()->unique('rate_id')->values();
 
                     $packageRatesMap = \App\Models\ActivityRate::where('activity_id', $activity->id)
                         ->where('variant_id', $variant->variant_id)
@@ -714,7 +659,6 @@ class PackageController extends Controller
                     $activityPricingByDay[$index][] = ['activity' => $activity, 'variants' => [['variant' => $variant, 'rates' => $rates, 'package_map' => $packageRatesMap]]];
                 }
             } else {
-                // fallback: if no explicit selections, show activity from itinerary.activity (if present)
                 $activityId = $dayIt['activity'] ?? null;
                 if ($activityId) {
                     $activity = \App\Models\Activity::find($activityId);
@@ -722,7 +666,6 @@ class PackageController extends Controller
                         $variants = \App\Models\ActivityVariant::where('activity_id', $activity->id)->get();
                         $variantEntries = [];
                         foreach ($variants as $variant) {
-                            // prefer seasonal (non-package) rates for display
                             $ratesCollection = \App\Models\ActivityRate::where('activity_id', $activity->id)
                                 ->where('variant_id', $variant->variant_id)
                                 ->where('season', '!=', 'Package')
@@ -736,11 +679,9 @@ class PackageController extends Controller
                                     ->get();
                             }
 
-                            $rates = $ratesCollection->groupBy(function ($r) {
-                                return $r->season ?: 'One Season';
-                            })->map(function ($group) {
-                                return $group->first();
-                            })->values()->unique('rate_id')->values();
+                            $rates = $ratesCollection->groupBy(fn ($r) => $r->season ?: 'One Season')
+                                ->map(fn ($group) => $group->first())
+                                ->values()->unique('rate_id')->values();
 
                             $packageRatesMap = \App\Models\ActivityRate::where('activity_id', $activity->id)
                                 ->where('variant_id', $variant->variant_id)
@@ -757,7 +698,6 @@ class PackageController extends Controller
             }
         }
 
-        // assemble transport pricing per day
         foreach ($dates as $index => $date) {
             $dayIt = $itinerary[$index] ?? [];
             $transportId = $dayIt['transport'] ?? null;
@@ -772,13 +712,11 @@ class PackageController extends Controller
                 continue;
             }
 
-            // Determine which routes were selected in Step 3 for this day (support -fwd / -rev keys and legacy numeric/route_id keys)
             $selectedRouteKeys = [];
             if (!empty($dayIt['transport_schedule']) && is_array($dayIt['transport_schedule'])) {
                 foreach ($dayIt['transport_schedule'] as $svcGroup) {
                     if (!is_array($svcGroup)) continue;
                     foreach ($svcGroup as $k => $v) {
-                        // consider selections: array with selected flag, or non-empty value
                         $isSelected = false;
                         if (is_array($v)) {
                             $isSelected = !empty($v['selected']) || !empty($v['selected_route']);
@@ -797,28 +735,17 @@ class PackageController extends Controller
                 }
             }
 
-            // Debug: log the raw transport_schedule and selected keys so we can diagnose
-            try {
-                Log::debug('AdminPackageStep4 - transport_schedule', ['package_id' => $package->id, 'day' => $index, 'transport_schedule' => $dayIt['transport_schedule'] ?? null, 'selectedRouteKeys' => array_keys($selectedRouteKeys)]);
-            } catch (\Throwable $e) {
-                // ignore logging errors
-            }
-
             $routes = [];
             foreach ($transport->routes as $route) {
                 $pricing = is_array($route->pricing) ? $route->pricing : (is_string($route->pricing) ? json_decode($route->pricing, true) : []);
-
-                // Determine route identifiers to match against selected keys
                 $ridStr = (string) ($route->route_id ?? '');
                 $ridNum = (string) ($route->id ?? '');
 
-                // If no explicit selections found for the day, include all routes (backwards compatibility)
                 if (empty($selectedRouteKeys)) {
                     $routes[] = ['route' => $route, 'pricing' => $pricing];
                     continue;
                 }
 
-                // If route matches any selected key (by route_id or numeric id), include it
                 if (!empty($ridStr) && isset($selectedRouteKeys[$ridStr])) {
                     $routes[] = ['route' => $route, 'pricing' => $pricing];
                     continue;
@@ -828,7 +755,6 @@ class PackageController extends Controller
                     continue;
                 }
 
-                // Also allow matching by base keys that may be stored as strings like TRN-AIRPORT-NORTH
                 foreach (array_keys($selectedRouteKeys) as $skey) {
                     if ($skey === '') continue;
                     if (is_string($skey) && (!empty($ridStr) && strcasecmp($skey, $ridStr) === 0)) {
@@ -841,21 +767,13 @@ class PackageController extends Controller
             $transportPricingByDay[$index] = ['transport' => $transport, 'routes' => $routes];
         }
 
-        return view('admin.packages.step4', compact('package', 'dates', 'itinerary', 'pricingByDay', 'activitySelectionsByDay', 'activityPricingByDay', 'transportPricingByDay'));
+        return view('admin.groups.step4', compact('group', 'dates', 'itinerary', 'pricingByDay', 'activitySelectionsByDay', 'activityPricingByDay', 'transportPricingByDay'));
     }
 
-    public function storeStep4(Package $package, Request $request)
+    public function storeStep4(Group $group, Request $request)
     {
-        $request->validate([
-            'pricing' => 'nullable|array',
-            'pricing_modes' => 'nullable|array',
-            'discounts' => 'nullable|array',
-        ]);
-
-        $itinerary = $package->itinerary ?? [];
-
+        $itinerary = $group->itinerary ?? [];
         $pricingModes = $request->input('pricing_modes', []);
-        $discounts = $request->input('discounts', []);
 
         $itinerary['pricing_modes'] = [
             'accommodation' => in_array($pricingModes['accommodation'] ?? 'discount_offer', ['discount_offer', 'package_rate'], true) ? $pricingModes['accommodation'] : 'discount_offer',
@@ -864,59 +782,25 @@ class PackageController extends Controller
         ];
 
         $itinerary['discounts'] = [
-            'accommodation' => is_numeric($discounts['accommodation'] ?? null) ? max(0, min(100, (float) $discounts['accommodation'])) : 20,
-            'activity' => is_numeric($discounts['activity'] ?? null) ? max(0, min(100, (float) $discounts['activity'])) : 10,
-            'transport' => is_numeric($discounts['transport'] ?? null) ? max(0, min(100, (float) $discounts['transport'])) : 5,
+            'accommodation' => (float) ($request->input('discounts.accommodation', 0) ?: 0),
+            'activity' => (float) ($request->input('discounts.activity', 0) ?: 0),
+            'transport' => (float) ($request->input('discounts.transport', 0) ?: 0),
         ];
 
-        $pricing = $request->input('pricing', []);
-        foreach ($pricing as $dayIndex => $dayData) {
-            if (!isset($itinerary[$dayIndex])) {
-                $itinerary[$dayIndex] = [];
-            }
+        $group->itinerary = $itinerary;
+        $group->save();
 
-            $normalized = [];
-            foreach ((array) $dayData as $roomId => $roomData) {
-                if (!is_array($roomData)) {
-                    continue;
-                }
-
-                $mode = $roomData['mode'] ?? 'discount_offer';
-                if (!in_array($mode, ['discount_offer', 'package_rate'], true)) {
-                    $mode = 'discount_offer';
-                }
-
-                $normalized[(int) $roomId] = [
-                    'mode' => $mode,
-                    'discount_percent' => isset($roomData['discount_percent']) ? trim((string) $roomData['discount_percent']) : '',
-                    'selected_package' => isset($roomData['selected_package']) ? trim((string) $roomData['selected_package']) : null,
-                ];
-            }
-
-            if (!empty($normalized)) {
-                $itinerary[$dayIndex]['pricing'] = $normalized;
-            } else {
-                unset($itinerary[$dayIndex]['pricing']);
-            }
-        }
-
-        $package->itinerary = $itinerary;
-        $package->save();
-
-        return redirect()->route('admin.packages.step5', $package->id)->with('success', 'Package pricing saved.');
+        return redirect()->route('admin.groups.step5', $group->id)->with('success', 'Group pricing saved.');
     }
 
-    /**
-     * Step 5 - Content & CMS
-     */
-    public function step5(Package $package)
+    public function step5(Group $group)
     {
-        $itinerary = $package->itinerary ?? [];
+        $itinerary = $group->itinerary ?? [];
         $content = $itinerary['content'] ?? [];
-        return view('admin.packages.step5', compact('package', 'content'));
+        return view('admin.groups.step5', compact('group', 'content'));
     }
 
-    public function storeStep5(Package $package, Request $request)
+    public function storeStep5(Group $group, Request $request)
     {
         $validated = $request->validate([
             'short_description' => 'nullable|string',
@@ -935,16 +819,14 @@ class PackageController extends Controller
             'remove_gallery' => 'nullable|array',
         ]);
 
-        $itinerary = $package->itinerary ?? [];
+        $itinerary = $group->itinerary ?? [];
         $content = $itinerary['content'] ?? [];
 
-        // Basic text fields
         $fields = ['short_description','full_description','inclusions','exclusions','traveller_requirements','seo_title','seo_description','og_title','og_description','listing_category'];
         foreach ($fields as $f) {
             $content[$f] = $validated[$f] ?? null;
         }
 
-        // Tags: accept comma-separated string and store as array
         $tagsRaw = $validated['tags'] ?? ($content['tags'] ?? []);
         if (is_string($tagsRaw)) {
             $tags = array_values(array_filter(array_map('trim', explode(',', $tagsRaw))));
@@ -955,16 +837,14 @@ class PackageController extends Controller
         }
         $content['tags'] = $tags;
 
-        // Handle existing gallery and removals
         $existingGallery = $content['gallery'] ?? [];
         $remove = $request->input('remove_gallery', []);
         if (!is_array($remove)) $remove = [];
         $existingGallery = array_values(array_filter($existingGallery, fn($p) => !in_array($p, $remove, true)));
 
-        // Handle gallery uploads
         $galleryFiles = $request->file('gallery', []);
         if (!is_array($galleryFiles)) $galleryFiles = [];
-        $storagePath = 'packages/' . $package->id . '/gallery';
+        $storagePath = 'groups/' . $group->id . '/gallery';
         foreach ($galleryFiles as $file) {
             if (!$file) continue;
             $path = $file->store($storagePath, 'public');
@@ -972,13 +852,11 @@ class PackageController extends Controller
         }
         $content['gallery'] = array_values($existingGallery);
 
-        // Handle OG image upload or URL
         if ($file = $request->file('og_image')) {
-            $ogPath = $file->store('packages/' . $package->id, 'public');
+            $ogPath = $file->store('groups/' . $group->id, 'public');
             $content['og_image_path'] = $ogPath;
             $content['og_image_url'] = asset('storage/' . $ogPath);
         } else {
-            // If a URL was provided, save it. Otherwise keep existing og_image_url/path if present
             if ($request->filled('og_image_url')) {
                 $content['og_image_url'] = $request->input('og_image_url');
             } elseif (!empty($content['og_image_path']) && empty($content['og_image_url'])) {
@@ -987,58 +865,51 @@ class PackageController extends Controller
         }
 
         $itinerary['content'] = $content;
-        $package->itinerary = $itinerary;
-        $package->save();
+        $group->itinerary = $itinerary;
+        $group->save();
 
-        return redirect()->route('admin.packages.step6', $package->id)->with('success', 'Step 5 saved.');
+        return redirect()->route('admin.groups.step6', $group->id)->with('success', 'Step 5 saved.');
     }
 
-    /**
-     * Step 6 - Day-wise Itinerary
-     */
-    public function step6(Package $package)
+    public function step6(Group $group)
     {
-        $itinerary = $package->itinerary ?? [];
+        $itinerary = $group->itinerary ?? [];
         $dayDescriptions = $itinerary['day_descriptions'] ?? [];
 
-        // Determine number of days from package
-        $days = (int) ($package->no_of_days ?? 0);
+        $days = (int) ($group->no_of_days ?? 0);
         $days = max(1, $days);
 
-        return view('admin.packages.step6', compact('package', 'days', 'dayDescriptions'));
+        return view('admin.groups.step6', compact('group', 'days', 'dayDescriptions'));
     }
 
-    public function storeStep6(Package $package, Request $request)
+    public function storeStep6(Group $group, Request $request)
     {
         $data = $request->validate([
             'day_descriptions' => 'nullable|array',
             'day_descriptions.*' => 'nullable|string',
         ]);
 
-        $itinerary = $package->itinerary ?? [];
+        $itinerary = $group->itinerary ?? [];
         $descriptions = $data['day_descriptions'] ?? [];
 
-        // normalize to sequential array of strings
         $normalized = array_values(array_map(function ($v) {
             return is_null($v) ? '' : trim((string) $v);
         }, $descriptions));
 
         $itinerary['day_descriptions'] = $normalized;
-        $package->itinerary = $itinerary;
-        $package->save();
+        $group->itinerary = $itinerary;
+        $group->save();
 
-        return redirect()->route('admin.packages.step7', $package->id)->with('success', 'Day-wise itinerary saved.');
+        return redirect()->route('admin.groups.step7', $group->id)->with('success', 'Day-wise itinerary saved.');
     }
 
-    public function step7(Package $package)
+    public function step7(Group $group)
     {
-        $itinerary = $package->itinerary ?? [];
-        $effectivePolicy = $this->buildEffectivePackagePolicy($package, $itinerary);
-
-        $days = (int) ($package->no_of_days ?? 0);
+        $itinerary = $group->itinerary ?? [];
+        $days = (int) ($group->no_of_days ?? 0);
         $dates = [];
-        if ($days > 0 && $package->available_from) {
-            $start = \Carbon\Carbon::parse($package->available_from);
+        if ($days > 0 && $group->available_from) {
+            $start = \Carbon\Carbon::parse($group->available_from);
             for ($i = 0; $i < $days; $i++) {
                 $dates[] = $start->copy()->addDays($i)->toDateString();
             }
@@ -1048,7 +919,10 @@ class PackageController extends Controller
             }
         }
 
-        // Provide option lists for editable selects in the view
+        // Build effective group policy across selected accommodations/operators
+        $effectivePolicy = $this->buildEffectiveGroupPolicy($group, $itinerary);
+
+        // Provide option lists for editable selects in the view (same as package)
         $policyOptions = [
             'cancellation' => [
                 'types' => ['Flexible', 'Moderate', 'Strict', 'Package (Default)', 'Group', 'Non-Refundable', 'No Show'],
@@ -1069,15 +943,9 @@ class PackageController extends Controller
                 'types' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],
                 'beforeOptions' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],
             ],
-            'refund' => [
-                'types' => ['Refund Policy'],
-            ],
-            'security_deposit' => [
-                'types' => ['Required'],
-            ],
-            'house_rules' => [
-                'types' => ['Applicable'],
-            ],
+            'refund' => [ 'types' => ['Refund Policy'] ],
+            'security_deposit' => [ 'types' => ['Required'] ],
+            'house_rules' => [ 'types' => ['Applicable'] ],
         ];
 
         $severityMaps = [
@@ -1102,91 +970,15 @@ class PackageController extends Controller
             ],
         ];
 
-        return view('admin.packages.step7', compact('package', 'dates', 'effectivePolicy', 'policyOptions', 'severityMaps'));
+        return view('admin.groups.step7', compact('group', 'dates', 'itinerary', 'effectivePolicy', 'policyOptions', 'severityMaps'));
     }
 
-    public function saveStep7(Package $package, Request $request)
+    protected function buildEffectiveGroupPolicy(Group $group, array $itinerary = []): array
     {
-        $data = $request->validate([
-            'action' => 'required|string|in:draft,published',
-            'policies' => 'nullable|array',
-            'policies.*' => 'nullable|array',
-            'booking_notes' => 'nullable|string',
-            'package_notes' => 'nullable|string',
-        ]);
-
-        // If admin provided policy overrides, validate severity rules against effective package defaults
-        $policies = $data['policies'] ?? [];
-        if (!empty($policies)) {
-            $currentEffective = $this->buildEffectivePackagePolicy($package, $package->itinerary ?? []);
-            $severityMap = [
-                'cancellation' => [
-                    'flexible' => 0,
-                    'moderate' => 1,
-                    'strict' => 2,
-                    'package (default)' => 3,
-                    'group' => 4,
-                    'non-refundable' => 5,
-                    'no show' => 6,
-                ],
-                'amendments' => [
-                    'flexible' => 0,
-                    'moderate' => 1,
-                    'strict' => 2,
-                ],
-                'postponement' => [
-                    'flexible' => 0,
-                    'moderate' => 1,
-                    'strict' => 2,
-                ],
-            ];
-
-            foreach ($severityMap as $key => $map) {
-                if (!isset($policies[$key]['type'])) continue;
-                $selected = strtolower(trim((string) $policies[$key]['type']));
-                $selectedScore = $map[$selected] ?? null;
-                $baselineType = strtolower(trim((string) ($currentEffective[$key]['type'] ?? 'package (default)')));
-                $baselineScore = $map[$baselineType] ?? ($map['package (default)'] ?? 0);
-                if ($selectedScore === null) {
-                    return back()->withInput()->with('error', "Invalid {$key} policy selected.");
-                }
-                if ($selectedScore < $baselineScore) {
-                    return back()->withInput()->with('error', ucfirst($key) . ' policy cannot be less severe than the current package default.');
-                }
-            }
-        }
-
-        // Persist overrides inside itinerary to avoid DB migrations
-        $itinerary = $package->itinerary ?? [];
-        if (!empty($policies)) {
-            $itinerary['package_policy_overrides'] = $policies;
-        }
-        if (!empty($data['booking_notes'])) {
-            $itinerary['package_policy_overrides'] = $itinerary['package_policy_overrides'] ?? [];
-            $itinerary['package_policy_overrides']['booking_notes'] = trim((string) $data['booking_notes']);
-        }
-        if (!empty($data['package_notes'])) {
-            $itinerary['package_policy_overrides'] = $itinerary['package_policy_overrides'] ?? [];
-            $itinerary['package_policy_overrides']['package_notes'] = trim((string) $data['package_notes']);
-        }
-
-        $package->itinerary = $itinerary;
-        $package->status = $data['action'];
-        $package->save();
-
-        if ($data['action'] === 'published') {
-            return redirect()->route('admin.packages.index')->with('success', 'Package status updated to Published.');
-        }
-
-        return redirect()->route('admin.packages.index')->with('success', 'Package status updated to Draft.');
-    }
-
-    protected function buildEffectivePackagePolicy(Package $package, array $itinerary = []): array
-    {
-        $days = max(1, (int) ($package->no_of_days ?? 0));
+        $days = max(1, (int) ($group->no_of_days ?? 0));
         $dates = [];
-        if ($days > 0 && $package->available_from) {
-            $start = \Carbon\Carbon::parse($package->available_from);
+        if ($days > 0 && $group->available_from) {
+            $start = \Carbon\Carbon::parse($group->available_from);
             for ($i = 0; $i < $days; $i++) {
                 $dates[] = $start->copy()->addDays($i)->toDateString();
             }
@@ -1208,12 +1000,13 @@ class PackageController extends Controller
                 continue;
             }
 
-            $policy = $accommodation->operator ? $accommodation->operator->effectivePackagePolicy() : [];
+            $policy = $accommodation->operator ? $accommodation->operator->effectiveGroupPolicy() : [];
             if (!empty($policy)) {
                 $dayPolicies[] = $policy;
             }
         }
 
+        // Use same base rows as package
         $baseRows = [
             'cancellation' => [
                 'label' => 'Cancellation',
@@ -1236,20 +1029,11 @@ class PackageController extends Controller
             'payment' => [
                 'label' => 'Payment',
                 'types' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],
-                'beforeOptions' => ['100% Payment', '50% Payment', '20% Payment', '0% Payment'],
+                'beforeOptions' => ['100% Payment', '50% Payment', '20% Payment', '0% Refund'],
             ],
-            'refund' => [
-                'label' => 'Refund',
-                'types' => ['Refund Policy'],
-            ],
-            'security_deposit' => [
-                'label' => 'Security Deposit',
-                'types' => ['Required'],
-            ],
-            'house_rules' => [
-                'label' => 'House & Gen. Rules',
-                'types' => ['Applicable'],
-            ],
+            'refund' => [ 'label' => 'Refund', 'types' => ['Refund Policy'] ],
+            'security_deposit' => [ 'label' => 'Security Deposit', 'types' => ['Required'] ],
+            'house_rules' => [ 'label' => 'House & Gen. Rules', 'types' => ['Applicable'] ],
         ];
 
         $result = [];
@@ -1260,9 +1044,7 @@ class PackageController extends Controller
             $notesValues = [];
             foreach ($dayPolicies as $policy) {
                 $entry = $policy[$key] ?? [];
-                if (!is_array($entry)) {
-                    continue;
-                }
+                if (!is_array($entry)) continue;
 
                 if (isset($entry['type']) && trim((string) $entry['type']) !== '') {
                     $typeValues[] = trim((string) $entry['type']);
@@ -1287,24 +1069,24 @@ class PackageController extends Controller
         }
 
         $bookingNotes = [];
-        $packageNotes = [];
+        $groupNotes = [];
         foreach ($dayPolicies as $policy) {
             if (!empty($policy['booking_notes'])) {
                 $bookingNotes[] = trim((string) $policy['booking_notes']);
             }
-            if (!empty($policy['package_notes'])) {
-                $packageNotes[] = trim((string) $policy['package_notes']);
+            if (!empty($policy['group_notes'])) {
+                $groupNotes[] = trim((string) $policy['group_notes']);
             }
         }
 
         $result['booking_notes'] = $this->selectNoteValue($bookingNotes);
-        $result['package_notes'] = $this->selectNoteValue($packageNotes);
+        $result['group_notes'] = $this->selectNoteValue($groupNotes);
 
-        // Apply package-level overrides stored in itinerary if present
-        $overrides = $itinerary['package_policy_overrides'] ?? null;
+        // Apply group-level overrides stored in itinerary if present
+        $overrides = $itinerary['group_policy_overrides'] ?? null;
         if (is_array($overrides)) {
             foreach ($overrides as $key => $override) {
-                if ($key === 'booking_notes' || $key === 'package_notes') continue;
+                if ($key === 'booking_notes' || $key === 'group_notes') continue;
                 if (!isset($result[$key])) continue;
                 if (!is_array($override)) continue;
                 if (isset($override['type']) && trim((string) $override['type']) !== '') {
@@ -1324,8 +1106,8 @@ class PackageController extends Controller
             if (!empty($overrides['booking_notes'])) {
                 $result['booking_notes'] = trim((string) $overrides['booking_notes']);
             }
-            if (!empty($overrides['package_notes'])) {
-                $result['package_notes'] = trim((string) $overrides['package_notes']);
+            if (!empty($overrides['group_notes'])) {
+                $result['group_notes'] = trim((string) $overrides['group_notes']);
             }
         }
 
@@ -1455,5 +1237,81 @@ class PackageController extends Controller
         }
 
         return implode(' | ', array_values($unique));
+    }
+
+    public function saveStep7(Group $group, Request $request)
+    {
+        $data = $request->validate([
+            'action' => 'required|string|in:draft,published',
+            'policies' => 'nullable|array',
+            'policies.*' => 'nullable|array',
+            'booking_notes' => 'nullable|string',
+            'group_notes' => 'nullable|string',
+        ]);
+
+        // If admin provided policy overrides, validate severity rules against effective group defaults
+        $policies = $data['policies'] ?? [];
+        if (!empty($policies)) {
+            $currentEffective = $this->buildEffectiveGroupPolicy($group, $group->itinerary ?? []);
+            $severityMap = [
+                'cancellation' => [
+                    'flexible' => 0,
+                    'moderate' => 1,
+                    'strict' => 2,
+                    'package (default)' => 3,
+                    'group' => 4,
+                    'non-refundable' => 5,
+                    'no show' => 6,
+                ],
+                'amendments' => [
+                    'flexible' => 0,
+                    'moderate' => 1,
+                    'strict' => 2,
+                ],
+                'postponement' => [
+                    'flexible' => 0,
+                    'moderate' => 1,
+                    'strict' => 2,
+                ],
+            ];
+
+            foreach ($severityMap as $key => $map) {
+                if (!isset($policies[$key]['type'])) continue;
+                $selected = strtolower(trim((string) $policies[$key]['type']));
+                $selectedScore = $map[$selected] ?? null;
+                $baselineType = strtolower(trim((string) ($currentEffective[$key]['type'] ?? 'group')));
+                $baselineScore = $map[$baselineType] ?? ($map['group'] ?? 0);
+                if ($selectedScore === null) {
+                    return back()->withInput()->with('error', "Invalid {$key} policy selected.");
+                }
+                if ($selectedScore < $baselineScore) {
+                    return back()->withInput()->with('error', ucfirst($key) . ' policy cannot be less severe than the current group default.');
+                }
+            }
+        }
+
+        // Persist overrides inside itinerary
+        $itinerary = $group->itinerary ?? [];
+        if (!empty($policies)) {
+            $itinerary['group_policy_overrides'] = $policies;
+        }
+        if (!empty($data['booking_notes'])) {
+            $itinerary['group_policy_overrides'] = $itinerary['group_policy_overrides'] ?? [];
+            $itinerary['group_policy_overrides']['booking_notes'] = trim((string) $data['booking_notes']);
+        }
+        if (!empty($data['group_notes'])) {
+            $itinerary['group_policy_overrides'] = $itinerary['group_policy_overrides'] ?? [];
+            $itinerary['group_policy_overrides']['group_notes'] = trim((string) $data['group_notes']);
+        }
+
+        $group->itinerary = $itinerary;
+        $group->status = $data['action'];
+        $group->save();
+
+        if ($data['action'] === 'published') {
+            return redirect()->route('admin.groups.index')->with('success', 'Group status updated to Published.');
+        }
+
+        return redirect()->route('admin.groups.index')->with('success', 'Group saved successfully.');
     }
 }

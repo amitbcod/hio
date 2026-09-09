@@ -941,7 +941,7 @@ class HomeController extends Controller
                 continue;
             }
 
-            $policy = is_array($accommodation->operator->package_policy ?? null) ? $accommodation->operator->package_policy : [];
+            $policy = $accommodation->operator ? $accommodation->operator->effectivePackagePolicy() : [];
             if (!empty($policy)) {
                 $dayPolicies[] = $policy;
             }

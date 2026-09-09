@@ -45,6 +45,8 @@ class OperatorController extends Controller
         $op->business_id = $request->business_id;
         $op->is_owner = $request->is_owner ?? 'no';
         $op->account_status = $request->account_status;
+        $op->package_policy = \App\Models\AdminUser::defaultPackagePolicy();
+        $op->group_policy = \App\Models\AdminUser::defaultGroupPolicy();
         if ($request->password) {
             $op->password_hash = bcrypt($request->password);
         }

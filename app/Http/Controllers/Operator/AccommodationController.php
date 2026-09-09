@@ -302,13 +302,22 @@ class AccommodationController extends Controller
             'management_contact_phone' => $request->management_contact_phone,
         ]);
 
-        // Save operator-level package policy if provided (operator-global, applies to all accommodations)
+        // Save operator-level package/group policy if provided (operator-global, applies to all accommodations)
         if ($request->has('package_policy')) {
             try {
                 $operator->package_policy = $request->input('package_policy');
                 $operator->save();
             } catch (\Exception $e) {
                 \Log::error('Failed to save operator package_policy', ['error' => $e->getMessage()]);
+            }
+        }
+
+        if ($request->has('group_policy')) {
+            try {
+                $operator->group_policy = $request->input('group_policy');
+                $operator->save();
+            } catch (\Exception $e) {
+                \Log::error('Failed to save operator group_policy', ['error' => $e->getMessage()]);
             }
         }
         
@@ -1024,13 +1033,22 @@ class AccommodationController extends Controller
             'house_rules_template_id' => $request->house_rules_template_id ?? null,
         ]);
 
-        // Save operator-level package policy if provided (operator-global, applies to all accommodations)
+        // Save operator-level package/group policy if provided (operator-global, applies to all accommodations)
         if ($request->has('package_policy')) {
             try {
                 $operator->package_policy = $request->input('package_policy');
                 $operator->save();
             } catch (\Exception $e) {
                 \Log::error('Failed to save operator package_policy from step 6', ['error' => $e->getMessage()]);
+            }
+        }
+
+        if ($request->has('group_policy')) {
+            try {
+                $operator->group_policy = $request->input('group_policy');
+                $operator->save();
+            } catch (\Exception $e) {
+                \Log::error('Failed to save operator group_policy from step 6', ['error' => $e->getMessage()]);
             }
         }
 

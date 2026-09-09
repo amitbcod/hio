@@ -18,6 +18,10 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('settings', [AdminSettingsController::class, 'edit'])->name('settings.edit');
     Route::post('settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+    Route::get('policy/package-default-policy', [AdminSettingsController::class, 'defaultPackagePolicy'])->name('policy.package-default-policy');
+    Route::post('policy/package-default-policy', [AdminSettingsController::class, 'saveDefaultPackagePolicy'])->name('policy.package-default-policy.save');
+    Route::get('policy/group-default-policy', [AdminSettingsController::class, 'defaultGroupPolicy'])->name('policy.group-default-policy');
+    Route::post('policy/group-default-policy', [AdminSettingsController::class, 'saveDefaultGroupPolicy'])->name('policy.group-default-policy.save');
     Route::post('businesses/{business}/approve', [DashboardController::class, 'approveBusiness'])->name('business.approve');
     Route::post('businesses/{business}/reject', [DashboardController::class, 'rejectBusiness'])->name('business.reject');
     Route::post('mpos/{mpo}/approve', [DashboardController::class, 'approveMpo'])->name('mpo.approve');
@@ -257,6 +261,25 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     Route::post('packages/{package}/step6', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep6'])->name('packages.step6.store');
     Route::get('packages/{package}/step7', [\App\Http\Controllers\Admin\PackageController::class, 'step7'])->name('packages.step7');
     Route::post('packages/{package}/step7', [\App\Http\Controllers\Admin\PackageController::class, 'saveStep7'])->name('packages.step7.save');
+
+    // Admin group management (multi-step). Step 1: group creation
+    Route::get('groups', [\App\Http\Controllers\Admin\GroupController::class, 'index'])->name('groups.index');
+    Route::get('groups/create', [\App\Http\Controllers\Admin\GroupController::class, 'create'])->name('groups.create');
+    Route::post('groups', [\App\Http\Controllers\Admin\GroupController::class, 'store'])->name('groups.store');
+    Route::get('groups/{group}/edit', [\App\Http\Controllers\Admin\GroupController::class, 'edit'])->name('groups.edit');
+    Route::post('groups/{group}', [\App\Http\Controllers\Admin\GroupController::class, 'update'])->name('groups.update');
+    Route::get('groups/{group}/step2', [\App\Http\Controllers\Admin\GroupController::class, 'step2'])->name('groups.step2');
+    Route::post('groups/{group}/step2', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep2'])->name('groups.step2.store');
+    Route::get('groups/{group}/step3', [\App\Http\Controllers\Admin\GroupController::class, 'step3'])->name('groups.step3');
+    Route::post('groups/{group}/step3', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep3'])->name('groups.step3.store');
+    Route::get('groups/{group}/step4', [\App\Http\Controllers\Admin\GroupController::class, 'step4'])->name('groups.step4');
+    Route::post('groups/{group}/step4', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep4'])->name('groups.step4.store');
+    Route::get('groups/{group}/step5', [\App\Http\Controllers\Admin\GroupController::class, 'step5'])->name('groups.step5');
+    Route::post('groups/{group}/step5', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep5'])->name('groups.step5.store');
+    Route::get('groups/{group}/step6', [\App\Http\Controllers\Admin\GroupController::class, 'step6'])->name('groups.step6');
+    Route::post('groups/{group}/step6', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep6'])->name('groups.step6.store');
+    Route::get('groups/{group}/step7', [\App\Http\Controllers\Admin\GroupController::class, 'step7'])->name('groups.step7');
+    Route::post('groups/{group}/step7', [\App\Http\Controllers\Admin\GroupController::class, 'saveStep7'])->name('groups.step7.save');
 
     Route::get('vehicle-types', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'index'])->name('vehicle-types.index');
     Route::get('vehicle-types/create', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'create'])->name('vehicle-types.create');

@@ -23,6 +23,74 @@ class AdminSettingsController extends Controller
         return view('admin.settings', compact('admin'));
     }
 
+    public function defaultPackagePolicy()
+    {
+        if (!session('admin_id')) {
+            return redirect()->route('admin.login');
+        }
+
+        $admin = AdminUser::find(session('admin_id')); 
+        if (!$admin) {
+            return redirect()->route('admin.login');
+        }
+
+        $packagePolicy = is_array($admin->package_policy ?? null) ? $admin->package_policy : [];
+
+        return view('admin.package_default_policy', compact('admin', 'packagePolicy'));
+    }
+
+    public function saveDefaultPackagePolicy(Request $request)
+    {
+        if (!session('admin_id')) {
+            return redirect()->route('admin.login');
+        }
+
+        $admin = AdminUser::find(session('admin_id'));
+        if (!$admin) {
+            return redirect()->route('admin.login');
+        }
+
+        $data = $request->input('package_policy');
+        $admin->package_policy = is_array($data) ? $data : [];
+        $admin->save();
+
+        return redirect()->route('admin.policy.package-default-policy')->with('success', 'Default package policy saved successfully.');
+    }
+
+    public function defaultGroupPolicy()
+    {
+        if (!session('admin_id')) {
+            return redirect()->route('admin.login');
+        }
+
+        $admin = AdminUser::find(session('admin_id'));
+        if (!$admin) {
+            return redirect()->route('admin.login');
+        }
+
+        $groupPolicy = is_array($admin->group_policy ?? null) ? $admin->group_policy : [];
+
+        return view('admin.group_default_policy', compact('admin', 'groupPolicy'));
+    }
+
+    public function saveDefaultGroupPolicy(Request $request)
+    {
+        if (!session('admin_id')) {
+            return redirect()->route('admin.login');
+        }
+
+        $admin = AdminUser::find(session('admin_id'));
+        if (!$admin) {
+            return redirect()->route('admin.login');
+        }
+
+        $data = $request->input('group_policy');
+        $admin->group_policy = is_array($data) ? $data : [];
+        $admin->save();
+
+        return redirect()->route('admin.policy.group-default-policy')->with('success', 'Default group policy saved successfully.');
+    }
+
     public function update(Request $request)
     {
         if (!session('admin_id')) {

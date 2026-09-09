@@ -256,6 +256,8 @@ class AuthController extends Controller
                 'password_hash' => bcrypt($request->password),
             ]);
         } else {
+            $defaultPackagePolicy = \App\Models\AdminUser::defaultPackagePolicy();
+            $defaultGroupPolicy = \App\Models\AdminUser::defaultGroupPolicy();
             $account = \App\Models\Operator::create([
                 'operator_id' => uniqid('OP'),
                 'user_type' => $request->user_type,
@@ -271,6 +273,8 @@ class AuthController extends Controller
                 'owner_email' => $request->is_owner === 'no' ? $request->owner_email : null,
                 'owner_phone' => $request->is_owner === 'no' ? $request->owner_phone : null,
                 'password_hash' => bcrypt($request->password),
+                'package_policy' => $defaultPackagePolicy,
+                'group_policy' => $defaultGroupPolicy,
             ]);
         }
 
