@@ -53,7 +53,7 @@ class TripController extends Controller
         $packageDetails = collect();
         $packageBookingReference = null;
         if ($packageLineItem && !empty($packageLineItem->service_id)) {
-            $package = \App\Models\Package::find($packageLineItem->service_id);
+            $package = $this->resolvePackageOrGroupModel((int) $packageLineItem->service_id);
             $packageBookingReference = 'PACKAGE-' . ($packageLineItem->id ?? $trip->id);
             if ($package) {
                 $tripStartDate = $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today();
@@ -210,6 +210,20 @@ class TripController extends Controller
 
             return $sourceChannel === 'package';
         })->values();
+    }
+
+    protected function resolvePackageOrGroupModel(?int $serviceId): ?object
+    {
+        if (!$serviceId) {
+            return null;
+        }
+
+        $package = \App\Models\Package::find($serviceId);
+        if ($package) {
+            return $package;
+        }
+
+        return \App\Models\Group::find($serviceId);
     }
 
     private function resolvePackageServiceImage($model, string $type): string
@@ -523,7 +537,7 @@ class TripController extends Controller
         }
 
         if (!$booking && $packageLineItem && $packageLineItem->service_type === 'package') {
-            $package = \App\Models\Package::find($packageLineItem->service_id);
+            $package = $this->resolvePackageOrGroupModel((int) $packageLineItem->service_id);
             if (!$package) {
                 abort(404);
             }
@@ -1531,7 +1545,7 @@ HTML;
         $subtotal = 0;
 
         if ($packageLineItem && $packageLineItem->service_id) {
-            $package = \App\Models\Package::find($packageLineItem->service_id);
+            $package = $this->resolvePackageOrGroupModel((int) $packageLineItem->service_id);
             $invoiceItems = [];
             $subtotal = 0.0;
 

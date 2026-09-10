@@ -105,9 +105,9 @@ class BookingController extends Controller
             $item = $this->buildAccommodationCartItem($request);
         } elseif ($type === 'activity') {
             $item = $this->buildActivityCartItem($request);
-        } elseif ($type === 'package') {
-            $item = $this->buildPackageCartItem($request);
-            // Before allowing package into cart, verify underlying accommodation inventory
+        } elseif ($type === 'package' || $type === 'group') {
+            $item = $type === 'group' ? $this->buildGroupCartItem($request) : $this->buildPackageCartItem($request);
+            // Before allowing package/group content into cart, verify underlying accommodation inventory
             try {
                 $availabilityError = $this->checkPackageAvailabilityForCartItem($item);
                 if ($availabilityError) {
@@ -117,7 +117,7 @@ class BookingController extends Controller
                     return back()->withInput()->with('error', $availabilityError);
                 }
             } catch (\Exception $e) {
-                Log::error('Package availability check failed', ['error' => $e->getMessage(), 'package_id' => $item['package_id'] ?? null]);
+                Log::error('Package availability check failed', ['error' => $e->getMessage(), 'package_id' => $item['package_id'] ?? null, 'group_id' => $item['group_id'] ?? null]);
                 if ($request->expectsJson()) {
                     return response()->json(['success' => false, 'message' => 'Failed to validate package availability. Please try again.'], 422);
                 }
@@ -309,6 +309,39 @@ class BookingController extends Controller
         // with a logged-in traveler cart. This is a valid business flow and should not break
         // checkout or trip creation, so we only enforce item-level validation at the add-to-cart
         // stage when specific downstream logic requires exclusivity.
+    }
+
+    private function buildGroupCartItem(Request $request): array
+    {
+        $groupId = (int) $request->input('group_id');
+        $groupName = trim((string) $request->input('group_name', 'Group'));
+        $groupTotal = (float) $request->input('group_total_price', $request->input('total_price', 0));
+        if (empty($groupTotal) && $groupId) {
+            $group = \App\Models\Group::find($groupId);
+            if ($group) {
+                $pricingService = new \App\Services\PackagePricingService();
+                $adults = max(1, (int) $request->input('adults', 2));
+                $children = max(0, (int) $request->input('children', 0));
+                $infants = max(0, (int) $request->input('infants', 0));
+                $groupTotal = $pricingService->calculatePackageTotal($group, $adults, $children, $infants);
+            }
+        }
+
+        $request->merge([
+            'package_id' => $groupId,
+            'package_name' => $groupName,
+            'package_total_price' => $groupTotal,
+            'package_image' => $request->input('group_image', $request->input('image', '')),
+            'package_start_date' => $request->input('group_start_date') ?: $request->input('package_start_date') ?: now()->toDateString(),
+            'package_end_date' => $request->input('group_end_date') ?: $request->input('package_end_date'),
+        ]);
+
+        $item = $this->buildPackageCartItem($request);
+        $item['group_id'] = $groupId;
+        $item['source_type'] = 'group';
+        $item['type'] = 'package';
+
+        return $item;
     }
 
     private function buildPackageCartItem(Request $request): array
@@ -831,9 +864,16 @@ class BookingController extends Controller
     private function checkPackageAvailabilityForCartItem(array $item): ?string
     {
         $packageId = (int) ($item['package_id'] ?? 0);
-        if (!$packageId) return null;
+        $groupId = (int) ($item['group_id'] ?? 0);
+        if (!$packageId && !$groupId) return null;
 
-        $package = \App\Models\Package::find($packageId);
+        $itemSourceType = strtolower((string) ($item['source_type'] ?? ''));
+        $package = null;
+        if ($itemSourceType === 'group' || ($packageId === 0 && $groupId > 0)) {
+            $package = \App\Models\Group::find($groupId ?: $packageId);
+        } else {
+            $package = \App\Models\Package::find($packageId);
+        }
         if (!$package) return null;
 
         $itinerary = $package->itinerary ?? [];
@@ -1595,6 +1635,11 @@ class BookingController extends Controller
         $bookingRefs = [];
         $tripBookingIds = [];
         $summary = $this->buildCartSummary($cart);
+        // Initialize notification tracking variables
+        $firstNotificationBooking = null;
+        $operatorNotificationBookings = [];
+        // Global additional guests collected from checkout form (ensure defined)
+        $globalAdditionalGuests = [];
 
         foreach ($cart as $item) {
             if (($item['type'] ?? null) === 'package') {
@@ -1681,6 +1726,13 @@ class BookingController extends Controller
             $guestName = trim(($primaryGuest['first_name'] ?? '') . ' ' . ($primaryGuest['middle_name'] ?? '') . ' ' . ($primaryGuest['last_name'] ?? '')) ?: ($travelerAccount?->full_name ?? $travelerAccount?->email ?? 'Guest');
 
             if ($item['type'] === 'package') {
+                $packageSourceType = strtolower((string) ($item['source_type'] ?? 'package'));
+                $packageId = (int) ($item['package_id'] ?? 0);
+                $groupId = (int) ($item['group_id'] ?? 0);
+                $package = $packageSourceType === 'group'
+                    ? \App\Models\Group::find($groupId ?: $packageId)
+                    : \App\Models\Package::find($packageId);
+
                 $packageBooking = Booking::create([
                     'trip_id' => $tripId,
                     'operator_id' => null,
@@ -1715,7 +1767,11 @@ class BookingController extends Controller
 
                 // Reserve accommodation inventory for package itinerary (if any)
                 try {
-                    $package = \App\Models\Package::find($item['package_id']);
+                    if (!$package) {
+                        $package = $packageSourceType === 'group'
+                            ? \App\Models\Group::find($groupId ?: $packageId)
+                            : \App\Models\Package::find($packageId);
+                    }
                     if ($package && is_array($package->itinerary ?? null)) {
                         $itinerary = $package->itinerary ?? [];
                         $packageStart = \Carbon\Carbon::parse($item['check_in']);

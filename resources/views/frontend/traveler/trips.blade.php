@@ -45,9 +45,19 @@
                                             $tripIsPackage = $trip->is_package_trip ?? $trip->bookings
                                                 ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
                                                 ->contains(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');
+                                            $tripHasGroupPackage = $trip->bookings
+                                                ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
+                                                ->contains(function ($lineItem) {
+                                                    if (($lineItem->service_type ?? null) !== 'package') {
+                                                        return false;
+                                                    }
+                                                    $serviceId = (int) ($lineItem->service_id ?? 0);
+                                                    return $serviceId > 0 && \App\Models\Group::whereKey($serviceId)->exists();
+                                                });
+                                            $tripPackageLabel = $tripHasGroupPackage ? 'Group Package' : 'Package';
 
                                             if ($tripIsPackage) {
-                                                $serviceTypes->push('Package');
+                                                $serviceTypes->push($tripPackageLabel);
                                             }
                                             
                                             if ($trip->accommodationBookings && $trip->accommodationBookings->isNotEmpty()) {
@@ -73,7 +83,7 @@
                                                 <div class="trip-name-cell">
                                                     <strong>#{{ $trip->id }}</strong>
                                                     @if($tripIsPackage)
-                                                        <span style="display:inline-block; margin-left:8px; font-size:12px; padding:4px 8px; border-radius:999px; background:#fff3e0; color:#b45309; font-weight:700;">Package Trip</span>
+                                                        <span style="display:inline-block; margin-left:8px; font-size:12px; padding:4px 8px; border-radius:999px; background:#fff3e0; color:#b45309; font-weight:700;">{{ $tripHasGroupPackage ? 'Group Package Trip' : 'Package Trip' }}</span>
                                                     @endif
                                                 </div>
                                             </td>
@@ -87,6 +97,8 @@
                                                                 {{ __('traveler.trips.service_type_activity') }}
                                                             @elseif($type === 'Transport')
                                                                 {{ __('traveler.trips.service_type_transport') }}
+                                                            @elseif($type === 'Package' || $type === 'Group Package')
+                                                                {{ $type }}
                                                             @else
                                                                 {{ __('traveler.trips.service_type_travel') }}
                                                             @endif
@@ -197,11 +209,21 @@
                                             $tripIsPackage = $trip->is_package_trip ?? $trip->bookings
                                                 ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
                                                 ->contains(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');
+                                            $tripHasGroupPackage = $trip->bookings
+                                                ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
+                                                ->contains(function ($lineItem) {
+                                                    if (($lineItem->service_type ?? null) !== 'package') {
+                                                        return false;
+                                                    }
+                                                    $serviceId = (int) ($lineItem->service_id ?? 0);
+                                                    return $serviceId > 0 && \App\Models\Group::whereKey($serviceId)->exists();
+                                                });
+                                            $tripPackageLabel = $tripHasGroupPackage ? 'Group Package' : 'Package';
 
                                             $serviceTypes = collect();
 
                                             if ($tripIsPackage) {
-                                                $serviceTypes->push('Package');
+                                                $serviceTypes->push($tripPackageLabel);
                                             }
                                             
                                             if ($trip->accommodationBookings && $trip->accommodationBookings->isNotEmpty()) {
@@ -227,7 +249,7 @@
                                                 <div class="trip-name-cell">
                                                     <strong> #{{ $trip->id }}</strong>
                                                     @if($tripIsPackage)
-                                                        <span style="display:inline-block; margin-left:8px; font-size:12px; padding:4px 8px; border-radius:999px; background:#fff3e0; color:#b45309; font-weight:700;">Package Trip</span>
+                                                        <span style="display:inline-block; margin-left:8px; font-size:12px; padding:4px 8px; border-radius:999px; background:#fff3e0; color:#b45309; font-weight:700;">{{ $tripHasGroupPackage ? 'Group Package Trip' : 'Package Trip' }}</span>
                                                     @endif
                                                     <!-- <span>{{ __('traveler.trips.trip_label') }}</span> -->
                                                 </div>
@@ -236,8 +258,8 @@
                                                 <div class="service-type-badges">
                                                     @foreach($serviceTypes as $type)
                                                         <span class="service-badge">
-                                                            @if($type === 'Package')
-                                                                Package
+                                                            @if($type === 'Package' || $type === 'Group Package')
+                                                                {{ $type }}
                                                             @elseif($type === 'Accommodation')
                                                                 {{ __('traveler.trips.service_type_accommodation') }}
                                                             @elseif($type === 'Activity')

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class PackagePricingService
 {
-    public function calculatePackageTotal(Package $package, int $adults = 2, int $children = 0, int $infants = 0): float
+    public function calculatePackageTotal($package, int $adults = 2, int $children = 0, int $infants = 0): float
     {
         $breakdown = $this->calculatePackageTotalDetailed($package, $adults, $children, $infants);
 
@@ -27,7 +27,7 @@ class PackagePricingService
         return (float) $breakdown['total'];
     }
 
-    public function calculatePackageTotalDetailed(Package $package, int $adults = 2, int $children = 0, int $infants = 0): array
+    public function calculatePackageTotalDetailed($package, int $adults = 2, int $children = 0, int $infants = 0): array
     {
         $itinerary = is_array($package->itinerary ?? null) ? $package->itinerary : [];
         Log::debug('PackagePricingService - itinerary', ['package_id' => $package->id, 'itinerary' => $itinerary]);
@@ -521,23 +521,23 @@ class PackagePricingService
     }
 
       // Public wrappers so callers can obtain per-service amounts when needed
-      public function getAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry, ?Package $package = null, int $adults = 2, int $children = 0, int $infants = 0): float
+      public function getAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry, $package = null, int $adults = 2, int $children = 0, int $infants = 0): float
       {
         return $this->resolvePackageAccommodationAmount($accommodation, $entry, $package, $adults, $children, $infants);
       }
 
-      public function getActivityAmount(\App\Models\Activity $activity, array $entry, int $guestCount, ?Package $package = null): float
+      public function getActivityAmount(\App\Models\Activity $activity, array $entry, int $guestCount, $package = null): float
       {
         return $this->resolvePackageActivityAmount($activity, $entry, $guestCount, $package);
       }
 
-      public function getTransportAmount(\App\Models\Transport $transport, array $entry, int $guestCount, ?Package $package = null): float
+      public function getTransportAmount(\App\Models\Transport $transport, array $entry, int $guestCount, $package = null): float
       {
         return $this->resolvePackageTransportAmount($transport, $entry, $guestCount, $package);
       }
 
     // Copied from TripController to preserve authoritative package pricing logic
-    protected function resolvePackageAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry, ?Package $package = null, int $adults = 2, int $children = 0, int $infants = 0): float
+    protected function resolvePackageAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry, $package = null, int $adults = 2, int $children = 0, int $infants = 0): float
     {
       $roomIds = $this->selectPreferredRoomIds($accommodation, $entry, $adults, $children, $infants);
 
@@ -616,7 +616,7 @@ class PackagePricingService
       return round(max(0.0, $bestAmount), 2);
     }
 
-    protected function resolvePackageActivityAmount(\App\Models\Activity $activity, array $entry, int $guestCount, ?Package $package = null, int $adults = 0, int $children = 0, int $infants = 0): float
+    protected function resolvePackageActivityAmount(\App\Models\Activity $activity, array $entry, int $guestCount, $package = null, int $adults = 0, int $children = 0, int $infants = 0): float
     {
       $selection = $entry['activity_selection'] ?? [];
       if (!is_array($selection)) {
@@ -760,7 +760,7 @@ class PackagePricingService
       return round($adultTotal + $childTotal + $infantTotal, 2);
     }
 
-    protected function resolvePackageTransportAmount(\App\Models\Transport $transport, array $entry, int $guestCount, ?Package $package = null): float
+    protected function resolvePackageTransportAmount(\App\Models\Transport $transport, array $entry, int $guestCount, $package = null): float
     {
       $bestAmount = 0.0;
       $routes = $transport->routes ?? collect();
@@ -821,7 +821,7 @@ class PackagePricingService
     /**
      * Resolve amount for a specific TransportRoute model (used when an itinerary selects explicit route ids).
      */
-    protected function resolveTransportRouteAmount(\App\Models\TransportRoute $route, int $guestCount, ?Package $package = null, bool $wantReturn = false): float
+    protected function resolveTransportRouteAmount(\App\Models\TransportRoute $route, int $guestCount, $package = null, bool $wantReturn = false): float
     {
       $pricing = is_array($route->pricing ?? null) ? $route->pricing : (is_string($route->pricing ?? null) ? json_decode($route->pricing, true) : []);
       $globalMode = $package && is_array($package->itinerary ?? null) ? ($package->itinerary['pricing_modes']['transport'] ?? 'discount_offer') : 'discount_offer';

@@ -175,6 +175,9 @@ class GuestTripController extends Controller
         if (!$booking && $packageLineItem && $packageLineItem->service_type === 'package') {
             $package = \App\Models\Package::find($packageLineItem->service_id);
             if (!$package) {
+                $package = \App\Models\Group::find($packageLineItem->service_id);
+            }
+            if (!$package) {
                 abort(404);
             }
 

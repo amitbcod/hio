@@ -396,6 +396,59 @@ class HomeController extends Controller
         ]);
     }
 
+    public function groupPackageList(Request $request)
+    {
+        $region = trim((string) $request->query('region', 'all'));
+        $travelingDateRaw = $request->query('traveling_date');
+        $travelingDate = null;
+
+        if (!empty($travelingDateRaw)) {
+            foreach (['d/m/Y', 'Y-m-d', 'm/d/Y', 'd-m-Y', 'Y/m/d'] as $format) {
+                try {
+                    $travelingDate = Carbon::createFromFormat($format, $travelingDateRaw)->format('d/m/Y');
+                    break;
+                } catch (\Exception $e) {
+                    $travelingDate = $travelingDateRaw;
+                }
+            }
+        }
+
+        $adults = max(1, (int) $request->query('adults', 2));
+        $children = max(0, (int) $request->query('children', 0));
+        $infants = max(0, (int) $request->query('infants', 0));
+
+        $allGroups = \App\Models\Group::query()
+            ->where('status', 'published')
+            ->where('group_type', 'Open Group')
+            ->latest('updated_at')
+            ->get();
+
+        // Apply guest/date/region filters similar to packages
+        $selectedPax = max(0, $adults) + max(0, $children);
+        $groups = $allGroups->filter(function ($group) use ($region, $travelingDate, $adults, $children, $infants) {
+            return $this->groupMatchesGuestCriteria($group, $region, $travelingDate, $adults, $children, $infants);
+        })->values();
+
+        $regionOptions = \App\Models\Region::query()
+            ->orderBy('name')
+            ->pluck('name')
+            ->map(fn ($value) => trim((string) $value))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        return view('frontend.group-packages-list', [
+            'groups' => $groups,
+            'regionOptions' => $regionOptions,
+            'region' => $region,
+            'travelingDate' => $travelingDate,
+            'adults' => $adults,
+            'children' => $children,
+            'infants' => $infants,
+        ]);
+    }
+
     private function buildPackageFilterOptions($packages): array
     {
         $propertyTypeCounts = [];
@@ -912,6 +965,8 @@ class HomeController extends Controller
             'package' => $packageData,
         ]);
     }
+
+    // showGroup moved to Frontend\GroupController
 
     private function buildEffectivePackagePolicy(Package $package, array $itinerary = []): array
     {
@@ -1510,6 +1565,63 @@ class HomeController extends Controller
             $requiredRoomsForAccommodation = $roomsRequired > 0
                 ? $roomsRequired
                 : $this->calculateMinimalRequiredRoomsForGuests($accommodation->rooms, $adults, $children, $infants);
+
+            if ($this->matchesPackageGuestCapacity($accommodation->rooms, $adults, $children + $infants, $requiredRoomsForAccommodation)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function groupMatchesGuestCriteria($group, string $region, ?string $travelingDate, int $adults, int $children, int $infants): bool
+    {
+        $itinerary = $group->itinerary ?? [];
+        $selectedAccommodations = [];
+
+        foreach ($itinerary as $dayData) {
+            if (!is_array($dayData)) {
+                continue;
+            }
+
+            $accommodationId = $dayData['accommodation'] ?? null;
+            if (!empty($accommodationId)) {
+                $selectedAccommodations[] = (int) $accommodationId;
+            }
+        }
+
+        $selectedAccommodations = array_values(array_unique(array_filter($selectedAccommodations, fn ($id) => $id > 0)));
+        if (empty($selectedAccommodations)) {
+            return false;
+        }
+
+        if ($region !== '' && $region !== 'all') {
+            $matchesRegion = false;
+            foreach ($selectedAccommodations as $accommodationId) {
+                $accommodation = \App\Models\Accommodation::find($accommodationId);
+                if (!$accommodation) {
+                    continue;
+                }
+
+                $regionValue = trim((string) ($accommodation->region ?? ''));
+                if ($regionValue !== '' && strcasecmp($regionValue, $region) === 0) {
+                    $matchesRegion = true;
+                    break;
+                }
+            }
+
+            if (!$matchesRegion) {
+                return false;
+            }
+        }
+
+        foreach ($selectedAccommodations as $accommodationId) {
+            $accommodation = \App\Models\Accommodation::with('rooms')->find($accommodationId);
+            if (!$accommodation || $accommodation->rooms->isEmpty()) {
+                continue;
+            }
+
+            $requiredRoomsForAccommodation = $this->calculateMinimalRequiredRoomsForGuests($accommodation->rooms, $adults, $children, $infants);
 
             if ($this->matchesPackageGuestCapacity($accommodation->rooms, $adults, $children + $infants, $requiredRoomsForAccommodation)) {
                 return true;

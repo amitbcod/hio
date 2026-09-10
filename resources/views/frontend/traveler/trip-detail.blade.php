@@ -17,9 +17,18 @@
                         $tripIsPackage = $trip->bookings
                             ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
                             ->contains(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');
+                        $tripHasGroupPackage = $trip->bookings
+                            ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
+                            ->contains(function ($lineItem) {
+                                if (($lineItem->service_type ?? null) !== 'package') {
+                                    return false;
+                                }
+                                $serviceId = (int) ($lineItem->service_id ?? 0);
+                                return $serviceId > 0 && \App\Models\Group::whereKey($serviceId)->exists();
+                            });
                     @endphp
                     @if($tripIsPackage)
-                        <p style="color: #b45309; font-size: 0.9rem; font-weight: 700; margin: 8px 0 0; padding: 8px 12px; background: #fff3e0; border-left: 4px solid #f59e0b; border-radius: 4px; display: inline-block;">Package Trip</p>
+                        <p style="color: #b45309; font-size: 0.9rem; font-weight: 700; margin: 8px 0 0; padding: 8px 12px; background: #fff3e0; border-left: 4px solid #f59e0b; border-radius: 4px; display: inline-block;">{{ $tripHasGroupPackage ? 'Group Package Trip' : 'Package Trip' }}</p>
                     @endif
 
                     @php

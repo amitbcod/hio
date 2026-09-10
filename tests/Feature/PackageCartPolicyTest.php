@@ -63,8 +63,8 @@ class PackageCartPolicyTest extends TestCase
         $downloadParams = $downloadMethod->getParameters();
         $manageParams = $manageMethod->getParameters();
 
-        $this->assertSame('request', $downloadParams[3]->getName());
-        $this->assertSame('request', $manageParams[1]->getName());
+        $this->assertSame('guestId', $downloadParams[3]->getName());
+        $this->assertSame('request', $manageParams[3]->getName());
     }
 
     public function test_package_generated_bookings_are_filtered_out_of_trip_detail_display(): void
@@ -83,5 +83,34 @@ class PackageCartPolicyTest extends TestCase
 
         $this->assertCount(1, $filtered);
         $this->assertSame(2, $filtered->first()->id);
+    }
+
+    public function test_group_cart_item_is_built_like_package_item(): void
+    {
+        $controller = new \App\Http\Controllers\Frontend\BookingController();
+        $request = new \Illuminate\Http\Request([
+            'group_id' => 42,
+            'group_name' => 'Spring Escape',
+            'group_total_price' => 1250,
+            'adults' => 2,
+            'children' => 1,
+            'infants' => 0,
+            'currency' => 'USD',
+            'group_image' => '/storage/group.jpg',
+            'nights' => 4,
+            'days' => 5,
+            'group_start_date' => '2026-09-10',
+        ]);
+
+        $method = new ReflectionMethod($controller, 'buildGroupCartItem');
+        $method->setAccessible(true);
+
+        $item = $method->invoke($controller, $request);
+
+        $this->assertSame('package', $item['type']);
+        $this->assertSame(42, $item['package_id']);
+        $this->assertSame('Spring Escape', $item['package_name']);
+        $this->assertSame('2026-09-10', $item['check_in']);
+        $this->assertSame(1250.0, $item['total_price']);
     }
 }
