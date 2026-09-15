@@ -256,8 +256,9 @@
                                     <option value="One Season">One Season</option>
                                     <option value="High">High</option>
                                     <option value="Low">Low</option>
-                                        <option value="Peak">Peak</option>
-                                        <option value="Package">Package</option>
+                                    <option value="Peak">Peak</option>
+                                    <option value="Package">Package</option>
+                                    <option value="Group">Group</option>
                                 </select>
                             </div>
                         </div>
@@ -350,15 +351,15 @@
                 return;
             }
 
-            if (seasonDisplay.value === 'Package') {
+            if (seasonDisplay.value === 'Package' || seasonDisplay.value === 'Group') {
                 if (dateRow) dateRow.style.display = 'none';
                 if (validFrom) {
                     validFrom.removeAttribute('required');
-                    validFrom.value = '';
+                    validFrom.value = validFrom.value || '';
                 }
                 if (validTo) {
                     validTo.removeAttribute('required');
-                    validTo.value = '';
+                    validTo.value = validTo.value || '';
                 }
             } else {
                 if (dateRow) dateRow.style.display = 'flex';

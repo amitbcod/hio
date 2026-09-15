@@ -2123,6 +2123,105 @@ class AccommodationController extends Controller
     }
 
     /**
+     * Get group price for a room+plan (AJAX)
+     */
+    public function getGroupPrice(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $roomId = $request->query('room_id');
+        $planId = $request->query('plan_id');
+        if (!$roomId || !$planId) {
+            return response()->json(['success' => true, 'data' => null]);
+        }
+
+        $group = AccommodationRate::where('accommodation_id', $accommodation->id)
+            ->where('room_id', $roomId)
+            ->where('rate_name', function($q) use ($planId) {
+                $plan = AccommodationRate::find($planId);
+                $q->select('rate_name')->from('accommodation_rates')->where('id', $planId)->limit(1);
+            })
+            ->where('rate_type', 'Group')
+            ->where('is_default', true)
+            ->first();
+
+        return response()->json(['success' => true, 'data' => $group]);
+    }
+
+    /**
+     * Save group price for a room+plan
+     */
+    public function setGroupPrice(Request $request, $id)
+    {
+        $accommodation = Accommodation::findOrFail($id);
+        $operator = auth()->user();
+
+        if ($accommodation->operator_id !== $operator->id && 
+            $accommodation->business_id !== $operator->business_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $request->validate([
+                'room_id' => 'required|exists:accommodation_rooms,id',
+                'plan_id' => 'required|exists:accommodation_rates,id',
+                'group_room_price' => 'nullable|numeric|min:0',
+                'group_adult_price' => 'nullable|numeric|min:0',
+                'group_child_price' => 'nullable|numeric|min:0',
+                'group_infant_price' => 'nullable|numeric|min:0',
+            ]);
+
+            $room = AccommodationRoom::findOrFail($request->room_id);
+            $plan = AccommodationRate::findOrFail($request->plan_id);
+
+            AccommodationRate::where('accommodation_id', $accommodation->id)
+                ->where('room_id', $room->id)
+                ->where('rate_name', $plan->rate_name)
+                ->where('meal_plan', $plan->meal_plan)
+                ->where('pricing_setting', $plan->pricing_setting)
+                ->where('rate_type', 'Group')
+                ->where('is_default', true)
+                ->delete();
+
+            AccommodationRate::create([
+                'rate_id' => 'GRP' . strtoupper(uniqid()),
+                'accommodation_id' => $accommodation->id,
+                'room_id' => $room->id,
+                'rate_name' => $plan->rate_name,
+                'meal_plan' => $plan->meal_plan,
+                'pricing_setting' => $plan->pricing_setting,
+                'inclusions' => $plan->inclusions,
+                'is_rate_plan' => false,
+                'is_default' => true,
+                'base_rate' => $request->group_room_price ?? null,
+                'final_rate' => $request->group_room_price ?? null,
+                'extra_adult_rate' => $request->group_adult_price ?? null,
+                'extra_bed_rate' => 0,
+                'children_rate' => $request->group_child_price ?? null,
+                'infant_rate' => $request->group_infant_price ?? null,
+                'valid_from' => now()->toDateString(),
+                'valid_to' => now()->addYears(10)->toDateString(),
+                'rate_type' => 'Group',
+                'currency' => 'USD',
+                'is_active' => true,
+            ]);
+
+            $this->syncStep9PricingStatus($accommodation);
+
+            return response()->json(['success' => true, 'message' => 'Group price saved']);
+        } catch (\Exception $e) {
+            \Log::error('setGroupPrice error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Update seasonal pricing
      */
     public function updateSeasonPricing(Request $request, $id, $pricingId)

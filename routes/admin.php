@@ -281,6 +281,11 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     Route::get('groups/{group}/step7', [\App\Http\Controllers\Admin\GroupController::class, 'step7'])->name('groups.step7');
     Route::post('groups/{group}/step7', [\App\Http\Controllers\Admin\GroupController::class, 'saveStep7'])->name('groups.step7.save');
 
+    // Closed Group Booking wizard (admin)
+    Route::get('closed-groups/book', [\App\Http\Controllers\Admin\ClosedGroupBookingController::class, 'create'])->name('closed-groups.book');
+    Route::post('closed-groups/book', [\App\Http\Controllers\Admin\ClosedGroupBookingController::class, 'store'])->name('closed-groups.book.store');
+    Route::get('closed-groups/{group}/rooms', [\App\Http\Controllers\Admin\ClosedGroupBookingController::class, 'rooms'])->name('closed-groups.rooms');
+
     Route::get('vehicle-types', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'index'])->name('vehicle-types.index');
     Route::get('vehicle-types/create', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'create'])->name('vehicle-types.create');
     Route::post('vehicle-types', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'store'])->name('vehicle-types.store');

@@ -591,6 +591,8 @@ class TransportController extends Controller
             'routes.*.pricing.return_price' => 'nullable|numeric|min:0',
             'routes.*.pricing.package_price' => 'nullable|numeric|min:0',
             'routes.*.pricing.package_return_price' => 'nullable|numeric|min:0',
+            'routes.*.pricing.group_price' => 'nullable|numeric|min:0',
+            'routes.*.pricing.group_return_price' => 'nullable|numeric|min:0',
             'routes.*.pricing.seasonal' => 'nullable|array',
             'routes.*.pricing.seasonal.*.start' => 'nullable|date',
             'routes.*.pricing.seasonal.*.end' => 'nullable|date|after_or_equal:routes.*.pricing.seasonal.*.start',
@@ -606,14 +608,18 @@ class TransportController extends Controller
                 $pricing = $routeData['pricing'] ?? [];
                 $defaultPrice = $pricing['default_price'] ?? null;
                 $packagePrice = $pricing['package_price'] ?? null;
+                $groupPrice = $pricing['group_price'] ?? null;
                 $seasonals = $pricing['seasonal'] ?? [];
                 $returnPrice = $pricing['return_price'] ?? null;
                 $packageReturnPrice = $pricing['package_return_price'] ?? null;
+                $groupReturnPrice = $pricing['group_return_price'] ?? null;
 
                 $hasDefaultPrice = array_key_exists('default_price', $pricing) && $defaultPrice !== null && $defaultPrice !== '';
                 $hasPackagePrice = array_key_exists('package_price', $pricing) && $packagePrice !== null && $packagePrice !== '';
+                $hasGroupPrice = array_key_exists('group_price', $pricing) && $groupPrice !== null && $groupPrice !== '';
                 $hasReturnPrice = array_key_exists('return_price', $pricing) && $returnPrice !== null && $returnPrice !== '';
                 $hasPackageReturnPrice = array_key_exists('package_return_price', $pricing) && $packageReturnPrice !== null && $packageReturnPrice !== '';
+                $hasGroupReturnPrice = array_key_exists('group_return_price', $pricing) && $groupReturnPrice !== null && $groupReturnPrice !== '';
                 $hasSeasonalValues = false;
 
                 foreach ($seasonals as $seasonal) {
@@ -628,14 +634,14 @@ class TransportController extends Controller
                     }
                 }
 
-                if (!$hasDefaultPrice && !$hasReturnPrice && !$hasSeasonalValues) {
+                if (!$hasDefaultPrice && !$hasPackagePrice && !$hasGroupPrice && !$hasReturnPrice && !$hasPackageReturnPrice && !$hasGroupReturnPrice && !$hasSeasonalValues) {
                     continue;
                 }
 
                 $activeRouteCount++;
 
-                if (!$hasSeasonalValues && !$hasDefaultPrice && !$hasPackagePrice) {
-                    $validator->errors()->add("routes.{$index}.pricing.default_price", 'Single trip price or package single trip price is required when no seasonal pricing is provided.');
+                if (!$hasSeasonalValues && !$hasDefaultPrice && !$hasPackagePrice && !$hasGroupPrice) {
+                    $validator->errors()->add("routes.{$index}.pricing.default_price", 'Single trip price, package single trip price, or group single trip price is required when no seasonal pricing is provided.');
                 }
 
                 $ranges = [];
@@ -704,14 +710,18 @@ class TransportController extends Controller
             $routePricing = $routeData['pricing'] ?? [];
             $defaultPrice = $routePricing['default_price'] ?? null;
             $packagePrice = $routePricing['package_price'] ?? null;
+            $groupPrice = $routePricing['group_price'] ?? null;
             $returnPrice = $routePricing['return_price'] ?? null;
             $packageReturnPrice = $routePricing['package_return_price'] ?? null;
+            $groupReturnPrice = $routePricing['group_return_price'] ?? null;
             $seasonals = $routePricing['seasonal'] ?? [];
 
             $hasDefaultPrice = array_key_exists('default_price', $routePricing) && $defaultPrice !== null && $defaultPrice !== '';
             $hasPackagePrice = array_key_exists('package_price', $routePricing) && $packagePrice !== null && $packagePrice !== '';
+            $hasGroupPrice = array_key_exists('group_price', $routePricing) && $groupPrice !== null && $groupPrice !== '';
             $hasReturnPrice = array_key_exists('return_price', $routePricing) && $returnPrice !== null && $returnPrice !== '';
             $hasPackageReturnPrice = array_key_exists('package_return_price', $routePricing) && $packageReturnPrice !== null && $packageReturnPrice !== '';
+            $hasGroupReturnPrice = array_key_exists('group_return_price', $routePricing) && $groupReturnPrice !== null && $groupReturnPrice !== '';
             $hasSeasonalValues = false;
             foreach ($seasonals as $seasonal) {
                 if (!is_array($seasonal)) {
@@ -725,7 +735,7 @@ class TransportController extends Controller
                 }
             }
 
-            if (!$hasDefaultPrice && !$hasPackagePrice && !$hasReturnPrice && !$hasPackageReturnPrice && !$hasSeasonalValues) {
+            if (!$hasDefaultPrice && !$hasPackagePrice && !$hasGroupPrice && !$hasReturnPrice && !$hasPackageReturnPrice && !$hasGroupReturnPrice && !$hasSeasonalValues) {
                 continue;
             }
 
@@ -735,6 +745,8 @@ class TransportController extends Controller
                 'return_price' => $returnPrice !== '' ? $returnPrice : null,
                 'package_price' => $packagePrice !== '' ? $packagePrice : null,
                 'package_return_price' => $packageReturnPrice !== '' ? $packageReturnPrice : null,
+                'group_price' => $groupPrice !== '' ? $groupPrice : null,
+                'group_return_price' => $groupReturnPrice !== '' ? $groupReturnPrice : null,
                 'seasonal' => array_values($seasonals),
             ];
 

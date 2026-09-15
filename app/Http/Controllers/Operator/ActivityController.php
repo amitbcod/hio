@@ -1384,7 +1384,7 @@ class ActivityController extends Controller
 
         $validated = $request->validate([
             'variant_id' => 'required|exists:activity_variants,variant_id',
-            'season' => 'nullable|string|max:100',
+            'season' => 'nullable|string|max:100|in:One Season,High,Low,Peak,Package,Group',
             'valid_from' => 'nullable|date|date_format:Y-m-d|required_if:season,One Season|required_if:season,High|required_if:season,Low|required_if:season,Peak',
             'valid_to' => 'nullable|date|date_format:Y-m-d|after_or_equal:valid_from|required_if:season,One Season|required_if:season,High|required_if:season,Low|required_if:season,Peak',
             'rate_specificity' => 'required|in:Per Person,Per Equipment',
@@ -1397,15 +1397,18 @@ class ActivityController extends Controller
 
         try {
             $variant = \App\Models\ActivityVariant::findOrFail($validated['variant_id']);
+            $season = $validated['season'] ?? 'One Season';
+            $validFrom = $validated['valid_from'] ?? ($season === 'Package' || $season === 'Group' ? now()->toDateString() : null);
+            $validTo = $validated['valid_to'] ?? ($season === 'Package' || $season === 'Group' ? now()->addYears(10)->toDateString() : null);
 
             $rate = new \App\Models\ActivityRate();
             $rate->service_id = (string) $activity->id;
             $rate->activity_id = $activity->id;
             $rate->variant_id = $validated['variant_id'];
             $rate->variant_name = $variant->variant_name ?? '';
-            $rate->season = $validated['season'] ?? 'One Season';
-            $rate->valid_from = $validated['valid_from'];
-            $rate->valid_to = $validated['valid_to'];
+            $rate->season = $season;
+            $rate->valid_from = $validFrom;
+            $rate->valid_to = $validTo;
             $rate->rate_specificity = $validated['rate_specificity'];
             $rate->adult_rate = $validated['adult_rate'] ?? null;
             $rate->children_rate = $validated['children_rate'] ?? null;
@@ -1469,7 +1472,7 @@ class ActivityController extends Controller
 
         $validated = $request->validate([
             'variant_id' => 'required|exists:activity_variants,variant_id',
-            'season' => 'nullable|string|max:100',
+            'season' => 'nullable|string|max:100|in:One Season,High,Low,Peak,Package,Group',
             'valid_from' => 'nullable|date|date_format:Y-m-d|required_if:season,One Season|required_if:season,High|required_if:season,Low|required_if:season,Peak',
             'valid_to' => 'nullable|date|date_format:Y-m-d|after_or_equal:valid_from|required_if:season,One Season|required_if:season,High|required_if:season,Low|required_if:season,Peak',
             'rate_specificity' => 'required|in:Per Person,Per Equipment',
@@ -1488,12 +1491,15 @@ class ActivityController extends Controller
             }
 
             $variant = \App\Models\ActivityVariant::findOrFail($validated['variant_id']);
+            $season = $validated['season'] ?? 'One Season';
+            $validFrom = $validated['valid_from'] ?? ($season === 'Package' || $season === 'Group' ? now()->toDateString() : null);
+            $validTo = $validated['valid_to'] ?? ($season === 'Package' || $season === 'Group' ? now()->addYears(10)->toDateString() : null);
 
             $rate->variant_id = $validated['variant_id'];
             $rate->variant_name = $variant->variant_name ?? '';
-            $rate->season = $validated['season'] ?? 'One Season';
-            $rate->valid_from = $validated['valid_from'];
-            $rate->valid_to = $validated['valid_to'];
+            $rate->season = $season;
+            $rate->valid_from = $validFrom;
+            $rate->valid_to = $validTo;
             $rate->rate_specificity = $validated['rate_specificity'];
             $rate->adult_rate = $validated['adult_rate'] ?? null;
             $rate->children_rate = $validated['children_rate'] ?? null;

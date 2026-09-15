@@ -104,6 +104,8 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::post('accommodation/{id}/step9-season-pricing', [AccommodationController::class, 'saveSeasonPricing'])->name('accommodation.saveStep9');
         Route::post('accommodation/{id}/step9-season-pricing/package', [AccommodationController::class, 'setPackagePrice'])->name('accommodation.step9.setPackagePrice');
         Route::get('accommodation/{id}/step9-season-pricing/package', [AccommodationController::class, 'getPackagePrice'])->name('accommodation.step9.getPackage');
+        Route::post('accommodation/{id}/step9-season-pricing/group', [AccommodationController::class, 'setGroupPrice'])->name('accommodation.step9.setGroupPrice');
+        Route::get('accommodation/{id}/step9-season-pricing/group', [AccommodationController::class, 'getGroupPrice'])->name('accommodation.step9.getGroup');
         Route::post('accommodation/{id}/step9-set-default-price', [AccommodationController::class, 'setDefaultPrice'])->name('accommodation.step9.setDefaultPrice');
         Route::post('accommodation/{id}/step9-add-season', [AccommodationController::class, 'addSeasonalEntry'])->name('accommodation.step9.addSeason');
         Route::post('accommodation/{id}/step9-delete-season/{entryId}', [AccommodationController::class, 'deleteSeasonalEntry'])->name('accommodation.step9.deleteSeason');

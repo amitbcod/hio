@@ -50,10 +50,23 @@
                                                             ->where('rate_type', 'Package')
                                                             ->where('is_default', true)
                                                             ->first();
+                                                        $groupEntry = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
+                                                            ->where('room_id', $combo['room']->id)
+                                                            ->where('rate_name', $combo['plan']->rate_name)
+                                                            ->where('meal_plan', $combo['plan']->meal_plan)
+                                                            ->where('pricing_setting', $combo['plan']->pricing_setting)
+                                                            ->where('rate_type', 'Group')
+                                                            ->where('is_default', true)
+                                                            ->first();
                                                     @endphp
                                                     @if($packageEntry)
                                                     <div style="color:#28a745;font-size:11px;margin-top:2px;">
                                                         <strong>Package Prices — Room: USD {{ number_format($packageEntry->base_rate,2) }} | Adult: USD {{ number_format($packageEntry->extra_adult_rate,2) }} | Child: USD {{ number_format($packageEntry->children_rate,2) }} | Infant: USD {{ number_format($packageEntry->infant_rate,2) }}</strong>
+                                                    </div>
+                                                    @endif
+                                                    @if($groupEntry)
+                                                    <div style="color:#0d6efd;font-size:11px;margin-top:2px;">
+                                                        <strong>Group Prices — Room: USD {{ number_format($groupEntry->base_rate,2) }} | Adult: USD {{ number_format($groupEntry->extra_adult_rate,2) }} | Child: USD {{ number_format($groupEntry->children_rate,2) }} | Infant: USD {{ number_format($groupEntry->infant_rate,2) }}</strong>
                                                     </div>
                                                     @endif
                                             @else
@@ -99,6 +112,15 @@
                                                     data-plan-name="{{ $combo['plan']->rate_name }}"
                                                     style="padding:6px 12px;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;text-decoration:none;text-align:center;">
                                                     Edit Package Price
+                                                </button>
+                                                <button type="button"
+                                                    class="btn-edit-group"
+                                                    data-room-id="{{ $combo['room']->id }}"
+                                                    data-plan-id="{{ $combo['plan']->id }}"
+                                                    data-room-name="{{ $combo['room']->room_name }}"
+                                                    data-plan-name="{{ $combo['plan']->rate_name }}"
+                                                    style="padding:6px 12px;background:#0d6efd;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;text-decoration:none;text-align:center;">
+                                                    Edit Group Price
                                                 </button>
                                                 <button type="button" 
                                                     onclick="@if(!$combo['has_default'])alert('Please set a default price first');return false;@endif document.getElementById('form_{{ $combo['room']->id }}_{{ $combo['plan']->id }}').scrollIntoView({behavior:'smooth'}); toggleAddSeasonalForm('form_{{ $combo['room']->id }}_{{ $combo['plan']->id }}')"
@@ -322,6 +344,40 @@
             </form>
         </div>
     </div>
+
+    <div id="groupPriceModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+        <div style="background:#fff;padding:24px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.2);width:90%;max-width:500px;max-height:80vh;overflow-y:auto;">
+            <h5 id="groupPriceModalTitle" style="margin-top:0;margin-bottom:16px;font-weight:600;">Set Group Price</h5>
+            <div id="groupPriceInfo" style="background:#f9f9f9;padding:12px;border-radius:4px;margin-bottom:16px;font-size:12px;color:#666;"></div>
+            <form id="groupPriceForm" method="POST">
+                @csrf
+                <input type="hidden" id="groupRoomId" name="room_id">
+                <input type="hidden" id="groupPlanId" name="plan_id">
+
+                <div class="mb-3">
+                    <label style="font-weight:600;">Group Room Price (USD)</label>
+                    <input type="number" name="group_room_price" class="form-control" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="mb-3">
+                    <label style="font-weight:600;">Group Adult Price (USD)</label>
+                    <input type="number" name="group_adult_price" class="form-control" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="mb-3">
+                    <label style="font-weight:600;">Group Child Price (USD)</label>
+                    <input type="number" name="group_child_price" class="form-control" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="mb-3">
+                    <label style="font-weight:600;">Group Infant Price (USD)</label>
+                    <input type="number" name="group_infant_price" class="form-control" step="0.01" min="0" placeholder="0.00">
+                </div>
+
+                <div style="display:flex;gap:12px;justify-content:flex-end;">
+                    <button type="button" onclick="closeGroupPriceModal()" style="padding:8px 14px;background:#f0f0f0;color:#333;border:none;border-radius:4px;cursor:pointer;">Cancel</button>
+                    <button type="submit" id="groupPriceSubmitBtn" style="padding:8px 14px;background:#0d6efd;color:#fff;border:none;border-radius:4px;cursor:pointer;">Save Group Price</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <div id="seasonalPricingModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
         <div style="background:#fff;padding:24px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.2);width:90%;max-width:500px;">
             <h5 style="margin-top:0;margin-bottom:16px;font-weight:600;">Add Seasonal Pricing</h5>
@@ -524,9 +580,7 @@
             document.getElementById('packageRoomId').value = roomId;
             document.getElementById('packagePlanId').value = planId;
             document.getElementById('packagePriceInfo').innerHTML = `<strong>${roomName}</strong><br>${planName}`;
-            // Reset form
             document.getElementById('packagePriceForm').reset();
-            // Try to prefill if package exists
             fetch('{{ route("operator.accommodation.step9.getPackage", $accommodation->id) }}?room_id=' + encodeURIComponent(roomId) + '&plan_id=' + encodeURIComponent(planId), {
                 method: 'GET'
             }).then(r => r.json()).then(data => {
@@ -547,10 +601,47 @@
             document.getElementById('packagePriceForm').reset();
         }
 
+        function openGroupPriceModal(btn) {
+            const roomId = btn.dataset.roomId;
+            const planId = btn.dataset.planId;
+            const roomName = btn.dataset.roomName;
+            const planName = btn.dataset.planName;
+
+            document.getElementById('groupPriceModalTitle').textContent = 'Set Group Price';
+            document.getElementById('groupRoomId').value = roomId;
+            document.getElementById('groupPlanId').value = planId;
+            document.getElementById('groupPriceInfo').innerHTML = `<strong>${roomName}</strong><br>${planName}`;
+            document.getElementById('groupPriceForm').reset();
+            fetch('{{ route("operator.accommodation.step9.getGroup", $accommodation->id) }}?room_id=' + encodeURIComponent(roomId) + '&plan_id=' + encodeURIComponent(planId), {
+                method: 'GET'
+            }).then(r => r.json()).then(data => {
+                if (data.success && data.data) {
+                    const p = data.data;
+                    document.getElementById('groupPriceForm').querySelector('input[name="group_room_price"]').value = p.base_rate ?? '';
+                    document.getElementById('groupPriceForm').querySelector('input[name="group_adult_price"]').value = p.extra_adult_rate ?? '';
+                    document.getElementById('groupPriceForm').querySelector('input[name="group_child_price"]').value = p.children_rate ?? '';
+                    document.getElementById('groupPriceForm').querySelector('input[name="group_infant_price"]').value = p.infant_rate ?? '';
+                }
+            }).catch(() => {});
+
+            document.getElementById('groupPriceModal').style.display = 'flex';
+        }
+
+        function closeGroupPriceModal() {
+            document.getElementById('groupPriceModal').style.display = 'none';
+            document.getElementById('groupPriceForm').reset();
+        }
+
         // Attach handler to Package Price buttons
         document.querySelectorAll('.btn-edit-package').forEach(btn => {
             btn.addEventListener('click', function() {
                 openPackagePriceModal(this);
+            });
+        });
+
+        document.querySelectorAll('.btn-edit-group').forEach(btn => {
+            btn.addEventListener('click', function() {
+                openGroupPriceModal(this);
             });
         });
 
@@ -572,6 +663,30 @@
                     location.reload();
                 } else {
                     alert('Error: ' + (data.message || 'Failed to save package price'));
+                }
+            }).catch(err => {
+                console.error(err);
+                alert('An error occurred');
+            });
+        });
+
+        document.getElementById('groupPriceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('{{ route("operator.accommodation.step9.setGroupPrice", $accommodation->id) }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: formData
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeGroupPriceModal();
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to save group price'));
                 }
             }).catch(err => {
                 console.error(err);

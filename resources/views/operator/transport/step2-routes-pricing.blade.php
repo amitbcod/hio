@@ -83,6 +83,16 @@
                                                 <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][package_return_price]" class="form-control" value="{{ $pricing['package_return_price'] ?? '' }}" min="0" step="0.01"></div>
                                             </div>
 
+                                            <div class="row mb-3">
+                                                <div class="col-md-4"><label class="form-label">Group single trip price </label></div>
+                                                <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][group_price]" class="form-control" value="{{ $pricing['group_price'] ?? '' }}" min="0" step="0.01"></div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <div class="col-md-4"><label class="form-label">Group return trip price </label></div>
+                                                <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][group_return_price]" class="form-control" value="{{ $pricing['group_return_price'] ?? '' }}" min="0" step="0.01"></div>
+                                            </div>
+
                                             <div class="mt-3">
                                                 <label class="form-label">Seasonal Prices</label>
                                                 <p class="text-muted small mb-2">If a seasonal date range matches the booking date, that price will be used. Otherwise the single trip price is applied.</p>
@@ -204,11 +214,12 @@
         }
 
         const defaultPriceInput = document.querySelector(`input[name="routes[${routeIndex}][pricing][default_price]"]`)
-            || document.querySelector(`input[name="routes[${routeIndex}][pricing][package_price]"]`);
+            || document.querySelector(`input[name="routes[${routeIndex}][pricing][package_price]"]`)
+            || document.querySelector(`input[name="routes[${routeIndex}][pricing][group_price]"]`);
         const defaultPrice = defaultPriceInput ? defaultPriceInput.value : '';
 
         if (!hasValue && defaultPrice.trim() === '') {
-            showRouteError(routeIndex, 'Either regular single trip price or package price is required.');
+            showRouteError(routeIndex, 'Either regular single trip price, package price, or group price is required.');
             return false;
         }
 
