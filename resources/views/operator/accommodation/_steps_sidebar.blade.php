@@ -1,6 +1,6 @@
 <!-- Accommodation Steps Sidebar -->
 <div style="">
-    <h6 style="">Accommodation Steps</h6>
+    <h6 style="color:#fff">Accommodation Steps</h6>
     <div style="display:flex;flex-direction:column;gap:0px;">
         @php
             $steps = [
@@ -32,12 +32,12 @@
                 }
             @endphp
             @if($accommodation)
-                <a href="{{ route($routeName, $accommodation->id) }}" style="padding:10px 12px;background:{{ $isActive ? '#1e5f83' : ($isComplete ? '#154f6eff' : 'transparent') }};border-left:0px solid {{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#ccc') }};border-radius:0px;text-decoration:none;font-size:13px;color:{{ $isActive ? '#9ddcff' : ($isComplete ? '#28a745' : '#fff') }};font-weight:{{ $isActive ? '600' : '500' }};display:flex;justify-content:space-between;align-items:center;border-bottom: 1px solid #fff;">
+                <a href="{{ route($routeName, $accommodation->id) }}" style="padding:10px 12px;background:{{ $isActive ? '#1e5f83' : ($isComplete ? '#154f6eff' : 'transparent') }};border-left:0px solid {{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#ccc') }};border-radius:0px;text-decoration:none;font-size:13px;color:{{ $isActive ? '#9ddcff' : ($isComplete ? '#28a745' : '#fff') }};font-weight:{{ $isActive ? '600' : '500' }};display:flex;justify-content:space-between;align-items:center;border-bottom: 1px solid #477993;">
                     <span>Step {{ $stepNum }}: {{ $stepData['name'] }}</span>
                     <span style="font-size:12px;">{{ $isComplete ? '✓' : $stepNum }}</span>
                 </a>
             @else
-                <div style="padding:10px 12px;background:transparent;border-left:0px solid #ccc;border-radius:0px;font-size:13px;color:#fff;font-weight:500;display:flex;justify-content:space-between;align-items:center;border-bottom: 1px solid #fff;">
+                <div style="padding:10px 12px;background:transparent;border-left:0px solid #ccc;border-radius:0px;font-size:13px;color:#fff;font-weight:500;display:flex;justify-content:space-between;align-items:center;border-bottom: 1px solid #477993;">
                     <span>Step {{ $stepNum }}: {{ $stepData['name'] }}</span>
                     <span style="font-size:12px;">{{ $stepNum }}</span>
                 </div>
