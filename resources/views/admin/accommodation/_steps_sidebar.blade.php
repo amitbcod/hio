@@ -1,7 +1,7 @@
 <!-- Accommodation Steps Sidebar -->
 <div style="">
     <h6 style="">Accommodation Steps</h6>
-    <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="display:flex;flex-direction:column;gap:0px;">
         @php
             $steps = [
                 1 => ['name' => 'Basics', 'field' => 'step1_basics'],
