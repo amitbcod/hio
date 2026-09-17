@@ -1,7 +1,7 @@
 <!-- Transport Setup Wizard Sidebar -->
-<div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-    <h6 style="font-weight:700;margin:0 0 16px 0;font-size:14px;color:#333;">Transport Setup</h6>
-    <div style="display:flex;flex-direction:column;gap:8px;">
+<div style="">
+    <h6 style="color:#fff">Transport Setup</h6>
+    <div style="display:flex;flex-direction:column;gap:0px;">
         @php
             $steps = [
                 1 => ['name' => 'Basic details', 'route' => 'operator.transport.basic-details'],
@@ -16,7 +16,7 @@
                 $isActive = $currentStep === $stepNumber;
                 $routeUrl = route($stepData['route']);
             @endphp
-            <a href="{{ $routeUrl }}" style="padding:10px 12px;background:{{ $isActive ? '#e3f2fd' : '#f5f5f5' }};border-left:4px solid {{ $isActive ? '#2196f3' : '#ccc' }};border-radius:4px;text-decoration:none;font-size:13px;color:{{ $isActive ? '#2196f3' : '#666' }};font-weight:{{ $isActive ? '600' : '500' }};display:flex;justify-content:space-between;align-items:center;">
+            <a href="{{ $routeUrl }}" style="padding:10px 12px;background:{{ $isActive ? '#1e5f83' : 'transparent' }};border-left:0px solid {{ $isActive ? '#2196f3' : '#ccc' }};border-radius:0px;text-decoration:none;font-size:13px;color:{{ $isActive ? '#9ddcff' : '#fff' }};font-weight:{{ $isActive ? '600' : '500' }};display:flex;justify-content:space-between;align-items:center;border-bottom: 1px solid #477993;">
                 <span>Step {{ $stepNumber }}: {{ $stepData['name'] }}</span>
                 <span style="font-size:12px;">{{ $stepNumber }}</span>
             </a>
