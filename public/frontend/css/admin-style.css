@@ -21,26 +21,27 @@
      width: 100%;
  }
 
-  button.btn.btn-primary:hover, button.btn.btn-primary:active  {
-        background-color: #c98f14 !important;
-  }
+ button.btn.btn-primary:hover,
+ button.btn.btn-primary:active {
+     background-color: #c98f14 !important;
+ }
 
  a {
-    color: rgb(65 176 170);
-    text-decoration: none;
-}
+     color: rgb(65 176 170);
+     text-decoration: none;
+ }
 
-a:hover {
-    color: #2463b1;
-}
+ a:hover {
+     color: #2463b1;
+ }
 
-.nav-pagination .shadow-sm {
-    box-shadow: none;
-}
+ .nav-pagination .shadow-sm {
+     box-shadow: none;
+ }
 
-.nav-pagination .flex.gap-2.items-center.justify-between {
-    display: none; 
-}
+ .nav-pagination .flex.gap-2.items-center.justify-between {
+     display: none;
+ }
 
 
  /* .main-setion {
@@ -100,8 +101,8 @@ a:hover {
  }
 
  .list-group-item.list-group-item-action:hover {
-    background: #917318;
-}
+     background: #917318;
+ }
 
  .dash-section h3 {
      font-weight: bold;
@@ -152,8 +153,8 @@ a:hover {
  }
 
  a.btn.btn-primary:hover {
-    background: #c98f14 !important;
-}
+     background: #c98f14 !important;
+ }
 
  a.btn.btn-primary:active {
      background-color: #c98f14;
@@ -191,69 +192,76 @@ a:hover {
  }
 
  .list-group-item+.list-group-item.active {
-    background: #917318;
-    border-top:0;
-}
+     background: #917318;
+     border-top: 0;
+ }
 
-.navbar .container {
-    max-width: 100% !important;
-    padding-left: 40px;
-    padding-right: 40px; 
-}
+ .navbar .container {
+     max-width: 100% !important;
+     padding-left: 40px;
+     padding-right: 40px;
+ }
 
-nav.navbar a.navbar-brand {
-    margin: 0;
-    margin-left: 20px;
-}
+ nav.navbar a.navbar-brand {
+     margin: 0;
+     margin-left: 20px;
+ }
 
-nav.navbar.bg-light {
-    background: #fbf6e3 !important;
-     
-}
+ nav.navbar.bg-light {
+     background: #fbf6e3 !important;
 
-.login-full-section .container {
-    padding:0;
-}
+ }
 
-.login-full-section .container.mt-4 {
-    margin-top:0 !important;
-}
+ .login-full-section .container {
+     padding: 0;
+ }
 
-/********************/
+ .login-full-section .container.mt-4 {
+     margin-top: 0 !important;
+ }
 
-nav[aria-label="Pagination Navigation"] > div > span, nav[aria-label="Pagination Navigation"] > div > a{
-  display: inline-block;
-}
+ /********************/
 
-nav[aria-label="Pagination Navigation"] > div + div > div + div > span {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+ nav[aria-label="Pagination Navigation"]>div>span,
+ nav[aria-label="Pagination Navigation"]>div>a {
+     display: inline-block;
+ }
 
-nav[aria-label="Pagination Navigation"] > div + div > div + div > span a  {
-    display: inline-block;
-}
+ nav[aria-label="Pagination Navigation"]>div+div>div+div>span {
+     display: flex;
+     justify-content: center;
+     align-items: center;
+ }
 
-nav[aria-label="Pagination Navigation"] > div + div > div + div > span a  {
-    display: inline-block;
-} 
+ nav[aria-label="Pagination Navigation"]>div+div>div+div>span a {
+     display: inline-block;
+ }
 
-nav[aria-label="Pagination Navigation"] > div + div > div + div > span svg {
-    width:20px
-}
+ nav[aria-label="Pagination Navigation"]>div+div>div+div>span a {
+     display: inline-block;
+ }
 
-nav[aria-label="Pagination Navigation"] > div + div > div + div > span > span > span {
-    display: block;
-}
+ nav[aria-label="Pagination Navigation"]>div+div>div+div>span svg {
+     width: 20px
+ }
 
-.transport-rightside {
-    
-}
+ nav[aria-label="Pagination Navigation"]>div+div>div+div>span>span>span {
+     display: block;
+ }
 
-.container.mt-5 {
-    margin-top: 0 !important;
-}
+ .transport-rightside {}
+
+ .container.mt-5 {
+     margin-top: 0 !important;
+ }
+
+ .container.mt-5>.row>.col-md-3 {
+     padding: 15px;
+     background-image: url('https://hio.whuso.in/images/sidebar-bkg.jpg');
+     background-position: top;
+     background-repeat: no-repeat;
+     background-size: cover;
+ }
 
 
 
