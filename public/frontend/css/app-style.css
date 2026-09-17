@@ -606,7 +606,8 @@ code {
 
 /*******************************/
 
-.container.mt-5>.row>.col-md-3 {
+.container.mt-5>.row>.col-md-3,
+.container.mt-4>.row>.col-md-3 {
     padding: 15px;
     background-image: url('https://hio.whuso.in/images/sidebar-bkg.jpg');
     background-position: top;
