@@ -3,7 +3,7 @@
 @section('title', 'Add Transport | Operator Dashboard')
 
 @section('content')
-<div class="container mt-4">
+<div class="container mt-5">
     <div class="row">
             <div class="col-md-3">
                 @php $currentStep = 1; @endphp

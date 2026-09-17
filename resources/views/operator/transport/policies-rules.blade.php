@@ -3,7 +3,7 @@
 @section('title', 'Transport Setup | Operator Dashboard')
 
 @section('content')
-<div class="container mt-4">
+<div class="container mt-5">
     <div class="row">
         <div class="col-md-3">
             @include('operator.transport._steps_wizard_sidebar', ['step' => $step ?? 3])
