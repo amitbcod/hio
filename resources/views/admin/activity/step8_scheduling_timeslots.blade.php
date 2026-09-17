@@ -2,7 +2,7 @@
 
 @section('content')
 @php $currentStep = 8; @endphp
-<div class="container-fluid" style="padding:24px;">
+<div class="container mt-5" style="">
     <div class="row">
         {{-- Sidebar --}}
         <div class="col-md-3">
