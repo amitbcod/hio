@@ -615,7 +615,8 @@ code {
     background-size: cover;
 }
 
-.container.mt-5 {
+.container.mt-5,
+.container.mt-4 {
     margin-top: 0 !important;
 }
 
