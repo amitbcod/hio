@@ -622,7 +622,7 @@ code {
 
 .container.mt-5>.row>.col-md-9,
 .container.mt-4>.row>.col-md-9 {
-    margin: 30px 1.5%;
+    margin: 30px 0;
 }
 
 @media (min-width: 1200px) {
