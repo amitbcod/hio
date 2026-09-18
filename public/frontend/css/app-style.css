@@ -620,6 +620,10 @@ code {
     margin-top: 0 !important;
 }
 
+.container.mt-5>.row>.col-md-9,
+.container.mt-4>.row>.col-md-9 {
+    margin: 30px 1.5%;
+}
 
 @media (min-width: 1200px) {
     .navbar .container {
