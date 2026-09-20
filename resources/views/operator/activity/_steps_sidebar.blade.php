@@ -1,6 +1,6 @@
 <!-- Activity Steps Sidebar -->
-<div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-    <h6 style="font-weight:700;margin:0 0 16px 0;font-size:14px;color:#333;">Activity Steps</h6>
+<div style="">
+    <h6 style="color:#fff">Activity Steps</h6>
     <div style="display:flex;flex-direction:column;gap:8px;">
         @php
             $steps = [
@@ -27,7 +27,7 @@
                 // Generate correct route name
                 $routeName = 'operator.activity.step' . $stepNum . '.show';
             @endphp
-            <a href="{{ route($routeName, $activity->id) }}" style="padding:10px 12px;background:{{ $isActive ? '#e3f2fd' : ($isComplete ? '#e8f5e9' : '#f5f5f5') }};border-left:4px solid {{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#ccc') }};border-radius:4px;text-decoration:none;font-size:13px;color:{{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#666') }};font-weight:{{ $isActive ? '600' : '500' }};display:flex;justify-content:space-between;align-items:center;">
+            <a href="{{ route($routeName, $activity->id) }}" style="padding:10px 12px;background:{{ $isActive ? '#1e5f83' : ($isComplete ? '#154f6eff' : 'transparent') }};border-left:0px solid {{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#ccc') }};border-radius:0px;text-decoration:none;font-size:13px;color:{{ $isActive ? '#9ddcff' : ($isComplete ? '#28a745' : '#FFF') }};font-weight:{{ $isActive ? '600' : '500' }};display:flex;justify-content:space-between;align-items:center; border-bottom: 1px solid #477993;">
                 <span>Step {{ $stepNum }}: {{ $stepData['name'] }}</span>
                 <span style="font-size:12px;">{{ $isComplete ? '✓' : $stepNum }}</span>
             </a>

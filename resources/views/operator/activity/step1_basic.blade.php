@@ -40,7 +40,7 @@
                         <div style="background:#f9f9f9;padding:16px;border-radius:8px;margin-bottom:16px;">
                             <h6 style="margin-top:0;font-weight:600;margin-bottom:12px;">Service Details</h6>
                             
-                            <div class="row mb-3">
+                            <div class="row mb-3 row-gap-3">
                                 <div class="col-md-6">
                                     <label style="font-weight:600;">Service Type *</label>
                                     <select name="service_type" class="form-control" required>

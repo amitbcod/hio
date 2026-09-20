@@ -5,7 +5,7 @@
     <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 
-<div class="container-fluid" style="padding:24px;">
+<div class="container mt-5" style="">
     @php $currentStep = 6; @endphp
     <div class="row">
         {{-- Sidebar --}}

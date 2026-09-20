@@ -19,7 +19,7 @@
                             <a href="{{ route('operator.activity.bookings') }}" class="btn" style="background: #6c757d; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
                                 ← Back to Bookings
                             </a>
-                            <span class="badge" style="background: {{ $booking->booking_status === 'Confirmed' ? '#28a745' : ($booking->booking_status === 'Pending' ? '#ffc107' : '#dc3545') }}; color: #fff; font-size: 14px; padding: 8px 16px;">
+                            <span class="badge" style="background: {{ $booking->booking_status === 'Confirmed' ? '#28a745' : ($booking->booking_status === 'Pending' ? '#ffc107' : '#dc3545') }}; color: #fff; font-size: 15px; padding: 8px 16px; line-height: 21px; font-weight: 500;">
                                 {{ $booking->booking_status }}
                             </span>
                         </div>
