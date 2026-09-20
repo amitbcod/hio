@@ -1176,7 +1176,73 @@ class TransportController extends Controller
             abort(403);
         }
 
-        return view('operator.transport.booking-details', compact('transport', 'booking'));
+        // Attempt to resolve a clearer route label for package-generated bookings
+        $packageRouteLabel = null;
+        try {
+            if (!empty($booking->trip_id) && (!empty($booking->source_channel) && strtolower(trim((string)$booking->source_channel)) === 'package' || strtolower(trim((string)$booking->booking_type ?? '')) === 'open-group')) {
+                $trip = \App\Models\Trip::find($booking->trip_id);
+                if ($trip) {
+                    $packageLineItem = $trip->bookings
+                        ->flatMap(fn($b) => $b->lineItems ?? collect())
+                        ->first(fn($li) => ($li->service_type ?? null) === 'package');
+
+                    if ($packageLineItem && !empty($packageLineItem->service_id)) {
+                        $package = \App\Models\Package::find((int) $packageLineItem->service_id);
+                        if ($package && is_array($package->itinerary ?? null) && $trip->start_date) {
+                            $start = \Carbon\Carbon::parse($trip->start_date);
+                            foreach (array_values($package->itinerary) as $idx => $entry) {
+                                if (!is_array($entry)) continue;
+                                $dayDate = $start->copy()->addDays(max(0, $idx));
+                                if ($booking->pickup_date && $dayDate->toDateString() === optional($booking->pickup_date)->toDateString()) {
+                                    // Found the matching itinerary day
+                                    // Prefer explicit transport_schedule selection if present
+                                    $labelParts = [];
+                                    if (!empty($entry['transport_schedule']) && is_array($entry['transport_schedule'])) {
+                                        foreach ($entry['transport_schedule'] as $svcGroup) {
+                                            if (empty($svcGroup) || !is_array($svcGroup)) continue;
+                                            // route ids may be in 'route_ids' or nested selections
+                                            $routeIds = $svcGroup['route_ids'] ?? ($svcGroup['selected_routes'] ?? []);
+                                            if (!empty($routeIds) && is_array($routeIds)) {
+                                                foreach ($routeIds as $rid) {
+                                                    $routeModel = \App\Models\TransportRoute::find((int) $rid) ?: \App\Models\TransportRoute::where('route_id', (string) $rid)->first();
+                                                    if ($routeModel) {
+                                                        $labelParts[] = trim(($routeModel->route_from ?? '') . ($routeModel->route_to ? ' → ' . $routeModel->route_to : '')) . (empty($svcGroup['add_return']) ? '' : ' (Return)');
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Fallback: if entry points to a transport id with no detailed schedule, try to use transport->routes
+                                    if (empty($labelParts) && !empty($entry['transport'])) {
+                                        $tmodel = \App\Models\Transport::with('routes')->find((int)$entry['transport']);
+                                        if ($tmodel && $tmodel->routes && $tmodel->routes->isNotEmpty()) {
+                                            // Prefer routes whose return_date matches booking return_date if available
+                                            foreach ($tmodel->routes as $rt) {
+                                                if (!empty($rt->route_from) && !empty($rt->route_to)) {
+                                                    $labelParts[] = trim($rt->route_from . ' → ' . $rt->route_to) . (optional($booking)->return_date ? ' (Return)' : '');
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if (!empty($labelParts)) {
+                                        $packageRouteLabel = implode(', ', array_unique($labelParts));
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // non-fatal: fall back to showing raw booking route values
+            \Log::debug('Operator::bookingDetails - failed to resolve packageRouteLabel', ['err' => $e->getMessage(), 'booking_id' => $booking->id ?? null]);
+        }
+
+        return view('operator.transport.booking-details', compact('transport', 'booking', 'packageRouteLabel'));
     }
 
     /**

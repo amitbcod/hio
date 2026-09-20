@@ -167,6 +167,89 @@ class TripController extends Controller
             ->orderBy('pickup_date', 'asc')
             ->get());
 
+        // Recompute transport amounts for package/group-generated bookings to ensure display matches
+        // package/group pricing rules (do not persist to DB here; only adjust the displayed value).
+        try {
+          $pricingService = new PackagePricingService();
+
+          // Attempt to discover the package or group model associated with this trip so
+          // we can apply group-specific pricing when recomputing display values.
+          $packageModel = null;
+          try {
+            $pkgBooking = \App\Models\Booking::where('trip_id', $trip->id)
+              ->whereIn('booking_type', ['open-group', 'package', 'close-group'])
+              ->with(['lineItems'])
+              ->first();
+            if ($pkgBooking && $pkgBooking->lineItems && $pkgBooking->lineItems->isNotEmpty()) {
+              $pkgLine = $pkgBooking->lineItems->first();
+              $serviceId = (int) ($pkgLine->service_id ?? 0);
+              if ($serviceId) {
+                $packageModel = \App\Models\Package::find($serviceId) ?: \App\Models\Group::find($serviceId);
+              }
+            }
+          } catch (\Exception $ex) {
+            // ignore discovery failures and continue with null packageModel
+          }
+
+          foreach ($transportBookings as $tb) {
+            $sourceChannel = strtolower(trim((string) data_get($tb, 'source_channel', '')));
+            $bookingType = strtolower(trim((string) data_get($tb, 'booking_type', '')));
+
+            if ($sourceChannel === 'package' || in_array($bookingType, ['open-group', 'close-group', 'package'], true) || str_starts_with((string) ($tb->booking_reference ?? ''), 'PACKAGE-')) {
+              $transportModel = $tb->transport;
+              if (!$transportModel) continue;
+
+              // Try to find the matching TransportRoute for this booking
+              $routeModel = null;
+              $routeFrom = trim((string) ($tb->route_from ?? ''));
+              $routeTo = trim((string) ($tb->route_to ?? ''));
+              if ($routeFrom !== '' || $routeTo !== '') {
+                $routes = $transportModel->routes ?? collect();
+                $matched = $routes->first(function ($r) use ($routeFrom, $routeTo) {
+                  $from = trim((string) ($r->route_from ?? ''));
+                  $to = trim((string) ($r->route_to ?? ''));
+                  if ($routeFrom !== '' && $routeTo !== '') {
+                    return strcasecmp($from, $routeFrom) === 0 && strcasecmp($to, $routeTo) === 0;
+                  }
+                  if ($routeFrom !== '') return strcasecmp($from, $routeFrom) === 0;
+                  return $routeTo !== '' ? strcasecmp($to, $routeTo) === 0 : false;
+                });
+                if ($matched) $routeModel = $matched;
+              }
+
+              // Fallback: try first route of transport
+              if (!$routeModel) {
+                $routeModel = ($transportModel->routes && $transportModel->routes->isNotEmpty()) ? $transportModel->routes->first() : null;
+              }
+
+              if ($routeModel) {
+                $passengers = max(1, (int) ($tb->adults ?? $tb->passengers ?? 1));
+                if ($packageModel && $packageModel instanceof \App\Models\Group) {
+                  $computed = $pricingService->getGroupTransportRouteAmount($routeModel, $passengers, $packageModel, !empty($tb->return_date));
+                } else {
+                  $computed = $pricingService->getTransportRouteAmount($routeModel, $passengers, $packageModel, !empty($tb->return_date));
+                }
+                if (is_numeric($computed)) {
+                  $beforeAmount = (float) ($tb->total_amount ?? 0);
+                  $tb->total_amount = $computed;
+                  if (abs($beforeAmount - (float) $computed) > 0.001) {
+                    \Log::info('Recomputed display transport amount for trip', [
+                      'trip_id' => $trip->id,
+                      'transport_booking_id' => $tb->id,
+                      'route_from' => $routeModel->route_from ?? null,
+                      'route_to' => $routeModel->route_to ?? null,
+                      'before' => $beforeAmount,
+                      'computed' => $computed,
+                    ]);
+                  }
+                }
+              }
+            }
+          }
+        } catch (\Exception $ex) {
+          \Log::error('Failed to recompute package transport booking display amounts', ['error' => $ex->getMessage(), 'trip_id' => $trip->id]);
+        }
+
         // Prepare `service_type_display` only if the booking has a persisted `service_type`.
         foreach ($transportBookings as $tb) {
           $serviceType = trim((string) ($tb->service_type ?? ''));
@@ -208,7 +291,12 @@ class TripController extends Controller
         return $items->reject(function ($booking) {
             $sourceChannel = strtolower(trim((string) data_get($booking, 'source_channel', '')));
 
-            return $sourceChannel === 'package';
+        if ($sourceChannel === 'package') return true;
+
+        $bookingType = strtolower(trim((string) data_get($booking, 'booking_type', '')));
+        if ($bookingType === 'close-group') return true;
+
+        return false;
         })->values();
     }
 
@@ -283,19 +371,19 @@ class TripController extends Controller
         return $requested !== '' && in_array($requested, $allowedPackageTypes, true) ? $requested : 'accommodation';
     }
 
-    private function resolvePackageAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry, ?\App\Models\Package $package = null): float
+    private function resolvePackageAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry, ?object $package = null): float
     {
       $service = new PackagePricingService();
       return $service->getAccommodationAmount($accommodation, $entry, $package);
     }
 
-    private function resolvePackageActivityAmount(\App\Models\Activity $activity, array $entry, int $guestCount, ?\App\Models\Package $package = null): float
+    private function resolvePackageActivityAmount(\App\Models\Activity $activity, array $entry, int $guestCount, ?object $package = null): float
     {
       $service = new PackagePricingService();
       return $service->getActivityAmount($activity, $entry, $guestCount, $package);
     }
 
-    private function resolvePackageTransportAmount(\App\Models\Transport $transport, array $entry, int $guestCount, ?\App\Models\Package $package = null): float
+    private function resolvePackageTransportAmount(\App\Models\Transport $transport, array $entry, int $guestCount, ?object $package = null): float
     {
       $service = new PackagePricingService();
       return $service->getTransportAmount($transport, $entry, $guestCount, $package);

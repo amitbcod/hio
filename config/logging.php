@@ -143,6 +143,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'closed_group' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/closed_group.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];

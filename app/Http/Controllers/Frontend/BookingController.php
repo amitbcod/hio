@@ -1738,6 +1738,7 @@ class BookingController extends Controller
                     'operator_id' => null,
                     'total_amount' => $item['net_amount'],
                     'status' => 'pending',
+                    'booking_type' => $packageSourceType === 'group' ? 'open-group' : 'package',
                 ]);
                 $tripBookingIds[] = $packageBooking->id;
 
@@ -1795,7 +1796,12 @@ class BookingController extends Controller
                                 $roomIds = array_values(array_filter(array_map('intval', (array) ($dayEntry['rooms'] ?? []))));
 
                                 // Only run accommodation allocation when accommodation and explicit rooms are present.
+                                // Package day selections may include multiple room choices; only create one booking per day
+                                // and use the primary selected room id to avoid duplicate accommodation orders.
                                 if ($accommodationId && !empty($roomIds)) {
+
+                                $primaryRoomId = $this->pickPreferredAccommodationRoomId($roomIds);
+                                if ($primaryRoomId === null) continue;
 
                                 $dayDate = $packageStart->copy()->addDays((int) $dayIndex);
                                 $start = $dayDate->copy();
@@ -1803,7 +1809,7 @@ class BookingController extends Controller
 
                                 // load room models
                                 $rooms = \App\Models\AccommodationRoom::where('accommodation_id', $accommodationId)
-                                    ->whereIn('id', $roomIds)
+                                    ->whereIn('id', [$primaryRoomId])
                                     ->get();
 
                                 if ($rooms->isEmpty()) continue;
@@ -1905,8 +1911,8 @@ class BookingController extends Controller
                                 if ($activityId) {
                                     try {
                                         $activity = Activity::with('schedulingTimeSlots')->find($activityId);
-                                        $activityName = trim((string) ($activity->activity_name ?? ''));
-                                        if (!$activity || $activityName === '' || preg_match('/^(activity)$/i', $activityName)) {
+                                        $activityName = $this->resolvePackageActivityName($activity);
+                                        if (!$activity || $activityName === null || preg_match('/^(activity)$/i', $activityName)) {
                                             \Log::warning('Skipping package activity booking with invalid or placeholder activity', ['package_id' => $item['package_id'] ?? null, 'dayIndex' => $dayIndex, 'activityId' => $activityId, 'activity_name' => $activityName]);
                                             continue;
                                         }
@@ -2096,32 +2102,30 @@ class BookingController extends Controller
 
                                             $pickupTime = $dayEntry['pickup_time'] ?? ($route->start_time ?? null);
 
-                                            // Compute per-route transport amount using package pricing rules
+                                            // Compute per-route transport amount using the canonical package pricing service
                                             $routeAmount = 0.0;
                                             try {
-                                                $pricing = is_array($route->pricing ?? null) ? $route->pricing : (is_string($route->pricing ?? null) ? json_decode($route->pricing, true) : []);
-                                                $globalMode = $package && is_array($package->itinerary ?? null) ? ($package->itinerary['pricing_modes']['transport'] ?? 'discount_offer') : 'discount_offer';
-                                                $globalDiscount = $package && is_array($package->itinerary ?? null) ? (float) ($package->itinerary['discounts']['transport'] ?? 5) : 5.0;
-                                                $candidate = 0.0;
-                                                $usedPackageRate = false;
-                                                if ($globalMode === 'package_rate') {
-                                                    $candidate = (float) ($wantReturn ? ($pricing['package_return_price'] ?? $pricing['package_price'] ?? 0) : ($pricing['package_price'] ?? $pricing['package_return_price'] ?? 0));
-                                                    if ($candidate > 0) $usedPackageRate = true;
-                                                }
-                                                if ($candidate <= 0) {
-                                                    $base = (float) ($pricing['price'] ?? $pricing['default_price'] ?? $pricing['single'] ?? 0);
-                                                    if ($globalMode === 'discount_offer' && $globalDiscount > 0 && $globalDiscount <= 100) {
-                                                        $base = $base - ($base * $globalDiscount / 100.0);
-                                                    }
-                                                    $candidate = $base;
-                                                }
-                                                $perUnit = $candidate;
                                                 $passengers = max(1, ($item['adults'] ?? 0) + ($item['children'] ?? 0));
-                                                $multiplier = ($usedPackageRate ? 1 : max(1, $passengers));
-                                                $routeAmount = round($perUnit * $multiplier, 2);
+                                                if ($package && $package instanceof \App\Models\Group) {
+                                                    $routeAmount = $pricingService->getGroupTransportRouteAmount($route, $passengers, $package, $wantReturn);
+                                                } else {
+                                                    $routeAmount = $pricingService->getTransportRouteAmount($route, $passengers, $package, $wantReturn);
+                                                }
                                             } catch (\Exception $ex) {
                                                 \Log::error('Failed to compute transport route amount for package', ['error' => $ex->getMessage(), 'package_id' => $item['package_id'] ?? null]);
                                             }
+
+                                            // Ensure route amount is a rounded float and log for auditing
+                                            $routeAmount = (float) round(max(0.0, (float) $routeAmount), 2);
+                                            \Log::info('Package transport amount computed', [
+                                                'package_id' => $item['package_id'] ?? null,
+                                                'group_id' => $item['group_id'] ?? null,
+                                                'route_id' => $route->id ?? null,
+                                                'route_from' => $route->route_from ?? null,
+                                                'route_to' => $route->route_to ?? null,
+                                                'passengers' => $passengers,
+                                                'computed_amount' => $routeAmount,
+                                            ]);
 
                                             $tRef = $this->generateBookingRef('transport', $tripId, $pickupDate);
                                             $tBooking = TransportBooking::create([
@@ -2165,7 +2169,7 @@ class BookingController extends Controller
 
                                             if ($tBooking) {
                                                 $packageBookingRefs[] = $tBooking->booking_reference;
-                                                \Log::info('Created package transport booking', ['booking_ref' => $tBooking->booking_reference, 'transport_booking_id' => $tBooking->id]);
+                                                \Log::info('Created package transport booking', ['booking_ref' => $tBooking->booking_reference, 'transport_booking_id' => $tBooking->id, 'saved_amount' => $tBooking->total_amount]);
 
                                                 if (!$guestOtp) {
                                                     $guestOtp = GuestOtpToken::createForGuest($guestEmail, $tBooking->id);
@@ -2560,7 +2564,7 @@ class BookingController extends Controller
                     'adults' => $item['passengers'] ?? 1, // Transport uses passengers field
                     'children' => 0,
                     'booking_status' => 'Pending',
-                    'total_amount' => $item['net_amount'],
+                    'total_amount' => (float) round(max(0.0, (float) ($item['net_amount'] ?? 0)), 2),
                     'currency' => $item['currency'],
                     'payment_method' => $paymentMethod === 'againgency' ? 'Againgency' : 'COD',
                     'source_channel' => 'Direct',
@@ -2580,6 +2584,7 @@ class BookingController extends Controller
                     $booking->save();
                 }
 
+                \Log::info('Created direct transport booking', ['booking_ref' => $booking->booking_reference, 'transport_booking_id' => $booking->id, 'saved_amount' => $booking->total_amount]);
                 if (!$firstNotificationBooking) {
                     $firstNotificationBooking = $booking;
                 }
@@ -3286,6 +3291,63 @@ class BookingController extends Controller
         return preg_replace('/-(fwd|rev)$/i', '', $trimmed);
     }
 
+    private function pickPreferredAccommodationRoomId(array $roomIds): ?int
+    {
+        $preferred = null;
+
+        foreach ($roomIds as $roomId) {
+            $normalized = $this->normalizePackageSelectableId($roomId);
+            if ($normalized !== null) {
+                $preferred = $normalized;
+            }
+        }
+
+        return $preferred;
+    }
+
+    private function resolvePackageActivityName($activity): ?string
+    {
+        if (!$activity) {
+            return null;
+        }
+
+        $candidates = [
+            $activity->activity_name ?? null,
+            $activity->name ?? null,
+            $activity->title ?? null,
+            $activity->service_name ?? null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            $trimmed = trim((string) ($candidate ?? ''));
+            if ($trimmed === '') {
+                continue;
+            }
+
+            if (preg_match('/^(activity|tour|n\/?a|na|null|none)$/i', $trimmed)) {
+                continue;
+            }
+
+            return $trimmed;
+        }
+
+        return null;
+    }
+
+    private function looksLikeTransportRouteIdentifier(string $value): bool
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return false;
+        }
+
+        if (preg_match('/^(n\/?a|na|null|none|airport|north|south|east|west|hotel|activity|airport_transfer|activity_transfer|hotel_transfer)$/i', $trimmed)) {
+            return false;
+        }
+
+        return preg_match('/[-_]/', $trimmed) === 1 || is_numeric($trimmed);
+    }
+
     private function isMeaningfulPackageDayEntry(array $dayEntry): bool
     {
         if (empty($dayEntry)) {
@@ -3386,12 +3448,12 @@ class BookingController extends Controller
                     }
 
                     if (is_array($routeData)) {
-                        if (!empty($routeData['route_id'])) $pushValue($routeData['route_id']);
-                        if (!empty($routeData['selected_route'])) $pushValue($routeData['selected_route']);
-                        if (!empty($routeData['id'])) $pushValue($routeData['id']);
+                        if (!empty($routeData['route_id']) && $this->looksLikeTransportRouteIdentifier((string) $routeData['route_id'])) $pushValue($routeData['route_id']);
+                        if (!empty($routeData['selected_route']) && $this->looksLikeTransportRouteIdentifier((string) $routeData['selected_route'])) $pushValue($routeData['selected_route']);
+                        if (!empty($routeData['id']) && $this->looksLikeTransportRouteIdentifier((string) $routeData['id'])) $pushValue($routeData['id']);
                     }
 
-                    if (!empty($routeKey)) {
+                    if (!empty($routeKey) && $this->looksLikeTransportRouteIdentifier((string) $routeKey)) {
                         $pushValue($routeKey);
                     }
                 }
@@ -3462,7 +3524,7 @@ class BookingController extends Controller
 
                     $resolvedRouteId = $routeId ?? $baseKey;
                     $resolvedRouteId = trim((string) $resolvedRouteId);
-                    if ($resolvedRouteId !== '') {
+                    if ($resolvedRouteId !== '' && $this->looksLikeTransportRouteIdentifier($resolvedRouteId)) {
                         $normalizedRouteId = $this->normalizeTransportRouteKey($resolvedRouteId);
                         if ($normalizedRouteId !== '' && !in_array($normalizedRouteId, array_map('strval', $groups[$baseKey]['route_ids']), true)) {
                             $groups[$baseKey]['route_ids'][] = $normalizedRouteId;
@@ -3492,6 +3554,9 @@ class BookingController extends Controller
                         continue;
                     }
                     $normalized = trim((string) $value);
+                    if (!$this->looksLikeTransportRouteIdentifier($normalized)) {
+                        continue;
+                    }
                     $baseKey = $this->normalizeTransportRouteKey($normalized);
                     if ($baseKey === '') {
                         continue;

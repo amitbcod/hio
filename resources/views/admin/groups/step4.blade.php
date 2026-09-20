@@ -35,7 +35,7 @@
                             <div class="text-uppercase small fw-bold text-secondary mb-2">Accommodation Package Mode</div>
                             <select name="pricing_modes[accommodation]" class="form-select form-select-sm pricing-mode-select" data-service="accommodation" style="background:#fff; border:1px solid #dfe7ea; min-height:40px;">
                                 <option value="discount_offer" {{ ($pricingModes['accommodation'] ?? 'package_rate') === 'discount_offer' ? 'selected' : '' }}>Discount Offer</option>
-                                <option value="package_rate" {{ ($pricingModes['accommodation'] ?? 'package_rate') === 'package_rate' ? 'selected' : '' }}>Package Rate</option>
+                                <option value="package_rate" {{ ($pricingModes['accommodation'] ?? 'package_rate') === 'package_rate' ? 'selected' : '' }}>Group Rate</option>
                             </select>
                             <div class="discount-field mt-3 d-flex justify-content-between align-items-center" style="display: {{ (($pricingModes['accommodation'] ?? 'package_rate') === 'discount_offer') ? 'flex' : 'none' }};">
                                 <input type="number" name="discounts[accommodation]" class="form-control form-control-sm discount-percent" data-service="accommodation" min="0" max="100" step="1" value="{{ $discounts['accommodation'] ?? 20 }}" style="max-width:120px;">
@@ -49,7 +49,7 @@
                             <div class="text-uppercase small fw-bold text-secondary mb-2">Activity Package Mode</div>
                             <select name="pricing_modes[activity]" class="form-select form-select-sm pricing-mode-select" data-service="activity" style="background:#fff; border:1px solid #dfe7ea; min-height:40px;">
                                 <option value="discount_offer" {{ ($pricingModes['activity'] ?? 'discount_offer') === 'discount_offer' ? 'selected' : '' }}>Discount Offer</option>
-                                <option value="package_rate" {{ ($pricingModes['activity'] ?? 'discount_offer') === 'package_rate' ? 'selected' : '' }}>Package Rate</option>
+                                <option value="package_rate" {{ ($pricingModes['activity'] ?? 'discount_offer') === 'package_rate' ? 'selected' : '' }}>Group Rate</option>
                             </select>
                             <div class="discount-field mt-3 d-flex justify-content-between align-items-center" style="display: {{ (($pricingModes['activity'] ?? 'discount_offer') === 'discount_offer') ? 'flex' : 'none' }};">
                                 <input type="number" name="discounts[activity]" class="form-control form-control-sm discount-percent" data-service="activity" min="0" max="100" step="1" value="{{ $discounts['activity'] ?? 10 }}" style="max-width:120px;">
@@ -63,7 +63,7 @@
                             <div class="text-uppercase small fw-bold text-secondary mb-2">Transport Package Mode</div>
                             <select name="pricing_modes[transport]" class="form-select form-select-sm pricing-mode-select" data-service="transport" style="background:#fff; border:1px solid #dfe7ea; min-height:40px;">
                                 <option value="discount_offer" {{ ($pricingModes['transport'] ?? 'discount_offer') === 'discount_offer' ? 'selected' : '' }}>Discount Offer</option>
-                                <option value="package_rate" {{ ($pricingModes['transport'] ?? 'discount_offer') === 'package_rate' ? 'selected' : '' }}>Package Rate</option>
+                                <option value="package_rate" {{ ($pricingModes['transport'] ?? 'discount_offer') === 'package_rate' ? 'selected' : '' }}>Group Rate</option>
                             </select>
                             <div class="discount-field mt-3 d-flex justify-content-between align-items-center" style="display: {{ (($pricingModes['transport'] ?? 'discount_offer') === 'discount_offer') ? 'flex' : 'none' }};">
                                 <input type="number" name="discounts[transport]" class="form-control form-control-sm discount-percent" data-service="transport" min="0" max="100" step="1" value="{{ $discounts['transport'] ?? 5 }}" style="max-width:120px;">
@@ -118,9 +118,18 @@
                                         $planName = $plan->rate_name ?? 'Unknown Plan';
                                         $planId = $plan->id;
                                         $defaultPrice = $planEntry['default_pricing'];
+                                        $groupPrice = $planEntry['group_pricing'] ?? null;
                                         $packagePrice = $planEntry['package_pricing'];
                                         $seasonalPricing = $planEntry['seasonal_pricing'];
+                                        $preferredBasePrice = $groupPrice ? (float) ($groupPrice->base_rate ?? 0) : ((float) ($defaultPrice->base_rate ?? 0));
                                         $packageOptions = [];
+                                        if ($groupPrice) {
+                                            $packageOptions[] = [
+                                                'value' => $groupPrice->id,
+                                                'label' => 'Group Rate (' . number_format((float) ($groupPrice->base_rate ?? 0), 2) . ')',
+                                                'price' => (float) ($groupPrice->base_rate ?? 0),
+                                            ];
+                                        }
                                         if ($packagePrice) {
                                             $packageOptions[] = [
                                                 'value' => $packagePrice->id,
@@ -162,7 +171,7 @@
                                                 <div class="fw-semibold text-dark" style="font-size:0.96rem;">{{ $rowItem['label'] }}</div>
                                             </div>
                                             <div class="col-md-3">
-                                                <input type="text" class="form-control form-control-sm base-price" value="{{ number_format($rowItem['base'], 2) }}" data-base="{{ $rowItem['base'] }}" readonly style="border:1px solid #dfe7ea; background:#fff; text-align:left;">
+                                                <input type="text" class="form-control form-control-sm base-price" value="{{ number_format($preferredBasePrice ?: $rowItem['base'], 2) }}" data-base="{{ $preferredBasePrice ?: $rowItem['base'] }}" readonly style="border:1px solid #dfe7ea; background:#fff; text-align:left;">
                                             </div>
                                             <div class="col-md-3 text-end">
                                                 <div class="final-price fw-bold text-success" style="font-size:1.02rem;">$0</div>
@@ -276,28 +285,100 @@
                                     @php
                                         $route = $routeEntry['route'];
                                         $pricing = $routeEntry['pricing'] ?? [];
-                                        $baseRate = (float) ($pricing['default_price'] ?? $pricing['base_rate'] ?? $pricing['price'] ?? 0);
-                                        $returnRate = (float) ($pricing['return_price'] ?? $pricing['package_return_price'] ?? 0);
+                                        $groupRate = (float) ($pricing['group_price'] ?? 0);
+                                        $groupReturnRate = (float) ($pricing['group_return_price'] ?? 0);
+                                        $baseRate = $groupRate > 0 ? $groupRate : ((float) ($pricing['default_price'] ?? $pricing['base_rate'] ?? $pricing['price'] ?? 0));
+                                        $returnRate = $groupReturnRate > 0 ? $groupReturnRate : ((float) ($pricing['return_price'] ?? $pricing['package_return_price'] ?? 0));
                                         $packageRate = (float) ($pricing['package_price'] ?? $pricing['package_return_price'] ?? $baseRate);
                                         $from = $route->route_from ?? $route->pickup_value ?? 'From';
                                         $to = $route->route_to ?? $route->dropoff_value ?? 'To';
+
+                                        // Determine saved schedule for this route (mirror package logic)
+                                        $savedRouteSchedule = [];
+                                        $direction = null; // 'fwd', 'rev', 'both', 'single'
+                                        if (!empty($itinerary[$dayIndex]['transport_schedule']) && is_array($itinerary[$dayIndex]['transport_schedule'])) {
+                                            foreach ($itinerary[$dayIndex]['transport_schedule'] as $svcKey => $svcGroup) {
+                                                $foundFwd = null; $foundRev = null; $foundSingle = null;
+                                                if (!is_array($svcGroup)) continue;
+                                                foreach ($svcGroup as $k => $v) {
+                                                    $isSelected = false;
+                                                    if (is_array($v)) {
+                                                        $isSelected = !empty($v['selected']) || !empty($v['selected_route']);
+                                                    } else {
+                                                        $isSelected = !empty($v) || $v === '0' || $v === 0;
+                                                    }
+                                                    if (!$isSelected) continue;
+
+                                                    if ($k === ($route->route_id ?? null) || $k === ($route->id ?? null) || (is_string($k) && $k === (string) ($route->id ?? null))) {
+                                                        $foundSingle = $v;
+                                                    }
+                                                    if (is_string($k) && (str_ends_with($k, '-fwd') || str_ends_with($k, '-rev'))) {
+                                                        $base = preg_replace('/-(fwd|rev)$/', '', $k);
+                                                        if ((string) $base === (string) ($route->route_id ?? $route->id)) {
+                                                            if (str_ends_with($k, '-fwd')) $foundFwd = $v; else $foundRev = $v;
+                                                        }
+                                                    }
+                                                }
+
+                                                if ($foundFwd !== null && $foundRev !== null) {
+                                                    $savedRouteSchedule = array_merge(is_array($foundFwd) ? $foundFwd : [], is_array($foundRev) ? $foundRev : []);
+                                                    $savedRouteSchedule['add_return'] = true;
+                                                    $direction = 'both';
+                                                    break;
+                                                }
+
+                                                if ($foundSingle !== null) {
+                                                    $savedRouteSchedule = is_array($foundSingle) ? $foundSingle : [];
+                                                    $direction = 'single';
+                                                    break;
+                                                }
+
+                                                if ($foundFwd !== null) {
+                                                    $savedRouteSchedule = is_array($foundFwd) ? $foundFwd : [];
+                                                    $direction = 'fwd';
+                                                    break;
+                                                }
+
+                                                if ($foundRev !== null) {
+                                                    $savedRouteSchedule = is_array($foundRev) ? $foundRev : [];
+                                                    $direction = 'rev';
+                                                    break;
+                                                }
+                                            }
+                                        }
+
+                                        $addReturn = !empty($savedRouteSchedule['add_return']);
+                                        $selected = !empty($savedRouteSchedule) && (
+                                            !empty($savedRouteSchedule['selected']) || !empty($savedRouteSchedule['selected_route']) || !empty($savedRouteSchedule['add_return'])
+                                        );
+
+                                        $isReverse = ($direction === 'rev');
+                                        $displayFrom = $isReverse ? ($route->route_to ?? '') : ($route->route_from ?? '');
+                                        $displayTo = $isReverse ? ($route->route_from ?? '') : ($route->route_to ?? '');
+
+                                        if (!$selected) {
+                                            // skip if not selected
+                                        } 
                                     @endphp
 
-                                    <div class="border rounded-3 p-2 mb-2">
-                                        <div class="fw-semibold small mb-1">{{ $route->service_type ? ucfirst(str_replace('_', ' ', $route->service_type)) : 'Transport' }} · Route: {{ $from }} → {{ $to }}</div>
-                                        <div class="pricing-row row align-items-center py-2" data-service="transport" data-rate-specificity="Per Equipment" data-package-exists="{{ ($packageRate > 0 || $returnRate > 0) ? 1 : 0 }}" data-package-price="{{ $packageRate }}" data-package-return="{{ $returnRate }}" data-add-return="{{ !empty($pricing['return_selected']) ? 1 : 0 }}" data-base-price="{{ $baseRate }}" style="border-top:1px solid #edf2f6;">
-                                            <div class="col-md-6">
-                                                <div class="fw-semibold">Flat Rate</div>
-                                                <div class="small text-muted">Route: {{ $from }} → {{ $to }}</div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <input type="text" class="form-control form-control-sm base-price" value="{{ number_format($baseRate, 2) }}" data-base="{{ $baseRate }}" readonly style="border:1px solid #dfe7ea; background:#fff; text-align:left;">
-                                            </div>
-                                            <div class="col-md-3 text-end">
-                                                <div class="final-price fw-bold text-success">$0</div>
+                                    @if(!empty($selected))
+                                        <div class="border rounded-3 p-2 mb-2">
+                                            <div class="fw-semibold small mb-1">{{ $route->service_type ? ucfirst(str_replace('_', ' ', $route->service_type)) : 'Transport' }} · Route: {{ $displayFrom }} → {{ $displayTo }}</div>
+                                            @php $displayBase = $addReturn ? ($returnRate ?? 0) : ($baseRate ?? 0); @endphp
+                                            <div class="pricing-row row align-items-center py-2" data-service="transport" data-rate-specificity="Per Equipment" data-group-exists="{{ ($groupRate > 0 || $groupReturnRate > 0) ? 1 : 0 }}" data-group-price="{{ $groupRate }}" data-group-return="{{ $groupReturnRate }}" data-package-exists="{{ ($packageRate > 0 || $returnRate > 0) ? 1 : 0 }}" data-package-price="{{ $packageRate }}" data-package-return="{{ $returnRate }}" data-add-return="{{ $addReturn ? 1 : 0 }}" data-base-price="{{ $displayBase }}" style="border-top:1px solid #edf2f6;">
+                                                <div class="col-md-6">
+                                                    <div class="fw-semibold">Flat Rate</div>
+                                                    <div class="small text-muted">Route: {{ $displayFrom }} → {{ $displayTo }}</div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <input type="text" class="form-control form-control-sm base-price" value="{{ number_format($displayBase, 2) }}" data-base="{{ $displayBase }}" readonly style="border:1px solid #dfe7ea; background:#fff; text-align:left;">
+                                                </div>
+                                                <div class="col-md-3 text-end">
+                                                    <div class="final-price fw-bold text-success">$0</div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    @endif
                                 @endforeach
                             </div>
                         @endif
@@ -335,10 +416,14 @@
 
             const baseValue = Number((baseInput.dataset.base || baseInput.value || 0).toString().replace(/[$,]/g, '')) || 0;
             let finalValue = baseValue;
+            const groupExists = row.dataset.groupExists === '1' || false;
+            const groupValue = Number(row.dataset.groupPrice || 0) || 0;
             const packageExists = row.dataset.packageExists === '1' || false;
             const packageValue = Number(row.dataset.packagePrice || 0) || 0;
 
-            if (modeSelect && modeSelect.value === 'package_rate') {
+            if (groupExists && groupValue > 0) {
+                finalValue = groupValue;
+            } else if (modeSelect && modeSelect.value === 'package_rate') {
                 if (packageExists && packageValue > 0) {
                     finalValue = packageValue;
                 } else {
@@ -350,7 +435,7 @@
             }
 
             result.textContent = formatCurrency(finalValue);
-            result.style.color = (modeSelect && modeSelect.value === 'package_rate' && (!packageExists || packageValue <= 0)) ? '#1e88e5' : '#198754';
+            result.style.color = (groupExists && groupValue > 0) ? '#198754' : ((modeSelect && modeSelect.value === 'package_rate' && (!packageExists || packageValue <= 0)) ? '#1e88e5' : '#198754');
             return;
         }
 
@@ -361,13 +446,20 @@
 
             const baseValue = Number((baseInput.dataset.base || baseInput.value || 0).toString().replace(/[$,]/g, '')) || 0;
             let finalValue = baseValue;
+            const groupExists = row.dataset.groupExists === '1' || false;
+            const groupValue = Number(row.dataset.groupPrice || 0) || 0;
+            const groupReturn = Number(row.dataset.groupReturn || 0) || 0;
+            const isReturn = row.dataset.addReturn === '1' || false;
+
             if (modeSelect && modeSelect.value === 'package_rate') {
                 const packageExists = row.dataset.packageExists === '1' || false;
                 const packageValue = Number(row.dataset.packagePrice || 0) || 0;
                 const packageReturn = Number(row.dataset.packageReturn || 0) || 0;
-                const isReturn = row.dataset.addReturn === '1' || false;
 
-                if (packageExists) {
+                // For group pages: when package_rate mode is selected, prefer the Group price if it exists
+                if (groupExists && groupValue > 0) {
+                    finalValue = isReturn && groupReturn > 0 ? groupReturn : groupValue;
+                } else if (packageExists) {
                     if (isReturn && packageReturn > 0) {
                         finalValue = packageReturn;
                     } else if (!isReturn && packageValue > 0) {
@@ -379,11 +471,13 @@
                     finalValue = baseValue;
                 }
             } else {
+                // discount_offer (or default) — apply percent to the effective base (prefer group prices when present)
                 const percent = discountInput ? Number(discountInput.value || 0) : 0;
-                finalValue = baseValue - (baseValue * percent / 100);
+                const effectiveBase = (groupExists && groupValue > 0) ? (isReturn && groupReturn > 0 ? groupReturn : groupValue) : baseValue;
+                finalValue = effectiveBase - (effectiveBase * percent / 100);
             }
             result.textContent = formatCurrency(finalValue);
-            result.style.color = (modeSelect && modeSelect.value === 'package_rate' && (!row.dataset.packageExists || Number(row.dataset.packagePrice || 0) <= 0)) ? '#1e88e5' : '#198754';
+            result.style.color = (groupExists && groupValue > 0) ? '#198754' : ((modeSelect && modeSelect.value === 'package_rate' && (!row.dataset.packageExists || Number(row.dataset.packagePrice || 0) <= 0)) ? '#1e88e5' : '#198754');
             return;
         }
 
@@ -400,11 +494,23 @@
         const childBase = Number((childInput.dataset.base || childInput.value || 0).toString().replace(/[$,]/g, '')) || 0;
         const infantBase = Number((infantInput.dataset.base || infantInput.value || 0).toString().replace(/[$,]/g, '')) || 0;
 
+        const groupExists = row.dataset.groupExists === '1' || false;
+        const groupAdult = Number(row.dataset.groupAdult || 0) || 0;
+        const groupChild = Number(row.dataset.groupChild || 0) || 0;
+        const groupInfant = Number(row.dataset.groupInfant || 0) || 0;
+        const groupValue = Number(row.dataset.groupPrice || 0) || 0;
         const packageExists = row.dataset.packageExists === '1' || false;
         const packageAdult = Number(row.dataset.packageAdult || 0) || 0;
         const packageChild = Number(row.dataset.packageChild || 0) || 0;
         const packageInfant = Number(row.dataset.packageInfant || 0) || 0;
         const packageValue = Number(row.dataset.packagePrice || 0) || 0;
+
+        if (groupExists && groupValue > 0) {
+            if (finalAdult) finalAdult.textContent = 'Adult: ' + formatCurrency(groupAdult || groupValue || adultBase);
+            if (finalChild) finalChild.textContent = 'Child: ' + formatCurrency(groupChild || groupValue || childBase);
+            if (finalInfant) finalInfant.textContent = 'Infant: ' + formatCurrency(groupInfant || groupValue || infantBase);
+            return;
+        }
 
         if (modeSelect && modeSelect.value === 'package_rate' && !packageExists) {
             if (finalAdult) finalAdult.textContent = 'Adult: ' + formatCurrency(adultBase);

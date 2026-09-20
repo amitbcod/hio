@@ -137,20 +137,32 @@
                     <h4 style="font-weight: 600; margin-bottom: 20px; color: #333;">📅 Trip Details</h4>
                     <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
                         <div class="row">
-                            <div class="col-md-4">
-                                <strong>Pickup:</strong><br>
-                                {{ $booking->route_from }}
-                                <br><small style="color:#666;">{{ optional($booking->pickup_date)->format('M d, Y') }} {{ $booking->pickup_time }}</small>
-                            </div>
-                            <div class="col-md-4">
-                                <strong>Destination:</strong><br>
-                                {{ $booking->route_to }}
-                                <br><small style="color:#666;">Return: {{ optional($booking->return_date)? optional($booking->return_date)->format('M d, Y') : '—' }} {{ $booking->return_time ?? '' }}</small>
-                            </div>
-                            <div class="col-md-4">
-                                <strong>Passengers:</strong><br>
-                                {{ $booking->total_passengers ?? $booking->adults }}
-                            </div>
+                            @if(!empty($packageRouteLabel))
+                                <div class="col-md-8">
+                                    <strong>Route:</strong><br>
+                                    {{ $packageRouteLabel }}
+                                    <br><small style="color:#666;">Pickup: {{ optional($booking->pickup_date)->format('M d, Y') }} {{ $booking->pickup_time }}@if($booking->return_date) • Return: {{ optional($booking->return_date)->format('M d, Y') }} {{ $booking->return_time ?? '' }}@endif</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Passengers:</strong><br>
+                                    {{ $booking->total_passengers ?? $booking->adults }}
+                                </div>
+                            @else
+                                <div class="col-md-4">
+                                    <strong>Pickup:</strong><br>
+                                    {{ $booking->route_from }}
+                                    <br><small style="color:#666;">{{ optional($booking->pickup_date)->format('M d, Y') }} {{ $booking->pickup_time }}</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Destination:</strong><br>
+                                    {{ $booking->route_to }}
+                                    <br><small style="color:#666;">Return: {{ optional($booking->return_date)? optional($booking->return_date)->format('M d, Y') : '—' }} {{ $booking->return_time ?? '' }}</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Passengers:</strong><br>
+                                    {{ $booking->total_passengers ?? $booking->adults }}
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

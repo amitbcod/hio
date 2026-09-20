@@ -549,6 +549,15 @@ class GroupController extends Controller
                         ->orderBy('valid_from')
                         ->get();
 
+                    $groupPricing = \App\Models\AccommodationRate::where('accommodation_id', $accommodationId)
+                        ->where('room_id', $room->id)
+                        ->where('rate_name', $plan->rate_name)
+                        ->where('meal_plan', $plan->meal_plan)
+                        ->where('pricing_setting', $plan->pricing_setting)
+                        ->where('rate_type', 'Group')
+                        ->where('is_default', true)
+                        ->first();
+
                     $packagePricing = \App\Models\AccommodationRate::where('accommodation_id', $accommodationId)
                         ->where('room_id', $room->id)
                         ->where('rate_name', $plan->rate_name)
@@ -561,6 +570,7 @@ class GroupController extends Controller
                     $planPricing[] = [
                         'plan' => $plan,
                         'default_pricing' => $defaultPricing,
+                        'group_pricing' => $groupPricing,
                         'seasonal_pricing' => $seasonalPricing,
                         'package_pricing' => $packagePricing,
                     ];

@@ -113,6 +113,69 @@ class PackageAvailabilityFilterTest extends TestCase
         $this->assertNotContains('Room Only', $mealPlans);
     }
 
+    public function test_package_booking_logic_ignores_null_activity_names(): void
+    {
+        $controller = new \App\Http\Controllers\Frontend\BookingController();
+        $method = new ReflectionMethod($controller, 'resolvePackageActivityName');
+        $method->setAccessible(true);
+
+        $activity = new class {
+            public $activity_name = 'Activity';
+            public $name = null;
+            public $title = null;
+        };
+
+        $this->assertNull($method->invoke($controller, $activity));
+
+        $validActivity = new class {
+            public $activity_name = 'Snorkelling';
+            public $name = null;
+            public $title = null;
+        };
+
+        $this->assertSame('Snorkelling', $method->invoke($controller, $validActivity));
+    }
+
+    public function test_closed_group_date_resolution_handles_array_group_payloads(): void
+    {
+        $controller = new \App\Http\Controllers\Admin\ClosedGroupBookingController();
+        $method = new ReflectionMethod($controller, 'resolveGroupDateValue');
+        $method->setAccessible(true);
+
+        $payload = [
+            'id' => 9,
+            'available_from' => '2026-09-09',
+            'available_to' => '2026-09-12',
+        ];
+
+        $this->assertSame('2026-09-09', $method->invoke($controller, $payload, 'available_from'));
+        $this->assertSame('2026-09-12', $method->invoke($controller, $payload, 'available_to'));
+    }
+
+    public function test_package_booking_logic_filters_duplicate_room_selection_to_one_booking(): void
+    {
+        $controller = new \App\Http\Controllers\Frontend\BookingController();
+        $method = new ReflectionMethod($controller, 'pickPreferredAccommodationRoomId');
+        $method->setAccessible(true);
+
+        $this->assertSame(3, $method->invoke($controller, [1, 2, 3]));
+        $this->assertSame(8, $method->invoke($controller, ['N/A', '8']));
+    }
+
+    public function test_transport_route_identifier_rejects_plain_place_names_and_accepts_real_route_keys(): void
+    {
+        $controller = new \App\Http\Controllers\Frontend\BookingController();
+        $routeMethod = new ReflectionMethod($controller, 'looksLikeTransportRouteIdentifier');
+        $routeMethod->setAccessible(true);
+
+        $this->assertFalse($routeMethod->invoke($controller, 'Airport'));
+        $this->assertFalse($routeMethod->invoke($controller, 'North'));
+        $this->assertFalse($routeMethod->invoke($controller, 'East'));
+        $this->assertTrue($routeMethod->invoke($controller, 'airport-north'));
+        $this->assertTrue($routeMethod->invoke($controller, 'hotel-transfer-airport-east'));
+        $this->assertTrue($routeMethod->invoke($controller, '42'));
+    }
+
     public function test_package_matching_room_selects_capacity_compatible_room_for_guest_count(): void
     {
         $controller = new \App\Http\Controllers\Frontend\HomeController();

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Package;
+use App\Models\Group;
 use App\Models\Accommodation;
 use App\Models\Activity;
 use App\Models\Transport;
@@ -29,6 +30,10 @@ class PackagePricingService
 
     public function calculatePackageTotalDetailed($package, int $adults = 2, int $children = 0, int $infants = 0): array
     {
+        if ($package instanceof Group) {
+            return $this->calculateGroupTotalDetailed($package, $adults, $children, $infants);
+        }
+
         $itinerary = is_array($package->itinerary ?? null) ? $package->itinerary : [];
         Log::debug('PackagePricingService - itinerary', ['package_id' => $package->id, 'itinerary' => $itinerary]);
         $guestCount = max(1, $adults + $children + $infants);
@@ -464,6 +469,234 @@ class PackagePricingService
         return array_values(array_unique($fallbackIds));
     }
 
+    public function calculateGroupTotal($group, int $adults = 2, int $children = 0, int $infants = 0): float
+    {
+        $breakdown = $this->calculateGroupTotalDetailed($group, $adults, $children, $infants);
+
+        Log::info('Group pricing breakdown', [
+            'group_id' => $group->id,
+            'group_name' => $group->name,
+            'adults' => $adults,
+            'children' => $children,
+            'infants' => $infants,
+            'total' => $breakdown['total'],
+            'items' => $breakdown['items'],
+        ]);
+
+        return (float) $breakdown['total'];
+    }
+
+    public function calculateGroupTotalDetailed($group, int $adults = 2, int $children = 0, int $infants = 0): array
+    {
+        $itinerary = is_array($group->itinerary ?? null) ? $group->itinerary : [];
+        Log::debug('GroupPricingService - itinerary', ['group_id' => $group->id, 'itinerary' => $itinerary]);
+        $guestCount = max(1, $adults + $children + $infants);
+        $total = 0.0;
+        $items = [];
+
+        $dayCounter = 0;
+        $maxGroupDays = (int) ($group->no_of_days ?? 0);
+        foreach ($itinerary as $dayIndex => $entry) {
+            if (!is_array($entry) || !$this->isMeaningfulPackageDayEntry($entry)) {
+                continue;
+            }
+
+            $numericDayIndex = (int) $dayIndex;
+            if ($numericDayIndex < 0) {
+                continue;
+            }
+
+            if ($maxGroupDays > 0 && ($numericDayIndex + 1) > $maxGroupDays) {
+                continue;
+            }
+
+            $dayCounter++;
+            $dayNumber = $dayCounter;
+            $accommodation = !empty($entry['accommodation']) ? Accommodation::with('rooms')->find((int) $entry['accommodation']) : null;
+            $activity = !empty($entry['activity']) ? Activity::find((int) $entry['activity']) : null;
+            $transport = !empty($entry['transport']) ? Transport::with('routes')->find((int) $entry['transport']) : null;
+
+            if ($accommodation) {
+                $amount = $this->resolveGroupAccommodationAmount($accommodation, $entry, $group, $adults, $children, $infants);
+                $total += $amount;
+                $items[] = [
+                    'day' => $dayNumber,
+                    'type' => 'Accommodation',
+                    'name' => $this->buildAccommodationLabel($accommodation, $entry, $adults, $children, $infants),
+                    'amount' => round($amount, 2),
+                ];
+            }
+
+            if ($activity) {
+                $activityName = trim((string) ($activity->activity_name ?? ''));
+                if ($activityName !== '' && !preg_match('/^(activity)$/i', $activityName)) {
+                    $amount = $this->resolveGroupActivityAmount($activity, $entry, $guestCount, $group, $adults, $children, $infants);
+                    $total += $amount;
+                    $items[] = [
+                        'day' => $dayNumber,
+                        'type' => 'Activity',
+                        'name' => $this->buildActivityLabel($activity, $entry),
+                        'amount' => round($amount, 2),
+                    ];
+                }
+            }
+
+            if (!empty($entry['transport']) || !empty($entry['transport_schedule'])) {
+                $selectedRoutes = [];
+
+                if (!empty($entry['transport_schedule']) && is_array($entry['transport_schedule'])) {
+                    $rawSelections = [];
+                    foreach ($entry['transport_schedule'] as $svcGroup) {
+                        if (!is_array($svcGroup)) continue;
+                        foreach ($svcGroup as $routeKey => $routeData) {
+                            $isSelected = false;
+                            if (is_array($routeData)) {
+                                $isSelected = !empty($routeData['selected']) || !empty($routeData['selected_route']);
+                            } else {
+                                $isSelected = !empty($routeData);
+                            }
+                            if (!$isSelected) continue;
+
+                            $dir = 'single';
+                            $base = $routeKey;
+                            if (is_string($routeKey)) {
+                                if (str_ends_with($routeKey, '-fwd')) {
+                                    $dir = 'fwd';
+                                    $base = substr($routeKey, 0, -4);
+                                } elseif (str_ends_with($routeKey, '-rev')) {
+                                    $dir = 'rev';
+                                    $base = substr($routeKey, 0, -4);
+                                }
+                            }
+
+                            $rawSelections[] = ['base' => $base, 'dir' => $dir, 'key' => $routeKey, 'data' => $routeData];
+                        }
+                    }
+
+                    $grouped = [];
+                    foreach ($rawSelections as $rs) {
+                        $b = (string) ($rs['base'] ?? '');
+                        if (!isset($grouped[$b])) $grouped[$b] = ['fwd' => null, 'rev' => null, 'single' => null];
+                        $grouped[$b][$rs['dir']] = $rs;
+                    }
+
+                    foreach ($grouped as $baseKey => $g) {
+                        if (!empty($g['fwd']) && !empty($g['rev'])) {
+                            $routeData = $g['fwd']['data'] ?? $g['rev']['data'] ?? [];
+                            $meta = ['key' => $baseKey, 'add_return' => true];
+                            if (is_array($routeData) && !empty($routeData['route_id'])) $meta['route_id'] = $routeData['route_id'];
+                            $selectedRoutes[] = $meta;
+                        } else {
+                            $sel = $g['single'] ?? $g['fwd'] ?? $g['rev'];
+                            if (!$sel) continue;
+                            $routeKey = $sel['key'];
+                            $routeData = $sel['data'];
+                            if (is_array($routeData)) {
+                                $meta = ['key' => $routeKey, 'add_return' => false];
+                                if (!empty($routeData['route_id'])) $meta['route_id'] = $routeData['route_id'];
+                                if (!empty($routeData['selected_route'])) $meta['selected_route'] = $routeData['selected_route'];
+                                if (is_numeric($routeKey)) $meta['id'] = (int) $routeKey;
+                                $selectedRoutes[] = $meta;
+                            } elseif (!empty($routeData)) {
+                                $meta = ['key' => $routeKey, 'value' => $routeData, 'add_return' => false];
+                                if (is_numeric($routeData)) $meta['id'] = (int) $routeData;
+                                else $meta['route_id'] = (string) $routeData;
+                                $selectedRoutes[] = $meta;
+                            } elseif (!empty($routeKey) && is_string($routeKey)) {
+                                $selectedRoutes[] = ['key' => $routeKey, 'route_id' => $routeKey, 'add_return' => false];
+                            }
+                        }
+                    }
+                }
+
+                $possibleKeys = ['transport_routes', 'transport_route_ids', 'routes', 'selected_routes', 'selected_transport_routes', 'route_ids'];
+                foreach ($possibleKeys as $k) {
+                    if (!empty($entry[$k]) && is_array($entry[$k])) {
+                        foreach ($entry[$k] as $v) {
+                            $meta = ['add_return' => false];
+                            if (is_numeric($v)) {
+                                $meta['id'] = (int) $v;
+                            } elseif (is_array($v)) {
+                                if (!empty($v['id']) && is_numeric($v['id'])) {
+                                    $meta['id'] = (int) $v['id'];
+                                } elseif (!empty($v['route_id'])) {
+                                    $meta['route_id'] = $v['route_id'];
+                                } elseif (!empty($v['route']) && is_string($v['route'])) {
+                                    $meta['route_id'] = $v['route'];
+                                }
+                            } elseif (!empty($v) && is_string($v)) {
+                                $meta['route_id'] = $v;
+                            }
+                            $selectedRoutes[] = $meta;
+                        }
+                    } elseif (!empty($entry[$k]) && is_numeric($entry[$k])) {
+                        $selectedRoutes[] = ['id' => (int) $entry[$k], 'add_return' => false];
+                    } elseif (!empty($entry[$k]) && is_string($entry[$k])) {
+                        $selectedRoutes[] = ['route_id' => $entry[$k], 'add_return' => false];
+                    }
+                }
+
+                $uniq = [];
+                $normalized = [];
+                foreach ($selectedRoutes as $sr) {
+                    $key = $sr['id'] ?? ($sr['route_id'] ?? ($sr['key'] ?? json_encode($sr)));
+                    if (!$key) continue;
+                    if (isset($uniq[$key])) continue;
+                    $uniq[$key] = true;
+                    $normalized[] = $sr;
+                }
+                $selectedRoutes = $normalized;
+
+                $dayTransportTotal = 0.0;
+                $transportNames = [];
+                if (!empty($selectedRoutes)) {
+                    foreach ($selectedRoutes as $sr) {
+                        $rid = $sr['id'] ?? ($sr['route_id'] ?? ($sr['key'] ?? null));
+                        $wantReturn = !empty($sr['add_return']);
+                        $routeModel = null;
+
+                        if (is_numeric($rid)) {
+                            $routeModel = \App\Models\TransportRoute::find((int) $rid);
+                        }
+
+                        if (!$routeModel && is_string($rid)) {
+                            $routeModel = \App\Models\TransportRoute::where('route_id', (string) $rid)->first()
+                                ?? \App\Models\TransportRoute::where('route_id', $this->normalizeTransportRouteKey((string) $rid))->first();
+                        }
+
+                        if (!$routeModel && is_string($rid)) {
+                            $routeModel = \App\Models\TransportRoute::query()->where(function ($q) use ($rid) {
+                                $normalizedRid = $this->normalizeTransportRouteKey((string) $rid);
+                                $q->whereRaw('LOWER(route_id) = ?', [strtolower($normalizedRid)])
+                                ->orWhereRaw('LOWER(route_id) LIKE ?', ['%' . strtolower($normalizedRid) . '%']);
+                            })->first();
+                        }
+
+                        if (!$routeModel) continue;
+                        $amount = $this->resolveGroupTransportRouteAmount($routeModel, $guestCount, $group, $wantReturn);
+                        $dayTransportTotal += $amount;
+                        $transportNames[] = trim(($routeModel->route_from ?? '') . ($routeModel->route_to ? ' → ' . $routeModel->route_to : ''));
+                    }
+                }
+
+                if ($dayTransportTotal > 0) {
+                    $total += $dayTransportTotal;
+                    $items[] = [
+                        'day' => $dayNumber,
+                        'type' => 'Transport',
+                        'name' => ' - ' . implode(', ', array_unique($transportNames)),
+                        'amount' => round($dayTransportTotal, 2),
+                    ];
+                }
+            }
+        }
+
+        return [
+            'total' => round($total, 2),
+            'items' => $items,
+        ];
+    }
+
     protected function buildAccommodationLabel(Accommodation $accommodation, array $entry, int $adults = 2, int $children = 0, int $infants = 0): string
     {
         $roomIds = $this->selectPreferredRoomIds($accommodation, $entry, $adults, $children, $infants);
@@ -536,12 +769,271 @@ class PackagePricingService
         return $this->resolvePackageTransportAmount($transport, $entry, $guestCount, $package);
       }
 
+    protected function resolveGroupAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry, $group = null, int $adults = 2, int $children = 0, int $infants = 0): float
+    {
+      $explicitRoomIds = is_array($entry['rooms'] ?? null) ? array_values(array_filter(array_map('intval', (array) $entry['rooms']))) : [];
+      $roomIds = $this->selectPreferredRoomIds($accommodation, $entry, $adults, $children, $infants);
+      $bestAmount = 0.0;
+
+      // If admin explicitly requested specific room instances for the day, sum each room's price
+      $sumExplicitRooms = 0.0;
+      $useExplicitSum = !empty($explicitRoomIds);
+
+      // Determine pricing mode/discount from group itinerary or per-day overrides
+      $globalMode = $group && is_array($group->itinerary ?? null) ? ($group->itinerary['pricing_modes']['accommodation'] ?? 'discount_offer') : 'discount_offer';
+      $globalDiscount = $group && is_array($group->itinerary ?? null) ? (float) ($group->itinerary['discounts']['accommodation'] ?? 0) : 0.0;
+
+      foreach ($roomIds as $roomId) {
+        $roomPricing = is_array($entry['pricing'] ?? null) ? ($entry['pricing'][$roomId] ?? []) : [];
+        $roomMode = $roomPricing['mode'] ?? $globalMode;
+        $roomDiscount = is_numeric($roomPricing['discount_percent'] ?? null) ? (float) $roomPricing['discount_percent'] : $globalDiscount;
+        $selectedPackage = $roomPricing['selected_package'] ?? null;
+
+        $candidate = 0.0;
+
+        // Package rate branch: respect selected package id (may point to Group or Package rate)
+        if ($roomMode === 'package_rate') {
+          if (!empty($selectedPackage)) {
+            if (is_numeric($selectedPackage)) {
+              $rate = \App\Models\AccommodationRate::find((int) $selectedPackage);
+            } else {
+              $rate = null;
+            }
+            if (empty($rate)) {
+              $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
+                ->where('room_id', $roomId)
+                ->where('rate_type', 'Package')
+                ->orderByDesc('updated_at')
+                ->first();
+            }
+            if ($rate) {
+              $candidate = (float) ($rate->base_rate ?? $rate->final_rate ?? 0);
+            }
+          } else {
+            $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
+              ->where('room_id', $roomId)
+              ->where('rate_type', 'Package')
+              ->orderByDesc('updated_at')
+              ->first();
+            if ($rate) {
+              $candidate = (float) ($rate->base_rate ?? $rate->final_rate ?? 0);
+            }
+          }
+        }
+
+        // Discount or fallback branch — prefer Group rates when available
+        if ($candidate <= 0) {
+          $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
+            ->where('room_id', $roomId)
+            ->where('rate_type', 'Group')
+            ->orderByDesc('valid_from')
+            ->first();
+
+          if ($rate) {
+            $base = (float) ($rate->base_rate ?? $rate->final_rate ?? 0);
+          } else {
+            $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
+              ->where('room_id', $roomId)
+              ->where(function ($q) { $q->where('rate_type', '!=', 'Package')->orWhereNull('rate_type'); })
+              ->where('is_rate_plan', false)
+              ->orderByDesc('valid_from')
+              ->first();
+
+            if (!$rate) {
+              $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
+                ->where('room_id', $roomId)
+                ->where('is_rate_plan', false)
+                ->orderByDesc('valid_from')
+                ->first();
+            }
+
+            $base = $rate ? (float) ($rate->base_rate ?? $rate->final_rate ?? 0) : 0.0;
+          }
+
+          // Apply discount if configured
+          if ($roomMode === 'discount_offer' && $roomDiscount > 0 && $roomDiscount <= 100) {
+            $base = $base - ($base * $roomDiscount / 100.0);
+          }
+
+          $candidate = $base;
+        }
+
+        if ($candidate > $bestAmount) {
+          $bestAmount = $candidate;
+        }
+
+        if ($useExplicitSum && in_array((int)$roomId, $explicitRoomIds, true)) {
+          $sumExplicitRooms += $candidate;
+        }
+      }
+
+      if ($useExplicitSum) {
+        return round(max(0.0, $sumExplicitRooms), 2);
+      }
+
+      return round(max(0.0, $bestAmount), 2);
+    }
+
+    protected function resolveGroupActivityAmount(\App\Models\Activity $activity, array $entry, int $guestCount, $group = null, int $adults = 0, int $children = 0, int $infants = 0): float
+    {
+      $selection = $entry['activity_selection'] ?? [];
+      if (!is_array($selection)) {
+        $selection = $selection ? [$selection] : [];
+      }
+
+      $unit = 0.0;
+      foreach (array_values(array_filter(array_map('trim', $selection))) as $selected) {
+        if (!str_contains((string) $selected, '|')) {
+          $variant = \App\Models\ActivityVariant::where('activity_id', $activity->id)->first();
+          if ($variant) {
+            $rates = \App\Models\ActivityRate::where('activity_id', $activity->id)
+              ->where('variant_id', $variant->variant_id)
+              ->orderByDesc('created_at')
+              ->get();
+            $rate = $rates->firstWhere('season', 'Group') ?: $rates->first();
+            if ($rate) {
+              $unit = max($unit, (float) ($rate->adult_rate ?? $rate->base_rate ?? 0));
+            }
+          }
+          continue;
+        }
+
+        [$variantId, $rateSpecificity] = array_pad(explode('|', (string) $selected, 2), 2, null);
+        $variantId = trim((string) $variantId);
+        $rateSpecificity = trim((string) ($rateSpecificity ?? ''));
+
+        $baseQuery = \App\Models\ActivityRate::query()
+          ->where('activity_id', $activity->id)
+          ->where('variant_id', $variantId);
+
+        if ($rateSpecificity !== '') {
+          $baseQuery->where('rate_specificity', $rateSpecificity);
+        }
+
+        $rate = (clone $baseQuery)
+          ->where('season', 'Group')
+          ->orderByDesc('updated_at')
+          ->first();
+
+        if (!$rate) {
+          $rate = (clone $baseQuery)->orderByDesc('updated_at')->first();
+        }
+
+        if ($rate) {
+          $unit = max($unit, (float) ($rate->adult_rate ?? $rate->base_rate ?? 0));
+        }
+      }
+
+      if ($unit <= 0) {
+        $rate = \App\Models\ActivityRate::where('activity_id', $activity->id)
+          ->where('season', 'Group')
+          ->orderByDesc('updated_at')
+          ->first();
+
+        if (!$rate) {
+          $rate = \App\Models\ActivityRate::where('activity_id', $activity->id)
+            ->orderByDesc('updated_at')
+            ->first();
+        }
+
+        if ($rate) {
+          $unit = (float) ($rate->adult_rate ?? $rate->base_rate ?? 0);
+        }
+      }
+
+      // Determine pricing mode/discount from group itinerary or per-day overrides
+      $globalMode = $group && is_array($group->itinerary ?? null) ? ($group->itinerary['pricing_modes']['activity'] ?? 'discount_offer') : 'discount_offer';
+      $globalDiscount = $group && is_array($group->itinerary ?? null) ? (float) ($group->itinerary['discounts']['activity'] ?? 0) : 0.0;
+      // If per-entry pricing override exists, use it
+      $entryPricing = is_array($entry['pricing'] ?? null) ? $entry['pricing'] : [];
+      $entryMode = $entryPricing['mode'] ?? $globalMode;
+      $entryDiscount = is_numeric($entryPricing['discount_percent'] ?? null) ? (float) $entryPricing['discount_percent'] : $globalDiscount;
+
+      if ($entryMode === 'discount_offer' && $entryDiscount > 0 && $entryDiscount <= 100) {
+        $unit = $unit - ($unit * $entryDiscount / 100.0);
+      }
+
+      return round(max(0.0, $unit * max(1, (int) $guestCount)), 2);
+    }
+
+    protected function resolveGroupTransportRouteAmount(\App\Models\TransportRoute $route, int $guestCount, $group = null, bool $wantReturn = false): float
+    {
+      $pricing = is_array($route->pricing ?? null) ? $route->pricing : (is_string($route->pricing ?? null) ? json_decode($route->pricing, true) : []);
+
+      // Determine group-level pricing mode/discount if available
+      $globalMode = $group && is_array($group->itinerary ?? null) ? ($group->itinerary['pricing_modes']['transport'] ?? 'discount_offer') : 'discount_offer';
+      $globalDiscount = $group && is_array($group->itinerary ?? null) ? (float) ($group->itinerary['discounts']['transport'] ?? 0) : 0.0;
+
+      $candidate = 0.0;
+      $usedPackageRate = false;
+
+      // If admin selected package_rate at group level, prefer package prices
+      if ($globalMode === 'package_rate') {
+        if ($wantReturn) {
+          $candidate = (float) ($pricing['package_return_price'] ?? $pricing['package_price'] ?? 0);
+        } else {
+          $candidate = (float) ($pricing['package_price'] ?? $pricing['package_return_price'] ?? 0);
+        }
+        if ($candidate > 0) $usedPackageRate = true;
+      }
+
+      // If no package rate chosen/available, use group/package/base prices and apply discount_offer when selected
+      if ($candidate <= 0) {
+        // Prefer explicit group/package prices when present, but be tolerant of alternate keys
+        if ($wantReturn) {
+          $base = (float) (
+            ($pricing['group_return_price'] ?? null)
+            ?: ($pricing['package_return_price'] ?? null)
+            ?: ($pricing['return_price'] ?? null)
+            ?: ($pricing['group_price'] ?? null)
+            ?: ($pricing['package_price'] ?? null)
+            ?: ($pricing['price'] ?? null)
+            ?: ($pricing['default_price'] ?? null)
+            ?: ($pricing['single'] ?? 0)
+          );
+        } else {
+          $base = (float) (
+            ($pricing['group_price'] ?? null)
+            ?: ($pricing['package_price'] ?? null)
+            ?: ($pricing['price'] ?? null)
+            ?: ($pricing['default_price'] ?? null)
+            ?: ($pricing['single'] ?? 0)
+          );
+        }
+
+        if ($globalMode === 'discount_offer' && $globalDiscount > 0 && $globalDiscount <= 100) {
+          $base = $base - ($base * $globalDiscount / 100.0);
+        }
+
+        $candidate = $base;
+      }
+
+      \Log::debug('PackagePricingService - group transport route resolved', [
+        'route_id' => $route->id ?? null,
+        'route_from' => $route->route_from ?? null,
+        'route_to' => $route->route_to ?? null,
+        'pricing' => $pricing,
+        'candidate_per_unit' => $candidate,
+        'guestCount' => $guestCount,
+        'global_mode' => $globalMode,
+        'global_discount' => $globalDiscount,
+      ]);
+
+      $perUnit = $candidate;
+      // Transport is charged per vehicle/transfer, not per person — multiplier must be 1
+      $multiplier = 1;
+      return round(max(0.0, $perUnit * $multiplier), 2);
+    }
+
     // Copied from TripController to preserve authoritative package pricing logic
     protected function resolvePackageAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry, $package = null, int $adults = 2, int $children = 0, int $infants = 0): float
     {
+      $explicitRoomIds = is_array($entry['rooms'] ?? null) ? array_values(array_filter(array_map('intval', (array) $entry['rooms']))) : [];
       $roomIds = $this->selectPreferredRoomIds($accommodation, $entry, $adults, $children, $infants);
 
       $bestAmount = 0.0;
+      $sumExplicitRooms = 0.0;
+      $useExplicitSum = !empty($explicitRoomIds);
       $globalMode = $package && is_array($package->itinerary ?? null) ? ($package->itinerary['pricing_modes']['accommodation'] ?? 'discount_offer') : 'discount_offer';
       $globalDiscount = $package && is_array($package->itinerary ?? null) ? (float) ($package->itinerary['discounts']['accommodation'] ?? 20) : 20.0;
       $dayPricing = is_array($entry['pricing'] ?? null) ? $entry['pricing'] : [];
@@ -611,6 +1103,14 @@ class PackagePricingService
         if ($candidate > $bestAmount) {
           $bestAmount = $candidate;
         }
+
+        if ($useExplicitSum && in_array((int)$roomId, $explicitRoomIds, true)) {
+          $sumExplicitRooms += $candidate;
+        }
+      }
+
+      if ($useExplicitSum) {
+        return round(max(0.0, $sumExplicitRooms), 2);
       }
 
       return round(max(0.0, $bestAmount), 2);
@@ -800,15 +1300,15 @@ class PackagePricingService
         }
       }
 
-      if ($bestAmount <= 0) {
-        $route = $transport->routes()->first();
+        if ($bestAmount <= 0) {
+          return round(max(0.0, $candidate * 1), 2);
         if ($route) {
           $pricing = is_array($route->pricing ?? null) ? $route->pricing : (is_string($route->pricing ?? null) ? json_decode($route->pricing, true) : []);
           $bestAmount = (float) ($pricing['package_price'] ?? $pricing['price'] ?? $pricing['default_price'] ?? 0);
         }
       }
 
-      $result = round($bestAmount > 0 ? $bestAmount * max(1, $guestCount) : 0.0, 2);
+      $result = round($bestAmount > 0 ? $bestAmount * 1 : 0.0, 2);
       \Log::debug('PackagePricingService - transport resolved amount', [
           'transport_id' => $transport->id ?? null,
           'bestAmount_per_unit' => $bestAmount,
@@ -856,8 +1356,24 @@ class PackagePricingService
       ]);
 
       $perUnit = $candidate;
-      // If admin selected package_rate and we used package prices, treat them as per-transfer totals (do not multiply by guest count)
-      $multiplier = ($usedPackageRate ? 1 : max(1, $guestCount));
+      // Transport is per vehicle; do not multiply by guest count
+      $multiplier = 1;
       return round($perUnit * $multiplier, 2);
+    }
+
+    /**
+     * Public wrapper to allow callers to price a specific TransportRoute.
+     */
+    public function getTransportRouteAmount(\App\Models\TransportRoute $route, int $guestCount, $package = null, bool $wantReturn = false): float
+    {
+      return $this->resolveTransportRouteAmount($route, $guestCount, $package, $wantReturn);
+    }
+
+    /**
+     * Public wrapper for group-specific transport pricing.
+     */
+    public function getGroupTransportRouteAmount(\App\Models\TransportRoute $route, int $guestCount, $group = null, bool $wantReturn = false): float
+    {
+      return $this->resolveGroupTransportRouteAmount($route, $guestCount, $group, $wantReturn);
     }
 }

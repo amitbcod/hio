@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
-    protected $fillable = ['trip_id', 'operator_id', 'total_amount', 'status'];
+    protected $fillable = ['trip_id', 'operator_id', 'total_amount', 'status', 'booking_type'];
 
     protected $casts = [
         'total_amount' => 'decimal:2',

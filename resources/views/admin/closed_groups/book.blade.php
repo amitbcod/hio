@@ -559,16 +559,29 @@ $(function(){
 
         if(paxCount <= 0) { alert('Invalid pax count'); return; }
 
-        // build guest forms
+        // build guest forms — responsibility traveller is counted in pax and is NOT included
+        // in the guest profiles list. So show pax-1 guest forms here.
         $('#guests-area').empty();
-        for(let i=1;i<=paxCount;i++) addGuestWithDefaults(i);
+        const guestCount = Math.max(0, paxCount - 1);
+        for(let i=1;i<=guestCount;i++) addGuestWithDefaults(i);
 
         $('#step2').hide(); $('#step3').show();
         populateGuestAssignOptions();
         updateUnassignedCount();
     });
 
-    $('#add-guest').on('click', function(e){ e.preventDefault(); addGuest(); updateUnassignedCount(); });
+    $('#add-guest').on('click', function(e){
+        e.preventDefault();
+        // prevent adding more guests than pax-1 (responsible traveller excluded)
+        let paxVal = $('#pax').val();
+        let paxCount = 0;
+        if(typeof paxVal === 'string'){ const m = paxVal.match(/(\d+)/); paxCount = m ? parseInt(m[1],10) : 0; }
+        else if(typeof paxVal === 'number') paxCount = paxVal;
+        const maxGuests = Math.max(0, paxCount - 1);
+        const current = $('#guests-area .guest-item').length;
+        if(current >= maxGuests){ alert('Guest count reached the total travellers minus responsible traveller.'); return; }
+        addGuest(); updateUnassignedCount();
+    });
 
 // refresh assign options when guest name inputs change
 $(document).on('input', '.guest-first, .guest-last', function(){ populateGuestAssignOptions(); });
@@ -784,11 +797,15 @@ $(document).on('change', '.guest-assign', function(){
 
 function populateGuestAssignOptions(){
     const guests = [];
+    // include responsible traveller (lead) as an occupant option
+    const leadNameRaw = ($('#lead_first_name').val() || '').trim();
+    const leadName = leadNameRaw || 'Responsible Traveller';
+    guests.push({ idx: 'lead', label: leadName });
     $('#guests-area .guest-item').each(function(i,el){
         const fn = $(el).find('.guest-first').val() || '';
         const ln = $(el).find('.guest-last').val() || '';
         const label = (fn + ' ' + ln).trim() || ('Guest ' + (i+1));
-        guests.push({idx:i, label:label});
+        guests.push({idx: String(i), label: label});
     });
     // enforce uniqueness per day: for each .property-card (day), compute selected values and disable duplicates only inside that card
     $('#properties-list .property-card').each(function(){
@@ -823,7 +840,8 @@ function populateGuestAssignOptions(){
 }
 
 function updateUnassignedCount(){
-    const total = $('#guests-area .guest-item').length;
+    // total travellers includes responsible traveller + guests
+    const total = $('#guests-area .guest-item').length + 1;
     // gather unique selected guest indices across all occupant single-selects
     const unique = new Set();
     $('#properties-list .guest-assign, #itinerary-rooms .guest-assign').each(function(){
@@ -836,13 +854,17 @@ function updateUnassignedCount(){
 function autoAssignGuests(){
     // assign unassigned guests into occupant slots (single-selects) in order
     const unassigned = [];
-    const totalGuests = $('#guests-area .guest-item').length;
+    // include lead plus guests in total order: 'lead', '0', '1', ...
+    const guestCount = $('#guests-area .guest-item').length;
+    const totalOrder = ['lead'];
+    for(let i=0;i<guestCount;i++) totalOrder.push(String(i));
+
     // collect already assigned
     const assigned = new Set();
     $('#properties-list .guest-assign, #itinerary-rooms .guest-assign').each(function(){ const v=$(this).val(); if(v) assigned.add(String(v)); });
-    for(let i=0;i<totalGuests;i++){ if(!assigned.has(String(i))) unassigned.push(i); }
+    totalOrder.forEach(function(val){ if(!assigned.has(String(val))) unassigned.push(val); });
 
-    // iterate occupant selects in DOM order and fill with unassigned guests
+    // iterate occupant selects in DOM order and fill with unassigned travellers
     $('#properties-list .guest-assign').each(function(){
         if(unassigned.length===0) return;
         const sel = $(this);
@@ -875,15 +897,75 @@ function buildReview(){
     const leadName = ($('#lead_first_name').val() || '').trim() || 'Lead Traveller';
     const leadEmail = ($('#lead_email').val() || '').trim() || 'Not provided';
     const leadPhone = ($('#lead_phone').val() || '').trim() || 'Not provided';
-    const pax = Number($('#pax').val()) || 0;
-    const groupRate = Number(selectedGroup && selectedGroup.price ? selectedGroup.price : 980) || 980;
+    // parse pax value robustly (supports '3 Travellers' labels)
+    let pax = 0;
+    const paxValRaw = $('#pax').val();
+    if (typeof paxValRaw === 'string'){
+        const m = String(paxValRaw).match(/(\d+)/);
+        pax = m ? parseInt(m[1],10) : 0;
+    } else if (typeof paxValRaw === 'number') pax = paxValRaw || 0;
     const leaderFree = $('#tl_free').is(':checked');
     const billedTravellers = Math.max(0, pax - (leaderFree ? 1 : 0));
-    const totalAmount = billedTravellers * groupRate;
+    // default per-pax group rate (may be overwritten by server price fetch)
+    const groupRate = Number(selectedGroup && selectedGroup.price ? selectedGroup.price : 0);
+    // Fetch accurate total from server to avoid mismatch with frontend pricing
+    let totalAmount = Number(selectedGroup && selectedGroup.price ? selectedGroup.price : 0) * billedTravellers;
+    if (selectedGroup && selectedGroup.id) {
+        // collect minimal payload (selected rooms + guest assignments) to send so server pricing matches admin selections
+        const pricePayload = { pax: pax, selected_rooms: [], guest_assignments: {} };
+        // collect selected rooms similarly to submitBooking
+        $('#properties-list .room-card').each(function(){
+            const card = $(this);
+            const dayIndex = card.closest('.property-card').data('day-index');
+            const accomId = card.closest('.property-card').data('accommodation-id') || null;
+            const roomId = card.find('.room-select').val();
+            let checkIn = null, checkOut = null;
+            if(selectedGroup && selectedGroup.available_from){
+                const base = new Date(selectedGroup.available_from);
+                base.setDate(base.getDate() + Number(dayIndex));
+                checkIn = base.toISOString().slice(0,10);
+                const out = new Date(base); out.setDate(out.getDate() + 1);
+                checkOut = out.toISOString().slice(0,10);
+            }
+            pricePayload.selected_rooms.push({ day_index: dayIndex, accommodation_id: accomId, room_id: roomId, check_in: checkIn, check_out: checkOut });
+            const assigned = [];
+            card.find('.guest-assign').each(function(){ const v = $(this).val(); if(v) assigned.push(v); });
+            const key = `${dayIndex}_${roomId}`;
+            pricePayload.guest_assignments[key] = assigned;
+        });
+
+        $.get("{{ url('admin/closed-groups') }}/" + selectedGroup.id + "/price", pricePayload)
+            .done(function(resp){
+                totalAmount = Number(resp.total || totalAmount);
+                window.__finalTotalAmount = totalAmount;
+                // compute per-pax rate (admin treats all travellers as adults)
+                const billed = billedTravellers || 1;
+                const perPax = billed > 0 ? (totalAmount / billed) : 0;
+                // render breakdown items into invoice table rows
+                const tbody = $('.invoice-table tbody').empty();
+                if(Array.isArray(resp.items) && resp.items.length){
+                    resp.items.forEach(function(it){
+                        const desc = it.name || it.type || (groupName + ' Item');
+                        const travellers = (it.type === 'Accommodation' || it.type === 'Activity') ? (billedTravellers + ' Pax') : '';
+                        const rateText = (it.type === 'Accommodation' || it.type === 'Activity') ? ('$' + ((billedTravellers>0)? ((it.amount / billedTravellers).toFixed(2)) : '0.00')) : '';
+                        tbody.append(`<tr><td>${desc}</td><td>${travellers}</td><td>${rateText}</td><td class="amount">$${Number(it.amount||0).toFixed(2)}</td></tr>`);
+                    });
+                } else {
+                    // fallback row
+                    $('.invoice-table tbody').append(`<tr><td>${groupName} - Group Package</td><td>${billedTravellers} Pax</td><td>$${perPax.toFixed(2)}</td><td class="amount">$${totalAmount.toFixed(2)}</td></tr>`);
+                }
+                $('.invoice-total .value').text('$' + (totalAmount.toFixed(2)));
+            }).fail(function(){
+                window.__finalTotalAmount = totalAmount;
+            });
+    } else {
+        window.__finalTotalAmount = totalAmount;
+    }
 
     const travelerRows = [];
     const leadDetail = leaderFree ? 'Tour Leader - Free' : 'Traveller';
     travelerRows.push(`${leadName} (${leadDetail})`);
+    window.__finalTotalAmount = totalAmount;
 
     $('#guests-area .guest-item').each(function(index, el) {
         const firstName = $(el).find('.guest-first').val() || 'Guest';
@@ -1008,7 +1090,8 @@ function submitBooking(){
         lead_email: $('#lead_email').val(),
         lead_phone: $('#lead_phone').val(),
         pax: $('#pax').val(),
-        total_amount: null,
+        total_amount: window.__finalTotalAmount ?? null,
+        _token: '{{ csrf_token() }}',
         guests: []
     };
     $('#guests-area .guest-item').each(function(i,el){
@@ -1046,13 +1129,28 @@ function submitBooking(){
         payload.guest_assignments[key] = assigned;
     });
 
-    $.post("{{ route('admin.closed-groups.book.store') }}", payload)
-        .done(function(resp){
-            alert('Booking created successfully');
+    $.ajax({
+        url: "{{ route('admin.closed-groups.book.store') }}",
+        method: 'POST',
+        data: payload,
+        dataType: 'json'
+    }).done(function(resp){
+        if(resp && resp.success){
+            alert('Booking created successfully (ID: ' + resp.booking_id + ')');
             location.reload();
-        }).fail(function(xhr){
-            alert('Failed to create booking: ' + (xhr.responseJSON?.message || xhr.responseText));
-        });
+        } else {
+            alert('Failed to create booking: ' + (resp?.message || 'Unknown error'));
+        }
+    }).fail(function(xhr){
+        let msg = 'Failed to create booking';
+        try{
+            const j = xhr.responseJSON;
+            if(j && j.errors) msg += ': ' + Object.values(j.errors).flat().join('; ');
+            else if(j && j.message) msg += ': ' + j.message;
+            else msg += ': ' + xhr.responseText;
+        }catch(e){ msg += '.'; }
+        alert(msg);
+    });
 }
 </script>
 @endpush

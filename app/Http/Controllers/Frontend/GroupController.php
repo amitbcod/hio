@@ -242,7 +242,7 @@ class GroupController extends Controller
         $adults = max(1, (int) request()->query('adults', 2));
         $children = max(0, (int) request()->query('children', 0));
         $infants = max(0, (int) request()->query('infants', 0));
-        $price = $pricingService->calculatePackageTotal($group, $adults, $children, $infants);
+        $price = $pricingService->calculateGroupTotal($group, $adults, $children, $infants);
 
         $days = (int) ($group->no_of_days ?? max(1, count($itineraryDays)));
         $nights = (int) ($group->no_of_nights ?? max(0, $days - 1));
