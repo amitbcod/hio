@@ -20,8 +20,8 @@
     --darker: #333333;
     --grey-light: #f2f1f6;
     --border-color: #e1e1e1;
-    --light-blue:#52b8e9;
-    --orange:#F59224;
+    --light-blue: #52b8e9;
+    --orange: #F59224;
 }
 
 * {
@@ -184,7 +184,7 @@ strong {
     padding: 10px 14px;
     border-radius: 999px;
     transition: 0.2s ease;
-        text-transform: capitalize;
+    text-transform: capitalize;
 }
 
 .main-nav a:hover,
@@ -3089,7 +3089,12 @@ div#transport-price-summary {
 
     .home-main-search {
         border: 0;
-        top: 20px;
+        /* top: 20px; */
+        padding: 20px 0 40px;
+        bottom: auto;
+        left: auto;
+        transform: none;
+        position: relative;
     }
 
     .category-radio-group span {
@@ -3283,17 +3288,29 @@ div#transport-price-summary {
     }
 
     .hero-slides {
-        min-height: 680px;
+        /* min-height: 680px; */
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
     }
 
     .filter-note {
         margin-top: 20px;
     }
+
     .category-search-cell--region {
         flex: 0 !important;
         min-width: auto !important;
         display: block !important;
     }
+
     .div-region-state {
-    display: block;}
+        display: block;
+    }
+
+    .hero {
+        min-height: 530px;
+    }
 }

@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="x7dcok4Dm5UOs90551s9KKCjj7GQg1sOAnic2TIs">
     <meta name="app-base-url" content="http://127.0.0.1:8010">
-    <meta name="description" content="Browse live accommodation and activity listings entered by operators on Holidays.io.">
+    <meta name="description"
+        content="Browse live accommodation and activity listings entered by operators on Holidays.io.">
     <title>Holidays.io | Dynamic Homepage</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=Roboto+Slab:wght@400;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="http://127.0.0.1:8010/frontend/css/site.css">
     <style>
@@ -35,6 +39,7 @@
             background: #ff5a5f;
             border-radius: 999px;
         }
+
         .language-switcher {
             display: inline-flex;
             align-items: center;
@@ -43,21 +48,26 @@
             font-size: 13px;
             color: #ffffff;
         }
+
         .language-switcher a {
             color: #ffffff;
             text-decoration: none;
             font-weight: 700;
         }
+
         .language-switcher a.active {
             color: #fcad10;
         }
+
         .language-switcher span {
             opacity: 1;
-            font-size:0
+            font-size: 0
         }
-        
-        .language-switcher span i {font-size:15px}
-        
+
+        .language-switcher span i {
+            font-size: 15px
+        }
+
         .mini-cart-overlay {
             position: fixed;
             inset: 0;
@@ -103,11 +113,13 @@
             border-bottom: 1px solid #eee;
             background: #fafafa;
         }
+
         .mini-cart-header h2 {
             margin: 0;
             font-size: 18px;
             line-height: 1.2;
         }
+
         .mini-cart-close {
             border: none;
             background: none;
@@ -115,6 +127,7 @@
             cursor: pointer;
             color: #333;
         }
+
         .mini-cart-body {
             flex: 1;
             overflow-y: auto;
@@ -123,6 +136,7 @@
             flex-direction: column;
             gap: 18px;
         }
+
         .mini-cart-item {
             display: grid;
             grid-template-columns: 100px 1fr auto;
@@ -131,15 +145,18 @@
             border-bottom: 1px solid #f1f1f1;
             align-items: start;
         }
+
         .mini-cart-item:last-child {
             border-bottom: none;
         }
+
         .mini-cart-item-image {
             display: flex;
             flex-direction: column;
             gap: 8px;
             position: relative;
         }
+
         .mini-cart-item-image img {
             width: 100%;
             height: 100px;
@@ -147,6 +164,7 @@
             border-radius: 10px;
             background: #f5f5f5;
         }
+
         .mini-cart-item-image-label {
             margin: 0;
             font-size: 13px;
@@ -154,17 +172,20 @@
             color: #111;
             line-height: 1.3;
         }
+
         .mini-cart-item-details {
             display: flex;
             flex-direction: column;
             gap: 4px;
             align-items: flex-start;
         }
+
         .mini-cart-item-meta {
             font-size: 13px;
             color: #666;
             line-height: 1.4;
         }
+
         .mini-cart-item-price {
             text-align: right;
             font-size: 15px;
@@ -172,6 +193,7 @@
             color: #111;
             min-width: 76px;
         }
+
         .mini-cart-item-delete {
             position: absolute;
             top: 6px;
@@ -191,40 +213,48 @@
             justify-content: center;
             transition: background 0.2s ease;
         }
+
         .mini-cart-item-delete:hover {
             background: rgba(0, 0, 0, 0.8);
         }
+
         .mini-cart-item-title {
             font-size: 13px;
             font-weight: 700;
             color: #111;
             margin-bottom: 4px;
         }
+
         .mini-cart-item-date {
             font-size: 12px;
             color: #666;
             margin-bottom: 4px;
         }
+
         .mini-cart-item-guests {
             font-size: 12px;
             color: #666;
             margin-bottom: 4px;
         }
+
         .mini-cart-summary {
             padding: 16px 24px;
             border-top: 1px solid #eee;
             background: #f9f9f9;
         }
+
         .mini-cart-summary-row {
             display: flex;
             justify-content: space-between;
             margin-bottom: 8px;
             font-size: 14px;
         }
+
         .mini-cart-summary-row.total {
             font-weight: 700;
             margin-top: 8px;
         }
+
         .mini-cart-actions {
             display: flex;
             gap: 12px;
@@ -232,6 +262,7 @@
             background: #fff;
             border-top: 1px solid #eee;
         }
+
         .mini-cart-actions .mini-cart-link,
         .mini-cart-actions .mini-cart-checkout-btn {
             flex: 1;
@@ -240,22 +271,26 @@
             border-radius: 8px;
             text-decoration: none;
         }
+
         .mini-cart-actions .mini-cart-link {
             color: #333;
             background: #f2f2f2;
             border: 1px solid #ddd;
         }
+
         .mini-cart-actions .mini-cart-checkout-btn {
             color: #fff;
             background: #16213e;
             border: none;
         }
+
         .mini-cart-empty {
             color: #555;
             font-size: 14px;
             padding: 30px 0;
             text-align: center;
         }
+
         .mini-cart-message {
             padding: 14px 16px;
             border-radius: 8px;
@@ -263,11 +298,13 @@
             line-height: 1.4;
             display: none;
         }
+
         .mini-cart-message.success {
             background: #e6ffed;
             color: #116530;
             border: 1px solid #b9f2c2;
         }
+
         .mini-cart-message.error {
             background: #ffe8e8;
             color: #9f1c21;
@@ -286,13 +323,13 @@
         .tax-notice strong {
             display: block;
             margin-bottom: 2px;
-            color:#0093d9
+            color: #0093d9
         }
 
         .operator-header {
             background: #ffffff;
             padding: 22px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.08);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
         }
 
         .operator-header-inner {
@@ -336,213 +373,223 @@
             color: #007bff;
             font-size: 18px;
         }
-
     </style>
-                                        <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
-                                        <style>
-            .listing-title-row {
-                display: flex;
-                flex-wrap: wrap;
-                align-items: center;
-                justify-content: space-between;
-                gap: 10px;
-                margin-bottom: 10px;
-            }
+    <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        .listing-title-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
 
-            .listing-rating-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 6px 10px;
-                border-radius: 999px;
-                background: rgba(255, 210, 95, 0.16);
-                color: #92400e;
-                font-size: 0.9rem;
-                font-weight: 700;
-                border: 1px solid rgba(245, 158, 11, 0.22);
-            }
+        .listing-rating-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(255, 210, 95, 0.16);
+            color: #92400e;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border: 1px solid rgba(245, 158, 11, 0.22);
+        }
 
-            .category-result-title-row {
-                display: flex;
-                flex-wrap: wrap;
-                align-items: center;
-                justify-content: space-between;
-                gap: 10px;
-                margin-bottom: 10px;
-            }
+        .category-result-title-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
 
-            .listing-rating-badge i {
-                color: #f59e0b;
-            }
+        .listing-rating-badge i {
+            color: #f59e0b;
+        }
 
-            .category-search-cell--transport .ts-wrapper.category-search-select .ts-control {
-                /* min-height: 44px;
+        .category-search-cell--transport .ts-wrapper.category-search-select .ts-control {
+            /* min-height: 44px;
                 line-height: 1.3;
                 padding: 0 12px 0 8px;
                 display: flex;
                 align-items: center; */
-                height: 22px;
-                overflow: hidden;
-                padding:0;
-            }
+            height: 22px;
+            overflow: hidden;
+            padding: 0;
+        }
 
-            .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown-content {
-                max-height: 195px;
-            }
+        .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown-content {
+            max-height: 195px;
+        }
 
-            /* .category-search-cell--transport .ts-wrapper.category-search-select {
+        /* .category-search-cell--transport .ts-wrapper.category-search-select {
                 width: 100%;
                 min-height: 44px;
                 box-sizing: border-box;
             } */
 
-            .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown.single {
-                background: #fff;
-                font-size: 14px;
-                font-weight: normal;
-            }
+        .category-search-cell--transport .ts-wrapper.category-search-select .ts-dropdown.single {
+            background: #fff;
+            font-size: 14px;
+            font-weight: normal;
+        }
 
 
-            .category-search-input[type="date"],
-            .category-search-input[type="time"] {
-                appearance: none !important;
-                -webkit-appearance: none !important;
-                -moz-appearance: none !important;
-                background: transparent !important;
-                padding-right: 10px !important;
-            }
+        .category-search-input[type="date"],
+        .category-search-input[type="time"] {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            background: transparent !important;
+            padding-right: 10px !important;
+        }
 
-            .category-search-input[type="date"]::-webkit-calendar-picker-indicator,
-            .category-search-input[type="date"]::-webkit-clear-button,
-            .category-search-input[type="date"]::-webkit-inner-spin-button,
-            .category-search-input[type="date"]::-webkit-outer-spin-button,
-            .category-search-input[type="time"]::-webkit-calendar-picker-indicator,
-            .category-search-input[type="time"]::-webkit-clear-button,
-            .category-search-input[type="time"]::-webkit-inner-spin-button,
-            .category-search-input[type="time"]::-webkit-outer-spin-button,
-            .category-search-input[type="date"]::-ms-clear,
-            .category-search-input[type="date"]::-ms-expand,
-            .category-search-input[type="time"]::-ms-clear,
-            .category-search-input[type="time"]::-ms-expand {
-                display: none !important;
-                opacity: 0 !important;
-                width: 0 !important;
-                height: 0 !important;
-            }
+        .category-search-input[type="date"]::-webkit-calendar-picker-indicator,
+        .category-search-input[type="date"]::-webkit-clear-button,
+        .category-search-input[type="date"]::-webkit-inner-spin-button,
+        .category-search-input[type="date"]::-webkit-outer-spin-button,
+        .category-search-input[type="time"]::-webkit-calendar-picker-indicator,
+        .category-search-input[type="time"]::-webkit-clear-button,
+        .category-search-input[type="time"]::-webkit-inner-spin-button,
+        .category-search-input[type="time"]::-webkit-outer-spin-button,
+        .category-search-input[type="date"]::-ms-clear,
+        .category-search-input[type="date"]::-ms-expand,
+        .category-search-input[type="time"]::-ms-clear,
+        .category-search-input[type="time"]::-ms-expand {
+            display: none !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
 
-            .category-search-cell--transport .ts-wrapper:not(.form-control,.form-select).single .ts-control {
-                background-position: right 3px center;
-            }
+        .category-search-cell--transport .ts-wrapper:not(.form-control, .form-select).single .ts-control {
+            background-position: right 3px center;
+        }
+    </style>
+</head>
 
-        </style>
-    </head>
 <body>
-    
-            <div class="top-bar">
-            <div class="wrap top-bar-inner">
-                <div class="top-meta">
-                                            <span><i class="fa-solid fa-phone"></i> +230 52 51 11 53</span>
-                        <span><i class="fa-solid fa-globe"></i> Your Local Connection - Mauritius</span>
-                                    </div>
-                <div class="top-links">
-                                            <a href="http://127.0.0.1:8010/traveler/login">Traveller Login</a>
-                        <a href="http://127.0.0.1:8010/traveler/register">Traveller Register</a>
-                                        <div class="language-switcher">
-                        <span><i class="fa-solid fa-earth-americas"></i>Language:</span>
-                        <a href="http://127.0.0.1:8010/lang/en" class="active">EN</a>
-                        <a href="http://127.0.0.1:8010/lang/fr" class="">FR</a>
-                    </div>
+
+    <div class="top-bar">
+        <div class="wrap top-bar-inner">
+            <div class="top-meta">
+                <span><i class="fa-solid fa-phone"></i> +230 52 51 11 53</span>
+                <span><i class="fa-solid fa-globe"></i> Your Local Connection - Mauritius</span>
+            </div>
+            <div class="top-links">
+                <a href="http://127.0.0.1:8010/traveler/login">Traveller Login</a>
+                <a href="http://127.0.0.1:8010/traveler/register">Traveller Register</a>
+                <div class="language-switcher">
+                    <span><i class="fa-solid fa-earth-americas"></i>Language:</span>
+                    <a href="http://127.0.0.1:8010/lang/en" class="active">EN</a>
+                    <a href="http://127.0.0.1:8010/lang/fr" class="">FR</a>
                 </div>
             </div>
         </div>
+    </div>
 
-        <header class="site-header">
-            <div class="wrap site-header-inner">
-                <a href="http://127.0.0.1:8010" class="brand">
-                                            <img src="http://127.0.0.1:8010/images/holidays-io-logo.png" alt="Holidays.io logo">
-                                                        </a>
-                <div class="top-right-mobill">
-                    <a href="http://127.0.0.1:8010/booking/cart" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> <span id="headerCartCount" class="header-cart-badge">0</span></a>
-                    <div class="mobile-menu-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                        </svg>
-                    </div>
+    <header class="site-header">
+        <div class="wrap site-header-inner">
+            <a href="http://127.0.0.1:8010" class="brand">
+                <img src="http://127.0.0.1:8010/images/holidays-io-logo.png" alt="Holidays.io logo">
+            </a>
+            <div class="top-right-mobill">
+                <a href="http://127.0.0.1:8010/booking/cart" id="headerCartToggle"><i
+                        class="fa-solid fa-cart-shopping"></i> <span id="headerCartCount"
+                        class="header-cart-badge">0</span></a>
+                <div class="mobile-menu-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
                 </div>
-                <nav class="main-nav">
-                    <a href="http://127.0.0.1:8010" class="is-active">Home</a>
-                    <a href="http://127.0.0.1:8010?category=accommodation" class="">Accommodation</a>
-                    <a href="http://127.0.0.1:8010?category=tours" class="">Activities</a>
-                    <a href="http://127.0.0.1:8010?category=transport" class="">Transport</a>
-                    <a href="http://127.0.0.1:8010#discover-mauritius">Discover Mauritius</a>
-                    <a href="http://127.0.0.1:8010/operator/accommodation">Operator</a>
-                    <a href="http://127.0.0.1:8010/booking/cart" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> Cart <span id="headerCartCount" class="header-cart-badge">0</span></a>
-                </nav>
             </div>
-        </header>
-        
+            <nav class="main-nav">
+                <a href="http://127.0.0.1:8010" class="is-active">Home</a>
+                <a href="http://127.0.0.1:8010?category=accommodation" class="">Accommodation</a>
+                <a href="http://127.0.0.1:8010?category=tours" class="">Activities</a>
+                <a href="http://127.0.0.1:8010?category=transport" class="">Transport</a>
+                <a href="http://127.0.0.1:8010#discover-mauritius">Discover Mauritius</a>
+                <a href="http://127.0.0.1:8010/operator/accommodation">Operator</a>
+                <a href="http://127.0.0.1:8010/booking/cart" id="headerCartToggle"><i
+                        class="fa-solid fa-cart-shopping"></i> Cart <span id="headerCartCount"
+                        class="header-cart-badge">0</span></a>
+            </nav>
+        </div>
+    </header>
+
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const menuIcon = document.querySelector('.mobile-menu-icon');
-        const nav = document.querySelector('.main-nav');
+        document.addEventListener('DOMContentLoaded', function () {
+            const menuIcon = document.querySelector('.mobile-menu-icon');
+            const nav = document.querySelector('.main-nav');
 
-        menuIcon.addEventListener('click', function (e) {
-            e.stopPropagation();
-            nav.classList.toggle('active');
+            menuIcon.addEventListener('click', function (e) {
+                e.stopPropagation();
+                nav.classList.toggle('active');
+            });
+            nav.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+            document.addEventListener('click', function () {
+                nav.classList.remove('active');
+            });
         });
-        nav.addEventListener('click', function (e) {
-            e.stopPropagation();
-        });
-        document.addEventListener('click', function () {
-            nav.classList.remove('active');
-        });
-    });
     </script>
-    
 
-    
-    
-        <div id="miniCartOverlay" class="mini-cart-overlay" aria-hidden="true"
-            data-msg-item-added="Item added to cart."
-            data-msg-item-removed="Item removed from cart."
-            data-msg-cart-empty="Your cart is empty"
-            data-msg-unable-load="Item added to cart. Unable to load cart details."
-            data-msg-unable-add="Unable to add item to cart."
-            data-msg-unable-remove="Unable to remove item from cart."
-            data-cart-items-zero="No items in cart"
-            data-cart-items-one="1 item in cart"
-            data-cart-items-many=":count items in cart">
+
+
+
+    <div id="miniCartOverlay" class="mini-cart-overlay" aria-hidden="true" data-msg-item-added="Item added to cart."
+        data-msg-item-removed="Item removed from cart." data-msg-cart-empty="Your cart is empty"
+        data-msg-unable-load="Item added to cart. Unable to load cart details."
+        data-msg-unable-add="Unable to add item to cart." data-msg-unable-remove="Unable to remove item from cart."
+        data-cart-items-zero="No items in cart" data-cart-items-one="1 item in cart"
+        data-cart-items-many=":count items in cart">
         <div class="mini-cart-panel" role="dialog" aria-modal="true" aria-labelledby="miniCartTitle">
             <div class="mini-cart-header">
                 <div>
                     <h2 id="miniCartTitle">Booking Cart</h2>
-                    <p id="miniCartCountText" style="margin: 6px 0 0; color: #666; font-size: 13px;">No items in cart</p>
+                    <p id="miniCartCountText" style="margin: 6px 0 0; color: #666; font-size: 13px;">No items in cart
+                    </p>
                 </div>
                 <button id="closeMiniCartBtn" type="button" class="mini-cart-close" aria-label="Booking Cart">×</button>
             </div>
             <div class="mini-cart-body">
                 <div id="miniCartMessage" class="mini-cart-message"></div>
                 <div id="miniCartItems"></div>
-                <div id="miniCartEmpty" class="mini-cart-empty" style="display:none;">Your cart is empty. Add a booking to see it here.</div>
+                <div id="miniCartEmpty" class="mini-cart-empty" style="display:none;">Your cart is empty. Add a booking
+                    to see it here.</div>
             </div>
             <div class="tax-notice">
                 <p><strong><i class="fa-solid fa-circle-exclamation"></i> Tourism Tax Notice</strong>
-                Please be informed that the tourism tax is not included in your booking total. This must be paid directly at the property in cash (EUR) during your stay and is charged at EUR 3.00 per person per night.</p>
+                    Please be informed that the tourism tax is not included in your booking total. This must be paid
+                    directly at the property in cash (EUR) during your stay and is charged at EUR 3.00 per person per
+                    night.</p>
             </div>
             <div class="mini-cart-summary" id="miniCartSummary">
-                <div class="mini-cart-summary-row"><span>Subtotal</span><span id="miniCartSubtotal">USD 0.00</span></div>
-                <div class="mini-cart-summary-row"><span>Discounts</span><span id="miniCartDiscount">USD 0.00</span></div>
-                <div class="mini-cart-summary-row"><span>Taxes &amp; Charges</span><span id="miniCartTaxFees">USD 0.00</span></div>
-                <div class="mini-cart-summary-row total"><span>Net Amount Payable</span><span id="miniCartTotal">USD 0.00</span></div>
+                <div class="mini-cart-summary-row"><span>Subtotal</span><span id="miniCartSubtotal">USD 0.00</span>
+                </div>
+                <div class="mini-cart-summary-row"><span>Discounts</span><span id="miniCartDiscount">USD 0.00</span>
+                </div>
+                <div class="mini-cart-summary-row"><span>Taxes &amp; Charges</span><span id="miniCartTaxFees">USD
+                        0.00</span></div>
+                <div class="mini-cart-summary-row total"><span>Net Amount Payable</span><span id="miniCartTotal">USD
+                        0.00</span></div>
             </div>
             <div class="mini-cart-actions">
                 <a href="http://127.0.0.1:8010/booking/cart" class="mini-cart-link">View Cart</a>
-                <a href="http://127.0.0.1:8010/booking/guest-checkout" class="mini-cart-checkout-btn">Proceed to Checkout</a>
+                <a href="http://127.0.0.1:8010/booking/guest-checkout" class="mini-cart-checkout-btn">Proceed to
+                    Checkout</a>
             </div>
         </div>
     </div>
 
-        <section class="hero" data-hero-slider>
+    <section class="hero" data-hero-slider>
         <!-- <div class="hero-slides">
                             <article class="hero-slide is-active" data-hero-slide>
                     <img src="http://127.0.0.1:8010/storage/activities/hero/mA8XFPKDfOHkWENka51kgNGidjq4yPa2GtqRKNJz.jpg" alt="tracing">
@@ -611,23 +658,23 @@
          -->
 
         <div class="hero-slides">
-    <article class="hero-slide is-active">
-        <img src="http://127.0.0.1:8010/storage/logos/mauritius.jpg" alt="Mauritius">
-        
-        <div class="hero-overlay"></div>
+            <article class="hero-slide is-active">
+                <img src="http://127.0.0.1:8010/storage/logos/mauritius.jpg" alt="Mauritius">
 
-        <div class="wrap hero-content">
-            <span class="hero-badge">Explore Mauritius</span>
-            <h1>Find your perfect holiday in Mauritius</h1>
-            <p>Discover hotels, activities, and transport options with fast booking.</p>
+                <div class="hero-overlay"></div>
 
-            <div class="hero-actions">
-                <a href="#" class="btn-primary">Explore Now</a>
-                <a href="#discover-mauritius" class="btn-outline">Browse Listings</a>
-            </div>
+                <div class="wrap hero-content">
+                    <span class="hero-badge">Explore Mauritius</span>
+                    <h1>Find your perfect holiday in Mauritius</h1>
+                    <p>Discover hotels, activities, and transport options with fast booking.</p>
+
+                    <div class="hero-actions">
+                        <a href="#" class="btn-primary">Explore Now</a>
+                        <a href="#discover-mauritius" class="btn-outline">Browse Listings</a>
+                    </div>
+                </div>
+            </article>
         </div>
-    </article>
-</div>
 
 
         <div class="main-search home-main-search">
@@ -645,16 +692,16 @@
                                     <div class="main-icon accommodation"><img src="images/accommodation.svg"></div>
                                     <span>Accommodation</span>
                                 </div>
-                                                                                            </label>
+                            </label>
                             <label class="category-radio-item">
-                                <input type="radio" name="category" value="tours" >
+                                <input type="radio" name="category" value="tours">
                                 <div class="cat-radio-tab">
                                     <div class="main-icon activity"><img src="images/activity.svg"></div>
                                     <span>Activities</span>
                                 </div>
                             </label>
                             <label class="category-radio-item">
-                                <input type="radio" name="category" value="transport" >
+                                <input type="radio" name="category" value="transport">
                                 <div class="cat-radio-tab">
                                     <div class="main-icon transport"><img src="images/transport.svg"></div>
                                     <span>Transport</span>
@@ -665,36 +712,40 @@
 
                     <div class="category-input-group">
                         <div class="category-input-group-inner">
-                            <div class="category-search-cell category-search-cell--region" style="; flex: 0 1 280px; min-width: 280px">
+                            <div class="category-search-cell category-search-cell--region"
+                                style=" flex: 0 1 280px; min-width: 280px">
                                 <h5>Region / Area</h5>
                                 <select name="region" class="category-search-select" data-search-region
                                     data-selected="">
                                     <option value="all" selected>All</option>
-                                                                            <option value="Quatre Bornes" >
-                                            Quatre Bornes
-                                        </option>
-                                                                    </select>
+                                    <option value="Quatre Bornes">
+                                        Quatre Bornes
+                                    </option>
+                                </select>
                             </div>
 
                             <!-- Accommodation/Transport: Check-In and Check-Out -->
-                            <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-in" style="display: none; flex: 0">
+                            <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-in"
+                                style="display: none; flex: 0">
                                 <h5>Check In</h5>
                                 <div class="category-search-dates">
-                                    <input type="date" name="check_in" class="category-search-input"
-                                        value="2026-08-04" min="2026-08-04">
+                                    <input type="date" name="check_in" class="category-search-input" value="2026-08-04"
+                                        min="2026-08-04">
                                 </div>
                             </div>
 
-                            <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-out" style="display: none; flex: 0">
+                            <div class="category-search-cell category-search-cell--accommodation category-search-cell--check-out"
+                                style="display: none; flex: 0">
                                 <h5>Check Out</h5>
                                 <div class="category-search-dates">
-                                    <input type="date" name="check_out" class="category-search-input"
-                                        value="2026-08-06" min="2026-08-05">
+                                    <input type="date" name="check_out" class="category-search-input" value="2026-08-06"
+                                        min="2026-08-05">
                                 </div>
                             </div>
 
                             <!-- Tours/Activity: Activity Date -->
-                            <div class="category-search-cell category-search-cell--tours category-search-cell--activity-date" style="display: none;">
+                            <div class="category-search-cell category-search-cell--tours category-search-cell--activity-date"
+                                style="display: none;">
                                 <h5>Select Date</h5>
                                 <div class="category-search-dates">
                                     <input type="date" name="activity_date" class="category-search-input"
@@ -706,39 +757,48 @@
                             <div class="category-search-cell category-search-cell--guests" style="display: none;">
                                 <h5 id="guest-cell-heading">Guests &amp; Rooms</h5>
                                 <div class="guest-rooms-summary">
-                                    <span id="guest-rooms-summary-text">2 Adult &middot; 0 Children &middot; 0 Infants &middot; 1 Rooms</span> 
+                                    <span id="guest-rooms-summary-text">2 Adult &middot; 0 Children &middot; 0 Infants
+                                        &middot; 1 Rooms</span>
                                 </div>
                                 <div class="guest-rooms-selector">
                                     <div class="guest-rooms-row">
                                         <label for="adults-field">Adult <span>(18+ years)</span></label>
                                         <div class="guest-rooms-counter">
-                                            <button type="button" class="count-btn decrement" data-target="adults">−</button>
+                                            <button type="button" class="count-btn decrement"
+                                                data-target="adults">−</button>
                                             <input id="adults-field" type="text" name="adults" value="2" readonly>
-                                            <button type="button" class="count-btn increment" data-target="adults">+</button>
+                                            <button type="button" class="count-btn increment"
+                                                data-target="adults">+</button>
                                         </div>
                                     </div>
                                     <div class="guest-rooms-row">
                                         <label for="children-field">Children <span>(2-11 years)</span></label>
                                         <div class="guest-rooms-counter">
-                                            <button type="button" class="count-btn decrement" data-target="children">−</button>
+                                            <button type="button" class="count-btn decrement"
+                                                data-target="children">−</button>
                                             <input id="children-field" type="text" name="children" value="0" readonly>
-                                            <button type="button" class="count-btn increment" data-target="children">+</button> 
+                                            <button type="button" class="count-btn increment"
+                                                data-target="children">+</button>
                                         </div>
                                     </div>
                                     <div class="guest-rooms-row">
                                         <label for="infants-field">Infants <span>(0-1 years)</span></label>
                                         <div class="guest-rooms-counter">
-                                            <button type="button" class="count-btn decrement" data-target="infants">−</button>
+                                            <button type="button" class="count-btn decrement"
+                                                data-target="infants">−</button>
                                             <input id="infants-field" type="text" name="infants" value="0" readonly>
-                                            <button type="button" class="count-btn increment" data-target="infants">+</button>
+                                            <button type="button" class="count-btn increment"
+                                                data-target="infants">+</button>
                                         </div>
                                     </div>
                                     <div class="guest-rooms-row" id="rooms-row">
                                         <label for="rooms-field">Rooms <span>(Max 9 rooms)</span></label>
                                         <div class="guest-rooms-counter">
-                                            <button type="button" class="count-btn decrement" data-target="rooms">−</button>
+                                            <button type="button" class="count-btn decrement"
+                                                data-target="rooms">−</button>
                                             <input id="rooms-field" type="text" name="rooms" value="1" readonly>
-                                            <button type="button" class="count-btn increment" data-target="rooms">+</button>
+                                            <button type="button" class="count-btn increment"
+                                                data-target="rooms">+</button>
                                         </div>
                                     </div>
                                 </div>
@@ -749,68 +809,74 @@
                                 <div class="transport-row" style="">
                                     <div class="transport-field" style="flex: 0 1 140px; min-width: 140px;">
                                         <h5>Service Type</h5>
-                                        <select name="service_type" class="category-search-select" id="home-service-type">
+                                        <select name="service_type" class="category-search-select"
+                                            id="home-service-type">
                                             <option value="airport_transfer" selected>Airport Transfer</option>
-                                            <option value="activity_transfer" >Activity Transfer</option>
-                                            <option value="hotel_transfer" >Hotel Transfer</option>
-                                            <option value="full_day_sightseeing" >Full Day Sightseeing</option>
-                                            <option value="half_day_sightseeing" >Half Day Sightseeing</option>
+                                            <option value="activity_transfer">Activity Transfer</option>
+                                            <option value="hotel_transfer">Hotel Transfer</option>
+                                            <option value="full_day_sightseeing">Full Day Sightseeing</option>
+                                            <option value="half_day_sightseeing">Half Day Sightseeing</option>
                                         </select>
                                     </div>
                                     <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
                                         <h5>Pick Up Region</h5>
                                         <select name="pickup_region_id" class="category-search-select" data-search-from>
                                             <option value="" disabled hidden>Pick Up Region</option>
-                                                                                            <option value="1" >Airport</option>
-                                                                                            <option value="4" >East</option>
-                                                                                            <option value="2" >North</option>
-                                                                                            <option value="3" >South</option>
-                                                                                            <option value="6" >South East</option>
-                                                                                            <option value="7" >South West</option>
-                                                                                            <option value="5" >West</option>
-                                                                                    </select>
+                                            <option value="1">Airport</option>
+                                            <option value="4">East</option>
+                                            <option value="2">North</option>
+                                            <option value="3">South</option>
+                                            <option value="6">South East</option>
+                                            <option value="7">South West</option>
+                                            <option value="5">West</option>
+                                        </select>
                                     </div>
                                     <div class="transport-field" style="flex: 1 1 160px; min-width: 140px;">
                                         <h5>Drop Off Region</h5>
                                         <select name="dropoff_region_id" class="category-search-select" data-search-to>
                                             <option value="" disabled hidden>Drop Off Region</option>
-                                                                                            <option value="1" >Airport</option>
-                                                                                            <option value="4" >East</option>
-                                                                                            <option value="2" >North</option>
-                                                                                            <option value="3" >South</option>
-                                                                                            <option value="6" >South East</option>
-                                                                                            <option value="7" >South West</option>
-                                                                                            <option value="5" >West</option>
-                                                                                    </select>
+                                            <option value="1">Airport</option>
+                                            <option value="4">East</option>
+                                            <option value="2">North</option>
+                                            <option value="3">South</option>
+                                            <option value="6">South East</option>
+                                            <option value="7">South West</option>
+                                            <option value="5">West</option>
+                                        </select>
                                     </div>
                                     <div class="transport-field" style="flex: 0 1 110px; min-width: 110px;">
                                         <h5>Passengers</h5>
-                                        <input type="number" name="passengers" class="category-search-input" min="1" value="2">
+                                        <input type="number" name="passengers" class="category-search-input" min="1"
+                                            value="2">
                                     </div>
                                     <div class="transport-row-date">
                                         <div class="transport-field" style="flex: 1 1 160px;">
                                             <h5>Pick Up Date</h5>
-                                            <input type="date" name="arrival_date" class="category-search-input" value="2026-08-04" min="2026-08-04">
+                                            <input type="date" name="arrival_date" class="category-search-input"
+                                                value="2026-08-04" min="2026-08-04">
                                         </div>
                                         <div class="transport-field" style="flex: 1 1 120px;">
                                             <h5>&nbsp;</h5>
-                                            <input type="time" name="arrival_time" class="category-search-input" value="">
+                                            <input type="time" name="arrival_time" class="category-search-input"
+                                                value="">
                                         </div>
                                     </div>
-                                    <div class="transport-row-date"> 
+                                    <div class="transport-row-date">
                                         <div class="transport-field" style="flex: 1 1 160px;">
                                             <h5>Return Date</h5>
-                                            <input type="date" name="return_date" class="category-search-input" value="" min="2026-08-04">
+                                            <input type="date" name="return_date" class="category-search-input" value=""
+                                                min="2026-08-04">
                                         </div>
                                         <div class="transport-field" style="flex: 1 1 120px">
                                             <h5>&nbsp;</h5>
-                                            <input type="time" name="return_time" class="category-search-input" value="">
+                                            <input type="time" name="return_time" class="category-search-input"
+                                                value="">
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                        <div class="category-search-submit">
+                            <div class="category-search-submit">
                                 <button type="submit" class="btn-primary">Proceed</button>
                             </div>
                         </div>
@@ -821,7 +887,7 @@
 
     </section>
 
-    
+
 
 
     <section class="quick-search">
@@ -853,7 +919,12 @@
         <div class="wrap split-highlight">
             <div class="highlight-copy">
                 <h3>Mauritius Holiday Destination</h3>
-                <p>Discover the beauty of a tropical paradise known for its stunning beaches, vibrant culture, and year-round pleasant climate. Whether you&#039;re a visitor or a local resident, Mauritius offers perfect experiences from relaxation to adventure. The island is safe and tourist-friendly, with modern infrastructure and welcoming communities. Basic healthcare facilities and pharmacies are easily accessible across the country. Enjoy your holiday with peace of mind by following simple safety practices and staying protected under the tropical sun.</p>
+                <p>Discover the beauty of a tropical paradise known for its stunning beaches, vibrant culture, and
+                    year-round pleasant climate. Whether you&#039;re a visitor or a local resident, Mauritius offers
+                    perfect experiences from relaxation to adventure. The island is safe and tourist-friendly, with
+                    modern infrastructure and welcoming communities. Basic healthcare facilities and pharmacies are
+                    easily accessible across the country. Enjoy your holiday with peace of mind by following simple
+                    safety practices and staying protected under the tropical sun.</p>
                 <div class="stats-bar">
                     <div class="stat-pill">
                         <strong>2</strong>
@@ -872,7 +943,7 @@
             <div class="highlight-card">
                 <!-- <img src="http://127.0.0.1:8010/storage/activities/hero/mA8XFPKDfOHkWENka51kgNGidjq4yPa2GtqRKNJz.jpg"
                     alt="Featured Mauritius experience"> -->
-                    <img src="http://127.0.0.1:8010/images/Mauritius2.jpg" alt="">
+                <img src="http://127.0.0.1:8010/images/Mauritius2.jpg" alt="">
             </div>
         </div>
     </section>
@@ -899,119 +970,135 @@
                 </div>
 
                 <div class="tab-panel " data-tab-panel="activities" id="activities-section">
-                                            <div class="cards-grid">
-                                                            <article class="listing-card">
-                                    <a href="http://127.0.0.1:8010/activities/1" class="listing-media">
-                                        <img src="http://127.0.0.1:8010/storage/activities/hero/mA8XFPKDfOHkWENka51kgNGidjq4yPa2GtqRKNJz.jpg" alt="tracing">
-                                        <span class="listing-badge">Activity</span>
-                                    </a>
-                                    <div class="listing-body">
-                                        <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
-                                            himalaya • B/h Vaishnodevi Mandir • ahmedavad</span>
-                                        <div class="listing-title-row">
-                                            <h3><a href="http://127.0.0.1:8010/activities/1">tracing</a></h3>
-                                                                                                                                            <span class="listing-rating-badge" aria-label="3 star rating"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></span>
-                                                                                    </div>
-                                        <p>cvxcvcxvcxvxcvcxv</p>
-                                        <div class="listing-footer">
-                                            <strong>Instant</strong>
-                                            <a href="http://127.0.0.1:8010/activities/1">View Details</a>
-                                        </div>
-                                    </div>
-                                </article>
-                                                            <article class="listing-card">
-                                    <a href="http://127.0.0.1:8010/activities/2" class="listing-media">
-                                        <img src="http://127.0.0.1:8010/storage/activities/hero/Tt6rUJXMquO9iyEY7itvhhRPkyE1u4t2YIG6gW96.jpg" alt="tracing2">
-                                        <span class="listing-badge">Activity</span>
-                                    </a>
-                                    <div class="listing-body">
-                                        <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
-                                            himalaya • Gujarat • ahmedavad</span>
-                                        <div class="listing-title-row">
-                                            <h3><a href="http://127.0.0.1:8010/activities/2">tracing2</a></h3>
-                                                                                    </div>
-                                        <p>rferfrergrtgtrthtyhtyhtyhtyhtyyjyujygggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg...</p>
-                                        <div class="listing-footer">
-                                            <strong>Instant</strong>
-                                            <a href="http://127.0.0.1:8010/activities/2">View Details</a>
-                                        </div>
-                                    </div>
-                                </article>
-                                                    </div>
-                                    </div>
+                    <div class="cards-grid">
+                        <article class="listing-card">
+                            <a href="http://127.0.0.1:8010/activities/1" class="listing-media">
+                                <img src="http://127.0.0.1:8010/storage/activities/hero/mA8XFPKDfOHkWENka51kgNGidjq4yPa2GtqRKNJz.jpg"
+                                    alt="tracing">
+                                <span class="listing-badge">Activity</span>
+                            </a>
+                            <div class="listing-body">
+                                <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
+                                    himalaya • B/h Vaishnodevi Mandir • ahmedavad</span>
+                                <div class="listing-title-row">
+                                    <h3><a href="http://127.0.0.1:8010/activities/1">tracing</a></h3>
+                                    <span class="listing-rating-badge" aria-label="3 star rating"><i
+                                            class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                                            class="fa-solid fa-star"></i></span>
+                                </div>
+                                <p>cvxcvcxvcxvxcvcxv</p>
+                                <div class="listing-footer">
+                                    <strong>Instant</strong>
+                                    <a href="http://127.0.0.1:8010/activities/1">View Details</a>
+                                </div>
+                            </div>
+                        </article>
+                        <article class="listing-card">
+                            <a href="http://127.0.0.1:8010/activities/2" class="listing-media">
+                                <img src="http://127.0.0.1:8010/storage/activities/hero/Tt6rUJXMquO9iyEY7itvhhRPkyE1u4t2YIG6gW96.jpg"
+                                    alt="tracing2">
+                                <span class="listing-badge">Activity</span>
+                            </a>
+                            <div class="listing-body">
+                                <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
+                                    himalaya • Gujarat • ahmedavad</span>
+                                <div class="listing-title-row">
+                                    <h3><a href="http://127.0.0.1:8010/activities/2">tracing2</a></h3>
+                                </div>
+                                <p>rferfrergrtgtrthtyhtyhtyhtyhtyyjyujygggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg...
+                                </p>
+                                <div class="listing-footer">
+                                    <strong>Instant</strong>
+                                    <a href="http://127.0.0.1:8010/activities/2">View Details</a>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
 
                 <div class="tab-panel" data-tab-panel="holiday-rentals" id="accommodations-section">
-                                            <div class="cards-grid">
-                                                            <article class="listing-card">
-                                    <a href="http://127.0.0.1:8010/accommodations/1" class="listing-media">
-                                        <img src="http://127.0.0.1:8010/storage/accommodations/1/media/ivazyVBNjXv1nzgev9HOw3pXFvkwGDF7IErsJRKW.jpg" alt="Amit Resort">
-                                        <span class="listing-badge">Hotel</span>
-                                    </a>
-                                    <div class="listing-body">
-                                        <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
-                                            Quatre Bornes • Quatre Bornes • Mauritius</span>
-                                        <div class="listing-title-row">
-                                            <h3><a href="http://127.0.0.1:8010/accommodations/1">Amit Resort</a></h3>
-                                                                                                                                            <span class="listing-rating-badge" aria-label="3 star rating"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></span>
-                                                                                    </div>
-                                        <p>Discover tranquillity and elegance in the rooms at Anelia Hotel and Spa. From charming villas to stylish Deluxe and Superior rooms...</p>
-                                        <div class="listing-footer">
-                                            <a href="http://127.0.0.1:8010/accommodations/1">View Details</a>
-                                        </div>
-                                    </div>
-                                </article>
-                                                    </div>
-                                    </div>
+                    <div class="cards-grid">
+                        <article class="listing-card">
+                            <a href="http://127.0.0.1:8010/accommodations/1" class="listing-media">
+                                <img src="http://127.0.0.1:8010/storage/accommodations/1/media/ivazyVBNjXv1nzgev9HOw3pXFvkwGDF7IErsJRKW.jpg"
+                                    alt="Amit Resort">
+                                <span class="listing-badge">Hotel</span>
+                            </a>
+                            <div class="listing-body">
+                                <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
+                                    Quatre Bornes • Quatre Bornes • Mauritius</span>
+                                <div class="listing-title-row">
+                                    <h3><a href="http://127.0.0.1:8010/accommodations/1">Amit Resort</a></h3>
+                                    <span class="listing-rating-badge" aria-label="3 star rating"><i
+                                            class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                                            class="fa-solid fa-star"></i></span>
+                                </div>
+                                <p>Discover tranquillity and elegance in the rooms at Anelia Hotel and Spa. From
+                                    charming villas to stylish Deluxe and Superior rooms...</p>
+                                <div class="listing-footer">
+                                    <a href="http://127.0.0.1:8010/accommodations/1">View Details</a>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
 
                 <div class="tab-panel is-active" data-tab-panel="hotels">
-                                            <div class="cards-grid">
-                                                            <article class="listing-card">
-                                    <a href="http://127.0.0.1:8010/accommodations/1" class="listing-media">
-                                        <img src="http://127.0.0.1:8010/storage/accommodations/1/media/ivazyVBNjXv1nzgev9HOw3pXFvkwGDF7IErsJRKW.jpg" alt="Amit Resort">
-                                        <span class="listing-badge">Hotel</span>
-                                    </a>
-                                    <div class="listing-body">
-                                        <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
-                                            Quatre Bornes • Quatre Bornes • Mauritius</span>
-                                        <div class="listing-title-row">
-                                            <h3><a href="http://127.0.0.1:8010/accommodations/1">Amit Resort</a></h3>
-                                                                                                                                            <span class="listing-rating-badge" aria-label="3 star rating"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></span>
-                                                                                    </div>
-                                        <p>Discover tranquillity and elegance in the rooms at Anelia Hotel and Spa. From charming villas to stylish Deluxe and Superior rooms...</p>
-                                        <div class="listing-footer">
-                                            <a href="http://127.0.0.1:8010/accommodations/1">View Details</a>
-                                        </div>
-                                    </div>
-                                </article>
-                                                    </div>
-                                    </div>
+                    <div class="cards-grid">
+                        <article class="listing-card">
+                            <a href="http://127.0.0.1:8010/accommodations/1" class="listing-media">
+                                <img src="http://127.0.0.1:8010/storage/accommodations/1/media/ivazyVBNjXv1nzgev9HOw3pXFvkwGDF7IErsJRKW.jpg"
+                                    alt="Amit Resort">
+                                <span class="listing-badge">Hotel</span>
+                            </a>
+                            <div class="listing-body">
+                                <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
+                                    Quatre Bornes • Quatre Bornes • Mauritius</span>
+                                <div class="listing-title-row">
+                                    <h3><a href="http://127.0.0.1:8010/accommodations/1">Amit Resort</a></h3>
+                                    <span class="listing-rating-badge" aria-label="3 star rating"><i
+                                            class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                                            class="fa-solid fa-star"></i></span>
+                                </div>
+                                <p>Discover tranquillity and elegance in the rooms at Anelia Hotel and Spa. From
+                                    charming villas to stylish Deluxe and Superior rooms...</p>
+                                <div class="listing-footer">
+                                    <a href="http://127.0.0.1:8010/accommodations/1">View Details</a>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
 
                 <div class="tab-panel" data-tab-panel="services">
-                    <div class="empty-state">Frontend service cards are ready to be connected when service data becomes available.</div>
+                    <div class="empty-state">Frontend service cards are ready to be connected when service data becomes
+                        available.</div>
                 </div>
                 <div class="tab-panel " data-tab-panel="transport">
-                                            <div class="cards-grid">
-                                                            <article class="listing-card">
-                                    <a href="http://127.0.0.1:8010/transports/2" class="listing-media">
-                                        <img src="http://127.0.0.1:8010/storage/transports/media/eDkiU3feaOpoMOQ6Hy4nFJjNULTdu1FjZ65JYiPA.jpg" alt="Car">
-                                        <span class="listing-badge">Standard car</span>
-                                    </a>
-                                    <div class="listing-body">
-                                        <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
-                                            Mauritius</span>
-                                        <div class="listing-title-row">
-                                            <h3><a href="http://127.0.0.1:8010/transports/2">Car</a></h3>
-                                        </div>
-                                        <p>fgg</p>
-                                        <div class="listing-footer">
-                                            <a href="http://127.0.0.1:8010/transports/2">View Details</a>
-                                        </div>
-                                    </div>
-                                </article>
-                                                    </div>
-                                    </div>
+                    <div class="cards-grid">
+                        <article class="listing-card">
+                            <a href="http://127.0.0.1:8010/transports/2" class="listing-media">
+                                <img src="http://127.0.0.1:8010/storage/transports/media/eDkiU3feaOpoMOQ6Hy4nFJjNULTdu1FjZ65JYiPA.jpg"
+                                    alt="Car">
+                                <span class="listing-badge">Standard car</span>
+                            </a>
+                            <div class="listing-body">
+                                <span class="listing-location"><i class="fa-solid fa-location-dot"></i>
+                                    Mauritius</span>
+                                <div class="listing-title-row">
+                                    <h3><a href="http://127.0.0.1:8010/transports/2">Car</a></h3>
+                                </div>
+                                <p>fgg</p>
+                                <div class="listing-footer">
+                                    <a href="http://127.0.0.1:8010/transports/2">View Details</a>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
                 <div class="tab-panel" data-tab-panel="wedding">
-                    <div class="empty-state">Frontend wedding cards are ready to be connected when wedding data becomes available.</div>
+                    <div class="empty-state">Frontend wedding cards are ready to be connected when wedding data becomes
+                        available.</div>
                 </div>
             </div>
         </div>
@@ -1431,14 +1518,15 @@
         });
     </script>
 
-    
-            <footer class="site-footer">
-            <div class="wrap">
-                <div class="site-footer-grid">
-                    <div>
-                        <h4>Holidays.io</h4>
-                        <p>Holidays.io connects travelers with live accommodation and activity listings across Mauritius.</p>
-                        <ul class="social-footer">
+
+    <footer class="site-footer">
+        <div class="wrap">
+            <div class="site-footer-grid">
+                <div>
+                    <h4>Holidays.io</h4>
+                    <p>Holidays.io connects travelers with live accommodation and activity listings across Mauritius.
+                    </p>
+                    <ul class="social-footer">
                         <li><a href="#"><i class="fa-brands fa-facebook"></i></a></li>
                         <li><a href="#"><i class="fa-brands fa-youtube"></i></a></li>
                         <li><a href="#"><i class="fa-brands fa-instagram"></i></a></li>
@@ -1471,9 +1559,12 @@
                 <div>
                     <h4>Contacts</h4>
                     <ul class="contact-footer">
-                        <li><i class="fa-solid fa-location-dot"></i><span>14, Sodnac Avenue Quatre Bornes, Mauritius</span></li>
-                        <li><a href="tel:+23052511153"><i class="fa-solid fa-phone"></i><span>+230 52511153</span></a></li>
-                        <li><a href="mailto:info@holidays.io"><i class="fa-solid fa-envelope"></i><span>info@holidays.io</span></a></li>
+                        <li><i class="fa-solid fa-location-dot"></i><span>14, Sodnac Avenue Quatre Bornes,
+                                Mauritius</span></li>
+                        <li><a href="tel:+23052511153"><i class="fa-solid fa-phone"></i><span>+230 52511153</span></a>
+                        </li>
+                        <li><a href="mailto:info@holidays.io"><i
+                                    class="fa-solid fa-envelope"></i><span>info@holidays.io</span></a></li>
                     </ul>
                 </div>
 
@@ -1487,7 +1578,7 @@
                     </ul>
                 </div> -->
                 <div>
-                                           </div>
+                </div>
             </div>
             <div class="site-footer-bottom">
                 <span>© 2026 Holidays.io All rights reserved. </span>
@@ -1496,41 +1587,49 @@
             </div>
         </div>
     </footer>
-    
+
     <!-- ═════════════════════════════════════════════════════════
          Guest Access Modal
     ═════════════════════════════════════════════════════════ -->
-    <div id="guestAccessModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
-        <div class="modal-content" style="background: white; padding: 40px; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="margin: 0; font-size: 20px;">Access Your Guest Booking</h2>
-                    <button type="button" onclick="closeGuestAccessModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
-                </div>
+    <div id="guestAccessModal" class="modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+        <div class="modal-content"
+            style="background: white; padding: 40px; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div class="modal-header"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0; font-size: 20px;">Access Your Guest Booking</h2>
+                <button type="button" onclick="closeGuestAccessModal()"
+                    style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
+            </div>
 
-                <div class="modal-body">
-                    <p style="color: #666; margin-bottom: 20px;">Enter your email address to search for your guest bookings.</p>
+            <div class="modal-body">
+                <p style="color: #666; margin-bottom: 20px;">Enter your email address to search for your guest bookings.
+                </p>
 
-                    <form id="guestAccessForm" style="display: flex; flex-direction: column; gap: 15px;">
-                        <div>
-                            <label for="guestEmail" style="display: block; margin-bottom: 5px; font-weight: 500;">Email Address</label>
-                            <input type="email" id="guestEmail" name="email" placeholder="your@email.com" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
-                        </div>
+                <form id="guestAccessForm" style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <label for="guestEmail" style="display: block; margin-bottom: 5px; font-weight: 500;">Email
+                            Address</label>
+                        <input type="email" id="guestEmail" name="email" placeholder="your@email.com" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
+                    </div>
 
-                        <button type="submit" style="padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px;">
-                            Find My Bookings
-                        </button>
-                    </form>
+                    <button type="submit"
+                        style="padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                        Find My Bookings
+                    </button>
+                </form>
 
-                    <p style="font-size: 12px; color: #999; margin-top: 15px; text-align: center;">
-                        You'll receive an OTP via email to access your guest booking details.
-                    </p>
-                </div>
+                <p style="font-size: 12px; color: #999; margin-top: 15px; text-align: center;">
+                    You'll receive an OTP via email to access your guest booking details.
+                </p>
             </div>
         </div>
+    </div>
 
     <script src="http://127.0.0.1:8010/frontend/js/site.js"></script>
-                                        <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
-                                    <script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('home-category-search-form');
             if (!form) return;
@@ -1548,7 +1647,7 @@
             });
         });
     </script>
-    
+
     <script>
         function openGuestAccessModal() {
             const modal = document.getElementById('guestAccessModal');
@@ -1567,17 +1666,17 @@
         }
 
         // Close modal when clicking outside
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const modal = document.getElementById('guestAccessModal');
             if (modal) {
-                modal.addEventListener('click', function(e) {
+                modal.addEventListener('click', function (e) {
                     if (e.target === modal) {
                         closeGuestAccessModal();
                     }
                 });
 
                 // Handle form submission
-                document.getElementById('guestAccessForm').addEventListener('submit', function(e) {
+                document.getElementById('guestAccessForm').addEventListener('submit', function (e) {
                     e.preventDefault();
                     const email = document.getElementById('guestEmail').value;
                     if (email) {
@@ -1589,4 +1688,5 @@
         });
     </script>
 </body>
+
 </html>
