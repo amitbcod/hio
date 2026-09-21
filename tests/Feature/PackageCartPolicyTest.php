@@ -113,4 +113,33 @@ class PackageCartPolicyTest extends TestCase
         $this->assertSame('2026-09-10', $item['check_in']);
         $this->assertSame(1250.0, $item['total_price']);
     }
+
+    public function test_trip_exposes_unique_booking_references_for_all_service_types(): void
+    {
+        $trip = new \App\Models\Trip(['id' => 99]);
+        $trip->setRelation('accommodationBookings', collect([
+            (object) ['booking_reference' => 'ACC-99-20260920-1'],
+            (object) ['booking_reference' => 'ACC-99-20260920-1'],
+        ]));
+        $trip->setRelation('activityBookings', collect([
+            (object) ['booking_reference' => 'ACT-99-20260920-1'],
+        ]));
+        $trip->setRelation('transportBookings', collect([
+            (object) ['booking_reference' => 'TRS-99-20260920-1'],
+        ]));
+        $trip->setRelation('bookings', collect([
+            (object) ['lineItems' => collect([
+                (object) ['service_type' => 'package', 'service_id' => 12],
+            ])],
+        ]));
+
+        $refs = $trip->booking_references;
+
+        $this->assertSame([
+            'ACC-99-20260920-1',
+            'ACT-99-20260920-1',
+            'TRS-99-20260920-1',
+            'PACKAGE-12',
+        ], $refs);
+    }
 }

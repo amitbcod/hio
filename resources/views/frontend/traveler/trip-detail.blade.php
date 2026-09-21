@@ -31,6 +31,17 @@
                         <p style="color: #b45309; font-size: 0.9rem; font-weight: 700; margin: 8px 0 0; padding: 8px 12px; background: #fff3e0; border-left: 4px solid #f59e0b; border-radius: 4px; display: inline-block;">{{ $tripHasGroupPackage ? 'Group Package Trip' : 'Package Trip' }}</p>
                     @endif
 
+                    @php $tripRefObjects = $trip->bookingRefs ?? collect(); @endphp
+                    @if($tripRefObjects->isNotEmpty())
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;">
+                            @foreach($tripRefObjects as $br)
+                                <a href="{{ route('traveler.trip.download-invoice', $trip) }}?booking_ref_id={{ $br->id }}" style="text-decoration:none;">
+                                    <span style="display:inline-block; font-size:12px; font-weight:700; color:#1f2937; background:#eef2ff; border:1px solid #c7d2fe; border-radius:999px; padding:6px 10px; letter-spacing:0.02em;">Booking Ref: {{ $br->booking_ref_code }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+
                     @php
                         $tripHasEnded = $tripEndDate && \Carbon\Carbon::parse($tripEndDate)->isPast();
                         $traveler = auth('traveler')->user();

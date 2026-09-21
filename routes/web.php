@@ -15,6 +15,12 @@ require base_path('routes/traveler.php');
 require base_path('routes/login_fallback.php');
 // Admin routes
 require base_path('routes/admin.php');
+
+// Admin booking refs
+Route::prefix('admin')->middleware(['web'])->group(function () {
+    Route::get('booking-refs', [\App\Http\Controllers\Admin\BookingRefController::class, 'index'])->name('admin.booking_refs.index');
+    Route::get('booking-refs/{bookingRef}', [\App\Http\Controllers\Admin\BookingRefController::class, 'show'])->name('admin.booking_refs.show');
+});
 Route::get('/lang/{locale}', function ($locale) {
     $allowedLocales = ['en', 'fr'];
     if (!in_array($locale, $allowedLocales)) {

@@ -85,6 +85,14 @@
                                                     @if($tripIsPackage)
                                                         <span style="display:inline-block; margin-left:8px; font-size:12px; padding:4px 8px; border-radius:999px; background:#fff3e0; color:#b45309; font-weight:700;">{{ $tripHasGroupPackage ? 'Group Package Trip' : 'Package Trip' }}</span>
                                                     @endif
+                                                    @php $tripRefs = $trip->booking_references ?? []; @endphp
+                                                    @if(!empty($tripRefs))
+                                                        <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">
+                                                            @foreach(array_slice($tripRefs, 0, 3) as $tripRef)
+                                                                <span style="display:inline-block; font-size:11px; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#3730a3; font-weight:600;">{{ $tripRef }}</span>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </td>
                                             <td data-label="{{ __('traveler.trips.service_type') }}">

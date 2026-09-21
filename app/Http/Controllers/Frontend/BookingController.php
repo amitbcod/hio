@@ -2713,6 +2713,33 @@ class BookingController extends Controller
                 'transaction_ref' => $transactionRef,
             ]);
 
+            // Create a parent booking reference for this transaction and link service BLIs to it.
+            try {
+                $bookingRefCode = 'BR-' . ($tripId ? $tripId : 'GUEST') . '-' . now()->format('Ymd') . '-' . rand(1, 9999);
+                $bookingRef = \App\Models\BookingRef::create([
+                    'trip_id' => $tripId,
+                    'booking_ref_code' => $bookingRefCode,
+                    'total_amount' => $summary['net_payable'],
+                    'payment_transaction_id' => null,
+                ]);
+
+                if (!empty($bookingRefs) && is_array($bookingRefs)) {
+                    \App\Models\AccommodationBooking::whereIn('booking_reference', $bookingRefs)->update(['booking_ref_id' => $bookingRef->id]);
+                    \App\Models\ActivityBooking::whereIn('booking_reference', $bookingRefs)->update(['booking_ref_id' => $bookingRef->id]);
+                    \App\Models\TransportBooking::whereIn('booking_reference', $bookingRefs)->update(['booking_ref_id' => $bookingRef->id]);
+                }
+
+                // Attach booking_ref to payment transaction record
+                $paymentTransaction->booking_ref_id = $bookingRef->id;
+                $paymentTransaction->save();
+
+                // update bookingRef with payment id
+                $bookingRef->payment_transaction_id = $paymentTransaction->id;
+                $bookingRef->save();
+            } catch (\Exception $e) {
+                \Log::error('Failed to create booking_ref for transaction', ['error' => $e->getMessage()]);
+            }
+
             // Log transaction state change
             PaymentLogger::logTransactionState(
                 $transactionRef,
@@ -2802,6 +2829,27 @@ class BookingController extends Controller
             return redirect()->away($paymentUrl);
         }
 
+        // For non-AGAINGENCY payment flows, create a parent BookingRef now
+        if ($paymentMethod !== 'againgency') {
+            try {
+                $bookingRefCode = 'BR-' . ($tripId ? $tripId : 'GUEST') . '-' . now()->format('Ymd') . '-' . rand(1, 9999);
+                $bookingRef = \App\Models\BookingRef::create([
+                    'trip_id' => $tripId,
+                    'booking_ref_code' => $bookingRefCode,
+                    'total_amount' => $summary['net_payable'],
+                    'payment_transaction_id' => null,
+                ]);
+
+                if (!empty($bookingRefs) && is_array($bookingRefs)) {
+                    \App\Models\AccommodationBooking::whereIn('booking_reference', $bookingRefs)->update(['booking_ref_id' => $bookingRef->id]);
+                    \App\Models\ActivityBooking::whereIn('booking_reference', $bookingRefs)->update(['booking_ref_id' => $bookingRef->id]);
+                    \App\Models\TransportBooking::whereIn('booking_reference', $bookingRefs)->update(['booking_ref_id' => $bookingRef->id]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to create booking_ref for non-transactional payment', ['error' => $e->getMessage()]);
+            }
+        }
+
         $this->storeCart([]);
 
         $confirmationParams = ['ref' => $primaryRef];
@@ -2836,6 +2884,19 @@ class BookingController extends Controller
         }
 
         $bookingRefs = session()->get('booking_refs', [$ref]);
+        // Also include any parent booking_refs (per-transaction) linked to this trip
+        try {
+            if ($booking && !empty($booking->trip_id)) {
+                $parentCodes = \App\Models\BookingRef::where('trip_id', $booking->trip_id)->pluck('booking_ref_code')->toArray();
+                foreach ($parentCodes as $pc) {
+                    if (!in_array($pc, $bookingRefs, true)) {
+                        $bookingRefs[] = $pc;
+                    }
+                }
+            }
+        } catch (\Exception $ex) {
+            \Log::warning('Failed to load parent booking refs for confirmation view', ['error' => $ex->getMessage()]);
+        }
         $guestName   = session()->get('guest_name', $booking?->guest_name ?? '');
         $summary     = session()->get('summary', []);
         $paymentMethod = session()->get('payment_method');

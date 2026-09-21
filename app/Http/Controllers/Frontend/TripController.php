@@ -20,7 +20,7 @@ class TripController extends Controller
     {
         $traveler = auth('traveler')->user();
         $trips = Trip::where('traveler_account_id', $traveler->id)
-            ->with(['accommodationBookings', 'activityBookings', 'transportBookings', 'bookings.lineItems'])
+          ->with(['accommodationBookings', 'activityBookings', 'transportBookings', 'bookings.lineItems', 'bookingRefs'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -1611,17 +1611,27 @@ HTML;
         return redirect()->route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id])->with('success', 'Guests updated successfully.');
     }
 
-    public function downloadInvoice(Trip $trip)
+    public function downloadInvoice(\Illuminate\Http\Request $request, Trip $trip)
     {
         $traveler = auth('traveler')->user();
         if ($trip->traveler_account_id !== $traveler->id) {
             abort(403);
         }
 
-        // Get all bookings for the trip
-        $accommodationBookings = $this->filterPackageGeneratedBookings($trip->accommodationBookings ?? collect());
-        $activityBookings = $this->filterPackageGeneratedBookings($trip->activityBookings ?? collect());
-        $transportBookings = $this->filterPackageGeneratedBookings($trip->transportBookings()->with(['transport'])->get() ?? collect());
+        // Get all bookings for the trip (or for a specific booking_ref if requested)
+        $bookingRefId = $request->query('booking_ref_id');
+
+        if ($bookingRefId) {
+          $accommodationBookings = $this->filterPackageGeneratedBookings(\App\Models\AccommodationBooking::where('trip_id', $trip->id)->where('booking_ref_id', $bookingRefId)->with(['accommodation'])->get());
+          $activityBookings = $this->filterPackageGeneratedBookings(\App\Models\ActivityBooking::where('trip_id', $trip->id)->where('booking_ref_id', $bookingRefId)->with(['activity'])->get());
+          $transportBookings = $this->filterPackageGeneratedBookings(\App\Models\TransportBooking::where('trip_id', $trip->id)->where('booking_ref_id', $bookingRefId)->with(['transport'])->get());
+          $selectedBookingRef = \App\Models\BookingRef::find($bookingRefId);
+        } else {
+          $accommodationBookings = $this->filterPackageGeneratedBookings($trip->accommodationBookings ?? collect());
+          $activityBookings = $this->filterPackageGeneratedBookings($trip->activityBookings ?? collect());
+          $transportBookings = $this->filterPackageGeneratedBookings($trip->transportBookings()->with(['transport'])->get() ?? collect());
+          $selectedBookingRef = null;
+        }
         $packageLineItem = $trip->bookings
             ->flatMap(fn ($booking) => $booking->lineItems ?? collect())
             ->first(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');
@@ -1751,7 +1761,13 @@ HTML;
         $companyLogoHtml = $this->renderAdminCompanyLogoHtml($company['logo_path'], $company['business_name']);
 
         // Build invoice data
-        $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad($trip->id, 6, '0', STR_PAD_LEFT);
+        if ($selectedBookingRef) {
+          $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad($selectedBookingRef->id, 6, '0', STR_PAD_LEFT);
+          $bookingRef = $selectedBookingRef->booking_ref_code ?? ('B' . str_pad($trip->id, 4, '0', STR_PAD_LEFT));
+        } else {
+          $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad($trip->id, 6, '0', STR_PAD_LEFT);
+          $bookingRef = 'B' . str_pad($trip->id, 4, '0', STR_PAD_LEFT);
+        }
         $invoiceDate = now()->format('d/m/Y');
         $bookingRef = 'B' . str_pad($trip->id, 4, '0', STR_PAD_LEFT);
         $invoiceTitle = e(__('invoice.title'));
