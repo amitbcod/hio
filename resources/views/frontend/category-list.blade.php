@@ -396,6 +396,12 @@
                                         <div class="availability-label">{{ trans_choice('category.available_label', $item['available_rooms_count']) }}</div>
                                     </div>
                                 @endif
+                                @if($category === 'transport' && isset($item['available_quantity']))
+                                    <div class="category-result-availability-badge">
+                                        <div class="availability-count">{{ $item['available_quantity'] }}</div>
+                                        <div class="availability-label">Available</div>
+                                    </div>
+                                @endif
                                 <a href="{{ $iteUSDl }}" class="category-result-media">
                                     <img src="{{ $item['image'] }}" alt="{{ $item['title'] }}">
                                 </a>
@@ -431,6 +437,9 @@
                                         <span class="chip">{{ $metaLabel }}</span>
                                         @if(isset($item['available_rooms_count']) && $item['available_rooms_count'] !== null)
                                             <!-- <span class="listing-availability">{{ $item['available_rooms_count'] }} rooms available</span> -->
+                                        @endif
+                                        @if($category === 'transport' && isset($item['available_quantity']))
+                                            <span class="listing-availability">{{ $item['available_quantity'] }} available</span>
                                         @endif
                                         @if($startingRate !== null)
                                             <span class="listing-price">From USD {{ number_format((float) $startingRate, 0) }} {{ $priceUnit }}</span>

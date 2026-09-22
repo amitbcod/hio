@@ -1,17 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Transport Step 5 | Operator Dashboard')
+@section('title', 'Transport Step 4 | Operator Dashboard')
 
 @section('content')
 <div class="container">
     <div class="row">
         <div id="sidebar" class="col-md-3 net-section">
-            @php $currentStep = 5; @endphp
+            @php $currentStep = 4; @endphp
             @include('operator.transport._steps_sidebar')
         </div>
         <div class="col-md-9">
             <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);margin-bottom:16px; margin-top:40px">
-                <h2 style="font-weight:700;margin:0;">Step 5: Promotions & Offers</h2>
+                <h2 style="font-weight:700;margin:0;">Step 4: Promotions & Offers</h2>
                 <p style="margin:8px 0 0 0;color:#666;">Add promotions, offers, or discount information for your transport service.</p>
             </div>
 

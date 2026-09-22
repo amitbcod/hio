@@ -25,7 +25,9 @@
                             <thead>
                                 <tr>
                                     <th>Ref</th>
-                                    <th>Service</th>
+                                    <th>Vehicle Type</th>
+                                    <th>Assigned Vehicle</th>
+                                    <th>Driver</th>
                                     <th>Guest</th>
                                     <th>Passengers</th>
                                     <th>Pickup</th>
@@ -39,7 +41,9 @@
                                 @foreach($bookings as $booking)
                                     <tr>
                                         <td>{{ $booking->booking_reference }}</td>
-                                        <td>{{ optional($booking->transport)->vehicle_name }}</td>
+                                        <td>{{ optional($booking->transport)->vehicle_type ?: optional($booking->transport)->vehicle_name }}</td>
+                                        <td>{{ $booking->vehicle?->license_number ?: ($booking->other_vehicle_license_number ? 'Other: '.$booking->other_vehicle_license_number : 'Unassigned') }}</td>
+                                        <td>{{ $booking->pickupDriver?->driver_name ?: 'Unassigned' }}</td>
                                         <td>{{ $booking->guest_name ?? ($booking->traveler_first_name.' '.$booking->traveler_last_name) }}</td>
                                         <td>{{ $booking->total_passengers ?? $booking->adults }}</td>
                                         <td>{{ optional($booking->pickup_date)->format('M d, Y') }} {{ $booking->pickup_time }}</td>
@@ -73,7 +77,7 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Assign Drivers to Booking</h5>
+                <h5 class="modal-title">Assign Vehicle and Drivers</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeAssignDriverModal()">
                     <span>&times;</span>
                 </button>
@@ -81,6 +85,16 @@
             <div class="modal-body">
                 <form id="assignDriverForm">
                     @csrf
+                    <div class="form-group">
+                        <label for="vehicleSelect">Vehicle <span style="color: red;">*</span></label>
+                        <select id="vehicleSelect" name="vehicle_id" class="form-control" required>
+                            <option value="">Select vehicle</option>
+                        </select>
+                    </div>
+                    <div id="otherVehicleFields" style="display:none;">
+                        <div class="form-group"><label>Other Vehicle Name *</label><input id="otherVehicleName" name="other_vehicle_name" class="form-control"></div>
+                        <div class="form-group"><label>Other Vehicle License Number *</label><input id="otherVehicleLicense" name="other_vehicle_license_number" class="form-control"></div>
+                    </div>
                     <div class="form-group">
                         <label for="pickupDriverSelect">Pickup Driver <span style="color: red;">*</span></label>
                         <select id="pickupDriverSelect" name="pickup_driver_id" class="form-control" required>
@@ -98,7 +112,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="closeAssignDriverModal()">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveDriverAssignment()">Assign Drivers</button>
+                <button type="button" class="btn btn-primary" onclick="saveDriverAssignment()">Save Assignment</button>
             </div>
         </div>
     </div>
@@ -124,6 +138,7 @@ function openAssignDriverModal(bookingId) {
         })
         .then(data => {
             if (data.drivers) {
+                populateVehicleSelect(data.vehicles || [], data.assigned_vehicle_id, data.other_vehicle_name, data.other_vehicle_license_number);
                 populateDriverSelects(data.drivers, data.assigned_pickup_driver_id, data.assigned_return_driver_id, data.has_return_journey);
                 $('#assignDriverModal').modal('show');
             } else {
@@ -135,6 +150,35 @@ function openAssignDriverModal(bookingId) {
             alert('Error loading drivers');
         });
 }
+
+function populateVehicleSelect(vehicles, selectedId = null, otherName = '', otherLicense = '') {
+    const select = document.getElementById('vehicleSelect');
+    select.innerHTML = '<option value="">Select vehicle</option>';
+    vehicles.forEach(vehicle => {
+        const option = document.createElement('option');
+        option.value = vehicle.id;
+        option.text = `${vehicle.license_number} / ${vehicle.registration_number}`;
+        option.selected = String(vehicle.id) === String(selectedId);
+        select.appendChild(option);
+    });
+    const otherOption = document.createElement('option');
+    otherOption.value = 'other';
+    otherOption.text = 'Other';
+    otherOption.selected = !selectedId && !!otherLicense;
+    select.appendChild(otherOption);
+    document.getElementById('otherVehicleName').value = otherName || '';
+    document.getElementById('otherVehicleLicense').value = otherLicense || '';
+    toggleOtherVehicleFields();
+}
+
+function toggleOtherVehicleFields() {
+    const isOther = document.getElementById('vehicleSelect').value === 'other';
+    document.getElementById('otherVehicleFields').style.display = isOther ? 'block' : 'none';
+    document.getElementById('otherVehicleName').required = isOther;
+    document.getElementById('otherVehicleLicense').required = isOther;
+}
+
+document.getElementById('vehicleSelect')?.addEventListener('change', toggleOtherVehicleFields);
 
 function populateDriverSelects(drivers, selectedPickupId = null, selectedReturnId = null, hasReturnJourney = false) {
     const pickupSelect = document.getElementById('pickupDriverSelect');
@@ -176,9 +220,14 @@ function closeAssignDriverModal() {
 function saveDriverAssignment() {
     const pickupDriverId = document.getElementById('pickupDriverSelect').value;
     const returnDriverId = document.getElementById('returnDriverSelect').value || null;
+    const vehicleValue = document.getElementById('vehicleSelect').value;
 
     if (!pickupDriverId) {
         alert('Please select a pickup driver');
+        return;
+    }
+    if (!vehicleValue) {
+        alert('Please select a vehicle');
         return;
     }
 
@@ -192,6 +241,9 @@ function saveDriverAssignment() {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}'
         },
         body: JSON.stringify({
+            vehicle_id: vehicleValue === 'other' ? null : vehicleValue,
+            other_vehicle_name: document.getElementById('otherVehicleName').value,
+            other_vehicle_license_number: document.getElementById('otherVehicleLicense').value,
             pickup_driver_id: pickupDriverId,
             return_driver_id: returnDriverId,
         })

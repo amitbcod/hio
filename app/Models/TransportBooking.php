@@ -9,6 +9,9 @@ class TransportBooking extends Model
     protected $table = 'transport_bookings';
     protected $fillable = [
         'transport_id',
+        'transport_vehicle_id',
+        'other_vehicle_name',
+        'other_vehicle_license_number',
         'driver_id',
         'pickup_driver_id',
         'return_driver_id',
@@ -64,6 +67,11 @@ class TransportBooking extends Model
     public function transport()
     {
         return $this->belongsTo(Transport::class, 'transport_id');
+    }
+
+    public function vehicle()
+    {
+        return $this->belongsTo(TransportVehicle::class, 'transport_vehicle_id');
     }
 
     public function driver()

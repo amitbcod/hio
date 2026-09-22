@@ -32,12 +32,14 @@ use App\Models\PaymentTransaction;
 use App\Services\AgaingencyPaymentService;
 use App\Services\PaymentLogger;
 use App\Services\TripService;
+use App\Services\TransportAvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Models\AccommodationInventory;
 use App\Models\AccommodationRoom;
 use Illuminate\Support\Facades\Validator;
@@ -943,149 +945,60 @@ class BookingController extends Controller
             return null;
         }
 
-        $routeFrom = trim((string) ($bookingData['route_from'] ?? ''));
-        $routeTo = trim((string) ($bookingData['route_to'] ?? ''));
-        $pickupDate = $bookingData['pickup_date'] ?? null;
-        $pickupTime = $bookingData['pickup_time'] ?? null;
-
-        if ($pickupDate === null || $pickupTime === null || $routeFrom === '' || $routeTo === '') {
+        $transport = Transport::find($transportId);
+        if (!$transport) {
             return null;
         }
 
-        $routeFromNorm = strtolower(trim($routeFrom));
-        $routeToNorm = strtolower(trim($routeTo));
-
-        $pair = TransportServiceRoutePair::query()
-            ->where('is_active', true)
-            ->where(function ($query) use ($routeFromNorm, $routeToNorm) {
-                $query->where(function ($q) use ($routeFromNorm, $routeToNorm) {
-                    $q->whereRaw('LOWER(TRIM(route_from)) = ?', [$routeFromNorm])
-                      ->whereRaw('LOWER(TRIM(route_to)) = ?', [$routeToNorm]);
-                })->orWhere(function ($q) use ($routeFromNorm, $routeToNorm) {
-                    $q->whereRaw('LOWER(TRIM(route_from)) = ?', [$routeToNorm])
-                      ->whereRaw('LOWER(TRIM(route_to)) = ?', [$routeFromNorm]);
-                });
-            })
-            ->first();
-
-        $tripMinutes = 0;
-        $bufferMinutes = 0;
-        if ($pair) {
-            $tripMinutes = (int) ($pair->trip_time_minutes ?? 0);
-            $bufferMinutes = (int) ($pair->buffer_time_minutes ?? 0);
-        }
-        $totalMinutes = $tripMinutes + $bufferMinutes;
-        if ($totalMinutes <= 0) {
-            // fallback to conservative default if no route pair configured
-            $tripMinutes = 60;
-            $bufferMinutes = 30;
-            $totalMinutes = $tripMinutes + $bufferMinutes;
+        $availability = new TransportAvailabilityService();
+        $overlaps = $availability->overlappingBookings($transport, $bookingData, $ignoreBookingId);
+        $hasPhysicalVehicles = Schema::hasTable('transport_vehicles') && $transport->vehicles()->exists();
+        if ($hasPhysicalVehicles && $availability->availableVehicles($transport, $bookingData, $ignoreBookingId) > 0) {
+            return null;
         }
 
-        $start = Carbon::parse($pickupDate . ' ' . $pickupTime);
-        $end = (clone $start)->addMinutes($totalMinutes);
-
-        $query = TransportBooking::query()
-            ->where('transport_id', $transportId)
-            ->where('booking_status', '!=', 'Cancelled')
-            ->whereNotNull('pickup_date')
-            ->whereNotNull('pickup_time');
-
-        if ($ignoreBookingId) {
-            $query->where('id', '!=', $ignoreBookingId);
+        $booking = $overlaps->first();
+        if (!$booking) {
+            return null;
         }
 
-        $existingBookings = $query->get();
-        foreach ($existingBookings as $booking) {
-            if (!$booking->pickup_date || !$booking->pickup_time) {
-                continue;
-            }
+        $window = $availability->bookingWindow([
+            'route_from' => $booking->route_from,
+            'route_to' => $booking->route_to,
+            'pickup_date' => $booking->pickup_date?->toDateString(),
+            'pickup_time' => $booking->pickup_time,
+        ]);
 
-            $bookingStart = Carbon::parse($booking->pickup_date->toDateString() . ' ' . $booking->pickup_time);
-            $bookingRouteFrom = $booking->route_from;
-            $bookingRouteTo = $booking->route_to;
-            $bookingPair = TransportServiceRoutePair::query()
-                ->where('is_active', true)
-                ->where(function ($query) use ($bookingRouteFrom, $bookingRouteTo) {
-                    $query->where(function ($q) use ($bookingRouteFrom, $bookingRouteTo) {
-                        $q->where('route_from', $bookingRouteFrom)->where('route_to', $bookingRouteTo);
-                    })->orWhere(function ($q) use ($bookingRouteFrom, $bookingRouteTo) {
-                        $q->where('route_from', $bookingRouteTo)->where('route_to', $bookingRouteFrom);
-                    });
-                })
-                ->first();
-
-            $bookingTripMinutes = 0;
-            $bookingBufferMinutes = 0;
-            if ($bookingPair) {
-                $bookingTripMinutes = (int) ($bookingPair->trip_time_minutes ?? 0);
-                $bookingBufferMinutes = (int) ($bookingPair->buffer_time_minutes ?? 0);
-            }
-
-            $bookingTotalMinutes = $bookingTripMinutes + $bookingBufferMinutes;
-            if ($bookingTotalMinutes <= 0) {
-                $bookingTotalMinutes = $totalMinutes;
-            }
-
-            $bookingEnd = (clone $bookingStart)->addMinutes($bookingTotalMinutes);
-
-            $overlaps = $start->lt($bookingEnd) && $end->gt($bookingStart);
-            if ($overlaps) {
-                return [
-                    'message' => 'Sorry, this vehicle is already booked for the selected time slot.',
-                    'booking_id' => $booking->id,
-                    'starts_at' => $bookingStart->toDateTimeString(),
-                    'ends_at' => $bookingEnd->toDateTimeString(),
-                ];
-            }
-        }
-
-        return null;
+        return [
+            'message' => 'Sorry, this vehicle is already booked for the selected time slot.',
+            'booking_id' => $booking->id,
+            'starts_at' => $window['start']->toDateTimeString(),
+            'ends_at' => $window['end']->toDateTimeString(),
+        ];
     }
 
     private function computeBookingWindow(array $bookingData): ?array
     {
-        $routeFrom = trim((string) ($bookingData['route_from'] ?? ''));
-        $routeTo = trim((string) ($bookingData['route_to'] ?? ''));
-        $pickupDate = $bookingData['pickup_date'] ?? null;
-        $pickupTime = $bookingData['pickup_time'] ?? null;
+        return (new TransportAvailabilityService())->bookingWindow($bookingData);
+    }
 
-        if ($pickupDate === null || $pickupTime === null || $routeFrom === '' || $routeTo === '') {
-            return null;
+    private function assignPhysicalVehicle(TransportBooking $booking): void
+    {
+        $transport = $booking->transport;
+        if (!$transport || !Schema::hasTable('transport_vehicles') || !$transport->vehicles()->exists()) {
+            return;
         }
 
-        $pair = TransportServiceRoutePair::query()
-            ->where('is_active', true)
-            ->where(function ($query) use ($routeFrom, $routeTo) {
-                $query->where(function ($q) use ($routeFrom, $routeTo) {
-                    $q->whereRaw('LOWER(TRIM(route_from)) = ?', [strtolower($routeFrom)])
-                      ->whereRaw('LOWER(TRIM(route_to)) = ?', [strtolower($routeTo)]);
-                })->orWhere(function ($q) use ($routeFrom, $routeTo) {
-                    $q->whereRaw('LOWER(TRIM(route_from)) = ?', [strtolower($routeTo)])
-                      ->whereRaw('LOWER(TRIM(route_to)) = ?', [strtolower($routeFrom)]);
-                });
-            })
-            ->first();
+        $vehicle = (new TransportAvailabilityService())->assignAvailableVehicle($transport, [
+            'route_from' => $booking->route_from,
+            'route_to' => $booking->route_to,
+            'pickup_date' => $booking->pickup_date?->toDateString(),
+            'pickup_time' => $booking->pickup_time,
+        ], $booking->id);
 
-        $tripMinutes = 0;
-        $bufferMinutes = 0;
-        if ($pair) {
-            $tripMinutes = (int) ($pair->trip_time_minutes ?? 0);
-            $bufferMinutes = (int) ($pair->buffer_time_minutes ?? 0);
+        if ($vehicle) {
+            $booking->forceFill(['transport_vehicle_id' => $vehicle->id])->save();
         }
-
-        $totalMinutes = $tripMinutes + $bufferMinutes;
-        if ($totalMinutes <= 0) {
-            // fallback to conservative default if no route pair configured
-            $tripMinutes = 60;
-            $bufferMinutes = 30;
-            $totalMinutes = $tripMinutes + $bufferMinutes;
-        }
-
-        $start = Carbon::parse($pickupDate . ' ' . $pickupTime);
-        $end = (clone $start)->addMinutes($totalMinutes);
-
-        return ['start' => $start, 'end' => $end, 'trip_minutes' => $tripMinutes, 'buffer_minutes' => $bufferMinutes];
     }
 
     private function buildActivityCartItem(Request $request): array

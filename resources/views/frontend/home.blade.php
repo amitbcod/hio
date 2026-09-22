@@ -666,6 +666,7 @@
                                             <h3><a href="{{ $transport['url'] }}">{{ $transport['title'] }}</a></h3>
                                         </div>
                                         <p>{{ $transport['excerpt'] }}</p>
+                                        <span class="listing-availability">{{ $transport['available_quantity'] ?? 0 }} available</span>
                                         <div class="listing-footer">
                                             <a href="{{ $transport['url'] }}">{{ __('home.view_details') }}</a>
                                         </div>

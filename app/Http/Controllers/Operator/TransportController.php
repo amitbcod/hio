@@ -8,7 +8,9 @@ use App\Models\Transport;
 use App\Models\TransportRate;
 use App\Models\TransportBooking;
 use App\Models\TransportVehicleType;
+use App\Models\TransportVehicle;
 use App\Models\OperatorDriver;
+use App\Services\TransportAvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -26,9 +28,24 @@ class TransportController extends Controller
             return redirect()->route('operator.login');
         }
 
-        $transports = Transport::where('operator_id', $operator->id)
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $transportQuery = Transport::where('operator_id', $operator->id)
+            ->orderBy('created_at', 'desc');
+
+        if (Schema::hasTable('transport_vehicles')) {
+            $transportQuery->withCount([
+                'vehicles as total_vehicle_qty',
+                'activeVehicles as active_vehicle_qty',
+            ]);
+        }
+
+        $transports = $transportQuery->paginate(20);
+
+        if (!Schema::hasTable('transport_vehicles')) {
+            $transports->getCollection()->each(function (Transport $transport) {
+                $transport->setAttribute('total_vehicle_qty', 1);
+                $transport->setAttribute('active_vehicle_qty', 1);
+            });
+        }
 
         return view('operator.transport.index', compact('transports'));
     }
@@ -41,8 +58,9 @@ class TransportController extends Controller
         }
 
         $vehicleTypes = TransportVehicleType::activeList();
+        $vehicleStatuses = TransportVehicle::STATUSES;
 
-        return view('operator.transport.create', compact('vehicleTypes'));
+        return view('operator.transport.create', compact('vehicleTypes', 'vehicleStatuses'));
     }
 
     protected function getOperatorTransportSettings($operator)
@@ -330,21 +348,55 @@ class TransportController extends Controller
             return redirect()->route('operator.login');
         }
 
-        $data = $request->validate([
+        $validated = $request->validate([
             'vehicle_name' => 'required|string|max:150',
             'vehicle_type' => 'required|string|exists:transport_vehicle_types,name,is_active,1',
             'seating_capacity' => 'required|integer|min:1|max:100',
             'registration_number' => 'nullable|string|max:50',
             'service_description' => 'nullable|string|max:500',
+            'vehicle_qty' => 'required|integer|min:1|max:100',
+            'vehicles' => 'required|array|size:' . (int) $request->input('vehicle_qty'),
+            'vehicles.*.license_number' => 'required|string|max:100',
+            'vehicles.*.registration_number' => 'required|string|max:100',
+            'vehicles.*.license_expiry_date' => 'required|date',
+            'vehicles.*.insurance_expiry_date' => 'required|date',
+            'vehicles.*.insurance_provider' => 'required|string|max:150',
+            'vehicles.*.policy' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'vehicles.*.documents' => 'nullable|array',
+            'vehicles.*.documents.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'vehicles.*.status' => 'required|string|in:' . implode(',', TransportVehicle::STATUSES),
         ]);
+        $data = $validated;
+        unset($data['vehicle_qty'], $data['vehicles']);
 
-        $data['operator_id'] = $operator->id;
-        $data['service_id'] = Transport::generateServiceId();
-        $data['status'] = Transport::STATUS_DRAFT;
-        $data['approval_status'] = 'Draft';
-        $data['step1_basics'] = 1;
+        $transport = Transport::where('operator_id', $operator->id)
+            ->where('vehicle_type', $data['vehicle_type'])
+            ->first();
 
-        $transport = Transport::create($data);
+        if (!$transport) {
+            $data['operator_id'] = $operator->id;
+            $data['service_id'] = Transport::generateServiceId();
+            $data['status'] = Transport::STATUS_DRAFT;
+            $data['approval_status'] = 'Draft';
+            $data['step1_basics'] = 1;
+            $transport = Transport::create($data);
+        }
+
+        foreach ($validated['vehicles'] as $vehicleData) {
+            $transport->vehicles()->create([
+                'license_number' => $vehicleData['license_number'],
+                'registration_number' => $vehicleData['registration_number'],
+                'license_expiry_date' => $vehicleData['license_expiry_date'],
+                'insurance_expiry_date' => $vehicleData['insurance_expiry_date'],
+                'insurance_provider' => $vehicleData['insurance_provider'],
+                'policy_path' => $vehicleData['policy']->store('transport-policies', 'public'),
+                'documents' => collect($vehicleData['documents'] ?? [])
+                    ->map(fn ($document) => $document->store('transport-documents', 'public'))
+                    ->values()
+                    ->all(),
+                'status' => $vehicleData['status'],
+            ]);
+        }
 
         return redirect()->route('operator.transport.step2.show', $transport->id)
             ->with('success', 'Transport created. Continue with the transport setup steps.');
@@ -358,6 +410,11 @@ class TransportController extends Controller
         }
 
         $rates = $transport->rates()->get();
+        if (Schema::hasTable('transport_vehicles')) {
+            $transport->load('vehicles');
+        } else {
+            $transport->setRelation('vehicles', collect());
+        }
 
         return view('operator.transport.show', compact('transport', 'rates'));
     }
@@ -369,7 +426,15 @@ class TransportController extends Controller
             abort(403);
         }
 
-        return view('operator.transport.edit', compact('transport'));
+        $vehicleTypes = TransportVehicleType::activeList();
+        $vehicleStatuses = TransportVehicle::STATUSES;
+        if (Schema::hasTable('transport_vehicles')) {
+            $transport->load('vehicles');
+        } else {
+            $transport->setRelation('vehicles', collect());
+        }
+
+        return view('operator.transport.edit', compact('transport', 'vehicleTypes', 'vehicleStatuses'));
     }
 
     public function update(Transport $transport, Request $request)
@@ -390,9 +455,62 @@ class TransportController extends Controller
             'contact_email' => 'nullable|email|max:100',
             'overview' => 'nullable|string',
             'amenities' => 'nullable|array',
+            'vehicle_qty' => 'required|integer|min:1|max:100',
+            'vehicles' => 'required|array|size:' . (int) $request->input('vehicle_qty'),
+            'vehicles.*.id' => 'nullable|integer|exists:transport_vehicles,id',
+            'vehicles.*.license_number' => 'required|string|max:100',
+            'vehicles.*.registration_number' => 'required|string|max:100',
+            'vehicles.*.license_expiry_date' => 'required|date',
+            'vehicles.*.insurance_expiry_date' => 'required|date',
+            'vehicles.*.insurance_provider' => 'required|string|max:150',
+            'vehicles.*.policy' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'vehicles.*.documents' => 'nullable|array',
+            'vehicles.*.documents.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'vehicles.*.status' => 'required|string|in:' . implode(',', TransportVehicle::STATUSES),
         ]);
+        $validated = $data;
+        unset($data['vehicle_qty'], $data['vehicles']);
 
         $transport->update($data);
+
+        $existingVehicles = $transport->vehicles()->orderBy('id')->get()->values();
+        foreach ($validated['vehicles'] as $index => $vehicleData) {
+            $vehicle = $existingVehicles->get($index);
+            $attributes = [
+                'license_number' => $vehicleData['license_number'],
+                'registration_number' => $vehicleData['registration_number'],
+                'license_expiry_date' => $vehicleData['license_expiry_date'],
+                'insurance_expiry_date' => $vehicleData['insurance_expiry_date'],
+                'insurance_provider' => $vehicleData['insurance_provider'],
+                'status' => $vehicleData['status'],
+            ];
+
+            if (!empty($vehicleData['policy'])) {
+                $attributes['policy_path'] = $vehicleData['policy']->store('transport-policies', 'public');
+            }
+
+            if (!empty($vehicleData['documents'])) {
+                $newDocuments = collect($vehicleData['documents'])
+                    ->map(fn ($document) => $document->store('transport-documents', 'public'))
+                    ->values()
+                    ->all();
+                $attributes['documents'] = array_values(array_merge($vehicle->documents ?? [], $newDocuments));
+            }
+
+            if ($vehicle) {
+                $vehicle->update($attributes);
+            } else {
+                $transport->vehicles()->create($attributes);
+            }
+        }
+
+        $transport->vehicles()->orderBy('id')->get()->values()->slice(count($validated['vehicles']))->each(function (TransportVehicle $vehicle) {
+            if ($vehicle->bookings()->exists()) {
+                $vehicle->update(['status' => 'Out of Service']);
+            } else {
+                $vehicle->delete();
+            }
+        });
 
         return redirect()->route('operator.transport.step2.show', $transport->id)
             ->with('success', 'Transport updated. Continue with Routes & Pricing.');
@@ -845,7 +963,7 @@ class TransportController extends Controller
             $transport->step3_media = 1;
             $transport->save();
 
-            return redirect()->route('operator.transport.step4.show', $transport->id)
+            return redirect()->route('operator.transport.step5.show', $transport->id)
                 ->with('success', 'Media saved.');
         } catch (\Exception $e) {
             \Log::error('saveStep3Media error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
@@ -1138,7 +1256,7 @@ class TransportController extends Controller
 
         // Get bookings for all transports
         $bookings = TransportBooking::whereIn('transport_id', $transports)
-            ->with(['transport', 'travelerAccount'])
+            ->with(['transport', 'travelerAccount', 'vehicle', 'pickupDriver', 'returnDriver'])
             ->orderBy('booked_at', 'desc')
             ->paginate(20);
 
@@ -1153,6 +1271,7 @@ class TransportController extends Controller
         }
 
         $bookings = $transport->bookings()
+            ->with('vehicle')
             ->orderBy('booked_at', 'desc')
             ->paginate(20);
 
@@ -1171,7 +1290,7 @@ class TransportController extends Controller
             abort(403);
         }
 
-        $booking = \App\Models\TransportBooking::findOrFail($bookingId);
+        $booking = \App\Models\TransportBooking::with(['vehicle', 'pickupDriver', 'returnDriver'])->findOrFail($bookingId);
         if ($booking->transport_id !== $transport->id) {
             abort(403);
         }
@@ -1300,35 +1419,35 @@ class TransportController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        // Get operator's drivers
-        $driverQuery = OperatorDriver::query()
-            ->where('driver_status', 'Active')
-            ->where(function ($query) use ($operator) {
-                $query->where('operator_id', $operator->operator_id);
-
-                if (!empty($operator->business_id)) {
-                    $query->orWhere('business_id', $operator->business_id);
-                }
-            })
-            ->where(function ($query) {
-                $query->whereNull('license_expiry_date')
-                      ->orWhere('license_expiry_date', '>=', now()->toDateString());
-            });
-
-        $drivers = $driverQuery->get([
-            'id',
-            'driver_name',
-            'driver_mobile_no as driver_phone',
-            'email as driver_email',
+        $availability = new TransportAvailabilityService();
+        $drivers = $availability->availableDrivers($operator, $booking)->map(fn ($driver) => [
+            'id' => $driver->id,
+            'driver_name' => $driver->driver_name,
+            'driver_phone' => $driver->driver_mobile_no,
+            'driver_email' => $driver->email,
         ]);
 
-        $assignedPickupDriverId = $booking->pickup_driver_id;
-        $assignedReturnDriverId = $booking->return_driver_id;
+        $bookingData = [
+            'route_from' => $booking->route_from,
+            'route_to' => $booking->route_to,
+            'pickup_date' => $booking->pickup_date?->toDateString(),
+            'pickup_time' => $booking->pickup_time,
+        ];
+        $vehicles = $availability->availableVehicleModelsForBooking($transport, $booking)
+            ->map(fn ($vehicle) => [
+                'id' => $vehicle->id,
+                'license_number' => $vehicle->license_number,
+                'registration_number' => $vehicle->registration_number,
+            ]);
 
         return response()->json([
             'drivers' => $drivers,
-            'assigned_pickup_driver_id' => $assignedPickupDriverId,
-            'assigned_return_driver_id' => $assignedReturnDriverId,
+            'vehicles' => $vehicles,
+            'assigned_vehicle_id' => $booking->transport_vehicle_id,
+            'other_vehicle_name' => $booking->other_vehicle_name,
+            'other_vehicle_license_number' => $booking->other_vehicle_license_number,
+            'assigned_pickup_driver_id' => $booking->pickup_driver_id,
+            'assigned_return_driver_id' => $booking->return_driver_id,
             'has_return_journey' => !empty($booking->return_date),
         ]);
     }
@@ -1348,10 +1467,38 @@ class TransportController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'pickup_driver_id' => 'required|integer|exists:operator_drivers,id',
             'return_driver_id' => 'nullable|integer|exists:operator_drivers,id',
+            'vehicle_id' => 'nullable|integer',
+            'other_vehicle_name' => 'nullable|string|max:150',
+            'other_vehicle_license_number' => 'nullable|string|max:100',
         ]);
+
+        $availability = new TransportAvailabilityService();
+        $availableDrivers = $availability->availableDrivers($operator, $booking)->pluck('id')->all();
+        foreach (array_filter([$validated['pickup_driver_id'], $validated['return_driver_id'] ?? null]) as $driverId) {
+            if (!in_array((int) $driverId, array_map('intval', $availableDrivers), true)
+                && !in_array((int) $driverId, [(int) $booking->pickup_driver_id, (int) $booking->return_driver_id], true)) {
+                return response()->json(['error' => 'This driver is no longer available for the selected booking period.'], 422);
+            }
+        }
+
+        $vehicleId = $validated['vehicle_id'] ?? null;
+        if ($vehicleId) {
+            $vehicle = $transport->vehicles()->active()->whereKey($vehicleId)->first();
+            if (!$vehicle) {
+                return response()->json(['error' => 'This vehicle is not active or does not belong to this vehicle type.'], 422);
+            }
+            $availableVehicleIds = $availability->availableVehicleModelsForBooking($transport, $booking)
+                ->pluck('id')->all();
+            if (!in_array((int) $vehicleId, array_map('intval', $availableVehicleIds), true)
+                && (int) $vehicleId !== (int) $booking->transport_vehicle_id) {
+                return response()->json(['error' => 'This vehicle is no longer available for the selected booking period.'], 422);
+            }
+        } elseif (blank($validated['other_vehicle_name'] ?? null) || blank($validated['other_vehicle_license_number'] ?? null)) {
+            return response()->json(['error' => 'Enter the other vehicle name and license number.'], 422);
+        }
 
         $selectedDriverIds = array_filter([
             $request->input('pickup_driver_id'),
@@ -1369,9 +1516,12 @@ class TransportController extends Controller
             }
         }
 
-        $booking->pickup_driver_id = $request->input('pickup_driver_id');
-        $booking->return_driver_id = $request->input('return_driver_id');
-        $booking->driver_id = $request->input('pickup_driver_id');
+        $booking->pickup_driver_id = $validated['pickup_driver_id'];
+        $booking->return_driver_id = $validated['return_driver_id'] ?? null;
+        $booking->driver_id = $validated['pickup_driver_id'];
+        $booking->transport_vehicle_id = $vehicleId;
+        $booking->other_vehicle_name = $vehicleId ? null : $validated['other_vehicle_name'];
+        $booking->other_vehicle_license_number = $vehicleId ? null : $validated['other_vehicle_license_number'];
         $booking->save();
 
         return response()->json([

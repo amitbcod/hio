@@ -18,6 +18,7 @@ use App\Models\OperatorStatusReview;
 use App\Models\PolicyTemplate;
 use App\Models\Review;
 use App\Models\ReviewItem;
+use App\Services\TransportAvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -2438,14 +2439,31 @@ class HomeController extends Controller
             $startingRate = $selectedRouteDefault;
         }
 
+        $vehicles = Schema::hasTable('transport_vehicles')
+            ? ($transport->relationLoaded('vehicles') ? $transport->vehicles : $transport->vehicles()->get())
+            : collect();
+        $availability = new TransportAvailabilityService();
+        $availabilityData = [
+            'route_from' => request()->query('transport_from', $selectedFrom),
+            'route_to' => request()->query('transport_to', $selectedTo),
+            'pickup_date' => request()->query('pickup_date', request()->query('arrival_date')),
+            'pickup_time' => request()->query('pickup_time', request()->query('arrival_time')),
+        ];
+        $totalQuantity = $vehicles->isEmpty() ? 1 : $vehicles->count();
+        $availableQuantity = $vehicles->isEmpty()
+            ? $availability->availableVehicles($transport, $availabilityData)
+            : $availability->availableVehicles($transport, $availabilityData);
+
         return [
             'id' => $transport->id,
             'service_id' => $transport->service_id,
-            'title' => $transport->vehicle_name,
+            'title' => $transport->vehicle_type ?: $transport->vehicle_name,
             'kind' => 'Transport',
             'type' => 'transport',
             'vehicle_type' => $transport->vehicle_type,
             'seating_capacity' => $transport->seating_capacity,
+            'total_quantity' => $totalQuantity,
+            'available_quantity' => $availableQuantity,
             'image' => $primaryImage,
             'excerpt' => $this->plainText($transport->short_description),
             'location' => $transport->operator?->business_name

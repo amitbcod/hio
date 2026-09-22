@@ -123,6 +123,16 @@
                                 <strong>Vehicle:</strong><br>
                                 {{ optional($transport)->vehicle_name }}
                                 <br><small style="color: #666;">{{ optional($transport)->vehicle_type }} • Seating: {{ optional($transport)->seating_capacity ?? 'N/A' }}</small>
+                                @if($booking->vehicle)
+                                    <br><small style="color: #666;">Assigned unit: {{ $booking->vehicle->license_number }} / {{ $booking->vehicle->registration_number }}</small>
+                                @elseif($booking->other_vehicle_license_number)
+                                    <br><small style="color: #666;">Assigned vehicle: Other</small>
+                                    <br><small style="color: #666;">Vehicle name: {{ $booking->other_vehicle_name }}</small>
+                                    <br><small style="color: #666;">License number: {{ $booking->other_vehicle_license_number }}</small>
+                                @else
+                                    <br><small style="color: #666;">Assigned vehicle: Unassigned</small>
+                                @endif
+                                <br><small style="color: #666;">Driver: {{ $booking->pickupDriver?->driver_name ?: 'Unassigned' }}</small>
                             </div>
                             <div class="col-md-6">
                                 <strong>Operator:</strong><br>

@@ -37,11 +37,10 @@
                 1 => ['name' => 'Basics', 'field' => 'step1_basics', 'route' => 'operator.transport.basic-details'],
                 2 => ['name' => 'Routes & Pricing', 'field' => 'step2_routes_pricing', 'route' => 'operator.transport.step2.show'],
                 3 => ['name' => 'Media', 'field' => 'step3_media', 'route' => 'operator.transport.step3.show'],
-                4 => ['name' => 'Compliance', 'field' => 'step4_compliance', 'route' => 'operator.transport.step4.show'],
-                5 => ['name' => 'Promotions & Offers', 'field' => 'step5_promotions_offers', 'route' => 'operator.transport.step5.show'],
-                6 => ['name' => 'Service Description', 'field' => 'step6_service_description', 'route' => 'operator.transport.step6-service-description.show'],
-                7 => ['name' => 'SEO & Social', 'field' => 'step6_seo_social', 'route' => 'operator.transport.step6.show'],
-                8 => ['name' => 'Publish', 'field' => 'step7_publish', 'route' => 'operator.transport.step7.show'],
+                4 => ['name' => 'Promotions & Offers', 'field' => 'step5_promotions_offers', 'route' => 'operator.transport.step5.show'],
+                5 => ['name' => 'Service Description', 'field' => 'step6_service_description', 'route' => 'operator.transport.step6-service-description.show'],
+                6 => ['name' => 'SEO & Social', 'field' => 'step6_seo_social', 'route' => 'operator.transport.step6.show'],
+                7 => ['name' => 'Publish', 'field' => 'step7_publish', 'route' => 'operator.transport.step7.show'],
             ];
             $currentStep = $currentStep ?? null;
         @endphp

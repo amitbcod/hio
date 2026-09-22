@@ -31,9 +31,9 @@
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>Vehicle</th>
-                                    <th>Type</th>
-                                    <th>Capacity</th>
+                                    <th>Vehicle Type</th>
+                                    <th>Total Qty</th>
+                                    <th>Available Qty</th>
                                     <th>Status</th>
                                     <th>Created</th>
                                     <th>Actions</th>
@@ -42,9 +42,9 @@
                             <tbody>
                                 @foreach ($transports as $transport)
                                     <tr>
-                                        <td>{{ $transport->vehicle_name }}</td>
-                                        <td>{{ $transport->vehicle_type }}</td>
-                                        <td>{{ $transport->seating_capacity }}</td>
+                                        <td>{{ $transport->vehicle_type ?: $transport->vehicle_name }}</td>
+                                        <td>{{ $transport->total_vehicle_qty }}</td>
+                                        <td>{{ $transport->active_vehicle_qty }}</td>
                                         <td>{{ ucfirst($transport->status ?? 'draft') }}</td>
                                         <td>{{ optional($transport->created_at)->format('M d, Y') }}</td>
                                         <td>

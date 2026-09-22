@@ -24,7 +24,13 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('operator.transport.update', $transport->id) }}">
+            @php
+                $vehicleStatuses = $vehicleStatuses ?? ['Active', 'Maintenance', 'Breakdown', 'Suspended', 'Out of Service', 'Reserve'];
+                $physicalVehicles = \Illuminate\Support\Facades\Schema::hasTable('transport_vehicles') ? $transport->vehicles : collect();
+                $physicalVehicleCount = $physicalVehicles->count();
+            @endphp
+
+            <form method="POST" action="{{ route('operator.transport.update', $transport->id) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -63,6 +69,16 @@
                     </div>
                 </div>
 
+                <div style="background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,0.04);margin-bottom:16px;">
+                    <label style="font-weight:600;">Vehicle Qty <span style="color:#d32f2f">*</span></label>
+                    <select name="vehicle_qty" id="vehicle_qty" class="form-control" required>
+                        @for($quantity = 1; $quantity <= 100; $quantity++)
+                            <option value="{{ $quantity }}" {{ (int) old('vehicle_qty', $physicalVehicleCount) === $quantity ? 'selected' : '' }}>{{ $quantity }}</option>
+                        @endfor
+                    </select>
+                    <div id="physical-vehicles" style="margin-top:16px;"></div>
+                </div>
+
                 <div style="display:flex;gap:12px;flex-wrap:wrap; padding:18px">
                     <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save Changes</button>
                     <a href="{{ route('operator.transport.show', $transport->id) }}" class="btn" style="background:#f0f0f0;color:#333;padding:10px 20px;border-radius:4px;border:none;">Cancel</a>
@@ -74,6 +90,41 @@
     <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
     <script>
+        (function () {
+            const quantity = document.getElementById('vehicle_qty');
+            const container = document.getElementById('physical-vehicles');
+            const statuses = @json($vehicleStatuses);
+            const existingVehicles = @json($physicalVehicles->values());
+            const oldVehicles = @json(old('vehicles', []));
+
+            function renderVehicles() {
+                const count = Number(quantity.value || 1);
+                container.innerHTML = '';
+                for (let index = 0; index < count; index += 1) {
+                    const vehicle = oldVehicles[index] || existingVehicles[index] || {};
+                    const options = statuses.map(status => `<option value="${status}" ${vehicle.status === status ? 'selected' : ''}>${status}</option>`).join('');
+                    container.insertAdjacentHTML('beforeend', `
+                        <div style="border-top:1px solid #ddd;padding-top:16px;margin-top:16px;">
+                            <h5>Vehicle ${index + 1}</h5>
+                            <input type="hidden" name="vehicles[${index}][id]" value="${vehicle.id || ''}">
+                            <div class="row">
+                                <div class="col-md-6 mb-3"><label>License Number *</label><input required type="text" name="vehicles[${index}][license_number]" value="${vehicle.license_number || ''}" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label>Registration Number *</label><input required type="text" name="vehicles[${index}][registration_number]" value="${vehicle.registration_number || ''}" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label>License / Permit Expiry Date *</label><input required type="date" name="vehicles[${index}][license_expiry_date]" value="${vehicle.license_expiry_date ? String(vehicle.license_expiry_date).substring(0, 10) : ''}" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label>Insurance Expiry Date *</label><input required type="date" name="vehicles[${index}][insurance_expiry_date]" value="${vehicle.insurance_expiry_date ? String(vehicle.insurance_expiry_date).substring(0, 10) : ''}" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label>Insurance Provider *</label><input required type="text" name="vehicles[${index}][insurance_provider]" value="${vehicle.insurance_provider || ''}" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label>Policy ${vehicle.policy_path ? '' : '*'} </label><input ${vehicle.policy_path ? '' : 'required'} type="file" name="vehicles[${index}][policy]" accept=".pdf,.jpg,.jpeg,.png" class="form-control">${vehicle.policy_path ? '<small>Existing policy retained unless replaced.</small>' : ''}</div>
+                                <div class="col-md-6 mb-3"><label>Supporting Documents</label><input type="file" name="vehicles[${index}][documents][]" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" class="form-control">${vehicle.documents && vehicle.documents.length ? `<small>${vehicle.documents.length} existing document(s) retained unless new files are added.</small>` : ''}</div>
+                                <div class="col-md-6 mb-3"><label>Status *</label><select required name="vehicles[${index}][status]" class="form-control">${options}</select></div>
+                            </div>
+                        </div>`);
+                }
+            }
+
+            quantity.addEventListener('change', renderVehicles);
+            renderVehicles();
+        })();
+
         (function () {
             const form = document.querySelector('form');
             const textarea = document.getElementById('service_description');

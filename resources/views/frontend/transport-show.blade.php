@@ -208,6 +208,9 @@
 
             <div class="hero-meta-row">
                 <span class="hero-chip">{{ $transport['vehicle_type'] ?? __('transport.vehicle') }}</span>
+                @if(isset($transport['available_quantity']))
+                    <span class="hero-chip">Available: {{ $transport['available_quantity'] }}</span>
+                @endif
                 @if(!empty($transport['seating_capacity']))
                     <span class="hero-chip">{{ __('transport.seating_capacity') }}: {{ $transport['seating_capacity'] }}</span>
                 @endif

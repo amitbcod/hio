@@ -266,11 +266,7 @@ Route::prefix('operator')->name('operator.')->group(function () {
         Route::post('transport/{transport}/step3-media', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep3Media'])->name('transport.step3.save');
         Route::delete('transport/{transport}/step3-media/{imageIndex}', [\App\Http\Controllers\Operator\TransportController::class, 'deleteStep3MediaImage'])->name('transport.step3.delete-image');
         
-        // Transport Step 4: Compliance
-        Route::get('transport/{transport}/step4-compliance', [\App\Http\Controllers\Operator\TransportController::class, 'step4Compliance'])->name('transport.step4.show');
-        Route::post('transport/{transport}/step4-compliance', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep4Compliance'])->name('transport.step4.save');
-
-        // Transport Step 5: Promotions & Offers
+        // Transport Step 4: Promotions & Offers
         Route::get('transport/{transport}/step5-promotions-offers', [\App\Http\Controllers\Operator\TransportController::class, 'step5PromotionsOffers'])->name('transport.step5.show');
         Route::post('transport/{transport}/step5-promotions-offers', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep5PromotionsOffers'])->name('transport.step5.save');
 

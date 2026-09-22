@@ -67,6 +67,16 @@ class Transport extends Model
         return $this->hasMany(TransportBooking::class, 'transport_id');
     }
 
+    public function vehicles()
+    {
+        return $this->hasMany(TransportVehicle::class, 'transport_id');
+    }
+
+    public function activeVehicles()
+    {
+        return $this->vehicles()->where('status', 'Active');
+    }
+
     /**
      * Generate unique service ID
      */
