@@ -10,9 +10,12 @@ return new class extends Migration
     {
         Schema::create('transport_booking_assignments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('transport_booking_id')->constrained('transport_bookings')->cascadeOnDelete();
-            $table->foreignId('vehicle_id')->nullable()->constrained('transport_vehicles')->nullOnDelete();
-            $table->foreignId('driver_id')->nullable()->constrained('operator_drivers')->nullOnDelete();
+            // These references intentionally remain unsigned IDs without MySQL
+            // foreign keys because legacy installations may use different
+            // engines or integer definitions for the existing test tables.
+            $table->unsignedBigInteger('transport_booking_id');
+            $table->unsignedBigInteger('vehicle_id')->nullable();
+            $table->unsignedBigInteger('driver_id')->nullable();
             $table->string('other_vehicle_name')->nullable();
             $table->string('other_vehicle_license_number')->nullable();
             $table->enum('status', ['Current', 'Replaced', 'Unassigned'])->default('Current');
@@ -23,6 +26,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['transport_booking_id', 'status']);
+            $table->index('vehicle_id');
+            $table->index('driver_id');
             $table->index('assigned_by');
         });
     }
