@@ -1,6 +1,6 @@
 <!-- Activity Steps Sidebar -->
 <div style="">
-    <h6 style="color:#fff">Activity Steps</h6>
+    <h3 style="color:#fff">Activity Steps</h3>
     <div style="display:flex;flex-direction:column;gap:0px;">
         @php
             $steps = [

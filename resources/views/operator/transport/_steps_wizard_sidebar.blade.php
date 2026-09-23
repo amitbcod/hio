@@ -1,6 +1,6 @@
 <!-- Transport Setup Wizard Sidebar -->
 <div style="">
-    <h6 style="color:#fff">Transport Setup</h6>
+    <h3 style="color:#fff">Transport Setup</h3>
     <div style="display:flex;flex-direction:column;gap:0px;">
         @php
             $steps = [
