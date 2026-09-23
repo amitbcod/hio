@@ -29,7 +29,7 @@
             @endphp
             <a href="{{ route($routeName, $activity->id) }}" style="padding:10px 12px;background:{{ $isActive ? '#1e5f83' : ($isComplete ? '#154f6eff' : 'transparent') }};border-left:0px solid {{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#ccc') }};border-radius:0px;text-decoration:none;font-size:13px;color:{{ $isActive ? '#2196f3' : ($isComplete ? '#28a745' : '#ffffff') }};font-weight:{{ $isActive ? '600' : '500' }};display:flex;justify-content:space-between;align-items:center;border-bottom: 1px solid #477993;">
                 <span>Step {{ $stepNum }}: {{ $stepData['name'] }}</span>
-                <span style="font-size:12px;background: {{ $isActive ? '#ffffff' : ($isComplete ? '#24a745' : '#557f97') }}; color:{{ $isActive ? '#557f97' : ($isComplete ? '#fff' : '#fff') }}; border-radius: 30px; width: 20px; height: 20px; align-items: center; display: flex; justify-content: center; font-weight: bold;">{{ $isComplete ? '✓' : $stepNum }}</span>
+                <span class="steps-number" style="font-size:12px;background: {{ $isActive ? '#ffffff' : ($isComplete ? '#24a745' : '#557f97') }}; color:{{ $isActive ? '#557f97' : ($isComplete ? '#fff' : '#fff') }}; border-radius: 30px; width: 20px; height: 20px; align-items: center; display: flex; justify-content: center; font-weight: bold;">{{ $isComplete ? '✓' : $stepNum }}</span>
             </a>
         @endforeach
     </div>
