@@ -2457,8 +2457,20 @@ class BookingController extends Controller
                     ]);
                 }
             } elseif ($item['type'] === 'transport') {
+                $isReturnTransport = !blank($item['return_date']);
+                $transportGroupReference = $ref;
+                $outboundPricing = $item['outbound_pricing'] ?? [
+                    'base_price' => $item['total_price'] ?? 0,
+                    'discount_percentage' => 0,
+                    'discount_amount' => 0,
+                    'final_price' => $item['total_price'] ?? 0,
+                ];
+                $returnPricing = $item['return_pricing'] ?? null;
+                $transportPassengerCount = $this->resolveTransportPassengerCount($item);
                 $booking = TransportBooking::create([
                     'booking_reference' => $ref,
+                    'trip_type' => $isReturnTransport ? 'OUTBOUND' : 'ONE_WAY',
+                    'transport_group_reference' => $transportGroupReference,
                     'transport_id' => $item['transport_id'],
                     'guest_name' => $guestName,
                     'traveler_account_id' => $travelerAccountId,
@@ -2477,21 +2489,21 @@ class BookingController extends Controller
                     'route_to' => $item['route_to'] ?? null,
                     'pickup_date' => $item['pickup_date'],
                     'pickup_time' => $item['pickup_time'] ?? null,
-                    'return_date' => $item['return_date'] ?? null,
-                    'return_time' => $item['return_time'] ?? null,
+                    'return_date' => null,
+                    'return_time' => null,
                     'pickup_address' => $item['pickup_address'] ?? null,
                     'dropoff_address' => $item['dropoff_address'] ?? null,
-                    'passengers' => $item['passengers'] ?? 1,
-                    'adults' => $item['passengers'] ?? 1, // Transport uses passengers field
-                    'children' => 0,
+                    'adults' => max(1, (int) ($item['adults'] ?? $transportPassengerCount)),
+                    'children' => max(0, (int) ($item['children'] ?? 0)),
+                    'total_passengers' => $transportPassengerCount,
                     'price_per_person' => null,
-                    'arrival_rate' => $item['arrival_rate'] ?? null,
-                    'departure_rate' => $item['departure_price'] ?? null,
-                    'return_discount_percentage' => $item['return_discount_percentage'] ?? null,
-                    'return_discount_amount' => $item['return_discount_amount'] ?? null,
-                    'transport_price' => $item['total_price'] ?? $item['net_amount'] ?? 0,
+                    'arrival_rate' => $outboundPricing['base_price'],
+                    'departure_rate' => null,
+                    'return_discount_percentage' => $outboundPricing['discount_percentage'],
+                    'return_discount_amount' => $outboundPricing['discount_amount'],
+                    'transport_price' => $outboundPricing['final_price'],
                     'booking_status' => TransportBooking::STATUS_PROCESSING,
-                    'total_amount' => (float) round(max(0.0, (float) ($item['net_amount'] ?? 0)), 2),
+                    'total_amount' => (float) round(max(0.0, (float) ($outboundPricing['final_price'] ?? 0)), 2),
                     'currency' => $item['currency'],
                     'payment_method' => $paymentMethod === 'againgency' ? 'Againgency' : 'COD',
                     'source_channel' => 'Direct',
@@ -2502,6 +2514,59 @@ class BookingController extends Controller
                     'is_guest' => $isGuestCheckout ? 1 : 0,
                 ]);
 
+                $returnBooking = null;
+                if ($isReturnTransport && $returnPricing) {
+                    $returnReference = $ref . '-RETURN';
+                    $returnBooking = TransportBooking::create([
+                        'booking_reference' => $returnReference,
+                        'trip_type' => 'RETURN',
+                        'transport_group_reference' => $transportGroupReference,
+                        'transport_id' => $item['transport_id'],
+                        'guest_name' => $guestName,
+                        'traveler_account_id' => $travelerAccountId,
+                        'traveler_relation' => $primaryGuest['relation'] ?? null,
+                        'traveler_first_name' => $primaryGuest['first_name'] ?? null,
+                        'traveler_middle_name' => $primaryGuest['middle_name'] ?? null,
+                        'traveler_last_name' => $primaryGuest['last_name'] ?? null,
+                        'traveler_dob' => $primaryGuest['dob'] ?? null,
+                        'traveler_gender' => $primaryGuest['gender'] ?? null,
+                        'traveler_nationality' => $primaryGuest['nationality'] ?? null,
+                        'traveler_passport_number' => $primaryGuest['passport_number'] ?? null,
+                        'traveler_notes' => $primaryGuest['notes'] ?? null,
+                        'guest_email' => $guestEmail,
+                        'guest_phone' => $guestPhone,
+                        'route_from' => $item['route_to'] ?? null,
+                        'route_to' => $item['route_from'] ?? null,
+                        'pickup_date' => $item['return_date'],
+                        'pickup_time' => $item['return_time'] ?? null,
+                        'return_date' => null,
+                        'return_time' => null,
+                        'pickup_address' => $item['dropoff_address'] ?? null,
+                        'dropoff_address' => $item['pickup_address'] ?? null,
+                        'adults' => max(1, (int) ($item['adults'] ?? $transportPassengerCount)),
+                        'children' => max(0, (int) ($item['children'] ?? 0)),
+                        'total_passengers' => $transportPassengerCount,
+                        'price_per_person' => null,
+                        'arrival_rate' => $returnPricing['base_price'],
+                        'departure_rate' => null,
+                        'return_discount_percentage' => $returnPricing['discount_percentage'],
+                        'return_discount_amount' => $returnPricing['discount_amount'],
+                        'transport_price' => $returnPricing['final_price'],
+                        'booking_status' => TransportBooking::STATUS_PROCESSING,
+                        'total_amount' => $returnPricing['final_price'],
+                        'currency' => $item['currency'],
+                        'payment_method' => $paymentMethod === 'againgency' ? 'Againgency' : 'COD',
+                        'source_channel' => 'Direct',
+                        'special_requests' => $special,
+                        'service_type' => $item['service_type'] ?? null,
+                        'booked_at' => now(),
+                        'trip_id' => $tripId,
+                        'is_guest' => $isGuestCheckout ? 1 : 0,
+                    ]);
+                    $returnBooking->guest_otp_token_id = $guestOtp?->id;
+                    $returnBooking->save();
+                }
+
                 if (!$guestOtp) {
                     $guestOtp = GuestOtpToken::createForGuest($guestEmail, $booking->id);
                 }
@@ -2509,11 +2574,19 @@ class BookingController extends Controller
                 if ($guestOtp) {
                     $booking->guest_otp_token_id = $guestOtp->id;
                     $booking->save();
+                    if ($returnBooking) {
+                        $returnBooking->guest_otp_token_id = $guestOtp->id;
+                        $returnBooking->save();
+                    }
                 }
 
                 \Log::info('Created direct transport booking', ['booking_ref' => $booking->booking_reference, 'transport_booking_id' => $booking->id, 'saved_amount' => $booking->total_amount]);
                 if (!$firstNotificationBooking) {
                     $firstNotificationBooking = $booking;
+                }
+
+                if ($returnBooking) {
+                    $bookingRefs[] = $returnBooking->booking_reference;
                 }
 
                 $operatorEmail = optional($booking->transport->operator)->email;
@@ -2522,6 +2595,7 @@ class BookingController extends Controller
                 }
 
                 // Create Trip party members if Trip exists
+                $returnBli = null;
                 if ($tripId) {
                     foreach ($itemGuests as $guest) {
                         $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
@@ -2563,12 +2637,29 @@ class BookingController extends Controller
                         'booking_id' => $tripBooking->id,
                         'service_type' => 'transport',
                         'service_id' => $item['transport_id'],
-                        'quantity' => $item['passengers'] ?? 1,
-                        'price' => $item['net_amount'],
+                        'transport_booking_id' => $booking->id,
+                        'trip_type' => $isReturnTransport ? 'OUTBOUND' : 'ONE_WAY',
+                        'quantity' => $transportPassengerCount,
+                        'price' => $outboundPricing['final_price'],
                         'start_date' => $item['pickup_date'],
-                        'end_date' => $item['return_date'] ?? $item['pickup_date'],
+                        'end_date' => $item['pickup_date'],
                         'status' => 'active',
                     ]);
+
+                    if ($returnBooking) {
+                        $returnBli = BookingLineItem::create([
+                            'booking_id' => $tripBooking->id,
+                            'service_type' => 'transport',
+                            'service_id' => $item['transport_id'],
+                            'transport_booking_id' => $returnBooking->id,
+                            'trip_type' => 'RETURN',
+                            'quantity' => $transportPassengerCount,
+                            'price' => $returnPricing['final_price'],
+                            'start_date' => $item['return_date'],
+                            'end_date' => $item['return_date'],
+                            'status' => 'active',
+                        ]);
+                    }
 
                     // Link guests to BLI
                     foreach ($itemGuests as $guest) {
@@ -2590,6 +2681,19 @@ class BookingController extends Controller
                                 'bli_id' => $bli->id,
                                 'traveller_id' => $traveller->id,
                             ]);
+                        }
+                    }
+
+                    if ($returnBli) {
+                        foreach (array_merge($itemGuests, $globalAdditionalGuests) as $guest) {
+                            $fullName = trim(($guest['first_name'] ?? '') . ' ' . ($guest['middle_name'] ?? '') . ' ' . ($guest['last_name'] ?? ''));
+                            $traveller = Traveller::where('trip_id', $tripId)->where('name', $fullName)->first();
+                            if ($traveller) {
+                                BliTravellerAllocation::create([
+                                    'bli_id' => $returnBli->id,
+                                    'traveller_id' => $traveller->id,
+                                ]);
+                            }
                         }
                     }
                 }
@@ -3126,10 +3230,27 @@ class BookingController extends Controller
         ];
     }
 
+    private function resolveTransportPassengerCount(array $source = []): int
+    {
+        if (array_key_exists('total_passengers', $source) && is_numeric($source['total_passengers'])) {
+            return max(1, (int) $source['total_passengers']);
+        }
+
+        if (array_key_exists('passengers', $source) && is_numeric($source['passengers'])) {
+            return max(1, (int) $source['passengers']);
+        }
+
+        $adults = max(0, (int) ($source['adults'] ?? 0));
+        $children = max(0, (int) ($source['children'] ?? 0));
+        $infants = max(0, (int) ($source['infants'] ?? 0));
+
+        return max(1, $adults + $children + $infants);
+    }
+
     private function getCartItemGuestCount(array $item): int
     {
         return match ($item['type'] ?? null) {
-            'transport' => max(1, (int) ($item['passengers'] ?? 1)),
+            'transport' => $this->resolveTransportPassengerCount($item),
             'activity' => (int) ($item['participants'] ?? (($item['adults'] ?? 0) + ($item['children'] ?? 0) + ($item['infants'] ?? 0))),
             'package' => max(1, (int) (($item['adults'] ?? 0) + ($item['children'] ?? 0) + ($item['infants'] ?? 0))),
             default => (int) (($item['adults'] ?? 0) + ($item['children'] ?? 0) + ($item['infants'] ?? 0)),

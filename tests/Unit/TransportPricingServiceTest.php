@@ -25,4 +25,15 @@ class TransportPricingServiceTest extends TestCase
         $this->assertSame(1000.0, $pricing->calculateOneWay(1000, 1200, false)['final_price']);
         $this->assertSame(1200.0, $pricing->calculateOneWay(1000, 1200, true)['final_price']);
     }
+
+    public function test_return_booking_splits_discount_between_both_operational_orders(): void
+    {
+        $prices = (new TransportPricingService())->calculateReturnBookingPrices(1000, 1200, 10);
+
+        $this->assertSame(100.0, $prices['outbound']['discount_amount']);
+        $this->assertSame(900.0, $prices['outbound']['final_price']);
+        $this->assertSame(120.0, $prices['return']['discount_amount']);
+        $this->assertSame(1080.0, $prices['return']['final_price']);
+        $this->assertSame(1980.0, $prices['combined_total']);
+    }
 }

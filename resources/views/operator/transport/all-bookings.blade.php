@@ -25,6 +25,7 @@
                             <thead>
                                 <tr>
                                     <th>Ref</th>
+                                    <th>Trip</th>
                                     <th>Vehicle Type</th>
                                     <th>Assigned Vehicle</th>
                                     <th>Driver</th>
@@ -41,6 +42,7 @@
                                 @foreach($bookings as $booking)
                                     <tr>
                                         <td>{{ $booking->booking_reference }}</td>
+                                        <td>{{ $booking->trip_type === 'RETURN' ? 'Return' : ($booking->trip_type === 'OUTBOUND' ? 'Outbound' : 'One-way') }}</td>
                                         <td>{{ optional($booking->transport)->vehicle_type ?: optional($booking->transport)->vehicle_name }}</td>
                                         <td>{{ $booking->vehicle?->license_number ?: ($booking->other_vehicle_license_number ? 'Other: '.$booking->other_vehicle_license_number : 'Unassigned') }}</td>
                                         <td>{{ $booking->pickupDriver?->driver_name ?: 'Unassigned' }}</td>

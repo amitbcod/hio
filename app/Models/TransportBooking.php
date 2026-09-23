@@ -31,6 +31,8 @@ class TransportBooking extends Model
         'return_driver_id',
         'traveler_account_id',
         'booking_reference',
+        'trip_type',
+        'transport_group_reference',
         'guest_name',
         'guest_email',
         'guest_phone',

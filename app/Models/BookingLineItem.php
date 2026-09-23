@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class BookingLineItem extends Model
 {
-    protected $fillable = ['booking_id', 'service_type', 'service_id', 'quantity', 'price', 'start_date', 'end_date', 'status'];
+    protected $fillable = ['booking_id', 'service_type', 'service_id', 'transport_booking_id', 'trip_type', 'quantity', 'price', 'start_date', 'end_date', 'status'];
 
     protected $casts = [
         'price' => 'decimal:2',
@@ -27,5 +27,10 @@ class BookingLineItem extends Model
     public function travellers()
     {
         return $this->belongsToMany(Traveller::class, 'bli_traveller_allocations', 'bli_id', 'traveller_id');
+    }
+
+    public function transportBooking()
+    {
+        return $this->belongsTo(TransportBooking::class, 'transport_booking_id');
     }
 }

@@ -16,7 +16,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
                     <div>
                         <h2 style="font-weight: bold; margin-bottom: 8px;">Booking Details</h2>
-                        <p style="color: #666; margin-bottom: 0;">Booking Reference: {{ $booking->booking_reference }}</p>
+                        <p style="color: #666; margin-bottom: 0;">Booking Reference: {{ $booking->booking_reference }} @if($booking->trip_type) | {{ ucfirst(strtolower($booking->trip_type)) }} trip @endif</p>
                     </div>
                     <div style="display: flex; gap: 12px; align-items:center;">
                         <a href="{{ route('operator.transport.bookings') }}" class="btn btn-outline-blue" style="">

@@ -360,6 +360,24 @@ trait CartItemBuilderTrait
             $returnDiscountPercentage = $pricing['discount_percentage'];
             $returnDiscountAmount = $pricing['discount_amount'];
             $totalPrice = $pricing['final_price'];
+            if (!blank($returnDate)) {
+                $splitPricing = (new TransportPricingService())->calculateReturnBookingPrices(
+                    $pricing['arrival_rate'],
+                    $pricing['departure_rate'],
+                    $pricing['discount_percentage']
+                );
+            } else {
+                $splitPricing = [
+                    'outbound' => [
+                        'base_price' => $pricing['final_price'],
+                        'discount_percentage' => 0,
+                        'discount_amount' => 0,
+                        'final_price' => $pricing['final_price'],
+                    ],
+                    'return' => null,
+                    'combined_total' => $pricing['final_price'],
+                ];
+            }
         }
         
         $taxAmount = 0.0;
@@ -398,6 +416,8 @@ trait CartItemBuilderTrait
             'departure_price' => $departurePrice,
             'return_discount_percentage' => $returnDiscountPercentage,
             'return_discount_amount' => $returnDiscountAmount,
+            'outbound_pricing' => $splitPricing['outbound'],
+            'return_pricing' => $splitPricing['return'],
             'car_rental_total' => $carRentalTotal,
             'total_price' => $totalPrice,
             'currency' => $currency,

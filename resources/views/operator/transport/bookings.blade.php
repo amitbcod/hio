@@ -25,6 +25,7 @@
                             <thead>
                                 <tr>
                                     <th>Ref</th>
+                                    <th>Trip</th>
                                     <th>Guest</th>
                                     <th>Passengers</th>
                                     <th>Pickup</th>
@@ -38,6 +39,7 @@
                                 @foreach($bookings as $booking)
                                     <tr>
                                         <td>{{ $booking->booking_reference }}</td>
+                                        <td>{{ $booking->trip_type === 'RETURN' ? 'Return' : ($booking->trip_type === 'OUTBOUND' ? 'Outbound' : 'One-way') }}</td>
                                         <td>{{ $booking->guest_name ?? ($booking->traveler_first_name.' '.$booking->traveler_last_name) }}</td>
                                         <td>{{ $booking->total_passengers ?? $booking->adults }}</td>
                                         <td>{{ optional($booking->pickup_date)->format('M d, Y') }} {{ $booking->pickup_time }}</td>

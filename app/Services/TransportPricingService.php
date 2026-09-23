@@ -39,6 +39,31 @@ class TransportPricingService
         ];
     }
 
+    public function calculateReturnBookingPrices(float $outboundPrice, float $returnPrice, float $discountPercentage): array
+    {
+        $outboundPrice = round(max(0, $outboundPrice), 2);
+        $returnPrice = round(max(0, $returnPrice), 2);
+        $discountPercentage = min(100, max(0, $discountPercentage));
+        $outboundDiscount = round($outboundPrice * $discountPercentage / 100, 2);
+        $returnDiscount = round($returnPrice * $discountPercentage / 100, 2);
+
+        return [
+            'outbound' => [
+                'base_price' => $outboundPrice,
+                'discount_percentage' => $discountPercentage,
+                'discount_amount' => $outboundDiscount,
+                'final_price' => round(max(0, $outboundPrice - $outboundDiscount), 2),
+            ],
+            'return' => [
+                'base_price' => $returnPrice,
+                'discount_percentage' => $discountPercentage,
+                'discount_amount' => $returnDiscount,
+                'final_price' => round(max(0, $returnPrice - $returnDiscount), 2),
+            ],
+            'combined_total' => round(($outboundPrice - $outboundDiscount) + ($returnPrice - $returnDiscount), 2),
+        ];
+    }
+
     public function resolveForBooking(
         Transport $transport,
         ?string $routeId,
