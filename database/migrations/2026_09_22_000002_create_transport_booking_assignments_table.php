@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('transport_booking_assignments')) {
+            return;
+        }
+
         Schema::create('transport_booking_assignments', function (Blueprint $table) {
             $table->id();
             // These references intentionally remain unsigned IDs without MySQL
