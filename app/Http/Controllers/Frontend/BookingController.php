@@ -2068,7 +2068,7 @@ class BookingController extends Controller
                                                 'passengers' => ($item['adults'] ?? 0) + ($item['children'] ?? 0),
                                                 'adults' => $item['adults'] ?? 0,
                                                 'children' => $item['children'] ?? 0,
-                                                'booking_status' => 'Pending',
+                                                'booking_status' => TransportBooking::STATUS_PROCESSING,
                                                 'total_amount' => $routeAmount,
                                                 'currency' => $item['currency'] ?? 'USD',
                                                 'payment_method' => $paymentMethod === 'againgency' ? 'Againgency' : 'COD',
@@ -2476,7 +2476,7 @@ class BookingController extends Controller
                     'passengers' => $item['passengers'] ?? 1,
                     'adults' => $item['passengers'] ?? 1, // Transport uses passengers field
                     'children' => 0,
-                    'booking_status' => 'Pending',
+                    'booking_status' => TransportBooking::STATUS_PROCESSING,
                     'total_amount' => (float) round(max(0.0, (float) ($item['net_amount'] ?? 0)), 2),
                     'currency' => $item['currency'],
                     'payment_method' => $paymentMethod === 'againgency' ? 'Againgency' : 'COD',

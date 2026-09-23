@@ -7,17 +7,20 @@ use App\Models\Region;
 use App\Models\Transport;
 use App\Models\TransportRate;
 use App\Models\TransportBooking;
+use App\Models\TransportBookingAssignment;
 use App\Models\TransportVehicleType;
 use App\Models\TransportVehicle;
 use App\Models\OperatorDriver;
 use App\Services\TransportAvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
+use Illuminate\Validation\ValidationException;
 
 class TransportController extends Controller
 {
@@ -1256,7 +1259,7 @@ class TransportController extends Controller
 
         // Get bookings for all transports
         $bookings = TransportBooking::whereIn('transport_id', $transports)
-            ->with(['transport', 'travelerAccount', 'vehicle', 'pickupDriver', 'returnDriver'])
+            ->with(['transport', 'travelerAccount', 'vehicle', 'pickupDriver', 'returnDriver', 'currentAssignment.vehicle', 'currentAssignment.driver'])
             ->orderBy('booked_at', 'desc')
             ->paginate(20);
 
@@ -1290,9 +1293,30 @@ class TransportController extends Controller
             abort(403);
         }
 
-        $booking = \App\Models\TransportBooking::with(['vehicle', 'pickupDriver', 'returnDriver'])->findOrFail($bookingId);
+        $booking = \App\Models\TransportBooking::with([
+            'vehicle',
+            'pickupDriver',
+            'returnDriver',
+            'assignments.vehicle',
+            'assignments.driver',
+            'assignments.assignedBy',
+        ])->findOrFail($bookingId);
         if ($booking->transport_id !== $transport->id) {
             abort(403);
+        }
+
+        $assignmentDrivers = collect();
+        $assignmentVehicles = collect();
+        if (in_array($booking->booking_status, [TransportBooking::STATUS_CONFIRMED, TransportBooking::STATUS_SCHEDULED], true)) {
+            $availability = new TransportAvailabilityService();
+            $assignmentDrivers = $availability->availableDrivers($operator, $booking);
+            $assignmentVehicles = $availability->availableVehicleModelsForBooking($transport, $booking);
+            if ($booking->pickupDriver && !$assignmentDrivers->contains('id', $booking->pickup_driver_id)) {
+                $assignmentDrivers->prepend($booking->pickupDriver);
+            }
+            if ($booking->vehicle && !$assignmentVehicles->contains('id', $booking->transport_vehicle_id)) {
+                $assignmentVehicles->prepend($booking->vehicle);
+            }
         }
 
         // Attempt to resolve a clearer route label for package-generated bookings
@@ -1361,7 +1385,13 @@ class TransportController extends Controller
             \Log::debug('Operator::bookingDetails - failed to resolve packageRouteLabel', ['err' => $e->getMessage(), 'booking_id' => $booking->id ?? null]);
         }
 
-        return view('operator.transport.booking-details', compact('transport', 'booking', 'packageRouteLabel'));
+        return view('operator.transport.booking-details', compact(
+            'transport',
+            'booking',
+            'packageRouteLabel',
+            'assignmentDrivers',
+            'assignmentVehicles'
+        ));
     }
 
     /**
@@ -1383,14 +1413,19 @@ class TransportController extends Controller
             ->firstOrFail();
 
         $request->validate([
-            'booking_status' => 'required|in:Confirmed,Cancelled',
+            'booking_status' => 'required|in:Confirmed,Scheduled,Cancelled,Completed',
         ]);
 
-        if ($booking->booking_status === 'Cancelled') {
-            return back()->with('error', 'Cancelled bookings cannot be updated.');
+        $nextStatus = $request->input('booking_status');
+        if (!TransportBooking::canTransition($booking->booking_status, $nextStatus)) {
+            return back()->with('error', "A {$booking->booking_status} booking cannot be changed to {$nextStatus}.");
         }
 
-        $booking->booking_status = $request->input('booking_status');
+        if ($nextStatus === TransportBooking::STATUS_SCHEDULED && !$booking->hasCompleteAssignment()) {
+            return back()->with('error', 'A driver and vehicle must be assigned before scheduling the booking.');
+        }
+
+        $booking->booking_status = $nextStatus;
         $booking->save();
 
         (new \App\Services\OperatorBookingNotificationService())->notifyBookingStatusChanged(
@@ -1419,8 +1454,16 @@ class TransportController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
+        if (!in_array($booking->booking_status, [TransportBooking::STATUS_CONFIRMED, TransportBooking::STATUS_SCHEDULED], true)) {
+            return response()->json(['error' => 'Only confirmed or scheduled bookings can be assigned.'], 422);
+        }
+
         $availability = new TransportAvailabilityService();
-        $drivers = $availability->availableDrivers($operator, $booking)->map(fn ($driver) => [
+        $availableDrivers = $availability->availableDrivers($operator, $booking);
+        if ($booking->pickupDriver && !$availableDrivers->contains('id', $booking->pickup_driver_id)) {
+            $availableDrivers->prepend($booking->pickupDriver);
+        }
+        $drivers = $availableDrivers->map(fn ($driver) => [
             'id' => $driver->id,
             'driver_name' => $driver->driver_name,
             'driver_phone' => $driver->driver_mobile_no,
@@ -1433,7 +1476,11 @@ class TransportController extends Controller
             'pickup_date' => $booking->pickup_date?->toDateString(),
             'pickup_time' => $booking->pickup_time,
         ];
-        $vehicles = $availability->availableVehicleModelsForBooking($transport, $booking)
+        $availableVehicles = $availability->availableVehicleModelsForBooking($transport, $booking);
+        if ($booking->vehicle && !$availableVehicles->contains('id', $booking->transport_vehicle_id)) {
+            $availableVehicles->prepend($booking->vehicle);
+        }
+        $vehicles = $availableVehicles
             ->map(fn ($vehicle) => [
                 'id' => $vehicle->id,
                 'license_number' => $vehicle->license_number,
@@ -1467,24 +1514,50 @@ class TransportController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
+        if (!in_array($booking->booking_status, [TransportBooking::STATUS_CONFIRMED, TransportBooking::STATUS_SCHEDULED], true)) {
+            return response()->json(['error' => 'Only confirmed or scheduled bookings can be assigned.'], 422);
+        }
+
         $validated = $request->validate([
-            'pickup_driver_id' => 'required|integer|exists:operator_drivers,id',
+            'pickup_driver_id' => 'nullable|integer|exists:operator_drivers,id',
             'return_driver_id' => 'nullable|integer|exists:operator_drivers,id',
             'vehicle_id' => 'nullable|integer',
             'other_vehicle_name' => 'nullable|string|max:150',
             'other_vehicle_license_number' => 'nullable|string|max:100',
+            'reason' => 'nullable|string|max:1000',
+            'remove_vehicle' => 'nullable|boolean',
+            'remove_driver' => 'nullable|boolean',
         ]);
+
+        $pickupDriverId = !empty($validated['remove_driver'])
+            ? null
+            : (array_key_exists('pickup_driver_id', $validated)
+            ? $validated['pickup_driver_id']
+            : $booking->pickup_driver_id);
+        $returnDriverId = array_key_exists('return_driver_id', $validated)
+            ? $validated['return_driver_id']
+            : $booking->return_driver_id;
+        $hasOtherVehicleInput = filled($validated['other_vehicle_name'] ?? null)
+            || filled($validated['other_vehicle_license_number'] ?? null);
+        $vehicleId = !empty($validated['remove_vehicle']) ? null : ($validated['vehicle_id'] ?? null);
+        if (!$vehicleId && !$hasOtherVehicleInput && empty($validated['remove_vehicle'])) {
+            $vehicleId = $booking->transport_vehicle_id;
+        }
+
+        if (!$pickupDriverId && !$vehicleId && !$hasOtherVehicleInput
+            && empty($validated['remove_vehicle']) && empty($validated['remove_driver'])) {
+            return response()->json(['error' => 'Select a driver or vehicle assignment.'], 422);
+        }
 
         $availability = new TransportAvailabilityService();
         $availableDrivers = $availability->availableDrivers($operator, $booking)->pluck('id')->all();
-        foreach (array_filter([$validated['pickup_driver_id'], $validated['return_driver_id'] ?? null]) as $driverId) {
+        foreach (array_filter([$pickupDriverId, $returnDriverId]) as $driverId) {
             if (!in_array((int) $driverId, array_map('intval', $availableDrivers), true)
                 && !in_array((int) $driverId, [(int) $booking->pickup_driver_id, (int) $booking->return_driver_id], true)) {
                 return response()->json(['error' => 'This driver is no longer available for the selected booking period.'], 422);
             }
         }
 
-        $vehicleId = $validated['vehicle_id'] ?? null;
         if ($vehicleId) {
             $vehicle = $transport->vehicles()->active()->whereKey($vehicleId)->first();
             if (!$vehicle) {
@@ -1496,13 +1569,13 @@ class TransportController extends Controller
                 && (int) $vehicleId !== (int) $booking->transport_vehicle_id) {
                 return response()->json(['error' => 'This vehicle is no longer available for the selected booking period.'], 422);
             }
-        } elseif (blank($validated['other_vehicle_name'] ?? null) || blank($validated['other_vehicle_license_number'] ?? null)) {
+        } elseif ($hasOtherVehicleInput && (blank($validated['other_vehicle_name'] ?? null) || blank($validated['other_vehicle_license_number'] ?? null))) {
             return response()->json(['error' => 'Enter the other vehicle name and license number.'], 422);
         }
 
         $selectedDriverIds = array_filter([
-            $request->input('pickup_driver_id'),
-            $request->input('return_driver_id'),
+            $pickupDriverId,
+            $returnDriverId,
         ]);
 
         if (!empty($selectedDriverIds)) {
@@ -1516,18 +1589,78 @@ class TransportController extends Controller
             }
         }
 
-        $booking->pickup_driver_id = $validated['pickup_driver_id'];
-        $booking->return_driver_id = $validated['return_driver_id'] ?? null;
-        $booking->driver_id = $validated['pickup_driver_id'];
-        $booking->transport_vehicle_id = $vehicleId;
-        $booking->other_vehicle_name = $vehicleId ? null : $validated['other_vehicle_name'];
-        $booking->other_vehicle_license_number = $vehicleId ? null : $validated['other_vehicle_license_number'];
-        $booking->save();
+        DB::transaction(function () use ($booking, $pickupDriverId, $returnDriverId, $vehicleId, $validated, $operator): void {
+            $lockedBooking = TransportBooking::query()->lockForUpdate()->findOrFail($booking->id);
+            $lockedTransport = Transport::findOrFail($lockedBooking->transport_id);
+            $lockedAvailability = new TransportAvailabilityService();
+            $lockedAvailableDrivers = $lockedAvailability->availableDrivers($operator, $lockedBooking)->pluck('id')->all();
+            foreach (array_filter([$pickupDriverId, $returnDriverId]) as $driverId) {
+                if (!in_array((int) $driverId, array_map('intval', $lockedAvailableDrivers), true)
+                    && !in_array((int) $driverId, [(int) $lockedBooking->pickup_driver_id, (int) $lockedBooking->return_driver_id], true)) {
+                    throw ValidationException::withMessages(['pickup_driver_id' => 'This driver is no longer available for the selected booking period.']);
+                }
+            }
+            if ($vehicleId) {
+                $lockedVehicle = $lockedTransport->vehicles()->active()->whereKey($vehicleId)->first();
+                $lockedAvailableVehicleIds = $lockedAvailability->availableVehicleModelsForBooking($lockedTransport, $lockedBooking)->pluck('id')->all();
+                if (!$lockedVehicle || (!in_array((int) $vehicleId, array_map('intval', $lockedAvailableVehicleIds), true)
+                    && (int) $vehicleId !== (int) $lockedBooking->transport_vehicle_id)) {
+                    throw ValidationException::withMessages(['vehicle_id' => 'This vehicle is no longer available for the selected booking period.']);
+                }
+            }
+            $previous = $lockedBooking->assignments()
+                ->where('status', TransportBookingAssignment::STATUS_CURRENT)
+                ->lockForUpdate()
+                ->first();
 
-        return response()->json([
+            $otherVehicleName = $vehicleId ? null : ($validated['other_vehicle_name'] ?? null);
+            $otherVehicleLicense = $vehicleId ? null : ($validated['other_vehicle_license_number'] ?? null);
+            $hasCompleteAssignment = !empty($pickupDriverId)
+                && ($vehicleId || (filled($otherVehicleName) && filled($otherVehicleLicense)));
+
+            if ($previous) {
+                $previous->forceFill([
+                    'status' => TransportBookingAssignment::STATUS_REPLACED,
+                    'unassigned_at' => now(),
+                ])->save();
+            }
+
+            $lockedBooking->forceFill([
+                'pickup_driver_id' => $pickupDriverId,
+                'return_driver_id' => $returnDriverId,
+                'driver_id' => $pickupDriverId,
+                'transport_vehicle_id' => $vehicleId,
+                'other_vehicle_name' => $otherVehicleName,
+                'other_vehicle_license_number' => $otherVehicleLicense,
+                'booking_status' => $hasCompleteAssignment
+                    ? ($lockedBooking->booking_status === TransportBooking::STATUS_SCHEDULED
+                        ? TransportBooking::STATUS_SCHEDULED
+                        : TransportBooking::STATUS_SCHEDULED)
+                    : TransportBooking::STATUS_CONFIRMED,
+            ])->save();
+
+            $lockedBooking->assignments()->create([
+                'vehicle_id' => $vehicleId,
+                'driver_id' => $pickupDriverId,
+                'other_vehicle_name' => $otherVehicleName,
+                'other_vehicle_license_number' => $otherVehicleLicense,
+                'status' => $hasCompleteAssignment
+                    ? TransportBookingAssignment::STATUS_CURRENT
+                    : TransportBookingAssignment::STATUS_UNASSIGNED,
+                'reason' => $validated['reason'] ?? null,
+                'assigned_at' => now(),
+                'assigned_by' => $operator->id,
+            ]);
+        });
+
+        $response = [
             'success' => true,
-            'message' => 'Drivers assigned successfully',
-        ]);
+            'message' => 'Assignment saved successfully',
+        ];
+
+        return $request->expectsJson() || $request->ajax()
+            ? response()->json($response)
+            : back()->with('success', $response['message']);
     }
 
     /**

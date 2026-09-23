@@ -48,16 +48,13 @@
                                         <td>{{ $booking->total_passengers ?? $booking->adults }}</td>
                                         <td>{{ optional($booking->pickup_date)->format('M d, Y') }} {{ $booking->pickup_time }}</td>
                                         <td>{{ $booking->currency ?? 'USD' }} {{ number_format($booking->total_amount, 2) }}</td>
-                                        <td>{{ ucfirst($booking->booking_status ?? 'pending') }}</td>
+                                        <td>{{ $booking->booking_status ?? \App\Models\TransportBooking::STATUS_PROCESSING }}</td>
                                         <td>{{ optional($booking->booked_at)->format('M d, Y H:i') }}</td>
                                         <td>
                                             <a href="{{ route('operator.transport.booking.details', [$booking->transport_id, $booking->id]) }}" class="btn btn-sm btn-primary">Details</a>
-                                            @php
-                                                $viewAssigned = $booking->pickup_driver_id && (! $booking->return_date || $booking->return_driver_id);
-                                            @endphp
-                                            <button class="btn btn-sm btn-info" onclick="openAssignDriverModal({{ $booking->id }})">
-                                                {{ $viewAssigned ? 'View Assigned Drivers' : 'Assign Driver' }}
-                                            </button>
+                                            @if(in_array($booking->booking_status, [\App\Models\TransportBooking::STATUS_CONFIRMED, \App\Models\TransportBooking::STATUS_SCHEDULED], true))
+                                                <button class="btn btn-sm btn-info" onclick="openAssignDriverModal({{ $booking->id }})">{{ $booking->booking_status === \App\Models\TransportBooking::STATUS_SCHEDULED ? 'Change Assignment' : 'Assign Driver' }}</button>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach
@@ -86,8 +83,8 @@
                 <form id="assignDriverForm">
                     @csrf
                     <div class="form-group">
-                        <label for="vehicleSelect">Vehicle <span style="color: red;">*</span></label>
-                        <select id="vehicleSelect" name="vehicle_id" class="form-control" required>
+                        <label for="vehicleSelect">Vehicle</label>
+                        <select id="vehicleSelect" name="vehicle_id" class="form-control">
                             <option value="">Select vehicle</option>
                         </select>
                     </div>
@@ -96,8 +93,8 @@
                         <div class="form-group"><label>Other Vehicle License Number *</label><input id="otherVehicleLicense" name="other_vehicle_license_number" class="form-control"></div>
                     </div>
                     <div class="form-group">
-                        <label for="pickupDriverSelect">Pickup Driver <span style="color: red;">*</span></label>
-                        <select id="pickupDriverSelect" name="pickup_driver_id" class="form-control" required>
+                        <label for="pickupDriverSelect">Pickup Driver</label>
+                        <select id="pickupDriverSelect" name="pickup_driver_id" class="form-control">
                             <option value="">Select pickup driver</option>
                         </select>
                     </div>
@@ -107,6 +104,10 @@
                             <option value="">Select return driver</option>
                         </select>
                         <small class="form-text text-muted">Assign a separate return driver if this booking includes a return journey.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="assignmentReason">Reason for change</label>
+                        <input id="assignmentReason" name="reason" class="form-control" placeholder="Vehicle breakdown, driver emergency, operational change...">
                     </div>
                 </form>
             </div>
@@ -222,13 +223,13 @@ function saveDriverAssignment() {
     const returnDriverId = document.getElementById('returnDriverSelect').value || null;
     const vehicleValue = document.getElementById('vehicleSelect').value;
 
-    if (!pickupDriverId) {
-        alert('Please select a pickup driver');
-        return;
-    }
     if (!vehicleValue) {
-        alert('Please select a vehicle');
-        return;
+        const otherName = document.getElementById('otherVehicleName').value;
+        const otherLicense = document.getElementById('otherVehicleLicense').value;
+        if (!pickupDriverId && (!otherName || !otherLicense)) {
+            alert('Select a driver or vehicle assignment');
+            return;
+        }
     }
 
     const url = assignDriversUrlTemplate.replace('BOOKING_ID', currentBookingId);
@@ -238,6 +239,8 @@ function saveDriverAssignment() {
         credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}'
         },
         body: JSON.stringify({
@@ -246,15 +249,27 @@ function saveDriverAssignment() {
             other_vehicle_license_number: document.getElementById('otherVehicleLicense').value,
             pickup_driver_id: pickupDriverId,
             return_driver_id: returnDriverId,
+            reason: document.getElementById('assignmentReason').value,
         })
     })
     .then(response => {
         if (!response.ok) {
-            return response.json().then(body => {
-                throw new Error(body.error || body.message || `HTTP ${response.status}`);
+            return response.text().then(text => {
+                let message = `HTTP ${response.status}`;
+                try {
+                    const body = JSON.parse(text);
+                    message = body.error || body.message || message;
+                } catch (parseError) {
+                    if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                        message = 'The server returned an HTML error page. Please refresh and try again.';
+                    }
+                }
+                throw new Error(message);
             });
         }
-        return response.json();
+        return response.json().catch(() => {
+            throw new Error('The server returned an invalid response. Please refresh and try again.');
+        });
     })
     .then(data => {
         if (data.success) {

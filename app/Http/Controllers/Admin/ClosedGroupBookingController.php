@@ -649,7 +649,7 @@ class ClosedGroupBookingController extends Controller
                                 'price_per_person' => 0.0,
                                 'total_amount' => (float) round($routeAmount, 2),
                                 'currency' => 'USD',
-                                'booking_status' => 'Pending',
+                                'booking_status' => TransportBooking::STATUS_PROCESSING,
                                 'payment_method' => Schema::hasColumn('transport_bookings', 'payment_method') ? 'Bank Transfer' : null,
                                 'source_channel' => 'Admin',
                                 'trip_id' => $trip->id,

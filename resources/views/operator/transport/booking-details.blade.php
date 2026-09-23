@@ -22,8 +22,8 @@
                         <a href="{{ route('operator.transport.bookings') }}" class="btn btn-outline-blue" style="">
                             ← Back to Bookings
                         </a>
-                        <span class="badge" style="background: {{ $booking->booking_status === 'Confirmed' ? '#28a745' : ($booking->booking_status === 'Pending' ? '#ffc107' : '#dc3545') }}; color: #fff; font-size: 15px; padding: 8px 16px; line-height: 21px; font-weight: 500;">
-                            {{ $booking->booking_status ?? 'Pending' }}
+                        <span class="badge" style="background: {{ match($booking->booking_status) { 'Confirmed' => '#28a745', 'Scheduled' => '#17a2b8', 'Processing' => '#ffc107', default => '#dc3545' } }}; color: #fff; font-size: 15px; padding: 8px 16px; line-height: 21px; font-weight: 500;">
+                            {{ $booking->booking_status ?? \App\Models\TransportBooking::STATUS_PROCESSING }}
                         </span>
                     </div>
                 </div>
@@ -62,7 +62,7 @@
                             </div>
                             <div class="col-md-3">
                                 <strong>Status:</strong><br>
-                                <span class="badge" style="background: {{ $booking->booking_status === 'Confirmed' ? '#28a745' : ($booking->booking_status === 'Pending' ? '#ffc107' : '#dc3545') }}; color:#fff;">{{ $booking->booking_status ?? 'Pending' }}</span>
+                                <span class="badge" style="background: {{ match($booking->booking_status) { 'Confirmed' => '#28a745', 'Scheduled' => '#17a2b8', 'Processing' => '#ffc107', default => '#dc3545' } }}; color:#fff;">{{ $booking->booking_status ?? \App\Models\TransportBooking::STATUS_PROCESSING }}</span>
                             </div>
                         </div>
                     </div>
@@ -193,8 +193,8 @@
                             <div class="col-md-6">
                                 <strong>Payment Status:</strong><br>
                                 @php
-                                    $bookingStatus = $booking->booking_status ?? 'Pending';
-                                    $statusColor = $bookingStatus === 'Confirmed' ? '#28a745' : ($bookingStatus === 'Cancelled' ? '#dc3545' : '#17a2b8');
+                                    $bookingStatus = $booking->booking_status ?? \App\Models\TransportBooking::STATUS_PROCESSING;
+                                    $statusColor = match($bookingStatus) { 'Confirmed' => '#28a745', 'Scheduled' => '#17a2b8', 'Processing' => '#ffc107', 'Cancelled' => '#dc3545', default => '#6c757d' };
                                 @endphp
                                 <span class="badge" style="background: {{ $statusColor }};">{{ $bookingStatus }}</span>
                                 <br><small style="color: #666;">{{ $bookingStatus === 'Confirmed' ? 'Payment completed successfully' : ($bookingStatus === 'Cancelled' ? 'Booking has been cancelled' : 'Payment processing details not available') }}</small>
@@ -211,6 +211,73 @@
                 </div>
                 @endif
 
+                @if(in_array($booking->booking_status, [\App\Models\TransportBooking::STATUS_CONFIRMED, \App\Models\TransportBooking::STATUS_SCHEDULED], true))
+                <div style="margin-bottom: 32px;">
+                    <h4 style="font-weight: 600; margin-bottom: 20px; color: #333;">Current Assignment</h4>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                        <form id="detailsAssignmentForm" method="POST" action="{{ route('operator.transport.booking.assign-drivers', $booking->id) }}">
+                            @csrf
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="detailsVehicleSelect"><strong>Vehicle</strong></label>
+                                    <select id="detailsVehicleSelect" name="vehicle_id" class="form-control">
+                                        <option value="">Remove vehicle</option>
+                                        @foreach($assignmentVehicles as $vehicle)
+                                            <option value="{{ $vehicle->id }}" @selected((int) $booking->transport_vehicle_id === (int) $vehicle->id)>{{ $vehicle->license_number }} / {{ $vehicle->registration_number }}</option>
+                                        @endforeach
+                                        <option value="other" @selected(!$booking->transport_vehicle_id && $booking->other_vehicle_license_number)>Other vehicle</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="detailsDriverSelect"><strong>Driver</strong></label>
+                                    <select id="detailsDriverSelect" name="pickup_driver_id" class="form-control">
+                                        <option value="">Remove driver</option>
+                                        @foreach($assignmentDrivers as $driver)
+                                            <option value="{{ $driver->id }}" @selected((int) $booking->pickup_driver_id === (int) $driver->id)>{{ $driver->driver_name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <label>Other vehicle name</label>
+                                    <input name="other_vehicle_name" class="form-control" value="{{ $booking->other_vehicle_name }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label>Other vehicle license number</label>
+                                    <input name="other_vehicle_license_number" class="form-control" value="{{ $booking->other_vehicle_license_number }}">
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label>Reason for change</label>
+                                <input name="reason" class="form-control" placeholder="Vehicle breakdown, driver emergency, operational change...">
+                            </div>
+                            <div class="mt-3">
+                                <label><input type="checkbox" name="remove_vehicle" value="1"> Remove vehicle assignment</label>
+                                <label class="ml-3"><input type="checkbox" name="remove_driver" value="1"> Remove driver assignment</label>
+                            </div>
+                            <button type="submit" class="btn btn-info mt-3">Change Assignment</button>
+                        </form>
+                    </div>
+                </div>
+                @endif
+
+                <div style="margin-bottom: 32px;">
+                    <h4 style="font-weight: 600; margin-bottom: 20px; color: #333;">Assignment History</h4>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                        @forelse($booking->assignments->sortByDesc('assigned_at') as $assignment)
+                            <div style="padding: 12px 0; border-bottom: 1px solid #ddd;">
+                                <strong>{{ $assignment->vehicle?->license_number ?: ($assignment->other_vehicle_license_number ? 'Other: '.$assignment->other_vehicle_license_number : 'No vehicle') }}</strong>
+                                <span> | {{ $assignment->driver?->driver_name ?: 'No driver' }}</span>
+                                <span class="badge" style="background: {{ $assignment->status === 'Current' ? '#17a2b8' : '#6c757d' }};">{{ $assignment->status }}</span><br>
+                                <small style="color:#666;">{{ optional($assignment->assigned_at)->format('d M Y H:i') }}@if($assignment->reason) | {{ $assignment->reason }}@endif @if($assignment->assignedBy) | {{ $assignment->assignedBy->name ?? $assignment->assignedBy->email ?? 'Operator' }}@endif</small>
+                            </div>
+                        @empty
+                            <span style="color:#666;">No assignment history yet.</span>
+                        @endforelse
+                    </div>
+                </div>
+
                 {{-- Cancellation Policy --}}
                 @if(optional($transport)->cancellation_policy)
                 <div style="margin-bottom: 32px;">
@@ -224,7 +291,7 @@
                     <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                         <a href="{{ route('operator.transport.bookings') }}" class="btn btn-outline-blue" style="">← Back to All Bookings</a>
 
-                        @if($booking->booking_status === 'Pending')
+                        @if($booking->booking_status === \App\Models\TransportBooking::STATUS_PROCESSING)
                             <form method="POST" action="{{ route('operator.transport.booking.status', $booking->id) }}" style="display:inline;" onsubmit="return confirm('Confirm this booking?');">
                                 @csrf
                                 <input type="hidden" name="booking_status" value="Confirmed">
@@ -232,11 +299,19 @@
                             </form>
                         @endif
 
-                        @if($booking->booking_status !== 'Cancelled')
+                        @if(in_array($booking->booking_status, [\App\Models\TransportBooking::STATUS_PROCESSING, \App\Models\TransportBooking::STATUS_CONFIRMED], true))
                             <form method="POST" action="{{ route('operator.transport.booking.status', $booking->id) }}" style="display:inline;" onsubmit="return confirm('Cancel this booking?');">
                                 @csrf
                                 <input type="hidden" name="booking_status" value="Cancelled">
                                 <button type="submit" class="btn" style="background: #dc3545; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">✕ Cancel Booking</button>
+                            </form>
+                        @endif
+
+                        @if($booking->booking_status === \App\Models\TransportBooking::STATUS_SCHEDULED)
+                            <form method="POST" action="{{ route('operator.transport.booking.status', $booking->id) }}" style="display:inline;" onsubmit="return confirm('Mark this booking as completed?');">
+                                @csrf
+                                <input type="hidden" name="booking_status" value="{{ \App\Models\TransportBooking::STATUS_COMPLETED }}">
+                                <button type="submit" class="btn" style="background: #17a2b8; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">Mark Completed</button>
                             </form>
                         @endif
                     </div>
@@ -245,4 +320,12 @@
         </div>
     </div>
 </div>
+<script>
+document.getElementById('detailsAssignmentForm')?.addEventListener('submit', function (event) {
+    const vehicle = document.getElementById('detailsVehicleSelect');
+    if (vehicle.value === 'other') {
+        vehicle.value = '';
+    }
+});
+</script>
                     @endsection

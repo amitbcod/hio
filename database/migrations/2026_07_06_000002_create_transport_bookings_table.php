@@ -48,7 +48,7 @@ return new class extends Migration
             $table->string('currency')->default('USD');
             
             // Status & Payment
-            $table->enum('booking_status', ['Pending', 'Confirmed', 'Cancelled', 'Completed'])->default('Pending');
+            $table->enum('booking_status', ['Processing', 'Confirmed', 'Scheduled', 'Cancelled', 'Completed'])->default('Processing');
             $table->string('payment_method')->nullable(); // COD, Againgency
             $table->string('source_channel')->default('Direct');
             

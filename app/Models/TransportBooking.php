@@ -6,6 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class TransportBooking extends Model
 {
+    public const STATUS_PROCESSING = 'Processing';
+    public const STATUS_CONFIRMED = 'Confirmed';
+    public const STATUS_SCHEDULED = 'Scheduled';
+    public const STATUS_CANCELLED = 'Cancelled';
+    public const STATUS_COMPLETED = 'Completed';
+
+    public const STATUSES = [
+        self::STATUS_PROCESSING,
+        self::STATUS_CONFIRMED,
+        self::STATUS_SCHEDULED,
+        self::STATUS_CANCELLED,
+        self::STATUS_COMPLETED,
+    ];
+
     protected $table = 'transport_bookings';
     protected $fillable = [
         'transport_id',
@@ -64,6 +78,39 @@ class TransportBooking extends Model
         'booked_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $booking): void {
+            $booking->booking_status ??= self::STATUS_PROCESSING;
+        });
+    }
+
+    public static function canTransition(?string $from, string $to): bool
+    {
+        return in_array($to, match ($from) {
+            self::STATUS_PROCESSING => [self::STATUS_CONFIRMED, self::STATUS_CANCELLED],
+            self::STATUS_CONFIRMED => [self::STATUS_SCHEDULED, self::STATUS_CANCELLED],
+            self::STATUS_SCHEDULED => [self::STATUS_COMPLETED],
+            default => [],
+        }, true);
+    }
+
+    public function hasDriverAssignment(): bool
+    {
+        return !empty($this->pickup_driver_id ?? $this->driver_id);
+    }
+
+    public function hasVehicleAssignment(): bool
+    {
+        return !empty($this->transport_vehicle_id)
+            || (filled($this->other_vehicle_name) && filled($this->other_vehicle_license_number));
+    }
+
+    public function hasCompleteAssignment(): bool
+    {
+        return $this->hasDriverAssignment() && $this->hasVehicleAssignment();
+    }
+
     public function transport()
     {
         return $this->belongsTo(Transport::class, 'transport_id');
@@ -118,5 +165,16 @@ class TransportBooking extends Model
     public function guestOtpToken()
     {
         return $this->belongsTo(GuestOtpToken::class, 'guest_otp_token_id');
+    }
+
+    public function assignments()
+    {
+        return $this->hasMany(TransportBookingAssignment::class, 'transport_booking_id');
+    }
+
+    public function currentAssignment()
+    {
+        return $this->hasOne(TransportBookingAssignment::class, 'transport_booking_id')
+            ->where('status', TransportBookingAssignment::STATUS_CURRENT);
     }
 }

@@ -42,7 +42,7 @@
                                         <td>{{ $booking->total_passengers ?? $booking->adults }}</td>
                                         <td>{{ optional($booking->pickup_date)->format('M d, Y') }} {{ $booking->pickup_time }}</td>
                                         <td>{{ $booking->currency ?? 'USD' }} {{ number_format($booking->total_amount, 2) }}</td>
-                                        <td>{{ ucfirst($booking->booking_status ?? 'pending') }}</td>
+                                        <td>{{ $booking->booking_status ?? \App\Models\TransportBooking::STATUS_PROCESSING }}</td>
                                         <td>{{ optional($booking->booked_at)->format('M d, Y H:i') }}</td>
                                         <td><a href="{{ route('operator.transport.booking.details', [$transport->id, $booking->id]) }}" class="btn btn-sm btn-primary">Details</a></td>
                                     </tr>
