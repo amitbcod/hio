@@ -282,9 +282,11 @@
                                     $route = $routeEntry['route'];
                                     $pricing = (array) ($routeEntry['pricing'] ?? []);
                                     $default = (float) ($pricing['default_price'] ?? 0);
-                                    $return = (float) ($pricing['return_price'] ?? 0);
+                                    $departure = (float) ($pricing['departure_price'] ?? 0);
                                     $packagePrice = isset($pricing['package_price']) ? (float) $pricing['package_price'] : 0;
-                                    $packageReturn = isset($pricing['package_return_price']) ? (float) $pricing['package_return_price'] : 0;
+                                    $packageDeparture = isset($pricing['package_departure_price']) ? (float) $pricing['package_departure_price'] : 0;
+                                    $return = round(($default + $departure) * (1 - ((float) ($route->transport->return_discount_percentage ?? 0) / 100)), 2);
+                                    $packageReturn = round(($packagePrice + $packageDeparture) * (1 - ((float) ($route->transport->return_discount_percentage ?? 0) / 100)), 2);
                                     $seasonal = $pricing['seasonal'] ?? [];
 
 
@@ -379,7 +381,7 @@
                                             $sStart = $s['start'] ?? $s['start_date'] ?? null;
                                             $sEnd = $s['end'] ?? $s['end_date'] ?? null;
                                             $sPrice = $s['price'] ?? $s['single'] ?? null;
-                                            $sReturn = $s['return_price'] ?? $s['return'] ?? null;
+                                            $sReturn = null;
                                             if ($sPrice === null && $sReturn === null) continue;
                                             $label = ($sStart && $sEnd) ? (\Carbon\Carbon::parse($sStart)->format('d M Y') . ' - ' . \Carbon\Carbon::parse($sEnd)->format('d M Y') . ' — Season Rate') : 'Seasonal Rate';
                                             $rows[] = ['label' => $label, 'base' => (float) ($sPrice ?? 0), 'package' => $packagePrice, 'return' => (float) ($sReturn ?? 0)];

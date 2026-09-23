@@ -21,6 +21,11 @@
             <form id="step2-routes-pricing-form" method="POST" action="{{ route('operator.transport.step2.save', $transport->id) }}">
                 @csrf
                 <input type="hidden" name="save_service" id="save_service" value="">
+                <div class="alert alert-info border mb-4">
+                    <label class="form-label mb-1"><strong>Return Discount (%)</strong></label>
+                    <input type="number" name="return_discount_percentage" class="form-control" value="{{ old('return_discount_percentage', $transport->return_discount_percentage ?? 0) }}" min="0" max="100" step="0.01" required>
+                    <small>Percentage discount applied to the combined price of both directions for a return/two-way booking.</small>
+                </div>
                 <div class="mb-4">
                     <ul class="nav nav-tabs" id="service-tabs" role="tablist">
                         @foreach($serviceGroups as $serviceKey => $serviceGroup)
@@ -64,47 +69,47 @@
                                             @endphp
 
                                             <div class="row mb-3">
-                                                <div class="col-md-4"><label class="form-label">Single trip price (per vehicle)</label></div>
+                                                <div class="col-md-4"><label class="form-label">{{ $route['route_from'] }} → {{ $route['route_to'] }} Price (per vehicle)</label></div>
                                                 <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][default_price]" class="form-control" value="{{ $pricing['default_price'] ?? '' }}" min="0" step="0.01"></div>
                                             </div>
 
                                             <div class="row mb-3">
-                                                <div class="col-md-4"><label class="form-label">Return trip price (per vehicle)</label></div>
-                                                <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][return_price]" class="form-control" value="{{ $pricing['return_price'] ?? '' }}" min="0" step="0.01"></div>
+                                                <div class="col-md-4"><label class="form-label">{{ $route['route_to'] }} → {{ $route['route_from'] }} Price (per vehicle)</label></div>
+                                                <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][departure_price]" class="form-control" value="{{ $pricing['departure_price'] ?? '' }}" min="0" step="0.01"></div>
                                             </div>
 
                                             <div class="row mb-3">
-                                                <div class="col-md-4"><label class="form-label">Package single trip price </label></div>
+                                                <div class="col-md-4"><label class="form-label">{{ $route['route_from'] }} → {{ $route['route_to'] }} Package Price (per vehicle)</label></div>
                                                 <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][package_price]" class="form-control" value="{{ $pricing['package_price'] ?? '' }}" min="0" step="0.01"></div>
                                             </div>
 
                                             <div class="row mb-3">
-                                                <div class="col-md-4"><label class="form-label">Package return trip price </label></div>
-                                                <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][package_return_price]" class="form-control" value="{{ $pricing['package_return_price'] ?? '' }}" min="0" step="0.01"></div>
+                                                <div class="col-md-4"><label class="form-label">{{ $route['route_to'] }} → {{ $route['route_from'] }} Package Price (per vehicle)</label></div>
+                                                <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][package_departure_price]" class="form-control" value="{{ $pricing['package_departure_price'] ?? '' }}" min="0" step="0.01"></div>
                                             </div>
 
                                             <div class="row mb-3">
-                                                <div class="col-md-4"><label class="form-label">Group single trip price </label></div>
+                                                <div class="col-md-4"><label class="form-label">{{ $route['route_from'] }} → {{ $route['route_to'] }} Group Price (per vehicle)</label></div>
                                                 <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][group_price]" class="form-control" value="{{ $pricing['group_price'] ?? '' }}" min="0" step="0.01"></div>
                                             </div>
 
                                             <div class="row mb-3">
-                                                <div class="col-md-4"><label class="form-label">Group return trip price </label></div>
-                                                <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][group_return_price]" class="form-control" value="{{ $pricing['group_return_price'] ?? '' }}" min="0" step="0.01"></div>
+                                                <div class="col-md-4"><label class="form-label">{{ $route['route_to'] }} → {{ $route['route_from'] }} Group Price (per vehicle)</label></div>
+                                                <div class="col-md-8"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][group_departure_price]" class="form-control" value="{{ $pricing['group_departure_price'] ?? '' }}" min="0" step="0.01"></div>
                                             </div>
 
                                             <div class="mt-3">
                                                 <label class="form-label">Seasonal Prices</label>
                                                 <p class="text-muted small mb-2">If a seasonal date range matches the booking date, that price will be used. Otherwise the single trip price is applied.</p>
-                                                <div class="seasonal-list" data-index="{{ $routeIndexValue }}">
+                                                <div class="seasonal-list" data-index="{{ $routeIndexValue }}" data-route-from="{{ $route['route_from'] }}" data-route-to="{{ $route['route_to'] }}">
                                                     @php $seasonalEntries = $pricing['seasonal'] ?? []; @endphp
                                                     @foreach($seasonalEntries as $seasonIndex => $season)
                                                         <div class="season-row mb-2">
                                                             <div class="row gx-2">
                                                                 <div class="col-md-2"><input type="date" name="routes[{{ $routeIndexValue }}][pricing][seasonal][{{ $seasonIndex }}][start]" class="form-control" value="{{ $season['start'] ?? $season['start_date'] ?? '' }}"></div>
                                                                 <div class="col-md-2"><input type="date" name="routes[{{ $routeIndexValue }}][pricing][seasonal][{{ $seasonIndex }}][end]" class="form-control" value="{{ $season['end'] ?? $season['end_date'] ?? '' }}"></div>
-                                                                <div class="col-md-2"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][seasonal][{{ $seasonIndex }}][price]" class="form-control" placeholder="Single trip" min="0" step="0.01" value="{{ $season['price'] ?? '' }}"></div>
-                                                                <div class="col-md-2"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][seasonal][{{ $seasonIndex }}][return_price]" class="form-control" placeholder="Return trip" min="0" step="0.01" value="{{ $season['return_price'] ?? '' }}"></div>
+                                                                <div class="col-md-2"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][seasonal][{{ $seasonIndex }}][price]" class="form-control" placeholder="{{ $route['route_from'] }} → {{ $route['route_to'] }} Price" min="0" step="0.01" value="{{ $season['price'] ?? '' }}"></div>
+                                                                <div class="col-md-2"><input type="number" name="routes[{{ $routeIndexValue }}][pricing][seasonal][{{ $seasonIndex }}][departure_price]" class="form-control" placeholder="{{ $route['route_to'] }} → {{ $route['route_from'] }} Price" min="0" step="0.01" value="{{ $season['departure_price'] ?? '' }}"></div>
                                                                 <div class="col-md-2 d-flex align-items-center"><button type="button" class="btn btn-sm btn-danger w-100" onclick="this.closest('.season-row').remove();">Remove</button></div>
                                                             </div>
                                                         </div>
@@ -232,6 +237,10 @@
             return;
         }
 
+        const routeFrom = container.dataset.routeFrom || '';
+        const routeTo = container.dataset.routeTo || '';
+            const routeLabel = (from, to) => `${from} → ${to}`;
+
         if (typeof seasonalCounts[routeIndex] === 'undefined') {
             seasonalCounts[routeIndex] = container.querySelectorAll('.season-row').length;
         }
@@ -245,8 +254,8 @@
             <div class="row gx-2">
                 <div class="col-md-2"><input type="date" name="routes[${routeIndex}][pricing][seasonal][${seasonCount}][start]" class="form-control"></div>
                 <div class="col-md-2"><input type="date" name="routes[${routeIndex}][pricing][seasonal][${seasonCount}][end]" class="form-control"></div>
-                <div class="col-md-2"><input type="number" name="routes[${routeIndex}][pricing][seasonal][${seasonCount}][price]" class="form-control" placeholder="Single trip" min="0" step="0.01"></div>
-                <div class="col-md-2"><input type="number" name="routes[${routeIndex}][pricing][seasonal][${seasonCount}][return_price]" class="form-control" placeholder="Return trip" min="0" step="0.01"></div>
+                <div class="col-md-2"><input type="number" name="routes[${routeIndex}][pricing][seasonal][${seasonCount}][price]" class="form-control" placeholder="${routeLabel(routeFrom, routeTo)} Price" min="0" step="0.01"></div>
+                <div class="col-md-2"><input type="number" name="routes[${routeIndex}][pricing][seasonal][${seasonCount}][departure_price]" class="form-control" placeholder="${routeLabel(routeTo, routeFrom)} Price" min="0" step="0.01"></div>
                 <div class="col-md-2 d-flex align-items-center"><button type="button" class="btn btn-sm btn-danger w-100" onclick="this.closest('.season-row').remove();">Remove</button></div>
             </div>
         `;

@@ -272,7 +272,15 @@ class BookingController extends Controller
                 }
             }
 
-            $item = $this->buildTransportCartItem($request);
+            try {
+                $item = $this->buildTransportCartItem($request);
+            } catch (\InvalidArgumentException $e) {
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+                }
+
+                return back()->withInput()->with('error', $e->getMessage());
+            }
         } else {
             return back()->with('error', 'Invalid booking type.');
         }
@@ -2476,6 +2484,12 @@ class BookingController extends Controller
                     'passengers' => $item['passengers'] ?? 1,
                     'adults' => $item['passengers'] ?? 1, // Transport uses passengers field
                     'children' => 0,
+                    'price_per_person' => null,
+                    'arrival_rate' => $item['arrival_rate'] ?? null,
+                    'departure_rate' => $item['departure_price'] ?? null,
+                    'return_discount_percentage' => $item['return_discount_percentage'] ?? null,
+                    'return_discount_amount' => $item['return_discount_amount'] ?? null,
+                    'transport_price' => $item['total_price'] ?? $item['net_amount'] ?? 0,
                     'booking_status' => TransportBooking::STATUS_PROCESSING,
                     'total_amount' => (float) round(max(0.0, (float) ($item['net_amount'] ?? 0)), 2),
                     'currency' => $item['currency'],

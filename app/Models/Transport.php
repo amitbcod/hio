@@ -42,6 +42,7 @@ class Transport extends Model
         'submitted_for_approval_at' => 'datetime',
         'approved_at' => 'datetime',
         'published_at' => 'datetime',
+        'return_discount_percentage' => 'decimal:2',
     ];
 
     /**

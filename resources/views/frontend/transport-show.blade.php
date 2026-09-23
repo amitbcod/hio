@@ -187,8 +187,10 @@
         $selectedRouteTo = $transport['selected_transport_to'] ?? ($selectedRoute['route_to'] ?? '');
         $selectedDefaultPrice = $selectedRoute['pricing']['default_price'] ?? $transport['starting_rate'] ?? 0;
         $selectedDefaultPrice = $resolveSeasonalValue($selectedRoute['pricing']['seasonal'] ?? [], $booking['pickup_date'], $selectedDefaultPrice, 'price');
-        $selectedReturnPrice = $selectedRoute['pricing']['return_price'] ?? null;
-        $selectedReturnPrice = $resolveSeasonalValue($selectedRoute['pricing']['seasonal'] ?? [], $booking['return_date'], $selectedReturnPrice, 'return_price');
+        $selectedDeparturePrice = $selectedRoute['pricing']['departure_price'] ?? 0;
+        $selectedDeparturePrice = $resolveSeasonalValue($selectedRoute['pricing']['seasonal'] ?? [], $booking['return_date'] ?: $booking['pickup_date'], $selectedDeparturePrice, 'departure_price');
+        $returnDiscountPercentage = (float) ($transport['return_discount_percentage'] ?? 0);
+        $selectedTwoWayPrice = round(((float) $selectedDefaultPrice + (float) $selectedDeparturePrice) * (1 - ($returnDiscountPercentage / 100)), 2);
         $routeId = $selectedRoute['route_id'] ?? '';
         $detailImage = $transport['image'] ?? asset('images/transport.svg');
     @endphp
@@ -375,8 +377,9 @@
                         <input type="hidden" name="title" value="{{ $transport['title'] }}">
                         <input type="hidden" name="image" value="{{ $detailImage }}">
                         <input type="hidden" id="transport-price-per-passenger" name="price_per_passenger" value="{{ number_format((float) $selectedDefaultPrice, 2, '.', '') }}">
+                        <input type="hidden" id="transport-departure-price" name="departure_price" value="{{ number_format((float) $selectedDeparturePrice, 2, '.', '') }}">
+                        <input type="hidden" id="transport-return-discount" name="return_discount_percentage" value="{{ number_format($returnDiscountPercentage, 2, '.', '') }}">
                         <input type="hidden" id="transport-car-rental-total" name="car_rental_total" value="{{ $carRentalTotal ?? 0 }}">
-                        <input type="hidden" id="transport-return-price" name="return_price" value="{{ number_format((float) ($selectedReturnPrice ?? 0), 2, '.', '') }}">
                         <input type="hidden" name="currency" value="USD">
                         <input type="hidden" name="pickup_date" value="{{ $booking['pickup_date'] }}">
                         <input type="hidden" name="return_date" value="{{ $booking['return_date'] ?? '' }}">
@@ -403,8 +406,8 @@
 
                     <div class="booking-summary-line" id="transport-price-summary">
                         <span>
-                            @if(!empty($booking['return_date']) && $selectedReturnPrice)
-                                {{ __('transport.price') }}: USD {{ number_format((float) $selectedReturnPrice, 2) }}
+                            @if(!empty($booking['return_date']))
+                                {{ __('transport.price') }}: USD {{ number_format((float) $selectedTwoWayPrice, 2) }}
                             @else
                                 {{ __('transport.price') }}: USD {{ number_format((float) ($selectedDefaultPrice ?? 0), 2) }}
                             @endif
@@ -663,8 +666,8 @@
                                 @if(!empty($route['pricing']['default_price']))
                                     <p><strong>{{ __('transport.price') }}:</strong> USD {{ number_format((float) $route['pricing']['default_price'], 2) }}</p>
                                 @endif
-                                @if(!empty($route['pricing']['return_price']))
-                                    <p><strong>{{ __('transport.return_price') }}</strong> USD {{ number_format((float) $route['pricing']['return_price'], 2) }}</p>
+                                @if(isset($route['pricing']['departure_price']))
+                                    <p><strong>Departure Price</strong> USD {{ number_format((float) $route['pricing']['departure_price'], 2) }}</p>
                                 @endif
                                 @if(!empty($route['pricing']['seasonal']))
                                     <div class="transport-seasonal-list">
@@ -1048,7 +1051,8 @@
             const routeFromInput = document.getElementById('transport-route-from');
             const routeToInput = document.getElementById('transport-route-to');
             const pricePerPassengerInput = document.getElementById('transport-price-per-passenger');
-            const returnPriceInput = document.getElementById('transport-return-price');
+            const departurePriceInput = document.getElementById('transport-departure-price');
+            const returnDiscountInput = document.getElementById('transport-return-discount');
             const routePriceSummary = document.getElementById('transport-price-summary');
             const pickupDateInput = document.querySelector('input[name="pickup_date"]');
             const pickupDateText = pickupDateInput ? pickupDateInput.closest('.custom-picker-wrapper').querySelector('.booking-input-text') : null;
@@ -1066,7 +1070,7 @@
             const placeRegionMap = Object.fromEntries(
                 Object.entries(rawPlaceRegionMap || {}).map(([key, value]) => [String(key).trim().toLowerCase(), String(value).trim().toLowerCase()])
             );
-            const transportReturnLabel = @json(__('transport.return_price'));
+            const transportReturnLabel = 'Two-Way Price';
             const booking = @json($booking ?? []);
 
             const TRANSPORT_DEBUG = true;
@@ -1345,6 +1349,19 @@
                 const toRegion = normalizeValue(route.route_to || '');
                 if (fromRegion && toRegion) {
                     routeLookup.set(`${fromRegion}|${toRegion}`, route);
+                    const reverse = JSON.parse(JSON.stringify(route));
+                    reverse.route_from = route.route_to;
+                    reverse.route_to = route.route_from;
+                    reverse.pricing = reverse.pricing || {};
+                    const arrival = reverse.pricing.default_price;
+                    reverse.pricing.default_price = reverse.pricing.departure_price;
+                    reverse.pricing.departure_price = arrival;
+                    reverse.pricing.seasonal = (reverse.pricing.seasonal || []).map((season) => ({
+                        ...season,
+                        price: season.departure_price,
+                        departure_price: season.price,
+                    }));
+                    routeLookup.set(`${toRegion}|${fromRegion}`, reverse);
                 }
             });
 
@@ -1399,29 +1416,25 @@
                     const defaultPrice = selectedRoute.pricing?.default_price != null ? parseFloat(selectedRoute.pricing.default_price) : 0;
                     const effectivePrice = resolveSeasonalValue(selectedRoute.pricing?.seasonal || [], bookingDateValue, defaultPrice, 'price');
                     pricePerPassengerInput.value = (effectivePrice || 0).toFixed(2);
-
-                    // Only set return price if a return date was included in the booking context
-                    if (booking && booking.return_date) {
-                        const defaultReturnPrice = selectedRoute.pricing?.return_price != null ? parseFloat(selectedRoute.pricing.return_price) : 0;
-                        const effectiveReturnPrice = resolveSeasonalValue(selectedRoute.pricing?.seasonal || [], bookingReturnDateValue, defaultReturnPrice, 'return_price');
-                        returnPriceInput.value = (effectiveReturnPrice || 0).toFixed(2);
-                    } else {
-                        returnPriceInput.value = '';
-                    }
+                    const defaultDeparturePrice = selectedRoute.pricing?.departure_price != null ? parseFloat(selectedRoute.pricing.departure_price) : 0;
+                    const effectiveDeparturePrice = resolveSeasonalValue(selectedRoute.pricing?.seasonal || [], bookingReturnDateValue || bookingDateValue, defaultDeparturePrice, 'departure_price');
+                    departurePriceInput.value = (effectiveDeparturePrice || 0).toFixed(2);
                 } else {
                     routeIdInput.value = '';
                     pricePerPassengerInput.value = pricePerPassengerInput.value || '';
-                    returnPriceInput.value = returnPriceInput.value || '';
+                    departurePriceInput.value = departurePriceInput.value || '';
                 }
 
                 if (routePriceSummary) {
-                    // If a return price is set and a return date/value is present, show only the return price
-                    const hasReturnPrice = returnPriceInput && returnPriceInput.value && parseFloat(returnPriceInput.value) > 0;
                     const hasReturnDate = (returnDateInput && returnDateInput.value) || (booking && booking.return_date);
-                    if (hasReturnPrice && hasReturnDate) {
-                        routePriceSummary.textContent = `USD ${parseFloat(returnPriceInput.value).toFixed(2)}`;
+                    const arrival = parseFloat(pricePerPassengerInput?.value || 0);
+                    const departure = parseFloat(departurePriceInput?.value || 0);
+                    const discount = Math.min(100, Math.max(0, parseFloat(returnDiscountInput?.value || 0)));
+                    if (hasReturnDate) {
+                        const twoWay = Math.max(0, (arrival + departure) - ((arrival + departure) * discount / 100));
+                        routePriceSummary.textContent = `USD ${twoWay.toFixed(2)}`;
                     } else {
-                        routePriceSummary.textContent = `USD ${pricePerPassengerInput.value}`;
+                        routePriceSummary.textContent = `USD ${arrival.toFixed(2)}`;
                     }
                 }
             }

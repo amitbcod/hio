@@ -286,10 +286,10 @@
                                         $route = $routeEntry['route'];
                                         $pricing = $routeEntry['pricing'] ?? [];
                                         $groupRate = (float) ($pricing['group_price'] ?? 0);
-                                        $groupReturnRate = (float) ($pricing['group_return_price'] ?? 0);
+                                        $groupDepartureRate = (float) ($pricing['group_departure_price'] ?? 0);
                                         $baseRate = $groupRate > 0 ? $groupRate : ((float) ($pricing['default_price'] ?? $pricing['base_rate'] ?? $pricing['price'] ?? 0));
-                                        $returnRate = $groupReturnRate > 0 ? $groupReturnRate : ((float) ($pricing['return_price'] ?? $pricing['package_return_price'] ?? 0));
-                                        $packageRate = (float) ($pricing['package_price'] ?? $pricing['package_return_price'] ?? $baseRate);
+                                        $returnRate = round(($baseRate + $groupDepartureRate) * (1 - ((float) ($route->transport->return_discount_percentage ?? 0) / 100)), 2);
+                                        $packageRate = (float) ($pricing['package_price'] ?? $baseRate);
                                         $from = $route->route_from ?? $route->pickup_value ?? 'From';
                                         $to = $route->route_to ?? $route->dropoff_value ?? 'To';
 
@@ -365,7 +365,7 @@
                                         <div class="border rounded-3 p-2 mb-2">
                                             <div class="fw-semibold small mb-1">{{ $route->service_type ? ucfirst(str_replace('_', ' ', $route->service_type)) : 'Transport' }} · Route: {{ $displayFrom }} → {{ $displayTo }}</div>
                                             @php $displayBase = $addReturn ? ($returnRate ?? 0) : ($baseRate ?? 0); @endphp
-                                            <div class="pricing-row row align-items-center py-2" data-service="transport" data-rate-specificity="Per Equipment" data-group-exists="{{ ($groupRate > 0 || $groupReturnRate > 0) ? 1 : 0 }}" data-group-price="{{ $groupRate }}" data-group-return="{{ $groupReturnRate }}" data-package-exists="{{ ($packageRate > 0 || $returnRate > 0) ? 1 : 0 }}" data-package-price="{{ $packageRate }}" data-package-return="{{ $returnRate }}" data-add-return="{{ $addReturn ? 1 : 0 }}" data-base-price="{{ $displayBase }}" style="border-top:1px solid #edf2f6;">
+                                            <div class="pricing-row row align-items-center py-2" data-service="transport" data-rate-specificity="Per Equipment" data-group-exists="{{ ($groupRate > 0 || $groupDepartureRate > 0) ? 1 : 0 }}" data-group-price="{{ $groupRate }}" data-group-return="{{ $returnRate }}" data-package-exists="{{ ($packageRate > 0 || $returnRate > 0) ? 1 : 0 }}" data-package-price="{{ $packageRate }}" data-package-return="{{ $returnRate }}" data-add-return="{{ $addReturn ? 1 : 0 }}" data-base-price="{{ $displayBase }}" style="border-top:1px solid #edf2f6;">
                                                 <div class="col-md-6">
                                                     <div class="fw-semibold">Flat Rate</div>
                                                     <div class="small text-muted">Route: {{ $displayFrom }} → {{ $displayTo }}</div>

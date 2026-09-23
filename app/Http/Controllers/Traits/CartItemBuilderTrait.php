@@ -11,6 +11,7 @@ use App\Models\ActivitySchedulingTimeSlot;
 use App\Models\ActivityVariant;
 use App\Models\Transport;
 use App\Models\TransportRate;
+use App\Services\TransportPricingService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -320,8 +321,11 @@ trait CartItemBuilderTrait
         $returnDate = $request->input('return_date');
         $returnTime = $request->input('return_time', '');
         $passengers = max(1, (int) $request->input('passengers', 1));
-        $pricePerPassenger = (float) $request->input('price_per_passenger', 0);
-        $returnPrice = max(0.0, (float) $request->input('return_price', 0));
+        $pricePerPassenger = 0.0;
+        $departurePrice = 0.0;
+        $arrivalPrice = 0.0;
+        $returnDiscountPercentage = 0.0;
+        $returnDiscountAmount = 0.0;
         $carRentalTotal = (float) $request->input('car_rental_total', 0);
         $pickupAddress = trim((string) $request->input('pickup_address', ''));
         $dropoffAddress = trim((string) $request->input('dropoff_address', ''));
@@ -340,16 +344,22 @@ trait CartItemBuilderTrait
             $totalPrice = $carRentalTotal;
             $pricePerPassenger = 0; // Not used for car rental
         } else {
-            $totalPrice = $pricePerPassenger * $passengers;
-            if (!blank($returnDate) && $returnPrice > 0) {
-                // When a return trip is selected, the provided `return_price` is
-                // treated as the total for the two-way journey (per vehicle).
-                // Use `return_price * passengers` as the authoritative total
-                // instead of summing outbound + return prices.
-                $totalPrice = $returnPrice * $passengers;
-                // clear pricePerPassenger to avoid misleading values elsewhere
-                $pricePerPassenger = 0;
-            }
+            $pricing = (new TransportPricingService())->resolveForBooking(
+                $transport,
+                $routeId !== null ? (string) $routeId : null,
+                $routeFrom,
+                $routeTo,
+                $pickupDate,
+                !blank($returnDate),
+                'direct',
+                $returnDate
+            );
+            $pricePerPassenger = $pricing['final_price'];
+            $arrivalPrice = $pricing['arrival_rate'];
+            $departurePrice = $pricing['departure_rate'];
+            $returnDiscountPercentage = $pricing['discount_percentage'];
+            $returnDiscountAmount = $pricing['discount_amount'];
+            $totalPrice = $pricing['final_price'];
         }
         
         $taxAmount = 0.0;
@@ -384,7 +394,10 @@ trait CartItemBuilderTrait
             'pickup_address' => $pickupAddress,
             'dropoff_address' => $dropoffAddress,
             'price_per_passenger' => $pricePerPassenger,
-            'return_price' => $returnPrice,
+            'arrival_rate' => $arrivalPrice,
+            'departure_price' => $departurePrice,
+            'return_discount_percentage' => $returnDiscountPercentage,
+            'return_discount_amount' => $returnDiscountAmount,
             'car_rental_total' => $carRentalTotal,
             'total_price' => $totalPrice,
             'currency' => $currency,

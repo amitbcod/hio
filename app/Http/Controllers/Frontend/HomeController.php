@@ -2334,14 +2334,14 @@ class HomeController extends Controller
             ->map(function ($route) {
                 $pricing = is_array($route->pricing) ? $route->pricing : [];
                 $defaultPrice = isset($pricing['default_price']) ? (float) $pricing['default_price'] : null;
-                $returnPrice = isset($pricing['return_price']) ? (float) $pricing['return_price'] : null;
+                $departurePrice = isset($pricing['departure_price']) ? (float) $pricing['departure_price'] : null;
                 $seasonal = collect($pricing['seasonal'] ?? [])
                     ->map(function ($season) {
                         return [
                             'start_date' => $season['start'] ?? $season['start_date'] ?? null,
                             'end_date' => $season['end'] ?? $season['end_date'] ?? null,
                             'price' => isset($season['price']) ? (float) $season['price'] : (isset($season['price_per_person']) ? (float) $season['price_per_person'] : null),
-                            'return_price' => isset($season['return_price']) ? (float) $season['return_price'] : null,
+                            'departure_price' => isset($season['departure_price']) ? (float) $season['departure_price'] : null,
                         ];
                     })
                     ->filter(fn($item) => !blank($item['start_date']) && !blank($item['end_date']) && $item['price'] !== null)
@@ -2360,7 +2360,7 @@ class HomeController extends Controller
                     'route_name' => $routeName,
                     'pricing' => [
                         'default_price' => $defaultPrice,
-                        'return_price' => $returnPrice,
+                        'departure_price' => $departurePrice,
                         'seasonal' => $seasonal,
                     ],
                 ];
@@ -2372,14 +2372,14 @@ class HomeController extends Controller
             $routes = collect($transport->routes_pricing ?? [])
                 ->map(function ($route) {
                     $defaultPrice = isset($route['price']) ? (float) $route['price'] : (isset($route['package_price']) ? (float) $route['package_price'] : null);
-                    $returnPrice = isset($route['return_price']) ? (float) $route['return_price'] : (isset($route['package_return_price']) ? (float) $route['package_return_price'] : null);
+                    $departurePrice = isset($route['departure_price']) ? (float) $route['departure_price'] : null;
                     $seasonal = collect($route['seasonal'] ?? [])
                         ->map(function ($season) {
                             return [
                                 'start_date' => $season['start'] ?? $season['start_date'] ?? null,
                                 'end_date' => $season['end'] ?? $season['end_date'] ?? null,
                                 'price' => isset($season['price']) ? (float) $season['price'] : null,
-                                'return_price' => isset($season['return_price']) ? (float) $season['return_price'] : null,
+                                'departure_price' => isset($season['departure_price']) ? (float) $season['departure_price'] : null,
                             ];
                         })
                         ->filter(fn($item) => !blank($item['start_date']) && !blank($item['end_date']) && $item['price'] !== null)
@@ -2398,7 +2398,7 @@ class HomeController extends Controller
                         'route_name' => $routeName,
                         'pricing' => [
                             'default_price' => $defaultPrice,
-                            'return_price' => $returnPrice,
+                            'departure_price' => $departurePrice,
                             'seasonal' => $seasonal,
                         ],
                     ];
@@ -2489,6 +2489,7 @@ class HomeController extends Controller
             'selected_transport_to' => $selectedTo,
             'starting_rate' => $startingRate,
             'starting_rate_of_adult' => $startingRate,
+            'return_discount_percentage' => (float) ($transport->return_discount_percentage ?? 0),
             'operator' => $transport->operator ? [
                 'id' => $transport->operator->id,
                 'name' => $transport->operator->business_name ?? $transport->operator->name ?? '',
@@ -2613,7 +2614,7 @@ class HomeController extends Controller
             // Ensure reverse route actually has pricing before using it as fallback
             $pricing = $reverse['pricing'] ?? [];
             $hasPricing = (isset($pricing['default_price']) && $pricing['default_price'] !== null)
-                || (isset($pricing['return_price']) && $pricing['return_price'] !== null)
+                || (isset($pricing['departure_price']) && $pricing['departure_price'] !== null)
                 || (!empty($pricing['seasonal'] ?? []));
 
             if (!$hasPricing) {
@@ -2625,6 +2626,13 @@ class HomeController extends Controller
             $copy['route_from'] = $selectedFrom;
             $copy['route_to'] = $selectedTo;
             $copy['route_name'] = trim(($selectedFrom ? $selectedFrom : '') . ' → ' . ($selectedTo ? $selectedTo : ''));
+            $pricing['default_price'] = $pricing['departure_price'] ?? null;
+            $pricing['departure_price'] = $reverse['pricing']['default_price'] ?? null;
+            foreach (($pricing['seasonal'] ?? []) as $seasonIndex => $season) {
+                $pricing['seasonal'][$seasonIndex]['price'] = $season['departure_price'] ?? null;
+                $pricing['seasonal'][$seasonIndex]['departure_price'] = $season['price'] ?? null;
+            }
+            $copy['pricing'] = $pricing;
             return $copy;
         }
 
