@@ -7,8 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // MySQL rejects the enum change when existing rows contain values that
-        // are not present in the new enum, such as the retired Pending value.
+        // First include Processing so MySQL can accept it during data cleanup.
+        DB::statement("ALTER TABLE `transport_bookings` MODIFY `booking_status` ENUM('Pending','Processing','Confirmed','Scheduled','Cancelled','Completed') NULL DEFAULT 'Processing'");
+
+        // Existing test rows may still contain the retired Pending value.
         DB::table('transport_bookings')
             ->whereNotIn('booking_status', ['Processing', 'Confirmed', 'Scheduled', 'Cancelled', 'Completed'])
             ->update(['booking_status' => 'Processing']);
