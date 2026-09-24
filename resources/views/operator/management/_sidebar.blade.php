@@ -96,19 +96,21 @@
 
 {{-- Transport Management Section --}}
 
+@php $isDriverManagement = request()->routeIs('operator.drivers.*'); @endphp
+
 <div class="dropdownToggle" 
      style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
    Transport Management
     <span class="dropdownArrow" style="transition: transform 0.3s;">▼</span>
 </div>
 
-<ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: none;">
-    <li class="add-section" style="padding: 8px 36px;">
+<ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: {{ $isDriverManagement ? 'block' : 'none' }};">
+    <!-- <li class="add-section" style="padding: 8px 36px;">
         <a href="{{ route('operator.transport.basic-details') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
            + Basic details
         </a>
-    </li>
+    </li> -->
     <li style="padding: 8px 36px;">
         <a href="{{ route('operator.transport.index') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
@@ -119,6 +121,12 @@
         <a href="{{ route('operator.transport.bookings') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
            Transport Bookings
+        </a>
+    </li>
+    <li style="padding: 8px 36px;">
+        <a href="{{ route('operator.drivers.index') }}"
+           style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;{{ $isDriverManagement ? 'background:rgba(255,255,255,0.18);' : '' }}">
+           Driver Management
         </a>
     </li>
 </ul>
@@ -142,29 +150,6 @@
         <a href="{{ route('operator.register.step6') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
            Manage Staff
-        </a>
-    </li>
-</ul>
-
-{{-- Driver Management Section --}}
-
-<div class="dropdownToggle" 
-     style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-   Driver Management
-    <span class="dropdownArrow" style="transition: transform 0.3s;">▼</span>
-</div>
-
-<ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: none;">
-    <li class="add-section" style="padding: 8px 36px;">
-        <a href="{{ route('operator.drivers.create') }}"
-           style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
-           + Add New Driver
-        </a>
-    </li>
-    <li style="padding: 8px 36px;">
-        <a href="{{ route('operator.drivers.index') }}"
-           style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
-           Manage Drivers
         </a>
     </li>
 </ul>
