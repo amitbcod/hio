@@ -39,15 +39,15 @@
                         <h5>Bank Account Details</h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label>Account Holder Name *</label>
+                                <label>Account Holder Name <span style="color:#d32f2f">*</span></label>
                                 <input type="text" name="bank_account_holder_name" class="form-control" required value="{{ old('bank_account_holder_name', $accounting?->bank_account_holder_name) }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label>Bank Name *</label>
+                                <label>Bank Name <span style="color:#d32f2f">*</span></label>
                                 <input type="text" name="bank_name" class="form-control" required value="{{ old('bank_name', $accounting?->bank_name) }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label>Account Number *</label>
+                                <label>Account Number <span style="color:#d32f2f">*</span></label>
                                 <input type="text" name="account_number" class="form-control" required value="{{ old('account_number', $accounting?->account_number) }}">
                             </div>
                             <div class="col-md-6 mb-3">

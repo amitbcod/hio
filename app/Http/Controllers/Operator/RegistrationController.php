@@ -17,6 +17,7 @@ use App\Models\Business;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\AgreementConfirmed;
+use Illuminate\Validation\Rule;
 
 class RegistrationController extends Controller
 {
@@ -200,12 +201,37 @@ class RegistrationController extends Controller
     }
 
     public function saveStep2Profile(Request $request) {
+        $serviceTypes = collect((array) $request->input('service_types', []))
+            ->map(fn ($value) => trim((string) $value))
+            ->filter()
+            ->values()
+            ->all();
+        $hasTransport = in_array('Transport', $serviceTypes, true);
+
         $request->validate([
             'business_legal_name' => 'required',
             'business_registration_number' => 'nullable',
             'registered_address' => 'nullable',
             'operational_address' => 'nullable',
             'service_types' => 'nullable|array',
+            'transport_same_as_business_address' => [
+                'nullable',
+                'in:1,0,yes,no',
+                Rule::requiredIf($hasTransport),
+            ],
+            'transport_address' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::requiredIf($hasTransport && in_array((string) $request->input('transport_same_as_business_address'), ['0', 'no', 0, false], true)),
+            ],
+            'transport_region_location' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::requiredIf($hasTransport && in_array((string) $request->input('transport_same_as_business_address'), ['0', 'no', 0, false], true)),
+            ],
+            'transport_geolocation' => 'nullable|string|max:255',
             'years_in_operation' => 'nullable|integer',
             'trading_name' => 'nullable',
             'company_logo' => 'nullable|file|image|max:2048',
@@ -218,6 +244,10 @@ class RegistrationController extends Controller
             'linkedin_link' => 'nullable',
         ]);
         $authUser = auth()->user();
+        $transportSameAsBusiness = $request->filled('transport_same_as_business_address')
+            ? (int) filter_var((string) $request->input('transport_same_as_business_address'), FILTER_VALIDATE_BOOLEAN)
+            : null;
+
         $data = [
             'business_legal_name' => $request->business_legal_name,
             'business_registration_number' => $request->business_registration_number,
@@ -234,6 +264,25 @@ class RegistrationController extends Controller
             'instagram_link' => $request->instagram_link,
             'linkedin_link' => $request->linkedin_link,
         ];
+
+        $transportData = [
+            'transport_same_as_business_address' => $hasTransport ? $transportSameAsBusiness : null,
+            'transport_address' => null,
+            'transport_region_location' => null,
+            'transport_geolocation' => null,
+        ];
+
+        if ($hasTransport && $transportSameAsBusiness === 0) {
+            $transportData['transport_address'] = $request->input('transport_address');
+            $transportData['transport_region_location'] = $request->input('transport_region_location');
+            $transportData['transport_geolocation'] = $request->input('transport_geolocation');
+        }
+
+        if ($authUser) {
+            $authUser->fill($transportData);
+            $authUser->save();
+        }
+
         // Handle logo upload
         if ($request->hasFile('company_logo')) {
             $logoPath = $request->file('company_logo')->store('logos', 'public');

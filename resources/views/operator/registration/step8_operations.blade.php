@@ -39,7 +39,7 @@
                         <h5>Service Details</h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label>Service Location *</label>
+                                <label>Service Location <span style="color:#d32f2f">*</span></label>
                                 <select id="service_location" name="service_location" class="form-control" required style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #fff;">
                                     <option value="">-- select --</option>
                                     <option value="fixed" {{ old('service_location', $serviceOps?->service_location) == 'fixed' ? 'selected' : '' }}>Fixed Location</option>
@@ -65,7 +65,7 @@
                         </script>
                         <div class="row mb-3">
                             <div class="col-md-12">
-                                <label>Operating Area *</label><br>
+                                <label>Operating Area <span style="color:#d32f2f">*</span></label><br>
                                 @php
                                     $areas = ['North','South','East','West','Central'];
                                     $selectedAreas = old('operating_areas', $serviceOps?->operating_areas ? json_decode($serviceOps->operating_areas, true) : []);
@@ -125,15 +125,15 @@
                         </script>
                         <div class="row mb-3">
                             <div class="col-md-4">
-                                <label>Emergency Contact *</label>
+                                <label>Emergency Contact <span style="color:#d32f2f">*</span></label>
                                 <input type="text" name="emergency_contact_name" class="form-control" required value="{{ old('emergency_contact_name', $serviceOps?->emergency_contact_name) }}">
                             </div>
                             <div class="col-md-4">
-                                <label>Emergency Phone *</label>
+                                <label>Emergency Phone <span style="color:#d32f2f">*</span></label>
                                 <input type="text" name="emergency_contact_phone" class="form-control" required maxlength="20" pattern="[0-9+\-\s()]{6,20}" title="Use only digits, +, -, spaces, and parentheses (6-20 chars)." value="{{ old('emergency_contact_phone', $serviceOps?->emergency_contact_phone) }}">
                             </div>
                             <div class="col-md-4">
-                                <label>Emergency Email *</label>
+                                <label>Emergency Email <span style="color:#d32f2f">*</span></label>
                                 <input type="email" name="emergency_contact_email" class="form-control" required value="{{ old('emergency_contact_email', $serviceOps?->emergency_contact_email) }}">
                             </div>
                         </div>

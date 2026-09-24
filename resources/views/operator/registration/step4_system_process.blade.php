@@ -55,7 +55,7 @@
 @endforeach
                 </div>
                 <div class="form-group mb-3">
-                    <label>Communication Preference</label>
+                    <label>Communication Preference <span style="color:#d32f2f">*</span></label>
                     @php
                         $commPref = old('communication_preference', $system->communication_preference ?? '');
                     @endphp
@@ -67,11 +67,11 @@
                     </select>
                 </div>
                 <div class="form-group mb-3">
-                    <label>Assigned Operator Name</label>
+                    <label>Assigned Operator Name <span style="color:#d32f2f">*</span></label>
                     <input type="text" name="assigned_operator_name" class="form-control" value="{{ old('assigned_operator_name', $system->assigned_operator_name ?? $operator->full_name ?? '') }}">
                 </div>
                 <div class="form-group mb-3">
-                    <label>Assigned Operator Role</label>
+                    <label>Assigned Operator Role <span style="color:#d32f2f">*</span></label>
                     <select name="assigned_operator_role" class="form-control">
                         <option value="Primary Operator" {{ (old('assigned_operator_role', $system->assigned_operator_role ?? '') == 'Primary Operator') ? 'selected' : '' }}>Primary Operator</option>
                         <option value="System Administrator" {{ (old('assigned_operator_role', $system->assigned_operator_role ?? '') == 'System Administrator') ? 'selected' : '' }}>System Administrator</option>

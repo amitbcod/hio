@@ -11,11 +11,11 @@
     <form method="POST" action="{{ url('operator/register/step3-legal') }}">
         @csrf
         <div class="form-group">
-            <label for="business_license_number">Business License Number</label>
+            <label for="business_license_number">Business License Number <span style="color:#d32f2f">*</span></label>
             <input type="text" name="business_license_number" class="form-control" required value="{{ old('business_license_number', $legal->business_license_number ?? '') }}">
         </div>
         <div class="form-group">
-            <label for="license_type">License Type</label>
+            <label for="license_type">License Type <span style="color:#d32f2f">*</span></label>
             <select name="license_type" class="form-control" required>
                 <option value="Accommodation" {{ (old('license_type', $legal->license_type ?? '') == 'Accommodation') ? 'selected' : '' }}>Accommodation</option>
                 <option value="Tour Operator" {{ (old('license_type', $legal->license_type ?? '') == 'Tour Operator') ? 'selected' : '' }}>Tour Operator</option>

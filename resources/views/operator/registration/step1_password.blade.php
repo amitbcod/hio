@@ -11,11 +11,11 @@
     <form method="POST" action="{{ url('operator/register/step1-password') }}">
         @csrf
         <div class="form-group">
-            <label for="password">Password</label>
+            <label for="password">Password <span style="color:#d32f2f">*</span></label>
             <input type="password" name="password" class="form-control" required>
         </div>
         <div class="form-group">
-            <label for="password_confirmation">Confirm Password</label>
+            <label for="password_confirmation">Confirm Password <span style="color:#d32f2f">*</span></label>
             <input type="password" name="password_confirmation" class="form-control" required>
         </div>
         <button type="submit" class="btn btn-primary">Save & Next</button>

@@ -1,4 +1,10 @@
 {
+    "operator.registration.transport_same_as_business_address": "Le transport a-t-il la même adresse que l'entreprise ?",
+    "operator.registration.yes": "Oui",
+    "operator.registration.no": "Non",
+    "operator.registration.transport_address": "Adresse du transport",
+    "operator.registration.transport_region_location": "Région / lieu du transport",
+    "operator.registration.transport_geolocation": "Carte / géolocalisation",
     "site.language": "Langue",
     "site.home": "Accueil",
     "site.accommodation": "Hébergement",

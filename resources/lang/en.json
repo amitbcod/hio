@@ -1,4 +1,10 @@
 {
+    "operator.registration.transport_same_as_business_address": "Transport has Same as Business Address?",
+    "operator.registration.yes": "Yes",
+    "operator.registration.no": "No",
+    "operator.registration.transport_address": "Transport Address",
+    "operator.registration.transport_region_location": "Transport Region / Location",
+    "operator.registration.transport_geolocation": "Map / Geolocation",
     "site.language": "Language",
     "site.home": "Home",
     "site.accommodation": "Accommodation",

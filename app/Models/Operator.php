@@ -16,6 +16,7 @@ class Operator extends Model implements AuthenticatableContract
     protected $casts = [
         'package_policy' => 'array',
         'group_policy' => 'array',
+        'transport_same_as_business_address' => 'boolean',
     ];
     public $timestamps = true;
     const CREATED_AT = 'created_at';
