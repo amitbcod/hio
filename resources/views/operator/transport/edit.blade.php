@@ -52,9 +52,9 @@
                             <label style="font-weight:600;">Seating Capacity <span style="color:#d32f2f">*</span></label>
                             <input type="number" name="seating_capacity" class="form-control @error('seating_capacity') is-invalid @enderror" value="{{ old('seating_capacity', $transport->seating_capacity) }}" min="1" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" style= "display:none;">
                             <label style="font-weight:600;">Registration Number</label>
-                            <input type="text" name="registration_number" class="form-control @error('registration_number') is-invalid @enderror" value="{{ old('registration_number', $transport->registration_number) }}">
+                            <input type="hidden" name="registration_number" class="form-control @error('registration_number') is-invalid @enderror" value="{{ old('registration_number', $transport->registration_number) }}">
                         </div>
                         <div class="col-md-4">
                             <label style="font-weight:600;">Contact Email</label>
@@ -108,12 +108,12 @@
                             <h5>Vehicle ${index + 1}</h5>
                             <input type="hidden" name="vehicles[${index}][id]" value="${vehicle.id || ''}">
                             <div class="row">
-                                <div class="col-md-6 mb-3"><label>License Number *</label><input required type="text" name="vehicles[${index}][license_number]" value="${vehicle.license_number || ''}" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label>License Plate Number *</label><input required type="text" name="vehicles[${index}][license_number]" value="${vehicle.license_number || ''}" class="form-control"></div>
                                 <div class="col-md-6 mb-3"><label>Registration Number *</label><input required type="text" name="vehicles[${index}][registration_number]" value="${vehicle.registration_number || ''}" class="form-control"></div>
                                 <div class="col-md-6 mb-3"><label>License / Permit Expiry Date *</label><input required type="date" name="vehicles[${index}][license_expiry_date]" value="${vehicle.license_expiry_date ? String(vehicle.license_expiry_date).substring(0, 10) : ''}" class="form-control"></div>
                                 <div class="col-md-6 mb-3"><label>Insurance Expiry Date *</label><input required type="date" name="vehicles[${index}][insurance_expiry_date]" value="${vehicle.insurance_expiry_date ? String(vehicle.insurance_expiry_date).substring(0, 10) : ''}" class="form-control"></div>
                                 <div class="col-md-6 mb-3"><label>Insurance Provider *</label><input required type="text" name="vehicles[${index}][insurance_provider]" value="${vehicle.insurance_provider || ''}" class="form-control"></div>
-                                <div class="col-md-6 mb-3"><label>Policy ${vehicle.policy_path ? '' : '*'} </label><input ${vehicle.policy_path ? '' : 'required'} type="file" name="vehicles[${index}][policy]" accept=".pdf,.jpg,.jpeg,.png" class="form-control">${vehicle.policy_path ? '<small>Existing policy retained unless replaced.</small>' : ''}</div>
+                                <div class="col-md-6 mb-3"><label>Upload Policy ${vehicle.policy_path ? '' : '*'} </label><input ${vehicle.policy_path ? '' : 'required'} type="file" name="vehicles[${index}][policy]" accept=".pdf,.jpg,.jpeg,.png" class="form-control">${vehicle.policy_path ? '<small>Existing policy retained unless replaced.</small>' : ''}</div>
                                 <div class="col-md-6 mb-3"><label>Supporting Documents</label><input type="file" name="vehicles[${index}][documents][]" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" class="form-control">${vehicle.documents && vehicle.documents.length ? `<small>${vehicle.documents.length} existing document(s) retained unless new files are added.</small>` : ''}</div>
                                 <div class="col-md-6 mb-3"><label>Status *</label><select required name="vehicles[${index}][status]" class="form-control">${options}</select></div>
                             </div>
