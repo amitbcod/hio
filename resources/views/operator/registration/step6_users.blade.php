@@ -83,7 +83,7 @@
                                         <span class="badge bg-warning">Suspended</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td style="display:flex">
                                     {{-- Edit User --}}
                                     <button class="btn btn-sm btn-warning editUserBtn" 
                                         data-id="{{ $user->id }}"
