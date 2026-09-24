@@ -28,7 +28,7 @@
     <div class="col-md-6 d-flex align-items-start justify-content-center" style="">
         <div class="container-middle team-member-new">
 
-            <h2 class="mb-4 fw-bold">USERS & STAFF MANAGEMENT</h2>
+            <h2 class="mb-4 fw-bold">Users & Staff Management</h2>
 
             @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show">
