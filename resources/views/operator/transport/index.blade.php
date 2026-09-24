@@ -44,8 +44,16 @@
                                     <tr>
                                         <td>{{ $transport->vehicle_type ?: $transport->vehicle_name }}</td>
                                         <td>{{ $transport->total_vehicle_qty }}</td>
-                                        <td>{{ $transport->active_vehicle_qty }}</td>
-                                        <td>{{ ucfirst($transport->status ?? 'draft') }}</td>
+                                        <td>{{ $transport->available_vehicle_qty }}</td>
+                                        <td>
+                                            {{ ucfirst($transport->status ?? 'draft') }}
+                                            @if($transport->has_expired_vehicle)
+                                                <span class="badge badge-warning" style="color:#d32f2f;background:#ffebee;" title="At least one physical vehicle has an expired license or insurance policy">Vehicle policy expired</span>
+                                                @if($transport->expired_vehicle_license_numbers->isNotEmpty())
+                                                    <span style="color:#d32f2f;font-size:12px;display:block;">License: {{ $transport->expired_vehicle_license_numbers->join(', ') }}</span>
+                                                @endif
+                                            @endif
+                                        </td>
                                         <td>{{ optional($transport->created_at)->format('M d, Y') }}</td>
                                         <td>
                                             <a href="{{ route('operator.transport.show', $transport->id) }}" class="btn btn-sm btn-info">View</a>

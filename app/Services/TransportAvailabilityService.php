@@ -86,7 +86,13 @@ class TransportAvailabilityService
                 ->count() > 0 ? 0 : 1;
         }
 
-        $vehicles = $transport->vehicles()->active()->get();
+        $vehicles = $transport->vehicles()->active()->where(function ($query) {
+            $query->whereNull('license_expiry_date')
+                ->orWhereDate('license_expiry_date', '>=', now()->toDateString());
+        })->where(function ($query) {
+            $query->whereNull('insurance_expiry_date')
+                ->orWhereDate('insurance_expiry_date', '>=', now()->toDateString());
+        })->get();
         if ($vehicles->isEmpty()) {
             return $transport->bookings()
                 ->where('booking_status', '!=', 'Cancelled')
@@ -111,6 +117,14 @@ class TransportAvailabilityService
         $bookedVehicleIds = $overlapping->pluck('transport_vehicle_id')->filter()->unique();
 
         return $transport->vehicles()->active()
+            ->where(function ($query) {
+                $query->whereNull('license_expiry_date')
+                    ->orWhereDate('license_expiry_date', '>=', now()->toDateString());
+            })
+            ->where(function ($query) {
+                $query->whereNull('insurance_expiry_date')
+                    ->orWhereDate('insurance_expiry_date', '>=', now()->toDateString());
+            })
             ->whereNotIn('id', $bookedVehicleIds)
             ->orderBy('id')
             ->first();
@@ -126,6 +140,14 @@ class TransportAvailabilityService
         $bookedVehicleIds = $overlapping->pluck('transport_vehicle_id')->filter()->unique();
 
         return $transport->vehicles()->active()
+            ->where(function ($query) {
+                $query->whereNull('license_expiry_date')
+                    ->orWhereDate('license_expiry_date', '>=', now()->toDateString());
+            })
+            ->where(function ($query) {
+                $query->whereNull('insurance_expiry_date')
+                    ->orWhereDate('insurance_expiry_date', '>=', now()->toDateString());
+            })
             ->whereNotIn('id', $bookedVehicleIds)
             ->orderBy('license_number')
             ->get();
@@ -157,6 +179,14 @@ class TransportAvailabilityService
         $bookedVehicleIds = $overlapping->pluck('transport_vehicle_id')->filter()->unique();
 
         return $transport->vehicles()->active()
+            ->where(function ($query) {
+                $query->whereNull('license_expiry_date')
+                    ->orWhereDate('license_expiry_date', '>=', now()->toDateString());
+            })
+            ->where(function ($query) {
+                $query->whereNull('insurance_expiry_date')
+                    ->orWhereDate('insurance_expiry_date', '>=', now()->toDateString());
+            })
             ->whereNotIn('id', $bookedVehicleIds)
             ->orderBy('license_number')
             ->get();

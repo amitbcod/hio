@@ -48,10 +48,6 @@
                             <label style="font-weight:600;">Seating Capacity <span style="color:#d32f2f">*</span></label>
                             <input type="number" name="seating_capacity" class="form-control @error('seating_capacity') is-invalid @enderror" value="{{ old('seating_capacity') }}" min="1" required>
                         </div>
-                        <div class="col-md-4" style="display:none;">
-                            <label style="font-weight:600;">Registration Number</label>
-                            <input type="hidden" name="registration_number" class="form-control @error('registration_number') is-invalid @enderror" value="{{ old('registration_number') }}">
-                        </div>
                         <div class="col-md-4">
                             <label style="font-weight:600;">Contact Email</label>
                             <input type="email" name="contact_email" class="form-control @error('contact_email') is-invalid @enderror" value="{{ old('contact_email') }}">
@@ -103,7 +99,6 @@
                             <h5>Vehicle ${index + 1}</h5>
                             <div class="row">
                                 <div class="col-md-6 mb-3"><label>License Plate Number <span style="color:#d32f2f">*</span></label><input required type="text" name="vehicles[${index}][license_number]" value="${vehicle.license_number || ''}" class="form-control"></div>
-                                <div class="col-md-6 mb-3"><label>Registration Number <span style="color:#d32f2f">*</span></label><input required type="text" name="vehicles[${index}][registration_number]" value="${vehicle.registration_number || ''}" class="form-control"></div>
                                 <div class="col-md-6 mb-3"><label>License / Permit Expiry Date <span style="color:#d32f2f">*</span></label><input required type="date" name="vehicles[${index}][license_expiry_date]" value="${vehicle.license_expiry_date || ''}" class="form-control"></div>
                                 <div class="col-md-6 mb-3"><label>Insurance Expiry Date <span style="color:#d32f2f">*</span></label><input required type="date" name="vehicles[${index}][insurance_expiry_date]" value="${vehicle.insurance_expiry_date || ''}" class="form-control"></div>
                                 <div class="col-md-6 mb-3"><label>Insurance Provider <span style="color:#d32f2f">*</span></label><input required type="text" name="vehicles[${index}][insurance_provider]" value="${vehicle.insurance_provider || ''}" class="form-control"></div>

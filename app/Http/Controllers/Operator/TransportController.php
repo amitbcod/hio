@@ -38,7 +38,18 @@ class TransportController extends Controller
             $transportQuery->withCount([
                 'vehicles as total_vehicle_qty',
                 'activeVehicles as active_vehicle_qty',
-            ]);
+                'vehicles as available_vehicle_qty' => function ($query) {
+                    $query->where('status', 'Active')
+                        ->where(function ($expiryQuery) {
+                            $expiryQuery->whereNull('license_expiry_date')
+                                ->orWhereDate('license_expiry_date', '>=', now()->toDateString());
+                        })
+                        ->where(function ($expiryQuery) {
+                            $expiryQuery->whereNull('insurance_expiry_date')
+                                ->orWhereDate('insurance_expiry_date', '>=', now()->toDateString());
+                        });
+                },
+            ])->with('vehicles');
         }
 
         $transports = $transportQuery->paginate(20);
@@ -47,6 +58,18 @@ class TransportController extends Controller
             $transports->getCollection()->each(function (Transport $transport) {
                 $transport->setAttribute('total_vehicle_qty', 1);
                 $transport->setAttribute('active_vehicle_qty', 1);
+                $transport->setAttribute('available_vehicle_qty', 1);
+                $transport->setAttribute('has_expired_vehicle', false);
+            });
+        } else {
+            $today = now()->startOfDay();
+            $transports->getCollection()->each(function (Transport $transport) use ($today) {
+                $expiredVehicles = $transport->vehicles->filter(function (TransportVehicle $vehicle) use ($today) {
+                    return ($vehicle->license_expiry_date && $vehicle->license_expiry_date->lt($today))
+                        || ($vehicle->insurance_expiry_date && $vehicle->insurance_expiry_date->lt($today));
+                });
+                $transport->setAttribute('has_expired_vehicle', $expiredVehicles->isNotEmpty());
+                $transport->setAttribute('expired_vehicle_license_numbers', $expiredVehicles->pluck('license_number')->filter()->values());
             });
         }
 
@@ -360,7 +383,6 @@ class TransportController extends Controller
             'vehicle_qty' => 'required|integer|min:1|max:100',
             'vehicles' => 'required|array|size:' . (int) $request->input('vehicle_qty'),
             'vehicles.*.license_number' => 'required|string|max:100',
-            'vehicles.*.registration_number' => 'required|string|max:100',
             'vehicles.*.license_expiry_date' => 'required|date',
             'vehicles.*.insurance_expiry_date' => 'required|date',
             'vehicles.*.insurance_provider' => 'required|string|max:150',
@@ -388,7 +410,7 @@ class TransportController extends Controller
         foreach ($validated['vehicles'] as $vehicleData) {
             $transport->vehicles()->create([
                 'license_number' => $vehicleData['license_number'],
-                'registration_number' => $vehicleData['registration_number'],
+                'registration_number' => $vehicleData['license_number'],
                 'license_expiry_date' => $vehicleData['license_expiry_date'],
                 'insurance_expiry_date' => $vehicleData['insurance_expiry_date'],
                 'insurance_provider' => $vehicleData['insurance_provider'],
@@ -462,7 +484,6 @@ class TransportController extends Controller
             'vehicles' => 'required|array|size:' . (int) $request->input('vehicle_qty'),
             'vehicles.*.id' => 'nullable|integer|exists:transport_vehicles,id',
             'vehicles.*.license_number' => 'required|string|max:100',
-            'vehicles.*.registration_number' => 'required|string|max:100',
             'vehicles.*.license_expiry_date' => 'required|date',
             'vehicles.*.insurance_expiry_date' => 'required|date',
             'vehicles.*.insurance_provider' => 'required|string|max:150',
@@ -481,7 +502,7 @@ class TransportController extends Controller
             $vehicle = $existingVehicles->get($index);
             $attributes = [
                 'license_number' => $vehicleData['license_number'],
-                'registration_number' => $vehicleData['registration_number'],
+                'registration_number' => $vehicle->registration_number ?: $vehicleData['license_number'],
                 'license_expiry_date' => $vehicleData['license_expiry_date'],
                 'insurance_expiry_date' => $vehicleData['insurance_expiry_date'],
                 'insurance_provider' => $vehicleData['insurance_provider'],
@@ -1593,6 +1614,10 @@ class TransportController extends Controller
             if (!$vehicle) {
                 return response()->json(['error' => 'This vehicle is not active or does not belong to this vehicle type.'], 422);
             }
+            if (($vehicle->license_expiry_date && $vehicle->license_expiry_date->lt(now()->startOfDay()))
+                || ($vehicle->insurance_expiry_date && $vehicle->insurance_expiry_date->lt(now()->startOfDay()))) {
+                return response()->json(['error' => 'This vehicle has an expired license or insurance policy.'], 422);
+            }
             $availableVehicleIds = $availability->availableVehicleModelsForBooking($transport, $booking)
                 ->pluck('id')->all();
             if (!in_array((int) $vehicleId, array_map('intval', $availableVehicleIds), true)
@@ -1617,6 +1642,13 @@ class TransportController extends Controller
             if (count($validDriverIds) !== count($selectedDriverIds)) {
                 return response()->json(['error' => 'Invalid driver selection'], 422);
             }
+
+            $expiredDriver = OperatorDriver::whereIn('id', $selectedDriverIds)
+                ->whereDate('license_expiry_date', '<', now()->toDateString())
+                ->exists();
+            if ($expiredDriver) {
+                return response()->json(['error' => 'This driver has an expired license.'], 422);
+            }
         }
 
         DB::transaction(function () use ($booking, $pickupDriverId, $returnDriverId, $vehicleId, $validated, $operator): void {
@@ -1632,11 +1664,21 @@ class TransportController extends Controller
             }
             if ($vehicleId) {
                 $lockedVehicle = $lockedTransport->vehicles()->active()->whereKey($vehicleId)->first();
+                if ($lockedVehicle && (($lockedVehicle->license_expiry_date && $lockedVehicle->license_expiry_date->lt(now()->startOfDay()))
+                    || ($lockedVehicle->insurance_expiry_date && $lockedVehicle->insurance_expiry_date->lt(now()->startOfDay())))) {
+                    throw ValidationException::withMessages(['vehicle_id' => 'This vehicle has an expired license or insurance policy.']);
+                }
                 $lockedAvailableVehicleIds = $lockedAvailability->availableVehicleModelsForBooking($lockedTransport, $lockedBooking)->pluck('id')->all();
                 if (!$lockedVehicle || (!in_array((int) $vehicleId, array_map('intval', $lockedAvailableVehicleIds), true)
                     && (int) $vehicleId !== (int) $lockedBooking->transport_vehicle_id)) {
                     throw ValidationException::withMessages(['vehicle_id' => 'This vehicle is no longer available for the selected booking period.']);
                 }
+            }
+            $lockedSelectedDriverIds = array_filter([$pickupDriverId, $returnDriverId]);
+            if (OperatorDriver::whereIn('id', $lockedSelectedDriverIds)
+                ->whereDate('license_expiry_date', '<', now()->toDateString())
+                ->exists()) {
+                throw ValidationException::withMessages(['pickup_driver_id' => 'This driver has an expired license.']);
             }
             $previous = $lockedBooking->assignments()
                 ->where('status', TransportBookingAssignment::STATUS_CURRENT)
