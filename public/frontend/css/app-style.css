@@ -507,6 +507,18 @@ button.btn.btn-sm.btn-danger {
     box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075) !important; */
 }
 
+#sidebar+div.col-md-6 {
+    margin: 30px 0;
+}
+
+.container-middle.team-member-new {
+    width: 100%;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+    padding: 32px;
+}
+
 .container>.row>.col-md-9>div,
 .container-fluid>.row>.col-md-9>div {
     background: #fff;
