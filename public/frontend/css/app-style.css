@@ -515,6 +515,11 @@ button.btn.btn-sm.btn-danger {
     padding: 32px;
 }
 
+.container>.row>.col-md-9,
+.container-fluid>.row>.col-md-9 {
+    margin-top: 30px;
+}
+
 code {
     font-size: inherit;
     color: #ff8a00;
