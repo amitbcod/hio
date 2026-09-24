@@ -56,6 +56,7 @@
                             <label style="font-weight:600;">Registration Number</label>
                             <input type="hidden" name="registration_number" class="form-control @error('registration_number') is-invalid @enderror" value="{{ old('registration_number', $transport->registration_number) }}">
                         </div>
+                        
                         <div class="col-md-4">
                             <label style="font-weight:600;">Contact Email</label>
                             <input type="email" name="contact_email" class="form-control @error('contact_email') is-invalid @enderror" value="{{ old('contact_email', $transport->contact_email) }}">
