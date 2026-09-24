@@ -55,7 +55,7 @@
                                         <td>
                                             <a href="{{ route('operator.transport.booking.details', [$booking->transport_id, $booking->id]) }}" class="btn btn-sm btn-primary">Details</a>
                                             @if(in_array($booking->booking_status, [\App\Models\TransportBooking::STATUS_CONFIRMED, \App\Models\TransportBooking::STATUS_SCHEDULED], true))
-                                                <button class="btn btn-sm btn-info" onclick="openAssignDriverModal({{ $booking->id }})">{{ $booking->booking_status === \App\Models\TransportBooking::STATUS_SCHEDULED ? 'Change Assignment' : 'Assign Driver' }}</button>
+                                                <button class="btn btn-sm btn-info" onclick="openAssignDriverModal({{ $booking->id }})">{{ $booking->hasVehicleAssignment() || $booking->hasDriverAssignment() ? 'Reassign' : 'Assign' }}</button>
                                             @endif
                                         </td>
                                     </tr>
@@ -108,8 +108,10 @@
                         <small class="form-text text-muted">Assign a separate return driver if this booking includes a return journey.</small>
                     </div>
                     <div class="form-group">
-                        <label for="assignmentReason">Reason for change</label>
+                        <div id="assignmentReasonGroup">
+                            <label for="assignmentReason">Reason for change</label>
                         <input id="assignmentReason" name="reason" class="form-control" placeholder="Vehicle breakdown, driver emergency, operational change...">
+                        </div>
                     </div>
                 </form>
             </div>
@@ -143,6 +145,9 @@ function openAssignDriverModal(bookingId) {
             if (data.drivers) {
                 populateVehicleSelect(data.vehicles || [], data.assigned_vehicle_id, data.other_vehicle_name, data.other_vehicle_license_number);
                 populateDriverSelects(data.drivers, data.assigned_pickup_driver_id, data.assigned_return_driver_id, data.has_return_journey);
+                const hasExistingAssignment = Boolean(data.assigned_vehicle_id || data.other_vehicle_license_number || data.assigned_pickup_driver_id || data.assigned_return_driver_id);
+                document.getElementById('assignmentReasonGroup').style.display = hasExistingAssignment ? 'block' : 'none';
+                document.getElementById('assignmentReason').value = '';
                 $('#assignDriverModal').modal('show');
             } else {
                 throw new Error('No drivers payload');

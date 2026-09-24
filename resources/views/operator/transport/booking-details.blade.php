@@ -115,6 +115,11 @@
                 </div>
 
                 {{-- Service & Vehicle Details --}}
+                @php
+                    $hasAssignedVehicle = $booking->transport_vehicle_id || $booking->other_vehicle_license_number;
+                    $hasAssignedDriver = $booking->pickup_driver_id || $booking->return_driver_id;
+                    $hasExistingAssignment = $hasAssignedVehicle || $hasAssignedDriver;
+                @endphp
                 <div style="margin-bottom: 32px;">
                     <h4 style="font-weight: 600; margin-bottom: 20px; color: #333;">🚗 Service & Vehicle Details</h4>
                     <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
@@ -130,9 +135,9 @@
                                     <br><small style="color: #666;">Vehicle name: {{ $booking->other_vehicle_name }}</small>
                                     <br><small style="color: #666;">License number: {{ $booking->other_vehicle_license_number }}</small>
                                 @else
-                                    <br><small style="color: #666;">Assigned vehicle: Unassigned</small>
+                                    <br><small style="color: #666;">Assigned vehicle: Unassigned <a href="#current-assignment" class="assignment-scroll-link">[Assign]</a></small>
                                 @endif
-                                <br><small style="color: #666;">Driver: {{ $booking->pickupDriver?->driver_name ?: 'Unassigned' }}</small>
+                                <br><small style="color: #666;">Driver: {{ $booking->pickupDriver?->driver_name ?: 'Unassigned' }}@unless($hasAssignedDriver) <a href="#current-assignment" class="assignment-scroll-link">[Assign]</a>@endunless</small>
                             </div>
                             <div class="col-md-6">
                                 <strong>Operator:</strong><br>
@@ -213,7 +218,7 @@
 
                 @if(in_array($booking->booking_status, [\App\Models\TransportBooking::STATUS_CONFIRMED, \App\Models\TransportBooking::STATUS_SCHEDULED], true))
                 <div style="margin-bottom: 32px;">
-                    <h4 style="font-weight: 600; margin-bottom: 20px; color: #333;">Current Assignment</h4>
+                    <h4 id="current-assignment" style="font-weight: 600; margin-bottom: 20px; color: #333;">Current Assignment</h4>
                     <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
                         <form id="detailsAssignmentForm" method="POST" action="{{ route('operator.transport.booking.assign-drivers', $booking->id) }}">
                             @csrf
@@ -221,7 +226,7 @@
                                 <div class="col-md-6">
                                     <label for="detailsVehicleSelect"><strong>Vehicle</strong></label>
                                     <select id="detailsVehicleSelect" name="vehicle_id" class="form-control">
-                                        <option value="">Remove vehicle</option>
+                                        <option value="">Select vehicle</option>
                                         @foreach($assignmentVehicles as $vehicle)
                                             <option value="{{ $vehicle->id }}" @selected((int) $booking->transport_vehicle_id === (int) $vehicle->id)>{{ $vehicle->license_number }} / {{ $vehicle->registration_number }}</option>
                                         @endforeach
@@ -231,7 +236,7 @@
                                 <div class="col-md-6">
                                     <label for="detailsDriverSelect"><strong>Driver</strong></label>
                                     <select id="detailsDriverSelect" name="pickup_driver_id" class="form-control">
-                                        <option value="">Remove driver</option>
+                                        <option value="">Select driver</option>
                                         @foreach($assignmentDrivers as $driver)
                                             <option value="{{ $driver->id }}" @selected((int) $booking->pickup_driver_id === (int) $driver->id)>{{ $driver->driver_name }}</option>
                                         @endforeach
@@ -248,13 +253,9 @@
                                     <input name="other_vehicle_license_number" class="form-control" value="{{ $booking->other_vehicle_license_number }}">
                                 </div>
                             </div>
-                            <div class="mt-3">
+                            <div id="detailsAssignmentReason" class="mt-3" style="display: {{ $hasExistingAssignment ? 'block' : 'none' }};">
                                 <label>Reason for change</label>
                                 <input name="reason" class="form-control" placeholder="Vehicle breakdown, driver emergency, operational change...">
-                            </div>
-                            <div class="mt-3">
-                                <label><input type="checkbox" name="remove_vehicle" value="1"> Remove vehicle assignment</label>
-                                <label class="ml-3"><input type="checkbox" name="remove_driver" value="1"> Remove driver assignment</label>
                             </div>
                             <button type="submit" class="btn btn-info mt-3">Change Assignment</button>
                         </form>
@@ -321,7 +322,27 @@
     </div>
 </div>
 <script>
-document.getElementById('detailsAssignmentForm')?.addEventListener('submit', function (event) {
+const detailsVehicleSelect = document.getElementById('detailsVehicleSelect');
+const detailsOtherVehicleFields = document.querySelector('#detailsAssignmentForm .row.mt-3');
+
+function toggleDetailsOtherVehicleFields() {
+    const isOther = detailsVehicleSelect?.value === 'other';
+    if (detailsOtherVehicleFields) {
+        detailsOtherVehicleFields.style.display = isOther ? 'flex' : 'none';
+    }
+}
+
+detailsVehicleSelect?.addEventListener('change', toggleDetailsOtherVehicleFields);
+toggleDetailsOtherVehicleFields();
+
+document.querySelectorAll('.assignment-scroll-link').forEach(function (link) {
+    link.addEventListener('click', function (event) {
+        event.preventDefault();
+        document.getElementById('current-assignment')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+});
+
+document.getElementById('detailsAssignmentForm')?.addEventListener('submit', function () {
     const vehicle = document.getElementById('detailsVehicleSelect');
     if (vehicle.value === 'other') {
         vehicle.value = '';

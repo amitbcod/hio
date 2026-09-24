@@ -1551,6 +1551,14 @@ class TransportController extends Controller
             'remove_driver' => 'nullable|boolean',
         ]);
 
+        $hasExistingAssignment = $booking->transport_vehicle_id
+            || filled($booking->other_vehicle_license_number)
+            || $booking->pickup_driver_id
+            || $booking->return_driver_id;
+        if ($hasExistingAssignment && blank($validated['reason'] ?? null)) {
+            return response()->json(['error' => 'A reason for change is required when reassigning a vehicle or driver.'], 422);
+        }
+
         $pickupDriverId = !empty($validated['remove_driver'])
             ? null
             : (array_key_exists('pickup_driver_id', $validated)
