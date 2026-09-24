@@ -48,9 +48,9 @@
                             <label style="font-weight:600;">Seating Capacity <span style="color:#d32f2f">*</span></label>
                             <input type="number" name="seating_capacity" class="form-control @error('seating_capacity') is-invalid @enderror" value="{{ old('seating_capacity') }}" min="1" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" style="display:none;">
                             <label style="font-weight:600;">Registration Number</label>
-                            <input type="text" name="registration_number" class="form-control @error('registration_number') is-invalid @enderror" value="{{ old('registration_number') }}">
+                            <input type="hidden" name="registration_number" class="form-control @error('registration_number') is-invalid @enderror" value="{{ old('registration_number') }}">
                         </div>
                         <div class="col-md-4">
                             <label style="font-weight:600;">Contact Email</label>
