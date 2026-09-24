@@ -15,7 +15,7 @@ body {
 
 .col-md-3.net-section {
     padding: 0;
-    width: 22%;
+    /* width: 22%; */
     overflow-y: auto;
     background: #0D2144;
     padding-bottom: 30px;
