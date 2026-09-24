@@ -55,7 +55,7 @@
             {{-- TEAM MEMBERS --}}
             <div class="card mt-4">
                 <div class="card-header">Team Members</div>
-                <div class="card-body p-0">
+                <div class="card-body p-0" style="overflow-x: scroll">
                     <table class="table mb-0">
                         <thead>
                             <tr>
