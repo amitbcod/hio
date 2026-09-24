@@ -28,7 +28,7 @@
     <div class="col-md-6 d-flex align-items-start justify-content-center" style="">
         <div class="container-middle team-member-new">
 
-            <h2 class="mb-4 fw-bold">USERS & STAFF MANAGEMENT</h2>
+            <h2 class="mb-4 fw-bold">Users & Staff Management</h2>
 
             @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show">
@@ -55,7 +55,7 @@
             {{-- TEAM MEMBERS --}}
             <div class="card mt-4">
                 <div class="card-header">Team Members</div>
-                <div class="card-body p-0">
+                <div class="card-body p-0" style="overflow-x: scroll">
                     <table class="table mb-0">
                         <thead>
                             <tr>
@@ -83,7 +83,7 @@
                                         <span class="badge bg-warning">Suspended</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td style="display:flex">
                                     {{-- Edit User --}}
                                     <button class="btn btn-sm btn-warning editUserBtn" 
                                         data-id="{{ $user->id }}"
