@@ -102,12 +102,12 @@
                         <div style="border-top:1px solid #ddd;padding-top:16px;margin-top:16px;">
                             <h5>Vehicle ${index + 1}</h5>
                             <div class="row">
-                                <div class="col-md-6 mb-3"><label>License Number *</label><input required type="text" name="vehicles[${index}][license_number]" value="${vehicle.license_number || ''}" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label>License Plate Number *</label><input required type="text" name="vehicles[${index}][license_number]" value="${vehicle.license_number || ''}" class="form-control"></div>
                                 <div class="col-md-6 mb-3"><label>Registration Number *</label><input required type="text" name="vehicles[${index}][registration_number]" value="${vehicle.registration_number || ''}" class="form-control"></div>
                                 <div class="col-md-6 mb-3"><label>License / Permit Expiry Date *</label><input required type="date" name="vehicles[${index}][license_expiry_date]" value="${vehicle.license_expiry_date || ''}" class="form-control"></div>
                                 <div class="col-md-6 mb-3"><label>Insurance Expiry Date *</label><input required type="date" name="vehicles[${index}][insurance_expiry_date]" value="${vehicle.insurance_expiry_date || ''}" class="form-control"></div>
                                 <div class="col-md-6 mb-3"><label>Insurance Provider *</label><input required type="text" name="vehicles[${index}][insurance_provider]" value="${vehicle.insurance_provider || ''}" class="form-control"></div>
-                                <div class="col-md-6 mb-3"><label>Policy *</label><input required type="file" name="vehicles[${index}][policy]" accept=".pdf,.jpg,.jpeg,.png" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label>Upload Policy *</label><input required type="file" name="vehicles[${index}][policy]" accept=".pdf,.jpg,.jpeg,.png" class="form-control"></div>
                                 <div class="col-md-6 mb-3"><label>Supporting Documents</label><input type="file" name="vehicles[${index}][documents][]" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" class="form-control"></div>
                                 <div class="col-md-6 mb-3"><label>Status *</label><select required name="vehicles[${index}][status]" class="form-control">${options}</select></div>
                             </div>

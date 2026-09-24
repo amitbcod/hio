@@ -16,6 +16,17 @@ when @extends('layouts.app')
             </div>
 
             <div style="background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,0.04);margin-bottom:16px;">
+                @if(session('success'))
+                    <div style="background:#e8f5e9;border:1px solid #66bb6a;border-radius:8px;padding:12px 14px;margin-bottom:16px;color:#2e7d32;">
+                        <strong>✓ {{ session('success') }}</strong>
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div style="background:#ffebee;border:1px solid #ef5350;border-radius:8px;padding:12px 14px;margin-bottom:16px;color:#c62828;">
+                        <strong>❌ {{ session('error') }}</strong>
+                    </div>
+                @endif
+
                 @if((($transport->approval_status ?? null) === 'Approved') || $transport->status === \App\Models\Transport::STATUS_ACTIVE)
                     <h4 style="margin-top:0;">Published</h4>
                     <p>Your transport listing has been approved and published.</p>

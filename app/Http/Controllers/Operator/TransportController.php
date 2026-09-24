@@ -1233,12 +1233,25 @@ class TransportController extends Controller
             abort(403);
         }
 
-        // Check all essential steps are complete
-        $essentialSteps = ['step1_basics', 'step2_routes_pricing', 'step3_media', 'step4_compliance', 'step5_promotions_offers', 'step6_service_description', 'step6_seo_social'];
-        foreach ($essentialSteps as $step) {
-            if (!$transport->{$step}) {
-                return back()->with('error', 'Please complete all essential setup steps before submitting for approval.');
+        $essentialSteps = [
+            'step1_basics' => 'Step 1: Basics',
+            'step2_routes_pricing' => 'Step 2: Routes & Pricing',
+            'step3_media' => 'Step 3: Media',
+            'step5_promotions_offers' => 'Step 5: Promotions & Offers',
+            'step6_service_description' => 'Step 6: Service Description',
+            'step6_seo_social' => 'Step 6: SEO & Social',
+        ];
+
+        $missingSteps = [];
+        foreach ($essentialSteps as $field => $label) {
+            if (!$transport->{$field}) {
+                $missingSteps[] = $label;
             }
+        }
+
+        if (!empty($missingSteps)) {
+            return redirect()->route('operator.transport.step7.show', $transport->id)
+                ->with('error', 'Please complete all essential setup steps before submitting for approval. Missing: ' . implode(', ', $missingSteps) . '.');
         }
 
         $transport->update([
@@ -1248,7 +1261,8 @@ class TransportController extends Controller
             'step7_publish' => 1,
         ]);
 
-        return back()->with('success', 'Transport submitted for admin approval. You will be notified once it is approved.');
+        return redirect()->route('operator.transport.step7.show', $transport->id)
+            ->with('success', 'Transport submitted for admin approval. You will be notified once it is approved.');
     }
 
     // ════════════════════════════════════════════════════════════════════════
