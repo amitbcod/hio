@@ -9,7 +9,7 @@
             @include('operator.registration._sidebar_main')
         </div>
         <div class="col-md-9 my-pro">
-            <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);margin-bottom:16px;margin-top:40px;">
+            <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);margin-bottom:16px;margin-top:0px;">
                 <h2 style="margin:0;font-weight:700;">All Transport Bookings</h2>
                 <p style="margin:6px 0 0 0;color:#666;">Bookings across all your transport services.</p>
             </div>
