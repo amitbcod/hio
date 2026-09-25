@@ -206,7 +206,11 @@ class RegistrationController extends Controller
             ->filter()
             ->values()
             ->all();
+        $hasAccommodation = in_array('Accommodation', $serviceTypes, true);
         $hasTransport = in_array('Transport', $serviceTypes, true);
+        $hasActivity = in_array('Activity', $serviceTypes, true);
+        $accommodationSameAsBusiness = in_array((string) $request->input('accommodation_same_as_business_address'), ['1', 'yes'], true);
+        $activitySameAsBusiness = in_array((string) $request->input('activity_same_as_business_address'), ['1', 'yes'], true);
 
         $request->validate([
             'business_legal_name' => 'required',
@@ -220,18 +224,49 @@ class RegistrationController extends Controller
                 Rule::requiredIf($hasTransport),
             ],
             'transport_address' => [
+                Rule::excludeIf(!$hasTransport),
                 'nullable',
                 'string',
                 'max:255',
                 Rule::requiredIf($hasTransport && in_array((string) $request->input('transport_same_as_business_address'), ['0', 'no', 0, false], true)),
             ],
             'transport_region_location' => [
+                Rule::excludeIf(!$hasTransport),
                 'nullable',
                 'string',
                 'max:255',
                 Rule::requiredIf($hasTransport && in_array((string) $request->input('transport_same_as_business_address'), ['0', 'no', 0, false], true)),
             ],
-            'transport_geolocation' => 'nullable|string|max:255',
+            'transport_geolocation' => [Rule::excludeIf(!$hasTransport), 'nullable', 'string', 'max:255'],
+            'accommodation_same_as_business_address' => [
+                'nullable', 'in:1,0,yes,no', Rule::requiredIf($hasAccommodation),
+            ],
+            'accommodation_address' => [
+                Rule::excludeIf(!$hasAccommodation || $accommodationSameAsBusiness), 'nullable', 'string', 'max:255', Rule::requiredIf($hasAccommodation && !$accommodationSameAsBusiness),
+            ],
+            'accommodation_region_location' => [
+                Rule::excludeIf(!$hasAccommodation || $accommodationSameAsBusiness), 'nullable', 'string', 'max:255', Rule::requiredIf($hasAccommodation && !$accommodationSameAsBusiness),
+            ],
+            'accommodation_geolocation' => [Rule::excludeIf(!$hasAccommodation || $accommodationSameAsBusiness), 'nullable', 'string', 'max:255'],
+            'accommodation_contact_number' => [Rule::excludeIf(!$hasAccommodation), 'nullable', 'string', 'max:50'],
+            'accommodation_contact_email' => [Rule::excludeIf(!$hasAccommodation), 'nullable', 'email', 'max:255'],
+            'accommodation_logo' => [Rule::excludeIf(!$hasAccommodation), 'nullable', 'file', 'image', 'max:2048'],
+            'transport_contact_number' => [Rule::excludeIf(!$hasTransport), 'nullable', 'string', 'max:50'],
+            'transport_contact_email' => [Rule::excludeIf(!$hasTransport), 'nullable', 'email', 'max:255'],
+            'transport_logo' => [Rule::excludeIf(!$hasTransport), 'nullable', 'file', 'image', 'max:2048'],
+            'activity_same_as_business_address' => [
+                'nullable', 'in:1,0,yes,no', Rule::requiredIf($hasActivity),
+            ],
+            'activity_address' => [
+                Rule::excludeIf(!$hasActivity || $activitySameAsBusiness), 'nullable', 'string', 'max:255', Rule::requiredIf($hasActivity && !$activitySameAsBusiness),
+            ],
+            'activity_region_location' => [
+                Rule::excludeIf(!$hasActivity || $activitySameAsBusiness), 'nullable', 'string', 'max:255', Rule::requiredIf($hasActivity && !$activitySameAsBusiness),
+            ],
+            'activity_geolocation' => [Rule::excludeIf(!$hasActivity || $activitySameAsBusiness), 'nullable', 'string', 'max:255'],
+            'activity_contact_number' => [Rule::excludeIf(!$hasActivity), 'nullable', 'string', 'max:50'],
+            'activity_contact_email' => [Rule::excludeIf(!$hasActivity), 'nullable', 'email', 'max:255'],
+            'activity_logo' => [Rule::excludeIf(!$hasActivity), 'nullable', 'file', 'image', 'max:2048'],
             'years_in_operation' => 'nullable|integer',
             'trading_name' => 'nullable',
             'company_logo' => 'nullable|file|image|max:2048',
@@ -264,6 +299,44 @@ class RegistrationController extends Controller
             'instagram_link' => $request->instagram_link,
             'linkedin_link' => $request->linkedin_link,
         ];
+
+        $existingProfile = !empty($authUser->business_id)
+            ? OperatorProfile::where('business_id', $authUser->business_id)->first()
+            : OperatorProfile::where('operator_id', $authUser->operator_id)->first();
+        $existingContactDetails = is_array($existingProfile?->contact_details)
+            ? $existingProfile->contact_details
+            : [];
+        $serviceProfiles = is_array($existingContactDetails['service_profiles'] ?? null)
+            ? $existingContactDetails['service_profiles']
+            : [];
+
+        foreach (['accommodation' => 'Accommodation', 'transport' => 'Transport', 'activity' => 'Activity'] as $key => $service) {
+            if (!in_array($service, $serviceTypes, true)) {
+                continue;
+            }
+
+            $serviceProfiles[$key] = array_merge($serviceProfiles[$key] ?? [], [
+                'same_as_business_address' => $key === 'accommodation'
+                    ? $request->input('accommodation_same_as_business_address')
+                    : ($key === 'activity' ? $request->input('activity_same_as_business_address') : null),
+                'address' => $key === 'accommodation'
+                    ? ($accommodationSameAsBusiness ? null : $request->input('accommodation_address'))
+                    : ($key === 'activity' ? ($activitySameAsBusiness ? null : $request->input('activity_address')) : null),
+                'region_location' => $key === 'accommodation'
+                    ? ($accommodationSameAsBusiness ? null : $request->input('accommodation_region_location'))
+                    : ($key === 'activity' ? ($activitySameAsBusiness ? null : $request->input('activity_region_location')) : null),
+                'geolocation' => $key === 'accommodation'
+                    ? ($accommodationSameAsBusiness ? null : $request->input('accommodation_geolocation'))
+                    : ($key === 'activity' ? ($activitySameAsBusiness ? null : $request->input('activity_geolocation')) : null),
+                'contact_number' => $request->input($key . '_contact_number'),
+                'contact_email' => $request->input($key . '_contact_email'),
+            ]);
+
+            if ($request->hasFile($key . '_logo')) {
+                $serviceProfiles[$key]['logo'] = $request->file($key . '_logo')->store('service-logos', 'public');
+            }
+        }
+        $data['contact_details'] = array_merge($existingContactDetails, ['service_profiles' => $serviceProfiles]);
 
         $transportData = [
             'transport_same_as_business_address' => $hasTransport ? $transportSameAsBusiness : null,

@@ -993,7 +993,11 @@ document.addEventListener('DOMContentLoaded', function() {
 function openCheckoutModal() {
     const isAuthenticated = {{ auth('traveler')->check() ? 'true' : 'false' }};
     const operatorToken = '{{ request()->query('operator_token') }}';
-    const operatorQuery = operatorToken ? '?operator_token=' + encodeURIComponent(operatorToken) : '';
+    const selectedService = '{{ $selectedService ?? session('booking_service', '') }}';
+    const queryParams = new URLSearchParams();
+    if (operatorToken) queryParams.set('operator_token', operatorToken);
+    if (selectedService) queryParams.set('service', selectedService);
+    const operatorQuery = queryParams.toString() ? '?' + queryParams.toString() : '';
     const targetUrl = isAuthenticated ? '{{ route("frontend.booking.checkout") }}' + operatorQuery : '{{ route("frontend.booking.guest-checkout") }}' + operatorQuery;
     window.location.href = targetUrl;
 }

@@ -57,6 +57,11 @@ class BookingWidgetController extends Controller
             abort(403, 'Invalid widget token');
         }
 
+        $service = in_array($service, ['accommodation', 'activity', 'transport'], true)
+            ? $service
+            : 'accommodation';
+        $request->session()->put('booking_service', $service);
+
         // sanitize inputs - allow only expected param keys
         $allowed = [
             'destination', 'check_in', 'check_out', 'guests', 'rooms',
@@ -75,6 +80,7 @@ class BookingWidgetController extends Controller
 
         // include operator token for tracking
         $query['operator_token'] = $token;
+        $query['service'] = $service;
 
         // Normalize widget params to frontend expected keys
         if ($service === 'accommodation') {

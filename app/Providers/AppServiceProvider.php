@@ -28,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('frontend.*', function ($view) {
             $operatorToken = (string) request()->query('operator_token', session('operator_token', ''));
+            $selectedService = (string) request()->query('service', session('booking_service', ''));
+            if (in_array($selectedService, ['accommodation', 'activity', 'transport'], true)) {
+                session(['booking_service' => $selectedService]);
+            }
             $operatorProfile = null;
 
             if ($operatorToken !== '') {
@@ -50,6 +54,7 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('operatorToken', $operatorToken);
             $view->with('operatorProfile', $operatorProfile);
+            $view->with('selectedService', in_array($selectedService, ['accommodation', 'activity', 'transport'], true) ? $selectedService : null);
         });
     }
 }

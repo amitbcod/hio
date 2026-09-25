@@ -347,7 +347,23 @@
     @php
         $operatorToken = request()->query('operator_token') ?: session('operator_token');
         $operatorQuery = $operatorToken ? ['operator_token' => $operatorToken] : [];
+        if (!empty($selectedService)) {
+            $operatorQuery['service'] = $selectedService;
+        }
         $showSiteBranding = empty($operatorToken);
+        $serviceProfile = null;
+        if (!empty($operatorProfile) && !empty($selectedService)) {
+            $serviceProfiles = is_array($operatorProfile->contact_details ?? null)
+                ? ($operatorProfile->contact_details['service_profiles'] ?? [])
+                : [];
+            $serviceProfile = $serviceProfiles[$selectedService] ?? null;
+        }
+        $headerLogo = !empty($serviceProfile['logo'])
+            ? $serviceProfile['logo']
+            : ($operatorProfile->company_logo ?? null);
+        $headerPhone = !empty($serviceProfile['contact_number'])
+            ? $serviceProfile['contact_number']
+            : ($operatorProfile->contact_phone ?? null);
     @endphp
 
     @if($showSiteBranding)
@@ -355,8 +371,8 @@
             <div class="wrap top-bar-inner">
                 <div class="top-meta">
                     @if(!empty($operatorProfile))
-                        @if(!empty($operatorProfile->contact_phone))
-                            <span><i class="fa-solid fa-phone"></i> {{ $operatorProfile->contact_phone }}</span>
+                        @if(!empty($headerPhone))
+                            <span><i class="fa-solid fa-phone"></i> {{ $headerPhone }}</span>
                         @endif
                         @if(!empty($operatorProfile->contact_email))
                             <span><i class="fa-solid fa-envelope"></i> {{ $operatorProfile->contact_email }}</span>
@@ -389,8 +405,8 @@
         <header class="site-header">
             <div class="wrap site-header-inner">
                 <a href="{{ route('frontend.home', $operatorQuery) }}" class="brand">
-                    @if(!empty($operatorProfile) && !empty($operatorProfile->company_logo))
-                        <img src="{{ asset('storage/' . $operatorProfile->company_logo) }}" alt="{{ $operatorProfile->trading_name ?: $operatorProfile->business_legal_name }} logo">
+                    @if(!empty($headerLogo))
+                        <img src="{{ asset('storage/' . $headerLogo) }}" alt="{{ $operatorProfile->trading_name ?: $operatorProfile->business_legal_name }} logo">
                     @else
                         <img src="{{ asset('images/holidays-io-logo.png') }}" alt="Holidays.io logo">
                     @endif
@@ -424,15 +440,15 @@
         <header class="operator-header">
             <div class="wrap operator-header-inner">
                 <a href="{{ route('frontend.home', $operatorQuery) }}" class="operator-brand">
-                    @if(!empty($operatorProfile->company_logo))
-                        <img src="{{ asset('storage/' . $operatorProfile->company_logo) }}" alt="{{ $operatorProfile->trading_name ?: $operatorProfile->business_legal_name }} logo">
+                    @if(!empty($headerLogo))
+                        <img src="{{ asset('storage/' . $headerLogo) }}" alt="{{ $operatorProfile->trading_name ?: $operatorProfile->business_legal_name }} logo">
                     @else
                         <span class="operator-name">{{ $operatorProfile->trading_name ?: $operatorProfile->business_legal_name }}</span>
                     @endif
                 </a>
                 <div class="operator-contact">
-                    @if(!empty($operatorProfile->contact_phone))
-                        <a href="tel:{{ $operatorProfile->contact_phone }}"><i class="fa-solid fa-phone"></i> {{ $operatorProfile->contact_phone }}</a>
+                    @if(!empty($headerPhone))
+                        <a href="tel:{{ $headerPhone }}"><i class="fa-solid fa-phone"></i> {{ $headerPhone }}</a>
                     @endif
                 </div>
             </div>

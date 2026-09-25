@@ -205,7 +205,7 @@
             // Redirect to tracking endpoint on our site which will validate token and forward
             const qs = new URLSearchParams(qp);
             const redirectUrl = origin + '/widget/track-redirect?token=' + encodeURIComponent(operatorToken) + '&service=' + encodeURIComponent(service) + '&' + qs.toString();
-            window.location.href = redirectUrl;
+            window.open(redirectUrl, '_blank', 'noopener,noreferrer');
         });
 
         function formatDateDisplay(value) {

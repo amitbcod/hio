@@ -57,6 +57,9 @@ class BookingController extends Controller
     public function addToCart(Request $request)
     {
         $type = $request->input('type'); // 'accommodation' | 'activity'
+        if (in_array($type, ['accommodation', 'activity', 'transport'], true)) {
+            $request->session()->put('booking_service', $type);
+        }
         $sharedCartToken = $request->input('shared_cart_token') ?? session('booking_shared_cart_token');
         if ($sharedCartToken) {
             session()->put('booking_shared_cart_token', $sharedCartToken);
@@ -1215,6 +1218,9 @@ class BookingController extends Controller
 
     public function guestCheckout()
     {
+        if (in_array(request()->query('service'), ['accommodation', 'activity', 'transport'], true)) {
+            session(['booking_service' => request()->query('service')]);
+        }
         $cart = $this->resolveCart();
 
         if (empty($cart)) {
@@ -1381,6 +1387,9 @@ class BookingController extends Controller
 
         if ($request->query('operator_token')) {
             session(['operator_token' => $request->query('operator_token')]);
+        }
+        if (in_array($request->query('service'), ['accommodation', 'activity', 'transport'], true)) {
+            session(['booking_service' => $request->query('service')]);
         }
 
         $cart = $this->resolveCart();
@@ -2792,6 +2801,10 @@ class BookingController extends Controller
             $callbackUrl = route('frontend.booking.payment.callback');
             $returnParams = ['status' => 'success', 'ref' => $primaryRef, 'transaction_ref' => $transactionRef];
             $failureParams = ['status' => 'failed', 'ref' => $primaryRef, 'transaction_ref' => $transactionRef];
+            if ($service = session('booking_service')) {
+                $returnParams['service'] = $service;
+                $failureParams['service'] = $service;
+            }
             if ($operatorToken) {
                 $returnParams['operator_token'] = $operatorToken;
                 $failureParams['operator_token'] = $operatorToken;
@@ -2884,6 +2897,9 @@ class BookingController extends Controller
         $this->storeCart([]);
 
         $confirmationParams = ['ref' => $primaryRef];
+        if ($service = session('booking_service')) {
+            $confirmationParams['service'] = $service;
+        }
         if (!empty($operatorToken)) {
             $confirmationParams['operator_token'] = $operatorToken;
         }
@@ -3065,6 +3081,9 @@ class BookingController extends Controller
         }
 
         $operatorToken = $request->input('operator_token') ?: session('operator_token');
+        if (in_array($request->input('service'), ['accommodation', 'activity', 'transport'], true)) {
+            session(['booking_service' => $request->input('service')]);
+        }
 
         Log::info('Payment return handler entered', [
             'primary_ref' => $primaryRef,
@@ -3088,6 +3107,9 @@ class BookingController extends Controller
         }
 
         $confirmationParams = ['ref' => $primaryRef];
+        if ($service = session('booking_service')) {
+            $confirmationParams['service'] = $service;
+        }
         if ($operatorToken) {
             $confirmationParams['operator_token'] = $operatorToken;
         }

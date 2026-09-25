@@ -30,6 +30,7 @@
             'rooms' => $filters['rooms'] ?? null,
             'participants' => $filters['participants'] ?? null,
             'operator_token' => request()->query('operator_token'),
+            'service' => request()->query('service'),
         ], fn ($value) => $value !== null && $value !== '');
 
         $detailQuery = array_filter([
@@ -54,6 +55,7 @@
             'return_date' => request()->query('return_date', ''),
             'return_time' => request()->query('return_time', ''),
             'operator_token' => request()->query('operator_token'),
+            'service' => request()->query('service'),
         ], fn ($value) => $value !== null && $value !== '');
     @endphp
 

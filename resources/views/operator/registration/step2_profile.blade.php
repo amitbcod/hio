@@ -38,12 +38,16 @@
                     <label>Operational Address</label>
                     <input type="text" name="operational_address" class="form-control" value="{{ old('operational_address', $profile->operational_address ?? '') }}">
                 </div>
-                <div class="form-group mb-3">
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
                     <label>Service Type <span style="color:#d32f2f">*</span></label>
                     @php
                         $selectedServiceTypes = old('service_types', isset($profile->service_types)
                             ? (is_array($profile->service_types) ? $profile->service_types : json_decode($profile->service_types, true))
                             : []);
+                        $serviceProfiles = is_array($profile->contact_details ?? null)
+                            ? ($profile->contact_details['service_profiles'] ?? [])
+                            : [];
                     @endphp
                     <select id="service-types-select" name="service_types[]" class="form-control" multiple>
                         <option value="Accommodation" {{ in_array('Accommodation', $selectedServiceTypes ?? []) ? 'selected' : '' }}>Accommodation</option>
@@ -51,39 +55,74 @@
                         <option value="Activity" {{ in_array('Activity', $selectedServiceTypes ?? []) ? 'selected' : '' }}>Activity</option>
                         <option value="Food" {{ in_array('Food', $selectedServiceTypes ?? []) ? 'selected' : '' }}>Food</option>
                     </select>
+                    </div>
+                    <div class="col-md-6 form-group mb-3">
+                        <label>Years in Operation</label>
+                        <input type="number" name="years_in_operation" class="form-control" value="{{ old('years_in_operation', $profile->years_in_operation ?? '') }}">
+                    </div>
                 </div>
 
-                <div id="transport-section" class="form-group mb-3" style="display:none;">
+                <div id="accommodation-section" class="service-profile-section form-group mb-3" style="display:none;clear:both;float:none;width:100%;border:1px solid #ddd;padding:16px;border-radius:8px;">
+                    <h4 style="font-size:18px;margin:0 0 16px;text-align:center;">Accommodation Details</h4>
+                    <label>Accommodation has Same as Business Address?</label>
+                    <div class="d-flex gap-3 mt-2 mb-3">
+                        <label class="d-flex align-items-center gap-2 mb-0"><input type="radio" name="accommodation_same_as_business_address" value="1" {{ old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? null) == 1 || old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? null) === '1' || old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? null) === 'yes' ? 'checked' : '' }}>{{ __('operator.registration.yes') }}</label>
+                        <label class="d-flex align-items-center gap-2 mb-0"><input type="radio" name="accommodation_same_as_business_address" value="0" {{ old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? '0') === 0 || old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? '0') === '0' || old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? '0') === 'no' || old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? '0') === false ? 'checked' : '' }}>{{ __('operator.registration.no') }}</label>
+                    </div>
+                    <div id="accommodation-address-fields" class="row">
+                        <div class="col-md-6 mb-3"><label>Address <span style="color:#d32f2f">*</span></label><input type="text" name="accommodation_address" class="form-control" value="{{ old('accommodation_address', $serviceProfiles['accommodation']['address'] ?? '') }}"></div>
+                        <div class="col-md-6 mb-3"><label>Region / Location <span style="color:#d32f2f">*</span></label><input type="text" name="accommodation_region_location" class="form-control" value="{{ old('accommodation_region_location', $serviceProfiles['accommodation']['region_location'] ?? '') }}"></div>
+                        <div class="col-md-6 mb-3"><label>Map / Geolocation</label><input type="text" name="accommodation_geolocation" class="form-control" placeholder="e.g. -20.1609, 57.5012" value="{{ old('accommodation_geolocation', $serviceProfiles['accommodation']['geolocation'] ?? '') }}"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3"><label>Logo</label><input type="file" name="accommodation_logo" class="form-control" accept="image/*">@if(!empty($serviceProfiles['accommodation']['logo']))<small class="text-muted d-block">Existing logo retained unless replaced.</small>@endif</div>
+                        <div class="col-md-6 mb-3"><label>Contact Number</label><input type="text" name="accommodation_contact_number" class="form-control" value="{{ old('accommodation_contact_number', $serviceProfiles['accommodation']['contact_number'] ?? '') }}"></div>
+                        <div class="col-md-6 mb-3"><label>Contact Email</label><input type="email" name="accommodation_contact_email" class="form-control" value="{{ old('accommodation_contact_email', $serviceProfiles['accommodation']['contact_email'] ?? '') }}"></div>
+                    </div>
+                </div>
+
+                <div id="transport-section" class="service-profile-section form-group mb-3" style="display:none;clear:both;float:none;width:100%;border:1px solid #ddd;padding:16px;border-radius:8px;">
+                    <h4 style="font-size:18px;margin:0 0 16px;text-align:center;">Transport Details</h4>
                     <label>{{ __('operator.registration.transport_same_as_business_address') }}</label>
-                    <div class="d-flex gap-3 mt-2">
+                    <div class="d-flex gap-3 mt-2 mb-3">
                         <label class="d-flex align-items-center gap-2 mb-0">
                             <input type="radio" name="transport_same_as_business_address" value="1" {{ old('transport_same_as_business_address', $operator->transport_same_as_business_address ?? null) == 1 || old('transport_same_as_business_address', $operator->transport_same_as_business_address ?? null) == '1' || old('transport_same_as_business_address', $operator->transport_same_as_business_address ?? null) == 'yes' ? 'checked' : '' }}>
                             {{ __('operator.registration.yes') }}
                         </label>
                         <label class="d-flex align-items-center gap-2 mb-0">
-                            <input type="radio" name="transport_same_as_business_address" value="0" {{ old('transport_same_as_business_address', $operator->transport_same_as_business_address ?? null) == 0 || old('transport_same_as_business_address', $operator->transport_same_as_business_address ?? null) == '0' || old('transport_same_as_business_address', $operator->transport_same_as_business_address ?? null) == 'no' ? 'checked' : '' }}>
+                            <input type="radio" name="transport_same_as_business_address" value="0" {{ old('transport_same_as_business_address', $operator->transport_same_as_business_address ?? '0') === 0 || old('transport_same_as_business_address', $operator->transport_same_as_business_address ?? '0') === '0' || old('transport_same_as_business_address', $operator->transport_same_as_business_address ?? '0') === 'no' || old('transport_same_as_business_address', $operator->transport_same_as_business_address ?? '0') === false ? 'checked' : '' }}>
                             {{ __('operator.registration.no') }}
                         </label>
                     </div>
+                    <div id="transport-address-fields" class="row">
+                        <div class="col-md-6 mb-3"><label>Address <span style="color:#d32f2f">*</span></label><input type="text" name="transport_address" class="form-control" value="{{ old('transport_address', $operator->transport_address ?? '') }}" data-transport-field></div>
+                        <div class="col-md-6 mb-3"><label>Region / Location <span style="color:#d32f2f">*</span></label><input type="text" name="transport_region_location" class="form-control" value="{{ old('transport_region_location', $operator->transport_region_location ?? '') }}" data-transport-field></div>
+                        <div class="col-md-6 mb-3"><label>Map / Geolocation</label><input type="text" name="transport_geolocation" class="form-control" placeholder="e.g. -20.1609, 57.5012" value="{{ old('transport_geolocation', $operator->transport_geolocation ?? '') }}"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3"><label>Logo</label><input type="file" name="transport_logo" class="form-control" accept="image/*">@if(!empty($serviceProfiles['transport']['logo']))<small class="text-muted d-block">Existing logo retained unless replaced.</small>@endif</div>
+                        <div class="col-md-6 mb-3"><label>Contact Number</label><input type="text" name="transport_contact_number" class="form-control" value="{{ old('transport_contact_number', $serviceProfiles['transport']['contact_number'] ?? '') }}"></div>
+                        <div class="col-md-6 mb-3"><label>Contact Email</label><input type="email" name="transport_contact_email" class="form-control" value="{{ old('transport_contact_email', $serviceProfiles['transport']['contact_email'] ?? '') }}"></div>
+                    </div>
                 </div>
 
-                <div id="transport-address-fields" class="form-group mb-3" style="display:none;">
-                    <div class="mb-3">
-                        <label>{{ __('operator.registration.transport_address') }} <span style="color:#d32f2f">*</span></label>
-                        <input type="text" name="transport_address" class="form-control" value="{{ old('transport_address', $operator->transport_address ?? '') }}" data-transport-field>
+                <div id="activity-section" class="service-profile-section form-group mb-3" style="display:none;clear:both;float:none;width:100%;border:1px solid #ddd;padding:16px;border-radius:8px;">
+                    <h4 style="font-size:18px;margin:0 0 16px;text-align:center;">Activity Details</h4>
+                    <label>Activity has Same as Business Address?</label>
+                    <div class="d-flex gap-3 mt-2 mb-3">
+                        <label class="d-flex align-items-center gap-2 mb-0"><input type="radio" name="activity_same_as_business_address" value="1" {{ old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? null) == 1 || old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? null) === '1' || old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? null) === 'yes' ? 'checked' : '' }}>{{ __('operator.registration.yes') }}</label>
+                        <label class="d-flex align-items-center gap-2 mb-0"><input type="radio" name="activity_same_as_business_address" value="0" {{ old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? '0') === 0 || old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? '0') === '0' || old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? '0') === 'no' || old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? '0') === false ? 'checked' : '' }}>{{ __('operator.registration.no') }}</label>
                     </div>
-                    <div class="mb-3">
-                        <label>{{ __('operator.registration.transport_region_location') }} <span style="color:#d32f2f">*</span></label>
-                        <input type="text" name="transport_region_location" class="form-control" value="{{ old('transport_region_location', $operator->transport_region_location ?? '') }}" data-transport-field>
+                    <div id="activity-address-fields" class="row">
+                        <div class="col-md-6 mb-3"><label>Address <span style="color:#d32f2f">*</span></label><input type="text" name="activity_address" class="form-control" value="{{ old('activity_address', $serviceProfiles['activity']['address'] ?? '') }}"></div>
+                        <div class="col-md-6 mb-3"><label>Region / Location <span style="color:#d32f2f">*</span></label><input type="text" name="activity_region_location" class="form-control" value="{{ old('activity_region_location', $serviceProfiles['activity']['region_location'] ?? '') }}"></div>
+                        <div class="col-md-6 mb-3"><label>Map / Geolocation</label><input type="text" name="activity_geolocation" class="form-control" placeholder="e.g. -20.1609, 57.5012" value="{{ old('activity_geolocation', $serviceProfiles['activity']['geolocation'] ?? '') }}"></div>
                     </div>
-                    <div class="mb-0">
-                        <label>{{ __('operator.registration.transport_geolocation') }}</label>
-                        <input type="text" name="transport_geolocation" class="form-control" value="{{ old('transport_geolocation', $operator->transport_geolocation ?? '') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3"><label>Logo</label><input type="file" name="activity_logo" class="form-control" accept="image/*">@if(!empty($serviceProfiles['activity']['logo']))<small class="text-muted d-block">Existing logo retained unless replaced.</small>@endif</div>
+                        <div class="col-md-6 mb-3"><label>Contact Number</label><input type="text" name="activity_contact_number" class="form-control" value="{{ old('activity_contact_number', $serviceProfiles['activity']['contact_number'] ?? '') }}"></div>
+                        <div class="col-md-6 mb-3"><label>Contact Email</label><input type="email" name="activity_contact_email" class="form-control" value="{{ old('activity_contact_email', $serviceProfiles['activity']['contact_email'] ?? '') }}"></div>
                     </div>
-                </div>
-                <div class="form-group mb-3">
-                    <label>Years in Operation</label>
-                    <input type="number" name="years_in_operation" class="form-control" value="{{ old('years_in_operation', $profile->years_in_operation ?? '') }}">
                 </div>
                 <div class="form-group mb-3">
                     <label>Contact Details</label>
@@ -144,59 +183,76 @@
     <script>
     (function () {
         const serviceTypeSelect = document.getElementById('service-types-select');
-        const transportSection = document.getElementById('transport-section');
-        const transportAddressFields = document.getElementById('transport-address-fields');
-        const transportAddressInput = document.querySelector('input[name="transport_address"]');
-        const transportRegionInput = document.querySelector('input[name="transport_region_location"]');
-        const radios = document.querySelectorAll('input[name="transport_same_as_business_address"]');
+        const sections = {
+            Accommodation: document.getElementById('accommodation-section'),
+            Transport: document.getElementById('transport-section'),
+            Activity: document.getElementById('activity-section')
+        };
+        const serviceAddressConfig = {
+            Transport: {
+                fields: document.getElementById('transport-address-fields'),
+                address: document.querySelector('input[name="transport_address"]'),
+                region: document.querySelector('input[name="transport_region_location"]'),
+                radios: document.querySelectorAll('input[name="transport_same_as_business_address"]')
+            },
+            Accommodation: {
+                fields: document.getElementById('accommodation-address-fields'),
+                address: document.querySelector('input[name="accommodation_address"]'),
+                region: document.querySelector('input[name="accommodation_region_location"]'),
+                radios: document.querySelectorAll('input[name="accommodation_same_as_business_address"]')
+            },
+            Activity: {
+                fields: document.getElementById('activity-address-fields'),
+                address: document.querySelector('input[name="activity_address"]'),
+                region: document.querySelector('input[name="activity_region_location"]'),
+                radios: document.querySelectorAll('input[name="activity_same_as_business_address"]')
+            }
+        };
 
-        function updateTransportFields() {
+        function updateServiceFields(service) {
+            const config = serviceAddressConfig[service];
             const selectedValues = Array.from(serviceTypeSelect.selectedOptions).map(option => option.value);
-            const hasTransport = selectedValues.includes('Transport');
-            const checkedValue = document.querySelector('input[name="transport_same_as_business_address"]:checked')?.value;
+            const isSelected = selectedValues.includes(service);
+            const checkedValue = document.querySelector(`input[name="${service.toLowerCase()}_same_as_business_address"]:checked`)?.value;
             const sameAsBusiness = checkedValue === '1' || checkedValue === 'yes';
 
-            transportSection.style.display = hasTransport ? 'block' : 'none';
-            transportAddressFields.style.display = hasTransport && !sameAsBusiness && checkedValue !== undefined ? 'block' : 'none';
-
-            if (!hasTransport) {
-                radios.forEach(function (radio) { radio.checked = false; });
-                if (transportAddressInput) {
-                    transportAddressInput.removeAttribute('required');
-                    transportAddressInput.value = '';
-                }
-                if (transportRegionInput) {
-                    transportRegionInput.removeAttribute('required');
-                    transportRegionInput.value = '';
-                }
+            if (!isSelected) {
+                config.radios.forEach(radio => { radio.checked = false; });
+                config.fields.style.display = 'none';
+                config.address?.removeAttribute('required');
+                config.region?.removeAttribute('required');
                 return;
             }
 
-            if (sameAsBusiness) {
-                if (transportAddressInput) {
-                    transportAddressInput.removeAttribute('required');
-                }
-                if (transportRegionInput) {
-                    transportRegionInput.removeAttribute('required');
-                }
-                transportAddressFields.style.display = 'none';
+            config.fields.style.display = sameAsBusiness || checkedValue === undefined ? 'none' : 'block';
+            if (sameAsBusiness || checkedValue === undefined) {
+                config.address?.removeAttribute('required');
+                config.region?.removeAttribute('required');
             } else {
-                transportAddressFields.style.display = 'block';
-                if (transportAddressInput) {
-                    transportAddressInput.setAttribute('required', 'required');
-                }
-                if (transportRegionInput) {
-                    transportRegionInput.setAttribute('required', 'required');
-                }
+                config.address?.setAttribute('required', 'required');
+                config.region?.setAttribute('required', 'required');
             }
         }
 
-        if (serviceTypeSelect) {
-            serviceTypeSelect.addEventListener('change', updateTransportFields);
-            radios.forEach(function (radio) {
-                radio.addEventListener('change', updateTransportFields);
+        function updateServiceFieldsVisibility() {
+            const selectedValues = Array.from(serviceTypeSelect.selectedOptions).map(option => option.value);
+
+            Object.entries(sections).forEach(([service, section]) => {
+                if (section) {
+                    section.style.display = selectedValues.includes(service) ? 'block' : 'none';
+                }
             });
-            updateTransportFields();
+            Object.keys(serviceAddressConfig).forEach(updateServiceFields);
+        }
+
+        if (serviceTypeSelect) {
+            serviceTypeSelect.addEventListener('change', updateServiceFieldsVisibility);
+            Object.values(serviceAddressConfig).forEach(function (config) {
+                config.radios.forEach(function (radio) {
+                    radio.addEventListener('change', updateServiceFieldsVisibility);
+                });
+            });
+            updateServiceFieldsVisibility();
         }
     })();
 
