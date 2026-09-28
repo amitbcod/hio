@@ -15,9 +15,35 @@
                 <p style="margin:8px 0 0 0;color:#666;">Add the full service description and key service details for the transport listing.</p>
             </div>
 
+            @if ($errors->any())
+                @php
+                    $fieldLabels = [
+                        'long_description' => 'Long Description',
+                        'long_description_fr' => 'Long Description (Français)',
+                        'inclusions' => 'Inclusions',
+                        'inclusions_fr' => 'Inclusions (Français)',
+                        'exclusions' => 'Exclusions',
+                        'exclusions_fr' => 'Exclusions (Français)',
+                        'pickup_instructions' => 'Pickup Instructions',
+                        'pickup_instructions_fr' => 'Pickup Instructions (Français)',
+                    ];
+                @endphp
+                <div class="alert alert-danger" role="alert">
+                    <strong>Please review the following fields:</strong>
+                    <ul class="mb-0 mt-2">
+                        @foreach ($errors->getMessages() as $field => $messages)
+                            @foreach ($messages as $message)
+                                <li><strong>{{ $fieldLabels[$field] ?? 'Service description' }}:</strong> {{ $message }}</li>
+                            @endforeach
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('operator.transport.step6-service-description.save', $transport->id) }}">
                 @csrf
                 <div style="background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,0.04);margin-bottom:16px;">
+                    <div id="service-description-client-error" class="alert alert-danger" role="alert" style="display:none;"></div>
                     <div class="mb-3">
                         <label class="form-label">Long Description</label>
                         <textarea name="long_description" id="long_description" class="form-control" style="display:none;">{{ old('long_description', $transport->long_description) }}</textarea>
@@ -117,7 +143,7 @@
                 editors.push(quill);
             });
 
-            form.addEventListener('submit', function () {
+            form.addEventListener('submit', function (event) {
                 editors.forEach(function (quill) {
                     const html = quill.root.innerHTML;
                     const textarea = document.querySelector('textarea[id="' + quill.container.id.replace('_editor', '') + '"]');
@@ -125,6 +151,30 @@
                         textarea.value = html === '<p><br></p>' ? '' : html;
                     }
                 });
+
+                const textColumnFields = [
+                    { id: 'long_description_fr', label: 'Long Description (Français)' },
+                    { id: 'inclusions_fr', label: 'Inclusions (Français)' },
+                    { id: 'exclusions_fr', label: 'Exclusions (Français)' },
+                    { id: 'pickup_instructions_fr', label: 'Pickup Instructions (Français)' }
+                ];
+                const oversizedFields = textColumnFields.filter(function (field) {
+                    const textarea = document.getElementById(field.id);
+                    return textarea && new TextEncoder().encode(textarea.value).length > 65535;
+                });
+                const errorBox = document.getElementById('service-description-client-error');
+
+                if (oversizedFields.length && errorBox) {
+                    event.preventDefault();
+                    errorBox.textContent = oversizedFields.map(function (field) {
+                        return field.label + ' exceeds the 65,535-byte database limit. Please shorten it before saving.';
+                    }).join(' ');
+                    errorBox.style.display = 'block';
+                    errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else if (errorBox) {
+                    errorBox.style.display = 'none';
+                    errorBox.textContent = '';
+                }
             });
         })();
     </script>

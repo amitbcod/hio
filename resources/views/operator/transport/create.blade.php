@@ -33,7 +33,7 @@
                             <select id="vehicle-name-select" name="vehicle_name_id" class="form-control @error('vehicle_name_id') is-invalid @enderror" required>
                                 <option value="">Select a vehicle name</option>
                                 @foreach($vehicleNames as $vehicleName)
-                                    <option value="{{ $vehicleName->id }}" data-vehicle-type="{{ $vehicleName->vehicleType->name }}" {{ (string) old('vehicle_name_id') === (string) $vehicleName->id ? 'selected' : '' }}>{{ $vehicleName->name }}</option>
+                                    <option value="{{ $vehicleName->id }}" data-vehicle-type="{{ $vehicleName->vehicleType->name }}" {{ (string) old('vehicle_name_id') === (string) $vehicleName->id ? 'selected' : '' }}>{{ $vehicleName->name }} ({{ $vehicleName->vehicleType->name }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -68,12 +68,35 @@
         </div>
     </div>
 </div>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<style>
+    .vehicle-name-select2 + .select2-container .select2-selection--single {
+        height: 38px;
+        border-color: #ced4da;
+    }
+    .vehicle-name-select2 + .select2-container .select2-selection__rendered {
+        line-height: 36px;
+    }
+    .vehicle-name-select2 + .select2-container .select2-selection__arrow {
+        height: 36px;
+    }
+</style>
     <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         (function () {
             const vehicleNameSelect = document.getElementById('vehicle-name-select');
             const vehicleTypeDisplay = document.getElementById('vehicle-type-display');
+
+            if (vehicleNameSelect && window.jQuery && jQuery.fn.select2) {
+                jQuery(vehicleNameSelect).addClass('vehicle-name-select2').select2({
+                    width: '100%',
+                    placeholder: 'Search vehicle name or type...',
+                    allowClear: true,
+                    minimumResultsForSearch: 0
+                });
+            }
 
             function updateVehicleMasterFields() {
                 const option = vehicleNameSelect?.selectedOptions[0];
@@ -81,6 +104,9 @@
             }
 
             vehicleNameSelect?.addEventListener('change', updateVehicleMasterFields);
+            if (vehicleNameSelect && window.jQuery) {
+                jQuery(vehicleNameSelect).on('select2:select select2:clear', updateVehicleMasterFields);
+            }
             updateVehicleMasterFields();
         })();
 

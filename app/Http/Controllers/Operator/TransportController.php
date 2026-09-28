@@ -14,6 +14,7 @@ use App\Models\TransportVehicle;
 use App\Models\OperatorDriver;
 use App\Services\TransportAvailabilityService;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -1311,20 +1312,42 @@ class TransportController extends Controller
             abort(403);
         }
 
+        $textColumnRule = static function (string $fieldLabel): array {
+            return [
+                'nullable',
+                'string',
+                static function ($attribute, $value, $fail) use ($fieldLabel) {
+                    if (is_string($value) && strlen($value) > 65535) {
+                        $fail("The {$fieldLabel} exceeds the database limit of 65,535 bytes. Please shorten it and try again.");
+                    }
+                },
+            ];
+        };
+
         $validated = $request->validate([
             'long_description' => 'nullable|string',
-            'long_description_fr' => 'nullable|string',
+            'long_description_fr' => $textColumnRule('French long description'),
             'inclusions' => 'nullable|string',
-            'inclusions_fr' => 'nullable|string',
+            'inclusions_fr' => $textColumnRule('French inclusions'),
             'exclusions' => 'nullable|string',
-            'exclusions_fr' => 'nullable|string',
+            'exclusions_fr' => $textColumnRule('French exclusions'),
             'pickup_instructions' => 'nullable|string',
-            'pickup_instructions_fr' => 'nullable|string',
+            'pickup_instructions_fr' => $textColumnRule('French pickup instructions'),
         ]);
 
-        $transport->update(array_merge($validated, [
-            'step6_service_description' => 1,
-        ]));
+        try {
+            $transport->update(array_merge($validated, [
+                'step6_service_description' => 1,
+            ]));
+        } catch (QueryException $exception) {
+            if ($exception->getCode() !== '22001' && (int) ($exception->errorInfo[1] ?? 0) !== 1406) {
+                throw $exception;
+            }
+
+            throw ValidationException::withMessages([
+                'long_description' => 'One or more service description fields exceed the database storage limit. Please shorten the content and try again.',
+            ]);
+        }
 
         return redirect()->route('operator.transport.step6.show', $transport->id)
             ->with('success', 'Service description details saved.');
