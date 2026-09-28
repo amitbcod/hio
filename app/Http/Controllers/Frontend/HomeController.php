@@ -68,7 +68,7 @@ class HomeController extends Controller
                 'rates' => function ($query) {
                     $query->where('is_active', true)->orderBy('price_per_person');
                 },
-                'operator',
+                'operator.profile',
                 'vehicleName.vehicleType',
                 'routes',
             ])
@@ -830,7 +830,7 @@ class HomeController extends Controller
             // Transport details
             $transId = $dayEntry['transport'] ?? null;
             if (!blank($transId)) {
-                $transModel = Transport::with(['routes'])->find((int) $transId);
+                $transModel = Transport::with(['routes', 'operator.profile'])->find((int) $transId);
                 if ($transModel) {
                     // Determine selected route ids from itinerary day entry if present.
                     // Prefer admin-saved transport_schedule (step3/step4) which stores per-service route keys with a 'selected' flag.
@@ -920,7 +920,7 @@ class HomeController extends Controller
 
                     $transportDetails = [
                         'id' => $transModel->id,
-                        'vehicle_name' => $transModel->vehicle_name ?? '',
+                        'vehicle_name' => $transModel->vehicle_display_name,
                         'vehicle_type' => $transModel->vehicle_type ?? '',
                         'pickup_time' => $dayEntry['pickup_time'] ?? null,
                         'return_time' => $dayEntry['return_time'] ?? null,
@@ -1765,7 +1765,7 @@ class HomeController extends Controller
 
     public function showTransport(Request $request, Transport $transport)
     {
-        $transport->loadMissing(['vehicleName.vehicleType', 'operator', 'rates', 'routes']);
+        $transport->loadMissing(['vehicleName.vehicleType', 'operator.profile', 'rates', 'routes']);
         abort_if(blank($transport->vehicleName?->name ?: $transport->vehicle_name), 404);
         abort_if(!$this->isTransportApprovedForFrontend($transport), 404);
 
@@ -2342,6 +2342,8 @@ class HomeController extends Controller
         $vehicleName = $transport->vehicleName;
         $vehicleType = $vehicleName?->vehicleType?->name ?: $transport->vehicle_type;
         $displayName = $vehicleName?->name ?: $transport->vehicle_name;
+        $operatorLegalName = trim((string) ($transport->operator?->profile?->business_legal_name ?? ''));
+        $vehicleDisplayName = $transport->vehicle_display_name;
         $rates = collect($transport->relationLoaded('rates') ? $transport->rates : []);
         $galleryImages = collect($transport->gallery_images ?? [])
             ->filter(fn ($path) => is_string($path) && !blank($path))
@@ -2481,8 +2483,8 @@ class HomeController extends Controller
             'id' => $transport->id,
             'service_id' => $transport->service_id,
             'vehicle_name_id' => $transport->vehicle_name_id,
-            'vehicle_name' => $displayName,
-            'title' => $displayName ?: $vehicleType,
+            'vehicle_name' => $vehicleDisplayName,
+            'title' => $vehicleDisplayName ?: $vehicleType,
             'kind' => 'Transport',
             'type' => 'transport',
             'vehicle_type' => $vehicleType,
@@ -2495,10 +2497,8 @@ class HomeController extends Controller
                 ?? $transport->operator?->business_name
                 ?? $transport->operator?->name
                 ?? 'Mauritius',
-            'operator_name' => $transport->operator?->business?->name
-                ?? $transport->operator?->business_name
-                ?? $transport->operator?->name
-                ?? '',
+            'operator_legal_name' => $operatorLegalName,
+            'operator_name' => $operatorLegalName,
             'description' => $detailed ? $transport->service_description : '',
             'long_description' => $detailed ? ($transport->long_description ?? '') : '',
             'long_description_fr' => $detailed ? ($transport->long_description_fr ?? '') : '',
@@ -2534,21 +2534,7 @@ class HomeController extends Controller
 
     private function annotateDuplicateTransportNames($items)
     {
-        $items = collect($items)->values();
-        $duplicateNames = $items
-            ->groupBy(fn (array $item) => $item['vehicle_name_id'] ?: Str::lower(trim((string) ($item['vehicle_name'] ?? ''))))
-            ->filter(fn ($group) => $group->count() > 1)
-            ->keys()
-            ->all();
-
-        return $items->map(function (array $item) use ($duplicateNames) {
-            $identity = $item['vehicle_name_id'] ?: Str::lower(trim((string) ($item['vehicle_name'] ?? '')));
-            if (in_array($identity, $duplicateNames, true) && !blank($item['operator_name'] ?? null)) {
-                $item['title'] = trim((string) ($item['vehicle_name'] ?? $item['title'])) . ' - ' . $item['operator_name'];
-            }
-
-            return $item;
-        });
+        return collect($items)->values();
     }
 
     private function orderTransportRoutesBySelection($routes, string $selectedFrom, string $selectedTo)

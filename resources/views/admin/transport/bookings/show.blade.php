@@ -12,7 +12,7 @@
 
             <div class="row">
                 <div class="col-md-4"><strong>Operator:</strong><br>{{ optional($booking->transport->operator)->email ?? 'N/A' }}</div>
-                <div class="col-md-4"><strong>Vehicle:</strong><br>{{ optional($booking->transport)->vehicle_name ?? 'N/A' }}</div>
+                <div class="col-md-4"><strong>Vehicle:</strong><br>{{ optional($booking->transport)->vehicle_display_name ?? 'N/A' }}</div>
                 <div class="col-md-4"><strong>Passengers:</strong><br>{{ $booking->total_passengers ?? ($booking->adults + ($booking->children ?? 0)) }}</div>
             </div>
 

@@ -78,4 +78,9 @@ class Operator extends Model implements AuthenticatableContract
     {
         return $this->hasMany(Transport::class, 'operator_id');
     }
+
+    public function profile()
+    {
+        return $this->hasOne(OperatorProfile::class, 'operator_id', 'operator_id');
+    }
 }

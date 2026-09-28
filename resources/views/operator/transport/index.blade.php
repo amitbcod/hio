@@ -83,7 +83,7 @@
                             <tbody>
                                 @foreach ($transports as $transport)
                                     <tr>
-                                        <td>{{ $transport->vehicleName?->name ?: $transport->vehicle_name }}</td>
+                                        <td>{{ $transport->vehicle_display_name }}</td>
                                         <td>{{ $transport->vehicle_type ?: '—' }}</td>
                                         <td>{{ $transport->total_vehicle_qty }}</td>
                                         <td>{{ $transport->available_vehicle_qty }}</td>

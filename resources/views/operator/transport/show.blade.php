@@ -6,7 +6,7 @@
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1>{{ $transport->vehicleName?->name ?: $transport->vehicle_name }}</h1>
+            <h1>{{ $transport->vehicle_display_name }}</h1>
             <p class="text-muted">Service ID: {{ $transport->service_id }}</p>
         </div>
         <div class="col-md-4 text-end">

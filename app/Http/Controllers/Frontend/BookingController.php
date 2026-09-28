@@ -1183,7 +1183,7 @@ class BookingController extends Controller
 
         session()->put('booking_shared_cart_token', $token);
 
-        $cart = is_array($sharedCart->items) ? $sharedCart->items : [];
+        $cart = is_array($sharedCart->items) ? $this->withTransportDisplayNames($sharedCart->items) : [];
         if (empty($cart)) {
             return redirect()->route('frontend.home')->with('error', 'This shared cart is empty.');
         }
@@ -1975,7 +1975,7 @@ class BookingController extends Controller
                                 \Log::info('Package transport check', ['package_id' => $item['package_id'] ?? null, 'dayIndex' => $dayIndex, 'transportId' => $transportId]);
                                 if ($transportId) {
                                     try {
-                                        $transModel = Transport::with(['routes'])->find($transportId);
+                                        $transModel = Transport::with(['routes', 'operator.profile'])->find($transportId);
                                         $pickupDate = $packageStart->copy()->addDays((int) $dayIndex)->toDateString();
                                         $selectedRouteGroups = $this->extractPackageSelectedRouteGroups($dayEntry);
 
@@ -2930,6 +2930,10 @@ class BookingController extends Controller
             $type = 'transport';
         }
 
+        if ($booking instanceof TransportBooking) {
+            $booking->loadMissing(['transport.operator.profile', 'transport.vehicleName']);
+        }
+
         $bookingRefs = session()->get('booking_refs', [$ref]);
         // Also include any parent booking_refs (per-transaction) linked to this trip
         try {
@@ -2952,7 +2956,7 @@ class BookingController extends Controller
         $relatedTransportBookings = collect();
         if ($booking && !empty($booking->trip_id)) {
             $relatedTransportBookings = \App\Models\TransportBooking::where('trip_id', $booking->trip_id)
-                ->with('transport')
+                ->with(['transport.operator.profile', 'transport.vehicleName'])
                 ->when($type === 'transport', fn($query) => $query->where('booking_reference', '<>', $booking->booking_reference))
                 ->get();
         }
@@ -3758,7 +3762,7 @@ class BookingController extends Controller
         $cart = session()->get('booking_cart', []);
 
         if (!empty($cart)) {
-            return $cart;
+            return $this->withTransportDisplayNames($cart);
         }
 
         $travelerId = $this->travelerAccountId();
@@ -3773,7 +3777,40 @@ class BookingController extends Controller
             session()->put('booking_cart', $items);
         }
 
-        return $items;
+        return $this->withTransportDisplayNames($items);
+    }
+
+    private function withTransportDisplayNames(array $cart): array
+    {
+        $transportIds = collect($cart)
+            ->filter(fn ($item) => is_array($item) && ($item['type'] ?? null) === 'transport')
+            ->pluck('transport_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($transportIds->isEmpty()) {
+            return $cart;
+        }
+
+        $transports = Transport::with('operator.profile')
+            ->whereIn('id', $transportIds)
+            ->get()
+            ->keyBy('id');
+
+        foreach ($cart as &$item) {
+            if (!is_array($item) || ($item['type'] ?? null) !== 'transport') {
+                continue;
+            }
+
+            $transport = $transports->get((int) ($item['transport_id'] ?? 0));
+            if ($transport) {
+                $item['title'] = $transport->vehicle_display_name ?: 'Transport';
+            }
+        }
+        unset($item);
+
+        return $cart;
     }
 
     private function storeCart(array $cart): void

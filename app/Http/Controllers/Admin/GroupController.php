@@ -308,7 +308,7 @@ class GroupController extends Controller
             $accommodationByDay[$index] = $accommodationId ? \App\Models\Accommodation::find($accommodationId) : null;
 
             $transportId = $itinerary[$index]['transport'] ?? null;
-            $transportByDay[$index] = $transportId ? \App\Models\Transport::find($transportId) : null;
+            $transportByDay[$index] = $transportId ? \App\Models\Transport::with('operator.profile')->find($transportId) : null;
 
             $transportGroups = [];
             $defaultTransportService = null;

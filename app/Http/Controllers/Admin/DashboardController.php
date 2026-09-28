@@ -50,7 +50,7 @@ class DashboardController extends Controller
             ->orderByRaw('COALESCE(submitted_for_approval_at, created_at) DESC')
             ->get();
 
-        $pendingTransports = Transport::with(['operator'])
+        $pendingTransports = Transport::with(['operator.profile', 'vehicleName'])
             ->whereNotNull('submitted_for_approval_at')
             ->where(function ($query) {
                 $query->where('approval_status', 'Pending')

@@ -118,7 +118,7 @@
                 <tr>
                     <td>{{ $transport->id }}</td>
                     <td>
-                        <strong>{{ $transport->vehicle_name }}</strong><br>
+                        <strong>{{ $transport->vehicle_display_name }}</strong><br>
                         <small class="text-muted">{{ $transport->vehicle_type }}</small>
                     </td>
                     <td>{{ $transport->operator->email ?? 'N/A' }}</td>

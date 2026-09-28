@@ -400,7 +400,7 @@ trait CartItemBuilderTrait
             'route_id' => $routeId,
             'route_from' => $routeFrom,
             'route_to' => $routeTo,
-            'title' => $title ?: ($transport->vehicle_name ?? 'Transport'),
+            'title' => $transport->vehicle_display_name ?: ($title ?: 'Transport'),
             'image' => $image,
             'pickup_date' => $pickupDate,
             'pickup_date_display' => $pickupDate ? Carbon::parse($pickupDate)->format('d/m/Y') : '',

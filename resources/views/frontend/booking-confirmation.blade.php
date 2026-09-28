@@ -150,7 +150,7 @@
                                 <div class="confirm-detail-item">
                                     <span class="detail-key">{{ __('booking.transport_vehicle') }}</span>
                                     <span class="detail-val">
-                                        {{ optional($booking->transport)->vehicle_name ?? __('traveler.common.not_available') }}
+                                        {{ optional($booking->transport)->vehicle_display_name ?? __('traveler.common.not_available') }}
                                         {{ optional($booking->transport)->vehicle_type ? ' (' . optional($booking->transport)->vehicle_type . ')' : '' }}
                                     </span>
                                 </div>
@@ -220,7 +220,7 @@
                                 @endif
                                 <div class="confirm-detail-item">
                                     <span class="detail-key">Vehicle</span>
-                                    <span class="detail-val">{{ optional($transportBooking->transport)->vehicle_name ?? 'N/A' }}{{ optional($transportBooking->transport)->vehicle_type ? ' (' . optional($transportBooking->transport)->vehicle_type . ')' : '' }}</span>
+                                    <span class="detail-val">{{ optional($transportBooking->transport)->vehicle_display_name ?? 'N/A' }}</span>
                                 </div>
                                 <div class="confirm-detail-item">
                                     <span class="detail-key">Seating Capacity</span>
@@ -275,7 +275,7 @@
             <div class="confirm-detail-item">
                 <span class="detail-key">{{ __('booking.transport_vehicle') }}</span>
                 <span class="detail-val">
-                    {{ optional($transportBooking->transport)->vehicle_name ?? __('traveler.common.not_available') }}
+                    {{ optional($transportBooking->transport)->vehicle_display_name ?? __('traveler.common.not_available') }}
                     {{ optional($transportBooking->transport)->vehicle_type ? ' (' . optional($transportBooking->transport)->vehicle_type . ')' : '' }}
                 </span>
             </div>

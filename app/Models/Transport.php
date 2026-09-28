@@ -58,6 +58,18 @@ class Transport extends Model
         return $this->belongsTo(TransportVehicleName::class, 'vehicle_name_id');
     }
 
+    public function getVehicleDisplayNameAttribute(): string
+    {
+        $vehicleName = trim((string) ($this->vehicle_name ?? ''));
+        $legalName = trim((string) ($this->operator?->profile?->business_legal_name ?? ''));
+
+        if ($vehicleName === '' || $legalName === '') {
+            return $vehicleName;
+        }
+
+        return $vehicleName . ' - ' . $legalName;
+    }
+
     public function getVehicleNameAttribute($legacyValue)
     {
         return $this->vehicle_name_id

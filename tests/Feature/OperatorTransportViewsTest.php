@@ -10,6 +10,33 @@ use Tests\TestCase;
 
 class OperatorTransportViewsTest extends TestCase
 {
+    public function test_transport_display_name_uses_its_own_operator_profile_legal_name(): void
+    {
+        $firstOperator = new Operator(['operator_id' => 'OP-FIRST']);
+        $firstOperator->setRelation('profile', new \App\Models\OperatorProfile([
+            'business_legal_name' => 'ABC Transport Ltd',
+        ]));
+        $firstTransport = new Transport(['vehicle_name' => 'Hyundai County']);
+        $firstTransport->setRelation('operator', $firstOperator);
+
+        $secondOperator = new Operator(['operator_id' => 'OP-SECOND']);
+        $secondOperator->setRelation('profile', new \App\Models\OperatorProfile([
+            'business_legal_name' => 'XYZ Tours Ltd',
+        ]));
+        $secondTransport = new Transport(['vehicle_name' => 'Hyundai County']);
+        $secondTransport->setRelation('operator', $secondOperator);
+
+        $legacyTransport = new Transport(['vehicle_name' => 'Hyundai County']);
+
+        $this->assertSame('Hyundai County - ABC Transport Ltd', $firstTransport->vehicle_display_name);
+        $this->assertSame('Hyundai County - XYZ Tours Ltd', $secondTransport->vehicle_display_name);
+        $this->assertSame('Hyundai County', $legacyTransport->vehicle_display_name);
+        $this->assertSame('operator_id', $firstTransport->operator()->getForeignKeyName());
+        $this->assertSame('id', $firstTransport->operator()->getOwnerKeyName());
+        $this->assertSame('operator_id', $firstOperator->profile()->getForeignKeyName());
+        $this->assertSame('operator_id', $firstOperator->profile()->getLocalKeyName());
+    }
+
     public function test_edit_transport_view_shows_steps_sidebar(): void
     {
         $transport = new Transport([

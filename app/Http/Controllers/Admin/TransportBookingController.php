@@ -9,7 +9,7 @@ class TransportBookingController extends Controller
 {
     public function index()
     {
-        $bookings = TransportBooking::with(['transport', 'transport.operator'])
+        $bookings = TransportBooking::with(['transport.operator.profile', 'transport.vehicleName'])
             ->orderBy('booked_at', 'desc')
             ->paginate(20);
 
@@ -18,7 +18,7 @@ class TransportBookingController extends Controller
 
     public function show(TransportBooking $booking)
     {
-        $booking->load(['transport', 'guests']);
+        $booking->load(['transport.operator.profile', 'transport.vehicleName', 'guests']);
         return view('admin.transport.bookings.show', compact('booking'));
     }
 }

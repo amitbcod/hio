@@ -146,7 +146,7 @@
 
                     @if($selectedTransport)
                         @php
-                            $selectedVehicleTitle = $selectedTransport->vehicle_name ?? $selectedTransport->name ?? 'Car';
+                            $selectedVehicleTitle = $selectedTransport->vehicle_display_name ?? $selectedTransport->name ?? 'Car';
                             $selectedRegistrationNumber = $selectedTransport->registration_number ?? '';
                             $selectedTransportHeading = trim('Transport — ' . $selectedVehicleTitle . ($selectedRegistrationNumber ? ' -- ' . $selectedRegistrationNumber : ''));
                         @endphp

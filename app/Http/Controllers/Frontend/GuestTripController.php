@@ -87,7 +87,7 @@ class GuestTripController extends Controller
             ->get());
 
         $transportBookings = (new \App\Http\Controllers\Frontend\TripController())->filterPackageGeneratedBookings(TransportBooking::where('trip_id', $trip->id)
-            ->with(['transport', 'driver'])
+            ->with(['transport.operator.profile', 'transport.vehicleName', 'driver'])
             ->orderBy('pickup_date', 'asc')
             ->get());
 
@@ -168,7 +168,7 @@ class GuestTripController extends Controller
         if (!$booking) {
             $booking = TransportBooking::where('id', $bookingId)
                 ->where('trip_id', $trip->id)
-                ->with(['transport.operator', 'driver', 'guests'])
+                ->with(['transport.operator.profile', 'transport.vehicleName', 'driver', 'guests'])
                 ->first();
         }
 
@@ -245,7 +245,7 @@ class GuestTripController extends Controller
                     $booking->setRelation('guests', $packageLineItem->travellers()->get());
                 }
             } elseif ($serviceType === 'transport' && $serviceEntry && !empty($serviceEntry['transport'])) {
-                $transport = \App\Models\Transport::with('routes')->find((int) $serviceEntry['transport']);
+                $transport = \App\Models\Transport::with(['routes', 'operator.profile'])->find((int) $serviceEntry['transport']);
                 if ($transport) {
                     $booking = new TransportBooking([
                         'id' => $packageLineItem->id,
@@ -346,12 +346,12 @@ class GuestTripController extends Controller
         $serviceName = $isActivity
             ? ($activity->activity_name ?? 'Activity')
             : ($isTransport
-                ? ($transport->vehicle_name ?? 'Transport')
+                ? ($transport->vehicle_display_name ?: 'Transport')
                 : ($accommodation->property_name ?? 'Accommodation'));
         $variantName = $isActivity
             ? ($booking->variant_name ? 'Variant: ' . $booking->variant_name : 'Standard option')
             : ($isTransport
-                ? ($transport->vehicle_name ? 'Vehicle: ' . $transport->vehicle_name : 'Standard transport option')
+                ? ($transport->vehicle_display_name ? 'Vehicle: ' . $transport->vehicle_display_name : 'Standard transport option')
                 : ($room ? 'Room: ' . $room->room_name : 'Standard room'));
         $duration = $isActivity ? ($activity->duration ? 'Duration: ' . $activity->duration : '') : '';
         $allowedTags = '<strong><em><u><br><p><ul><ol><li><b><i>';
@@ -572,7 +572,7 @@ class GuestTripController extends Controller
         }));
         $otherTravellers = !empty($otherTravellerNames) ? e(implode(', ', $otherTravellerNames)) : '-';
 
-        $providerName = $accommodation->property_name ?? ($activity->activity_name ?? ($transport->vehicle_name ?? 'Service Provider'));
+        $providerName = $accommodation->property_name ?? ($activity->activity_name ?? ($transport->vehicle_display_name ?? 'Service Provider'));
         if ($isActivity) {
             if (is_numeric($activity->regions)) {
                 $regionModel = \App\Models\Region::find((int) $activity->regions);
@@ -641,7 +641,7 @@ class GuestTripController extends Controller
         $emergencyContact = $contactDisplay($emergencyContact);
         $receptionContact = $contactDisplay($receptionContact);
 
-        $roomType = $isTransport ? ($transport->vehicle_name ?? '-') : ($room->room_name ?? $booking->room_name ?? '-');
+        $roomType = $isTransport ? ($transport->vehicle_display_name ?? '-') : ($room->room_name ?? $booking->room_name ?? '-');
         $occupancy = $isTransport
             ? (($booking->total_passengers !== null ? (int) $booking->total_passengers . ' Passengers' : ((($booking->adults ?? 0) + ($booking->children ?? 0)) . ' Passengers')))
             : ($adultCount !== null ? (int) $adultCount . ' Adults' . ($childCount ? ' • ' . (int) $childCount . ' Children' : '') : '-');
@@ -1245,7 +1245,7 @@ HTML;
                     }
                 }
 
-                $transport = $transportId ? \App\Models\Transport::with('routes')->find($transportId) : null;
+                $transport = $transportId ? \App\Models\Transport::with(['routes', 'operator.profile'])->find($transportId) : null;
                 if ($transport) {
                     $booking = new TransportBooking([
                         'id' => $packageLineItem->id,
@@ -1368,7 +1368,7 @@ HTML;
         // Get all bookings for the trip
         $accommodationBookings = $trip->accommodationBookings ?? collect();
         $activityBookings = $trip->activityBookings ?? collect();
-        $transportBookings = $trip->transportBookings()->with(['transport'])->get() ?? collect();
+            $transportBookings = $trip->transportBookings()->with(['transport.operator.profile', 'transport.vehicleName'])->get() ?? collect();
         
         $allBookings = $accommodationBookings->merge($activityBookings)->merge($transportBookings);
         
@@ -1531,7 +1531,7 @@ HTML;
                 );
                 $item = [
                     'type' => 'Transport',
-                    'name' => e($booking->transport->vehicle_name ?? 'Transport'),
+                    'name' => e($booking->transport->vehicle_display_name ?: 'Transport'),
                     'location' => e($booking->route_to ?? $booking->transport->location ?? 'Mauritius'),
                     'checkIn' => $booking->pickup_date ? $booking->pickup_date->format('d/m/Y') : 'N/A',
                     'checkOut' => $booking->return_date ? $booking->return_date->format('d/m/Y') : 'N/A',

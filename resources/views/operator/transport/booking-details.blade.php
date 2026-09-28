@@ -126,7 +126,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <strong>Vehicle:</strong><br>
-                                {{ optional($transport)->vehicle_name }}
+                                {{ optional($transport)->vehicle_display_name }}
                                 <br><small style="color: #666;">{{ optional($transport)->vehicle_type }} • Seating: {{ optional($transport)->seating_capacity ?? 'N/A' }}</small>
                                 @if($booking->vehicle)
                                     <br><small style="color: #666;">Assigned unit: {{ $booking->vehicle->license_number }} / {{ $booking->vehicle->registration_number }}</small>

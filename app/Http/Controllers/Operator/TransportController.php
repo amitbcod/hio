@@ -95,6 +95,8 @@ class TransportController extends Controller
             $transportQuery->whereDate('created_at', $filters['created_date']);
         }
 
+        $transportQuery->with(['operator.profile', 'vehicleName.vehicleType']);
+
         if (Schema::hasTable('transport_vehicles')) {
             $transportQuery->withCount([
                 'vehicles as total_vehicle_qty',
@@ -110,7 +112,7 @@ class TransportController extends Controller
                                 ->orWhereDate('insurance_expiry_date', '>=', now()->toDateString());
                         });
                 },
-            ])->with(['vehicles', 'vehicleName.vehicleType']);
+            ])->with(['vehicles']);
         }
 
         $transports = $transportQuery->paginate(20);
@@ -521,7 +523,7 @@ class TransportController extends Controller
             abort(403);
         }
 
-        $transport->loadMissing('vehicleName.vehicleType');
+        $transport->loadMissing(['operator.profile', 'vehicleName.vehicleType']);
         $rates = $transport->rates()->get();
         if (Schema::hasTable('transport_vehicles')) {
             $transport->load('vehicles');
@@ -1458,7 +1460,7 @@ class TransportController extends Controller
 
         // Get bookings for all transports
         $bookings = TransportBooking::whereIn('transport_id', $transports)
-            ->with(['transport', 'travelerAccount', 'vehicle', 'pickupDriver', 'returnDriver', 'currentAssignment.vehicle', 'currentAssignment.driver'])
+            ->with(['transport.operator.profile', 'transport.vehicleName', 'travelerAccount', 'vehicle', 'pickupDriver', 'returnDriver', 'currentAssignment.vehicle', 'currentAssignment.driver'])
             ->orderBy('booked_at', 'desc')
             ->paginate(20);
 
@@ -1488,6 +1490,7 @@ class TransportController extends Controller
         }
 
         $transport = Transport::findOrFail($transportId);
+        $transport->loadMissing(['operator.profile', 'vehicleName']);
         if ($transport->operator_id !== $operator->id) {
             abort(403);
         }

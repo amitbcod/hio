@@ -63,7 +63,7 @@
                                         <input type="hidden" name="routes[{{ $routeIndexValue }}][dropoff_value]" value="{{ $route['dropoff_value'] ?? $route['route_to'] }}">
 
                                         <div style="background:#f8f9fa;border-radius:10px;padding:16px;margin-top:8px;">
-                                            <h6 style="margin-bottom:12px;">{{ $transport->vehicle_name }} ({{ $vehicleTypes[$transport->vehicle_type] ?? $transport->vehicle_type }})</h6>
+                                            <h6 style="margin-bottom:12px;">{{ $transport->vehicle_display_name }}</h6>
 
                                             @php
                                                 $pricing = $route['pricing'] ?? [];

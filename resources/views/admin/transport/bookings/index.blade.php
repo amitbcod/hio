@@ -27,7 +27,7 @@
                 <tr>
                     <td>{{ $booking->booking_reference }}</td>
                     <td>{{ optional($booking->transport->operator)->email ?? 'N/A' }}</td>
-                    <td>{{ optional($booking->transport)->vehicle_name ?? 'N/A' }}</td>
+                    <td>{{ optional($booking->transport)->vehicle_display_name ?? 'N/A' }}</td>
                     <td>{{ $booking->guest_name ?? 'N/A' }}</td>
                     <td>{{ $booking->total_passengers ?? ($booking->adults + ($booking->children ?? 0)) }}</td>
                     <td>{{ $booking->route_from }} → {{ $booking->route_to }}</td>

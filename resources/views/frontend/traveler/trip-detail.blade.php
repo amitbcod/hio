@@ -503,9 +503,9 @@
 
                             <div class="booking-content">
                                 <div class="left-section">
-                                    <img src="{{ $transportImg }}" alt="{{ $booking->transport?->vehicle_name ?? __('traveler.trip_detail.transport') }}" class="property-img">
+                                    <img src="{{ $transportImg }}" alt="{{ $booking->transport?->vehicle_display_name ?? __('traveler.trip_detail.transport') }}" class="property-img">
                                     <div class="property-info">
-                                        <h3>{{ $booking->transport?->vehicle_name ?? __('traveler.trip_detail.transport') }}</h3>
+                                        <h3>{{ $booking->transport?->vehicle_display_name ?? __('traveler.trip_detail.transport') }}</h3>
                                         @if(!empty($booking->transport?->vehicle_type))
                                             <div class="subtitle">{{ $booking->transport->vehicle_type }}</div>
                                         @endif

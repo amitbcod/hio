@@ -131,7 +131,7 @@ class GroupController extends Controller
             // Transport details
             $transId = $dayEntry['transport'] ?? null;
             if (!blank($transId)) {
-                $transModel = Transport::with(['routes'])->find((int) $transId);
+                $transModel = Transport::with(['routes', 'operator.profile'])->find((int) $transId);
                 if ($transModel) {
                     $selectedRouteIdentifiers = [];
 
@@ -209,7 +209,7 @@ class GroupController extends Controller
 
                     $transportDetails = [
                         'id' => $transModel->id,
-                        'vehicle_name' => $transModel->vehicle_name ?? '',
+                        'vehicle_name' => $transModel->vehicle_display_name,
                         'vehicle_type' => $transModel->vehicle_type ?? '',
                         'pickup_time' => $dayEntry['pickup_time'] ?? null,
                         'return_time' => $dayEntry['return_time'] ?? null,
