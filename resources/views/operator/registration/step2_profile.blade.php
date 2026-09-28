@@ -38,8 +38,7 @@
                     <label>Operational Address</label>
                     <input type="text" name="operational_address" class="form-control" value="{{ old('operational_address', $profile->operational_address ?? '') }}">
                 </div>
-                <div class="row">
-                    <div class="col-md-6 form-group mb-3">
+                    <div class="form-group mb-3">
                     <label>Service Type <span style="color:#d32f2f">*</span></label>
                     @php
                         $selectedServiceTypes = old('service_types', isset($profile->service_types)
@@ -56,11 +55,11 @@
                         <!-- <option value="Food" {{ in_array('Food', $selectedServiceTypes ?? []) ? 'selected' : '' }}>Food</option> -->
                     </select>
                     </div>
-                    <div class="col-md-6 form-group mb-3">
+                    <div class="form-group mb-3">
                         <label>Years in Operation</label>
                         <input type="number" name="years_in_operation" class="form-control" value="{{ old('years_in_operation', $profile->years_in_operation ?? '') }}">
                     </div>
-                </div>
+
 
                 <div id="accommodation-section" class="service-profile-section form-group mb-3" style="display:none;clear:both;float:none;width:100%;border:1px solid #ddd;padding:16px;border-radius:8px;">
                     <h4 style="font-size:18px;margin:0 0 16px;text-align:center;">Accommodation Details</h4>
