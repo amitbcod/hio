@@ -51,9 +51,20 @@ button.btn.btn-info {
 
 
 .media-fixed form {
-    display: grid;
+    /* display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 20px; */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.media-fixed form .form-group {
+    flex-basis: 49%;
+}
+
+div#accommodation-section {
+    flex-basis: 100%;
 }
 
 select.form-control {
