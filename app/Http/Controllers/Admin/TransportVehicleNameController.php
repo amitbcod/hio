@@ -49,7 +49,7 @@ class TransportVehicleNameController extends Controller
     public function edit(TransportVehicleName $vehicleName)
     {
         $vehicleTypes = TransportVehicleType::active()
-            ->orWhereKey($vehicleName->transport_vehicle_type_id)
+            ->orWhere('id', $vehicleName->transport_vehicle_type_id)
             ->orderBy('name')
             ->get();
 
