@@ -40,7 +40,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save Step 4</button>
+                    <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save and Continue</button>
                 </form>
             </div>
         </div>

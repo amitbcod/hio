@@ -42,7 +42,7 @@
                         <input type="file" name="media_files[]" class="form-control" multiple accept="image/*">
                     </div>
 
-                    <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save Step 3</button>
+                    <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save and Continue</button>
                 </form>
             </div>
         </div>

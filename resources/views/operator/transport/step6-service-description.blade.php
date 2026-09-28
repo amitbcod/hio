@@ -59,7 +59,7 @@
                         <div id="pickup_instructions_fr_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
                     </div>
                 </div>
-                <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save & Continue</button>
+                <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save and Continue</button>
             </form>
         </div>
     </div>

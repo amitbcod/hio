@@ -1069,15 +1069,24 @@ class TransportController extends Controller
                 'full_day_sightseeing' => 'Full Day Sightseeing',
                 'half_day_sightseeing' => 'Half Day Sightseeing',
             ];
+            $serviceOrder = array_keys($serviceLabels);
+            $currentServiceIndex = array_search($saveService, $serviceOrder, true);
+            $nextService = $currentServiceIndex !== false
+                ? ($serviceOrder[$currentServiceIndex + 1] ?? null)
+                : null;
 
-            return redirect()->route('operator.transport.step2.show', $transport->id)
-                ->with('success', ($serviceLabels[$saveService] ?? ucfirst(str_replace('_', ' ', $saveService))) . ' pricing saved.');
+            if ($nextService !== null) {
+                return redirect()->route('operator.transport.step2.show', $transport->id)
+                    ->with('active_service', $nextService)
+                    ->with('success', ($serviceLabels[$saveService] ?? ucfirst(str_replace('_', ' ', $saveService))) . ' saved. Continue with ' . $serviceLabels[$nextService] . '.');
+            }
+
+            return redirect()->route('operator.transport.step3.show', $transport->id)
+                ->with('success', ($serviceLabels[$saveService] ?? ucfirst(str_replace('_', ' ', $saveService))) . ' saved. Continue with Step 3: Media.');
         }
 
-        return redirect()->route('operator.transport.step2.car_rental.show', $transport->id)->with('success', 'Routes and pricing saved. You can now add car rental prices.');
-
         return redirect()->route('operator.transport.step3.show', $transport->id)
-            ->with('success', 'Routes and pricing saved.');
+            ->with('success', 'Routes and pricing saved. Continue with Step 3: Media.');
     }
 
     // ════════════════════════════════════════════════════════════════════════

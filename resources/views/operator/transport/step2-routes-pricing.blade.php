@@ -21,6 +21,7 @@
             <form id="step2-routes-pricing-form" method="POST" action="{{ route('operator.transport.step2.save', $transport->id) }}">
                 @csrf
                 <input type="hidden" name="save_service" id="save_service" value="">
+                @php $activeService = session('active_service', old('save_service', array_key_first($serviceGroups))); @endphp
                 <div class="alert alert-info border mb-4">
                     <label class="form-label mb-1"><strong>Return Discount (%)</strong></label>
                     <input type="number" name="return_discount_percentage" class="form-control" value="{{ old('return_discount_percentage', $transport->return_discount_percentage ?? 0) }}" min="0" max="100" step="0.01" required>
@@ -30,7 +31,7 @@
                     <ul class="nav nav-tabs" id="service-tabs" role="tablist">
                         @foreach($serviceGroups as $serviceKey => $serviceGroup)
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link {{ $loop->first ? 'active' : '' }}" id="{{ $serviceKey }}-tab" data-bs-toggle="tab" data-bs-target="#{{ $serviceKey }}-pane" type="button" role="tab" aria-controls="{{ $serviceKey }}-pane" aria-selected="{{ $loop->first ? 'true' : 'false' }}">
+                                <button class="nav-link {{ $activeService === $serviceKey ? 'active' : '' }}" id="{{ $serviceKey }}-tab" data-bs-toggle="tab" data-bs-target="#{{ $serviceKey }}-pane" type="button" role="tab" aria-controls="{{ $serviceKey }}-pane" aria-selected="{{ $activeService === $serviceKey ? 'true' : 'false' }}">
                                     {{ $serviceGroup['label'] }}
                                 </button>
                             </li>
@@ -40,7 +41,7 @@
 
                 <div class="tab-content" id="service-tabs-content">
                     @foreach($serviceGroups as $serviceKey => $serviceGroup)
-                        <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="{{ $serviceKey }}-pane" role="tabpanel" aria-labelledby="{{ $serviceKey }}-tab">
+                        <div class="tab-pane fade {{ $activeService === $serviceKey ? 'show active' : '' }}" id="{{ $serviceKey }}-pane" role="tabpanel" aria-labelledby="{{ $serviceKey }}-tab">
                             <div class="alert alert-light border mb-3">
                                 <strong>{{ $serviceGroup['label'] }}</strong> pricing uses the region pairs configured for this service.
                             </div>
@@ -62,7 +63,7 @@
                                         <input type="hidden" name="routes[{{ $routeIndexValue }}][dropoff_value]" value="{{ $route['dropoff_value'] ?? $route['route_to'] }}">
 
                                         <div style="background:#f8f9fa;border-radius:10px;padding:16px;margin-top:8px;">
-                                            <h6 style="margin-bottom:12px;">Pricing ({{ $vehicleTypes[$transport->vehicle_type] ?? $transport->vehicle_type }})</h6>
+                                            <h6 style="margin-bottom:12px;">{{ $transport->vehicle_name }} ({{ $vehicleTypes[$transport->vehicle_type] ?? $transport->vehicle_type }})</h6>
 
                                             @php
                                                 $pricing = $route['pricing'] ?? [];
@@ -127,7 +128,7 @@
                                 @endforeach
                             </div>
                             <div class="mt-3">
-                                <button type="submit" value="{{ $serviceKey }}" class="btn btn-primary save-service-btn" data-service="{{ $serviceKey }}" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save {{ $serviceGroup['label'] }}</button>
+                                <button type="submit" value="{{ $serviceKey }}" class="btn btn-primary save-service-btn" data-service="{{ $serviceKey }}" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save and Continue</button>
                             </div>
                         </div>
                     @endforeach
