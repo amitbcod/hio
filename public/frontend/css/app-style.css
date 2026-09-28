@@ -63,7 +63,10 @@ button.btn.btn-info {
     flex-basis: 49%;
 }
 
-div#accommodation-section {
+#accommodation-section,
+#transport-section,
+#activity-section,
+.flex-full {
     flex-basis: 100%;
 }
 

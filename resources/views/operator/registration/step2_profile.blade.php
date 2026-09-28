@@ -153,7 +153,7 @@
                     <input type="text" name="linkedin_link" class="form-control" placeholder="Linkedin" value="{{ old('linkedin_link', $profile->linkedin_link ?? '') }}">
                 </div>
 
-                <div class="form-group mt-3">
+                <div class="form-group mt-3 flex-full">
                     <button type="button" class="btn btn-secondary mb-3" data-bs-toggle="modal" data-bs-target="#legalComplianceModal">Advanced Settings</button>
                     <button type="submit" class="btn btn-primary">Save and Continue</button>
                 </div>
