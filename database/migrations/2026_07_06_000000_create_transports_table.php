@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('registration_number')->nullable();
             
             // Service Details
-            $table->string('service_description')->nullable();
+            $table->text('service_description')->nullable();
             $table->text('overview')->nullable();
             $table->text('overview_fr')->nullable();
             $table->text('amenities')->nullable(); // JSON array

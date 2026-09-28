@@ -382,10 +382,10 @@ class TransportController extends Controller
         $validated = $request->validate([
             'vehicle_name_id' => 'required|integer|exists:transport_vehicle_names,id,is_active,1',
             'registration_number' => 'nullable|string|max:50',
-            'service_description' => 'nullable|string|max:500',
+            'service_description' => 'nullable|string|max:65535',
             'vehicle_qty' => 'required|integer|min:1|max:100',
             'vehicles' => 'required|array|size:' . (int) $request->input('vehicle_qty'),
-            'vehicles.*.license_number' => 'required|string|max:100',
+            'vehicles.*.license_number' => 'required|string|max:100|distinct|unique:transport_vehicles,license_number',
             'vehicles.*.license_expiry_date' => 'required|date',
             'vehicles.*.insurance_expiry_date' => 'required|date',
             'vehicles.*.insurance_provider' => 'required|string|max:150',
@@ -393,6 +393,9 @@ class TransportController extends Controller
             'vehicles.*.documents' => 'nullable|array',
             'vehicles.*.documents.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
             'vehicles.*.status' => 'required|string|in:' . implode(',', TransportVehicle::STATUSES),
+        ], [
+            'vehicles.*.license_number.distinct' => 'Each vehicle must have a different license plate number.',
+            'vehicles.*.license_number.unique' => 'This license plate number is already registered. Please enter a different number.',
         ]);
         $data = $validated;
         unset($data['vehicle_qty'], $data['vehicles']);
@@ -509,7 +512,7 @@ class TransportController extends Controller
         $data = $request->validate([
             'vehicle_name_id' => 'required|integer|exists:transport_vehicle_names,id',
             'registration_number' => 'nullable|string|max:50',
-            'service_description' => 'nullable|string|max:500',
+            'service_description' => 'nullable|string|max:65535',
             'contact_person' => 'nullable|string|max:100',
             'contact_phone' => 'nullable|string|max:25',
             'overview' => 'nullable|string',
