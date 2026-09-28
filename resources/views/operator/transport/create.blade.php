@@ -33,7 +33,7 @@
                             <select id="vehicle-name-select" name="vehicle_name_id" class="form-control @error('vehicle_name_id') is-invalid @enderror" required>
                                 <option value="">Select a vehicle name</option>
                                 @foreach($vehicleNames as $vehicleName)
-                                    <option value="{{ $vehicleName->id }}" data-vehicle-type="{{ $vehicleName->vehicleType->name }}" {{ (string) old('vehicle_name_id') === (string) $vehicleName->id ? 'selected' : '' }}>{{ $vehicleName->name }} ({{ $vehicleName->vehicleType->name }})</option>
+                                    <option value="{{ $vehicleName->id }}" data-vehicle-name="{{ $vehicleName->name }}" data-vehicle-type="{{ $vehicleName->vehicleType->name }}" {{ (string) old('vehicle_name_id') === (string) $vehicleName->id ? 'selected' : '' }}>{{ $vehicleName->name }} ({{ $vehicleName->vehicleType->name }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -83,33 +83,7 @@
 </style>
     <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        (function () {
-            const vehicleNameSelect = document.getElementById('vehicle-name-select');
-            const vehicleTypeDisplay = document.getElementById('vehicle-type-display');
-
-            if (vehicleNameSelect && window.jQuery && jQuery.fn.select2) {
-                jQuery(vehicleNameSelect).addClass('vehicle-name-select2').select2({
-                    width: '100%',
-                    placeholder: 'Search vehicle name or type...',
-                    allowClear: true,
-                    minimumResultsForSearch: 0
-                });
-            }
-
-            function updateVehicleMasterFields() {
-                const option = vehicleNameSelect?.selectedOptions[0];
-                vehicleTypeDisplay.value = option?.dataset.vehicleType || '';
-            }
-
-            vehicleNameSelect?.addEventListener('change', updateVehicleMasterFields);
-            if (vehicleNameSelect && window.jQuery) {
-                jQuery(vehicleNameSelect).on('select2:select select2:clear', updateVehicleMasterFields);
-            }
-            updateVehicleMasterFields();
-        })();
-
         (function () {
             const quantity = document.getElementById('vehicle_qty');
             const container = document.getElementById('physical-vehicles');
@@ -182,4 +156,60 @@
             });
         })();
     </script>
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        jQuery(function ($) {
+            const $vehicleName = $('#vehicle-name-select');
+            const vehicleTypeDisplay = document.getElementById('vehicle-type-display');
+            if (!$vehicleName.length || !$.fn.select2) return;
+
+            function updateVehicleType() {
+                const selectedOption = $vehicleName[0].selectedOptions[0];
+                vehicleTypeDisplay.value = selectedOption?.dataset.vehicleType || '';
+            }
+
+            $vehicleName.on('change.vehicleType select2:select.vehicleType select2:clear.vehicleType', updateVehicleType);
+            $vehicleName.addClass('vehicle-name-select2').select2({
+                width: '100%',
+                placeholder: 'Search vehicle name or type...',
+                allowClear: true,
+                minimumResultsForSearch: 0,
+                language: {
+                    noResults: function () {
+                        return 'No vehicle found';
+                    }
+                },
+                matcher: function (params, data) {
+                    const term = (params.term || '').trim().toLocaleLowerCase();
+                    if (!term) return data;
+
+                    const option = data.element;
+                    const name = (option?.dataset.vehicleName || data.text || '').toLocaleLowerCase();
+                    const type = (option?.dataset.vehicleType || '').toLocaleLowerCase();
+                    return name.includes(term) || type.includes(term) ? data : null;
+                },
+                sorter: function (results) {
+                    const term = ($('.select2-container--open .select2-search__field').val() || '').trim().toLocaleLowerCase();
+                    if (!term) return results;
+
+                    return results.sort(function (first, second) {
+                        function rank(item) {
+                            const option = item.element;
+                            const name = (option?.dataset.vehicleName || item.text || '').toLocaleLowerCase();
+                            const type = (option?.dataset.vehicleType || '').toLocaleLowerCase();
+                            if (name.startsWith(term)) return 0;
+                            if (name.includes(term)) return 1;
+                            if (type.includes(term)) return 2;
+                            return 3;
+                        }
+
+                        return rank(first) - rank(second);
+                    });
+                }
+            });
+            updateVehicleType();
+        });
+    </script>
+    @endpush
 @endsection
