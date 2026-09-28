@@ -68,10 +68,12 @@
                         <label class="d-flex align-items-center gap-2 mb-0"><input type="radio" name="accommodation_same_as_business_address" value="1" {{ old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? null) == 1 || old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? null) === '1' || old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? null) === 'yes' ? 'checked' : '' }}>{{ __('operator.registration.yes') }}</label>
                         <label class="d-flex align-items-center gap-2 mb-0"><input type="radio" name="accommodation_same_as_business_address" value="0" {{ old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? '0') === 0 || old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? '0') === '0' || old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? '0') === 'no' || old('accommodation_same_as_business_address', $serviceProfiles['accommodation']['same_as_business_address'] ?? '0') === false ? 'checked' : '' }}>{{ __('operator.registration.no') }}</label>
                     </div>
-                    <div id="accommodation-address-fields" class="row">
+                    <div id="accommodation-address-fields">
+                        <div class="row">
                         <div class="col-md-6 mb-3"><label>Address <span style="color:#d32f2f">*</span></label><input type="text" name="accommodation_address" class="form-control" value="{{ old('accommodation_address', $serviceProfiles['accommodation']['address'] ?? '') }}"></div>
                         <div class="col-md-6 mb-3"><label>Region / Location <span style="color:#d32f2f">*</span></label><input type="text" name="accommodation_region_location" class="form-control" value="{{ old('accommodation_region_location', $serviceProfiles['accommodation']['region_location'] ?? '') }}"></div>
                         <div class="col-md-6 mb-3"><label>Map / Geolocation</label><input type="text" name="accommodation_geolocation" class="form-control" placeholder="e.g. -20.1609, 57.5012" value="{{ old('accommodation_geolocation', $serviceProfiles['accommodation']['geolocation'] ?? '') }}"></div>
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3"><label>Logo</label><input type="file" name="accommodation_logo" class="form-control" accept="image/*">@if(!empty($serviceProfiles['accommodation']['logo']))<small class="text-muted d-block">Existing logo retained unless replaced.</small>@endif</div>
@@ -112,10 +114,12 @@
                         <label class="d-flex align-items-center gap-2 mb-0"><input type="radio" name="activity_same_as_business_address" value="1" {{ old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? null) == 1 || old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? null) === '1' || old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? null) === 'yes' ? 'checked' : '' }}>{{ __('operator.registration.yes') }}</label>
                         <label class="d-flex align-items-center gap-2 mb-0"><input type="radio" name="activity_same_as_business_address" value="0" {{ old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? '0') === 0 || old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? '0') === '0' || old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? '0') === 'no' || old('activity_same_as_business_address', $serviceProfiles['activity']['same_as_business_address'] ?? '0') === false ? 'checked' : '' }}>{{ __('operator.registration.no') }}</label>
                     </div>
-                    <div id="activity-address-fields" class="row">
+                    <div id="activity-address-fields">
+                        <div class="row">
                         <div class="col-md-6 mb-3"><label>Address <span style="color:#d32f2f">*</span></label><input type="text" name="activity_address" class="form-control" value="{{ old('activity_address', $serviceProfiles['activity']['address'] ?? '') }}"></div>
                         <div class="col-md-6 mb-3"><label>Region / Location <span style="color:#d32f2f">*</span></label><input type="text" name="activity_region_location" class="form-control" value="{{ old('activity_region_location', $serviceProfiles['activity']['region_location'] ?? '') }}"></div>
                         <div class="col-md-6 mb-3"><label>Map / Geolocation</label><input type="text" name="activity_geolocation" class="form-control" placeholder="e.g. -20.1609, 57.5012" value="{{ old('activity_geolocation', $serviceProfiles['activity']['geolocation'] ?? '') }}"></div>
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3"><label>Logo</label><input type="file" name="activity_logo" class="form-control" accept="image/*">@if(!empty($serviceProfiles['activity']['logo']))<small class="text-muted d-block">Existing logo retained unless replaced.</small>@endif</div>
