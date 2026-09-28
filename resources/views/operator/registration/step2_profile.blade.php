@@ -160,7 +160,7 @@
                 </div>
 
                 <div class="form-group mt-3 flex-full">
-                    <button type="button" class="btn btn-secondary mb-3" data-bs-toggle="modal" data-bs-target="#legalComplianceModal">Advanced Settings</button>
+                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#legalComplianceModal">Advanced Settings</button>
                     <button type="submit" class="btn btn-primary">Save and Continue</button>
                 </div>
             </form>
