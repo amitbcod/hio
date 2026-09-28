@@ -293,6 +293,8 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     Route::get('vehicle-types/{vehicleType}/edit', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'edit'])->name('vehicle-types.edit');
     Route::put('vehicle-types/{vehicleType}', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'update'])->name('vehicle-types.update');
     Route::delete('vehicle-types/{vehicleType}', [\App\Http\Controllers\Admin\TransportVehicleTypeController::class, 'destroy'])->name('vehicle-types.destroy');
+    Route::resource('vehicle-names', \App\Http\Controllers\Admin\TransportVehicleNameController::class)
+        ->except(['show']);
 
     // Admin regions management (CRUD)
     Route::get('regions', [\App\Http\Controllers\Admin\RegionController::class, 'index'])->name('regions.index');

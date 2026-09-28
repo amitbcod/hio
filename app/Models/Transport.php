@@ -53,6 +53,34 @@ class Transport extends Model
         return $this->belongsTo(Operator::class, 'operator_id');
     }
 
+    public function vehicleName()
+    {
+        return $this->belongsTo(TransportVehicleName::class, 'vehicle_name_id');
+    }
+
+    public function getVehicleNameAttribute($legacyValue)
+    {
+        return $this->vehicle_name_id
+            ? ($this->vehicleName?->name ?? $legacyValue)
+            : $legacyValue;
+    }
+
+    public function getVehicleTypeAttribute($legacyValue)
+    {
+        return $this->vehicle_name_id
+            ? ($this->vehicleName?->vehicleType?->name ?? $legacyValue)
+            : $legacyValue;
+    }
+
+    public function getSeatingCapacityAttribute($legacyValue)
+    {
+        if ($this->vehicle_name_id) {
+            return $this->vehicleName?->seat_capacity;
+        }
+
+        return $legacyValue;
+    }
+
     public function rates()
     {
         return $this->hasMany(TransportRate::class, 'transport_id');

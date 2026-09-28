@@ -152,7 +152,8 @@
                         <div class="bw-row"><label class="bw-label">Passengers</label><input class="bw-input" name="passengers" type="number" min="1" value="2"></div>
                     </div>
                     <div class="bw-actions"><button type="button" class="bw-proceed">Proceed</button></div>
-                </form>
+                    <div style = "text-align: center;font-size: 11px;color: #777;margin-top: 10px;padding-top: 5px;" class="bw-powered-by">Powered by Holidays.io</div>
+                    </form>
             </div>
         `;
 

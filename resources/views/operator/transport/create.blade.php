@@ -30,27 +30,16 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label style="font-weight:600;">Vehicle Name <span style="color:#d32f2f">*</span></label>
-                            <input type="text" name="vehicle_name" class="form-control @error('vehicle_name') is-invalid @enderror" value="{{ old('vehicle_name') }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label style="font-weight:600;">Vehicle Type <span style="color:#d32f2f">*</span></label>
-                            <select name="vehicle_type" class="form-control @error('vehicle_type') is-invalid @enderror" required>
-                                <option value="">Select a vehicle type</option>
-                                @foreach($vehicleTypes as $value => $label)
-                                    <option value="{{ $value }}" {{ old('vehicle_type') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            <select id="vehicle-name-select" name="vehicle_name_id" class="form-control @error('vehicle_name_id') is-invalid @enderror" required>
+                                <option value="">Select a vehicle name</option>
+                                @foreach($vehicleNames as $vehicleName)
+                                    <option value="{{ $vehicleName->id }}" data-vehicle-type="{{ $vehicleName->vehicleType->name }}" {{ (string) old('vehicle_name_id') === (string) $vehicleName->id ? 'selected' : '' }}>{{ $vehicleName->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label style="font-weight:600;">Seating Capacity <span style="color:#d32f2f">*</span></label>
-                            <input type="number" name="seating_capacity" class="form-control @error('seating_capacity') is-invalid @enderror" value="{{ old('seating_capacity') }}" min="1" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label style="font-weight:600;">Contact Email</label>
-                            <input type="email" name="contact_email" class="form-control @error('contact_email') is-invalid @enderror" value="{{ old('contact_email') }}">
+                        <div class="col-md-6">
+                            <label style="font-weight:600;">Vehicle Type <span style="color:#d32f2f">*</span></label>
+                            <input id="vehicle-type-display" type="text" class="form-control" value="" readonly>
                         </div>
                     </div>
 
@@ -82,6 +71,19 @@
     <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
     <script>
+        (function () {
+            const vehicleNameSelect = document.getElementById('vehicle-name-select');
+            const vehicleTypeDisplay = document.getElementById('vehicle-type-display');
+
+            function updateVehicleMasterFields() {
+                const option = vehicleNameSelect?.selectedOptions[0];
+                vehicleTypeDisplay.value = option?.dataset.vehicleType || '';
+            }
+
+            vehicleNameSelect?.addEventListener('change', updateVehicleMasterFields);
+            updateVehicleMasterFields();
+        })();
+
         (function () {
             const quantity = document.getElementById('vehicle_qty');
             const container = document.getElementById('physical-vehicles');

@@ -6,7 +6,7 @@
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1>{{ $transport->vehicle_name }}</h1>
+            <h1>{{ $transport->vehicleName?->name ?: $transport->vehicle_name }}</h1>
             <p class="text-muted">Service ID: {{ $transport->service_id }}</p>
         </div>
         <div class="col-md-4 text-end">
@@ -17,7 +17,7 @@
 
     <div class="card mb-4">
         <div class="card-body">
-            <p><strong>Vehicle Type:</strong> {{ $transport->vehicle_type }}</p>
+            <p><strong>Vehicle Type:</strong> {{ $transport->vehicleName?->vehicleType?->name ?: $transport->vehicle_type }}</p>
             <p><strong>Vehicle Quantity:</strong> {{ $transport->vehicles->count() }}</p>
             <p><strong>Seating Capacity:</strong> {{ $transport->seating_capacity }}</p>
             <p><strong>Registration Number:</strong> {{ $transport->registration_number ?? 'N/A' }}</p>

@@ -53,7 +53,7 @@
                         <option value="Accommodation" {{ in_array('Accommodation', $selectedServiceTypes ?? []) ? 'selected' : '' }}>Accommodation</option>
                         <option value="Transport" {{ in_array('Transport', $selectedServiceTypes ?? []) ? 'selected' : '' }}>Transport</option>
                         <option value="Activity" {{ in_array('Activity', $selectedServiceTypes ?? []) ? 'selected' : '' }}>Activity</option>
-                        <option value="Food" {{ in_array('Food', $selectedServiceTypes ?? []) ? 'selected' : '' }}>Food</option>
+                        <!-- <option value="Food" {{ in_array('Food', $selectedServiceTypes ?? []) ? 'selected' : '' }}>Food</option> -->
                     </select>
                     </div>
                     <div class="col-md-6 form-group mb-3">

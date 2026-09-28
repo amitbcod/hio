@@ -10,13 +10,15 @@
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
 
     <div class="table-responsive">
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Seats</th>
                     <th>Active</th>
                     <th>Actions</th>
                 </tr>
@@ -25,7 +27,6 @@
                 @forelse($vehicleTypes as $vehicleType)
                     <tr>
                         <td>{{ $vehicleType->name }}</td>
-                        <td>{{ $vehicleType->seat_capacity ?? '-' }}</td>
                         <td>{{ $vehicleType->is_active ? 'Yes' : 'No' }}</td>
                         <td>
                             <a href="{{ route('admin.vehicle-types.edit', $vehicleType->id) }}" class="btn btn-sm btn-warning">Edit</a>
@@ -38,7 +39,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="text-center">No vehicle types available.</td>
+                        <td colspan="3" class="text-center">No vehicle types available.</td>
                     </tr>
                 @endforelse
             </tbody>

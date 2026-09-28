@@ -14,11 +14,9 @@ class TransportVehicleType extends Model
         'is_active' => 'boolean',
     ];
 
-    public function getLabelAttribute()
+    public function vehicleNames()
     {
-        return $this->seat_capacity
-            ? $this->name . ' (' . $this->seat_capacity . ' Seats)'
-            : $this->name;
+        return $this->hasMany(TransportVehicleName::class, 'transport_vehicle_type_id');
     }
 
     public function scopeActive($query)
@@ -29,10 +27,8 @@ class TransportVehicleType extends Model
     public static function activeList(): array
     {
         return self::active()
-            ->orderBy('seat_capacity', 'desc')
             ->orderBy('name')
-            ->get()
-            ->pluck('label', 'name')
+            ->pluck('name', 'name')
             ->toArray();
     }
 }

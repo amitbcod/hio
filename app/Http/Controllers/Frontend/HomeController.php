@@ -69,9 +69,12 @@ class HomeController extends Controller
                     $query->where('is_active', true)->orderBy('price_per_person');
                 },
                 'operator',
+                'vehicleName.vehicleType',
                 'routes',
             ])
-            ->whereNotNull('vehicle_name')
+            ->where(function ($query) {
+                $query->whereHas('vehicleName')->orWhereNotNull('vehicle_name');
+            })
             ->latest('updated_at')
             ->take(8)
             ->get()
@@ -80,7 +83,9 @@ class HomeController extends Controller
                 false,
                 $filters['transport_from'] ?? '',
                 $filters['transport_to'] ?? ''
-            ));
+            ))
+            ->values();
+        $transports = $this->annotateDuplicateTransportNames($transports);
 
         if ($holidayRentals->isEmpty()) {
             $holidayRentals = $accommodations->take(4)->values();
@@ -250,7 +255,6 @@ class HomeController extends Controller
         if ($selectedPickupRegion === '' && $filters['transport_from'] !== '') {
             $selectedPickupRegion = $this->getPlaceRegion($filters['transport_from']) ?? '';
         }
-
         if ($selectedDropoffRegion === '' && $filters['transport_to'] !== '') {
             $selectedDropoffRegion = $this->getPlaceRegion($filters['transport_to']) ?? '';
         }
@@ -260,9 +264,22 @@ class HomeController extends Controller
                     $query->where('is_active', true)->orderBy('price_per_person');
                 },
                 'operator',
+                'vehicleName.vehicleType',
                 'routes',
             ])
-            ->whereNotNull('vehicle_name')
+            ->where(function ($query) {
+                $query->whereHas('vehicleName')->orWhereNotNull('vehicle_name');
+            })
+            ->when(!empty($sidebarSelections['vehicle_name_id']), fn ($query) => $query->whereIn('vehicle_name_id', array_map('intval', $sidebarSelections['vehicle_name_id'])))
+            ->when(!empty($sidebarSelections['vehicle_type']), function ($query) use ($sidebarSelections) {
+                $query->where(function ($typeQuery) use ($sidebarSelections) {
+                    $typeQuery->whereHas('vehicleName.vehicleType', fn ($vehicleTypeQuery) => $vehicleTypeQuery->whereIn('name', $sidebarSelections['vehicle_type']))
+                        ->orWhere(function ($legacyQuery) use ($sidebarSelections) {
+                            $legacyQuery->whereNull('vehicle_name_id')
+                                ->whereIn('vehicle_type', $sidebarSelections['vehicle_type']);
+                        });
+                });
+            })
             ->latest('updated_at')
             ->take(120)
             ->get()
@@ -278,6 +295,9 @@ class HomeController extends Controller
         $items = $this->applySearchFilters($items, $category, $filters);
         $sidebarDefinitions = $this->buildSidebarDefinitions($items, $category);
         $items = $this->applySidebarFilters($items, $category, $sidebarSelections);
+        if ($category === 'transport') {
+            $items = $this->annotateDuplicateTransportNames($items);
+        }
 
         $categoryTitle = match ($category) {
             'tours' => __('category.title.tours_activity'),
@@ -1745,11 +1765,11 @@ class HomeController extends Controller
 
     public function showTransport(Request $request, Transport $transport)
     {
-        abort_if(blank($transport->vehicle_name), 404);
+        $transport->loadMissing(['vehicleName.vehicleType', 'operator', 'rates', 'routes']);
+        abort_if(blank($transport->vehicleName?->name ?: $transport->vehicle_name), 404);
         abort_if(!$this->isTransportApprovedForFrontend($transport), 404);
 
         $bookingContext = $this->buildTransportBookingContext($request);
-        $transport = $transport->load(['operator', 'rates', 'routes']);
 
         $serviceType = in_array(trim((string) $request->query('service_type', 'airport_transfer')), ['airport_transfer', 'activity_transfer', 'hotel_transfer', 'full_day_sightseeing', 'half_day_sightseeing'], true)
             ? trim((string) $request->query('service_type'))
@@ -2319,6 +2339,9 @@ class HomeController extends Controller
 
     private function mapTransport(Transport $transport, bool $detailed = false, string $selectedFrom = '', string $selectedTo = ''): array
     {
+        $vehicleName = $transport->vehicleName;
+        $vehicleType = $vehicleName?->vehicleType?->name ?: $transport->vehicle_type;
+        $displayName = $vehicleName?->name ?: $transport->vehicle_name;
         $rates = collect($transport->relationLoaded('rates') ? $transport->rates : []);
         $galleryImages = collect($transport->gallery_images ?? [])
             ->filter(fn ($path) => is_string($path) && !blank($path))
@@ -2457,18 +2480,25 @@ class HomeController extends Controller
         return [
             'id' => $transport->id,
             'service_id' => $transport->service_id,
-            'title' => $transport->vehicle_type ?: $transport->vehicle_name,
+            'vehicle_name_id' => $transport->vehicle_name_id,
+            'vehicle_name' => $displayName,
+            'title' => $displayName ?: $vehicleType,
             'kind' => 'Transport',
             'type' => 'transport',
-            'vehicle_type' => $transport->vehicle_type,
-            'seating_capacity' => $transport->seating_capacity,
+            'vehicle_type' => $vehicleType,
+            'seating_capacity' => $vehicleName?->seat_capacity ?? $transport->seating_capacity,
             'total_quantity' => $totalQuantity,
             'available_quantity' => $availableQuantity,
             'image' => $primaryImage,
             'excerpt' => $this->plainText($transport->short_description),
-            'location' => $transport->operator?->business_name
+            'location' => $transport->operator?->business?->name
+                ?? $transport->operator?->business_name
                 ?? $transport->operator?->name
                 ?? 'Mauritius',
+            'operator_name' => $transport->operator?->business?->name
+                ?? $transport->operator?->business_name
+                ?? $transport->operator?->name
+                ?? '',
             'description' => $detailed ? $transport->service_description : '',
             'long_description' => $detailed ? ($transport->long_description ?? '') : '',
             'long_description_fr' => $detailed ? ($transport->long_description_fr ?? '') : '',
@@ -2500,6 +2530,25 @@ class HomeController extends Controller
             'approval_status' => $transport->approval_status,
             'is_published' => $transport->is_published,
         ];
+    }
+
+    private function annotateDuplicateTransportNames($items)
+    {
+        $items = collect($items)->values();
+        $duplicateNames = $items
+            ->groupBy(fn (array $item) => $item['vehicle_name_id'] ?: Str::lower(trim((string) ($item['vehicle_name'] ?? ''))))
+            ->filter(fn ($group) => $group->count() > 1)
+            ->keys()
+            ->all();
+
+        return $items->map(function (array $item) use ($duplicateNames) {
+            $identity = $item['vehicle_name_id'] ?: Str::lower(trim((string) ($item['vehicle_name'] ?? '')));
+            if (in_array($identity, $duplicateNames, true) && !blank($item['operator_name'] ?? null)) {
+                $item['title'] = trim((string) ($item['vehicle_name'] ?? $item['title'])) . ' - ' . $item['operator_name'];
+            }
+
+            return $item;
+        });
     }
 
     private function orderTransportRoutesBySelection($routes, string $selectedFrom, string $selectedTo)
@@ -4170,6 +4219,7 @@ class HomeController extends Controller
                 'budget' => $this->normalizeFilterValues($request->query('budget', [])),
             ],
             'transport' => [
+                'vehicle_name_id' => $this->normalizeFilterValues($request->query('vehicle_name_id', [])),
                 'vehicle_type' => $this->normalizeFilterValues($request->query('vehicle_type', [])),
                 'seating_capacity' => $this->normalizeFilterValues($request->query('seating_capacity', [])),
             ],
@@ -4239,6 +4289,11 @@ class HomeController extends Controller
         
 
         if ($category === 'transport') {
+            if (!empty($sidebarSelections['vehicle_name_id'])) {
+                $selected = array_map('intval', $sidebarSelections['vehicle_name_id']);
+                $items = $items->filter(fn (array $item) => in_array((int) ($item['vehicle_name_id'] ?? 0), $selected, true));
+            }
+
             if (!empty($sidebarSelections['vehicle_type'])) {
                 $selected = $sidebarSelections['vehicle_type'];
                 $items = $items->filter(fn (array $item) => in_array((string) ($item['vehicle_type'] ?? ''), $selected, true));
@@ -4284,9 +4339,27 @@ class HomeController extends Controller
 
         if ($category === 'transport') {
             $vehicleTypes = $items->pluck('vehicle_type')->filter()->map(fn($v) => trim((string) $v))->unique()->sort()->values()->all();
+            $vehicleNames = $items
+                ->filter(fn (array $item) => !empty($item['vehicle_name_id']) && !blank($item['vehicle_name'] ?? null))
+                ->groupBy('vehicle_name_id')
+                ->map(function ($group, $id) {
+                    return [
+                        'value' => (string) $id,
+                        'label' => (string) $group->first()['vehicle_name'],
+                        'count' => $group->count(),
+                    ];
+                })
+                ->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)
+                ->values()
+                ->all();
             $seatCaps = $items->pluck('seating_capacity')->filter()->map(fn($v) => (int) $v)->unique()->sort()->values()->map(fn($v) => (string) $v)->all();
 
             return array_values(array_filter([
+                [
+                    'key' => 'vehicle_name_id',
+                    'label' => $this->translateFilterLabel('vehicle_name', 'Vehicle Name'),
+                    'options' => $vehicleNames,
+                ],
                 [
                     'key' => 'vehicle_type',
                     'label' => $this->translateFilterLabel('vehicle_type', 'Vehicle Type'),

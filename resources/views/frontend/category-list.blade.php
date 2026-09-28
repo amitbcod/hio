@@ -56,6 +56,8 @@
             'return_time' => request()->query('return_time', ''),
             'operator_token' => request()->query('operator_token'),
             'service' => request()->query('service'),
+            'vehicle_name_id' => request()->query('vehicle_name_id', []),
+            'vehicle_type' => request()->query('vehicle_type', []),
         ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
@@ -84,6 +86,12 @@
                 id="category-search-form"
                 data-search-options='@json($searchOptions)'>
                 <input type="hidden" name="operator_token" value="{{ request()->query('operator_token') }}">
+                @foreach((array) request()->query('vehicle_name_id', []) as $vehicleNameId)
+                    <input type="hidden" name="vehicle_name_id[]" value="{{ $vehicleNameId }}">
+                @endforeach
+                @foreach((array) request()->query('vehicle_type', []) as $vehicleType)
+                    <input type="hidden" name="vehicle_type[]" value="{{ $vehicleType }}">
+                @endforeach
                 <div class="category-search-cell category-search-cell--what page-category-search">
                     <!-- <h5><span>01</span> What?</h5> -->
                     <div class="category-radio-group">

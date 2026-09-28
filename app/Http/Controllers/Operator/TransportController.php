@@ -9,6 +9,7 @@ use App\Models\TransportRate;
 use App\Models\TransportBooking;
 use App\Models\TransportBookingAssignment;
 use App\Models\TransportVehicleType;
+use App\Models\TransportVehicleName;
 use App\Models\TransportVehicle;
 use App\Models\OperatorDriver;
 use App\Services\TransportAvailabilityService;
@@ -49,7 +50,7 @@ class TransportController extends Controller
                                 ->orWhereDate('insurance_expiry_date', '>=', now()->toDateString());
                         });
                 },
-            ])->with('vehicles');
+            ])->with(['vehicles', 'vehicleName']);
         }
 
         $transports = $transportQuery->paginate(20);
@@ -83,10 +84,14 @@ class TransportController extends Controller
             return redirect()->route('operator.login');
         }
 
-        $vehicleTypes = TransportVehicleType::activeList();
+        $vehicleNames = TransportVehicleName::active()
+            ->whereHas('vehicleType', fn ($query) => $query->active())
+            ->with('vehicleType')
+            ->orderBy('name')
+            ->get();
         $vehicleStatuses = TransportVehicle::STATUSES;
 
-        return view('operator.transport.create', compact('vehicleTypes', 'vehicleStatuses'));
+        return view('operator.transport.create', compact('vehicleNames', 'vehicleStatuses'));
     }
 
     protected function getOperatorTransportSettings($operator)
@@ -375,9 +380,7 @@ class TransportController extends Controller
         }
 
         $validated = $request->validate([
-            'vehicle_name' => 'required|string|max:150',
-            'vehicle_type' => 'required|string|exists:transport_vehicle_types,name,is_active,1',
-            'seating_capacity' => 'required|integer|min:1|max:100',
+            'vehicle_name_id' => 'required|integer|exists:transport_vehicle_names,id,is_active,1',
             'registration_number' => 'nullable|string|max:50',
             'service_description' => 'nullable|string|max:500',
             'vehicle_qty' => 'required|integer|min:1|max:100',
@@ -394,8 +397,17 @@ class TransportController extends Controller
         $data = $validated;
         unset($data['vehicle_qty'], $data['vehicles']);
 
+        $vehicleName = TransportVehicleName::active()
+            ->whereKey($validated['vehicle_name_id'])
+            ->whereHas('vehicleType', fn ($query) => $query->active())
+            ->with('vehicleType')
+            ->firstOrFail();
+        $data['vehicle_name'] = $vehicleName->name;
+        $data['vehicle_type'] = $vehicleName->vehicleType->name;
+        $data['vehicle_name_id'] = $vehicleName->id;
+
         $transport = Transport::where('operator_id', $operator->id)
-            ->where('vehicle_type', $data['vehicle_type'])
+            ->where('vehicle_name_id', $vehicleName->id)
             ->first();
 
         if (!$transport) {
@@ -434,6 +446,7 @@ class TransportController extends Controller
             abort(403);
         }
 
+        $transport->loadMissing('vehicleName.vehicleType');
         $rates = $transport->rates()->get();
         if (Schema::hasTable('transport_vehicles')) {
             $transport->load('vehicles');
@@ -451,7 +464,31 @@ class TransportController extends Controller
             abort(403);
         }
 
-        $vehicleTypes = TransportVehicleType::activeList();
+        $vehicleNames = TransportVehicleName::query()
+            ->where(function ($query) use ($transport) {
+                $query->where(function ($activeQuery) {
+                    $activeQuery->active()
+                        ->whereHas('vehicleType', fn ($typeQuery) => $typeQuery->active());
+                })
+                    ->orWhere(function ($inactiveQuery) use ($transport) {
+                        $inactiveQuery->where(function ($currentQuery) use ($transport) {
+                            if ($transport->vehicle_name_id) {
+                                $currentQuery->whereKey($transport->vehicle_name_id);
+                            } else {
+                                $currentQuery->where('name', trim((string) $transport->vehicle_name))
+                                    ->whereHas('vehicleType', fn ($typeQuery) => $typeQuery->where('name', trim((string) $transport->vehicle_type)));
+                            }
+                        });
+                    });
+            })
+            ->with('vehicleType')
+            ->orderBy('name')
+            ->get();
+        $selectedVehicleName = $vehicleNames->firstWhere('id', $transport->vehicle_name_id)
+            ?? $vehicleNames->first(fn ($vehicleName) =>
+                $vehicleName->name === trim((string) $transport->vehicle_name)
+                && $vehicleName->vehicleType?->name === trim((string) $transport->vehicle_type)
+            );
         $vehicleStatuses = TransportVehicle::STATUSES;
         if (Schema::hasTable('transport_vehicles')) {
             $transport->load('vehicles');
@@ -459,7 +496,7 @@ class TransportController extends Controller
             $transport->setRelation('vehicles', collect());
         }
 
-        return view('operator.transport.edit', compact('transport', 'vehicleTypes', 'vehicleStatuses'));
+        return view('operator.transport.edit', compact('transport', 'vehicleNames', 'selectedVehicleName', 'vehicleStatuses'));
     }
 
     public function update(Transport $transport, Request $request)
@@ -470,14 +507,11 @@ class TransportController extends Controller
         }
 
         $data = $request->validate([
-            'vehicle_name' => 'required|string|max:150',
-            'vehicle_type' => 'required|string|exists:transport_vehicle_types,name,is_active,1',
-            'seating_capacity' => 'required|integer|min:1|max:100',
+            'vehicle_name_id' => 'required|integer|exists:transport_vehicle_names,id',
             'registration_number' => 'nullable|string|max:50',
             'service_description' => 'nullable|string|max:500',
             'contact_person' => 'nullable|string|max:100',
             'contact_phone' => 'nullable|string|max:25',
-            'contact_email' => 'nullable|email|max:100',
             'overview' => 'nullable|string',
             'amenities' => 'nullable|array',
             'vehicle_qty' => 'required|integer|min:1|max:100',
@@ -494,6 +528,22 @@ class TransportController extends Controller
         ]);
         $validated = $data;
         unset($data['vehicle_qty'], $data['vehicles']);
+
+        $vehicleName = TransportVehicleName::query()
+            ->whereKey($validated['vehicle_name_id'])
+            ->with('vehicleType')
+            ->firstOrFail();
+        $isCurrentVehicleName = (int) $vehicleName->id === (int) $transport->vehicle_name_id
+            || ($vehicleName->name === trim((string) $transport->vehicle_name)
+                && $vehicleName->vehicleType?->name === trim((string) $transport->vehicle_type));
+        if ((!$vehicleName->is_active || !$vehicleName->vehicleType?->is_active) && !$isCurrentVehicleName) {
+            throw ValidationException::withMessages([
+                'vehicle_name_id' => 'Select an active vehicle name and vehicle type.',
+            ]);
+        }
+        $data['vehicle_name'] = $vehicleName->name;
+        $data['vehicle_type'] = $vehicleName->vehicleType->name;
+        $data['vehicle_name_id'] = $vehicleName->id;
 
         $transport->update($data);
 

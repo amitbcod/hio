@@ -31,7 +31,7 @@
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>Vehicle Type</th>
+                                    <th>Vehicle Name</th>
                                     <th>Total Qty</th>
                                     <th>Available Qty</th>
                                     <th>Status</th>
@@ -42,7 +42,7 @@
                             <tbody>
                                 @foreach ($transports as $transport)
                                     <tr>
-                                        <td>{{ $transport->vehicle_type ?: $transport->vehicle_name }}</td>
+                                        <td>{{ $transport->vehicleName?->name ?: $transport->vehicle_name }}</td>
                                         <td>{{ $transport->total_vehicle_qty }}</td>
                                         <td>{{ $transport->available_vehicle_qty }}</td>
                                         <td>
