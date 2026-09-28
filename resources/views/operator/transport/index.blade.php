@@ -25,6 +25,46 @@
                 <div style="background:#e8f5e9;border:1px solid #66bb6a;border-radius:8px;padding:12px;margin-bottom:12px;color:#2e7d32;">{{ session('success') }}</div>
             @endif
 
+            <form method="GET" action="{{ route('operator.transport.index') }}" class="row g-2 mb-3 align-items-end">
+                <div class="col-sm-6 col-lg-3">
+                    <label for="filter-vehicle-name" class="form-label">Vehicle Name</label>
+                    <input type="search" id="filter-vehicle-name" name="vehicle_name" value="{{ $filters['vehicle_name'] }}" class="form-control" placeholder="Vehicle name" list="vehicle-name-suggestions" autocomplete="off">
+                    <datalist id="vehicle-name-suggestions">
+                        @foreach ($vehicleNameSuggestions as $suggestion)
+                            <option value="{{ $suggestion }}"></option>
+                        @endforeach
+                    </datalist>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <label for="filter-vehicle-type" class="form-label">Vehicle Type</label>
+                    <input type="search" id="filter-vehicle-type" name="vehicle_type" value="{{ $filters['vehicle_type'] }}" class="form-control" placeholder="Vehicle type" list="vehicle-type-suggestions" autocomplete="off">
+                    <datalist id="vehicle-type-suggestions">
+                        @foreach ($vehicleTypeSuggestions as $suggestion)
+                            <option value="{{ $suggestion }}"></option>
+                        @endforeach
+                    </datalist>
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label for="filter-status" class="form-label">Status</label>
+                    <select id="filter-status" name="status" class="form-control">
+                        <option value="">All statuses</option>
+                        @foreach ($statuses as $status)
+                            <option value="{{ $status }}" @selected($filters['status'] === $status)>{{ $status }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label for="filter-created-date" class="form-label">Created</label>
+                    <input type="date" id="filter-created-date" name="created_date" value="{{ $filters['created_date'] }}" class="form-control">
+                </div>
+                <div class="col-lg-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                    @if ($hasFilters)
+                        <a href="{{ route('operator.transport.index') }}" class="btn btn-outline-secondary">Clear</a>
+                    @endif
+                </div>
+            </form>
+
             @if ($transports->count() > 0)
                 <div style="background:#fff;border-radius:12px;padding:12px;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
                     <div class="table-responsive">
@@ -32,6 +72,7 @@
                             <thead>
                                 <tr>
                                     <th>Vehicle Name</th>
+                                    <th>Vehicle Type</th>
                                     <th>Total Qty</th>
                                     <th>Available Qty</th>
                                     <th>Status</th>
@@ -43,6 +84,7 @@
                                 @foreach ($transports as $transport)
                                     <tr>
                                         <td>{{ $transport->vehicleName?->name ?: $transport->vehicle_name }}</td>
+                                        <td>{{ $transport->vehicle_type ?: '—' }}</td>
                                         <td>{{ $transport->total_vehicle_qty }}</td>
                                         <td>{{ $transport->available_vehicle_qty }}</td>
                                         <td>
@@ -69,7 +111,13 @@
                 </div>
             @else
                 <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
-                    <div class="alert" style="background:transparent;color:#666;margin:0;">No transport records found. <a href="{{ route('operator.transport.create') }}">Create your first vehicle</a>.</div>
+                    <div class="alert" style="background:transparent;color:#666;margin:0;">
+                        @if ($hasFilters)
+                            No transport records match your search. <a href="{{ route('operator.transport.index') }}">Clear search</a>.
+                        @else
+                            No transport records found. <a href="{{ route('operator.transport.create') }}">Create your first vehicle</a>.
+                        @endif
+                    </div>
                 </div>
             @endif
         </div>

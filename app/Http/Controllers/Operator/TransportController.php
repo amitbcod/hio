@@ -32,8 +32,67 @@ class TransportController extends Controller
             return redirect()->route('operator.login');
         }
 
+        $filters = [
+            'vehicle_name' => trim((string) request()->query('vehicle_name', '')),
+            'vehicle_type' => trim((string) request()->query('vehicle_type', '')),
+            'status' => trim((string) request()->query('status', '')),
+            'created_date' => trim((string) request()->query('created_date', '')),
+        ];
+        $operatorTransports = Transport::where('operator_id', $operator->id);
+        $vehicleNameSuggestions = (clone $operatorTransports)
+            ->whereNotNull('vehicle_name')
+            ->where('vehicle_name', '!=', '')
+            ->pluck('vehicle_name')
+            ->merge((clone $operatorTransports)
+                ->whereNotNull('vehicle_name_id')
+                ->with('vehicleName:id,name')
+                ->get()
+                ->pluck('vehicleName.name'))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+        $vehicleTypeSuggestions = (clone $operatorTransports)
+            ->whereNotNull('vehicle_type')
+            ->where('vehicle_type', '!=', '')
+            ->pluck('vehicle_type')
+            ->merge((clone $operatorTransports)
+                ->whereNotNull('vehicle_name_id')
+                ->with('vehicleName:id,name,transport_vehicle_type_id', 'vehicleName.vehicleType:id,name')
+                ->get()
+                ->pluck('vehicleName.vehicleType.name'))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
         $transportQuery = Transport::where('operator_id', $operator->id)
             ->orderBy('created_at', 'desc');
+
+        if ($filters['vehicle_name'] !== '') {
+            $transportQuery->where(function ($query) use ($filters) {
+                $query->where('vehicle_name', 'like', '%' . $filters['vehicle_name'] . '%')
+                    ->orWhereHas('vehicleName', function ($vehicleNameQuery) use ($filters) {
+                        $vehicleNameQuery->where('name', 'like', '%' . $filters['vehicle_name'] . '%');
+                    });
+            });
+        }
+
+        if ($filters['vehicle_type'] !== '') {
+            $transportQuery->where(function ($query) use ($filters) {
+                $query->where('vehicle_type', 'like', '%' . $filters['vehicle_type'] . '%')
+                    ->orWhereHas('vehicleName.vehicleType', function ($vehicleTypeQuery) use ($filters) {
+                        $vehicleTypeQuery->where('name', 'like', '%' . $filters['vehicle_type'] . '%');
+                    });
+            });
+        }
+
+        if ($filters['status'] !== '') {
+            $transportQuery->where('status', 'like', '%' . $filters['status'] . '%');
+        }
+
+        if ($filters['created_date'] !== '') {
+            $transportQuery->whereDate('created_at', $filters['created_date']);
+        }
 
         if (Schema::hasTable('transport_vehicles')) {
             $transportQuery->withCount([
@@ -50,7 +109,7 @@ class TransportController extends Controller
                                 ->orWhereDate('insurance_expiry_date', '>=', now()->toDateString());
                         });
                 },
-            ])->with(['vehicles', 'vehicleName']);
+            ])->with(['vehicles', 'vehicleName.vehicleType']);
         }
 
         $transports = $transportQuery->paginate(20);
@@ -74,7 +133,19 @@ class TransportController extends Controller
             });
         }
 
-        return view('operator.transport.index', compact('transports'));
+        $hasFilters = collect($filters)->contains(fn ($value) => $value !== '');
+        $transports->appends($filters);
+
+        $statuses = ['Draft', 'In Review', 'Active', 'Inactive', 'Archived'];
+
+        return view('operator.transport.index', compact(
+            'transports',
+            'filters',
+            'hasFilters',
+            'vehicleNameSuggestions',
+            'vehicleTypeSuggestions',
+            'statuses'
+        ));
     }
 
     public function create()
