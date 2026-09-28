@@ -95,10 +95,12 @@
                             {{ __('operator.registration.no') }}
                         </label>
                     </div>
-                    <div id="transport-address-fields" class="row">
+                    <div id="transport-address-fields">
+                        <div class="row">
                         <div class="col-md-6 mb-3"><label>Address <span style="color:#d32f2f">*</span></label><input type="text" name="transport_address" class="form-control" value="{{ old('transport_address', $operator->transport_address ?? '') }}" data-transport-field></div>
                         <div class="col-md-6 mb-3"><label>Region / Location <span style="color:#d32f2f">*</span></label><input type="text" name="transport_region_location" class="form-control" value="{{ old('transport_region_location', $operator->transport_region_location ?? '') }}" data-transport-field></div>
                         <div class="col-md-6 mb-3"><label>Map / Geolocation</label><input type="text" name="transport_geolocation" class="form-control" placeholder="e.g. -20.1609, 57.5012" value="{{ old('transport_geolocation', $operator->transport_geolocation ?? '') }}"></div>
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3"><label>Logo</label><input type="file" name="transport_logo" class="form-control" accept="image/*">@if(!empty($serviceProfiles['transport']['logo']))<small class="text-muted d-block">Existing logo retained unless replaced.</small>@endif</div>
