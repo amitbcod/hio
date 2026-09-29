@@ -263,7 +263,7 @@ class HomeController extends Controller
                 'rates' => function ($query) {
                     $query->where('is_active', true)->orderBy('price_per_person');
                 },
-                'operator',
+                'operator.profile',
                 'vehicleName.vehicleType',
                 'routes',
             ])
@@ -2339,11 +2339,16 @@ class HomeController extends Controller
 
     private function mapTransport(Transport $transport, bool $detailed = false, string $selectedFrom = '', string $selectedTo = ''): array
     {
-        $vehicleName = $transport->vehicleName;
+        $vehicleName = $transport->relationLoaded('vehicleName')
+            ? $transport->getRelation('vehicleName')
+            : $transport->vehicleName()->with('vehicleType')->first();
         $vehicleType = $vehicleName?->vehicleType?->name ?: $transport->vehicle_type;
-        $displayName = $vehicleName?->name ?: $transport->vehicle_name;
         $operatorLegalName = trim((string) ($transport->operator?->profile?->business_legal_name ?? ''));
-        $vehicleDisplayName = $transport->vehicle_display_name;
+        $displayName = $vehicleName?->name ?: $transport->getRawOriginal('vehicle_name');
+        $vehicleDisplayName = trim((string) $displayName);
+        if ($vehicleDisplayName !== '' && $operatorLegalName !== '') {
+            $vehicleDisplayName .= ' - ' . $operatorLegalName;
+        }
         $rates = collect($transport->relationLoaded('rates') ? $transport->rates : []);
         $galleryImages = collect($transport->gallery_images ?? [])
             ->filter(fn ($path) => is_string($path) && !blank($path))
@@ -2484,11 +2489,13 @@ class HomeController extends Controller
             'service_id' => $transport->service_id,
             'vehicle_name_id' => $transport->vehicle_name_id,
             'vehicle_name' => $vehicleDisplayName,
+            'vehicle_name_filter_label' => $displayName,
             'title' => $vehicleDisplayName ?: $vehicleType,
             'kind' => 'Transport',
             'type' => 'transport',
             'vehicle_type' => $vehicleType,
-            'seating_capacity' => $vehicleName?->seat_capacity ?? $transport->seating_capacity,
+            'seating_capacity' => $vehicleName?->seat_capacity
+                ?? ($transport->vehicle_name_id ? null : $transport->getRawOriginal('seating_capacity')),
             'total_quantity' => $totalQuantity,
             'available_quantity' => $availableQuantity,
             'image' => $primaryImage,
@@ -4331,7 +4338,7 @@ class HomeController extends Controller
                 ->map(function ($group, $id) {
                     return [
                         'value' => (string) $id,
-                        'label' => (string) $group->first()['vehicle_name'],
+                        'label' => (string) $group->first()['vehicle_name_filter_label'],
                         'count' => $group->count(),
                     ];
                 })

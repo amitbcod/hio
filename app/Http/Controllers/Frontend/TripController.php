@@ -191,6 +191,13 @@ class TripController extends Controller
             // ignore discovery failures and continue with null packageModel
           }
 
+          $splitTransportGroupReferences = $transportBookings
+            ->filter(fn ($booking) => filled($booking->transport_group_reference))
+            ->groupBy('transport_group_reference')
+            ->filter(fn ($group) => $group->count() > 1)
+            ->keys()
+            ->all();
+
           foreach ($transportBookings as $tb) {
             $sourceChannel = strtolower(trim((string) data_get($tb, 'source_channel', '')));
             $bookingType = strtolower(trim((string) data_get($tb, 'booking_type', '')));
@@ -224,11 +231,16 @@ class TripController extends Controller
 
               if ($routeModel) {
                 $passengers = max(1, (int) ($tb->adults ?? $tb->passengers ?? 1));
-                if ($packageModel && $packageModel instanceof \App\Models\Group) {
-                  $computed = $pricingService->getGroupTransportRouteAmount($routeModel, $passengers, $packageModel, !empty($tb->return_date));
-                } else {
-                  $computed = $pricingService->getTransportRouteAmount($routeModel, $passengers, $packageModel, !empty($tb->return_date));
-                }
+                $isReverse = strcasecmp($routeFrom, trim((string) ($routeModel->route_to ?? ''))) === 0
+                  && strcasecmp($routeTo, trim((string) ($routeModel->route_from ?? ''))) === 0;
+                $computed = $pricingService->getTransportRouteLegAmount(
+                  $transportModel,
+                  $routeModel,
+                  $packageModel,
+                  $isReverse,
+                  in_array($tb->transport_group_reference, $splitTransportGroupReferences, true),
+                  $tb->pickup_date?->format('Y-m-d')
+                );
                 if (is_numeric($computed)) {
                   $beforeAmount = (float) ($tb->total_amount ?? 0);
                   $tb->total_amount = $computed;

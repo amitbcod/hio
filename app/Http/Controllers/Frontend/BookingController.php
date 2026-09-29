@@ -2001,46 +2001,76 @@ class BookingController extends Controller
                                             }
                                         }
 
-                                        $routeCandidates = $routes->isNotEmpty() ? $routes->all() : [];
-                                        if (empty($routeCandidates) && !empty($selectedRouteGroups)) {
+                                        $routeLegCandidates = [];
+                                        if (!empty($selectedRouteGroups)) {
                                             foreach ($selectedRouteGroups as $group) {
-                                                foreach ($group['route_ids'] ?? [] as $routeId) {
-                                                    $routeModel = \App\Models\TransportRoute::query()
-                                                        ->where('route_id', (string) $routeId)
-                                                        ->orWhere('route_id', $this->normalizeTransportRouteKey((string) $routeId))
-                                                        ->orWhere('id', (int) $routeId)
-                                                        ->first();
-                                                    if ($routeModel) {
-                                                        $routeCandidates[] = $routeModel;
+                                                $legs = $group['legs'] ?? [];
+                                                if (empty($legs)) {
+                                                    $legs = array_map(fn ($routeId) => [
+                                                        'route_id' => $routeId,
+                                                        'direction' => 'forward',
+                                                        'pickup_time' => null,
+                                                        'is_return_pair' => false,
+                                                    ], $group['route_ids'] ?? []);
+                                                }
+
+                                                foreach ($legs as $leg) {
+                                                    $routeId = (string) ($leg['route_id'] ?? '');
+                                                    $normalizedRouteId = $this->normalizeTransportRouteKey($routeId);
+                                                    $route = $routes->first(function ($candidate) use ($routeId, $normalizedRouteId) {
+                                                        return (string) ($candidate->id ?? '') === $routeId
+                                                            || (string) ($candidate->route_id ?? '') === $routeId
+                                                            || $this->normalizeTransportRouteKey((string) ($candidate->route_id ?? '')) === $normalizedRouteId;
+                                                    });
+
+                                                    if (!$route && $routeId !== '') {
+                                                        $route = \App\Models\TransportRoute::query()
+                                                            ->where('route_id', $routeId)
+                                                            ->orWhere('route_id', $normalizedRouteId)
+                                                            ->orWhere('id', is_numeric($routeId) ? (int) $routeId : 0)
+                                                            ->first();
+                                                    }
+
+                                                    if ($route) {
+                                                        $routeLegCandidates[] = ['route' => $route, 'leg' => $leg];
                                                     }
                                                 }
+                                            }
+                                        } else {
+                                            foreach ($routes as $route) {
+                                                $routeLegCandidates[] = [
+                                                    'route' => $route,
+                                                    'leg' => ['direction' => 'forward', 'pickup_time' => null, 'is_return_pair' => false],
+                                                ];
                                             }
                                         }
 
-                                        foreach ($routeCandidates as $route) {
-                                            $wantReturn = false;
-                                            $routeIdentifier = $this->normalizeTransportRouteKey((string) ($route->route_id ?? $route->id ?? ''));
-                                            if (!empty($selectedRouteGroups)) {
-                                                foreach ($selectedRouteGroups as $group) {
-                                                    $groupIds = array_map(fn ($value) => $this->normalizeTransportRouteKey((string) $value), $group['route_ids'] ?? []);
-                                                    if (in_array($routeIdentifier, $groupIds, true) || in_array((string) ($route->id ?? ''), array_map('strval', $group['route_ids'] ?? []), true)) {
-                                                        $wantReturn = !empty($group['add_return']);
-                                                        break;
-                                                    }
-                                                }
-                                            }
+                                        $transportGroupReference = null;
 
-                                            $pickupTime = $dayEntry['pickup_time'] ?? ($route->start_time ?? null);
+                                        foreach ($routeLegCandidates as $routeLeg) {
+                                            $route = $routeLeg['route'];
+                                            $leg = $routeLeg['leg'];
+                                            $isReverse = ($leg['direction'] ?? 'forward') === 'reverse';
+                                            $routeFrom = $isReverse
+                                                ? ($route->route_to ?? $route->dropoff_value)
+                                                : ($route->route_from ?? $route->pickup_value);
+                                            $routeTo = $isReverse
+                                                ? ($route->route_from ?? $route->pickup_value)
+                                                : ($route->route_to ?? $route->dropoff_value);
+                                            $pickupTime = $leg['pickup_time'] ?? $dayEntry['pickup_time'] ?? ($route->start_time ?? null);
 
                                             // Compute per-route transport amount using the canonical package pricing service
                                             $routeAmount = 0.0;
                                             try {
                                                 $passengers = max(1, ($item['adults'] ?? 0) + ($item['children'] ?? 0));
-                                                if ($package && $package instanceof \App\Models\Group) {
-                                                    $routeAmount = $pricingService->getGroupTransportRouteAmount($route, $passengers, $package, $wantReturn);
-                                                } else {
-                                                    $routeAmount = $pricingService->getTransportRouteAmount($route, $passengers, $package, $wantReturn);
-                                                }
+                                                $routeAmount = $pricingService->getTransportRouteLegAmount(
+                                                    $transModel,
+                                                    $route,
+                                                    $package,
+                                                    $isReverse,
+                                                    !empty($leg['is_return_pair']),
+                                                    $pickupDate
+                                                );
                                             } catch (\Exception $ex) {
                                                 \Log::error('Failed to compute transport route amount for package', ['error' => $ex->getMessage(), 'package_id' => $item['package_id'] ?? null]);
                                             }
@@ -2058,6 +2088,9 @@ class BookingController extends Controller
                                             ]);
 
                                             $tRef = $this->generateBookingRef('transport', $tripId, $pickupDate);
+                                            if (count($routeLegCandidates) > 1 && $transportGroupReference === null) {
+                                                $transportGroupReference = $tRef . '-GROUP';
+                                            }
                                             $tBooking = TransportBooking::create([
                                                 'booking_reference' => $tRef,
                                                 'transport_id' => $transportId,
@@ -2074,18 +2107,20 @@ class BookingController extends Controller
                                                 'traveler_notes' => $primaryGuest['notes'] ?? null,
                                                 'guest_email' => $guestEmail,
                                                 'guest_phone' => $guestPhone,
-                                                'route_from' => $route->route_from ?? null,
-                                                'route_to' => $route->route_to ?? null,
+                                                'route_from' => $routeFrom,
+                                                'route_to' => $routeTo,
                                                 'pickup_date' => $pickupDate,
                                                 'pickup_time' => $pickupTime ?? null,
-                                                'return_date' => $dayEntry['return_date'] ?? null,
-                                                'return_time' => $dayEntry['return_time'] ?? null,
-                                                'pickup_address' => $dayEntry['pickup_address'] ?? null,
-                                                'dropoff_address' => $dayEntry['dropoff_address'] ?? null,
+                                                'return_date' => null,
+                                                'return_time' => null,
+                                                'pickup_address' => $isReverse ? ($dayEntry['dropoff_address'] ?? null) : ($dayEntry['pickup_address'] ?? null),
+                                                'dropoff_address' => $isReverse ? ($dayEntry['pickup_address'] ?? null) : ($dayEntry['dropoff_address'] ?? null),
                                                 'passengers' => ($item['adults'] ?? 0) + ($item['children'] ?? 0),
                                                 'adults' => $item['adults'] ?? 0,
                                                 'children' => $item['children'] ?? 0,
                                                 'booking_status' => TransportBooking::STATUS_PROCESSING,
+                                                'trip_type' => 'ONE_WAY',
+                                                'transport_group_reference' => $transportGroupReference,
                                                 'total_amount' => $routeAmount,
                                                 'currency' => $item['currency'] ?? 'USD',
                                                 'payment_method' => $paymentMethod === 'againgency' ? 'Againgency' : 'COD',
@@ -3654,7 +3689,7 @@ class BookingController extends Controller
                     }
 
                     if (!isset($groups[$baseKey])) {
-                        $groups[$baseKey] = ['route_ids' => [], 'add_return' => false, 'directions' => []];
+                        $groups[$baseKey] = ['route_ids' => [], 'add_return' => false, 'directions' => [], 'legs' => []];
                     }
 
                     $resolvedRouteId = $routeId ?? $baseKey;
@@ -3663,6 +3698,28 @@ class BookingController extends Controller
                         $normalizedRouteId = $this->normalizeTransportRouteKey($resolvedRouteId);
                         if ($normalizedRouteId !== '' && !in_array($normalizedRouteId, array_map('strval', $groups[$baseKey]['route_ids']), true)) {
                             $groups[$baseKey]['route_ids'][] = $normalizedRouteId;
+                        }
+
+                        $direction = is_string($routeKey) && preg_match('/-rev$/i', $routeKey) ? 'reverse' : 'forward';
+                        $startHour = trim((string) ($routeData['start_hour'] ?? ''));
+                        $startMinute = trim((string) ($routeData['start_min'] ?? ''));
+                        $pickupTime = preg_match('/^\d{1,2}$/', $startHour)
+                            && preg_match('/^\d{1,2}$/', $startMinute)
+                            && (int) $startHour <= 23
+                            && (int) $startMinute <= 59
+                            ? sprintf('%02d:%02d:00', (int) $startHour, (int) $startMinute)
+                            : null;
+                        $legKey = $normalizedRouteId . '|' . $direction;
+                        $existingLegKeys = array_map(
+                            fn (array $leg) => $leg['route_id'] . '|' . $leg['direction'],
+                            $groups[$baseKey]['legs']
+                        );
+                        if (!in_array($legKey, $existingLegKeys, true)) {
+                            $groups[$baseKey]['legs'][] = [
+                                'route_id' => $normalizedRouteId,
+                                'direction' => $direction,
+                                'pickup_time' => $pickupTime,
+                            ];
                         }
                     }
 
@@ -3697,21 +3754,36 @@ class BookingController extends Controller
                         continue;
                     }
                     if (!isset($groups[$baseKey])) {
-                        $groups[$baseKey] = ['route_ids' => [], 'add_return' => false, 'directions' => []];
+                        $groups[$baseKey] = ['route_ids' => [], 'add_return' => false, 'directions' => [], 'legs' => []];
                     }
                     if (!in_array($normalized, array_map('strval', $groups[$baseKey]['route_ids']), true)) {
                         $groups[$baseKey]['route_ids'][] = $normalized;
                     }
+                    $groups[$baseKey]['legs'][] = [
+                        'route_id' => $normalized,
+                        'direction' => 'forward',
+                        'pickup_time' => null,
+                    ];
                 }
             }
         }
 
         foreach ($groups as $baseKey => $meta) {
             $groups[$baseKey]['add_return'] = isset($meta['directions']) && count(array_unique($meta['directions'])) > 1;
+            $hasReturnPair = in_array('fwd', $meta['directions'] ?? [], true)
+                && in_array('rev', $meta['directions'] ?? [], true);
+            foreach ($groups[$baseKey]['legs'] as &$leg) {
+                $leg['is_return_pair'] = $hasReturnPair;
+            }
+            unset($leg);
         }
 
         return array_values(array_map(function ($routeIds, $meta) {
-            return ['route_ids' => array_values(array_unique(array_filter(array_map('strval', $routeIds), fn ($value) => trim((string) $value) !== ''))), 'add_return' => (bool) $meta['add_return']];
+            return [
+                'route_ids' => array_values(array_unique(array_filter(array_map('strval', $routeIds), fn ($value) => trim((string) $value) !== ''))),
+                'add_return' => false,
+                'legs' => array_values($meta['legs'] ?? []),
+            ];
         }, array_map(fn ($group) => $group['route_ids'], $groups), $groups));
     }
 

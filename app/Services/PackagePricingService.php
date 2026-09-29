@@ -958,128 +958,25 @@ class PackagePricingService
 
     protected function resolveGroupTransportRouteAmount(\App\Models\TransportRoute $route, int $guestCount, $group = null, bool $wantReturn = false): float
     {
-      $mode = $group && is_array($group->itinerary ?? null)
-        && ($group->itinerary['pricing_modes']['transport'] ?? 'discount_offer') === 'package_rate'
-        ? 'package'
-        : 'group';
-
-      return (new TransportPricingService())->resolveForBooking(
+      $itinerary = $group && is_array($group->itinerary ?? null) ? $group->itinerary : [];
+      $pricingMode = $itinerary['pricing_modes']['transport'] ?? 'discount_offer';
+      $rateMode = $pricingMode === 'package_rate' ? 'package' : 'group';
+      $amount = (new TransportPricingService())->resolveForBooking(
         $route->transport,
         (string) ($route->route_id ?? $route->id),
         (string) ($route->route_from ?? $route->pickup_value),
         (string) ($route->route_to ?? $route->dropoff_value),
         null,
         $wantReturn,
-        $mode
+        $rateMode
       )['final_price'];
 
-      $pricing = is_array($route->pricing ?? null) ? $route->pricing : (is_string($route->pricing ?? null) ? json_decode($route->pricing, true) : []);
-
-      // Determine group-level pricing mode/discount if available
-      $globalMode = $group && is_array($group->itinerary ?? null) ? ($group->itinerary['pricing_modes']['transport'] ?? 'discount_offer') : 'discount_offer';
-      $globalDiscount = $group && is_array($group->itinerary ?? null) ? (float) ($group->itinerary['discounts']['transport'] ?? 0) : 0.0;
-
-      $candidate = 0.0;
-      $usedPackageRate = false;
-
-      // If admin selected package_rate at group level, prefer package prices
-      if ($globalMode === 'package_rate') {
-        if ($wantReturn) {
-          $candidate = (float) ($pricing['package_departure_price'] ?? $pricing['package_price'] ?? 0);
-        } else {
-          $candidate = (float) ($pricing['package_price'] ?? $pricing['package_departure_price'] ?? 0);
-        }
-        if ($candidate > 0) $usedPackageRate = true;
+      if ($pricingMode === 'discount_offer') {
+        $discount = min(100.0, max(0.0, (float) ($itinerary['discounts']['transport'] ?? 0)));
+        $amount *= 1 - ($discount / 100);
       }
 
-      // If no package rate chosen/available, use group/package/base prices and apply discount_offer when selected
-      if ($candidate <= 0) {
-        $mode = $group && is_array($group->itinerary ?? null)
-          && ($group->itinerary['pricing_modes']['transport'] ?? 'discount_offer') === 'package_rate'
-          ? 'package'
-          : 'group';
-
-        return (new TransportPricingService())->resolveForBooking(
-          $route->transport,
-          (string) ($route->route_id ?? $route->id),
-          (string) ($route->route_from ?? $route->pickup_value),
-          (string) ($route->route_to ?? $route->dropoff_value),
-          null,
-          $wantReturn,
-          $mode
-        )['final_price'];
-        $roomMode = $roomPricing['mode'] ?? $globalMode;
-        $selectedPackage = $roomPricing['selected_package'] ?? null;
-        $roomDiscount = is_numeric($roomPricing['discount_percent'] ?? null) ? (float) $roomPricing['discount_percent'] : $globalDiscount;
-
-        if ($roomMode === 'package_rate') {
-          if (!empty($selectedPackage)) {
-            if (is_numeric($selectedPackage)) {
-              $rate = \App\Models\AccommodationRate::find((int) $selectedPackage);
-            } else {
-              $rate = null;
-            }
-            if (empty($rate)) {
-              $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
-                ->where('room_id', $roomId)
-                ->where('rate_type', 'Package')
-                ->orderByDesc('updated_at')
-                ->first();
-            }
-            if ($rate) {
-              $candidate = (float) ($rate->base_rate ?? $rate->final_rate ?? 0);
-            }
-          } else {
-            $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
-              ->where('room_id', $roomId)
-              ->where('rate_type', 'Package')
-              ->orderByDesc('updated_at')
-              ->first();
-            if ($rate) {
-              $candidate = (float) ($rate->base_rate ?? $rate->final_rate ?? 0);
-            }
-          }
-        }
-
-        if ($candidate <= 0) {
-          $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
-            ->where('room_id', $roomId)
-            ->where(function ($q) { $q->where('rate_type', '!=', 'Package')->orWhereNull('rate_type'); })
-            ->where('is_rate_plan', false)
-            ->orderByDesc('valid_from')
-            ->first();
-
-          if (!$rate) {
-            $rate = \App\Models\AccommodationRate::where('accommodation_id', $accommodation->id)
-              ->where('room_id', $roomId)
-              ->where('is_rate_plan', false)
-              ->orderByDesc('valid_from')
-              ->first();
-          }
-
-          if ($rate) {
-            $base = (float) ($rate->base_rate ?? $rate->final_rate ?? 0);
-            if ($roomMode === 'discount_offer' && $roomDiscount > 0 && $roomDiscount <= 100) {
-              $base = $base - ($base * $roomDiscount / 100.0);
-            }
-            $candidate = $base;
-          }
-        }
-
-        if ($candidate > $bestAmount) {
-          $bestAmount = $candidate;
-        }
-
-        if ($useExplicitSum && in_array((int)$roomId, $explicitRoomIds, true)) {
-          $sumExplicitRooms += $candidate;
-        }
-      }
-
-      if ($useExplicitSum) {
-        return round(max(0.0, $sumExplicitRooms), 2);
-      }
-
-      return round(max(0.0, $bestAmount), 2);
+      return round(max(0.0, $amount), 2);
     }
 
     protected function resolvePackageAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry, $package = null, int $adults = 2, int $children = 0, int $infants = 0): float
@@ -1302,18 +1199,11 @@ class PackagePricingService
         }
       }
 
-        if ($bestAmount <= 0) {
-          return round(max(0.0, $candidate * 1), 2);
-        if ($route) {
-          $pricing = is_array($route->pricing ?? null) ? $route->pricing : (is_string($route->pricing ?? null) ? json_decode($route->pricing, true) : []);
-          $bestAmount = (float) ($pricing['package_price'] ?? $pricing['price'] ?? $pricing['default_price'] ?? 0);
-        }
-      }
-
-      $result = round($bestAmount > 0 ? $bestAmount * 1 : 0.0, 2);
+      $result = $this->applyPackageTransportDiscount($bestAmount, $package);
       \Log::debug('PackagePricingService - transport resolved amount', [
           'transport_id' => $transport->id ?? null,
           'bestAmount_per_unit' => $bestAmount,
+          'global_mode' => $globalMode,
           'guestCount' => $guestCount,
           'result_total' => $result,
       ]);
@@ -1330,7 +1220,7 @@ class PackagePricingService
         ? 'package'
         : 'direct';
 
-      return (new TransportPricingService())->resolveForBooking(
+      $amount = (new TransportPricingService())->resolveForBooking(
         $route->transport,
         (string) ($route->route_id ?? $route->id),
         (string) ($route->route_from ?? $route->pickup_value),
@@ -1339,6 +1229,25 @@ class PackagePricingService
         $wantReturn,
         $mode
       )['final_price'];
+
+      return $this->applyPackageTransportDiscount($amount, $package);
+    }
+
+    protected function applyPackageTransportDiscount(float $amount, $package = null): float
+    {
+      if (!$package || !is_array($package->itinerary ?? null)) {
+        return round(max(0.0, $amount), 2);
+      }
+
+      $pricingMode = $package->itinerary['pricing_modes']['transport'] ?? 'discount_offer';
+      if ($pricingMode !== 'discount_offer') {
+        return round(max(0.0, $amount), 2);
+      }
+
+      $discount = (float) ($package->itinerary['discounts']['transport'] ?? 5);
+      $discount = min(100.0, max(0.0, $discount));
+
+      return round(max(0.0, $amount) * (1 - $discount / 100), 2);
     }
 
     /**
@@ -1355,5 +1264,55 @@ class PackagePricingService
     public function getGroupTransportRouteAmount(\App\Models\TransportRoute $route, int $guestCount, $group = null, bool $wantReturn = false): float
     {
       return $this->resolveGroupTransportRouteAmount($route, $guestCount, $group, $wantReturn);
+    }
+
+    public function getTransportRouteLegAmount(
+      \App\Models\Transport $transport,
+      \App\Models\TransportRoute $route,
+      $packageOrGroup = null,
+      bool $reverse = false,
+      bool $isReturnPair = false,
+      ?string $pickupDate = null
+    ): float {
+      $itinerary = $packageOrGroup && is_array($packageOrGroup->itinerary ?? null)
+        ? $packageOrGroup->itinerary
+        : [];
+      $pricingMode = $itinerary['pricing_modes']['transport'] ?? 'discount_offer';
+      $isGroup = $packageOrGroup instanceof Group;
+      $rateMode = $pricingMode === 'package_rate'
+        ? 'package'
+        : ($isGroup ? 'group' : 'direct');
+      if ($packageOrGroup instanceof Package && $reverse && !$isReturnPair) {
+        $reverse = false;
+      }
+      $from = (string) ($reverse
+        ? ($route->route_to ?? $route->dropoff_value)
+        : ($route->route_from ?? $route->pickup_value));
+      $to = (string) ($reverse
+        ? ($route->route_from ?? $route->pickup_value)
+        : ($route->route_to ?? $route->dropoff_value));
+
+      $amount = (new TransportPricingService())->resolveForBooking(
+        $transport,
+        (string) ($route->route_id ?? $route->id),
+        $from,
+        $to,
+        $pickupDate,
+        false,
+        $rateMode
+      )['final_price'];
+
+      if ($isReturnPair) {
+        $returnDiscount = min(100.0, max(0.0, (float) ($transport->return_discount_percentage ?? 0)));
+        $amount *= 1 - ($returnDiscount / 100);
+      }
+
+      if ($pricingMode === 'discount_offer') {
+        $defaultDiscount = $isGroup ? 0.0 : 5.0;
+        $discount = min(100.0, max(0.0, (float) ($itinerary['discounts']['transport'] ?? $defaultDiscount)));
+        $amount *= 1 - ($discount / 100);
+      }
+
+      return round(max(0.0, $amount), 2);
     }
 }

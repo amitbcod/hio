@@ -101,9 +101,7 @@
                                     @php
                                         $t = $tEntry['model'];
                                         $hasPkg = !empty($tEntry['has_package']) ? 1 : 0;
-                                        $reg = $t->registration_number ?? null;
-                                        $veh = $t->vehicle_type ?? null;
-                                        $label = $reg ? ($reg . ($veh ? ' (' . $veh . ')' : '')) : ($t->name ?? 'Transport #' . $t->id);
+                                        $label = $t->vehicle_display_name ?: 'Transport';
                                     @endphp
                                     <option value="{{ $t->id }}" data-has-package="{{ $hasPkg }}" {{ $selectedTrn == $t->id ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach

@@ -164,7 +164,9 @@ class PackageController extends Controller
         // Filtered lists
         $accQuery = \App\Models\Accommodation::query()->where('status', 'Active');
         $actQuery = \App\Models\Activity::query()->where('status', 'Active');
-        $trnQuery = \App\Models\Transport::query()->where('status', 'Active');
+        $trnQuery = \App\Models\Transport::query()
+            ->with(['operator.profile', 'vehicleName.vehicleType'])
+            ->where('status', 'Active');
 
         // apply simple search filters
         if ($request->filled('q_accommodation')) {
@@ -174,7 +176,13 @@ class PackageController extends Controller
             $actQuery->where('activity_name', 'like', '%'.$request->get('q_activity').'%');
         }
         if ($request->filled('q_transport')) {
-            $trnQuery->where('name', 'like', '%'.$request->get('q_transport').'%');
+            $transportSearch = trim((string) $request->get('q_transport'));
+            $trnQuery->where(function ($query) use ($transportSearch) {
+                $query->where('vehicle_name', 'like', '%' . $transportSearch . '%')
+                    ->orWhereHas('vehicleName', function ($vehicleNameQuery) use ($transportSearch) {
+                        $vehicleNameQuery->where('name', 'like', '%' . $transportSearch . '%');
+                    });
+            });
         }
 
         // Load base collections for transports (no date specific)
@@ -766,7 +774,7 @@ class PackageController extends Controller
                 continue;
             }
 
-            $transport = \App\Models\Transport::with('routes')->find($transportId);
+            $transport = \App\Models\Transport::with(['routes', 'operator.profile', 'vehicleName.vehicleType'])->find($transportId);
             if (!$transport) {
                 $transportPricingByDay[$index] = [];
                 continue;

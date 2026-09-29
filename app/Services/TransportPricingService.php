@@ -116,7 +116,9 @@ class TransportPricingService
 
     public function findRoute(Transport $transport, ?string $routeId, string $from, string $to): ?TransportRoute
     {
-        $routes = $transport->routes()->get();
+        $routes = $transport->relationLoaded('routes')
+            ? $transport->routes
+            : $transport->routes()->get();
         $normalizedFrom = $this->normalize($from);
         $normalizedTo = $this->normalize($to);
 

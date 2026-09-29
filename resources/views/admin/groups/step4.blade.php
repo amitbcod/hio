@@ -280,7 +280,7 @@
                         @else
                             @php $transport = $transportForDay['transport']; @endphp
                             <div class="mb-2">
-                                <div class="fw-semibold">Transport #{{ $loop->iteration }}</div>
+                                <div class="fw-semibold">{{ $transport->vehicle_display_name ?: 'Transport' }}</div>
                                 @foreach(($transportForDay['routes'] ?? []) as $routeEntry)
                                     @php
                                         $route = $routeEntry['route'];

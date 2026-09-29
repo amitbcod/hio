@@ -276,7 +276,7 @@
                             <div class="p-2 text-muted small">No transport selected or no route pricing available for this day.</div>
                         @else
                             @php $trans = $transForDay['transport']; @endphp
-                            <div class="mb-2 fw-semibold">{{ $trans->name ?? ('Transport #' . ($trans->id ?? '')) }}</div>
+                            <div class="mb-2 fw-semibold">{{ $trans->vehicle_display_name ?: 'Transport' }}</div>
                             @foreach($transForDay['routes'] as $routeEntry)
                                 @php
                                     $route = $routeEntry['route'];

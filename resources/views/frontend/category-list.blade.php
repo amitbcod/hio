@@ -448,8 +448,8 @@
                                         @if(isset($item['available_rooms_count']) && $item['available_rooms_count'] !== null)
                                             <!-- <span class="listing-availability">{{ $item['available_rooms_count'] }} rooms available</span> -->
                                         @endif
-                                        @if($category === 'transport' && isset($item['available_quantity']))
-                                            <span class="listing-availability">{{ $item['available_quantity'] }} available</span>
+                                        @if($category === 'transport' && !empty($item['seating_capacity']))
+                                            <span class="listing-seating-capacity">{{ (int) $item['seating_capacity'] }} Seats</span>
                                         @endif
                                         @if($startingRate !== null)
                                             <span class="listing-price">From USD {{ number_format((float) $startingRate, 0) }} {{ $priceUnit }}</span>

@@ -184,4 +184,182 @@ class PackagePolicyAggregationTest extends TestCase
         $this->assertSame([], $breakdown['items']);
     }
 
+    public function test_package_transport_discount_offer_applies_discount_to_direct_rate(): void
+    {
+        $package = new \App\Models\Package([
+            'itinerary' => [
+                'pricing_modes' => ['transport' => 'discount_offer'],
+                'discounts' => ['transport' => 10],
+            ],
+        ]);
+        $service = new \App\Services\PackagePricingService();
+        $method = new ReflectionMethod($service, 'applyPackageTransportDiscount');
+        $method->setAccessible(true);
+
+        $this->assertSame(81.0, $method->invoke($service, 90.0, $package));
+    }
+
+    public function test_package_transport_rate_is_not_discounted_again(): void
+    {
+        $package = new \App\Models\Package([
+            'itinerary' => [
+                'pricing_modes' => ['transport' => 'package_rate'],
+                'discounts' => ['transport' => 10],
+            ],
+        ]);
+        $service = new \App\Services\PackagePricingService();
+        $method = new ReflectionMethod($service, 'applyPackageTransportDiscount');
+        $method->setAccessible(true);
+
+        $this->assertSame(90.0, $method->invoke($service, 90.0, $package));
+    }
+
+    public function test_package_transport_forward_and_reverse_selections_remain_separate_booking_legs(): void
+    {
+        $controller = new \App\Http\Controllers\Frontend\BookingController();
+        $method = new ReflectionMethod($controller, 'extractPackageSelectedRouteGroups');
+        $method->setAccessible(true);
+
+        $groups = $method->invoke($controller, [
+            'transport_schedule' => [
+                'airport_transfer' => [
+                    'TRN-13-airport-transfer-airport-south-east-fwd' => [
+                        'selected' => '1',
+                        'start_hour' => '10',
+                        'start_min' => '00',
+                    ],
+                    'TRN-13-airport-transfer-airport-south-east-rev' => [
+                        'selected' => '1',
+                        'start_hour' => '11',
+                        'start_min' => '30',
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertCount(1, $groups);
+        $this->assertCount(2, $groups[0]['legs']);
+        $this->assertSame('forward', $groups[0]['legs'][0]['direction']);
+        $this->assertSame('10:00:00', $groups[0]['legs'][0]['pickup_time']);
+        $this->assertSame('reverse', $groups[0]['legs'][1]['direction']);
+        $this->assertSame('11:30:00', $groups[0]['legs'][1]['pickup_time']);
+        $this->assertTrue($groups[0]['legs'][0]['is_return_pair']);
+        $this->assertTrue($groups[0]['legs'][1]['is_return_pair']);
+        $this->assertFalse($groups[0]['add_return']);
+    }
+
+    public function test_package_transport_legs_use_directional_rates_and_split_discounts(): void
+    {
+        $transport = new \App\Models\Transport(['return_discount_percentage' => 10]);
+        $transport->id = 13;
+        $route = new \App\Models\TransportRoute([
+            'id' => 372,
+            'route_id' => 'TRN-13-airport-south-east',
+            'route_from' => 'Airport',
+            'route_to' => 'South East',
+            'pricing' => [
+                'default_price' => 100,
+                'departure_price' => 80,
+                'package_price' => 60,
+                'package_departure_price' => 50,
+            ],
+        ]);
+        $transport->setRelation('routes', collect([$route]));
+        $package = new \App\Models\Package([
+            'itinerary' => [
+                'pricing_modes' => ['transport' => 'discount_offer'],
+                'discounts' => ['transport' => 10],
+            ],
+        ]);
+        $service = new \App\Services\PackagePricingService();
+
+        $this->assertSame(81.0, $service->getTransportRouteLegAmount($transport, $route, $package, false, true));
+        $this->assertSame(64.8, $service->getTransportRouteLegAmount($transport, $route, $package, true, true));
+    }
+
+    public function test_unpaired_reverse_package_leg_matches_package_breakdown_rate(): void
+    {
+        $transport = new \App\Models\Transport(['return_discount_percentage' => 50]);
+        $transport->id = 13;
+        $route = new \App\Models\TransportRoute([
+            'id' => 372,
+            'route_id' => 'TRN-13-airport-south-east',
+            'route_from' => 'Airport',
+            'route_to' => 'South East',
+            'pricing' => [
+                'default_price' => 80,
+                'departure_price' => 100,
+            ],
+        ]);
+        $transport->setRelation('routes', collect([$route]));
+        $package = new \App\Models\Package([
+            'itinerary' => [
+                'pricing_modes' => ['transport' => 'discount_offer'],
+                'discounts' => ['transport' => 10],
+            ],
+        ]);
+        $service = new \App\Services\PackagePricingService();
+
+        $this->assertSame(72.0, $service->getTransportRouteLegAmount($transport, $route, $package, true, false));
+        $this->assertSame(45.0, $service->getTransportRouteLegAmount($transport, $route, $package, true, true));
+    }
+
+    public function test_package_rate_legs_keep_package_rates_and_return_discount(): void
+    {
+        $transport = new \App\Models\Transport(['return_discount_percentage' => 10]);
+        $transport->id = 13;
+        $route = new \App\Models\TransportRoute([
+            'id' => 372,
+            'route_id' => 'TRN-13-airport-south-east',
+            'route_from' => 'Airport',
+            'route_to' => 'South East',
+            'pricing' => [
+                'default_price' => 100,
+                'departure_price' => 80,
+                'package_price' => 60,
+                'package_departure_price' => 50,
+            ],
+        ]);
+        $transport->setRelation('routes', collect([$route]));
+        $package = new \App\Models\Package([
+            'itinerary' => [
+                'pricing_modes' => ['transport' => 'package_rate'],
+                'discounts' => ['transport' => 10],
+            ],
+        ]);
+        $service = new \App\Services\PackagePricingService();
+
+        $this->assertSame(54.0, $service->getTransportRouteLegAmount($transport, $route, $package, false, true));
+        $this->assertSame(45.0, $service->getTransportRouteLegAmount($transport, $route, $package, true, true));
+    }
+
+    public function test_group_discount_offer_is_applied_to_each_transport_leg(): void
+    {
+        $transport = new \App\Models\Transport(['return_discount_percentage' => 0]);
+        $transport->id = 13;
+        $route = new \App\Models\TransportRoute([
+            'id' => 372,
+            'route_id' => 'TRN-13-airport-south-east',
+            'route_from' => 'Airport',
+            'route_to' => 'South East',
+            'pricing' => [
+                'default_price' => 100,
+                'departure_price' => 80,
+                'group_price' => 90,
+                'group_departure_price' => 70,
+            ],
+        ]);
+        $transport->setRelation('routes', collect([$route]));
+        $group = new \App\Models\Group([
+            'itinerary' => [
+                'pricing_modes' => ['transport' => 'discount_offer'],
+                'discounts' => ['transport' => 10],
+            ],
+        ]);
+        $service = new \App\Services\PackagePricingService();
+
+        $this->assertSame(81.0, $service->getTransportRouteLegAmount($transport, $route, $group, false, false));
+        $this->assertSame(63.0, $service->getTransportRouteLegAmount($transport, $route, $group, true, false));
+    }
+
 }
