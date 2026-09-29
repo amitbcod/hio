@@ -2798,6 +2798,12 @@ class BookingController extends Controller
                     'payment_transaction_id' => null,
                 ]);
 
+                if (Schema::hasColumn('bookings', 'booking_ref_id') && !empty($tripBookingIds)) {
+                    Booking::whereIn('id', array_values(array_unique($tripBookingIds)))
+                        ->where('trip_id', $tripId)
+                        ->update(['booking_ref_id' => $bookingRef->id]);
+                }
+
                 if (!empty($bookingRefs) && is_array($bookingRefs)) {
                     \App\Models\AccommodationBooking::whereIn('booking_reference', $bookingRefs)->update(['booking_ref_id' => $bookingRef->id]);
                     \App\Models\ActivityBooking::whereIn('booking_reference', $bookingRefs)->update(['booking_ref_id' => $bookingRef->id]);
@@ -2918,6 +2924,12 @@ class BookingController extends Controller
                     'total_amount' => $summary['net_payable'],
                     'payment_transaction_id' => null,
                 ]);
+
+                if (Schema::hasColumn('bookings', 'booking_ref_id') && !empty($tripBookingIds)) {
+                    Booking::whereIn('id', array_values(array_unique($tripBookingIds)))
+                        ->where('trip_id', $tripId)
+                        ->update(['booking_ref_id' => $bookingRef->id]);
+                }
 
                 if (!empty($bookingRefs) && is_array($bookingRefs)) {
                     \App\Models\AccommodationBooking::whereIn('booking_reference', $bookingRefs)->update(['booking_ref_id' => $bookingRef->id]);

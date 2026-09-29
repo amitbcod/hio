@@ -18,4 +18,9 @@ class BookingRef extends Model
     {
         return $this->belongsTo(PaymentTransaction::class, 'payment_transaction_id');
     }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'booking_ref_id');
+    }
 }

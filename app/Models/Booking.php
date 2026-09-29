@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
-    protected $fillable = ['trip_id', 'operator_id', 'total_amount', 'status', 'booking_type'];
+    protected $fillable = ['trip_id', 'booking_ref_id', 'operator_id', 'total_amount', 'status', 'booking_type'];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
@@ -15,6 +15,11 @@ class Booking extends Model
     public function trip()
     {
         return $this->belongsTo(Trip::class);
+    }
+
+    public function bookingRef()
+    {
+        return $this->belongsTo(BookingRef::class);
     }
 
     public function lineItems()
