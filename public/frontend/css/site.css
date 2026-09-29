@@ -2518,7 +2518,7 @@ div.detail-top-grid {
 }
 
 textarea.booking-input {
-    line-height: normal;
+    line-height: normal !important;
     padding: 12px;
 }
 
