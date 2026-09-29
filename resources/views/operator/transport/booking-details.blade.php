@@ -139,10 +139,10 @@
                                 @endif
                                 <br><small style="color: #666;">Driver: {{ $booking->pickupDriver?->driver_name ?: 'Unassigned' }}@unless($hasAssignedDriver) <a href="#current-assignment" class="assignment-scroll-link">[Assign]</a>@endunless</small>
                             </div>
-                            <div class="col-md-6">
+                            <!-- <div class="col-md-6">
                                 <strong>Operator:</strong><br>
                                 {{ optional($transport->operator)->business->name ?? optional($transport->operator)->name ?? 'Operator' }}
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                 </div>
