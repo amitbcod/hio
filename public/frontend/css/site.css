@@ -2514,7 +2514,7 @@ div.detail-top-grid {
     font: inherit;
     color: var(--ink);
     background: var(--card);
-    line-height: 40px;
+    line-height: 40px !important;
 }
 
 textarea.booking-input {
