@@ -2522,6 +2522,10 @@ textarea.booking-input {
     padding: 12px;
 }
 
+.category-search-cell .booking-input.booking-input-time {
+    line-height: normal !important;
+}
+
 .booking-btn {
     grid-column: 1 / -1;
     border: 0;
@@ -3012,7 +3016,13 @@ div#transport-price-summary {
     font-weight: 700;
 }
 
+.custom-picker-wrapper.time-picker .booking-input-text .time-value {
+    min-height: 38px;
+}
 
+.category-search-cell .custom-picker-wrapper.time-picker .booking-input-text .time-value {
+    min-height: auto;
+}
 
 
 
