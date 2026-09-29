@@ -3016,7 +3016,13 @@ div#transport-price-summary {
     font-weight: 700;
 }
 
+.custom-picker-wrapper.time-picker .booking-input-text .time-value {
+    min-height: 38px;
+}
 
+.category-search-cell .custom-picker-wrapper.time-picker .booking-input-text .time-value {
+    min-height: auto;
+}
 
 
 
