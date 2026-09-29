@@ -434,7 +434,7 @@
             @if(!empty(trim($overviewContent)))
                 <a href="#overview">{{ __('transport.overview') }}</a>
             @endif
-                <a href="#routes-pricing">{{ __('transport.routes_pricing') }}</a>
+                <!-- <a href="#routes-pricing">{{ __('transport.routes_pricing') }}</a> -->
                 <a href="#promotions">{{ __('transport.promotions') }}</a>
                 <a href="#amenities">{{ __('transport.amenities') }}</a>
             </nav>

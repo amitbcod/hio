@@ -416,7 +416,8 @@
                                     <img src="{{ $item['image'] }}" alt="{{ $item['title'] }}">
                                 </a>
                                 <div class="category-result-body">
-                                    <span class="listing-location"><i class="fa-solid fa-location-dot"></i> {{ $item['location'] ?? 'Mauritius' }}</span>
+                                   
+                                    <span class="listing-location"> {{ $item['vehicle_type'] ?? '' }}</span> 
                                     <div class="category-result-title-row">
                                         <h3><a href="{{ $iteUSDl }}">{{ $item['title'] }}</a></h3>
                                         @if(!empty($item['rating_display']))
