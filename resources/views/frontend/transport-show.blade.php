@@ -607,10 +607,12 @@
                         <strong>{{ __('transport.vehicle_type_label') }}</strong>
                         <span>{{ $transport['vehicle_type'] ?? '' }}</span>
                     </div>
-                    <div class="transport-detail-item">
-                        <strong>{{ __('transport.seating_capacity') }}</strong>
-                        <span>{{ $transport['seating_capacity'] ?? '' }}</span>
-                    </div>
+                    @if(!empty($transport['seating_capacity']))
+                        <div class="transport-detail-item">
+                            <strong>{{ __('transport.seating_capacity') }}</strong>
+                            <span>{{ $transport['seating_capacity'] }}</span>
+                        </div>
+                    @endif
                 </div>
             </div>
 
