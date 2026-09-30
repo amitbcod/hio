@@ -3018,10 +3018,14 @@ div#transport-price-summary {
 
 .custom-picker-wrapper.time-picker .booking-input-text .time-value {
     min-height: 38px;
+    font-weight: 500;
+    font-size: 16px;
 }
 
 .category-search-cell .custom-picker-wrapper.time-picker .booking-input-text .time-value {
     min-height: auto;
+    font-weight: bold;
+    font-size: 15px;
 }
 
 
@@ -3049,11 +3053,11 @@ div#transport-price-summary {
 }
 
 .custom-picker-wrapper.time-picker .booking-input-text {
-    justify-content: space-between;
+    justify-content: space-between !important;
 }
 
 .custom-picker-wrapper.time-picker::after {
-    background-image: transparent;
+    background: transparent !important;
 }
 
 
