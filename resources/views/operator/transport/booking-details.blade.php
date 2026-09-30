@@ -130,20 +130,26 @@
                                 <br><small style="color: #666;">{{ optional($transport)->vehicle_type }} • Seating: {{ optional($transport)->seating_capacity ?? 'N/A' }}</small>
                                 @if($booking->vehicle)
                                     <br><small style="color: #666;">Assigned unit: {{ $booking->vehicle->license_number }} / {{ $booking->vehicle->registration_number }}</small>
-                                @elseif($booking->other_vehicle_license_number)
+                                    <br><small style="color: #666;"><a href="#current-assignment" class="assignment-scroll-link">[Reassign]</a></small>
+                                    @elseif($booking->other_vehicle_license_number)
                                     <br><small style="color: #666;">Assigned vehicle: Other</small>
                                     <br><small style="color: #666;">Vehicle name: {{ $booking->other_vehicle_name }}</small>
                                     <br><small style="color: #666;">License number: {{ $booking->other_vehicle_license_number }}</small>
-                                @else
-                                @if($booking->booking_status == 'Confirmed' || $booking->booking_status == 'Scheduled')
+                                    <br><small style="color: #666;"><a href="#current-assignment" class="assignment-scroll-link">[Reassign]</a></small>
+                                    @else
+                                @if($booking->booking_status == 'Confirmed')
                                     <br><small style="color: #666;">Assigned vehicle: Unassigned <a href="#current-assignment" class="assignment-scroll-link">[Assign]</a></small>
                                 @endif
                                     <!-- <br><small style="color: #666;">Assigned vehicle: Unassigned <a href="#current-assignment" class="assignment-scroll-link">[Assign]</a></small> -->
                                 @endif
-                                @if($booking->booking_status == 'Confirmed' || $booking->booking_status == 'Scheduled')
-                                    
-                                <br><small style="color: #666;">Driver: {{ $booking->pickupDriver?->driver_name ?: 'Unassigned' }}@unless($hasAssignedDriver) <a href="#current-assignment" class="assignment-scroll-link">[Assign]</a>@endunless</small>
-                                 @endif
+                                @if($booking->booking_status != 'Processing')
+                                    @if(isset($booking->pickupDriver->driver_name))
+                                        <br><small style="color: #666;">Driver: {{ $booking->pickupDriver->driver_name }} <a href="#current-assignment" class="assignment-scroll-link">[Reassign]</a></small>
+                                    @else
+                                        <br><small style="color: #666;">Assigned Driver: Unassigned <a href="#current-assignment" class="assignment-scroll-link">[Assign]</a></small>
+                                    @endif
+                                
+                                @endif
                             </div>
                             <!-- <div class="col-md-6">
                                 <strong>Operator:</strong><br>
