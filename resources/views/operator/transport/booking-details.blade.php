@@ -135,12 +135,13 @@
                                     <br><small style="color: #666;">Vehicle name: {{ $booking->other_vehicle_name }}</small>
                                     <br><small style="color: #666;">License number: {{ $booking->other_vehicle_license_number }}</small>
                                 @else
-                                @if($booking->booking_status == 'Confirmed')
+                                @if($booking->booking_status == 'Confirmed' || $booking->booking_status == 'Scheduled')
                                     <br><small style="color: #666;">Assigned vehicle: Unassigned <a href="#current-assignment" class="assignment-scroll-link">[Assign]</a></small>
                                 @endif
                                     <!-- <br><small style="color: #666;">Assigned vehicle: Unassigned <a href="#current-assignment" class="assignment-scroll-link">[Assign]</a></small> -->
                                 @endif
-                                @if($booking->booking_status == 'Confirmed')
+                                @if($booking->booking_status == 'Confirmed' || $booking->booking_status == 'Scheduled')
+                                    
                                 <br><small style="color: #666;">Driver: {{ $booking->pickupDriver?->driver_name ?: 'Unassigned' }}@unless($hasAssignedDriver) <a href="#current-assignment" class="assignment-scroll-link">[Assign]</a>@endunless</small>
                                  @endif
                             </div>
