@@ -3018,16 +3018,47 @@ div#transport-price-summary {
 
 .custom-picker-wrapper.time-picker .booking-input-text .time-value {
     min-height: 38px;
+    font-weight: 500;
+    font-size: 16px;
 }
 
 .category-search-cell .custom-picker-wrapper.time-picker .booking-input-text .time-value {
     min-height: auto;
+    font-weight: bold;
+    font-size: 15px;
 }
 
 
 
+.custom-picker-wrapper.time-picker {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0 12px;
+    font: inherit;
+    color: var(--ink);
+    background: #fff;
+}
 
+.category-search-cell .custom-picker-wrapper.time-picker {
+    width: 100%;
+    min-height: auto;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    font: inherit;
+    color: transparent;
+    background: transparent;
+}
 
+.custom-picker-wrapper.time-picker .booking-input-text {
+    justify-content: space-between !important;
+}
+
+.custom-picker-wrapper.time-picker::after {
+    background: transparent !important;
+}
 
 
 
