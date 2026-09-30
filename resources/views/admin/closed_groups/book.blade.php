@@ -7,6 +7,10 @@
 .plan-card { border:1px solid #d1d5db; padding:18px; border-radius:8px; cursor:pointer; }
 .plan-card.selected { border-color:#0d9488; box-shadow:0 1px 4px rgba(13,148,136,0.08); }
 .badge-pending{background:#fffbeb;color:#b45309;padding:6px 8px;border-radius:4px;font-weight:700}
+.tour-leader-options { display:flex; flex-wrap:wrap; gap:8px 18px; }
+.tour-leader-option { display:inline-flex; align-items:center; gap:6px; }
+.tour-leader-option input { margin:0; }
+.tour-leader-note { display:none; margin:8px 0 0; color:#0d9488; font-size:13px; }
 
 .wizard-shell {
     max-width: 980px;
@@ -438,14 +442,18 @@
 
             <div class="mt-3 p-3" style="background:#f8fafb;border:1px solid #e6eef0;border-radius:6px">
                 <label style="font-weight:700">Tour Leader / Guide Options:</label>
-                <div class="form-check mt-2">
+                <div class="tour-leader-options mt-2">
+                    <div class="tour-leader-option">
                     <input class="form-check-input" type="checkbox" id="tl_free">
                     <label class="form-check-label" for="tl_free">Tour leader/Guide is free</label>
-                </div>
-                <div class="form-check mt-1">
+                    </div>
+                    <div class="tour-leader-option">
                     <input class="form-check-input" type="checkbox" id="tl_local">
                     <label class="form-check-label" for="tl_local">Tour leader/Guide is local</label>
+                    </div>
                 </div>
+                <div id="tl-free-note" class="tour-leader-note" role="status">✓ Tour Leader is free: Not invoiced for group package.</div>
+                <div id="tl-local-note" class="tour-leader-note" role="status">✓ Tour Leader is local: Not invoiced, not occupying accommodation, and no passport/contact details required.</div>
             </div>
 
             <div class="row mt-4">
@@ -533,6 +541,8 @@ let selectedGroup = null;
 $(function(){
     // setup CSRF for AJAX
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+    $('#tl_free').on('change', function(){ $('#tl-free-note').toggle(this.checked); });
+    $('#tl_local').on('change', function(){ $('#tl-local-note').toggle(this.checked); });
     $('.plan-card').on('click', function(){
         $('.plan-card').removeClass('selected');
         $(this).addClass('selected');
@@ -640,7 +650,7 @@ function fetchRoomsForGroup(groupId){
         }
         window._groupItinerary = itArr;
 
-        // normalize keys to strings (API may return numeric keys)
+        // Room options are keyed by itinerary day so identical hotels can have different allocations.
         window._groupRooms = {};
         const rawRooms = resp.rooms || {};
         Object.keys(rawRooms).forEach(k=> window._groupRooms[String(k)] = rawRooms[k]);
@@ -658,7 +668,10 @@ function fetchRoomsForGroup(groupId){
 function renderItineraryRooms(){
     const it = window._groupItinerary || [];
     // filter out itinerary days that don't have an accommodation set
-    const filteredIt = (it || []).filter(function(d){
+    const filteredIt = (it || []).map(function(day, dayIndex){
+        return { day: day, dayIndex: dayIndex };
+    }).filter(function(entry){
+        const d = entry.day;
         if(!d) return false;
         const hasName = d.accommodation_name !== null && d.accommodation_name !== undefined && String(d.accommodation_name).trim() !== '';
         const hasId = d.accommodation !== null && d.accommodation !== undefined && String(d.accommodation).trim() !== '';
@@ -679,23 +692,23 @@ function renderItineraryRooms(){
     }
     // build property cards list for assignment panel
     for(let idx=0; idx<daysToShow; idx++){
-        const day = filteredIt[idx] || {};
+        const { day, dayIndex } = filteredIt[idx];
         // support several itinerary shapes: day.accommodation (id), day.accommodation_id, or day.accommodation.id
         const accomId = day.accommodation ?? day.accommodation_id ?? (day.accommodation && day.accommodation.id) ?? null;
         const accomMeta = (window._groupAccommodations && window._groupAccommodations[accomId]) || {};
-        html += `<div class="property-card card mb-3 p-3" data-day-index="${idx}" data-accommodation-id="${accomId}">`;
+        const allowedRooms = (window._groupRooms && window._groupRooms[String(dayIndex)]) || [];
+        html += `<div class="property-card card mb-3 p-3" data-day-index="${dayIndex}" data-accommodation-id="${accomId}">`;
         html += `<div style="display:flex;justify-content:space-between;align-items:center">`;
-        html += `<div><strong>${accomMeta.name || ('Accommodation ' + accomId)}</strong><div style="font-size:12px;color:#6b7280">${accomMeta.place || ''} • Day ${idx+1}</div></div>`;
-        html += `<div><button class="btn btn-sm btn-outline add-room-instance" data-day-index="${idx}">+ Add Room</button></div>`;
+        html += `<div><strong>${accomMeta.name || ('Accommodation ' + accomId)}</strong><div style="font-size:12px;color:#6b7280">${accomMeta.place || ''} • Day ${dayIndex+1}</div></div>`;
+        html += `<div><button class="btn btn-sm btn-outline add-room-instance" data-day-index="${dayIndex}">+ Add Room</button></div>`;
         html += `</div>`;
 
-        html += `<div class="day-rooms mt-2" data-day-index="${idx}" data-accommodation-id="${accomId}">`;
-        const acData = window._groupAccommodations && window._groupAccommodations[accomId] ? window._groupAccommodations[accomId] : null;
-        const rooms = (acData && Array.isArray(acData.rooms)) ? acData.rooms : (window._groupRooms[accomId] || []);
+        html += `<div class="day-rooms mt-2" data-day-index="${dayIndex}" data-accommodation-id="${accomId}">`;
+        const rooms = allowedRooms;
         if(rooms.length===0){
-            html += `<div class="text-muted">No room types configured for this accommodation.</div>`;
+            html += `<div class="text-muted">No room types assigned for this day.</div>`;
         } else {
-            html += renderRoomInstanceHtml(idx, accomId, rooms, 0);
+            html += renderRoomInstanceHtml(dayIndex, accomId, rooms, 0);
         }
         html += `</div>`;
 
@@ -749,7 +762,8 @@ $(document).on('click', '.add-room-instance', function(){
     const container = $(`.day-rooms[data-day-index="${dayIndex}"]`).first();
     if(!container || container.length === 0){ console.warn('day-rooms container not found for day', dayIndex); return; }
     const accomId = String(container.data('accommodation-id'));
-    const rooms = window._groupRooms[accomId] || [];
+    const rooms = window._groupRooms[String(dayIndex)] || [];
+    if(rooms.length === 0) return;
     const instanceIndex = container.find('.room-card').length;
     const html = renderRoomInstanceHtml(dayIndex, accomId, rooms, instanceIndex);
     container.append(html);

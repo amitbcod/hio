@@ -193,33 +193,31 @@ class ClosedGroupBookingController extends Controller
                 elseif (!empty($dayRaw->accommodation_id)) $accomId = (int) $dayRaw->accommodation_id;
                 elseif (!empty($dayRaw->accommodation) && is_object($dayRaw->accommodation) && !empty($dayRaw->accommodation->id)) $accomId = (int) $dayRaw->accommodation->id;
             }
+            $allocatedRoomIds = is_array($dayRaw) ? array_values(array_filter(array_map('intval', (array) ($dayRaw['rooms'] ?? [])))) : [];
             $itinerary[$i] = [
                 'day_index' => $i,
                 'accommodation' => $accomId,
                 'accommodation_name' => null,
+                'rooms' => [],
                 'title' => is_array($dayRaw) && !empty($dayRaw['title']) ? $dayRaw['title'] : (is_object($dayRaw) && !empty($dayRaw->title) ? $dayRaw->title : null),
             ];
+            $itinerary[$i]['allocated_room_ids'] = $allocatedRoomIds;
         }
 
-        // collect accommodation ids from normalized itinerary
+        // Collect only room types allocated to this group for each itinerary day.
         $accommodationIds = array_values(array_filter(array_map(function($d){ return $d['accommodation']; }, $itinerary)));
         $accommodationIds = array_values(array_unique(array_filter($accommodationIds)));
         $rooms = [];
-        if (!empty($accommodationIds)) {
-            $roomModels = \App\Models\AccommodationRoom::whereIn('accommodation_id', $accommodationIds)->get();
-            foreach ($roomModels as $r) {
-                $rooms[$r->accommodation_id][] = $r;
-            }
-        }
-        // also include accommodation metadata for each accommodation id
-        $accommodations = [];
-        if (!empty($accommodationIds)) {
-            $acModels = \App\Models\Accommodation::with(['rooms.rates'])->whereIn('id', $accommodationIds)->get();
-            foreach ($acModels as $ac) {
-                $roomList = [];
-                foreach ($ac->rooms as $r) {
+        foreach ($itinerary as $dayIndex => $day) {
+            $allocatedRoomIds = $day['allocated_room_ids'];
+            if ($day['accommodation'] && !empty($allocatedRoomIds)) {
+                $roomModels = AccommodationRoom::with('rates')
+                    ->where('accommodation_id', $day['accommodation'])
+                    ->whereIn('id', $allocatedRoomIds)
+                    ->get();
+                foreach ($roomModels as $room) {
                     $rates = [];
-                    foreach ($r->rates as $rate) {
+                    foreach ($room->rates as $rate) {
                         $rates[] = [
                             'id' => $rate->id,
                             'name' => $rate->name ?? ($rate->rate_name ?? 'Rate'),
@@ -227,23 +225,32 @@ class ClosedGroupBookingController extends Controller
                             'meal_plan' => $rate->meal_plan ?? null,
                         ];
                     }
-                    $roomList[] = [
-                        'id' => $r->id,
-                        'room_id' => $r->room_id ?? null,
-                        'room_name' => $r->room_name ?? $r->room_type,
-                        'room_type' => $r->room_type,
-                        'capacity' => $r->capacity ?? $r->occupancy ?? 1,
-                        'quantity' => $r->quantity ?? 1,
-                        'base_price' => $r->base_price ?? null,
+                    $rooms[$dayIndex][] = [
+                        'id' => $room->id,
+                        'room_id' => $room->room_id ?? null,
+                        'room_name' => $room->room_name ?? $room->room_type,
+                        'room_type' => $room->room_type,
+                        'capacity' => $room->capacity ?? $room->occupancy ?? 1,
+                        'occupancy' => $room->occupancy ?? $room->capacity ?? 1,
+                        'quantity' => $room->quantity ?? 1,
+                        'base_price' => $room->base_price ?? null,
+                        'accommodation_id' => $room->accommodation_id,
                         'rates' => $rates,
                     ];
                 }
-
+            }
+            $rooms[$dayIndex] = $rooms[$dayIndex] ?? [];
+            $itinerary[$dayIndex]['rooms'] = $rooms[$dayIndex];
+        }
+        // also include accommodation metadata for each accommodation id
+        $accommodations = [];
+        if (!empty($accommodationIds)) {
+            $acModels = \App\Models\Accommodation::whereIn('id', $accommodationIds)->get();
+            foreach ($acModels as $ac) {
                 $accommodations[$ac->id] = [
                     'id' => $ac->id,
                     'name' => $ac->property_name ?? $ac->name ?? ($ac->title ?? 'Accommodation'),
                     'place' => $ac->place ?? $ac->location ?? null,
-                    'rooms' => $roomList,
                 ];
             }
         }
@@ -305,6 +312,39 @@ class ClosedGroupBookingController extends Controller
 
         if (!$group) {
             throw new \RuntimeException('Closed group not found.');
+        }
+
+        $groupItinerary = is_array($group->itinerary ?? null) ? $group->itinerary : [];
+        foreach ((array) $request->input('selected_rooms', []) as $index => $selectedRoom) {
+            $dayIndex = isset($selectedRoom['day_index']) && is_numeric($selectedRoom['day_index'])
+                ? (int) $selectedRoom['day_index']
+                : null;
+            $roomId = isset($selectedRoom['room_id']) && is_numeric($selectedRoom['room_id'])
+                ? (int) $selectedRoom['room_id']
+                : null;
+            $dayAllocation = $dayIndex !== null ? ($groupItinerary[$dayIndex] ?? null) : null;
+            $allocatedAccommodationId = is_array($dayAllocation) ? (int) ($dayAllocation['accommodation'] ?? 0) : 0;
+            $allocatedRoomIds = is_array($dayAllocation)
+                ? array_values(array_filter(array_map('intval', (array) ($dayAllocation['rooms'] ?? []))))
+                : [];
+            $selectedAccommodationId = isset($selectedRoom['accommodation_id']) && is_numeric($selectedRoom['accommodation_id'])
+                ? (int) $selectedRoom['accommodation_id']
+                : 0;
+
+            $roomMatchesAllocation = $roomId !== null
+                && in_array($roomId, $allocatedRoomIds, true)
+                && $allocatedAccommodationId > 0
+                && $selectedAccommodationId === $allocatedAccommodationId
+                && AccommodationRoom::where('id', $roomId)
+                    ->where('accommodation_id', $allocatedAccommodationId)
+                    ->exists();
+
+            if (!$roomMatchesAllocation) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ["selected_rooms.{$index}.room_id" => ['The selected room type is not allocated to this group day.']],
+                ], 422);
+            }
         }
 
         $computedTotal = isset($data['total_amount']) && $data['total_amount'] !== ''
