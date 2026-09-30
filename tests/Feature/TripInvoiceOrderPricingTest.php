@@ -236,4 +236,27 @@ class TripInvoiceOrderPricingTest extends TestCase
         $this->assertSame('open-group', $groupBooking->booking_type);
         $this->assertSame(2885.0, (float) $groupBooking->lineItems->first()->price);
     }
+
+    public function test_trip_detail_pricing_mapping_keeps_same_transport_separate_by_day(): void
+    {
+        $controller = new TripController();
+        $method = new ReflectionMethod($controller, 'groupTripPricingItemsByDayAndType');
+        $method->setAccessible(true);
+
+        $amounts = $method->invoke($controller, [
+            ['day' => 1, 'type' => 'Accommodation', 'name' => 'Resort', 'amount' => 500],
+            ['day' => 1, 'type' => 'Activity', 'name' => 'Tour', 'amount' => 360],
+            ['day' => 1, 'type' => 'Transport', 'name' => 'Airport to South East', 'amount' => 75],
+            ['day' => 2, 'type' => 'Accommodation', 'name' => 'Apartment', 'amount' => 1000],
+            ['day' => 2, 'type' => 'Activity', 'name' => 'Other tour', 'amount' => 900],
+            ['day' => 2, 'type' => 'Transport', 'name' => 'Airport to South East', 'amount' => 50],
+        ]);
+
+        $this->assertSame([75.0], $amounts['1|transport']);
+        $this->assertSame([50.0], $amounts['2|transport']);
+        $this->assertSame([500.0], $amounts['1|accommodation']);
+        $this->assertSame([1000.0], $amounts['2|accommodation']);
+        $this->assertSame([360.0], $amounts['1|activity']);
+        $this->assertSame([900.0], $amounts['2|activity']);
+    }
 }

@@ -409,6 +409,11 @@ class PackagePricingService
         return false;
     }
 
+      public function isMeaningfulDayEntry(array $entry): bool
+      {
+        return $this->isMeaningfulPackageDayEntry($entry);
+      }
+
     private function roomMatchesGuestRequirements($room, int $adults, int $children = 0, int $infants = 0): bool
     {
         if (!$room) {

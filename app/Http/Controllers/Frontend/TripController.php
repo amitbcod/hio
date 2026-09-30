@@ -52,6 +52,25 @@ class TripController extends Controller
         $packageLineItem = $packageBooking?->lineItems
           ->first(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');
 
+        $tripAccommodationBookings = \App\Models\AccommodationBooking::where('trip_id', $trip->id)
+          ->where('is_guest', 0)
+          ->with(['accommodation', 'room', 'guests'])
+          ->orderBy('check_in_date', 'asc')
+          ->get();
+        $accommodationBookings = $this->filterPackageGeneratedBookings($tripAccommodationBookings);
+        $tripActivityBookings = \App\Models\ActivityBooking::where('trip_id', $trip->id)
+          ->where('is_guest', 0)
+          ->with(['activity', 'guests'])
+          ->orderBy('activity_date', 'asc')
+          ->get();
+        $activityBookings = $this->filterPackageGeneratedBookings($tripActivityBookings);
+        $tripTransportBookings = TransportBooking::where('trip_id', $trip->id)
+          ->where('is_guest', 0)
+          ->with(['transport.operator.profile', 'transport.vehicleName', 'pickupDriver', 'returnDriver'])
+          ->orderBy('pickup_date', 'asc')
+          ->get();
+        $transportBookings = $this->filterPackageGeneratedBookings($tripTransportBookings);
+
         $packageDetails = collect();
         $packageBookingReference = null;
         if ($packageLineItem && !empty($packageLineItem->service_id)) {
@@ -61,11 +80,52 @@ class TripController extends Controller
                 $tripStartDate = $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today();
                 $rawItinerary = is_array($package->itinerary ?? null) ? $package->itinerary : [];
                 $guestCount = max(1, $trip->travellers ? $trip->travellers->count() : 1);
+                $partyBookings = $tripAccommodationBookings->concat($tripActivityBookings)->concat($tripTransportBookings);
+              $adults = (int) $partyBookings->max(fn ($booking) => (int) ($booking->adults ?? 0));
+              $children = (int) $partyBookings->max(fn ($booking) => (int) ($booking->children ?? 0));
+              $infants = (int) $partyBookings->max(fn ($booking) => (int) ($booking->infants ?? 0));
+              if ($adults < 1) {
+                $adults = max(1, $guestCount - $children - $infants);
+              }
 
-                $packageDetails = collect($rawItinerary)
-                    ->filter(fn ($entry, $key) => is_array($entry) && (is_numeric($key) || preg_match('/^\d+$/', (string) $key)))
-                    ->map(function ($entry, $key) use ($tripStartDate, $packageLineItem, $trip, $guestCount, $package) {
-                        $dayNumber = is_numeric($key) ? ((int) $key + 1) : ((int) ($entry['day'] ?? $key + 1));
+              $pricingService = new PackagePricingService();
+              $pricingBreakdown = $pricingService->calculatePackageTotalDetailed(
+                $package,
+                $adults,
+                $children,
+                $infants
+              );
+              $pricingItemsByDayAndType = $this->groupTripPricingItemsByDayAndType($pricingBreakdown['items'] ?? []);
+              $pricingItemOffsets = [];
+              $takePricingAmount = function (int $day, string $type) use ($pricingItemsByDayAndType, &$pricingItemOffsets): ?float {
+                $key = $day . '|' . strtolower($type);
+                $offset = $pricingItemOffsets[$key] ?? 0;
+                $amounts = $pricingItemsByDayAndType[$key] ?? [];
+                if (!array_key_exists($offset, $amounts)) {
+                  return null;
+                }
+
+                $pricingItemOffsets[$key] = $offset + 1;
+                return $amounts[$offset];
+              };
+
+                $maxPackageDays = (int) ($package->no_of_days ?? 0);
+                $dayEntries = collect($rawItinerary)
+                  ->filter(function ($entry, $key) use ($pricingService, $maxPackageDays) {
+                    if (!is_array($entry) || !is_numeric($key) || (int) $key < 0) {
+                      return false;
+                    }
+                    if ($maxPackageDays > 0 && ((int) $key + 1) > $maxPackageDays) {
+                      return false;
+                    }
+
+                    return $pricingService->isMeaningfulDayEntry($entry);
+                  })
+                  ->values();
+
+                $packageDetails = $dayEntries
+                ->map(function ($entry, $key) use ($tripStartDate, $packageLineItem, $trip, $guestCount, $package, $adults, $children, $infants, $takePricingAmount) {
+                    $dayNumber = (int) $key + 1;
                         $accommodation = !empty($entry['accommodation'])
                             ? \App\Models\Accommodation::with('rooms')->find((int) $entry['accommodation'])
                             : null;
@@ -95,7 +155,7 @@ class TripController extends Controller
                                 'booked_count' => max(1, $guestCount),
                                 'added_count' => 0,
                                 'currency' => $packageLineItem->currency ?? 'USD',
-                                  'amount' => $this->resolvePackageAccommodationAmount($accommodation, $entry, $package),
+                                'amount' => $takePricingAmount($dayNumber, 'Accommodation') ?? 0.0,
                                 'manage_route' => route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'accommodation']),
                                 'voucher_route' => route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'accommodation']),
                             ]);
@@ -113,7 +173,7 @@ class TripController extends Controller
                                 'booked_count' => max(1, $guestCount),
                                 'added_count' => 0,
                                 'currency' => $packageLineItem->currency ?? 'USD',
-                                'amount' => $this->resolvePackageActivityAmount($activity, $entry, $guestCount, $package),
+                                'amount' => $takePricingAmount($dayNumber, 'Activity') ?? 0.0,
                                 'manage_route' => route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'activity']),
                                 'voucher_route' => route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'activity']),
                             ]);
@@ -131,7 +191,7 @@ class TripController extends Controller
                                 'booked_count' => max(1, $guestCount),
                                 'added_count' => 0,
                                 'currency' => $packageLineItem->currency ?? 'USD',
-                                'amount' => $this->resolvePackageTransportAmount($transport, $entry, $guestCount, $package),
+                                'amount' => $takePricingAmount($dayNumber, 'Transport') ?? 0.0,
                                 'manage_route' => null,
                                 'voucher_route' => route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'transport']),
                             ]);
@@ -150,25 +210,6 @@ class TripController extends Controller
             }
         }
         
-        // Load associated accommodation and activity bookings (exclude guest bookings)
-        $accommodationBookings = $this->filterPackageGeneratedBookings(\App\Models\AccommodationBooking::where('trip_id', $trip->id)
-            ->where('is_guest', 0)
-            ->with(['accommodation', 'room', 'guests'])
-            ->orderBy('check_in_date', 'asc')
-            ->get());
-        
-        $activityBookings = $this->filterPackageGeneratedBookings(\App\Models\ActivityBooking::where('trip_id', $trip->id)
-            ->where('is_guest', 0)
-            ->with(['activity', 'guests'])
-            ->orderBy('activity_date', 'asc')
-            ->get());
-
-        $transportBookings = $this->filterPackageGeneratedBookings(TransportBooking::where('trip_id', $trip->id)
-            ->where('is_guest', 0)
-              ->with(['transport.operator.profile', 'transport.vehicleName', 'pickupDriver', 'returnDriver'])
-            ->orderBy('pickup_date', 'asc')
-            ->get());
-
         // Recompute transport amounts for package/group-generated bookings to ensure display matches
         // package/group pricing rules (do not persist to DB here; only adjust the displayed value).
         try {
@@ -338,6 +379,17 @@ class TripController extends Controller
         return \App\Models\Package::find($serviceId) ?: \App\Models\Group::find($serviceId);
       }
 
+      protected function groupTripPricingItemsByDayAndType(array $items): array
+      {
+        $grouped = [];
+        foreach ($items as $item) {
+          $key = (int) ($item['day'] ?? 0) . '|' . strtolower((string) ($item['type'] ?? ''));
+          $grouped[$key][] = (float) ($item['amount'] ?? 0);
+        }
+
+        return $grouped;
+      }
+
     private function resolvePackageServiceImage($model, string $type): string
     {
         if ($model === null) {
@@ -393,24 +445,6 @@ class TripController extends Controller
         }
 
         return $requested !== '' && in_array($requested, $allowedPackageTypes, true) ? $requested : 'accommodation';
-    }
-
-    private function resolvePackageAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry, ?object $package = null): float
-    {
-      $service = new PackagePricingService();
-      return $service->getAccommodationAmount($accommodation, $entry, $package);
-    }
-
-    private function resolvePackageActivityAmount(\App\Models\Activity $activity, array $entry, int $guestCount, ?object $package = null): float
-    {
-      $service = new PackagePricingService();
-      return $service->getActivityAmount($activity, $entry, $guestCount, $package);
-    }
-
-    private function resolvePackageTransportAmount(\App\Models\Transport $transport, array $entry, int $guestCount, ?object $package = null): float
-    {
-      $service = new PackagePricingService();
-      return $service->getTransportAmount($transport, $entry, $guestCount, $package);
     }
 
     public function cancelBooking(Trip $trip, $bookingId)
