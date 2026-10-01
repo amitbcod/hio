@@ -2181,7 +2181,7 @@ class ActivityController extends Controller
         $activityIds = Activity::where('operator_id', $operator->id)->pluck('id');
 
         $bookings = \App\Models\ActivityBooking::whereIn('activity_id', $activityIds)
-            ->with(['activity', 'guests'])
+            ->with(['bookingRef', 'activity', 'guests'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 

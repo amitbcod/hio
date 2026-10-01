@@ -536,7 +536,9 @@
 @push('scripts')
 <script>
 const groups = @json($groups->toArray());
+const adminBookingIdempotencyKey = @json((string) \Illuminate\Support\Str::uuid());
 let selectedGroup = null;
+let bookingSubmissionInProgress = false;
 
 $(function(){
     // setup CSRF for AJAX
@@ -1097,6 +1099,9 @@ function buildReview(){
 }
 
 function submitBooking(){
+    if (bookingSubmissionInProgress) return;
+    bookingSubmissionInProgress = true;
+    $('#submit-booking').prop('disabled', true);
     const payload = {
         group_id: $('#group_id').val(),
         lead_first_name: $('#lead_first_name').val(),
@@ -1105,6 +1110,7 @@ function submitBooking(){
         lead_phone: $('#lead_phone').val(),
         pax: $('#pax').val(),
         total_amount: window.__finalTotalAmount ?? null,
+        idempotency_key: adminBookingIdempotencyKey,
         _token: '{{ csrf_token() }}',
         guests: []
     };
@@ -1143,27 +1149,40 @@ function submitBooking(){
         payload.guest_assignments[key] = assigned;
     });
 
-    $.ajax({
-        url: "{{ route('admin.closed-groups.book.store') }}",
-        method: 'POST',
-        data: payload,
-        dataType: 'json'
-    }).done(function(resp){
-        if(resp && resp.success){
-            alert('Booking created successfully (ID: ' + resp.booking_id + ')');
-            location.reload();
-        } else {
-            alert('Failed to create booking: ' + (resp?.message || 'Unknown error'));
-        }
-    }).fail(function(xhr){
-        let msg = 'Failed to create booking';
-        try{
-            const j = xhr.responseJSON;
-            if(j && j.errors) msg += ': ' + Object.values(j.errors).flat().join('; ');
-            else if(j && j.message) msg += ': ' + j.message;
-            else msg += ': ' + xhr.responseText;
-        }catch(e){ msg += '.'; }
-        alert(msg);
+    $.getJSON("{{ route('admin.closed-groups.csrf-token') }}").done(function(csrfResponse){
+        const csrfToken = csrfResponse.token;
+        payload._token = csrfToken;
+        $.ajax({
+            url: "{{ route('admin.closed-groups.book.store') }}",
+            method: 'POST',
+            data: payload,
+            dataType: 'json',
+            headers: { 'X-CSRF-TOKEN': csrfToken }
+        }).done(function(resp){
+            if(resp && resp.success){
+                alert('Booking created successfully (ID: ' + resp.booking_id + ')');
+                location.reload();
+            } else {
+                bookingSubmissionInProgress = false;
+                $('#submit-booking').prop('disabled', false);
+                alert('Failed to create booking: ' + (resp?.message || 'Unknown error'));
+            }
+        }).fail(function(xhr){
+            bookingSubmissionInProgress = false;
+            $('#submit-booking').prop('disabled', false);
+            let msg = 'Failed to create booking';
+            try{
+                const j = xhr.responseJSON;
+                if(j && j.errors) msg += ': ' + Object.values(j.errors).flat().join('; ');
+                else if(j && j.message) msg += ': ' + j.message;
+                else msg += ': ' + xhr.responseText;
+            }catch(e){ msg += '.'; }
+            alert(msg);
+        });
+    }).fail(function(){
+        bookingSubmissionInProgress = false;
+        $('#submit-booking').prop('disabled', false);
+        alert('Your admin session could not be verified. Reload the page and sign in again.');
     });
 }
 </script>

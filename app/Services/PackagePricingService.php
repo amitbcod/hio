@@ -764,6 +764,11 @@ class PackagePricingService
         return $this->resolvePackageAccommodationAmount($accommodation, $entry, $package, $adults, $children, $infants);
       }
 
+        public function getGroupAccommodationAmount(\App\Models\Accommodation $accommodation, array $entry, $group, int $adults = 2, int $children = 0, int $infants = 0): float
+        {
+          return $this->resolveGroupAccommodationAmount($accommodation, $entry, $group, $adults, $children, $infants);
+        }
+
       public function getActivityAmount(\App\Models\Activity $activity, array $entry, int $guestCount, $package = null): float
       {
         return $this->resolvePackageActivityAmount($activity, $entry, $guestCount, $package);

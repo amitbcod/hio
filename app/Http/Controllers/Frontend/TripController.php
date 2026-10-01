@@ -180,12 +180,13 @@ class TripController extends Controller
                         }
 
                         if ($transport) {
+                          $transportRouteLabel = $this->resolvePackageTransportRouteLabel($transport, $entry);
                             $services->push([
                                 'type' => 'transport',
                                 'service_label' => 'Transport',
                                 'title' => $transport->vehicle_display_name ?: 'Transport',
                                 'subtitle' => $transport->vehicle_type ?? 'Transport',
-                                'location' => trim((string) (($transport->route_from ?? '') . ($transport->route_to ? ' - ' . $transport->route_to : ''))),
+                                'location' => $transportRouteLabel,
                                 'image' => $this->resolvePackageServiceImage($transport, 'transport'),
                                 'model' => $transport,
                                 'booked_count' => max(1, $guestCount),
@@ -388,6 +389,22 @@ class TripController extends Controller
         }
 
         return $grouped;
+      }
+
+      protected function resolvePackageTransportRouteLabel(\App\Models\Transport $transport, array $entry): string
+      {
+        $routeResolver = new \App\Services\GroupTransportRouteResolver();
+        $label = $routeResolver->label($transport, $entry);
+        if ($label !== '') {
+          return $label;
+        }
+        if ($routeResolver->hasExplicitSelection($entry)) {
+          return '';
+        }
+
+        $from = trim((string) ($entry['route_from'] ?? $transport->route_from ?? ''));
+        $to = trim((string) ($entry['route_to'] ?? $transport->route_to ?? ''));
+        return $from !== '' && $to !== '' ? $from . ' → ' . $to : '';
       }
 
     private function resolvePackageServiceImage($model, string $type): string
@@ -610,6 +627,11 @@ class TripController extends Controller
                 $booking->setRelation('room', $accommodation->rooms->first());
                 $booking->setRelation('guests', $packageGuests);
               } elseif ($packageServiceType === 'transport' && $transport) {
+                  $routeResolver = new \App\Services\GroupTransportRouteResolver();
+                  $transportEntry = $packageEntry ?? [];
+                  $selectedTransportLeg = $routeResolver->selectedLegs($transport, $transportEntry)[0] ?? [];
+                  $transportRouteFrom = $selectedTransportLeg['route_from'] ?? ($routeResolver->hasExplicitSelection($transportEntry) ? null : ($transport->route_from ?? null));
+                  $transportRouteTo = $selectedTransportLeg['route_to'] ?? ($routeResolver->hasExplicitSelection($transportEntry) ? null : ($transport->route_to ?? null));
                 $booking = new TransportBooking([
                     'id' => $packageLineItem->id,
                     'trip_id' => $trip->id,
@@ -619,8 +641,8 @@ class TripController extends Controller
                     'currency' => $packageLineItem->currency ?? 'USD',
                     'pickup_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today(),
                     'return_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date)->addDay() : \Carbon\Carbon::today()->addDay(),
-                    'route_from' => $transport->route_from ?? null,
-                    'route_to' => $transport->route_to ?? null,
+                    'route_from' => $transportRouteFrom,
+                    'route_to' => $transportRouteTo,
                     'pickup_time' => $transport->pickup_time ?? null,
                     'return_time' => $transport->return_time ?? null,
                 ]);

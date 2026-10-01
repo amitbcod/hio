@@ -9,6 +9,8 @@ use App\Models\Group;
 use App\Models\Trip;
 use App\Models\Booking;
 use App\Models\BookingLineItem;
+use App\Models\BookingRef;
+use App\Models\BliTravellerAllocation;
 use App\Models\Traveller;
 use App\Models\AccommodationBooking;
 use App\Models\ActivityBooking;
@@ -19,7 +21,6 @@ use App\Models\Transport;
 use Carbon\Carbon;
 use App\Services\PackagePricingService;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
 
 class ClosedGroupBookingController extends Controller
 {
@@ -28,6 +29,11 @@ class ClosedGroupBookingController extends Controller
         // show available closed groups to admin
         $groups = Group::orderBy('available_from', 'desc')->get();
         return view('admin.closed_groups.book', ['groups' => $groups]);
+    }
+
+    public function csrfToken()
+    {
+        return response()->json(['token' => csrf_token()]);
     }
 
     /**
@@ -48,6 +54,7 @@ class ClosedGroupBookingController extends Controller
             $itinerary = $rawItinerary;
             $postedRooms = $request->input('selected_rooms', []);
             $postedAssignments = $request->input('guest_assignments', []);
+            $selectedRoomDays = [];
 
             if (!empty($postedRooms) && is_array($postedRooms)) {
                 foreach ($postedRooms as $r) {
@@ -55,7 +62,12 @@ class ClosedGroupBookingController extends Controller
                     if ($d === null) continue;
                     if (!isset($itinerary[$d]) || !is_array($itinerary[$d])) $itinerary[$d] = [];
                     $itinerary[$d]['accommodation'] = $r['accommodation_id'] ?? ($itinerary[$d]['accommodation'] ?? null);
-                    if (!isset($itinerary[$d]['rooms']) || !is_array($itinerary[$d]['rooms'])) $itinerary[$d]['rooms'] = [];
+                    if (!isset($selectedRoomDays[$d])) {
+                        $itinerary[$d]['rooms'] = [];
+                        $selectedRoomDays[$d] = true;
+                    } elseif (!isset($itinerary[$d]['rooms']) || !is_array($itinerary[$d]['rooms'])) {
+                        $itinerary[$d]['rooms'] = [];
+                    }
                     $rid = isset($r['room_id']) ? (int) $r['room_id'] : null;
                     if ($rid) $itinerary[$d]['rooms'][] = $rid;
                 }
@@ -72,13 +84,7 @@ class ClosedGroupBookingController extends Controller
                 }
             }
 
-            // Build a temporary group-like object with overridden itinerary for pricing
-            $groupData = $group->toArray();
-            $groupData['itinerary'] = $itinerary;
-            $tmpGroup = (object) $groupData;
-
-            $svc = new PackagePricingService();
-            $breakdown = $svc->calculateGroupTotalDetailed($tmpGroup, $pax, 0, 0);
+            $breakdown = $this->calculateAdminGroupPriceBreakdown($group, $itinerary, $pax);
             return response()->json(['total' => $breakdown['total'] ?? 0, 'items' => $breakdown['items'] ?? []]);
         } catch (\Exception $e) {
             // fallback to numeric total if breakdown fails
@@ -92,8 +98,32 @@ class ClosedGroupBookingController extends Controller
      */
     protected function generateBookingRef($type = 'misc', $tripId = null, $date = null)
     {
-        $prefix = 'REF-' . strtoupper(substr($type, 0, 3));
-        return $prefix . '-' . time() . '-' . rand(100, 999);
+        $prefix = match ($type) {
+            'accommodation' => 'ACC',
+            'activity' => 'ACT',
+            'transport' => 'TRS',
+            default => 'PKG',
+        };
+        $datePart = $date ? Carbon::parse($date)->format('Ymd') : now()->format('Ymd');
+        $count = match ($type) {
+            'accommodation' => AccommodationBooking::where('trip_id', $tripId)->count(),
+            'activity' => ActivityBooking::where('trip_id', $tripId)->count(),
+            'transport' => TransportBooking::where('trip_id', $tripId)->count(),
+            default => Booking::where('trip_id', $tripId)->count(),
+        };
+        $candidate = sprintf('%s-%s-%s-%d', $prefix, $tripId ?: 'GUEST', $datePart, $count + 1);
+        $suffix = 1;
+        $exists = fn (string $reference): bool => match ($type) {
+            'accommodation' => AccommodationBooking::where('booking_reference', $reference)->exists(),
+            'activity' => ActivityBooking::where('booking_reference', $reference)->exists(),
+            'transport' => TransportBooking::where('booking_reference', $reference)->exists(),
+            default => Booking::where('id', $reference)->exists(),
+        };
+        while ($exists($candidate)) {
+            $candidate = sprintf('%s-%s-%s-%d-%02d', $prefix, $tripId ?: 'GUEST', $datePart, $count + 1, $suffix++);
+        }
+
+        return $candidate;
     }
 
     protected function normalizeGroupModel($group): ?Group
@@ -281,6 +311,70 @@ class ClosedGroupBookingController extends Controller
         }
     }
 
+    protected function calculateAdminGroupPriceBreakdown(Group $group, array $itinerary, int $adults): array
+    {
+        $groupData = $group->toArray();
+        $groupData['itinerary'] = $itinerary;
+        $bookingGroup = (object) $groupData;
+        $pricingService = new PackagePricingService();
+        $breakdown = $pricingService->calculateGroupTotalDetailed($bookingGroup, max(1, $adults), 0, 0);
+
+        $dayNumbers = [];
+        $dayNumber = 0;
+        foreach ($itinerary as $dayIndex => $dayEntry) {
+            if (!is_numeric($dayIndex) || (int) $dayIndex < 0) {
+                continue;
+            }
+            if ((int) ($group->no_of_days ?? 0) > 0 && (int) $dayIndex + 1 > (int) $group->no_of_days) {
+                continue;
+            }
+            if (is_array($dayEntry) && $pricingService->isMeaningfulDayEntry($dayEntry)) {
+                $dayNumbers[$dayIndex] = ++$dayNumber;
+            }
+        }
+
+        foreach ($itinerary as $dayIndex => $dayEntry) {
+            if (!is_array($dayEntry) || empty($dayEntry['accommodation']) || empty($dayNumbers[$dayIndex])) {
+                continue;
+            }
+            $roomIds = array_values(array_filter(array_map('intval', (array) ($dayEntry['rooms'] ?? [])), fn ($id) => $id > 0));
+            if ($roomIds === []) {
+                continue;
+            }
+
+            $accommodation = \App\Models\Accommodation::find((int) $dayEntry['accommodation']);
+            if (!$accommodation) {
+                continue;
+            }
+
+            $accommodationAmount = 0.0;
+            foreach ($roomIds as $roomId) {
+                $roomEntry = $dayEntry;
+                $roomEntry['rooms'] = [$roomId];
+                $accommodationAmount += $pricingService->getGroupAccommodationAmount(
+                    $accommodation,
+                    $roomEntry,
+                    $bookingGroup,
+                    max(1, $adults),
+                    0,
+                    0
+                );
+            }
+
+            foreach ($breakdown['items'] as &$item) {
+                if ((int) ($item['day'] ?? 0) === (int) $dayNumbers[$dayIndex]
+                    && strtolower((string) ($item['type'] ?? '')) === 'accommodation') {
+                    $item['amount'] = round($accommodationAmount, 2);
+                    break;
+                }
+            }
+            unset($item);
+        }
+
+        $breakdown['total'] = round(array_sum(array_map(fn ($item) => (float) ($item['amount'] ?? 0), $breakdown['items'] ?? [])), 2);
+        return $breakdown;
+    }
+
     public function store(Request $request)
     {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
@@ -291,8 +385,12 @@ class ClosedGroupBookingController extends Controller
             'lead_phone' => 'nullable|string|max:50',
             'pax' => 'required|integer|min:1',
             'total_amount' => 'nullable|numeric|min:0',
+            'idempotency_key' => 'nullable|uuid',
             'guests' => 'nullable|array',
             'selected_rooms' => 'nullable|array',
+            'selected_rooms.*.day_index' => 'required|integer|min:0',
+            'selected_rooms.*.accommodation_id' => 'required|integer|min:1',
+            'selected_rooms.*.room_id' => 'required|integer|min:1',
             'guest_assignments' => 'nullable|array',
         ]);
 
@@ -347,15 +445,67 @@ class ClosedGroupBookingController extends Controller
             }
         }
 
-        $computedTotal = isset($data['total_amount']) && $data['total_amount'] !== ''
-            ? (float) $data['total_amount']
-            : $this->resolveAdminGroupTotalAmount($group, (int) $data['pax']);
+        $idempotencyKey = (string) ($data['idempotency_key'] ?? \Illuminate\Support\Str::uuid());
+        $existingBookingRef = BookingRef::where('idempotency_key', $idempotencyKey)
+            ->orWhere('booking_ref_code', 'like', '%-' . $idempotencyKey)
+            ->first();
+        if ($existingBookingRef) {
+            $existingBooking = Booking::where('booking_ref_id', $existingBookingRef->id)
+                ->where('booking_type', 'open-group')
+                ->first();
+            if ($existingBooking) {
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => true, 'booking_id' => $existingBooking->id]);
+                }
+                return redirect()->route('admin.closed-groups.book')->with('success', 'Closed group booking created. REF: ' . $existingBooking->id);
+            }
+        }
+
+        $bookingItinerary = $groupItinerary;
+        $selectedRoomDays = [];
+        foreach ((array) ($data['selected_rooms'] ?? []) as $selectedRoom) {
+            $dayIndex = (int) $selectedRoom['day_index'];
+            if (!isset($bookingItinerary[$dayIndex]) || !is_array($bookingItinerary[$dayIndex])) {
+                $bookingItinerary[$dayIndex] = [];
+            }
+            if (!isset($selectedRoomDays[$dayIndex])) {
+                $bookingItinerary[$dayIndex]['rooms'] = [];
+                $selectedRoomDays[$dayIndex] = true;
+            }
+            $bookingItinerary[$dayIndex]['rooms'][] = (int) $selectedRoom['room_id'];
+            $bookingItinerary[$dayIndex]['accommodation'] = (int) $selectedRoom['accommodation_id'];
+        }
+
+        foreach ($bookingItinerary as $dayIndex => $dayEntry) {
+            if (is_array($dayEntry) && !empty($dayEntry['accommodation']) && empty($dayEntry['rooms'])) {
+                $bookingItinerary[$dayIndex]['rooms'] = [-1];
+            }
+        }
+
+        foreach ((array) ($data['guest_assignments'] ?? []) as $key => $assigned) {
+            $parts = explode('_', (string) $key, 2);
+            if (count($parts) !== 2 || !ctype_digit($parts[0])) {
+                continue;
+            }
+            $dayIndex = (int) $parts[0];
+            if (!isset($bookingItinerary[$dayIndex]) || !is_array($bookingItinerary[$dayIndex])) {
+                continue;
+            }
+            $bookingItinerary[$dayIndex]['guest_assignments'][$key] = is_array($assigned)
+                ? $assigned
+                : explode(',', (string) $assigned);
+        }
+
+        $pricingService = new PackagePricingService();
+        $priceBreakdown = $this->calculateAdminGroupPriceBreakdown($group, $bookingItinerary, max(1, (int) $data['pax']));
+        $computedTotal = (float) ($priceBreakdown['total'] ?? 0);
 
         DB::beginTransaction();
         try {
             Log::channel('closed_group')->info('Creating Trip record', ['group_id' => $group->id, 'title' => $group->name ?? null]);
             $groupStartDate = $this->resolveGroupDateValue($group, 'available_from');
             $groupEndDate = $this->resolveGroupDateValue($group, 'available_to');
+            $leadFullName = trim(($data['lead_first_name'] ?? '') . ' ' . ($data['lead_last_name'] ?? ''));
 
             $trip = Trip::create([
                 'traveler_account_id' => null,
@@ -373,36 +523,36 @@ class ClosedGroupBookingController extends Controller
                 'operator_id' => null,
                 'total_amount' => $computedTotal,
                 'status' => 'pending',
-                'booking_type' => 'close-group',
+                'booking_type' => 'open-group',
             ]);
 
             Log::channel('closed_group')->info('Booking created', ['booking_id' => $booking->id]);
 
-            BookingLineItem::create([
+            $packageLineItem = BookingLineItem::create([
                 'booking_id' => $booking->id,
-                // use 'package' to match booking_line_items.service_type enum
                 'service_type' => 'package',
                 'service_id' => $group->id,
-                'quantity' => max(1, (int) $data['pax']),
+                'quantity' => 1,
                 'price' => $computedTotal,
                 'start_date' => $groupStartDate,
                 'end_date' => $groupEndDate,
                 'status' => 'active',
             ]);
-            $leadFullName = trim(($data['lead_first_name'] ?? '') . ' ' . ($data['lead_last_name'] ?? ''));
-            Traveller::create([
+            $travellersByName = [];
+            $leadTraveller = Traveller::create([
                 'trip_id' => $trip->id,
                 'name' => $leadFullName,
                 'email' => $data['lead_email'] ?? null,
                 'phone' => $data['lead_phone'] ?? null,
                 'relationship' => 'lead',
             ]);
+            $travellersByName[$leadFullName] = $leadTraveller;
 
             if (!empty($data['guests']) && is_array($data['guests'])) {
                 foreach ($data['guests'] as $g) {
                     $full = trim(($g['first_name'] ?? '') . ' ' . ($g['last_name'] ?? ''));
                     if ($full !== '') {
-                        Traveller::create([
+                        $traveller = Traveller::create([
                             'trip_id' => $trip->id,
                             'name' => $full,
                             'email' => $g['email'] ?? null,
@@ -410,27 +560,51 @@ class ClosedGroupBookingController extends Controller
                             'date_of_birth' => $g['dob'] ?? null,
                             'relationship' => $g['relation'] ?? 'guest',
                         ]);
+                        $travellersByName[$full] = $traveller;
                     }
                 }
             }
-            $itinerary = is_array($group->itinerary ?? null) ? $group->itinerary : [];
+            foreach ($travellersByName as $traveller) {
+                BliTravellerAllocation::create([
+                    'bli_id' => $packageLineItem->id,
+                    'traveller_id' => $traveller->id,
+                ]);
+            }
+
+            $bookingRef = BookingRef::create([
+                'trip_id' => $trip->id,
+                'booking_ref_code' => app(\App\Services\BookingReferenceGenerator::class)->generateCommon($trip->id),
+                'idempotency_key' => $idempotencyKey,
+                'total_amount' => $computedTotal,
+            ]);
+            $booking->booking_ref_id = $bookingRef->id;
+            $booking->save();
+
+            $itinerary = $bookingItinerary;
             // pricing service for computing authoritative per-service amounts
             $pricingService = new PackagePricingService();
-
-            // If admin provided selected_rooms / guest_assignments in the booking form, merge them
-            $postedRooms = $request->input('selected_rooms', []);
-            $postedAssignments = $request->input('guest_assignments', []);
-            if (!empty($postedRooms) && is_array($postedRooms)) {
-                foreach ($postedRooms as $r) {
-                    $d = isset($r['day_index']) ? (int) $r['day_index'] : null;
-                    if ($d === null) continue;
-                    if (!isset($itinerary[$d]) || !is_array($itinerary[$d])) $itinerary[$d] = [];
-                    $itinerary[$d]['accommodation'] = $r['accommodation_id'] ?? ($itinerary[$d]['accommodation'] ?? null);
-                    if (!isset($itinerary[$d]['rooms']) || !is_array($itinerary[$d]['rooms'])) $itinerary[$d]['rooms'] = [];
-                    $rid = isset($r['room_id']) ? (int) $r['room_id'] : null;
-                    if ($rid) $itinerary[$d]['rooms'][] = $rid;
+            $travelerAccount = !empty($data['lead_email'])
+                ? \App\Models\TravelerAccount::where('email', $data['lead_email'])->first()
+                : null;
+            $pricingAmounts = [];
+            foreach ($priceBreakdown['items'] ?? [] as $priceItem) {
+                $pricingAmounts[(int) ($priceItem['day'] ?? 0) . '|' . strtolower((string) ($priceItem['type'] ?? ''))] = (float) ($priceItem['amount'] ?? 0);
+            }
+            $pricingDays = [];
+            $pricingDayNumber = 0;
+            foreach ($itinerary as $pricingDayIndex => $pricingDayEntry) {
+                if (!is_array($pricingDayEntry) || !is_numeric($pricingDayIndex) || (int) $pricingDayIndex < 0) {
+                    continue;
+                }
+                if ((int) ($group->no_of_days ?? 0) > 0 && (int) $pricingDayIndex + 1 > (int) $group->no_of_days) {
+                    continue;
+                }
+                if ($pricingService->isMeaningfulDayEntry($pricingDayEntry)) {
+                    $pricingDays[$pricingDayIndex] = ++$pricingDayNumber;
                 }
             }
+
+            $postedAssignments = $request->input('guest_assignments', []);
 
             // attach guest assignments map for later use (optional)
             if (!empty($postedAssignments) && is_array($postedAssignments)) {
@@ -444,18 +618,47 @@ class ClosedGroupBookingController extends Controller
                     $itinerary[$dayIndex]['guest_assignments'][$key] = is_array($assigned) ? $assigned : explode(',', (string) $assigned);
                 }
             }
-            $createdAccommodationKeys = [];
             foreach ($itinerary as $dayIndex => $dayEntry) {
-                Log::channel('closed_group')->info('Processing itinerary day', ['day_index' => $dayIndex, 'day_entry' => $dayEntry]);
-                if (!is_array($dayEntry)) {
+                if (!is_numeric($dayIndex) || (int) $dayIndex < 0) {
                     continue;
                 }
+                if ((int) ($group->no_of_days ?? 0) > 0 && (int) $dayIndex + 1 > (int) $group->no_of_days) {
+                    continue;
+                }
+                if (!is_array($dayEntry) || !$pricingService->isMeaningfulDayEntry($dayEntry)) {
+                    continue;
+                }
+                Log::channel('closed_group')->info('Processing itinerary day', ['day_index' => $dayIndex, 'day_entry' => $dayEntry]);
 
                 $dayDate = $groupStartDate ? Carbon::parse($groupStartDate)->addDays((int) $dayIndex) : null;
 
                 if (!empty($dayEntry['accommodation'])) {
                     $accommodationId = (int) $dayEntry['accommodation'];
                     $selectedRoomIds = array_values(array_filter(array_map('intval', (array) ($dayEntry['rooms'] ?? []))));
+                    $accommodationDayAmount = $pricingAmounts[($pricingDays[$dayIndex] ?? 0) . '|accommodation'] ?? 0.0;
+                    $roomAmountTotal = 0.0;
+                    $roomAmounts = [];
+                    foreach ($selectedRoomIds as $roomId) {
+                        $roomEntry = $dayEntry;
+                        $roomEntry['rooms'] = [$roomId];
+                        $roomAmounts[$roomId] = $pricingService->getGroupAccommodationAmount(
+                            \App\Models\Accommodation::find($accommodationId),
+                            $roomEntry,
+                            $group,
+                            max(1, (int) $data['pax']),
+                            0,
+                            0
+                        );
+                        $roomAmountTotal += $roomAmounts[$roomId];
+                    }
+
+                    if (!empty($roomAmounts) && abs($roomAmountTotal - $accommodationDayAmount) > 0.01) {
+                        $scale = $roomAmountTotal > 0 ? $accommodationDayAmount / $roomAmountTotal : 0;
+                        foreach ($roomAmounts as $roomId => $amount) {
+                            $roomAmounts[$roomId] = round($amount * $scale, 2);
+                        }
+                    }
+
                     foreach ($selectedRoomIds as $roomId) {
                         Log::channel('closed_group')->info('Creating AccommodationBooking attempt', ['trip_id' => $trip->id, 'room_id' => $roomId, 'accommodation_id' => $accommodationId]);
                         $room = AccommodationRoom::find($roomId);
@@ -466,16 +669,7 @@ class ClosedGroupBookingController extends Controller
                         $checkIn = $dayDate ? $dayDate->toDateString() : null;
                         $checkOut = $checkIn ? Carbon::parse($checkIn)->addDay()->toDateString() : null;
 
-                        // Compute accommodation amount using canonical pricing
-                        $accommodationModel = \App\Models\Accommodation::find($accommodationId);
-                        $accAmount = 0.0;
-                        try {
-                            if ($accommodationModel) {
-                                $accAmount = $pricingService->getAccommodationAmount($accommodationModel, is_array($dayEntry) ? $dayEntry : [], $group, max(1, (int) $data['pax']), 0, 0);
-                            }
-                        } catch (\Exception $e) {
-                            Log::channel('closed_group')->error('Failed to compute accommodation amount', ['err' => $e->getMessage(), 'accommodation_id' => $accommodationId]);
-                        }
+                        $accAmount = (float) ($roomAmounts[$roomId] ?? 0);
 
                         // determine adults/children for this room using explicit guest_assignments when available
                         $assignedKey = $dayIndex . '_' . $roomId;
@@ -506,8 +700,10 @@ class ClosedGroupBookingController extends Controller
                             'accommodation_id' => $accommodationId,
                             'room_id' => $roomId,
                             'guest_name' => $leadFullName,
-                            'traveler_account_id' => null,
+                            'traveler_account_id' => $travelerAccount?->id,
                             'traveler_relation' => 'self',
+                            'traveler_first_name' => $data['lead_first_name'] ?? null,
+                            'traveler_last_name' => $data['lead_last_name'] ?? null,
                             'guest_email' => $data['lead_email'] ?? null,
                             'check_in_date' => $checkIn,
                             'check_out_date' => $checkOut,
@@ -517,26 +713,19 @@ class ClosedGroupBookingController extends Controller
                             'booking_status' => 'Pending',
                             'total_amount' => (float) round($accAmount, 2),
                             'currency' => 'USD',
-                            'source_channel' => 'Admin',
+                            'source_channel' => 'Package',
+                            'payment_method' => 'Bank Transfer',
+                            'booking_ref_id' => $bookingRef->id,
                             'booked_at' => now(),
                             'trip_id' => $trip->id,
                         ];
-                        if (Schema::hasColumn('accommodation_bookings', 'payment_method')) {
-                            $accData['payment_method'] = 'Bank Transfer';
-                        }
-                        $accKey = $accommodationId . '|' . ($accData['check_in_date'] ?? '');
-                        if (in_array($accKey, $createdAccommodationKeys, true)) {
-                            Log::channel('closed_group')->info('Skipping duplicate AccommodationBooking', ['key' => $accKey]);
-                            continue;
-                        }
                         $acc = AccommodationBooking::create($accData);
-                        $createdAccommodationKeys[] = $accKey;
                         Log::channel('closed_group')->info('AccommodationBooking created', ['id' => $acc->id ?? null, 'room_id' => $roomId]);
                     }
                 }
 
                 if (!empty($dayEntry['activity'])) {
-                    $activity = Activity::find((int) $dayEntry['activity']);
+                    $activity = Activity::with('schedulingTimeSlots')->find((int) $dayEntry['activity']);
                     if ($activity) {
                         $activityName = $activity->name ?? $activity->title ?? $activity->activity_name ?? null;
                         if (empty(trim((string) ($activityName ?? '')))) {
@@ -562,14 +751,27 @@ class ClosedGroupBookingController extends Controller
                             }
                         }
 
-                        // Compute activity amount using canonical pricing
-                        $activityAmount = 0.0;
-                        try {
-                            $activityCount = max(1, (int) $data['pax']);
-                            $activityAmount = $pricingService->getActivityAmount($activity, is_array($dayEntry) ? $dayEntry : [], $activityCount, $group);
-                        } catch (\Exception $e) {
-                            Log::channel('closed_group')->error('Failed to compute activity amount', ['err' => $e->getMessage(), 'activity_id' => $activity->id ?? null]);
+                        $activityTimeSlotId = null;
+                        $requiredParticipants = max(1, (int) $data['pax']);
+                        foreach ($activity->schedulingTimeSlots ?? [] as $slot) {
+                            $capacity = (int) ($slot->capacity_per_slot ?? 0);
+                            if ($capacity <= 0) {
+                                $activityTimeSlotId = $slot->timeslot_id;
+                                break;
+                            }
+                            $occupied = ActivityBooking::where('activity_id', $activity->id)
+                                ->where('activity_time_slot_id', $slot->timeslot_id)
+                                ->whereDate('activity_date', $dayDate?->toDateString() ?? now()->toDateString())
+                                ->get()
+                                ->sum(fn ($existing) => (int) ($existing->adults ?? 0) + (int) ($existing->children ?? 0));
+                            if ($occupied + $requiredParticipants <= $capacity) {
+                                $activityTimeSlotId = $slot->timeslot_id;
+                                break;
+                            }
                         }
+
+                        // Compute activity amount using canonical pricing
+                        $activityAmount = (float) ($pricingAmounts[($pricingDays[$dayIndex] ?? 0) . '|activity'] ?? 0);
 
                         $abData = [
                             'booking_reference' => $this->generateBookingRef('activity', $trip->id, $dayDate?->toDateString() ?? now()->toDateString()),
@@ -577,6 +779,10 @@ class ClosedGroupBookingController extends Controller
                             'variant_id' => $variantId,
                             'variant_name' => $variantName,
                             'guest_name' => $leadFullName,
+                            'traveler_account_id' => $travelerAccount?->id,
+                            'traveler_relation' => 'self',
+                            'traveler_first_name' => $data['lead_first_name'] ?? null,
+                            'traveler_last_name' => $data['lead_last_name'] ?? null,
                             'guest_email' => $data['lead_email'] ?? null,
                             'guest_phone' => $data['lead_phone'] ?? null,
                             'activity_date' => $dayDate?->toDateString() ?? now()->toDateString(),
@@ -585,14 +791,14 @@ class ClosedGroupBookingController extends Controller
                             'booking_status' => 'Pending',
                             'total_amount' => (float) round($activityAmount, 2),
                             'currency' => 'USD',
-                            'source_channel' => 'Admin',
+                            'payment_method' => 'Bank Transfer',
+                            'source_channel' => 'Package',
+                            'booking_ref_id' => $bookingRef->id,
                             'special_requests' => null,
+                            'activity_time_slot_id' => $activityTimeSlotId,
                             'booked_at' => now(),
                             'trip_id' => $trip->id,
                         ];
-                        if (Schema::hasColumn('activity_bookings', 'payment_method')) {
-                            $abData['payment_method'] = 'Bank Transfer';
-                        }
                             $ab = ActivityBooking::create($abData);
                             Log::channel('closed_group')->info('ActivityBooking created', ['id' => $ab->id ?? null, 'activity_id' => $activity->id, 'variant_id' => $variantId]);
                         }
@@ -608,80 +814,113 @@ class ClosedGroupBookingController extends Controller
                         // extract selected route groups (route_ids + add_return) using the same logic as frontend
                         $selectedGroups = $this->extractSelectedRouteGroups(is_array($dayEntry) ? $dayEntry : []);
 
-                        $routesToBook = [];
+                        $routeLegCandidates = [];
                         if (!empty($selectedGroups)) {
-                            foreach ($selectedGroups as $groupMeta) {
-                                $addReturn = !empty($groupMeta['add_return']);
-                                foreach ($groupMeta['route_ids'] as $rid) {
-                                    // support when route id entries are objects/arrays (sometimes itinerary stores full route objects)
-                                    if (is_object($rid) && ($rid instanceof \App\Models\TransportRoute)) {
-                                        $found = $rid;
-                                        $routesToBook[] = ['route' => $found, 'add_return' => $addReturn];
-                                        continue;
+                            foreach ($selectedGroups as $groupIndex => $groupMeta) {
+                                foreach ($groupMeta['legs'] ?? [] as $leg) {
+                                    $routeId = (string) ($leg['route_id'] ?? '');
+                                    $normalizedRouteId = $this->normalizeTransportRouteKey($routeId);
+                                    $route = $transport->routes->first(function ($candidate) use ($routeId, $normalizedRouteId) {
+                                        return (string) ($candidate->id ?? '') === $routeId
+                                            || (string) ($candidate->route_id ?? '') === $routeId
+                                            || $this->normalizeTransportRouteKey((string) ($candidate->route_id ?? '')) === $normalizedRouteId;
+                                    });
+                                    if (!$route && $routeId !== '') {
+                                        $route = \App\Models\TransportRoute::where('transport_id', $transport->id)
+                                            ->where(function ($query) use ($routeId, $normalizedRouteId) {
+                                                $query->where('route_id', $routeId)
+                                                    ->orWhere('route_id', $normalizedRouteId)
+                                                    ->orWhere('id', is_numeric($routeId) ? (int) $routeId : 0);
+                                            })
+                                            ->first();
                                     }
-                                    if (is_array($rid)) {
-                                        $ridVal = $rid['id'] ?? $rid['route_id'] ?? null;
-                                    } else {
-                                        $ridVal = $rid;
+                                    if ($route) {
+                                        $routeLegCandidates[] = [
+                                            'route' => $route,
+                                            'leg' => $leg,
+                                            'group_index' => $groupIndex,
+                                        ];
                                     }
-                                    // find matching route in transport->routes by route_id or id
-                                    $found = null;
-                                    foreach ($transport->routes as $rt) {
-                                        $rtKey = $this->normalizeTransportRouteKey((string) ($rt->route_id ?? $rt->id ?? ''));
-                                        $normalizedRid = $this->normalizeTransportRouteKey((string) ($ridVal ?? ''));
-                                        if ($rtKey !== '' && ($rtKey === $normalizedRid || (string) ($rt->id ?? '') === (string) ($ridVal ?? ''))) {
-                                            $found = $rt;
-                                            break;
-                                        }
-                                    }
-                                    if ($found) $routesToBook[] = ['route' => $found, 'add_return' => $addReturn];
                                 }
                             }
                         }
 
-                        // fallback: if nothing matched, try first route
-                        if (empty($routesToBook)) {
-                            $firstRoute = $transport->routes->first();
-                            if ($firstRoute) $routesToBook[] = $firstRoute;
+                        if (!empty($selectedGroups) && $routeLegCandidates === []) {
+                            throw new \RuntimeException('A selected group transport route could not be resolved.');
                         }
 
-                        foreach ($routesToBook as $routeEntry) {
+                        $transportDayAmount = (float) ($pricingAmounts[($pricingDays[$dayIndex] ?? 0) . '|transport'] ?? 0);
+                        $routeAmountCandidates = [];
+                        $candidateAmountTotal = 0.0;
+                        foreach ($routeLegCandidates as $routeEntry) {
                             $route = $routeEntry['route'] ?? null;
-                            $wantReturn = !empty($routeEntry['add_return']);
                             if (!$route) {
                                 Log::channel('closed_group')->warning('Transport route not found for selected id', ['route_entry' => $routeEntry]);
                                 continue;
                             }
-                            $pricing = is_array($route->pricing ?? null) ? $route->pricing : [];
-                            // compute amount for this route using the canonical pricing service
-                            $passengers = max(1, (int) $data['pax']);
-                            $routeAmount = 0.0;
-                            try {
-                                $routeAmount = $pricingService->getGroupTransportRouteAmount($route, $passengers, $group, $wantReturn);
-                            } catch (\Exception $e) {
-                                try {
-                                    $routeAmount = $pricingService->getTransportRouteAmount($route, $passengers, $group, $wantReturn);
-                                } catch (\Exception $e2) {
-                                    Log::channel('closed_group')->error('Failed to compute transport route amount', ['err' => $e2->getMessage(), 'route_id' => $route->id ?? null]);
-                                }
-                            }
+                            $leg = $routeEntry['leg'];
+                            $reverse = ($leg['direction'] ?? 'forward') === 'reverse';
+                            $candidateAmount = $pricingService->getTransportRouteLegAmount(
+                                $transport,
+                                $route,
+                                $group,
+                                $reverse,
+                                !empty($leg['is_return_pair']),
+                                $dayDate?->toDateString()
+                            );
+                            $routeAmountCandidates[] = $routeEntry + ['candidate_amount' => $candidateAmount];
+                            $candidateAmountTotal += $candidateAmount;
+                        }
+
+                        $routeAmountScale = $candidateAmountTotal > 0
+                            ? $transportDayAmount / $candidateAmountTotal
+                            : 0;
+                        $allocatedTransportAmount = 0.0;
+                        $returnGroupReferences = [];
+                        $lastCandidateIndex = count($routeAmountCandidates) - 1;
+                        foreach ($routeAmountCandidates as $candidateIndex => $routeEntry) {
+                            $route = $routeEntry['route'];
+                            $leg = $routeEntry['leg'];
+                            $reverse = ($leg['direction'] ?? 'forward') === 'reverse';
+                            $routeFrom = $reverse
+                                ? ($route->route_to ?? $route->dropoff_value ?? '')
+                                : ($route->route_from ?? $route->pickup_value ?? '');
+                            $routeTo = $reverse
+                                ? ($route->route_from ?? $route->pickup_value ?? '')
+                                : ($route->route_to ?? $route->dropoff_value ?? '');
+                            $pickupDate = $dayDate?->toDateString() ?? now()->toDateString();
+                            $routeAmount = $candidateIndex === $lastCandidateIndex
+                                ? round($transportDayAmount - $allocatedTransportAmount, 2)
+                                : round((float) $routeEntry['candidate_amount'] * $routeAmountScale, 2);
+                            $allocatedTransportAmount += $routeAmount;
+                            $bookingReference = $this->generateBookingRef('transport', $trip->id, $pickupDate);
+                            $groupIndex = (string) $routeEntry['group_index'];
+                            $transportGroupReference = !empty($leg['is_return_pair'])
+                                ? ($returnGroupReferences[$groupIndex] ??= $bookingReference . '-GROUP')
+                                : null;
 
                             $tbData = [
                                 'transport_id' => $transport->id,
-                                'traveler_account_id' => null,
-                                'booking_reference' => $this->generateBookingRef('transport', $trip->id, $dayDate?->toDateString() ?? now()->toDateString()),
+                                'traveler_account_id' => $travelerAccount?->id,
+                                'booking_reference' => $bookingReference,
+                                'trip_type' => !empty($leg['is_return_pair']) ? ($reverse ? 'RETURN' : 'OUTBOUND') : 'ONE_WAY',
+                                'transport_group_reference' => $transportGroupReference,
                                 'guest_name' => $leadFullName,
-                                'guest_email' => $data['lead_email'] ?? null,
+                                'guest_email' => $data['lead_email'] ?? '',
                                 'guest_phone' => $data['lead_phone'] ?? null,
-                                'route_from' => $route->route_from ?? '',
-                                'route_to' => $route->route_to ?? '',
-                                'pickup_date' => $dayDate?->toDateString() ?? now()->toDateString(),
-                                'pickup_time' => null,
-                                'return_date' => $dayDate?->copy()->addDay()->toDateString(),
+                                'route_from' => $routeFrom,
+                                'route_to' => $routeTo,
+                                'pickup_date' => $pickupDate,
+                                'pickup_time' => $leg['pickup_time'] ?? null,
+                                'return_date' => null,
                                 'return_time' => null,
+                                'pickup_address' => $reverse ? ($dayEntry['dropoff_address'] ?? null) : ($dayEntry['pickup_address'] ?? null),
+                                'dropoff_address' => $reverse ? ($dayEntry['pickup_address'] ?? null) : ($dayEntry['dropoff_address'] ?? null),
+                                'service_type' => $dayEntry['service_type'] ?? null,
                                 'adults' => max(1, (int) $data['pax']),
                                 'children' => 0,
                                 'total_passengers' => max(1, (int) $data['pax']),
+                                'transport_price' => $routeAmount,
                                 'traveler_first_name' => $data['lead_first_name'] ?? null,
                                 'traveler_middle_name' => null,
                                 'traveler_last_name' => $data['lead_last_name'] ?? null,
@@ -689,9 +928,10 @@ class ClosedGroupBookingController extends Controller
                                 'price_per_person' => 0.0,
                                 'total_amount' => (float) round($routeAmount, 2),
                                 'currency' => 'USD',
-                                'booking_status' => TransportBooking::STATUS_PROCESSING,
-                                'payment_method' => Schema::hasColumn('transport_bookings', 'payment_method') ? 'Bank Transfer' : null,
-                                'source_channel' => 'Admin',
+                                'booking_status' => TransportBooking::STATUS_PENDING,
+                                'payment_method' => 'Bank Transfer',
+                                'source_channel' => 'Package',
+                                'booking_ref_id' => $bookingRef->id,
                                 'trip_id' => $trip->id,
                                 'booked_at' => now(),
                             ];
@@ -723,6 +963,7 @@ class ClosedGroupBookingController extends Controller
     {
         $s = trim((string) $raw);
         if ($s === '') return '';
+        $s = preg_replace('/-(fwd|rev)$/i', '', $s);
         $s = preg_replace('/[^A-Za-z0-9\-_.]/', '-', $s);
         $s = preg_replace('/-+/', '-', $s);
         return strtolower(trim($s, '-'));
@@ -759,17 +1000,35 @@ class ClosedGroupBookingController extends Controller
                     $baseKey = trim((string) $baseKey);
                     if ($baseKey === '') continue;
 
-                    if (!isset($groups[$baseKey])) {
-                        $groups[$baseKey] = ['route_ids' => [], 'add_return' => false, 'directions' => []];
-                    }
-
                     $resolvedRouteId = $routeId ?? $baseKey;
                     $resolvedRouteId = trim((string) $resolvedRouteId);
-                    if ($resolvedRouteId !== '') {
-                        $normalizedRouteId = $this->normalizeTransportRouteKey($resolvedRouteId);
-                        if ($normalizedRouteId !== '' && !in_array($normalizedRouteId, array_map('strval', $groups[$baseKey]['route_ids']), true)) {
-                            $groups[$baseKey]['route_ids'][] = $normalizedRouteId;
-                        }
+                    $normalizedRouteId = $this->normalizeTransportRouteKey($resolvedRouteId);
+                    if ($normalizedRouteId === '') continue;
+
+                    if (!isset($groups[$baseKey])) {
+                        $groups[$baseKey] = ['route_ids' => [], 'directions' => [], 'legs' => []];
+                    }
+                    if (!in_array($normalizedRouteId, $groups[$baseKey]['route_ids'], true)) {
+                        $groups[$baseKey]['route_ids'][] = $normalizedRouteId;
+                    }
+
+                    $direction = is_string($routeKey) && preg_match('/-rev$/i', $routeKey) ? 'reverse' : 'forward';
+                    $startHour = trim((string) ($routeData['start_hour'] ?? ''));
+                    $startMinute = trim((string) ($routeData['start_min'] ?? ''));
+                    $pickupTime = preg_match('/^\d{1,2}$/', $startHour)
+                        && preg_match('/^\d{1,2}$/', $startMinute)
+                        && (int) $startHour <= 23
+                        && (int) $startMinute <= 59
+                        ? sprintf('%02d:%02d:00', (int) $startHour, (int) $startMinute)
+                        : null;
+                    $legKey = $normalizedRouteId . '|' . $direction;
+                    $existingLegKeys = array_map(fn ($leg) => $leg['route_id'] . '|' . $leg['direction'], $groups[$baseKey]['legs']);
+                    if (!in_array($legKey, $existingLegKeys, true)) {
+                        $groups[$baseKey]['legs'][] = [
+                            'route_id' => $normalizedRouteId,
+                            'direction' => $direction,
+                            'pickup_time' => $pickupTime,
+                        ];
                     }
 
                     if (is_string($routeKey) && preg_match('/-(fwd|rev)$/i', $routeKey)) {
@@ -793,21 +1052,25 @@ class ClosedGroupBookingController extends Controller
                     $baseKey = $this->normalizeTransportRouteKey($normalized);
                     if ($baseKey === '') continue;
                     if (!isset($groups[$baseKey])) {
-                        $groups[$baseKey] = ['route_ids' => [], 'add_return' => false, 'directions' => []];
+                        $groups[$baseKey] = ['route_ids' => [], 'directions' => [], 'legs' => []];
                     }
-                    if (!in_array($normalized, array_map('strval', $groups[$baseKey]['route_ids']), true)) {
+                    if (!in_array($normalized, $groups[$baseKey]['route_ids'], true)) {
                         $groups[$baseKey]['route_ids'][] = $normalized;
+                        $groups[$baseKey]['legs'][] = ['route_id' => $normalized, 'direction' => 'forward', 'pickup_time' => null];
                     }
                 }
             }
         }
 
         foreach ($groups as $baseKey => $meta) {
-            $groups[$baseKey]['add_return'] = isset($meta['directions']) && count(array_unique($meta['directions'])) > 1;
+            $hasReturnPair = in_array('fwd', $meta['directions'] ?? [], true)
+                && in_array('rev', $meta['directions'] ?? [], true);
+            foreach ($groups[$baseKey]['legs'] as &$leg) {
+                $leg['is_return_pair'] = $hasReturnPair;
+            }
+            unset($leg);
         }
 
-        return array_values(array_map(function ($routeIds, $meta) {
-            return ['route_ids' => array_values(array_unique(array_filter(array_map('strval', $routeIds), fn ($value) => trim((string) $value) !== ''))), 'add_return' => (bool) $meta['add_return']];
-        }, array_map(fn ($group) => $group['route_ids'], $groups), $groups));
+        return array_values($groups);
     }
 }

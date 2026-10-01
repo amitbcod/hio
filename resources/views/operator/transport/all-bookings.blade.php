@@ -24,7 +24,7 @@
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>Ref</th>
+                                    <th>Booking Reference</th>
                                     <th>Trip</th>
                                     <th>Vehicle Type</th>
                                     <th>Assigned Vehicle</th>
@@ -41,7 +41,10 @@
                             <tbody>
                                 @foreach($bookings as $booking)
                                     <tr>
-                                        <td>{{ $booking->booking_reference }}</td>
+                                        <td>
+                                            <div>{{ $booking->booking_reference }}</div>
+                                            <small class="text-muted">Common Booking: {{ $booking->bookingRef?->booking_ref_code ?? 'N/A' }}</small>
+                                        </td>
                                         <td>{{ $booking->trip_type === 'RETURN' ? 'Return' : ($booking->trip_type === 'OUTBOUND' ? 'Outbound' : 'One-way') }}</td>
                                         <td>{{ optional($booking->transport)->vehicle_type ?: optional($booking->transport)->vehicle_display_name }}</td>
                                         <td>{{ $booking->vehicle?->license_number ?: ($booking->other_vehicle_license_number ? 'Other: '.$booking->other_vehicle_license_number : 'Unassigned') }}</td>

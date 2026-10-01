@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class TransportBooking extends Model
 {
     public const STATUS_PROCESSING = 'Processing';
+    public const STATUS_PENDING = 'Pending';
     public const STATUS_CONFIRMED = 'Confirmed';
     public const STATUS_SCHEDULED = 'Scheduled';
     public const STATUS_CANCELLED = 'Cancelled';
     public const STATUS_COMPLETED = 'Completed';
 
     public const STATUSES = [
+        self::STATUS_PENDING,
         self::STATUS_PROCESSING,
         self::STATUS_CONFIRMED,
         self::STATUS_SCHEDULED,
@@ -100,6 +102,7 @@ class TransportBooking extends Model
     public static function canTransition(?string $from, string $to): bool
     {
         return in_array($to, match ($from) {
+            self::STATUS_PENDING => [self::STATUS_CONFIRMED, self::STATUS_CANCELLED],
             self::STATUS_PROCESSING => [self::STATUS_CONFIRMED, self::STATUS_CANCELLED],
             self::STATUS_CONFIRMED => [self::STATUS_SCHEDULED, self::STATUS_CANCELLED],
             self::STATUS_SCHEDULED => [self::STATUS_COMPLETED],
@@ -126,6 +129,11 @@ class TransportBooking extends Model
     public function transport()
     {
         return $this->belongsTo(Transport::class, 'transport_id');
+    }
+
+    public function bookingRef()
+    {
+        return $this->belongsTo(BookingRef::class, 'booking_ref_id');
     }
 
     public function vehicle()

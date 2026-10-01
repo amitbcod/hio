@@ -3397,7 +3397,7 @@ class AccommodationController extends Controller
         
         // Get bookings for these accommodations
         $bookings = AccommodationBooking::whereIn('accommodation_id', $accommodationIds)
-            ->with(['accommodation', 'room'])
+            ->with(['bookingRef', 'accommodation', 'room'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
         

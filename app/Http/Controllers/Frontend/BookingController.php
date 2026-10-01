@@ -2036,7 +2036,7 @@ class BookingController extends Controller
                                                     }
                                                 }
                                             }
-                                        } else {
+                                        } elseif ($package instanceof Package) {
                                             foreach ($routes as $route) {
                                                 $routeLegCandidates[] = [
                                                     'route' => $route,
@@ -2790,7 +2790,7 @@ class BookingController extends Controller
 
             // Create a parent booking reference for this transaction and link service BLIs to it.
             try {
-                $bookingRefCode = 'BR-' . ($tripId ? $tripId : 'GUEST') . '-' . now()->format('Ymd') . '-' . rand(1, 9999);
+                $bookingRefCode = app(\App\Services\BookingReferenceGenerator::class)->generateCommon($tripId);
                 $bookingRef = \App\Models\BookingRef::create([
                     'trip_id' => $tripId,
                     'booking_ref_code' => $bookingRefCode,
@@ -2917,7 +2917,7 @@ class BookingController extends Controller
         // For non-AGAINGENCY payment flows, create a parent BookingRef now
         if ($paymentMethod !== 'againgency') {
             try {
-                $bookingRefCode = 'BR-' . ($tripId ? $tripId : 'GUEST') . '-' . now()->format('Ymd') . '-' . rand(1, 9999);
+                $bookingRefCode = app(\App\Services\BookingReferenceGenerator::class)->generateCommon($tripId);
                 $bookingRef = \App\Models\BookingRef::create([
                     'trip_id' => $tripId,
                     'booking_ref_code' => $bookingRefCode,

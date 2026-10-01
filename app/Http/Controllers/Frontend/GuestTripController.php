@@ -247,6 +247,10 @@ class GuestTripController extends Controller
             } elseif ($serviceType === 'transport' && $serviceEntry && !empty($serviceEntry['transport'])) {
                 $transport = \App\Models\Transport::with(['routes', 'operator.profile'])->find((int) $serviceEntry['transport']);
                 if ($transport) {
+                    $routeResolver = new \App\Services\GroupTransportRouteResolver();
+                    $selectedTransportLeg = $routeResolver->selectedLegs($transport, $serviceEntry)[0] ?? [];
+                    $transportRouteFrom = $selectedTransportLeg['route_from'] ?? ($routeResolver->hasExplicitSelection($serviceEntry) ? null : ($transport->route_from ?? null));
+                    $transportRouteTo = $selectedTransportLeg['route_to'] ?? ($routeResolver->hasExplicitSelection($serviceEntry) ? null : ($transport->route_to ?? null));
                     $booking = new TransportBooking([
                         'id' => $packageLineItem->id,
                         'trip_id' => $trip->id,
@@ -256,8 +260,8 @@ class GuestTripController extends Controller
                         'currency' => $packageLineItem->currency ?? 'USD',
                         'pickup_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today(),
                         'return_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date)->addDay() : \Carbon\Carbon::today()->addDay(),
-                        'route_from' => $transport->route_from ?? null,
-                        'route_to' => $transport->route_to ?? null,
+                        'route_from' => $transportRouteFrom,
+                        'route_to' => $transportRouteTo,
                         'pickup_time' => $transport->pickup_time ?? null,
                         'return_time' => $transport->return_time ?? null,
                     ]);
@@ -1238,15 +1242,22 @@ HTML;
                 }
             } elseif ($serviceType === 'transport' && $package && !empty($package->itinerary)) {
                 $transportId = null;
+                $transportEntry = null;
                 foreach ($package->itinerary as $entry) {
                     if (is_array($entry) && !empty($entry['transport'])) {
                         $transportId = (int) $entry['transport'];
+                        $transportEntry = $entry;
                         break;
                     }
                 }
 
                 $transport = $transportId ? \App\Models\Transport::with(['routes', 'operator.profile'])->find($transportId) : null;
                 if ($transport) {
+                    $transportEntry = $transportEntry ?? [];
+                    $routeResolver = new \App\Services\GroupTransportRouteResolver();
+                    $selectedTransportLeg = $routeResolver->selectedLegs($transport, $transportEntry)[0] ?? [];
+                    $transportRouteFrom = $selectedTransportLeg['route_from'] ?? ($routeResolver->hasExplicitSelection($transportEntry) ? null : ($transport->route_from ?? null));
+                    $transportRouteTo = $selectedTransportLeg['route_to'] ?? ($routeResolver->hasExplicitSelection($transportEntry) ? null : ($transport->route_to ?? null));
                     $booking = new TransportBooking([
                         'id' => $packageLineItem->id,
                         'trip_id' => $trip->id,
@@ -1256,8 +1267,8 @@ HTML;
                         'currency' => $packageLineItem->currency ?? 'USD',
                         'pickup_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today(),
                         'return_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date)->addDay() : \Carbon\Carbon::today()->addDay(),
-                        'route_from' => $transport->route_from ?? null,
-                        'route_to' => $transport->route_to ?? null,
+                        'route_from' => $transportRouteFrom,
+                        'route_to' => $transportRouteTo,
                         'pickup_time' => $transport->pickup_time ?? null,
                         'return_time' => $transport->return_time ?? null,
                     ]);

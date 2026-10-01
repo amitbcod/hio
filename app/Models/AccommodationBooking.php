@@ -25,6 +25,11 @@ class AccommodationBooking extends Model
         return $this->belongsTo(Accommodation::class, 'accommodation_id');
     }
 
+    public function bookingRef()
+    {
+        return $this->belongsTo(BookingRef::class, 'booking_ref_id');
+    }
+
     public function room()
     {
         return $this->belongsTo(AccommodationRoom::class, 'room_id');

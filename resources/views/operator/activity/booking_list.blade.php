@@ -37,7 +37,7 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Booking ID</th>
+                                        <th>Booking Reference</th>
                                         <th>Activity</th>
                                         <th>Primary Name</th>
                                         <th>Participants</th>
@@ -51,7 +51,10 @@
                                 <tbody>
                                     @foreach($bookings as $booking)
                                         <tr>
-                                            <td>{{ $booking->booking_reference ?? $booking->id }}</td>
+                                            <td>
+                                                <div>{{ $booking->booking_reference ?? $booking->id }}</div>
+                                                <small class="text-muted">Common Booking: {{ $booking->bookingRef?->booking_ref_code ?? 'N/A' }}</small>
+                                            </td>
                                             <td>{{ optional($booking->activity)->activity_name ?? 'N/A' }}</td>
                                             <td>{{ $booking->guest_name ?? 'N/A' }}</td>
                                             <td>

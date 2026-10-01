@@ -283,6 +283,7 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
 
     // Closed Group Booking wizard (admin)
     Route::get('closed-groups/book', [\App\Http\Controllers\Admin\ClosedGroupBookingController::class, 'create'])->name('closed-groups.book');
+    Route::get('closed-groups/csrf-token', [\App\Http\Controllers\Admin\ClosedGroupBookingController::class, 'csrfToken'])->name('closed-groups.csrf-token');
     Route::post('closed-groups/book', [\App\Http\Controllers\Admin\ClosedGroupBookingController::class, 'store'])->name('closed-groups.book.store');
     Route::get('closed-groups/{group}/price', [\App\Http\Controllers\Admin\ClosedGroupBookingController::class, 'price'])->name('closed-groups.price');
     Route::get('closed-groups/{group}/rooms', [\App\Http\Controllers\Admin\ClosedGroupBookingController::class, 'rooms'])->name('closed-groups.rooms');
