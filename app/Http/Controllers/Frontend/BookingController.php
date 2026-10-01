@@ -3043,7 +3043,7 @@ class BookingController extends Controller
         return view('frontend.booking-confirmation', compact('booking', 'type', 'ref', 'bookingRefs', 'guestName', 'summary', 'paymentMethod', 'paymentStatus', 'relatedTransportBookings'));
     }
 
-    public function paymentCallback(Request $request)
+    public function paymentCallback(Request $request, \App\Services\BookingOrderStatusSynchronizer $statusSynchronizer)
     {
         $transactionRef = $request->input('transaction_ref') ?: $request->input('reference');
         if (!$transactionRef) {
@@ -3056,41 +3056,21 @@ class BookingController extends Controller
         }
 
         $status = AgaingencyPaymentService::resolveCallbackStatus($request->input('status', $request->input('payment_status', 'pending')));
-        $previousStatus = $paymentTransaction->status;
-        $paymentTransaction->status = $status;
-
         $paymentId = AgaingencyPaymentService::parsePaymentId($request->json()->all() ?: $request->all());
-        if ($paymentId && empty($paymentTransaction->payment_id)) {
-            $paymentTransaction->payment_id = $paymentId;
-        }
-
-        $paymentTransaction->save();
-
-        // PaymentTransaction.booking relationship may point to Booking model or be null
-        $bookingRecord = Booking::find($paymentTransaction->booking_id);
-        if ($bookingRecord) {
-            if ($status === 'paid') {
-                Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'confirmed']);
-                // Update per-item booking_status fields for accommodation/activity
-                AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
-                ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
-
-                if ($previousStatus !== 'paid') {
-                    $this->sendGuestBookingOtpNotificationsForTrip($bookingRecord->trip_id);
-                }
-            } elseif ($status === 'failed') {
-                // If payment failed, mark related bookings as Cancelled
-                AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
-                ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
-                // Also mark the parent Booking as cancelled for consistency
-                Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'cancelled']);
-            }
+        $notificationTripId = $this->applyAgencyPaymentStatus(
+            $paymentTransaction,
+            $status,
+            $paymentId,
+            $statusSynchronizer
+        );
+        if ($notificationTripId) {
+            $this->sendGuestBookingOtpNotificationsForTrip($notificationTripId);
         }
 
         return response()->json(['success' => true]);
     }
 
-    public function paymentReturn(Request $request)
+    public function paymentReturn(Request $request, \App\Services\BookingOrderStatusSynchronizer $statusSynchronizer)
     {
         $status = AgaingencyPaymentService::resolveCallbackStatus($request->input('status', $request->input('payment_status', 'pending')));
         $transactionRef = $request->input('transaction_ref') ?: $request->input('reference');
@@ -3100,29 +3080,14 @@ class BookingController extends Controller
             $paymentTransaction = PaymentTransaction::where('transaction_ref', $transactionRef)->first();
             if ($paymentTransaction) {
                 $paymentId = AgaingencyPaymentService::parsePaymentId($request->json()->all() ?: $request->all());
-                if ($paymentId && empty($paymentTransaction->payment_id)) {
-                    $paymentTransaction->payment_id = $paymentId;
-                }
-
-                $previousStatus = $paymentTransaction->status;
-                $paymentTransaction->status = $status;
-                $paymentTransaction->save();
-
-                $bookingRecord = Booking::find($paymentTransaction->booking_id);
-                if ($bookingRecord) {
-                    if ($status === 'paid') {
-                        Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'confirmed']);
-                        AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
-                        ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Confirmed']);
-
-                        if ($previousStatus !== 'paid') {
-                            $this->sendGuestBookingOtpNotificationsForTrip($bookingRecord->trip_id);
-                        }
-                    } elseif ($status === 'failed') {
-                        AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
-                        ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
-                        Booking::where('trip_id', $bookingRecord->trip_id)->update(['status' => 'cancelled']);
-                    }
+                $notificationTripId = $this->applyAgencyPaymentStatus(
+                    $paymentTransaction,
+                    $status,
+                    $paymentId,
+                    $statusSynchronizer
+                );
+                if ($notificationTripId) {
+                    $this->sendGuestBookingOtpNotificationsForTrip($notificationTripId);
                 }
             }
         }
@@ -3175,6 +3140,57 @@ class BookingController extends Controller
     // ═══════════════════════════════════════════════════════════════════════
     //  PRIVATE HELPERS
     // ═══════════════════════════════════════════════════════════════════════
+
+    private function applyAgencyPaymentStatus(
+        PaymentTransaction $paymentTransaction,
+        string $status,
+        ?string $paymentId,
+        \App\Services\BookingOrderStatusSynchronizer $statusSynchronizer
+    ): ?int {
+        $notificationTripId = null;
+
+        DB::transaction(function () use ($paymentTransaction, $status, $paymentId, $statusSynchronizer, &$notificationTripId): void {
+            $lockedPayment = PaymentTransaction::whereKey($paymentTransaction->id)->lockForUpdate()->firstOrFail();
+            $previousStatus = $lockedPayment->status;
+            $lockedPayment->status = $status;
+            if ($paymentId && empty($lockedPayment->payment_id)) {
+                $lockedPayment->payment_id = $paymentId;
+            }
+            $lockedPayment->save();
+
+            $bookingRecord = Booking::find($lockedPayment->booking_id);
+            if (!$bookingRecord) {
+                return;
+            }
+
+            $bookingReferenceId = $lockedPayment->booking_ref_id ?: $bookingRecord->booking_ref_id;
+            if ($status === 'paid') {
+                if ($bookingReferenceId) {
+                    Booking::where('booking_ref_id', $bookingReferenceId)->update(['status' => 'confirmed']);
+                    $statusSynchronizer->markProcessingForBookingReference((int) $bookingReferenceId);
+                } else {
+                    $bookingRecord->update(['status' => 'confirmed']);
+                }
+
+                if ($previousStatus !== 'paid') {
+                    $notificationTripId = (int) $bookingRecord->trip_id;
+                }
+            } elseif ($status === 'failed') {
+                if ($bookingReferenceId) {
+                    AccommodationBooking::where('booking_ref_id', $bookingReferenceId)->update(['booking_status' => 'Cancelled']);
+                    ActivityBooking::where('booking_ref_id', $bookingReferenceId)->update(['booking_status' => 'Cancelled']);
+                    TransportBooking::where('booking_ref_id', $bookingReferenceId)->update(['booking_status' => 'Cancelled']);
+                    Booking::where('booking_ref_id', $bookingReferenceId)->update(['status' => 'cancelled']);
+                } else {
+                    AccommodationBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
+                    ActivityBooking::where('trip_id', $bookingRecord->trip_id)->update(['booking_status' => 'Cancelled']);
+                    $bookingRecord->update(['status' => 'cancelled']);
+                }
+            }
+        });
+
+        return $notificationTripId ?: null;
+    }
 
     private function sendGuestBookingOtpNotificationsForTrip(int $tripId): void
     {

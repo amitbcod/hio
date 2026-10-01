@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
-    protected $fillable = ['trip_id', 'booking_ref_id', 'operator_id', 'total_amount', 'status', 'booking_type'];
+    protected $fillable = ['trip_id', 'booking_ref_id', 'operator_id', 'total_amount', 'status', 'booking_type', 'is_admin_created'];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
+        'is_admin_created' => 'boolean',
     ];
 
     public function trip()

@@ -15,6 +15,7 @@ use App\Models\Traveller;
 use App\Models\AccommodationBooking;
 use App\Models\ActivityBooking;
 use App\Models\TransportBooking;
+use App\Models\PaymentTransaction;
 use App\Models\AccommodationRoom;
 use App\Models\Activity;
 use App\Models\Transport;
@@ -524,6 +525,7 @@ class ClosedGroupBookingController extends Controller
                 'total_amount' => $computedTotal,
                 'status' => 'pending',
                 'booking_type' => 'open-group',
+                'is_admin_created' => true,
             ]);
 
             Log::channel('closed_group')->info('Booking created', ['booking_id' => $booking->id]);
@@ -579,6 +581,17 @@ class ClosedGroupBookingController extends Controller
             ]);
             $booking->booking_ref_id = $bookingRef->id;
             $booking->save();
+
+            $paymentTransaction = PaymentTransaction::create([
+                'booking_id' => $booking->id,
+                'booking_ref_id' => $bookingRef->id,
+                'amount' => $computedTotal,
+                'method' => 'bank_transfer',
+                'status' => 'pending',
+                'settlement_status' => 'pending_verification',
+            ]);
+            $bookingRef->payment_transaction_id = $paymentTransaction->id;
+            $bookingRef->save();
 
             $itinerary = $bookingItinerary;
             // pricing service for computing authoritative per-service amounts

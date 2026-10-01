@@ -375,6 +375,7 @@
 <div class="container-wizard">
     <h2>Closed Group Booking (Admin)</h2>
     <p>Select a closed group plan and proceed to register guests and create a booking.</p>
+    <p><a href="{{ route('admin.closed-groups.settlement') }}">Bank Transfer Settlement</a></p>
 
     <div id="step1">
         <h4>Step 1: Choose Your Approved Group Plan</h4>
@@ -971,6 +972,7 @@ function buildReview(){
                     $('.invoice-table tbody').append(`<tr><td>${groupName} - Group Package</td><td>${billedTravellers} Pax</td><td>$${perPax.toFixed(2)}</td><td class="amount">$${totalAmount.toFixed(2)}</td></tr>`);
                 }
                 $('.invoice-total .value').text('$' + (totalAmount.toFixed(2)));
+                $('#transfer-amount').text('$' + totalAmount.toFixed(2) + ' USD');
             }).fail(function(){
                 window.__finalTotalAmount = totalAmount;
             });
@@ -1091,7 +1093,7 @@ function buildReview(){
                 </div>
                 <div class="item">
                     <span class="label">Amount to Transfer:</span>
-                    <span class="value">$${totalAmount.toFixed(2)} USD</span>
+                    <span class="value" id="transfer-amount">$${totalAmount.toFixed(2)} USD</span>
                 </div>
             </div>
         </div>
