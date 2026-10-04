@@ -16,6 +16,8 @@
     <a href="{{ route('admin.activity.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/activity*') ? 'active' : '' }}">Activities</a>
     <a href="{{ route('admin.packages.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/packages*') ? 'active' : '' }}">Packages</a>
     <a href="{{ route('admin.groups.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/groups*') ? 'active' : '' }}">Groups</a>
+    <a href="{{ route('admin.closed-groups.book') }}" class="list-group-item list-group-item-action {{ request()->is('admin/closed-groups/book*') ? 'active' : '' }}">Closed Group Booking</a>
+    <a href="{{ route('admin.closed-groups.settlement') }}" class="list-group-item list-group-item-action {{ request()->is('admin/closed-groups/bank-transfer-settlement*') ? 'active' : '' }}">Bank Transfer Settlement</a>
     <!-- <a href="{{ route('admin.activity.create') }}" class="list-group-item list-group-item-action {{ request()->is('admin/activity/create*') ? 'active' : '' }}">Create Activity</a> -->
     <a href="{{ route('admin.accommodation.bookings') }}" class="list-group-item list-group-item-action {{ request()->is('admin/accommodation/bookings*') ? 'active' : '' }}">Accommodation Bookings</a>
     <a href="{{ route('admin.activity.bookings') }}" class="list-group-item list-group-item-action {{ request()->is('admin/activity/bookings*') ? 'active' : '' }}">Activity Bookings</a>
