@@ -16,6 +16,8 @@ Route::prefix('operator')->name('operator.')->group(function () {
 
     Route::middleware('auth:operator,operator_staff')->group(function () {
         Route::get('profile', [ProfileController::class, 'showProfile'])->name('profile');
+        Route::get('trips', [\App\Http\Controllers\Operator\TripController::class, 'index'])->name('trips.index');
+
         // Registration/Profile Steps
         // Step 1 (Set Password) skipped after registration
         Route::get('register/step2-profile', [RegistrationController::class, 'step2Profile'])->name('register.step2');
