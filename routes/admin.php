@@ -70,6 +70,7 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     Route::post('trips', [\App\Http\Controllers\Admin\TripController::class, 'store'])->name('trips.store');
     Route::get('trips/{trip}', [\App\Http\Controllers\Admin\TripController::class, 'show'])->name('trips.show');
     Route::get('trips/{trip}/edit', [\App\Http\Controllers\Admin\TripController::class, 'edit'])->name('trips.edit');
+    Route::post('trips/{trip}/priority', [\App\Http\Controllers\Admin\TripController::class, 'updatePriority'])->name('trips.update-priority');
     Route::post('trips/{trip}', [\App\Http\Controllers\Admin\TripController::class, 'update'])->name('trips.update');
 
     // Admin feedback management

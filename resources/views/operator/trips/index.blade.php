@@ -72,6 +72,7 @@
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Traveller</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Dates</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Payment Status</th>
+                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Attention / Priority</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Next Action</th>
                         </tr>
                     </thead>
@@ -102,6 +103,20 @@
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
                                     {{ $trip->payment_status_display }}
+                                </td>
+                                <td style="padding:14px; vertical-align:top;">
+                                    @php
+                                        $priorityValue = strtolower((string) ($trip->priority ?? 'normal'));
+                                        $priorityLabel = App\Models\Trip::priorityOptions()[$priorityValue] ?? ucfirst($priorityValue);
+                                        $priorityTone = match ($priorityValue) {
+                                            'low' => 'background:#e2e8f0; color:#334155;',
+                                            'normal' => 'background:#dbeafe; color:#1d4ed8;',
+                                            'high' => 'background:#fef3c7; color:#b45309;',
+                                            'urgent' => 'background:#fee2e2; color:#b91c1c;',
+                                            default => 'background:#e2e8f0; color:#334155;',
+                                        };
+                                    @endphp
+                                    <span style="display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:700; {{ $priorityTone }};">{{ $priorityLabel }}</span>
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
                                     @if(empty($tripNextActions))

@@ -195,11 +195,25 @@ class TripController extends Controller
             'title' => 'required|string|max:255',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
+            'priority' => ['nullable', 'in:low,normal,high,urgent'],
         ]);
 
         Trip::create($request->all());
 
         return redirect()->route('admin.trips.index')->with('success', 'Trip created successfully.');
+    }
+
+    public function updatePriority(Request $request, Trip $trip)
+    {
+        if (!session('admin_id')) return redirect()->route('admin.login');
+
+        $request->validate([
+            'priority' => ['required', 'in:low,normal,high,urgent'],
+        ]);
+
+        $trip->update(['priority' => $request->priority]);
+
+        return back()->with('success', 'Trip priority updated to ' . $trip->fresh()->priority_label . '.');
     }
 
     public function edit(Trip $trip)
@@ -219,6 +233,7 @@ class TripController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'status' => 'required|in:planned,active,completed,cancelled',
+            'priority' => ['nullable', 'in:low,normal,high,urgent'],
         ]);
 
         $trip->update($request->all());

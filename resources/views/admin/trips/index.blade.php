@@ -68,6 +68,7 @@
                                     <th>Status</th>
                                     <th>Payment Status</th>
                                     <th>Booking References</th>
+                                    <th>Attention / Priority</th>
                                     <th>Next Action</th>
                                 </tr>
                             </thead>
@@ -111,6 +112,19 @@
                                         </td>
                                         <td>{{ $trip->payment_status_display }}</td>
                                         <td>{{ !empty($bookingReferenceCodes) ? implode(', ', $bookingReferenceCodes) : ($allServiceBookings->count() ? $allServiceBookings->count() : 0) }}</td>
+                                        <td>
+                                            <form method="POST" action="{{ route('admin.trips.update-priority', $trip) }}" class="d-inline">
+                                                @csrf
+                                                <div class="input-group input-group-sm" style="max-width: 180px;">
+                                                    <select name="priority" class="form-select form-select-sm" aria-label="Trip priority">
+                                                        @foreach(App\Models\Trip::priorityOptions() as $value => $label)
+                                                            <option value="{{ $value }}" @selected(strtolower((string) ($trip->priority ?? 'normal')) === $value)>{{ $label }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button type="submit" class="btn btn-outline-secondary btn-sm">Save</button>
+                                                </div>
+                                            </form>
+                                        </td>
                                         <td>
                                             @if(empty($tripNextActions))
                                                 No Action Required
