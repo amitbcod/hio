@@ -259,6 +259,14 @@
      font-size: 12px;
  }
 
+ .trips-table table {
+     border: 1px solid #eee;
+ }
+
+ .trips-table.table-bordered>:not(caption)>*>* {
+     border-width: 0;
+ }
+
 
 
  /******************************************/
