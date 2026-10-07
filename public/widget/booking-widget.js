@@ -124,6 +124,18 @@
                     </div>
                     <!-- Transport -->
                     <div class="bw-service" data-service-panel="transport" style="display:none;">
+                        <div class="bw-row">
+                            <label class="bw-label">Service Type</label>
+                            <select class="bw-select" name="service_type" required></select>
+                        </div>
+                        <div class="bw-row">
+                            <label class="bw-label">Pick Up Region</label>
+                            <select class="bw-select" name="pickup_region_id" required></select>
+                        </div>
+                        <div class="bw-row">
+                            <label class="bw-label">Drop Off Region</label>
+                            <select class="bw-select" name="dropoff_region_id" required></select>
+                        </div>
                         <div class="bw-row bw-date-field">
                             <label class="bw-label">Pickup date</label>
                             <div class="bw-date-input-wrapper">
@@ -183,10 +195,89 @@
             panel.classList.toggle('open');
         }
 
+        function populateWidgetTransportOptions() {
+            const form = panel.querySelector('form');
+            const serviceTypeSelect = form.querySelector('select[name="service_type"]');
+            const pickupRegionSelect = form.querySelector('select[name="pickup_region_id"]');
+            const dropoffRegionSelect = form.querySelector('select[name="dropoff_region_id"]');
+            if (!serviceTypeSelect || !pickupRegionSelect || !dropoffRegionSelect) return;
+
+            const defaultServiceTypes = [
+                { value: 'airport_transfer', label: 'Airport Transfer' },
+                { value: 'activity_transfer', label: 'Activity Transfer' },
+                { value: 'hotel_transfer', label: 'Hotel Transfer' },
+                { value: 'half_day_sightseeing', label: 'Half Day Sightseeing' },
+                { value: 'full_day_sightseeing', label: 'Full Day Sightseeing' }
+            ];
+
+            const renderOptions = (select, options, placeholder) => {
+                select.innerHTML = '';
+                const placeholderOption = document.createElement('option');
+                placeholderOption.value = '';
+                placeholderOption.textContent = placeholder;
+                select.appendChild(placeholderOption);
+
+                options.forEach((option) => {
+                    const opt = document.createElement('option');
+                    opt.value = option.value;
+                    opt.textContent = option.label || option.name || option.value;
+                    if (option.value === (select.dataset.defaultValue || '')) {
+                        opt.selected = true;
+                    }
+                    select.appendChild(opt);
+                });
+            };
+
+            renderOptions(serviceTypeSelect, defaultServiceTypes, 'Select service type');
+            serviceTypeSelect.value = 'airport_transfer';
+
+            fetch(origin + '/widget/regions', { method: 'GET', credentials: 'omit' })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Unable to load region options');
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    const serviceTypes = Array.isArray(data && data.service_types) && data.service_types.length
+                        ? data.service_types
+                        : defaultServiceTypes;
+                    const regions = Array.isArray(data && data.regions) ? data.regions : [];
+                    renderOptions(serviceTypeSelect, serviceTypes, 'Select service type');
+                    serviceTypeSelect.value = 'airport_transfer';
+
+                    const regionOptions = regions.map((region) => ({ value: String(region.id), label: region.name }));
+                    renderOptions(pickupRegionSelect, regionOptions, 'Select pick up region');
+                    renderOptions(dropoffRegionSelect, regionOptions, 'Select drop off region');
+
+                    pickupRegionSelect.dataset.defaultValue = '';
+                    dropoffRegionSelect.dataset.defaultValue = '';
+                    pickupRegionSelect.required = true;
+                    dropoffRegionSelect.required = true;
+                })
+                .catch(() => {
+                    renderOptions(serviceTypeSelect, defaultServiceTypes, 'Select service type');
+                    serviceTypeSelect.value = 'airport_transfer';
+                    pickupRegionSelect.required = true;
+                    dropoffRegionSelect.required = true;
+                });
+        }
+
         // Proceed handler
         panel.querySelector('.bw-proceed').addEventListener('click', () => {
             const service = panel.getAttribute('data-current-service') || 'accommodation';
             const form = panel.querySelector('form');
+            if (service === 'transport') {
+                const transportFields = ['service_type', 'pickup_region_id', 'dropoff_region_id'];
+                const invalid = transportFields.some((name) => {
+                    const field = form.querySelector(`[name="${name}"]`);
+                    return !field || !field.value;
+                });
+                if (invalid) {
+                    form.reportValidity && form.reportValidity();
+                    return;
+                }
+            }
             const fd = new FormData(form);
             const params = {};
             fd.forEach((v, k) => { if (v !== null && v !== undefined && v !== '') params[k] = v; });
@@ -195,6 +286,7 @@
             const mapping = {
                 'destination': 'destination', 'check_in': 'check_in', 'check_out': 'check_out', 'guests': 'guests', 'rooms': 'rooms',
                 'activity_destination': 'destination', 'activity_date': 'activity_date', 'travellers': 'travellers',
+                'service_type': 'service_type', 'pickup_region_id': 'pickup_region_id', 'dropoff_region_id': 'dropoff_region_id',
                 'pickup': 'pickup', 'dropoff': 'dropoff', 'pickup_date': 'pickup_date', 'pickup_time': 'pickup_time', 'passengers': 'passengers'
             };
 
@@ -326,6 +418,7 @@
 
         setupDateDisplays(panel);
         setupTimePicker(panel);
+        populateWidgetTransportOptions();
 
         // default current service and disable inactive service inputs
         switchService('accommodation');

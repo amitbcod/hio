@@ -94,4 +94,5 @@ Route::middleware(['auth'])->prefix('operator')->group(function () {
 
 // Public widget endpoints used by the embeddable widget script
 Route::get('/widget/validate/{token}', [BookingWidgetController::class, 'validateToken']);
+Route::get('/widget/regions', [BookingWidgetController::class, 'regionOptions'])->name('widget.regions');
 Route::get('/widget/track-redirect', [BookingWidgetController::class, 'trackRedirect']);
