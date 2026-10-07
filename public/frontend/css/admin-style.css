@@ -55,6 +55,8 @@
      font-weight: bold;
      margin-bottom: 24px;
      text-transform: uppercase;
+     margin-top: 0 !important;
+     font-size: 24px;
  }
 
  .col-md-2.list-section {
@@ -180,10 +182,6 @@
  .login-full-section>.col-md-10.offset-md-1 {
      margin-left: 0;
      width: 100%;
- }
-
- .login-full-section h3 {
-     margin-top: 0 !important;
  }
 
  table.table thead tr th {

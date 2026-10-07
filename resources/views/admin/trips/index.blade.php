@@ -1,14 +1,14 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title mb-0">Trips Management</h3>
+<div class="trips-management-page">
+    <div class="">
+        <div class="">
+            <div class="">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mt-4">Trips Management</h3>
                 </div>
-                <div class="card-body">
+                <div class="">
                     <form method="GET" action="{{ route('admin.trips.index') }}" class="border rounded bg-light p-3 mb-3">
                         <div class="row g-3">
                             <div class="col-12 col-sm-6 col-lg-3">
