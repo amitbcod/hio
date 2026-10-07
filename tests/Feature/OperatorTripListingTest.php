@@ -63,6 +63,7 @@ class OperatorTripListingTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('trip_id')->nullable();
             $table->string('booking_ref_code')->nullable();
+            $table->unsignedBigInteger('payment_transaction_id')->nullable();
             $table->timestamps();
         });
 
@@ -171,8 +172,12 @@ class OperatorTripListingTest extends TestCase
         $response->assertOk();
         $response->assertSee('Visible Trip');
         $response->assertSee('Mixed Trip');
+        $response->assertSee('aria-label="Expand trip details"', false);
+        $response->assertSee('>+</button>', false);
         $response->assertSee('aria-expanded="false"', false);
         $response->assertSee('id="operator-trip-1" hidden', false);
+        $response->assertSee('Next Step:</strong> Awaiting Payment', false);
+        $response->assertDontSee('background:#16a34a');
         $response->assertDontSee('Hidden Trip');
         $response->assertSee('BR-OP-001');
         $response->assertSee('Standard yes');
@@ -180,5 +185,21 @@ class OperatorTripListingTest extends TestCase
         $response->assertSee('/operator/activity/bookings/1');
         $response->assertSee('/operator/transport/1/bookings/1');
         $response->assertDontSee('ACC-OTHER');
+
+        $nonOwnedReferenceSearch = $this->get(route('operator.trips.index', [
+            'booking_reference' => 'ACC-OTHER',
+        ]));
+        $nonOwnedReferenceSearch->assertDontSee('Mixed Trip');
+
+        $ownedReferenceSearch = $this->get(route('operator.trips.index', [
+            'booking_reference' => 'ACT-OWN',
+        ]));
+        $ownedReferenceSearch->assertSee('Mixed Trip');
+        $ownedReferenceSearch->assertDontSee('ACC-OTHER');
+
+        $otherOperatorTripSearch = $this->get(route('operator.trips.index', [
+            'trip' => '2',
+        ]));
+        $otherOperatorTripSearch->assertDontSee('Hidden Trip');
     }
 }

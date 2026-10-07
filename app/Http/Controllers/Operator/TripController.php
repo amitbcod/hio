@@ -11,12 +11,14 @@ use App\Models\Booking;
 use App\Models\Transport;
 use App\Models\TransportBooking;
 use App\Models\Trip;
+use App\Services\TripListingFilters;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
+use Illuminate\Http\Request;
 
 class TripController extends Controller
 {
-    public function index()
+    public function index(Request $request, TripListingFilters $tripListingFilters)
     {
         $operator = Auth::guard('operator')->user() ?? Auth::guard('operator_staff')->user();
 
@@ -25,41 +27,66 @@ class TripController extends Controller
         }
 
         $accommodationIds = Accommodation::where(function ($query) use ($operator) {
-            $query->where('operator_id', $operator->id)
-                ->orWhere('business_id', $operator->business_id);
+            $query->where('operator_id', $operator->id);
+            if ($operator->business_id !== null) {
+                $query->orWhere('business_id', $operator->business_id);
+            }
         })->pluck('id');
 
         $activityIds = Activity::where('operator_id', $operator->id)->pluck('id');
         $transportIds = Transport::where('operator_id', $operator->id)->pluck('id');
 
-        $tripIds = Trip::query()
-            ->where(function ($query) use ($accommodationIds) {
-                if ($accommodationIds->isNotEmpty()) {
-                    $query->whereHas('accommodationBookings', function ($bookingQuery) use ($accommodationIds) {
-                        $bookingQuery->whereIn('accommodation_id', $accommodationIds);
-                    });
-                }
-            })
-            ->orWhere(function ($query) use ($activityIds) {
-                if ($activityIds->isNotEmpty()) {
-                    $query->whereHas('activityBookings', function ($bookingQuery) use ($activityIds) {
-                        $bookingQuery->whereIn('activity_id', $activityIds);
-                    });
-                }
-            })
-            ->orWhere(function ($query) use ($transportIds) {
-                if ($transportIds->isNotEmpty()) {
-                    $query->whereHas('transportBookings', function ($bookingQuery) use ($transportIds) {
-                        $bookingQuery->whereIn('transport_id', $transportIds);
-                    });
-                }
-            })
-            ->pluck('id');
+        $filters = $request->validate([
+            'from_date' => ['nullable', 'date_format:Y-m-d'],
+            'to_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from_date'],
+            'payment_status' => ['nullable', 'string', 'max:100'],
+            'trip_type' => ['nullable', 'in:Trip,Group Trip,Package Trip'],
+            'traveller' => ['nullable', 'string', 'max:255'],
+            'booking_reference' => ['nullable', 'string', 'max:255'],
+            'trip' => ['nullable', 'string', 'max:255'],
+        ]);
 
-        $trips = Trip::whereIn('id', $tripIds)
+        $tripScope = Trip::query()->where(function ($query) use ($accommodationIds, $activityIds, $transportIds) {
+            $hasOwnedServices = false;
+
+            if ($accommodationIds->isNotEmpty()) {
+                $query->whereHas('accommodationBookings', fn ($bookingQuery) => $bookingQuery
+                    ->whereIn('accommodation_id', $accommodationIds));
+                $hasOwnedServices = true;
+            }
+
+            if ($activityIds->isNotEmpty()) {
+                $method = $hasOwnedServices ? 'orWhereHas' : 'whereHas';
+                $query->{$method}('activityBookings', fn ($bookingQuery) => $bookingQuery
+                    ->whereIn('activity_id', $activityIds));
+                $hasOwnedServices = true;
+            }
+
+            if ($transportIds->isNotEmpty()) {
+                $method = $hasOwnedServices ? 'orWhereHas' : 'whereHas';
+                $query->{$method}('transportBookings', fn ($bookingQuery) => $bookingQuery
+                    ->whereIn('transport_id', $transportIds));
+                $hasOwnedServices = true;
+            }
+
+            if (!$hasOwnedServices) {
+                $query->whereRaw('1 = 0');
+            }
+        });
+
+        $paymentStatuses = $tripListingFilters->paymentStatusOptions(clone $tripScope);
+        $operatorServiceIds = [
+            'accommodations' => $accommodationIds,
+            'activities' => $activityIds,
+            'transports' => $transportIds,
+        ];
+
+        $trips = $tripListingFilters->apply(clone $tripScope, $filters, $operatorServiceIds)
             ->with([
                 'traveler',
                 'bookingRefs',
+                'bookingRefs.paymentTransactions',
+                'bookingRefs.paymentTransaction',
                 'bookings.lineItems',
                 'bookings.payments',
                 'accommodationBookings.accommodation',
@@ -72,19 +99,23 @@ class TripController extends Controller
                 'transportBookings.bookingRef',
             ])
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         foreach ($trips as $trip) {
             $trip->accommodationBookings = $this->scopeAccommodationBookings($trip, $accommodationIds);
             $trip->activityBookings = $this->scopeActivityBookings($trip, $activityIds);
             $trip->transportBookings = $this->scopeTransportBookings($trip, $transportIds);
-            $trip->trip_type = $this->resolveTripType($trip);
+            $trip->trip_type = $tripListingFilters->resolveTripType($trip);
             $trip->payment_status = $this->resolvePaymentStatus($trip);
+            $trip->payment_status_display = $tripListingFilters->resolvePaymentStatusDisplay($trip);
             $trip->next_actions = $this->resolveNextActions($trip);
             $trip->common_booking_reference = $this->resolvePrimaryBookingReference($trip);
         }
 
-        return view('operator.trips.index', compact('trips'));
+        $tripTypes = ['Trip', 'Group Trip', 'Package Trip'];
+
+        return view('operator.trips.index', compact('trips', 'filters', 'paymentStatuses', 'tripTypes'));
     }
 
     private function scopeAccommodationBookings(Trip $trip, Collection $accommodationIds): Collection
@@ -103,30 +134,6 @@ class TripController extends Controller
     {
         return $trip->transportBookings
             ->filter(fn (TransportBooking $booking) => $transportIds->contains($booking->transport_id));
-    }
-
-    private function resolveTripType(Trip $trip): string
-    {
-        $tripBookings = $trip->bookings()->with('lineItems')->get();
-
-        foreach ($tripBookings as $booking) {
-            $bookingType = strtolower((string) ($booking->booking_type ?? ''));
-            if (in_array($bookingType, ['open-group', 'close-group', 'group'], true)) {
-                return 'Group Trip';
-            }
-
-            foreach ($booking->lineItems ?? collect() as $lineItem) {
-                if (strtolower((string) ($lineItem->service_type ?? '')) === 'package') {
-                    return 'Package Trip';
-                }
-            }
-
-            if (in_array($bookingType, ['package'], true)) {
-                return 'Package Trip';
-            }
-        }
-
-        return 'Trip';
     }
 
     private function resolvePaymentStatus(Trip $trip): string

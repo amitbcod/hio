@@ -12,6 +12,52 @@
     </div>
 
     <div style="padding:20px 24px;">
+        <form method="GET" action="{{ route('operator.trips.index') }}" style="padding:16px; border:1px solid #e5e7eb; border-radius:8px; background:#f8fafc; margin-bottom:20px;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px;">
+                <div>
+                    <label for="operator-trip-from-date" style="display:block; margin-bottom:5px; font-size:13px; font-weight:600;">Trip From Date</label>
+                    <input id="operator-trip-from-date" type="date" name="from_date" value="{{ $filters['from_date'] ?? '' }}" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+                </div>
+                <div>
+                    <label for="operator-trip-to-date" style="display:block; margin-bottom:5px; font-size:13px; font-weight:600;">Trip To Date</label>
+                    <input id="operator-trip-to-date" type="date" name="to_date" value="{{ $filters['to_date'] ?? '' }}" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+                </div>
+                <div>
+                    <label for="operator-trip-payment-status" style="display:block; margin-bottom:5px; font-size:13px; font-weight:600;">Payment Status</label>
+                    <select id="operator-trip-payment-status" name="payment_status" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+                        <option value="">All Payment Statuses</option>
+                        @foreach($paymentStatuses as $value => $label)
+                            <option value="{{ $value }}" @selected(strtolower($filters['payment_status'] ?? '') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="operator-trip-type" style="display:block; margin-bottom:5px; font-size:13px; font-weight:600;">Trip Type</label>
+                    <select id="operator-trip-type" name="trip_type" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+                        <option value="">All Trip Types</option>
+                        @foreach($tripTypes as $tripType)
+                            <option value="{{ $tripType }}" @selected(($filters['trip_type'] ?? '') === $tripType)>{{ $tripType }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="operator-trip-traveller" style="display:block; margin-bottom:5px; font-size:13px; font-weight:600;">Traveller</label>
+                    <input id="operator-trip-traveller" type="search" name="traveller" value="{{ $filters['traveller'] ?? '' }}" placeholder="Search traveller name" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+                </div>
+                <div>
+                    <label for="operator-trip-booking-reference" style="display:block; margin-bottom:5px; font-size:13px; font-weight:600;">Booking References</label>
+                    <input id="operator-trip-booking-reference" type="search" name="booking_reference" value="{{ $filters['booking_reference'] ?? '' }}" placeholder="Search booking reference" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+                </div>
+                <div>
+                    <label for="operator-trip-search" style="display:block; margin-bottom:5px; font-size:13px; font-weight:600;">Trip</label>
+                    <input id="operator-trip-search" type="search" name="trip" value="{{ $filters['trip'] ?? '' }}" placeholder="Search trip name or ID" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+                </div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:14px;">
+                <button type="submit" style="padding:8px 14px; border:0; border-radius:6px; background:#0f172a; color:#fff; font-weight:600; cursor:pointer;">Apply Filters</button>
+                <a href="{{ route('operator.trips.index') }}" style="padding:8px 14px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; color:#334155; text-decoration:none;">Reset Filters</a>
+            </div>
+        </form>
         @if($trips->isEmpty())
             <div style="padding:40px 20px; text-align:center; color:#64748b;">No trips found for your services.</div>
         @else
@@ -19,14 +65,14 @@
                 <table style="width:100%; border-collapse:collapse; min-width:1100px;">
                     <thead>
                         <tr style="background:#f8fafc; color:#475569; font-size:13px; text-transform:uppercase; letter-spacing:.04em;">
+                            <th scope="col" aria-label="Expand trip details" style="width:48px; padding:8px; border-bottom:1px solid #e5e7eb;"></th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Trip</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Trip Type</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Common Booking</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Traveller</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Dates</th>
-                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Payment</th>
+                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Payment Status</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Next Action</th>
-                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -40,6 +86,9 @@
                                     ->merge($trip->transportBookings->map(fn ($booking) => ['type' => 'transport', 'booking' => $booking]));
                             @endphp
                             <tr style="border-bottom:1px solid #eef2f7;">
+                                <td style="padding:10px 8px; vertical-align:top; text-align:center;">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-trip-toggle aria-expanded="false" aria-controls="operator-trip-{{ $trip->id }}" aria-label="Expand trip details" title="Expand trip details" style="width:30px; height:30px; padding:0; border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:4px; font-size:18px; line-height:1; font-weight:600; cursor:pointer;">+</button>
+                                </td>
                                 <td style="padding:14px; vertical-align:top;">
                                     <div style="font-weight:700; color:#0f172a;">{{ $trip->title ?: 'Trip #' . $trip->id }}</div>
                                     <div style="font-size:12px; color:#94a3b8; margin-top:3px;">#{{ $trip->id }}</div>
@@ -52,33 +101,16 @@
                                     <span style="color:#64748b;">to</span> {{ $trip->end_date ? $trip->end_date->format('d/m/Y') : 'N/A' }}
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
-                                    <span style="display:inline-block; padding:4px 8px; border-radius:999px; background:{{ $trip->payment_status === 'paid' ? '#dcfce7' : '#fef3c7' }}; color:{{ $trip->payment_status === 'paid' ? '#166534' : '#92400e' }}; font-size:12px; font-weight:600; text-transform:capitalize;">
-                                        {{ $trip->payment_status ?? 'pending' }}
-                                    </span>
+                                    {{ $trip->payment_status_display }}
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
                                     @if(empty($tripNextActions))
-                                        <span style="color:#64748b;">No Action Required</span>
+                                        No Action Required
                                     @else
                                         @foreach($tripNextActions as $action)
-                                            @php $actionType = $action['type'] ?? 'status'; @endphp
-                                            @if($actionType === 'confirm')
-                                                <form method="POST" action="{{ $action['url'] ?? '#' }}" class="d-inline-block mb-1">
-                                                    @csrf
-                                                    <button type="submit" style="background:#16a34a; color:#fff; border:0; border-radius:6px; padding:7px 10px; font-size:12px; font-weight:700; cursor:pointer;">{{ $action['label'] }}</button>
-                                                </form>
-                                            @elseif($actionType === 'assign')
-                                                <a href="{{ $action['url'] ?? '#' }}" style="display:inline-block; background:#f59e0b; color:#fff; border-radius:6px; padding:7px 10px; font-size:12px; font-weight:700; text-decoration:none; margin-bottom:4px;">{{ $action['label'] }}</a>
-                                            @else
-                                                <div style="font-size:12px; color:#64748b;">{{ $action['label'] }}</div>
-                                            @endif
+                                            <div>{{ $action['label'] ?? 'No Action Required' }}</div>
                                         @endforeach
                                     @endif
-                                </td>
-                                <td style="padding:14px; vertical-align:top;">
-                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-trip-toggle aria-expanded="false" aria-controls="operator-trip-{{ $trip->id }}" style="border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:6px; padding:7px 10px; font-weight:600; cursor:pointer;">
-                                        Expand
-                                    </button>
                                 </td>
                             </tr>
                             <tr>
@@ -112,6 +144,13 @@
                                                             'transport' => 'Transport',
                                                             default => 'Booking',
                                                         };
+                                                        $nextStep = strtolower((string) $trip->payment_status) !== 'paid'
+                                                            ? 'Awaiting Payment'
+                                                            : ((string) ($booking->booking_status ?? '') !== 'Confirmed'
+                                                                ? 'Mark as Confirmed'
+                                                                : ($type === 'transport' && ! $booking->hasCompleteAssignment()
+                                                                    ? 'Assign Driver & Vehicle'
+                                                                    : 'No Action Required'));
                                                         $serviceMeta = match ($type) {
                                                             'accommodation' => [
                                                                 'Property' => optional($booking->accommodation)->property_name ?? 'N/A',
@@ -151,6 +190,7 @@
                                                                 </div>
                                                             @endforeach
                                                         </div>
+                                                        <div style="margin-top:10px; font-size:13px;"><strong style="color:#334155;">Next Step:</strong> {{ $nextStep }}</div>
                                                     </div>
                                                 @endforeach
                                             @endif
@@ -177,7 +217,9 @@
 
             panel.hidden = isExpanded;
             button.setAttribute('aria-expanded', String(!isExpanded));
-            button.textContent = isExpanded ? 'Expand' : 'Collapse';
+            button.textContent = isExpanded ? '+' : '-';
+            button.setAttribute('aria-label', isExpanded ? 'Expand trip details' : 'Collapse trip details');
+            button.title = isExpanded ? 'Expand trip details' : 'Collapse trip details';
         });
     });
 </script>

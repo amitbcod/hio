@@ -21,7 +21,7 @@ class AdminTripListingTest extends TestCase
 
         DB::statement('PRAGMA foreign_keys = OFF');
 
-        foreach (['transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'traveler_accounts'] as $table) {
+        foreach (['payment_transactions', 'booking_line_items', 'bookings', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'traveler_accounts'] as $table) {
             if (Schema::hasTable($table)) {
                 Schema::drop($table);
             }
@@ -49,6 +49,7 @@ class AdminTripListingTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('trip_id')->nullable();
             $table->string('booking_ref_code')->nullable();
+            $table->unsignedBigInteger('payment_transaction_id')->nullable();
             $table->timestamps();
         });
 
@@ -85,6 +86,7 @@ class AdminTripListingTest extends TestCase
             $table->decimal('amount', 10, 2)->default(0);
             $table->string('method')->nullable();
             $table->string('status')->nullable();
+            $table->string('settlement_status')->nullable();
             $table->timestamps();
         });
 
@@ -250,15 +252,130 @@ class AdminTripListingTest extends TestCase
         $response = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index'));
 
         $response->assertOk();
+        $response->assertSee('data-trip-toggle', false);
+        $response->assertSee('aria-label="Expand trip details"', false);
+        $response->assertSee('colspan="10"', false);
         $response->assertSee('Trip 202');
         $response->assertSee('Group Trip');
         $response->assertSee('BR-202-20261001-0001');
+        $response->assertSee('Payment Status');
+        $response->assertSee('Paid');
         $response->assertSee('Accommodation');
         $response->assertSee('Activity');
         $response->assertSee('Transport');
         $response->assertSee('Assign Driver & Vehicle');
+        $response->assertSee('Next Step:', false);
+        $response->assertDontSee('btn-success');
         $response->assertSee('/admin/accommodation/bookings/1');
         $response->assertSee('/admin/activity/bookings/1');
         $response->assertSee('/admin/transport/bookings/1');
+    }
+
+    public function test_admin_trip_listing_filters_all_fields_together(): void
+    {
+        $traveler = TravelerAccount::create(['full_name' => 'Alex Smith']);
+        $trip = Trip::create([
+            'traveler_account_id' => $traveler->id,
+            'title' => 'Island Escape',
+            'start_date' => '2026-11-01',
+            'end_date' => '2026-11-05',
+            'status' => 'planned',
+        ]);
+        $bookingRef = BookingRef::create([
+            'trip_id' => $trip->id,
+            'booking_ref_code' => 'BR-OTHER-20261101',
+        ]);
+        $booking = \App\Models\Booking::create([
+            'trip_id' => $trip->id,
+            'booking_ref_id' => $bookingRef->id,
+            'total_amount' => 100,
+            'status' => 'pending',
+            'booking_type' => 'package',
+        ]);
+        \App\Models\PaymentTransaction::create([
+            'booking_id' => $booking->id,
+            'booking_ref_id' => $bookingRef->id,
+            'amount' => 100,
+            'method' => 'bank_transfer',
+            'status' => 'pending',
+            'settlement_status' => 'pending_verification',
+        ]);
+
+        $normalTrip = Trip::create([
+            'title' => 'Normal Trip',
+            'start_date' => '2026-11-10',
+            'end_date' => '2026-11-11',
+            'status' => 'planned',
+        ]);
+
+        $response = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index', [
+            'from_date' => '2026-10-01',
+            'to_date' => '2026-10-03',
+            'payment_status' => 'paid',
+            'trip_type' => 'Group Trip',
+            'traveller' => 'jane',
+            'booking_reference' => 'br-202-',
+            'trip' => '202',
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('Trip 202');
+        $response->assertDontSee('Island Escape');
+        $response->assertSee('value="pending_verification"', false);
+        $response->assertSee('Pending Verification');
+
+        $paymentFilter = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index', [
+            'payment_status' => 'pending_verification',
+        ]));
+        $paymentFilter->assertSee('Island Escape');
+        $paymentFilter->assertSee('<td>Pending Verification</td>', false);
+        $paymentFilter->assertDontSee('Trip 202');
+
+        $travellerFilter = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index', [
+            'traveller' => 'SMITH',
+        ]));
+        $travellerFilter->assertSee('Island Escape');
+        $travellerFilter->assertDontSee('Trip 202');
+
+        $referenceFilter = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index', [
+            'booking_reference' => 'ACC-202-1',
+        ]));
+        $referenceFilter->assertSee('Trip 202');
+        $referenceFilter->assertDontSee('Island Escape');
+
+        $tripFilter = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index', [
+            'trip' => 'Island Escape',
+        ]));
+        $tripFilter->assertSee('Island Escape');
+        $tripFilter->assertDontSee('Trip 202');
+
+        $fromDateFilter = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index', [
+            'from_date' => '2026-10-04',
+        ]));
+        $fromDateFilter->assertSee('Island Escape');
+        $fromDateFilter->assertDontSee('Trip 202');
+
+        $toDateFilter = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index', [
+            'to_date' => '2026-10-02',
+        ]));
+        $toDateFilter->assertSee('Trip 202');
+        $toDateFilter->assertDontSee('Island Escape');
+
+        $packageTypeFilter = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index', [
+            'trip_type' => 'Package Trip',
+        ]));
+        $packageTypeFilter->assertSee('Island Escape');
+        $packageTypeFilter->assertDontSee('Trip 202');
+
+        $normalTypeFilter = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index', [
+            'trip_type' => 'Trip',
+        ]));
+        $normalTypeFilter->assertSee('Normal Trip');
+        $normalTypeFilter->assertDontSee('Island Escape');
+
+        $reset = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index'));
+        $reset->assertSee('Trip 202');
+        $reset->assertSee('Island Escape');
+        $reset->assertSee('Normal Trip');
     }
 }

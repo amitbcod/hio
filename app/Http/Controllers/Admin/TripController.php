@@ -8,17 +8,33 @@ use App\Models\ActivityBooking;
 use App\Models\Trip;
 use App\Models\TravelerAccount;
 use App\Models\TransportBooking;
+use App\Services\TripListingFilters;
 use Illuminate\Http\Request;
 
 class TripController extends Controller
 {
-    public function index()
+    public function index(Request $request, TripListingFilters $tripListingFilters)
     {
         if (!session('admin_id')) return redirect()->route('admin.login');
 
-        $trips = Trip::with([
+        $filters = $request->validate([
+            'from_date' => ['nullable', 'date_format:Y-m-d'],
+            'to_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from_date'],
+            'payment_status' => ['nullable', 'string', 'max:100'],
+            'trip_type' => ['nullable', 'in:Trip,Group Trip,Package Trip'],
+            'traveller' => ['nullable', 'string', 'max:255'],
+            'booking_reference' => ['nullable', 'string', 'max:255'],
+            'trip' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $tripScope = Trip::query();
+        $paymentStatuses = $tripListingFilters->paymentStatusOptions(clone $tripScope);
+        $trips = $tripListingFilters->apply(clone $tripScope, $filters)
+            ->with([
             'traveler',
             'bookingRefs',
+            'bookingRefs.paymentTransactions',
+            'bookingRefs.paymentTransaction',
             'bookings.lineItems',
             'bookings.payments',
             'accommodationBookings.accommodation',
@@ -29,17 +45,21 @@ class TripController extends Controller
             'transportBookings.transport.operator.profile',
             'transportBookings.transport.vehicleName',
             'transportBookings.bookingRef',
-        ])
+            ])
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         foreach ($trips as $trip) {
-            $trip->trip_type = $this->resolveTripType($trip);
+            $trip->trip_type = $tripListingFilters->resolveTripType($trip);
             $trip->payment_status = $this->resolvePaymentStatus($trip);
+            $trip->payment_status_display = $tripListingFilters->resolvePaymentStatusDisplay($trip);
             $trip->next_actions = $this->resolveNextActions($trip);
         }
 
-        return view('admin.trips.index', compact('trips'));
+        $tripTypes = ['Trip', 'Group Trip', 'Package Trip'];
+
+        return view('admin.trips.index', compact('trips', 'filters', 'paymentStatuses', 'tripTypes'));
     }
 
     public function confirmBooking(Request $request, string $bookingType, $booking)
@@ -65,30 +85,6 @@ class TripController extends Controller
         $targetBooking->save();
 
         return back()->with('success', ucfirst($bookingTypeKey) . ' booking marked as confirmed.');
-    }
-
-    private function resolveTripType(Trip $trip): string
-    {
-        $tripBookings = $trip->bookings()->with('lineItems')->get();
-
-        foreach ($tripBookings as $booking) {
-            $bookingType = strtolower((string) ($booking->booking_type ?? ''));
-            if (in_array($bookingType, ['open-group', 'close-group', 'group'], true)) {
-                return 'Group Trip';
-            }
-
-            foreach ($booking->lineItems ?? collect() as $lineItem) {
-                if (strtolower((string) ($lineItem->service_type ?? '')) === 'package') {
-                    return 'Package Trip';
-                }
-            }
-
-            if (in_array($bookingType, ['package'], true)) {
-                return 'Package Trip';
-            }
-        }
-
-        return 'Trip';
     }
 
     private function resolvePaymentStatus(Trip $trip): string
