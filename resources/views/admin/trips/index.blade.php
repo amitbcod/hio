@@ -107,7 +107,7 @@
                                         <td>{{ optional($trip->traveler)->full_name ?? optional($trip->traveler)->email ?? 'N/A' }}</td>
                                         <td>{{ $trip->start_date ? $trip->start_date->format('d/m/Y') : 'N/A' }} - {{ $trip->end_date ? $trip->end_date->format('d/m/Y') : 'N/A' }}</td>
                                         <td>
-                                            <span class="badge bg-light text-dark">{{ $trip->status ?? 'N/A' }}</span>
+                                            <span class="badge bg-info text-dark">{{ $trip->status ?? 'N/A' }}</span>
                                         </td>
                                         <td>{{ $trip->payment_status_display }}</td>
                                         <td>{{ !empty($bookingReferenceCodes) ? implode(', ', $bookingReferenceCodes) : ($allServiceBookings->count() ? $allServiceBookings->count() : 0) }}</td>
