@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AccommodationBooking;
+use App\Models\ActivityBooking;
 use App\Models\Trip;
 use App\Models\TravelerAccount;
+use App\Models\TransportBooking;
 use Illuminate\Http\Request;
 
 class TripController extends Controller
@@ -12,8 +15,165 @@ class TripController extends Controller
     public function index()
     {
         if (!session('admin_id')) return redirect()->route('admin.login');
-        $trips = Trip::with('traveler')->orderBy('created_at', 'desc')->paginate(20);
+
+        $trips = Trip::with([
+            'traveler',
+            'bookingRefs',
+            'bookings.lineItems',
+            'bookings.payments',
+            'accommodationBookings.accommodation',
+            'accommodationBookings.room',
+            'accommodationBookings.bookingRef',
+            'activityBookings.activity',
+            'activityBookings.bookingRef',
+            'transportBookings.transport.operator.profile',
+            'transportBookings.transport.vehicleName',
+            'transportBookings.bookingRef',
+        ])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        foreach ($trips as $trip) {
+            $trip->trip_type = $this->resolveTripType($trip);
+            $trip->payment_status = $this->resolvePaymentStatus($trip);
+            $trip->next_actions = $this->resolveNextActions($trip);
+        }
+
         return view('admin.trips.index', compact('trips'));
+    }
+
+    public function confirmBooking(Request $request, string $bookingType, $booking)
+    {
+        if (!session('admin_id')) {
+            return redirect()->route('admin.login');
+        }
+
+        $bookingTypeKey = strtolower($bookingType);
+
+        $targetBooking = match ($bookingTypeKey) {
+            'accommodation' => AccommodationBooking::findOrFail($booking),
+            'activity' => ActivityBooking::findOrFail($booking),
+            'transport' => TransportBooking::findOrFail($booking),
+            default => abort(404),
+        };
+
+        if ($targetBooking->booking_status === 'Cancelled') {
+            return back()->with('error', 'Cancelled bookings cannot be updated.');
+        }
+
+        $targetBooking->booking_status = 'Confirmed';
+        $targetBooking->save();
+
+        return back()->with('success', ucfirst($bookingTypeKey) . ' booking marked as confirmed.');
+    }
+
+    private function resolveTripType(Trip $trip): string
+    {
+        $tripBookings = $trip->bookings()->with('lineItems')->get();
+
+        foreach ($tripBookings as $booking) {
+            $bookingType = strtolower((string) ($booking->booking_type ?? ''));
+            if (in_array($bookingType, ['open-group', 'close-group', 'group'], true)) {
+                return 'Group Trip';
+            }
+
+            foreach ($booking->lineItems ?? collect() as $lineItem) {
+                if (strtolower((string) ($lineItem->service_type ?? '')) === 'package') {
+                    return 'Package Trip';
+                }
+            }
+
+            if (in_array($bookingType, ['package'], true)) {
+                return 'Package Trip';
+            }
+        }
+
+        return 'Trip';
+    }
+
+    private function resolvePaymentStatus(Trip $trip): string
+    {
+        $payments = collect();
+
+        foreach ($trip->bookings as $booking) {
+            $payments = $payments->merge($booking->payments ?? collect());
+        }
+
+        foreach ($payments as $payment) {
+            if (strtolower((string) ($payment->status ?? '')) === 'paid') {
+                return 'paid';
+            }
+        }
+
+        return 'pending';
+    }
+
+    private function resolveNextActions(Trip $trip): array
+    {
+        $paymentStatus = strtolower((string) $this->resolvePaymentStatus($trip));
+        $actions = [];
+
+        if ($paymentStatus !== 'paid') {
+            $actions[] = [
+                'type' => 'payment',
+                'label' => 'Awaiting Payment',
+            ];
+
+            return $actions;
+        }
+
+        foreach ($trip->accommodationBookings as $booking) {
+            if ((string) ($booking->booking_status ?? '') !== 'Confirmed') {
+                $actions[] = [
+                    'type' => 'confirm',
+                    'label' => 'Accommodation #' . $booking->id . ' — Mark as Confirmed',
+                    'url' => route('admin.trips.confirm-booking', ['bookingType' => 'accommodation', 'booking' => $booking->id]),
+                ];
+            }
+        }
+
+        foreach ($trip->activityBookings as $booking) {
+            if ((string) ($booking->booking_status ?? '') !== 'Confirmed') {
+                $actions[] = [
+                    'type' => 'confirm',
+                    'label' => 'Activity #' . $booking->id . ' — Mark as Confirmed',
+                    'url' => route('admin.trips.confirm-booking', ['bookingType' => 'activity', 'booking' => $booking->id]),
+                ];
+            }
+        }
+
+        foreach ($trip->transportBookings as $booking) {
+            if ((string) ($booking->booking_status ?? '') !== 'Confirmed') {
+                $actions[] = [
+                    'type' => 'confirm',
+                    'label' => 'Transport #' . $booking->id . ' — Mark as Confirmed',
+                    'url' => route('admin.trips.confirm-booking', ['bookingType' => 'transport', 'booking' => $booking->id]),
+                ];
+                continue;
+            }
+
+            if ($booking instanceof TransportBooking && !$booking->hasCompleteAssignment()) {
+                $actions[] = [
+                    'type' => 'assign',
+                    'label' => 'Transport #' . $booking->id . ' — Assign Driver & Vehicle',
+                    'url' => route('admin.transport.booking.details', $booking->id),
+                ];
+            } else {
+                $actions[] = [
+                    'type' => 'status',
+                    'label' => 'Transport #' . $booking->id . ' — Driver & Vehicle Assigned',
+                ];
+            }
+        }
+
+        if (empty($actions)) {
+            $actions[] = [
+                'type' => 'completed',
+                'label' => 'No Action Required',
+            ];
+        }
+
+        return $actions;
     }
 
     public function show(Trip $trip)
