@@ -253,6 +253,16 @@
      margin-top: 0 !important;
  }
 
+ /****************************************/
+
+ .trips-table {
+     font-size: 12px;
+ }
+
+
+
+ /******************************************/
+
  @media(max-width:768px) {
 
      .col-md-2.show-section {

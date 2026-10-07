@@ -55,7 +55,7 @@
                             <a href="{{ route('admin.trips.index') }}" class="btn btn-outline-secondary">Reset Filters</a>
                         </div>
                     </form>
-                    <div class="table-responsive">
+                    <div class="table-responsive trips-table">
                         <table class="table table-bordered align-middle mb-0">
                             <thead>
                                 <tr>
