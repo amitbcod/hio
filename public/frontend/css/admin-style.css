@@ -260,10 +260,10 @@
  }
 
  .trips-table table {
-     border: 1px solid #eee;
+     border: 1px solid #dee2e6;
  }
 
- .trips-table.table-bordered>:not(caption)>*>* {
+ .trips-table .table-bordered>:not(caption)>*>* {
      border-width: 0;
  }
 
