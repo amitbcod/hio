@@ -55,6 +55,8 @@
      font-weight: bold;
      margin-bottom: 24px;
      text-transform: uppercase;
+     margin-top: 0 !important;
+     font-size: 24px;
  }
 
  .col-md-2.list-section {
@@ -182,10 +184,6 @@
      width: 100%;
  }
 
- .login-full-section h3 {
-     margin-top: 0 !important;
- }
-
  table.table thead tr th {
      background: #2463b1 !important;
      color: #fff !important;
@@ -254,6 +252,24 @@
  .container.mt-5 {
      margin-top: 0 !important;
  }
+
+ /****************************************/
+
+ .trips-table {
+     font-size: 12px;
+ }
+
+ .trips-table table {
+     border: 1px solid #dee2e6;
+ }
+
+ .trips-table .table-bordered>:not(caption)>*>* {
+     border-width: 0;
+ }
+
+
+
+ /******************************************/
 
  @media(max-width:768px) {
 
