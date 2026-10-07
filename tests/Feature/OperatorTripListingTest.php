@@ -56,6 +56,7 @@ class OperatorTripListingTest extends TestCase
         Schema::create('trips', function (Blueprint $table) {
             $table->id();
             $table->string('title')->nullable();
+            $table->string('priority', 20)->default('normal');
             $table->timestamps();
         });
 

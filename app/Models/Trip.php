@@ -6,12 +6,31 @@ use Illuminate\Database\Eloquent\Model;
 
 class Trip extends Model
 {
-    protected $fillable = ['traveler_account_id', 'title', 'start_date', 'end_date', 'status'];
+    public const PRIORITY_OPTIONS = [
+        'low' => 'Low',
+        'normal' => 'Normal',
+        'high' => 'High',
+        'urgent' => 'Urgent',
+    ];
+
+    protected $fillable = ['traveler_account_id', 'title', 'start_date', 'end_date', 'status', 'priority'];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
     ];
+
+    public static function priorityOptions(): array
+    {
+        return self::PRIORITY_OPTIONS;
+    }
+
+    public function getPriorityLabelAttribute(): string
+    {
+        $value = strtolower((string) ($this->priority ?? 'normal'));
+
+        return self::PRIORITY_OPTIONS[$value] ?? ucfirst($value);
+    }
 
     public function traveler()
     {

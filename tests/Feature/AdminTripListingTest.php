@@ -42,6 +42,7 @@ class AdminTripListingTest extends TestCase
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->string('status')->nullable();
+            $table->string('priority', 20)->default('normal');
             $table->timestamps();
         });
 
@@ -377,5 +378,32 @@ class AdminTripListingTest extends TestCase
         $reset->assertSee('Trip 202');
         $reset->assertSee('Island Escape');
         $reset->assertSee('Normal Trip');
+    }
+
+    public function test_admin_can_update_trip_priority_and_visibly_persist_it(): void
+    {
+        $traveler = TravelerAccount::create(['full_name' => 'Sam Brown']);
+        $trip = Trip::create([
+            'traveler_account_id' => $traveler->id,
+            'title' => 'Priority Trip',
+            'start_date' => '2026-12-01',
+            'end_date' => '2026-12-03',
+            'status' => 'planned',
+            'priority' => 'normal',
+        ]);
+
+        $response = $this->withSession(['admin_id' => 1])->from(route('admin.trips.index'))->post(route('admin.trips.update-priority', $trip), [
+            'priority' => 'urgent',
+        ]);
+
+        $response->assertRedirect();
+        $trip->refresh();
+        $this->assertSame('urgent', $trip->priority);
+        $this->assertSame('Urgent', $trip->priority_label);
+
+        $view = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index'));
+        $view->assertOk();
+        $view->assertSee('Priority Trip');
+        $view->assertSee('Urgent');
     }
 }
