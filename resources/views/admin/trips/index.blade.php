@@ -60,9 +60,9 @@
                             <thead>
                                 <tr>
                                     <th scope="col" style="width:48px;"><span class="visually-hidden">Expand trip details</span></th>
-                                    <th>Trip ID</th>
+                                    <th style="width:52px;">Trip ID</th>
                                     <th>Trip</th>
-                                    <th>Trip Type</th>
+                                    <th style="width:67px;">Trip Type</th>
                                     <th>Traveller</th>
                                     <th>Dates</th>
                                     <th>Status</th>
@@ -136,7 +136,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td colspan="10" class="p-0 border-top-0">
+                                        <td colspan="11" class="p-0 border-top-0">
                                             <div id="trip-{{ $trip->id }}" class="collapse">
                                                 <div class="p-3 bg-light">
                                                     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
@@ -240,7 +240,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="10" class="text-center text-muted">No trips found.</td>
+                                        <td colspan="11" class="text-center text-muted">No trips found.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
