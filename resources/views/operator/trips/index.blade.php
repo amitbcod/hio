@@ -195,22 +195,71 @@
                                                                 : ($type === 'transport' && ! $booking->hasCompleteAssignment()
                                                                     ? 'Assign Driver & Vehicle'
                                                                     : 'No Action Required'));
+                                                        $participantNameList = $booking->guests
+                                                            ->map(fn ($guest) => trim(implode(' ', array_filter([
+                                                                $guest->first_name,
+                                                                $guest->middle_name,
+                                                                $guest->last_name,
+                                                            ]))))
+                                                            ->push($booking->guest_name);
+                                                        if ($type === 'transport') {
+                                                            $participantNameList->push(trim(implode(' ', array_filter([
+                                                                $booking->traveler_first_name,
+                                                                $booking->traveler_middle_name,
+                                                                $booking->traveler_last_name,
+                                                            ]))));
+                                                            foreach ($trip->bookings as $tripBooking) {
+                                                                foreach ($tripBooking->lineItems as $lineItem) {
+                                                                    if ((int) ($lineItem->transport_booking_id ?? 0) === (int) $booking->id
+                                                                        && $lineItem->relationLoaded('travellers')) {
+                                                                        $participantNameList = $participantNameList->concat($lineItem->travellers->pluck('name'));
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                        $guestNames = $participantNameList
+                                                            ->filter(fn ($name) => is_string($name) && trim($name) !== '')
+                                                            ->map(fn ($name) => trim($name))
+                                                            ->unique()
+                                                            ->implode(', ');
+                                                        $participantCounts = 'Adults: ' . (int) ($booking->adults ?? 0)
+                                                            . ' · Children: ' . (int) ($booking->children ?? 0);
                                                         $serviceMeta = match ($type) {
                                                             'accommodation' => [
                                                                 'Property' => optional($booking->accommodation)->property_name ?? 'N/A',
                                                                 'Room' => optional($booking->room)->room_name ?? optional($booking->room)->name ?? 'N/A',
+                                                                'Check-in' => $booking->check_in_date ? $booking->check_in_date->format('d/m/Y') : 'N/A',
+                                                                'Check-out' => $booking->check_out_date ? $booking->check_out_date->format('d/m/Y') : 'N/A',
+                                                                'Rooms' => (int) ($booking->rooms_booked ?? 0),
+                                                                'Participants' => $participantCounts . ' · Total: ' . ((int) ($booking->adults ?? 0) + (int) ($booking->children ?? 0)),
+                                                                'Participant Names' => $guestNames !== '' ? $guestNames : ($booking->guest_name ?? 'N/A'),
                                                                 'BLI Id' => $booking->booking_reference ?? $booking->bookingRef?->booking_ref_code ?? 'N/A',
                                                                 'Status' => $booking->booking_status ?? 'N/A',
                                                             ],
-                                                            'activity' => [
-                                                                'Activity' => optional($booking->activity)->activity_name ?? 'N/A',
-                                                                '' => '',
-                                                                'BLI Id' => $booking->booking_reference ?? $booking->bookingRef?->booking_ref_code ?? 'N/A',
-                                                                'Status' => $booking->booking_status ?? 'N/A',
-                                                            ],
+                                                            'activity' => (function () use ($booking, $guestNames, $participantCounts) {
+                                                                $slot = optional($booking->activity)->schedulingTimeSlots
+                                                                    ?->firstWhere('timeslot_id', $booking->activity_time_slot_id);
+                                                                $infants = (int) ($booking->infants ?? 0);
+                                                                $counts = $participantCounts . ($infants > 0 ? ' · Infants: ' . $infants : '');
+
+                                                                return [
+                                                                    'Activity' => optional($booking->activity)->activity_name ?? 'N/A',
+                                                                    'Date' => $booking->activity_date ? $booking->activity_date->format('d/m/Y') : 'N/A',
+                                                                    'Time' => $slot ? trim(($slot->start_time ?? '') . ' - ' . ($slot->end_time ?? '')) : 'N/A',
+                                                                    'Participants' => $counts . ' · Total: ' . ((int) ($booking->adults ?? 0) + (int) ($booking->children ?? 0) + $infants),
+                                                                    'Participant Names' => $guestNames !== '' ? $guestNames : ($booking->guest_name ?? 'N/A'),
+                                                                    'BLI Id' => $booking->booking_reference ?? $booking->bookingRef?->booking_ref_code ?? 'N/A',
+                                                                    'Status' => $booking->booking_status ?? 'N/A',
+                                                                ];
+                                                            })(),
                                                             'transport' => [
                                                                 'Route' => trim(($booking->route_from ?? '') . ' → ' . ($booking->route_to ?? '')),
                                                                 'Vehicle' => optional($booking->transport)->vehicle_display_name ?? 'N/A',
+                                                                'Pickup' => trim(($booking->pickup_date ? $booking->pickup_date->format('d/m/Y') : 'N/A') . ' ' . ($booking->pickup_time ?? '')),
+                                                                'Passengers' => (int) ($booking->total_passengers ?? (($booking->adults ?? 0) + ($booking->children ?? 0))),
+                                                                'Passenger Categories' => $participantCounts,
+                                                                'Passenger Names' => $guestNames !== '' ? $guestNames : (trim(($booking->traveler_first_name ?? '') . ' ' . ($booking->traveler_middle_name ?? '') . ' ' . ($booking->traveler_last_name ?? '')) ?: ($booking->guest_name ?? 'N/A')),
+                                                                ...($booking->hasVehicleAssignment() ? ['Vehicles' => 1] : []),
                                                                 'BLI Id' => $booking->booking_reference ?? $booking->bookingRef?->booking_ref_code ?? 'N/A',
                                                                 'Status' => $booking->booking_status ?? 'N/A',
                                                             ],

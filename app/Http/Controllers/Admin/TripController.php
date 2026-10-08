@@ -36,16 +36,19 @@ class TripController extends Controller
             'bookingRefs',
             'bookingRefs.paymentTransactions',
             'bookingRefs.paymentTransaction',
-            'bookings.lineItems',
+            'bookings.lineItems.travellers',
             'bookings.payments',
             'accommodationBookings.accommodation',
             'accommodationBookings.room',
             'accommodationBookings.bookingRef',
-            'activityBookings.activity',
+            'accommodationBookings.guests',
+            'activityBookings.activity.schedulingTimeSlots',
             'activityBookings.bookingRef',
+            'activityBookings.guests',
             'transportBookings.transport.operator.profile',
             'transportBookings.transport.vehicleName',
             'transportBookings.bookingRef',
+            'transportBookings.guests',
             ])
             ->orderBy('created_at', 'desc')
             ->paginate(20)

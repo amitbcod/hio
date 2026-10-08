@@ -25,7 +25,7 @@ class OperatorTripListingTest extends TestCase
 
         DB::statement('PRAGMA foreign_keys = OFF');
 
-        foreach (['travellers', 'traveler_accounts', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'operators', 'operator_users'] as $table) {
+        foreach (['bli_traveller_allocations', 'booking_guests', 'activity_scheduling_timeslots', 'travellers', 'traveler_accounts', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'operators', 'operator_users'] as $table) {
             if (Schema::hasTable($table)) {
                 Schema::drop($table);
             }
@@ -76,6 +76,31 @@ class OperatorTripListingTest extends TestCase
             $table->timestamps();
         });
 
+        Schema::create('booking_guests', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('booking_id');
+            $table->string('booking_type');
+            $table->integer('guest_number')->default(1);
+            $table->string('first_name');
+            $table->string('middle_name')->nullable();
+            $table->string('last_name');
+            $table->timestamps();
+        });
+
+        Schema::create('bli_traveller_allocations', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('bli_id');
+            $table->unsignedBigInteger('traveller_id');
+        });
+
+        Schema::create('activity_scheduling_timeslots', function (Blueprint $table) {
+            $table->unsignedBigInteger('timeslot_id')->primary();
+            $table->unsignedBigInteger('activity_id');
+            $table->string('start_time')->nullable();
+            $table->string('end_time')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('booking_refs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('trip_id')->nullable();
@@ -109,6 +134,12 @@ class OperatorTripListingTest extends TestCase
             $table->unsignedBigInteger('room_id')->nullable();
             $table->string('booking_reference')->nullable();
             $table->string('booking_status')->nullable();
+            $table->date('check_in_date')->nullable();
+            $table->date('check_out_date')->nullable();
+            $table->string('guest_name')->nullable();
+            $table->unsignedInteger('rooms_booked')->default(1);
+            $table->unsignedSmallInteger('adults')->default(2);
+            $table->unsignedSmallInteger('children')->default(0);
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->timestamps();
         });
@@ -128,6 +159,11 @@ class OperatorTripListingTest extends TestCase
             $table->unsignedBigInteger('activity_id')->nullable();
             $table->string('booking_reference')->nullable();
             $table->string('booking_status')->nullable();
+            $table->date('activity_date')->nullable();
+            $table->unsignedBigInteger('activity_time_slot_id')->nullable();
+            $table->string('guest_name')->nullable();
+            $table->unsignedSmallInteger('adults')->default(1);
+            $table->unsignedSmallInteger('children')->default(0);
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->timestamps();
         });
@@ -150,6 +186,16 @@ class OperatorTripListingTest extends TestCase
             $table->string('booking_status')->nullable();
             $table->string('route_from')->nullable();
             $table->string('route_to')->nullable();
+            $table->date('pickup_date')->nullable();
+            $table->time('pickup_time')->nullable();
+            $table->string('guest_name')->nullable();
+            $table->string('traveler_first_name')->nullable();
+            $table->string('traveler_middle_name')->nullable();
+            $table->string('traveler_last_name')->nullable();
+            $table->unsignedInteger('total_passengers')->default(1);
+            $table->unsignedInteger('adults')->default(1);
+            $table->unsignedInteger('children')->default(0);
+            $table->unsignedBigInteger('transport_vehicle_id')->nullable();
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->timestamps();
         });
@@ -182,10 +228,14 @@ class OperatorTripListingTest extends TestCase
         $visibleRef = BookingRef::create(['id' => 1, 'trip_id' => 1, 'booking_ref_code' => 'BR-OP-001']);
         $mixedRef = BookingRef::create(['id' => 2, 'trip_id' => 3, 'booking_ref_code' => 'BR-OP-003']);
 
-        AccommodationBooking::create(['id' => 1, 'trip_id' => 1, 'booking_ref_id' => $visibleRef->id, 'accommodation_id' => 1, 'room_id' => $room->id, 'booking_reference' => 'ACC-001', 'booking_status' => 'Confirmed', 'total_amount' => 120.00]);
-        ActivityBooking::create(['id' => 1, 'trip_id' => 1, 'booking_ref_id' => $visibleRef->id, 'activity_id' => 1, 'booking_reference' => 'ACT-001', 'booking_status' => 'Confirmed', 'total_amount' => 80.00]);
-        $visibleTransportBooking = TransportBooking::create(['id' => 1, 'transport_id' => 1, 'booking_reference' => 'TRN-001', 'booking_status' => 'Confirmed', 'route_from' => 'Airport', 'route_to' => 'Hotel', 'total_amount' => 90.00]);
+        AccommodationBooking::create(['id' => 1, 'trip_id' => 1, 'booking_ref_id' => $visibleRef->id, 'accommodation_id' => 1, 'room_id' => $room->id, 'booking_reference' => 'ACC-001', 'booking_status' => 'Confirmed', 'check_in_date' => '2026-10-01', 'check_out_date' => '2026-10-03', 'rooms_booked' => 2, 'adults' => 2, 'children' => 1, 'total_amount' => 120.00]);
+        \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'accommodation', 'guest_number' => 1, 'first_name' => 'John', 'last_name' => 'Smith']);
+        ActivityBooking::create(['id' => 1, 'trip_id' => 1, 'booking_ref_id' => $visibleRef->id, 'activity_id' => 1, 'booking_reference' => 'ACT-001', 'booking_status' => 'Confirmed', 'activity_date' => '2026-10-02', 'activity_time_slot_id' => 1, 'adults' => 2, 'children' => 1, 'total_amount' => 80.00]);
+        DB::table('activity_scheduling_timeslots')->insert(['timeslot_id' => 1, 'activity_id' => 1, 'start_time' => '09:00:00', 'end_time' => '11:00:00', 'created_at' => now(), 'updated_at' => now()]);
+        \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'activity', 'guest_number' => 1, 'first_name' => 'Sarah', 'last_name' => 'Smith']);
+        $visibleTransportBooking = TransportBooking::create(['id' => 1, 'transport_id' => 1, 'booking_reference' => 'TRN-001', 'booking_status' => 'Confirmed', 'route_from' => 'Airport', 'route_to' => 'Hotel', 'pickup_date' => '2026-10-01', 'pickup_time' => '08:30:00', 'total_passengers' => 3, 'adults' => 2, 'children' => 1, 'traveler_first_name' => 'John', 'traveler_last_name' => 'Smith', 'transport_vehicle_id' => 1, 'total_amount' => 90.00]);
         $visibleTransportBooking->forceFill(['trip_id' => 1, 'booking_ref_id' => $visibleRef->id])->save();
+        \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'transport', 'guest_number' => 1, 'first_name' => 'Sarah', 'last_name' => 'Smith']);
         $secondVisibleRef = BookingRef::create(['id' => 3, 'trip_id' => 1, 'booking_ref_code' => 'BR-OP-001-B']);
         ActivityBooking::create(['id' => 3, 'trip_id' => 1, 'booking_ref_id' => $secondVisibleRef->id, 'activity_id' => 1, 'booking_reference' => 'ACT-001-B', 'booking_status' => 'Confirmed', 'total_amount' => 40.00]);
 
@@ -224,6 +274,18 @@ class OperatorTripListingTest extends TestCase
         $response->assertSee('/operator/accommodation/bookings/1');
         $response->assertSee('/operator/activity/bookings/1');
         $response->assertSee('/operator/transport/1/bookings/1');
+        $response->assertSee('Check-in:</strong> 01/10/2026', false);
+        $response->assertSee('Check-out:</strong> 03/10/2026', false);
+        $response->assertSee('Rooms:</strong> 2', false);
+        $response->assertSee('Participant Names:</strong> John Smith', false);
+        $response->assertSee('Date:</strong> 02/10/2026', false);
+        $response->assertSee('Time:</strong> 09:00:00 - 11:00:00', false);
+        $response->assertSee('Participants:</strong> Adults: 2 · Children: 1 · Total: 3', false);
+        $response->assertSee('Participant Names:</strong> Sarah Smith', false);
+        $response->assertSee('Passengers:</strong> 3', false);
+        $response->assertSee('Pickup:</strong> 01/10/2026 08:30:00', false);
+        $response->assertSee('Passenger Names:</strong> Sarah Smith', false);
+        $response->assertSee('Vehicles:</strong> 1', false);
         $response->assertDontSee('ACC-OTHER');
 
         $nonOwnedReferenceSearch = $this->get(route('operator.trips.index', [

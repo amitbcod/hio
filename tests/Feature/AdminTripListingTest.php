@@ -21,7 +21,7 @@ class AdminTripListingTest extends TestCase
 
         DB::statement('PRAGMA foreign_keys = OFF');
 
-        foreach (['travellers', 'payment_transactions', 'booking_line_items', 'bookings', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'traveler_accounts'] as $table) {
+        foreach (['bli_traveller_allocations', 'booking_guests', 'activity_scheduling_timeslots', 'travellers', 'payment_transactions', 'booking_line_items', 'bookings', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'traveler_accounts'] as $table) {
             if (Schema::hasTable($table)) {
                 Schema::drop($table);
             }
@@ -54,6 +54,31 @@ class AdminTripListingTest extends TestCase
             $table->timestamps();
         });
 
+        Schema::create('bli_traveller_allocations', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('bli_id');
+            $table->unsignedBigInteger('traveller_id');
+        });
+
+        Schema::create('booking_guests', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('booking_id');
+            $table->string('booking_type');
+            $table->integer('guest_number')->default(1);
+            $table->string('first_name');
+            $table->string('middle_name')->nullable();
+            $table->string('last_name');
+            $table->timestamps();
+        });
+
+        Schema::create('activity_scheduling_timeslots', function (Blueprint $table) {
+            $table->unsignedBigInteger('timeslot_id')->primary();
+            $table->unsignedBigInteger('activity_id');
+            $table->string('start_time')->nullable();
+            $table->string('end_time')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('booking_refs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('trip_id')->nullable();
@@ -79,6 +104,7 @@ class AdminTripListingTest extends TestCase
             $table->unsignedBigInteger('booking_id')->nullable();
             $table->string('service_type')->nullable();
             $table->unsignedBigInteger('service_id')->nullable();
+            $table->unsignedBigInteger('transport_booking_id')->nullable();
             $table->string('trip_type')->nullable();
             $table->integer('quantity')->default(1);
             $table->decimal('price', 10, 2)->default(0);
@@ -110,6 +136,7 @@ class AdminTripListingTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('accommodation_id')->nullable();
             $table->string('name')->nullable();
+            $table->string('room_name')->nullable();
             $table->timestamps();
         });
 
@@ -123,6 +150,10 @@ class AdminTripListingTest extends TestCase
             $table->string('booking_status')->nullable();
             $table->date('check_in_date')->nullable();
             $table->date('check_out_date')->nullable();
+            $table->string('guest_name')->nullable();
+            $table->unsignedInteger('rooms_booked')->default(1);
+            $table->unsignedSmallInteger('adults')->default(2);
+            $table->unsignedSmallInteger('children')->default(0);
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->timestamps();
         });
@@ -142,6 +173,10 @@ class AdminTripListingTest extends TestCase
             $table->string('booking_reference')->nullable();
             $table->string('booking_status')->nullable();
             $table->date('activity_date')->nullable();
+            $table->unsignedBigInteger('activity_time_slot_id')->nullable();
+            $table->string('guest_name')->nullable();
+            $table->unsignedSmallInteger('adults')->default(1);
+            $table->unsignedSmallInteger('children')->default(0);
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->timestamps();
         });
@@ -164,6 +199,15 @@ class AdminTripListingTest extends TestCase
             $table->string('route_from')->nullable();
             $table->string('route_to')->nullable();
             $table->date('pickup_date')->nullable();
+            $table->time('pickup_time')->nullable();
+            $table->string('guest_name')->nullable();
+            $table->string('traveler_first_name')->nullable();
+            $table->string('traveler_middle_name')->nullable();
+            $table->string('traveler_last_name')->nullable();
+            $table->unsignedInteger('total_passengers')->default(1);
+            $table->unsignedInteger('adults')->default(1);
+            $table->unsignedInteger('children')->default(0);
+            $table->unsignedBigInteger('transport_vehicle_id')->nullable();
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->timestamps();
         });
@@ -215,7 +259,7 @@ class AdminTripListingTest extends TestCase
         ]);
 
         $accommodation = \App\Models\Accommodation::create(['property_name' => 'Ocean View Hotel']);
-        $room = \App\Models\AccommodationRoom::create(['accommodation_id' => $accommodation->id, 'name' => 'Deluxe Room']);
+        $room = \App\Models\AccommodationRoom::create(['accommodation_id' => $accommodation->id, 'name' => 'Deluxe Room', 'room_name' => 'Deluxe Room Type']);
 
         AccommodationBooking::create([
             'trip_id' => $trip->id,
@@ -226,8 +270,13 @@ class AdminTripListingTest extends TestCase
             'booking_status' => 'Cancelled',
             'check_in_date' => '2026-10-01',
             'check_out_date' => '2026-10-02',
+            'guest_name' => 'Jane Doe',
+            'rooms_booked' => 2,
+            'adults' => 2,
+            'children' => 1,
             'total_amount' => 200.00,
         ]);
+        \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'accommodation', 'guest_number' => 1, 'first_name' => 'Jane', 'last_name' => 'Doe']);
 
         $activity = \App\Models\Activity::create(['activity_name' => 'Island Tour']);
 
@@ -238,8 +287,21 @@ class AdminTripListingTest extends TestCase
             'booking_reference' => 'ACT-202-1',
             'booking_status' => 'Processing',
             'activity_date' => '2026-10-02',
+            'activity_time_slot_id' => 1,
+            'guest_name' => 'Jane Doe',
+            'adults' => 2,
+            'children' => 1,
             'total_amount' => 120.00,
         ]);
+        DB::table('activity_scheduling_timeslots')->insert([
+            'timeslot_id' => 1,
+            'activity_id' => $activity->id,
+            'start_time' => '09:00:00',
+            'end_time' => '11:00:00',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'activity', 'guest_number' => 1, 'first_name' => 'Alex', 'last_name' => 'Doe']);
 
         $transport = \App\Models\Transport::create(['vehicle_display_name' => 'Airport Shuttle']);
 
@@ -252,20 +314,42 @@ class AdminTripListingTest extends TestCase
             'route_from' => 'Airport',
             'route_to' => 'Hotel',
             'pickup_date' => '2026-10-01',
+            'pickup_time' => '08:30:00',
+            'guest_name' => 'Jane Doe',
+            'traveler_first_name' => 'Jane',
+            'traveler_last_name' => 'Doe',
+            'total_passengers' => 3,
+            'adults' => 2,
+            'children' => 1,
+            'transport_vehicle_id' => 1,
             'total_amount' => 90.00,
         ]);
         $transportBooking->forceFill([
             'trip_id' => $trip->id,
             'booking_ref_id' => $bookingRef->id,
         ])->save();
+        \App\Models\BookingLineItem::create([
+            'booking_id' => $booking->id,
+            'service_type' => 'transport',
+            'service_id' => $transport->id,
+            'transport_booking_id' => $transportBooking->id,
+            'quantity' => 3,
+            'price' => 90.00,
+        ]);
+        \App\Models\BookingGuest::create(['booking_id' => $transportBooking->id, 'booking_type' => 'transport', 'guest_number' => 1, 'first_name' => 'Alex', 'last_name' => 'Doe']);
     }
 
     public function test_admin_trip_listing_shows_grouped_service_bookings_and_links(): void
     {
         $trip = Trip::firstOrFail();
-        $trip->travellers()->createMany([
+        $travellers = $trip->travellers()->createMany([
             ['name' => 'Jane Doe', 'relationship' => 'self'],
             ['name' => 'Alex Doe', 'relationship' => 'guest'],
+        ]);
+        $transportLineItem = \App\Models\BookingLineItem::where('transport_booking_id', 1)->firstOrFail();
+        DB::table('bli_traveller_allocations')->insert([
+            ['bli_id' => $transportLineItem->id, 'traveller_id' => $travellers[0]->id],
+            ['bli_id' => $transportLineItem->id, 'traveller_id' => $travellers[1]->id],
         ]);
 
         $response = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index'));
@@ -301,6 +385,17 @@ class AdminTripListingTest extends TestCase
         $response->assertSee('/admin/accommodation/bookings/1');
         $response->assertSee('/admin/activity/bookings/1');
         $response->assertSee('/admin/transport/bookings/1');
+        $response->assertSee('Deluxe Room Type');
+        $response->assertSee('Rooms:</strong> 2', false);
+        $response->assertSee('Participants:</strong> Adults: 2 · Children: 1 · Total: 3', false);
+        $response->assertSee('Participant Names:</strong> Jane Doe', false);
+        $response->assertSee('Check-in:</strong> 01/10/2026', false);
+        $response->assertSee('Check-out:</strong> 02/10/2026', false);
+        $response->assertSee('Date:</strong> 02/10/2026', false);
+        $response->assertSee('Time:</strong> 09:00:00 - 11:00:00', false);
+        $response->assertSee('Participant Names:</strong> Alex Doe', false);
+        $response->assertSee('Passenger Names:</strong> Alex Doe, Jane Doe', false);
+        $response->assertSee('Vehicles:</strong> 1', false);
     }
 
     public function test_admin_trip_listing_filters_all_fields_together(): void
