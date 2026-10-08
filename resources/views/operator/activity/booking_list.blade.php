@@ -70,9 +70,7 @@
                                             <!-- <td>{{ $booking->booking_date ? $booking->booking_date->format('M d, Y') : 'N/A' }}</td> -->
                                             <td>{{ $booking->activity_date ? $booking->activity_date->format('M d, Y') : 'N/A' }}</td>
                                             <td>
-                                                <span class="badge" style="background: {{ $booking->booking_status === 'Confirmed' ? '#28a745' : ($booking->booking_status === 'Pending' ? '#ffc107' : '#dc3545') }}; color: #fff;">
-                                                    {{ $booking->booking_status }}
-                                                </span>
+                                                @include('operator.partials._status_badge', ['status' => $booking->booking_status])
                                             </td>
                                             <td>{{ $booking->created_at->format('M d, Y H:i') }}</td>
                                             <td>

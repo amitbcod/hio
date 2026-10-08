@@ -123,7 +123,7 @@
                                 <td style="padding:14px; vertical-align:top;">
                                     <div style="display:flex; flex-wrap:wrap; gap:4px;">
                                         @forelse($trip->booking_status_counts as $statusCount)
-                                            <span class="trip-booking-status-badge" style="display:inline-block; padding:4px 7px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; {{ $statusCount['style'] }}">{{ $statusCount['status'] }}: {{ $statusCount['count'] }}</span>
+                                            @include('operator.partials._status_badge', ['status' => $statusCount['status'], 'statusBadgeLabel' => $statusCount['status'] . ': ' . $statusCount['count']])
                                         @empty
                                             <span style="color:#64748b;">N/A</span>
                                         @endforelse
@@ -132,7 +132,7 @@
                                 <td style="padding:14px; vertical-align:top;">
                                     <div style="display:flex; flex-wrap:wrap; gap:4px;">
                                         @forelse($trip->payment_status_badges as $statusBadge)
-                                            <span class="trip-booking-status-badge" style="display:inline-block; padding:4px 7px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; {{ $statusBadge['style'] }}">{{ $statusBadge['status'] }}</span>
+                                            @include('operator.partials._status_badge', ['status' => $statusBadge['status']])
                                         @empty
                                             <span style="color:#64748b;">N/A</span>
                                         @endforelse
@@ -283,7 +283,11 @@
                                                             @foreach($serviceMeta as $label => $value)
                                                                 <div>
                                                                     @if($label !== '')
-                                                                        <strong style="color:#334155;">{{ $label }}:</strong> {{ $value }}
+                                                                        @if($label === 'Status')
+                                                                            <strong style="color:#334155;">{{ $label }}:</strong> @include('operator.partials._status_badge', ['status' => $value, 'statusBadgeLabel' => $value])
+                                                                        @else
+                                                                            <strong style="color:#334155;">{{ $label }}:</strong> {{ $value }}
+                                                                        @endif
                                                                     @endif
                                                                 </div>
                                                             @endforeach

@@ -22,9 +22,7 @@
                         <a href="{{ route('operator.transport.bookings') }}" class="btn btn-outline-blue" style="">
                             ← Back to Bookings
                         </a>
-                        <span class="badge" style="background: {{ match($booking->booking_status) { 'Confirmed' => '#28a745', 'Scheduled' => '#17a2b8', 'Processing' => '#ffc107', default => '#dc3545' } }}; color: #fff; font-size: 15px; padding: 8px 16px; line-height: 21px; font-weight: 500;">
-                            {{ $booking->booking_status ?? \App\Models\TransportBooking::STATUS_PROCESSING }}
-                        </span>
+                        @include('operator.partials._status_badge', ['status' => $booking->booking_status ?? \App\Models\TransportBooking::STATUS_PROCESSING])
                     </div>
                 </div>
 
@@ -62,7 +60,7 @@
                             </div>
                             <div class="col-md-3">
                                 <strong>Status:</strong><br>
-                                <span class="badge" style="background: {{ match($booking->booking_status) { 'Confirmed' => '#28a745', 'Scheduled' => '#17a2b8', 'Processing' => '#ffc107', default => '#dc3545' } }}; color:#fff;">{{ $booking->booking_status ?? \App\Models\TransportBooking::STATUS_PROCESSING }}</span>
+                                @include('operator.partials._status_badge', ['status' => $booking->booking_status ?? \App\Models\TransportBooking::STATUS_PROCESSING])
                             </div>
                         </div>
                     </div>
@@ -209,11 +207,8 @@
                             </div>
                             <div class="col-md-6">
                                 <strong>Payment Status:</strong><br>
-                                @php
-                                    $bookingStatus = $booking->booking_status ?? \App\Models\TransportBooking::STATUS_PROCESSING;
-                                    $statusColor = match($bookingStatus) { 'Confirmed' => '#28a745', 'Scheduled' => '#17a2b8', 'Processing' => '#ffc107', 'Cancelled' => '#dc3545', default => '#6c757d' };
-                                @endphp
-                                <span class="badge" style="background: {{ $statusColor }};">{{ $bookingStatus }}</span>
+                                @php($bookingStatus = $booking->booking_status ?? \App\Models\TransportBooking::STATUS_PROCESSING)
+                                @include('operator.partials._status_badge', ['status' => $bookingStatus])
                                 <br><small style="color: #666;">{{ $bookingStatus === 'Confirmed' ? 'Payment completed successfully' : ($bookingStatus === 'Cancelled' ? 'Booking has been cancelled' : 'Payment processing details not available') }}</small>
                             </div>
                         </div>

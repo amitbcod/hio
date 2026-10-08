@@ -19,9 +19,7 @@
                             <a href="{{ route('operator.activity.bookings') }}" class="btn btn-outline-blue" style="">
                                 ← Back to Bookings
                             </a>
-                            <span class="badge" style="background: {{ $booking->booking_status === 'Confirmed' ? '#28a745' : ($booking->booking_status === 'Pending' ? '#ffc107' : '#dc3545') }}; color: #fff; font-size: 14px; padding: 8px 16px;">
-                                {{ $booking->booking_status }}
-                            </span>
+                            @include('operator.partials._status_badge', ['status' => $booking->booking_status])
                         </div>
                     </div>
 
@@ -59,9 +57,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <strong>Status:</strong><br>
-                                    <span class="badge" style="background: {{ $booking->booking_status === 'Confirmed' ? '#28a745' : ($booking->booking_status === 'Pending' ? '#ffc107' : '#dc3545') }};">
-                                        {{ $booking->booking_status }}
-                                    </span>
+                                    @include('operator.partials._status_badge', ['status' => $booking->booking_status])
                                 </div>
                             </div>
                         </div>
