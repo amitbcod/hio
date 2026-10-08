@@ -1,8 +1,13 @@
-@extends('operator.layout')
-
-@section('title', 'Trip Listing')
+@extends('layouts.app')
 
 @section('content')
+<div class="container mt-0">
+    <div class="row">
+        <div id="sidebar" class="col-md-3 net-section">
+            @include('operator.registration._sidebar_main')
+        </div>
+        <div class="col-md-9 my-pro">
+            <div class="container-middle">
 <div style="background:#fff; border:1px solid #e5e7eb; border-radius:12px; box-shadow: 0 1px 2px rgba(15,23,42,.04);">
     <div style="padding:20px 24px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; gap:16px;">
         <div>
@@ -299,9 +304,14 @@
         @endif
     </div>
 </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
+@include('operator.partials._sidebar_scripts')
 <script>
     document.querySelectorAll('[data-trip-toggle]').forEach((button) => {
         button.addEventListener('click', () => {

@@ -142,23 +142,6 @@
          submenu.classList.toggle("hidden");
       }
    </script>
-   <script>
-      function toggleSidebar() {
-         document.getElementById("sidebar").classList.toggle("active");
-      }
-   </script>
-
-   <script>
-      function toggleSidebar() {
-         document.getElementById("sidebar").classList.toggle("active");
-      }
-
-      document.addEventListener("click", function (e) {
-         let sidebar = document.getElementById("sidebar");
-         let hamburger = document.querySelector(".hamburger");
-
-         if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
-            sidebar.classList.remove("active");
-         }
-      });
-   </script>
+@push('scripts')
+    @include('operator.partials._sidebar_scripts')
+@endpush

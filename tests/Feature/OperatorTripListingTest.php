@@ -25,7 +25,7 @@ class OperatorTripListingTest extends TestCase
 
         DB::statement('PRAGMA foreign_keys = OFF');
 
-        foreach (['bli_traveller_allocations', 'booking_guests', 'activity_scheduling_timeslots', 'travellers', 'traveler_accounts', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'operators', 'operator_users'] as $table) {
+        foreach (['bli_traveller_allocations', 'booking_guests', 'activity_scheduling_timeslots', 'travellers', 'traveler_accounts', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'operators', 'operator_users', 'businesses'] as $table) {
             if (Schema::hasTable($table)) {
                 Schema::drop($table);
             }
@@ -40,6 +40,12 @@ class OperatorTripListingTest extends TestCase
             $table->unsignedBigInteger('business_id')->nullable();
             $table->json('package_policy')->nullable();
             $table->json('group_policy')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('businesses', function (Blueprint $table) {
+            $table->id();
+            $table->string('status')->nullable();
             $table->timestamps();
         });
 
@@ -203,6 +209,10 @@ class OperatorTripListingTest extends TestCase
 
     public function test_operator_trip_listing_only_shows_trips_with_their_own_services(): void
     {
+        DB::table('businesses')->insert([
+            ['id' => 100, 'status' => 'active', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 200, 'status' => 'active', 'created_at' => now(), 'updated_at' => now()],
+        ]);
         $operator = Operator::create(['id' => 10, 'name' => 'Operator One', 'email' => 'one@example.test', 'business_id' => 100]);
         $otherOperator = Operator::create(['id' => 20, 'name' => 'Operator Two', 'email' => 'two@example.test', 'business_id' => 200]);
 
@@ -249,6 +259,11 @@ class OperatorTripListingTest extends TestCase
         $response = $this->get(route('operator.trips.index'));
 
         $response->assertOk();
+        $response->assertSee('id="sidebar" class="col-md-3 net-section"', false);
+        $response->assertSee('id="registrationStepsCollapse"', false);
+        $response->assertSee('background:rgba(255,255,255,0.18);', false);
+        $response->assertSee('function toggleSidebar()', false);
+        $response->assertDontSee('class="operator-shell"', false);
         $response->assertSee('Visible Trip');
         $response->assertSee('Mixed Trip');
         $response->assertSee('aria-label="Expand trip details"', false);

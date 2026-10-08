@@ -1,15 +1,17 @@
 <div>
     
+@php $isTripManagement = request()->routeIs('operator.trips.*'); @endphp
+
 <div class="dropdownToggle" 
      style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
    Trips
-    <span class="dropdownArrow" style="transition: transform 0.3s;">▼</span>
+    <span class="dropdownArrow" style="transition: transform 0.3s;{{ $isTripManagement ? ' transform: rotate(180deg);' : '' }}">▼</span>
 </div>
 
-<ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: none;">
+<ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: {{ $isTripManagement ? 'block' : 'none' }};">
     <li style="padding: 8px 36px;">
         <a href="{{ route('operator.trips.index') }}"
-           style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
+           style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;{{ $isTripManagement ? ' background:rgba(255,255,255,0.18);' : '' }}">
            Trip Listing
         </a>
     </li>
