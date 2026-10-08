@@ -3,13 +3,23 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminUser;
 use App\Models\Operator;
 use App\Models\OperatorProfile;
 use App\Models\TransportBooking;
+use App\Models\TransportVehicle;
+use App\Services\TransportAvailabilityService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TransportBookingController extends Controller
 {
+    protected function admin(): ?AdminUser
+    {
+        $adminId = session('admin_id');
+        return $adminId ? AdminUser::find($adminId) : null;
+    }
+
     public function index(Request $request)
     {
         $filters = [
@@ -64,8 +74,52 @@ class TransportBookingController extends Controller
             'drivers',
             'currentAssignment.vehicle',
             'currentAssignment.driver',
+            'assignments.vehicle',
+            'assignments.driver',
+            'assignments.assignedBy',
             'guests',
         ]);
-        return view('admin.transport.bookings.show', compact('booking'));
+
+        $assignmentDrivers = collect();
+        $assignmentVehicles = collect();
+        if (in_array($booking->booking_status, [TransportBooking::STATUS_CONFIRMED, TransportBooking::STATUS_SCHEDULED], true)) {
+            $operator = $booking->transport?->operator;
+            $transport = $booking->transport;
+            $availability = new TransportAvailabilityService();
+            if ($operator && $transport) {
+                $assignmentDrivers = $availability->availableDrivers($operator, $booking);
+                $assignmentVehicles = $availability->availableVehicleModelsForBooking($transport, $booking);
+                if ($booking->pickupDriver && !$assignmentDrivers->contains('id', $booking->pickup_driver_id)) {
+                    $assignmentDrivers->prepend($booking->pickupDriver);
+                }
+                if ($booking->vehicle && !$assignmentVehicles->contains('id', $booking->transport_vehicle_id)) {
+                    $assignmentVehicles->prepend($booking->vehicle);
+                }
+            }
+        }
+
+        return view('admin.transport.bookings.show', compact('booking', 'assignmentDrivers', 'assignmentVehicles'));
+    }
+
+    public function updateBookingStatus(Request $request, TransportBooking $booking)
+    {
+        $admin = $this->admin();
+        if (!$admin) {
+            abort(403);
+        }
+
+        return app(\App\Http\Controllers\Operator\TransportController::class)
+            ->updateBookingStatusForActor($request, $booking, $admin, true);
+    }
+
+    public function assignDrivers(Request $request, TransportBooking $booking)
+    {
+        $admin = $this->admin();
+        if (!$admin) {
+            abort(403);
+        }
+
+        return app(\App\Http\Controllers\Operator\TransportController::class)
+            ->assignDriversForActor($request, $booking, $admin, true);
     }
 }

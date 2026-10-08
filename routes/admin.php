@@ -81,14 +81,18 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     // Admin accommodation booking management (superadmin)
     Route::get('accommodation/bookings', [\App\Http\Controllers\Admin\AccommodationBookingController::class, 'index'])->name('accommodation.bookings');
     Route::get('accommodation/bookings/{booking}', [\App\Http\Controllers\Admin\AccommodationBookingController::class, 'show'])->name('accommodation.booking.details');
+    Route::post('accommodation/bookings/{booking}/status', [\App\Http\Controllers\Admin\AccommodationBookingController::class, 'updateBookingStatus'])->name('accommodation.booking.status');
 
     // Admin activity booking management (superadmin)
     Route::get('activity/bookings', [\App\Http\Controllers\Admin\ActivityBookingController::class, 'index'])->name('activity.bookings');
     Route::get('activity/bookings/{booking}', [\App\Http\Controllers\Admin\ActivityBookingController::class, 'show'])->name('activity.booking.details');
+    Route::post('activity/bookings/{booking}/status', [\App\Http\Controllers\Admin\ActivityBookingController::class, 'updateBookingStatus'])->name('activity.booking.status');
 
     // Admin transport booking management (superadmin)
     Route::get('transport/bookings', [\App\Http\Controllers\Admin\TransportBookingController::class, 'index'])->name('transport.bookings');
     Route::get('transport/bookings/{booking}', [\App\Http\Controllers\Admin\TransportBookingController::class, 'show'])->name('transport.booking.details');
+    Route::post('transport/bookings/{booking}/status', [\App\Http\Controllers\Admin\TransportBookingController::class, 'updateBookingStatus'])->name('transport.booking.status');
+    Route::post('transport-bookings/{booking}/assign-drivers', [\App\Http\Controllers\Admin\TransportBookingController::class, 'assignDrivers'])->name('transport.booking.assign-drivers');
 
     // Admin accommodation management for selected operator/business
     Route::get('accommodations/select-operator', [\App\Http\Controllers\Admin\AccommodationController::class, 'selectOperator'])->name('accommodation.select-operator');

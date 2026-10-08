@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\ActivityBooking;
+use Illuminate\Http\Request;
 
 class ActivityBookingController extends Controller
 {
@@ -35,5 +35,29 @@ class ActivityBookingController extends Controller
             ->findOrFail($bookingId);
 
         return view('admin.activity.bookings.show', compact('booking'));
+    }
+
+    public function updateBookingStatus(Request $request, ActivityBooking $booking)
+    {
+        if ($redirect = $this->ensureAdmin()) return $redirect;
+
+        $request->validate([
+            'booking_status' => 'required|in:Confirmed,Cancelled',
+        ]);
+
+        if ($booking->booking_status === 'Cancelled') {
+            return back()->with('error', 'Cancelled bookings cannot be updated.');
+        }
+
+        $booking->booking_status = $request->input('booking_status');
+        $booking->save();
+
+        (new \App\Services\OperatorBookingNotificationService())->notifyBookingStatusChanged(
+            $booking,
+            'activity',
+            $booking->booking_status
+        );
+
+        return back()->with('success', 'Booking status updated to ' . $booking->booking_status . '.');
     }
 }

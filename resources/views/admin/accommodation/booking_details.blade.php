@@ -280,7 +280,7 @@
                             </a>
 
                             @if($booking->booking_status === 'Pending')
-                                <form method="POST" action="{{ route('operator.accommodation.booking.status', $booking->id) }}" style="display:inline;" onsubmit="return confirm('Confirm this booking?');">
+                                <form method="POST" action="{{ route('admin.accommodation.booking.status', $booking->id) }}" style="display:inline;" onsubmit="return confirm('Confirm this booking?');">
                                     @csrf
                                     <input type="hidden" name="booking_status" value="Confirmed">
                                     <button type="submit" class="btn" style="background: #28a745; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
@@ -290,7 +290,7 @@
                             @endif
 
                             @if($booking->booking_status !== 'Cancelled')
-                                <form method="POST" action="{{ route('operator.accommodation.booking.status', $booking->id) }}" style="display:inline;" onsubmit="return confirm('Cancel this booking?');">
+                                <form method="POST" action="{{ route('admin.accommodation.booking.status', $booking->id) }}" style="display:inline;" onsubmit="return confirm('Cancel this booking?');">
                                     @csrf
                                     <input type="hidden" name="booking_status" value="Cancelled">
                                     <button type="submit" class="btn" style="background: #dc3545; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">

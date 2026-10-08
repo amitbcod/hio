@@ -1554,6 +1554,18 @@ class TransportController extends Controller
             ->where('id', $bookingId)
             ->firstOrFail();
 
+        return $this->updateBookingStatusForActor($request, $booking, $operator, false);
+    }
+
+    public function updateBookingStatusForActor(Request $request, TransportBooking $booking, $actor, bool $isAdmin = false)
+    {
+        if (!$isAdmin) {
+            $transport = Transport::findOrFail($booking->transport_id);
+            if ($transport->operator_id !== $actor->id) {
+                abort(403);
+            }
+        }
+
         $request->validate([
             'booking_status' => 'required|in:Confirmed,Scheduled,Cancelled,Completed',
         ]);
@@ -1651,10 +1663,21 @@ class TransportController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $transport = Transport::findOrFail($booking->transport_id);
-        if ($transport->operator_id !== $operator->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        return $this->assignDriversForActor($request, $booking, $operator, false);
+    }
+
+    public function assignDriversForActor(Request $request, TransportBooking $booking, $actor, bool $isAdmin = false)
+    {
+        if (!$isAdmin) {
+            $transport = Transport::findOrFail($booking->transport_id);
+            if ($transport->operator_id !== $actor->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+        } else {
+            $transport = $booking->transport()->firstOrFail();
         }
+
+        $sourceOperator = $isAdmin ? ($transport->operator ?? $actor) : $actor;
 
         if (!in_array($booking->booking_status, [TransportBooking::STATUS_CONFIRMED, TransportBooking::STATUS_SCHEDULED], true)) {
             return response()->json(['error' => 'Only confirmed or scheduled bookings can be assigned.'], 422);
@@ -1663,7 +1686,7 @@ class TransportController extends Controller
         $validated = $request->validate([
             'pickup_driver_id' => 'nullable|integer|exists:operator_drivers,id',
             'return_driver_id' => 'nullable|integer|exists:operator_drivers,id',
-            'vehicle_id' => 'nullable|integer',
+            'vehicle_id' => 'nullable',
             'other_vehicle_name' => 'nullable|string|max:150',
             'other_vehicle_license_number' => 'nullable|string|max:100',
             'reason' => 'nullable|string|max:1000',
@@ -1689,7 +1712,13 @@ class TransportController extends Controller
             : $booking->return_driver_id;
         $hasOtherVehicleInput = filled($validated['other_vehicle_name'] ?? null)
             || filled($validated['other_vehicle_license_number'] ?? null);
-        $vehicleId = !empty($validated['remove_vehicle']) ? null : ($validated['vehicle_id'] ?? null);
+        $vehicleRawId = $validated['vehicle_id'] ?? null;
+        $vehicleId = !empty($validated['remove_vehicle']) ? null : (
+            $vehicleRawId === 'other' ? null : ((is_numeric($vehicleRawId) || is_string($vehicleRawId) && ctype_digit((string) $vehicleRawId)) ? (int) $vehicleRawId : ($vehicleRawId ?? $booking->transport_vehicle_id))
+        );
+        if ($vehicleRawId === 'other') {
+            $hasOtherVehicleInput = true;
+        }
         if (!$vehicleId && !$hasOtherVehicleInput && empty($validated['remove_vehicle'])) {
             $vehicleId = $booking->transport_vehicle_id;
         }
@@ -1700,7 +1729,8 @@ class TransportController extends Controller
         }
 
         $availability = new TransportAvailabilityService();
-        $availableDrivers = $availability->availableDrivers($operator, $booking)->pluck('id')->all();
+        $sourceOperator = $isAdmin ? $transport->operator : $actor;
+        $availableDrivers = $availability->availableDrivers($sourceOperator, $booking)->pluck('id')->all();
         foreach (array_filter([$pickupDriverId, $returnDriverId]) as $driverId) {
             if (!in_array((int) $driverId, array_map('intval', $availableDrivers), true)
                 && !in_array((int) $driverId, [(int) $booking->pickup_driver_id, (int) $booking->return_driver_id], true)) {
@@ -1733,7 +1763,21 @@ class TransportController extends Controller
         ]);
 
         if (!empty($selectedDriverIds)) {
-            $validDriverIds = OperatorDriver::where('operator_id', $operator->operator_id)
+            $sourceOperatorId = $sourceOperator->operator_id ?? $sourceOperator->id ?? null;
+            $sourceBusinessId = $sourceOperator->business_id ?? null;
+
+            $validDriverIds = OperatorDriver::query()
+                ->where(function ($query) use ($sourceOperatorId, $sourceBusinessId) {
+                    if ($sourceOperatorId) {
+                        $query->where('operator_id', $sourceOperatorId);
+                    }
+                    if (!empty($sourceBusinessId)) {
+                        $query->orWhere('business_id', $sourceBusinessId);
+                    }
+                    if (empty($sourceOperatorId) && empty($sourceBusinessId)) {
+                        $query->where('id', -1);
+                    }
+                })
                 ->whereIn('id', $selectedDriverIds)
                 ->pluck('id')
                 ->toArray();
@@ -1750,11 +1794,10 @@ class TransportController extends Controller
             }
         }
 
-        DB::transaction(function () use ($booking, $pickupDriverId, $returnDriverId, $vehicleId, $validated, $operator): void {
+        DB::transaction(function () use ($booking, $pickupDriverId, $returnDriverId, $vehicleId, $validated, $actor, $transport, $sourceOperator): void {
             $lockedBooking = TransportBooking::query()->lockForUpdate()->findOrFail($booking->id);
-            $lockedTransport = Transport::findOrFail($lockedBooking->transport_id);
             $lockedAvailability = new TransportAvailabilityService();
-            $lockedAvailableDrivers = $lockedAvailability->availableDrivers($operator, $lockedBooking)->pluck('id')->all();
+            $lockedAvailableDrivers = $lockedAvailability->availableDrivers($sourceOperator, $lockedBooking)->pluck('id')->all();
             foreach (array_filter([$pickupDriverId, $returnDriverId]) as $driverId) {
                 if (!in_array((int) $driverId, array_map('intval', $lockedAvailableDrivers), true)
                     && !in_array((int) $driverId, [(int) $lockedBooking->pickup_driver_id, (int) $lockedBooking->return_driver_id], true)) {
@@ -1762,12 +1805,12 @@ class TransportController extends Controller
                 }
             }
             if ($vehicleId) {
-                $lockedVehicle = $lockedTransport->vehicles()->active()->whereKey($vehicleId)->first();
+                $lockedVehicle = $transport->vehicles()->active()->whereKey($vehicleId)->first();
                 if ($lockedVehicle && (($lockedVehicle->license_expiry_date && $lockedVehicle->license_expiry_date->lt(now()->startOfDay()))
                     || ($lockedVehicle->insurance_expiry_date && $lockedVehicle->insurance_expiry_date->lt(now()->startOfDay())))) {
                     throw ValidationException::withMessages(['vehicle_id' => 'This vehicle has an expired license or insurance policy.']);
                 }
-                $lockedAvailableVehicleIds = $lockedAvailability->availableVehicleModelsForBooking($lockedTransport, $lockedBooking)->pluck('id')->all();
+                $lockedAvailableVehicleIds = $lockedAvailability->availableVehicleModelsForBooking($transport, $lockedBooking)->pluck('id')->all();
                 if (!$lockedVehicle || (!in_array((int) $vehicleId, array_map('intval', $lockedAvailableVehicleIds), true)
                     && (int) $vehicleId !== (int) $lockedBooking->transport_vehicle_id)) {
                     throw ValidationException::withMessages(['vehicle_id' => 'This vehicle is no longer available for the selected booking period.']);
@@ -1804,9 +1847,7 @@ class TransportController extends Controller
                 'other_vehicle_name' => $otherVehicleName,
                 'other_vehicle_license_number' => $otherVehicleLicense,
                 'booking_status' => $hasCompleteAssignment
-                    ? ($lockedBooking->booking_status === TransportBooking::STATUS_SCHEDULED
-                        ? TransportBooking::STATUS_SCHEDULED
-                        : TransportBooking::STATUS_SCHEDULED)
+                    ? TransportBooking::STATUS_SCHEDULED
                     : TransportBooking::STATUS_CONFIRMED,
             ])->save();
 
@@ -1820,7 +1861,7 @@ class TransportController extends Controller
                     : TransportBookingAssignment::STATUS_UNASSIGNED,
                 'reason' => $validated['reason'] ?? null,
                 'assigned_at' => now(),
-                'assigned_by' => $operator->id,
+                'assigned_by' => $actor->id,
             ]);
         });
 
