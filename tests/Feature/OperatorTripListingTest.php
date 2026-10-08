@@ -25,7 +25,7 @@ class OperatorTripListingTest extends TestCase
 
         DB::statement('PRAGMA foreign_keys = OFF');
 
-        foreach (['transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'operators', 'operator_users'] as $table) {
+        foreach (['travellers', 'traveler_accounts', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'operators', 'operator_users'] as $table) {
             if (Schema::hasTable($table)) {
                 Schema::drop($table);
             }
@@ -53,10 +53,26 @@ class OperatorTripListingTest extends TestCase
             $table->timestamps();
         });
 
+        Schema::create('traveler_accounts', function (Blueprint $table) {
+            $table->id();
+            $table->string('full_name')->nullable();
+            $table->string('email')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('trips', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('traveler_account_id')->nullable();
             $table->string('title')->nullable();
             $table->string('priority', 20)->default('normal');
+            $table->timestamps();
+        });
+
+        Schema::create('travellers', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('trip_id');
+            $table->string('name');
+            $table->string('relationship')->nullable();
             $table->timestamps();
         });
 
@@ -150,18 +166,30 @@ class OperatorTripListingTest extends TestCase
         $ownedTransport = Transport::create(['id' => 1, 'operator_id' => 10, 'vehicle_display_name' => 'Owned Bus']);
         $otherAccommodation = Accommodation::create(['id' => 2, 'operator_id' => 20, 'business_id' => 200, 'property_name' => 'Other Property']);
 
-        $visibleTrip = Trip::create(['id' => 1, 'title' => 'Visible Trip']);
+        $accountHolder = \App\Models\TravelerAccount::create(['full_name' => 'John Smith']);
+        $visibleTrip = Trip::create(['id' => 1, 'traveler_account_id' => $accountHolder->id, 'title' => 'Visible Trip']);
         $hiddenTrip = Trip::create(['id' => 2, 'title' => 'Hidden Trip']);
-        $mixedTrip = Trip::create(['id' => 3, 'title' => 'Mixed Trip']);
+        $mixedTrip = Trip::create(['id' => 3, 'traveler_account_id' => $accountHolder->id, 'title' => 'Mixed Trip']);
+        $visibleTrip->travellers()->createMany([
+            ['name' => 'John Smith', 'relationship' => 'self'],
+            ['name' => 'Sarah Smith', 'relationship' => 'guest'],
+        ]);
+        $mixedTrip->travellers()->createMany([
+            ['name' => 'Sarah Jones', 'relationship' => 'lead'],
+            ['name' => 'David Jones', 'relationship' => 'guest'],
+        ]);
 
         $visibleRef = BookingRef::create(['id' => 1, 'trip_id' => 1, 'booking_ref_code' => 'BR-OP-001']);
         $mixedRef = BookingRef::create(['id' => 2, 'trip_id' => 3, 'booking_ref_code' => 'BR-OP-003']);
 
         AccommodationBooking::create(['id' => 1, 'trip_id' => 1, 'booking_ref_id' => $visibleRef->id, 'accommodation_id' => 1, 'room_id' => $room->id, 'booking_reference' => 'ACC-001', 'booking_status' => 'Confirmed', 'total_amount' => 120.00]);
         ActivityBooking::create(['id' => 1, 'trip_id' => 1, 'booking_ref_id' => $visibleRef->id, 'activity_id' => 1, 'booking_reference' => 'ACT-001', 'booking_status' => 'Confirmed', 'total_amount' => 80.00]);
-        TransportBooking::create(['id' => 1, 'trip_id' => 1, 'booking_ref_id' => $visibleRef->id, 'transport_id' => 1, 'booking_reference' => 'TRN-001', 'booking_status' => 'Confirmed', 'route_from' => 'Airport', 'route_to' => 'Hotel', 'total_amount' => 90.00]);
+        $visibleTransportBooking = TransportBooking::create(['id' => 1, 'transport_id' => 1, 'booking_reference' => 'TRN-001', 'booking_status' => 'Confirmed', 'route_from' => 'Airport', 'route_to' => 'Hotel', 'total_amount' => 90.00]);
+        $visibleTransportBooking->forceFill(['trip_id' => 1, 'booking_ref_id' => $visibleRef->id])->save();
+        $secondVisibleRef = BookingRef::create(['id' => 3, 'trip_id' => 1, 'booking_ref_code' => 'BR-OP-001-B']);
+        ActivityBooking::create(['id' => 3, 'trip_id' => 1, 'booking_ref_id' => $secondVisibleRef->id, 'activity_id' => 1, 'booking_reference' => 'ACT-001-B', 'booking_status' => 'Confirmed', 'total_amount' => 40.00]);
 
-        AccommodationBooking::create(['id' => 2, 'trip_id' => 3, 'booking_ref_id' => $mixedRef->id, 'accommodation_id' => 2, 'booking_reference' => 'ACC-OTHER', 'booking_status' => 'Confirmed', 'total_amount' => 60.00]);
+        AccommodationBooking::create(['id' => 2, 'trip_id' => 3, 'booking_ref_id' => $mixedRef->id, 'accommodation_id' => 2, 'booking_reference' => 'ACC-OTHER', 'booking_status' => 'Cancelled', 'total_amount' => 60.00]);
         ActivityBooking::create(['id' => 2, 'trip_id' => 3, 'booking_ref_id' => $mixedRef->id, 'activity_id' => 1, 'booking_reference' => 'ACT-OWN', 'booking_status' => 'Confirmed', 'total_amount' => 50.00]);
 
         AccommodationBooking::create(['id' => 3, 'trip_id' => 2, 'booking_ref_id' => 99, 'accommodation_id' => 2, 'booking_reference' => 'ACC-HIDDEN', 'booking_status' => 'Confirmed', 'total_amount' => 70.00]);
@@ -180,7 +208,18 @@ class OperatorTripListingTest extends TestCase
         $response->assertSee('Next Step:</strong> Awaiting Payment', false);
         $response->assertDontSee('background:#16a34a');
         $response->assertDontSee('Hidden Trip');
+        $response->assertSee('1 Booking Refs · 1 BLIs');
         $response->assertSee('BR-OP-001');
+        $response->assertSee('2 Booking Refs · 4 BLIs');
+        $response->assertSee('Total Amount USD330');
+        $response->assertSee('Total Amount USD50');
+        $response->assertSee('Confirmed: 4');
+        $response->assertDontSee('Cancelled: 1');
+        $response->assertSee('Booking Status');
+        $response->assertSee('Pending</span>', false);
+        $response->assertSee('Travel Party Size: 2');
+        $response->assertSee('John Smith');
+        $response->assertSee('Account Holder not travelling · Responsible: Sarah Jones');
         $response->assertSee('Standard yes');
         $response->assertSee('/operator/accommodation/bookings/1');
         $response->assertSee('/operator/activity/bookings/1');

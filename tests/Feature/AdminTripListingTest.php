@@ -21,7 +21,7 @@ class AdminTripListingTest extends TestCase
 
         DB::statement('PRAGMA foreign_keys = OFF');
 
-        foreach (['payment_transactions', 'booking_line_items', 'bookings', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'traveler_accounts'] as $table) {
+        foreach (['travellers', 'payment_transactions', 'booking_line_items', 'bookings', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'traveler_accounts'] as $table) {
             if (Schema::hasTable($table)) {
                 Schema::drop($table);
             }
@@ -43,6 +43,14 @@ class AdminTripListingTest extends TestCase
             $table->date('end_date')->nullable();
             $table->string('status')->nullable();
             $table->string('priority', 20)->default('normal');
+            $table->timestamps();
+        });
+
+        Schema::create('travellers', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('trip_id');
+            $table->string('name');
+            $table->string('relationship')->nullable();
             $table->timestamps();
         });
 
@@ -215,7 +223,7 @@ class AdminTripListingTest extends TestCase
             'accommodation_id' => $accommodation->id,
             'room_id' => $room->id,
             'booking_reference' => 'ACC-202-1',
-            'booking_status' => 'Confirmed',
+            'booking_status' => 'Cancelled',
             'check_in_date' => '2026-10-01',
             'check_out_date' => '2026-10-02',
             'total_amount' => 200.00,
@@ -228,14 +236,14 @@ class AdminTripListingTest extends TestCase
             'booking_ref_id' => $bookingRef->id,
             'activity_id' => $activity->id,
             'booking_reference' => 'ACT-202-1',
-            'booking_status' => 'Confirmed',
+            'booking_status' => 'Processing',
             'activity_date' => '2026-10-02',
             'total_amount' => 120.00,
         ]);
 
         $transport = \App\Models\Transport::create(['vehicle_display_name' => 'Airport Shuttle']);
 
-        TransportBooking::create([
+        $transportBooking = TransportBooking::create([
             'trip_id' => $trip->id,
             'booking_ref_id' => $bookingRef->id,
             'transport_id' => $transport->id,
@@ -246,18 +254,41 @@ class AdminTripListingTest extends TestCase
             'pickup_date' => '2026-10-01',
             'total_amount' => 90.00,
         ]);
+        $transportBooking->forceFill([
+            'trip_id' => $trip->id,
+            'booking_ref_id' => $bookingRef->id,
+        ])->save();
     }
 
     public function test_admin_trip_listing_shows_grouped_service_bookings_and_links(): void
     {
+        $trip = Trip::firstOrFail();
+        $trip->travellers()->createMany([
+            ['name' => 'Jane Doe', 'relationship' => 'self'],
+            ['name' => 'Alex Doe', 'relationship' => 'guest'],
+        ]);
+
         $response = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index'));
 
         $response->assertOk();
         $response->assertSee('data-trip-toggle', false);
         $response->assertSee('aria-label="Expand trip details"', false);
-        $response->assertSee('colspan="10"', false);
+        $response->assertSee('colspan="8"', false);
         $response->assertSee('Trip 202');
         $response->assertSee('Group Trip');
+        $response->assertSee('Travel Party Size: 2');
+        $response->assertSee('Jane Doe');
+        $response->assertSee('1 Booking Refs · 3 BLIs');
+        $response->assertSee('Total Amount USD410');
+        $response->assertSee('Confirmed: 1');
+        $response->assertSee('Processing: 1');
+        $response->assertSee('Cancelled: 1');
+        $response->assertDontSee('<th>Status</th>', false);
+        $response->assertSee('<th>Booking Status</th>', false);
+        $response->assertSee('background:#fef3c7; color:#92400e;', false);
+        $response->assertSee('background:#dcfce7; color:#166534;', false);
+        $response->assertSee('background:#fee2e2; color:#991b1b;', false);
+        $response->assertSee('Paid</span>', false);
         $response->assertSee('BR-202-20261001-0001');
         $response->assertSee('Payment Status');
         $response->assertSee('Paid');
@@ -329,7 +360,9 @@ class AdminTripListingTest extends TestCase
             'payment_status' => 'pending_verification',
         ]));
         $paymentFilter->assertSee('Island Escape');
-        $paymentFilter->assertSee('<td>Pending Verification</td>', false);
+        $paymentFilter->assertSee('Pending Verification</span>', false);
+        $paymentFilter->assertSee('Pending Verification</span>', false);
+        $paymentFilter->assertSee('background:#fef3c7; color:#92400e;', false);
         $paymentFilter->assertDontSee('Trip 202');
 
         $travellerFilter = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index', [

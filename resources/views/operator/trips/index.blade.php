@@ -67,10 +67,9 @@
                         <tr style="background:#f8fafc; color:#475569; font-size:13px; text-transform:uppercase; letter-spacing:.04em;">
                             <th scope="col" aria-label="Expand trip details" style="width:48px; padding:8px; border-bottom:1px solid #e5e7eb;"></th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Trip</th>
-                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Trip Type</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Common Booking</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Traveller</th>
-                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Dates</th>
+                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Booking Status</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Payment Status</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Attention / Priority</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Next Action</th>
@@ -91,18 +90,48 @@
                                     <button class="btn btn-sm btn-outline-secondary" type="button" data-trip-toggle aria-expanded="false" aria-controls="operator-trip-{{ $trip->id }}" aria-label="Expand trip details" title="Expand trip details" style="width:30px; height:30px; padding:0; border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:4px; font-size:18px; line-height:1; font-weight:600; cursor:pointer;">+</button>
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
-                                    <div style="font-weight:700; color:#0f172a;">{{ $trip->title ?: 'Trip #' . $trip->id }}</div>
-                                    <div style="font-size:12px; color:#94a3b8; margin-top:3px;">#{{ $trip->id }}</div>
+                                    @php
+                                        $resolvedTripType = $trip->trip_type ?? 'Trip';
+                                        $tripDisplayName = $resolvedTripType === 'Trip' ? null : ($trip->title ?: 'Trip #' . $trip->id);
+                                        $tripDateRange = ($trip->start_date ? $trip->start_date->format('d M Y') : 'N/A') . ' - ' . ($trip->end_date ? $trip->end_date->format('d M Y') : 'N/A');
+                                    @endphp
+                                    @if(in_array($resolvedTripType, ['Package Trip', 'Group Trip'], true))
+                                        <div style="font-weight:700; color:#0f172a;">{{ $tripDisplayName ?: ($trip->title ?: 'Trip #' . $trip->id) }}</div>
+                                        <div style="margin-top:6px; color:#334155; font-size:12px;">{{ $resolvedTripType }}</div>
+                                        <div style="margin-top:6px; color:#64748b; font-size:12px;">{{ $tripDateRange }}</div>
+                                    @else
+                                        <div style="font-weight:700; color:#0f172a;">Trip #{{ $trip->id }}</div>
+                                        <div style="margin-top:6px; color:#64748b; font-size:12px;">{{ $tripDateRange }}</div>
+                                    @endif
+                                    <div style="margin-top:6px; color:#64748b; font-size:12px;">{{ $trip->common_booking_ref_count }} Booking Refs · {{ $trip->common_booking_bli_count }} BLIs</div>
+                                    @forelse($trip->total_amounts as $totalAmount)
+                                        <div style="margin-top:6px; color:#64748b; font-size:12px;">Total Amount {{ $totalAmount['currency'] }}{{ $totalAmount['amount'] }}</div>
+                                    @empty
+                                        <div style="margin-top:6px; color:#64748b; font-size:12px;">Total Amount USD0</div>
+                                    @endforelse
                                 </td>
-                                <td style="padding:14px; vertical-align:top;">{{ $trip->trip_type ?? 'Trip' }}</td>
                                 <td style="padding:14px; vertical-align:top;">{{ $tripRef ?: 'N/A' }}</td>
-                                <td style="padding:14px; vertical-align:top;">{{ optional($trip->traveler)->full_name ?? optional($trip->traveler)->email ?? 'N/A' }}</td>
                                 <td style="padding:14px; vertical-align:top;">
-                                    {{ $trip->start_date ? $trip->start_date->format('d/m/Y') : 'N/A' }}<br>
-                                    <span style="color:#64748b;">to</span> {{ $trip->end_date ? $trip->end_date->format('d/m/Y') : 'N/A' }}
+                                    <div>{{ $trip->traveller_display_name }}</div>
+                                    <div style="margin-top:6px; color:#64748b; font-size:12px;">Travel Party Size: {{ $trip->travel_party_size }}</div>
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
-                                    {{ $trip->payment_status_display }}
+                                    <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                                        @forelse($trip->booking_status_counts as $statusCount)
+                                            <span class="trip-booking-status-badge" style="display:inline-block; padding:4px 7px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; {{ $statusCount['style'] }}">{{ $statusCount['status'] }}: {{ $statusCount['count'] }}</span>
+                                        @empty
+                                            <span style="color:#64748b;">N/A</span>
+                                        @endforelse
+                                    </div>
+                                </td>
+                                <td style="padding:14px; vertical-align:top;">
+                                    <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                                        @forelse($trip->payment_status_badges as $statusBadge)
+                                            <span class="trip-booking-status-badge" style="display:inline-block; padding:4px 7px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; {{ $statusBadge['style'] }}">{{ $statusBadge['status'] }}</span>
+                                        @empty
+                                            <span style="color:#64748b;">N/A</span>
+                                        @endforelse
+                                    </div>
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
                                     @php
@@ -129,7 +158,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="8" style="padding:0; border-bottom:1px solid #e5e7eb;">
+                                <td colspan="9" style="padding:0; border-bottom:1px solid #e5e7eb;">
                                     <div id="operator-trip-{{ $trip->id }}" hidden>
                                         <div style="padding:18px; background:#f8fafc;">
                                             <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
@@ -170,19 +199,19 @@
                                                             'accommodation' => [
                                                                 'Property' => optional($booking->accommodation)->property_name ?? 'N/A',
                                                                 'Room' => optional($booking->room)->room_name ?? optional($booking->room)->name ?? 'N/A',
-                                                                'Booking Ref' => $booking->booking_reference ?? $booking->bookingRef?->booking_ref_code ?? 'N/A',
+                                                                'BLI Id' => $booking->booking_reference ?? $booking->bookingRef?->booking_ref_code ?? 'N/A',
                                                                 'Status' => $booking->booking_status ?? 'N/A',
                                                             ],
                                                             'activity' => [
                                                                 'Activity' => optional($booking->activity)->activity_name ?? 'N/A',
                                                                 '' => '',
-                                                                'Booking Ref' => $booking->booking_reference ?? $booking->bookingRef?->booking_ref_code ?? 'N/A',
+                                                                'BLI Id' => $booking->booking_reference ?? $booking->bookingRef?->booking_ref_code ?? 'N/A',
                                                                 'Status' => $booking->booking_status ?? 'N/A',
                                                             ],
                                                             'transport' => [
                                                                 'Route' => trim(($booking->route_from ?? '') . ' → ' . ($booking->route_to ?? '')),
                                                                 'Vehicle' => optional($booking->transport)->vehicle_display_name ?? 'N/A',
-                                                                'Booking Ref' => $booking->booking_reference ?? $booking->bookingRef?->booking_ref_code ?? 'N/A',
+                                                                'BLI Id' => $booking->booking_reference ?? $booking->bookingRef?->booking_ref_code ?? 'N/A',
                                                                 'Status' => $booking->booking_status ?? 'N/A',
                                                             ],
                                                             default => [],

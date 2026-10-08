@@ -60,12 +60,9 @@
                             <thead>
                                 <tr>
                                     <th scope="col" style="width:48px;"><span class="visually-hidden">Expand trip details</span></th>
-                                    <th style="width:52px;">Trip ID</th>
                                     <th>Trip</th>
-                                    <th style="width:67px;">Trip Type</th>
                                     <th>Traveller</th>
-                                    <th>Dates</th>
-                                    <th>Status</th>
+                                    <th>Booking Status</th>
                                     <th>Payment Status</th>
                                     <th>Booking References</th>
                                     <th>Attention / Priority</th>
@@ -102,15 +99,48 @@
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#trip-{{ $trip->id }}" data-trip-toggle aria-expanded="false" aria-controls="trip-{{ $trip->id }}" aria-label="Expand trip details" title="Expand trip details" style="width:30px; height:30px; padding:0; font-size:18px; line-height:1;">+</button>
                                         </td>
-                                        <td>{{ $trip->id }}</td>
-                                        <td>{{ $tripLabel }}</td>
-                                        <td>{{ $trip->trip_type ?? 'Trip' }}</td>
-                                        <td>{{ optional($trip->traveler)->full_name ?? optional($trip->traveler)->email ?? 'N/A' }}</td>
-                                        <td>{{ $trip->start_date ? $trip->start_date->format('d/m/Y') : 'N/A' }} - {{ $trip->end_date ? $trip->end_date->format('d/m/Y') : 'N/A' }}</td>
                                         <td>
-                                            <span class="badge bg-info text-dark trip-status">{{ $trip->status ?? 'N/A' }}</span>
+                                            @php
+                                                $resolvedTripType = $trip->trip_type ?? 'Trip';
+                                                $tripDateRange = ($trip->start_date ? $trip->start_date->format('d M Y') : 'N/A') . ' - ' . ($trip->end_date ? $trip->end_date->format('d M Y') : 'N/A');
+                                            @endphp
+                                            @if(in_array($resolvedTripType, ['Package Trip', 'Group Trip'], true))
+                                                <div><strong>{{ $trip->title ?: 'Trip #' . $trip->id }}</strong></div>
+                                                <div class="small text-muted mt-1">{{ $resolvedTripType }}</div>
+                                                <div class="small text-muted mt-1">{{ $tripDateRange }}</div>
+                                            @else
+                                                <div><strong>Trip #{{ $trip->id }}</strong></div>
+                                                <div class="small text-muted mt-1">{{ $tripDateRange }}</div>
+                                            @endif
+                                            <div class="small text-muted mt-1">{{ $trip->common_booking_ref_count }} Booking Refs · {{ $trip->common_booking_bli_count }} BLIs</div>
+                                            @forelse($trip->total_amounts as $totalAmount)
+                                                <div class="small text-muted mt-1">Total Amount {{ $totalAmount['currency'] }}{{ $totalAmount['amount'] }}</div>
+                                            @empty
+                                                <div class="small text-muted mt-1">Total Amount USD0</div>
+                                            @endforelse
                                         </td>
-                                        <td>{{ $trip->payment_status_display }}</td>
+                                        <td>
+                                            <div>{{ $trip->traveller_display_name }}</div>
+                                            <div class="small text-muted mt-1">Travel Party Size: {{ $trip->travel_party_size }}</div>
+                                        </td>
+                                        <td>
+                                            <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                                                @forelse($trip->booking_status_counts as $statusCount)
+                                                    <span class="trip-booking-status-badge" style="display:inline-block; padding:4px 7px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; {{ $statusCount['style'] }}">{{ $statusCount['status'] }}: {{ $statusCount['count'] }}</span>
+                                                @empty
+                                                    <span class="text-muted">N/A</span>
+                                                @endforelse
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                                                @forelse($trip->payment_status_badges as $statusBadge)
+                                                    <span class="trip-booking-status-badge" style="display:inline-block; padding:4px 7px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; {{ $statusBadge['style'] }}">{{ $statusBadge['status'] }}</span>
+                                                @empty
+                                                    <span class="text-muted">N/A</span>
+                                                @endforelse
+                                            </div>
+                                        </td>
                                         <td>{{ !empty($bookingReferenceCodes) ? implode(', ', $bookingReferenceCodes) : ($allServiceBookings->count() ? $allServiceBookings->count() : 0) }}</td>
                                         <td>
                                             <form method="POST" action="{{ route('admin.trips.update-priority', $trip) }}" class="d-inline">
@@ -136,7 +166,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td colspan="11" class="p-0 border-top-0">
+                                        <td colspan="8" class="p-0 border-top-0">
                                             <div id="trip-{{ $trip->id }}" class="collapse">
                                                 <div class="p-3 bg-light">
                                                     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
@@ -221,7 +251,7 @@
                                                                                 <a href="{{ $detailRoute }}" class="btn btn-sm btn-primary">View Details</a>
                                                                             </div>
                                                                             <div class="row g-3 small">
-                                                                                <div class="col-md-6"><strong>Booking Ref:</strong> {{ $bookingRefValue }}</div>
+                                                                                <div class="col-md-6"><strong>BLI Id:</strong> {{ $bookingRefValue }}</div>
                                                                                 <div class="col-md-6"><strong>Status:</strong> {{ $bookingStatus }}</div>
                                                                                 @foreach($serviceMeta as $label => $value)
                                                                                     <div class="col-md-6"><strong>{{ $label }}:</strong> {{ $value }}</div>

@@ -32,6 +32,7 @@ class TripController extends Controller
         $trips = $tripListingFilters->apply(clone $tripScope, $filters)
             ->with([
             'traveler',
+            'travellers',
             'bookingRefs',
             'bookingRefs.paymentTransactions',
             'bookingRefs.paymentTransaction',
@@ -52,8 +53,17 @@ class TripController extends Controller
 
         foreach ($trips as $trip) {
             $trip->trip_type = $tripListingFilters->resolveTripType($trip);
+            $commonBookingCounts = $tripListingFilters->resolveCommonBookingCounts($trip);
+            $trip->common_booking_ref_count = $commonBookingCounts['booking_refs'];
+            $trip->common_booking_bli_count = $commonBookingCounts['blis'];
+            $trip->booking_status_counts = $tripListingFilters->resolveBookingStatusCounts($trip);
+            $trip->total_amounts = $tripListingFilters->resolveTripTotalAmounts($trip);
+            $travellerDisplay = $tripListingFilters->resolveTravellerDisplay($trip);
+            $trip->traveller_display_name = $travellerDisplay['name'];
+            $trip->travel_party_size = $travellerDisplay['party_size'];
             $trip->payment_status = $this->resolvePaymentStatus($trip);
             $trip->payment_status_display = $tripListingFilters->resolvePaymentStatusDisplay($trip);
+            $trip->payment_status_badges = $tripListingFilters->paymentStatusBadges($trip->payment_status_display);
             $trip->next_actions = $this->resolveNextActions($trip);
         }
 

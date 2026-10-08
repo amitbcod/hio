@@ -161,6 +161,220 @@ class TripListingFilters
         return 'Trip';
     }
 
+    public function resolveCommonBookingCounts(Trip $trip): array
+    {
+        $tripBookingRefIds = array_map('intval', $trip->bookingRefs->modelKeys());
+        $serviceBookings = $trip->accommodationBookings
+            ->concat($trip->activityBookings)
+            ->concat($trip->transportBookings);
+        $bookingRefIds = $serviceBookings
+            ->pluck('booking_ref_id')
+            ->filter(fn ($bookingRefId) => $bookingRefId !== null && $bookingRefId !== '')
+            ->map(fn ($bookingRefId) => (int) $bookingRefId)
+            ->filter(fn (int $bookingRefId) => in_array($bookingRefId, $tripBookingRefIds, true))
+            ->unique();
+
+        return [
+            'booking_refs' => $bookingRefIds->count(),
+            'blis' => $serviceBookings->count(),
+        ];
+    }
+
+    public function resolveTravellerDisplay(Trip $trip): array
+    {
+        $travellers = $trip->relationLoaded('travellers')
+            ? $trip->travellers
+            : $trip->travellers()->get();
+        $accountHolderName = trim((string) ($trip->traveler?->full_name ?? ''));
+        $accountHolderEmail = trim((string) ($trip->traveler?->email ?? ''));
+        $normalizeName = static fn (string $name): string => mb_strtolower(
+            preg_replace('/\s+/', ' ', trim($name)) ?? ''
+        );
+        $accountHolderKey = $normalizeName($accountHolderName);
+        $accountHolderEmailKey = mb_strtolower($accountHolderEmail);
+
+        $accountHolderTraveller = $travellers->first(function ($traveller) use ($accountHolderKey, $accountHolderEmailKey, $normalizeName) {
+            return ($accountHolderKey !== '' && $normalizeName((string) $traveller->name) === $accountHolderKey)
+                || ($accountHolderEmailKey !== ''
+                    && mb_strtolower(trim((string) $traveller->email)) === $accountHolderEmailKey)
+                || mb_strtolower((string) $traveller->relationship) === 'self';
+        });
+        $leadTraveller = $travellers->first(
+            fn ($traveller) => mb_strtolower((string) $traveller->relationship) === 'lead'
+        );
+
+        if ($accountHolderTraveller) {
+            $displayName = $accountHolderTraveller->name;
+        } elseif ($accountHolderName !== '') {
+            $displayName = 'Account Holder not travelling · Responsible: ' . ($leadTraveller?->name ?: 'Not specified');
+        } else {
+            $displayName = $leadTraveller?->name ?: 'N/A';
+        }
+
+        return [
+            'name' => $displayName,
+            'party_size' => $travellers->unique(fn ($traveller) => $traveller->getKey())->count(),
+        ];
+    }
+
+    public function resolveBookingStatusCounts(Trip $trip): array
+    {
+        $serviceBookings = $trip->accommodationBookings
+            ->concat($trip->activityBookings)
+            ->concat($trip->transportBookings);
+        $statusCounts = $serviceBookings
+            ->map(fn ($booking) => trim((string) ($booking->booking_status ?? '')))
+            ->filter(fn (string $status) => $status !== '')
+            ->groupBy(fn (string $status) => mb_strtolower($status))
+            ->map(fn ($statuses) => [
+                'status' => $statuses->first(),
+                'count' => $statuses->count(),
+            ]);
+
+        $statusOrder = [
+            'pending' => 0,
+            'processing' => 1,
+            'confirmed' => 2,
+            'cancelled' => 3,
+            'canceled' => 3,
+        ];
+
+        return $statusCounts
+            ->map(function (array $item, string $key): array {
+                $item['style'] = $this->bookingStatusBadgeStyle($item['status']);
+
+                return $item;
+            })
+            ->sortBy(fn (array $item, string $key) => [$statusOrder[$key] ?? 4, $key])
+            ->values()
+            ->all();
+    }
+
+    public function bookingStatusBadgeStyle(string $status): string
+    {
+        return match (mb_strtolower(trim($status))) {
+            'processing', 'pending' => 'background:#fef3c7; color:#92400e;',
+            'confirmed' => 'background:#dcfce7; color:#166534;',
+            'cancelled', 'canceled', 'cancel' => 'background:#fee2e2; color:#991b1b;',
+            default => 'background:#e2e8f0; color:#334155;',
+        };
+    }
+
+    public function resolveTripTotalAmounts(Trip $trip, bool $useBookingRefTotals = true): array
+    {
+        $serviceBookings = $trip->accommodationBookings
+            ->concat($trip->activityBookings)
+            ->concat($trip->transportBookings);
+        $totals = [];
+
+        $addAmount = static function (array &$totals, ?string $currency, $amount): void {
+            $currency = strtoupper(trim((string) $currency)) ?: 'USD';
+            $totals[$currency] = ($totals[$currency] ?? 0) + (float) ($amount ?? 0);
+        };
+
+        if (!$useBookingRefTotals) {
+            foreach ($serviceBookings as $booking) {
+                $addAmount($totals, $booking->currency ?? null, $booking->total_amount ?? 0);
+            }
+
+            return $this->formatTripTotalAmounts($totals);
+        }
+
+        $serviceBookingsByReference = $serviceBookings->groupBy(
+            fn ($booking) => $booking->booking_ref_id === null ? 'unreferenced' : (string) $booking->booking_ref_id
+        );
+        $accountedReferenceIds = [];
+
+        foreach ($trip->bookingRefs as $bookingRef) {
+            $referenceId = (int) $bookingRef->getKey();
+            $referenceBookings = $serviceBookingsByReference->get((string) $referenceId, collect());
+            $currency = $referenceBookings
+                ->map(fn ($booking) => trim((string) ($booking->currency ?? '')))
+                ->first(fn (string $currency) => $currency !== '') ?: 'USD';
+
+            if ($bookingRef->total_amount !== null) {
+                $addAmount($totals, $currency, $bookingRef->total_amount);
+            } else {
+                $parentBooking = $trip->bookings->first(
+                    fn ($booking) => (int) $booking->booking_ref_id === $referenceId
+                );
+
+                if ($parentBooking?->total_amount !== null) {
+                    $addAmount($totals, $currency, $parentBooking->total_amount);
+                } elseif ($referenceBookings->isNotEmpty()) {
+                    foreach ($referenceBookings as $booking) {
+                        $addAmount($totals, $booking->currency ?? $currency, $booking->total_amount ?? 0);
+                    }
+                } else {
+                    $lineItemTotal = $parentBooking?->lineItems->sum('price') ?? 0;
+                    $addAmount($totals, $currency, $lineItemTotal);
+                }
+            }
+
+            $accountedReferenceIds[] = $referenceId;
+        }
+
+        foreach ($serviceBookingsByReference as $referenceKey => $referenceBookings) {
+            if ($referenceKey !== 'unreferenced' && in_array((int) $referenceKey, $accountedReferenceIds, true)) {
+                continue;
+            }
+
+            foreach ($referenceBookings as $booking) {
+                $addAmount($totals, $booking->currency ?? null, $booking->total_amount ?? 0);
+            }
+        }
+
+        return $this->formatTripTotalAmounts($totals);
+    }
+
+    private function formatTripTotalAmounts(array $totals): array
+    {
+        ksort($totals);
+
+        $formattedAmounts = [];
+        foreach ($totals as $currency => $amount) {
+            $decimals = (float) $amount == (int) $amount ? 0 : 2;
+            $formattedAmounts[] = [
+                'currency' => $currency,
+                'amount' => number_format((float) $amount, $decimals),
+            ];
+        }
+
+        return $formattedAmounts;
+    }
+
+    public function paymentStatusBadges(string $display): array
+    {
+        return collect(explode(',', $display))
+            ->map(fn (string $status) => trim($status))
+            ->filter()
+            ->map(fn (string $status) => [
+                'status' => $status,
+                'style' => $this->paymentStatusBadgeStyle($status),
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function paymentStatusBadgeStyle(string $status): string
+    {
+        $normalized = mb_strtolower(trim($status));
+
+        if (in_array($normalized, ['paid', 'verified & settled', 'verified_settled'], true)) {
+            return 'background:#dcfce7; color:#166534;';
+        }
+
+        if (in_array($normalized, ['pending', 'pending verification', 'processing'], true)) {
+            return 'background:#fef3c7; color:#92400e;';
+        }
+
+        if (in_array($normalized, ['cancel', 'cancelled', 'canceled', 'failed', 'refunded', 'rejected'], true)) {
+            return 'background:#fee2e2; color:#991b1b;';
+        }
+
+        return 'background:#e2e8f0; color:#334155;';
+    }
+
     private function applyPaymentStatus(Builder $query, string $status): void
     {
         $status = mb_strtolower(trim($status));
