@@ -22,6 +22,7 @@ class TripController extends Controller
             'to_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from_date'],
             'payment_status' => ['nullable', 'string', 'max:100'],
             'trip_type' => ['nullable', 'in:Trip,Group Trip,Package Trip'],
+            'traveller_information' => ['nullable', 'in:missing,complete'],
             'traveller' => ['nullable', 'string', 'max:255'],
             'booking_reference' => ['nullable', 'string', 'max:255'],
             'trip' => ['nullable', 'string', 'max:255'],

@@ -11,6 +11,18 @@ use Illuminate\Support\Str;
 
 class TripListingFilters
 {
+    private const RESPONSIBLE_TRAVELLER_CONDITION = "LOWER(TRIM(COALESCE(travellers.relationship, ''))) IN ('self', 'lead')
+        OR EXISTS (
+            SELECT 1 FROM traveler_accounts
+            WHERE traveler_accounts.id = trips.traveler_account_id
+            AND (
+                (NULLIF(TRIM(COALESCE(traveler_accounts.full_name, '')), '') IS NOT NULL
+                    AND LOWER(TRIM(travellers.name)) = LOWER(TRIM(traveler_accounts.full_name)))
+                OR (NULLIF(TRIM(COALESCE(traveler_accounts.email, '')), '') IS NOT NULL
+                    AND LOWER(TRIM(COALESCE(travellers.email, ''))) = LOWER(TRIM(traveler_accounts.email)))
+            )
+        )";
+
     private ?bool $hasSettlementStatus = null;
 
     public function apply(Builder $query, array $filters, ?array $operatorServiceIds = null): Builder
@@ -33,6 +45,10 @@ class TripListingFilters
 
         if (!empty($filters['trip_type'])) {
             $this->applyTripType($query, $filters['trip_type']);
+        }
+
+        if (!empty($filters['traveller_information'])) {
+            $this->applyTravellerInformation($query, $filters['traveller_information'], $operatorServiceIds);
         }
 
         if (!empty($filters['traveller'])) {
@@ -58,6 +74,156 @@ class TripListingFilters
         }
 
         return $query;
+    }
+
+    private function applyTravellerInformation(Builder $query, string $status, ?array $operatorServiceIds): void
+    {
+        $sources = [
+            ['relation' => 'accommodationBookings', 'table' => 'accommodation_bookings', 'type' => 'accommodation', 'scope' => 'accommodations'],
+            ['relation' => 'activityBookings', 'table' => 'activity_bookings', 'type' => 'activity', 'scope' => 'activities'],
+            ['relation' => 'transportBookings', 'table' => 'transport_bookings', 'type' => 'transport', 'scope' => 'transports'],
+        ];
+
+        $sources = array_values(array_filter($sources, function (array $source) use ($operatorServiceIds): bool {
+            return $operatorServiceIds === null
+                || !isset($operatorServiceIds[$source['scope']])
+                || $operatorServiceIds[$source['scope']]->isNotEmpty();
+        }));
+
+        $isMissing = $status === 'missing';
+        $query->where(function (Builder $tripQuery) use ($sources, $operatorServiceIds, $isMissing): void {
+            if ($isMissing) {
+                $tripQuery->where(function (Builder $incompleteQuery) use ($sources, $operatorServiceIds): void {
+                    $incompleteQuery
+                        ->whereDoesntHave('travellers')
+                        ->orWhereHas('travellers', fn (Builder $travellerQuery) => $travellerQuery
+                            ->whereRaw("NULLIF(TRIM(COALESCE(travellers.name, '')), '') IS NULL"))
+                        ->orWhereDoesntHave('travellers', fn (Builder $travellerQuery) => $travellerQuery
+                            ->whereRaw(self::RESPONSIBLE_TRAVELLER_CONDITION));
+
+                    $incompleteQuery->orWhere(function (Builder $noExpectedQuery) use ($sources, $operatorServiceIds): void {
+                        foreach ($sources as $source) {
+                            $noExpectedQuery->whereDoesntHave($source['relation'], function (Builder $bookingQuery) use ($source, $operatorServiceIds): void {
+                                $this->scopeServiceBookingQuery($bookingQuery, $source, $operatorServiceIds[$source['scope']] ?? null);
+                                $bookingQuery->whereRaw(
+                                    '(COALESCE(' . $source['table'] . '.adults, 0) + COALESCE(' . $source['table'] . '.children, 0)) > 0'
+                                );
+                            });
+                        }
+                    });
+
+                    foreach ($sources as $source) {
+                        $this->whereServiceBookingIsIncomplete(
+                            $incompleteQuery,
+                            $source,
+                            $operatorServiceIds[$source['scope']] ?? null
+                        );
+                    }
+                });
+
+                return;
+            }
+
+            $tripQuery
+                ->whereHas('travellers')
+                ->whereDoesntHave('travellers', fn (Builder $travellerQuery) => $travellerQuery
+                    ->whereRaw("NULLIF(TRIM(COALESCE(travellers.name, '')), '') IS NULL"))
+                ->whereHas('travellers', fn (Builder $travellerQuery) => $travellerQuery
+                    ->whereRaw(self::RESPONSIBLE_TRAVELLER_CONDITION));
+
+            $this->whereHasExpectedParticipants($tripQuery, $sources, $operatorServiceIds);
+
+            foreach ($sources as $source) {
+                $tripQuery->whereDoesntHave($source['relation'], function (Builder $bookingQuery) use ($source, $operatorServiceIds): void {
+                    $this->scopeServiceBookingQuery($bookingQuery, $source, $operatorServiceIds[$source['scope']] ?? null);
+                    $this->addIncompleteServiceBookingCondition($bookingQuery, $source);
+                });
+            }
+        });
+    }
+
+    private function whereHasExpectedParticipants(Builder $query, array $sources, ?array $operatorServiceIds): void
+    {
+        $query->where(function (Builder $expectedQuery) use ($sources, $operatorServiceIds): void {
+            foreach ($sources as $index => $source) {
+                $method = $index === 0 ? 'whereHas' : 'orWhereHas';
+                $expectedQuery->{$method}($source['relation'], function (Builder $bookingQuery) use ($source, $operatorServiceIds): void {
+                    $this->scopeServiceBookingQuery($bookingQuery, $source, $operatorServiceIds[$source['scope']] ?? null);
+                    $bookingQuery->whereRaw(
+                        '(COALESCE(' . $source['table'] . '.adults, 0) + COALESCE(' . $source['table'] . '.children, 0)) > 0'
+                    );
+                });
+            }
+        });
+    }
+
+    private function whereServiceBookingIsIncomplete(Builder $query, array $source, $serviceIds): void
+    {
+        $query->orWhereHas($source['relation'], function (Builder $bookingQuery) use ($source, $serviceIds): void {
+            $this->scopeServiceBookingQuery($bookingQuery, $source, $serviceIds);
+            $this->addIncompleteServiceBookingCondition($bookingQuery, $source);
+        });
+    }
+
+    private function scopeServiceBookingQuery(Builder $query, array $source, $serviceIds): void
+    {
+        if ($serviceIds !== null) {
+            $query->whereIn($source['table'] . '.' . match ($source['scope']) {
+                'accommodations' => 'accommodation_id',
+                'activities' => 'activity_id',
+                default => 'transport_id',
+            }, $serviceIds);
+        }
+    }
+
+    private function addIncompleteServiceBookingCondition(Builder $query, array $source): void
+    {
+        $table = $source['table'];
+        $guestType = $source['type'];
+        $guestCorrelation = "booking_guests.booking_id = {$table}.id AND booking_guests.booking_type = ?";
+        $expectedAdults = "COALESCE({$table}.adults, 0)";
+        $expectedChildren = "COALESCE({$table}.children, 0)";
+        $expectedTotal = "({$expectedAdults} + {$expectedChildren})";
+
+        $query->where(function (Builder $incompleteQuery) use (
+            $table,
+            $guestType,
+            $guestCorrelation,
+            $expectedAdults,
+            $expectedChildren,
+            $expectedTotal
+        ): void {
+            $incompleteQuery
+                ->whereRaw($expectedTotal . ' <= 0')
+                ->orWhereRaw(
+                    "(SELECT COUNT(*) FROM booking_guests WHERE {$guestCorrelation}) <> {$expectedTotal}",
+                    [$guestType]
+                )
+                ->orWhereRaw(
+                    "(SELECT COUNT(*) FROM booking_guests WHERE {$guestCorrelation} AND LOWER(TRIM(COALESCE(booking_guests.relation, ''))) <> 'child') <> {$expectedAdults}",
+                    [$guestType]
+                )
+                ->orWhereRaw(
+                    "(SELECT COUNT(*) FROM booking_guests WHERE {$guestCorrelation} AND LOWER(TRIM(COALESCE(booking_guests.relation, ''))) = 'child') <> {$expectedChildren}",
+                    [$guestType]
+                )
+                ->orWhereRaw(
+                    "EXISTS (
+                        SELECT 1 FROM booking_guests
+                        WHERE {$guestCorrelation}
+                        AND (
+                            NULLIF(TRIM(COALESCE(booking_guests.first_name, '')), '') IS NULL
+                            OR NULLIF(TRIM(COALESCE(booking_guests.last_name, '')), '') IS NULL
+                            OR booking_guests.dob IS NULL
+                            OR NULLIF(TRIM(COALESCE(booking_guests.nationality, '')), '') IS NULL
+                        )
+                    )",
+                    [$guestType]
+                )
+                ->orWhereRaw(
+                    "(SELECT COUNT(*) FROM travellers WHERE travellers.trip_id = {$table}.trip_id) < {$expectedTotal}"
+                );
+        });
     }
 
     public function paymentStatusOptions(Builder $tripScope): array

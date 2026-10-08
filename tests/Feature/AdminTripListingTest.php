@@ -32,6 +32,7 @@ class AdminTripListingTest extends TestCase
         Schema::create('traveler_accounts', function (Blueprint $table) {
             $table->id();
             $table->string('full_name')->nullable();
+            $table->string('email')->nullable();
             $table->timestamps();
         });
 
@@ -50,6 +51,8 @@ class AdminTripListingTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('trip_id');
             $table->string('name');
+            $table->string('email')->nullable();
+            $table->date('date_of_birth')->nullable();
             $table->string('relationship')->nullable();
             $table->timestamps();
         });
@@ -68,6 +71,9 @@ class AdminTripListingTest extends TestCase
             $table->string('first_name');
             $table->string('middle_name')->nullable();
             $table->string('last_name');
+            $table->string('relation')->nullable();
+            $table->date('dob')->nullable();
+            $table->string('nationality')->nullable();
             $table->timestamps();
         });
 
@@ -440,6 +446,7 @@ class AdminTripListingTest extends TestCase
             'to_date' => '2026-10-03',
             'payment_status' => 'paid',
             'trip_type' => 'Group Trip',
+            'traveller_information' => 'missing',
             'traveller' => 'jane',
             'booking_reference' => 'br-202-',
             'trip' => '202',
@@ -506,6 +513,55 @@ class AdminTripListingTest extends TestCase
         $reset->assertSee('Trip 202');
         $reset->assertSee('Island Escape');
         $reset->assertSee('Normal Trip');
+    }
+
+    public function test_admin_trip_listing_filters_missing_and_complete_traveller_information(): void
+    {
+        $accountHolder = TravelerAccount::firstOrFail();
+        $completeTrip = Trip::create([
+            'traveler_account_id' => $accountHolder->id,
+            'title' => 'Complete Traveller Trip',
+            'start_date' => '2026-11-01',
+            'end_date' => '2026-11-02',
+        ]);
+        $completeTrip->travellers()->create([
+            'name' => 'Jane Doe',
+            'relationship' => 'self',
+            'date_of_birth' => '1985-01-01',
+        ]);
+
+        $completeBooking = AccommodationBooking::create([
+            'trip_id' => $completeTrip->id,
+            'accommodation_id' => \App\Models\Accommodation::firstOrFail()->id,
+            'booking_reference' => 'ACC-COMPLETE',
+            'booking_status' => 'Confirmed',
+            'adults' => 1,
+            'children' => 0,
+        ]);
+        \App\Models\BookingGuest::create([
+            'booking_id' => $completeBooking->id,
+            'booking_type' => 'accommodation',
+            'guest_number' => 1,
+            'first_name' => 'Jane',
+            'last_name' => 'Doe',
+            'relation' => 'self',
+            'dob' => '1985-01-01',
+            'nationality' => 'Mauritian',
+        ]);
+
+        $missingResponse = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index', [
+            'traveller_information' => 'missing',
+        ]));
+        $missingResponse->assertOk();
+        $missingResponse->assertSee('Trip 202');
+        $missingResponse->assertDontSee('Complete Traveller Trip');
+
+        $completeResponse = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index', [
+            'traveller_information' => 'complete',
+        ]));
+        $completeResponse->assertOk();
+        $completeResponse->assertSee('Complete Traveller Trip');
+        $completeResponse->assertDontSee('Trip 202');
     }
 
     public function test_admin_can_update_trip_priority_and_visibly_persist_it(): void

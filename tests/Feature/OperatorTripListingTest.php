@@ -78,6 +78,8 @@ class OperatorTripListingTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('trip_id');
             $table->string('name');
+            $table->string('email')->nullable();
+            $table->date('date_of_birth')->nullable();
             $table->string('relationship')->nullable();
             $table->timestamps();
         });
@@ -90,6 +92,9 @@ class OperatorTripListingTest extends TestCase
             $table->string('first_name');
             $table->string('middle_name')->nullable();
             $table->string('last_name');
+            $table->string('relation')->nullable();
+            $table->date('dob')->nullable();
+            $table->string('nationality')->nullable();
             $table->timestamps();
         });
 
@@ -254,6 +259,78 @@ class OperatorTripListingTest extends TestCase
 
         AccommodationBooking::create(['id' => 3, 'trip_id' => 2, 'booking_ref_id' => 99, 'accommodation_id' => 2, 'booking_reference' => 'ACC-HIDDEN', 'booking_status' => 'Confirmed', 'total_amount' => 70.00]);
 
+        $completeTrip = Trip::create(['id' => 4, 'traveler_account_id' => $accountHolder->id, 'title' => 'Complete Trip']);
+        $completeTrip->travellers()->create([
+            'name' => 'Sarah Jones',
+            'relationship' => 'lead',
+            'date_of_birth' => '1985-01-01',
+        ]);
+        $completeTrip->travellers()->create([
+            'name' => 'David Jones',
+            'relationship' => 'child',
+            'date_of_birth' => '2015-01-01',
+        ]);
+        $completeBooking = AccommodationBooking::create([
+            'id' => 4,
+            'trip_id' => $completeTrip->id,
+            'accommodation_id' => $ownedAccommodation->id,
+            'room_id' => $room->id,
+            'booking_reference' => 'ACC-COMPLETE',
+            'booking_status' => 'Confirmed',
+            'adults' => 1,
+            'children' => 1,
+        ]);
+        \App\Models\BookingGuest::create([
+            'booking_id' => $completeBooking->id,
+            'booking_type' => 'accommodation',
+            'guest_number' => 1,
+            'first_name' => 'Sarah',
+            'last_name' => 'Jones',
+            'relation' => 'lead',
+            'dob' => '1985-01-01',
+            'nationality' => 'Mauritian',
+        ]);
+        \App\Models\BookingGuest::create([
+            'booking_id' => $completeBooking->id,
+            'booking_type' => 'accommodation',
+            'guest_number' => 2,
+            'first_name' => 'David',
+            'last_name' => 'Jones',
+            'relation' => 'child',
+            'dob' => '2015-01-01',
+            'nationality' => 'Mauritian',
+        ]);
+
+        $categoryMismatchTrip = Trip::create(['id' => 5, 'traveler_account_id' => $accountHolder->id, 'title' => 'Category Mismatch Trip']);
+        $categoryMismatchTrip->travellers()->createMany([
+            ['name' => 'John Smith', 'relationship' => 'self'],
+            ['name' => 'Sarah Jones', 'relationship' => 'guest'],
+            ['name' => 'David Jones', 'relationship' => 'guest'],
+        ]);
+        $categoryMismatchBooking = ActivityBooking::create([
+            'id' => 4,
+            'trip_id' => $categoryMismatchTrip->id,
+            'activity_id' => $ownedActivity->id,
+            'booking_reference' => 'ACT-CATEGORY-MISMATCH',
+            'booking_status' => 'Confirmed',
+            'adults' => 2,
+            'children' => 1,
+        ]);
+        foreach ([
+            ['first_name' => 'John', 'last_name' => 'Smith', 'relation' => 'self'],
+            ['first_name' => 'Sarah', 'last_name' => 'Jones', 'relation' => 'spouse'],
+            ['first_name' => 'David', 'last_name' => 'Jones', 'relation' => 'spouse'],
+        ] as $index => $guest) {
+            \App\Models\BookingGuest::create([
+                'booking_id' => $categoryMismatchBooking->id,
+                'booking_type' => 'activity',
+                'guest_number' => $index + 1,
+                ...$guest,
+                'dob' => '1985-01-01',
+                'nationality' => 'Mauritian',
+            ]);
+        }
+
         $this->actingAs($operator, 'operator');
 
         $response = $this->get(route('operator.trips.index'));
@@ -270,6 +347,7 @@ class OperatorTripListingTest extends TestCase
         $response->assertSee('>+</button>', false);
         $response->assertSee('aria-expanded="false"', false);
         $response->assertSee('id="operator-trip-1" hidden', false);
+        $response->assertSee('name="traveller_information"', false);
         $response->assertSee('Next Step:</strong> Awaiting Payment', false);
         $response->assertDontSee('background:#16a34a');
         $response->assertDontSee('Hidden Trip');
@@ -314,9 +392,32 @@ class OperatorTripListingTest extends TestCase
         $ownedReferenceSearch->assertSee('Mixed Trip');
         $ownedReferenceSearch->assertDontSee('ACC-OTHER');
 
+        $combinedFilter = $this->get(route('operator.trips.index', [
+            'booking_reference' => 'ACT-OWN',
+            'traveller_information' => 'missing',
+        ]));
+        $combinedFilter->assertSee('Mixed Trip');
+        $combinedFilter->assertDontSee('Visible Trip');
+
         $otherOperatorTripSearch = $this->get(route('operator.trips.index', [
             'trip' => '2',
         ]));
         $otherOperatorTripSearch->assertDontSee('Hidden Trip');
+
+        $missingResponse = $this->get(route('operator.trips.index', ['traveller_information' => 'missing']));
+        $missingResponse->assertOk();
+        $missingResponse->assertSee('Visible Trip');
+        $missingResponse->assertSee('Mixed Trip');
+        $missingResponse->assertSee('Category Mismatch Trip');
+        $missingResponse->assertDontSee('Complete Trip');
+        $missingResponse->assertDontSee('Hidden Trip');
+
+        $completeResponse = $this->get(route('operator.trips.index', ['traveller_information' => 'complete']));
+        $completeResponse->assertOk();
+        $completeResponse->assertSee('Complete Trip');
+        $completeResponse->assertDontSee('Category Mismatch Trip');
+        $completeResponse->assertDontSee('Visible Trip');
+        $completeResponse->assertDontSee('Mixed Trip');
+        $completeResponse->assertDontSee('Hidden Trip');
     }
 }

@@ -46,6 +46,14 @@
                     </select>
                 </div>
                 <div>
+                    <label for="operator-trip-traveller-information" style="display:block; margin-bottom:5px; font-size:13px; font-weight:600;">Missing traveller information</label>
+                    <select id="operator-trip-traveller-information" name="traveller_information" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+                        <option value="" @selected(empty($filters['traveller_information']))>All</option>
+                        <option value="missing" @selected(($filters['traveller_information'] ?? '') === 'missing')>Missing traveller information</option>
+                        <option value="complete" @selected(($filters['traveller_information'] ?? '') === 'complete')>Complete traveller information</option>
+                    </select>
+                </div>
+                <div>
                     <label for="operator-trip-traveller" style="display:block; margin-bottom:5px; font-size:13px; font-weight:600;">Traveller</label>
                     <input id="operator-trip-traveller" type="search" name="traveller" value="{{ $filters['traveller'] ?? '' }}" placeholder="Search traveller name" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
                 </div>

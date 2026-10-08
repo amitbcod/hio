@@ -37,6 +37,14 @@
                                     @endforeach
                                 </select>
                             </div>
+                            <div class="col-12 col-sm-6 col-lg-3">
+                                <label for="admin-trip-traveller-information" class="form-label">Missing traveller information</label>
+                                <select id="admin-trip-traveller-information" class="form-select" name="traveller_information">
+                                    <option value="" @selected(empty($filters['traveller_information']))>All</option>
+                                    <option value="missing" @selected(($filters['traveller_information'] ?? '') === 'missing')>Missing traveller information</option>
+                                    <option value="complete" @selected(($filters['traveller_information'] ?? '') === 'complete')>Complete traveller information</option>
+                                </select>
+                            </div>
                             <div class="col-12 col-sm-6 col-lg-4">
                                 <label for="admin-trip-traveller" class="form-label">Traveller</label>
                                 <input id="admin-trip-traveller" class="form-control" type="search" name="traveller" value="{{ $filters['traveller'] ?? '' }}" placeholder="Search traveller name">
