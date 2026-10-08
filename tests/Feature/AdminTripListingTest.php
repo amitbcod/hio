@@ -589,5 +589,7 @@ class AdminTripListingTest extends TestCase
         $view->assertOk();
         $view->assertSee('Priority Trip');
         $view->assertSee('Urgent');
+        $view->assertSee('onchange="this.form.requestSubmit()"', false);
+        $view->assertDontSee('>Save</button>', false);
     }
 }

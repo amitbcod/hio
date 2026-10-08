@@ -154,12 +154,11 @@
                                             <form method="POST" action="{{ route('admin.trips.update-priority', $trip) }}" class="d-inline">
                                                 @csrf
                                                 <div class="input-group input-group-sm" style="max-width: 180px;">
-                                                    <select name="priority" class="form-select form-select-sm" aria-label="Trip priority">
+                                                    <select name="priority" class="form-select form-select-sm" aria-label="Trip priority" onchange="this.form.requestSubmit()">
                                                         @foreach(App\Models\Trip::priorityOptions() as $value => $label)
                                                             <option value="{{ $value }}" @selected(strtolower((string) ($trip->priority ?? 'normal')) === $value)>{{ $label }}</option>
                                                         @endforeach
                                                     </select>
-                                                    <button type="submit" class="btn btn-outline-secondary btn-sm">Save</button>
                                                 </div>
                                             </form>
                                         </td>
