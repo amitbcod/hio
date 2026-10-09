@@ -327,3 +327,33 @@
          margin-bottom: 4px;
      }
  }
+/* Shared status badges used by Admin trip and service booking views. */
+.admin-status-badge {
+    display: inline-block;
+    padding: 4px 7px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
+.admin-status-badge--success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.admin-status-badge--warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.admin-status-badge--danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.admin-status-badge--neutral {
+    background: #e2e8f0;
+    color: #334155;
+}

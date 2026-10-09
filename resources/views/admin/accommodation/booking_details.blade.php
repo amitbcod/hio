@@ -19,9 +19,7 @@
                             <a href="{{ route('operator.accommodation.bookings') }}" class="btn btn-outline-blue" style="">
                                 ← Back to Bookings
                             </a>
-                            <span class="badge" style="background: {{ $booking->booking_status === 'Confirmed' ? '#28a745' : ($booking->booking_status === 'Pending' ? '#ffc107' : '#dc3545') }}; color: #fff; font-size: 15px; padding: 8px 16px; line-height: 21px; font-weight: 500;">
-                                {{ $booking->booking_status }}
-                            </span>
+                            @include('admin.partials._status_badge', ['status' => $booking->booking_status])
                         </div>
                     </div>
 
@@ -59,9 +57,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <strong>Status:</strong><br>
-                                    <span class="badge" style="background: {{ $booking->booking_status === 'Confirmed' ? '#28a745' : ($booking->booking_status === 'Pending' ? '#ffc107' : '#dc3545') }};">
-                                        {{ $booking->booking_status }}
-                                    </span>
+                                    @include('admin.partials._status_badge', ['status' => $booking->booking_status])
                                 </div>
                             </div>
                         </div>
@@ -237,9 +233,8 @@
                                     <strong>Payment Status:</strong><br>
                                     @php
                                         $bookingStatus = $booking->booking_status ?? 'Pending';
-                                        $statusColor = $bookingStatus === 'Confirmed' ? '#28a745' : ($bookingStatus === 'Cancelled' ? '#dc3545' : '#17a2b8');
                                     @endphp
-                                    <span class="badge" style="background: {{ $statusColor }};">{{ $bookingStatus }}</span>
+                                    @include('admin.partials._status_badge', ['status' => $bookingStatus])
                                     <br><small style="color: #666;">
                                         {{ $bookingStatus === 'Confirmed' ? 'Payment completed successfully' : ($bookingStatus === 'Cancelled' ? 'Booking has been cancelled' : 'Payment processing details not available') }}
                                     </small>

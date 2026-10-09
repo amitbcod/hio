@@ -375,10 +375,13 @@ class AdminTripListingTest extends TestCase
         $response->assertSee('Cancelled: 1');
         $response->assertDontSee('<th>Status</th>', false);
         $response->assertSee('<th>Booking Status</th>', false);
-        $response->assertSee('background:#fef3c7; color:#92400e;', false);
-        $response->assertSee('background:#dcfce7; color:#166534;', false);
-        $response->assertSee('background:#fee2e2; color:#991b1b;', false);
-        $response->assertSee('Paid</span>', false);
+        $response->assertSee('admin-status-badge--warning', false);
+        $response->assertSee('admin-status-badge--success', false);
+        $response->assertSee('admin-status-badge--danger', false);
+        $response->assertSee('admin-status-badge--success">Paid</span>', false);
+        $response->assertSee('admin-status-badge--danger">Cancelled</span>', false);
+        $response->assertSee('admin-status-badge--warning">Processing</span>', false);
+        $response->assertSee('admin-status-badge--success">Confirmed</span>', false);
         $response->assertSee('BR-202-20261001-0001');
         $response->assertSee('Payment Status');
         $response->assertSee('Paid');
@@ -464,7 +467,7 @@ class AdminTripListingTest extends TestCase
         $paymentFilter->assertSee('Island Escape');
         $paymentFilter->assertSee('Pending Verification</span>', false);
         $paymentFilter->assertSee('Pending Verification</span>', false);
-        $paymentFilter->assertSee('background:#fef3c7; color:#92400e;', false);
+        $paymentFilter->assertSee('admin-status-badge--warning">Pending Verification</span>', false);
         $paymentFilter->assertDontSee('Trip 202');
 
         $travellerFilter = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index', [
@@ -591,5 +594,22 @@ class AdminTripListingTest extends TestCase
         $view->assertSee('Urgent');
         $view->assertSee('onchange="this.form.requestSubmit()"', false);
         $view->assertDontSee('>Save</button>', false);
+    }
+
+    public function test_admin_status_badges_normalize_status_case_and_share_colors(): void
+    {
+        foreach ([
+            'pAiD' => 'success',
+            'Verified & Settled' => 'success',
+            'CONFIRMED' => 'success',
+            'Pending' => 'warning',
+            'PROCESSING' => 'warning',
+            'Cancel' => 'danger',
+            'Cancelled' => 'danger',
+        ] as $status => $tone) {
+            $this->view('admin.partials._status_badge', ['status' => $status])
+                ->assertSee('admin-status-badge--' . $tone, false)
+                ->assertSee($status);
+        }
     }
 }

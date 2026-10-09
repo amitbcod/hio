@@ -19,7 +19,7 @@
         </div>
         <div class="d-flex align-items-center gap-2">
             <a href="{{ route('admin.transport.bookings') }}" class="btn btn-outline-secondary btn-sm">← Back to Bookings</a>
-            <span class="badge rounded-pill text-bg-info px-3 py-2">{{ $booking->booking_status ?: \App\Models\TransportBooking::STATUS_PROCESSING }}</span>
+            @include('admin.partials._status_badge', ['status' => $booking->booking_status ?: \App\Models\TransportBooking::STATUS_PROCESSING])
         </div>
     </div>
 
@@ -30,7 +30,7 @@
                 <div class="col-md-3"><strong>Booking Reference:</strong><br>{{ $booking->booking_reference ?: 'N/A' }}</div>
                 <div class="col-md-3"><strong>Booking Date:</strong><br>{{ optional($booking->created_at)->format('M d, Y H:i') }}</div>
                 <div class="col-md-3"><strong>Source Channel:</strong><br>{{ $booking->source_channel ?? 'Direct' }}</div>
-                <div class="col-md-3"><strong>Status:</strong><br><span class="badge text-bg-info">{{ $booking->booking_status ?: \App\Models\TransportBooking::STATUS_PROCESSING }}</span></div>
+                <div class="col-md-3"><strong>Status:</strong><br>@include('admin.partials._status_badge', ['status' => $booking->booking_status ?: \App\Models\TransportBooking::STATUS_PROCESSING])</div>
             </div>
         </div>
     </div>

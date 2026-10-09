@@ -134,7 +134,7 @@
                                         <td>
                                             <div style="display:flex; flex-wrap:wrap; gap:4px;">
                                                 @forelse($trip->booking_status_counts as $statusCount)
-                                                    <span class="trip-booking-status-badge" style="display:inline-block; padding:4px 7px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; {{ $statusCount['style'] }}">{{ $statusCount['status'] }}: {{ $statusCount['count'] }}</span>
+                                                    @include('admin.partials._status_badge', ['status' => $statusCount['status'], 'badgeLabel' => $statusCount['status'] . ': ' . $statusCount['count']])
                                                 @empty
                                                     <span class="text-muted">N/A</span>
                                                 @endforelse
@@ -143,7 +143,7 @@
                                         <td>
                                             <div style="display:flex; flex-wrap:wrap; gap:4px;">
                                                 @forelse($trip->payment_status_badges as $statusBadge)
-                                                    <span class="trip-booking-status-badge" style="display:inline-block; padding:4px 7px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; {{ $statusBadge['style'] }}">{{ $statusBadge['status'] }}</span>
+                                                    @include('admin.partials._status_badge', ['status' => $statusBadge['status']])
                                                 @empty
                                                     <span class="text-muted">N/A</span>
                                                 @endforelse
@@ -303,7 +303,7 @@
                                                                             </div>
                                                                             <div class="row g-3 small">
                                                                                 <div class="col-md-6"><strong>BLI Id:</strong> {{ $bookingRefValue }}</div>
-                                                                                <div class="col-md-6"><strong>Status:</strong> {{ $bookingStatus }}</div>
+                                                                                <div class="col-md-6"><strong>Status:</strong> @include('admin.partials._status_badge', ['status' => $bookingStatus, 'badgeLabel' => $bookingStatus])</div>
                                                                                 @foreach($serviceMeta as $label => $value)
                                                                                     <div class="col-md-6"><strong>{{ $label }}:</strong> {{ $value }}</div>
                                                                                 @endforeach

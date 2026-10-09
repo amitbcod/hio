@@ -1,0 +1,54 @@
+Project Technologies
+====================
+
+Backend
+-------
+- PHP: ^8.2 (minimum supported by composer.json)
+- Laravel: ^12.0 (composer.lock resolves Laravel Framework v12.47.0)
+- Blade: Laravel's server-side templating engine
+- Composer: PHP dependency management
+- Laravel Tinker: ^2.10.1 (locked v2.11.0)
+- Spatie Laravel Permission: ^6.24 (locked v6.24.0)
+- TCPDF: ^6.10 (locked v6.10.1; PDF generation)
+
+Frontend
+--------
+- HTML
+- CSS
+- JavaScript: ES modules; no JavaScript runtime version is pinned in the project manifests
+- Bootstrap: 5.3.0 (CDN)
+- jQuery: 3.6.0 (CDN)
+- Font Awesome: 6.5.1 (CDN)
+- Tailwind CSS: ^4.0.0 (npm)
+- Axios: ^1.11.0 (npm)
+- Vite: ^7.0.7 (npm)
+- Laravel Vite Plugin: ^2.0.0 (npm)
+- Node.js: runs the frontend build and development tools, including Vite and Tailwind CSS.
+- npm: installs and manages JavaScript packages declared in package.json.
+- npm scripts:
+  - `npm run dev` starts Vite's development server with Laravel Vite integration and asset refresh.
+  - `npm run build` runs `vite build` to compile production frontend assets.
+- Where Node.js is used in this application:
+  - It is a development/build-time tool, not the runtime for Laravel pages or application business logic.
+  - Vite is configured to process `resources/css/app.css` and `resources/js/app.js`.
+  - The `@vite` directive currently references those assets in `resources/views/welcome.blade.php` (the Welcome page).
+  - `resources/js/app.js` loads Axios setup from `resources/js/bootstrap.js`; that setup configures Axios with the `X-Requested-With: XMLHttpRequest` header.
+  - Tailwind CSS scans Blade and JavaScript files for class names to include in the generated CSS.
+  - Other application pages/layouts currently load their listed Bootstrap, jQuery, Font Awesome, and `public/frontend/css` assets directly; they are not wired to the configured Vite entrypoints.
+  - Node.js is not needed to serve a built Laravel application when its compiled assets are already present.
+- Frontend npm dependencies are declared in package.json; no Node.js/npm runtime version or npm lockfile is present in the project root.
+
+Database
+--------
+- MySQL, PostgreSQL, and SQL Server: configured as supported connection options
+- Laravel Eloquent ORM and migrations
+
+Testing and Development Tools
+-----------------------------
+- PHPUnit: ^11.5.3 (composer.lock resolves v11.5.48)
+- Laravel Pint: ^1.24 (locked v1.27.0; code formatting)
+- Laravel Sail: ^1.41 (locked v1.52.0; development containers)
+- Laravel Pail: ^1.2.2 (locked v1.2.4; log viewing)
+- Faker: ^1.23 (locked v1.24.1)
+- Mockery: ^1.6 (locked v1.6.12)
+- Concurrently: ^9.0.1 (npm development process runner)
