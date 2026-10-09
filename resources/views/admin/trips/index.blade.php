@@ -186,7 +186,7 @@
 
                                                     <div class="row g-3 small mb-3">
                                                         <div class="col-md-3"><strong>Trip Type:</strong> {{ $trip->trip_type ?? 'Trip' }}</div>
-                                                        <div class="col-md-3"><strong>Payment:</strong> {{ ucfirst($trip->payment_status ?? 'pending') }}</div>
+                                                        <div class="col-md-3"><strong>Payment:</strong> @include('admin.partials._status_badge', ['status' => $trip->payment_status ?? 'pending', 'badgeLabel' => ucfirst($trip->payment_status ?? 'pending')])</div>
                                                         <div class="col-md-3"><strong>Next Action:</strong> {{ empty($tripNextActions) ? 'No Action Required' : ($tripNextActions[0]['label'] ?? 'No Action Required') }}</div>
                                                         <div class="col-md-3"><strong>Authority:</strong> {{ optional($trip->traveler)->full_name ?? optional($trip->traveler)->email ?? 'N/A' }}</div>
                                                     </div>
