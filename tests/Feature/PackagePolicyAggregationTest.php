@@ -93,6 +93,20 @@ class PackagePolicyAggregationTest extends TestCase
         $this->assertSame('TRN-2-hotel-transfer-airport-east', $method->invoke($service, 'TRN-2-hotel-transfer-airport-east'));
     }
 
+    public function test_stale_transport_routes_without_a_transport_are_ignored_during_package_pricing()
+    {
+        $service = new \App\Services\PackagePricingService();
+        $route = new \App\Models\TransportRoute([
+            'route_id' => 'TRN-1',
+            'route_from' => 'Airport',
+            'route_to' => 'Hotel',
+        ]);
+        $route->setRelation('transport', null);
+
+        $this->assertSame(0.0, $service->getGroupTransportRouteAmount($route, 2));
+        $this->assertSame(0.0, $service->getTransportRouteAmount($route, 2));
+    }
+
     public function test_package_day_route_selection_parses_scalar_and_array_route_payloads()
     {
         $controller = new \App\Http\Controllers\Frontend\BookingController();

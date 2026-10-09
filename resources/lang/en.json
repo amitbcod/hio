@@ -553,6 +553,7 @@
     "traveler.trip_detail.status": "Status",
     "traveler.trip_detail.start_date": "Start Date",
     "traveler.trip_detail.end_date": "End Date",
+    "traveler.trip_detail.accommodation_booking": "Accommodation Bookings",
     "traveler.trip_detail.accommodation_bookings": "Accommodation Bookings",
     "traveler.trip_detail.activity_bookings": "Activity Bookings",
     "traveler.trip_detail.transport_bookings": "Transport Bookings",

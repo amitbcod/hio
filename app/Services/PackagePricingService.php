@@ -968,11 +968,21 @@ class PackagePricingService
 
     protected function resolveGroupTransportRouteAmount(\App\Models\TransportRoute $route, int $guestCount, $group = null, bool $wantReturn = false): float
     {
+      $transport = $route->transport;
+      if (!$transport) {
+        Log::warning('Skipping group transport route pricing because its transport no longer exists.', [
+          'route_id' => $route->getKey(),
+          'transport_id' => $route->transport_id,
+        ]);
+
+        return 0.0;
+      }
+
       $itinerary = $group && is_array($group->itinerary ?? null) ? $group->itinerary : [];
       $pricingMode = $itinerary['pricing_modes']['transport'] ?? 'discount_offer';
       $rateMode = $pricingMode === 'package_rate' ? 'package' : 'group';
       $amount = (new TransportPricingService())->resolveForBooking(
-        $route->transport,
+        $transport,
         (string) ($route->route_id ?? $route->id),
         (string) ($route->route_from ?? $route->pickup_value),
         (string) ($route->route_to ?? $route->dropoff_value),
@@ -1183,7 +1193,7 @@ class PackagePricingService
         $pricing = is_array($route->pricing ?? null) ? $route->pricing : (is_string($route->pricing ?? null) ? json_decode($route->pricing, true) : []);
         $wantReturn = !empty($entry['add_return']) || !empty($entry['return_date']);
         $candidate = (new TransportPricingService())->resolveForBooking(
-          $route->transport,
+          $transport,
           (string) ($route->route_id ?? $route->id),
           (string) ($route->route_from ?? $route->pickup_value),
           (string) ($route->route_to ?? $route->dropoff_value),
@@ -1225,13 +1235,23 @@ class PackagePricingService
      */
     protected function resolveTransportRouteAmount(\App\Models\TransportRoute $route, int $guestCount, $package = null, bool $wantReturn = false): float
     {
+      $transport = $route->transport;
+      if (!$transport) {
+        Log::warning('Skipping package transport route pricing because its transport no longer exists.', [
+          'route_id' => $route->getKey(),
+          'transport_id' => $route->transport_id,
+        ]);
+
+        return 0.0;
+      }
+
       $mode = $package && is_array($package->itinerary ?? null)
         && ($package->itinerary['pricing_modes']['transport'] ?? 'discount_offer') === 'package_rate'
         ? 'package'
         : 'direct';
 
       $amount = (new TransportPricingService())->resolveForBooking(
-        $route->transport,
+        $transport,
         (string) ($route->route_id ?? $route->id),
         (string) ($route->route_from ?? $route->pickup_value),
         (string) ($route->route_to ?? $route->dropoff_value),
