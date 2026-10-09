@@ -185,6 +185,8 @@
 @section('content')
 @php
     $currentServiceType = request()->query('service_type', null);
+    $isActivityBooking = $booking instanceof \App\Models\ActivityBooking
+        || strtolower((string) $currentServiceType) === 'activity';
 @endphp
 <section class="page-section manage-guests-section">
     <div class="wrap">
@@ -202,8 +204,11 @@
 
         @php $bookedCount = ($booking->adults ?? 0) + ($booking->children ?? 0); $addedCount = $booking->guests->count(); $canDownload = $bookedCount == $addedCount; @endphp
         <div class="manage-guests-card" style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-bottom: 30px;">
-            <form id="manageGuestsForm" method="POST" action="{{ route('traveler.trip.booking.update-guests', ['trip' => $trip->id, 'booking' => $booking->id]) }}">
+            <form id="manageGuestsForm" method="POST" action="{{ route('traveler.trip.booking.update-guests', ['trip' => $trip->id, 'booking' => $booking->id, 'service_type' => $currentServiceType]) }}">
                 @csrf
+                @if($currentServiceType)
+                    <input type="hidden" name="service_type" value="{{ $currentServiceType }}">
+                @endif
                 <p style="margin-bottom: 20px; font-weight: 600;">Booked: {{ $bookedCount }} &nbsp;|&nbsp; Added: <span id="added-count">{{ $booking->guests->count() }}</span></p>
 
                 <div class="saved-guests-panel" style="border: 1px solid #dcdcdc; border-radius: 10px; padding: 18px; margin-bottom: 20px; background: #fafafa;">
@@ -247,7 +252,7 @@
                             <button type="button" class="btn-edit-guest" data-index="{{ $index }}" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #0066cc; padding: 0;">
                                 <i class="fa-solid fa-pencil"></i> Edit
                             </button>
-                            @if ($booking instanceof \App\Models\ActivityBooking && isset($guest->id) && $canDownload)
+                            @if ($isActivityBooking && isset($guest->id) && $guest->id !== '')
                                 <a href="{{ route('traveler.trip.booking.download-voucher', ['trip' => $trip->id, 'booking' => $booking->id, 'guest' => $guest->id, 'service_type' => $currentServiceType]) }}" target="_blank" style="font-size: 14px; color: #007bff; text-decoration: none; display: inline-flex; align-items: center;">
                                     <i class="fa-solid fa-download"></i> Download Voucher
                                 </a>

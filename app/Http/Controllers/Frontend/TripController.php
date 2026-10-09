@@ -79,7 +79,8 @@ class TripController extends Controller
             if ($package) {
                 $tripStartDate = $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today();
                 $rawItinerary = is_array($package->itinerary ?? null) ? $package->itinerary : [];
-                $guestCount = max(1, $trip->travellers ? $trip->travellers->count() : 1);
+                $guestCount = $this->getTripBookedGuestCount($trip);
+                $addedGuestCount = $this->countPackageTravellersForTrip($packageLineItem, $trip);
                 $partyBookings = $tripAccommodationBookings->concat($tripActivityBookings)->concat($tripTransportBookings);
               $adults = (int) $partyBookings->max(fn ($booking) => (int) ($booking->adults ?? 0));
               $children = (int) $partyBookings->max(fn ($booking) => (int) ($booking->children ?? 0));
@@ -124,7 +125,7 @@ class TripController extends Controller
                   ->values();
 
                 $packageDetails = $dayEntries
-                ->map(function ($entry, $key) use ($tripStartDate, $packageLineItem, $trip, $guestCount, $package, $adults, $children, $infants, $takePricingAmount) {
+                ->map(function ($entry, $key) use ($tripStartDate, $packageLineItem, $trip, $guestCount, $addedGuestCount, $package, $adults, $children, $infants, $takePricingAmount) {
                     $dayNumber = (int) $key + 1;
                         $accommodation = !empty($entry['accommodation'])
                             ? \App\Models\Accommodation::with('rooms')->find((int) $entry['accommodation'])
@@ -153,7 +154,7 @@ class TripController extends Controller
                                 'image' => $this->resolvePackageServiceImage($accommodation, 'accommodation'),
                                 'model' => $accommodation,
                                 'booked_count' => max(1, $guestCount),
-                                'added_count' => 0,
+                                'added_count' => $addedGuestCount,
                                 'currency' => $packageLineItem->currency ?? 'USD',
                                 'amount' => $takePricingAmount($dayNumber, 'Accommodation') ?? 0.0,
                                 'manage_route' => route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'accommodation']),
@@ -171,7 +172,7 @@ class TripController extends Controller
                                 'image' => $this->resolvePackageServiceImage($activity, 'activity'),
                                 'model' => $activity,
                                 'booked_count' => max(1, $guestCount),
-                                'added_count' => 0,
+                                'added_count' => $addedGuestCount,
                                 'currency' => $packageLineItem->currency ?? 'USD',
                                 'amount' => $takePricingAmount($dayNumber, 'Activity') ?? 0.0,
                                 'manage_route' => route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $packageLineItem->id, 'service_type' => 'activity']),
@@ -190,7 +191,7 @@ class TripController extends Controller
                                 'image' => $this->resolvePackageServiceImage($transport, 'transport'),
                                 'model' => $transport,
                                 'booked_count' => max(1, $guestCount),
-                                'added_count' => 0,
+                                'added_count' => $addedGuestCount,
                                 'currency' => $packageLineItem->currency ?? 'USD',
                                 'amount' => $takePricingAmount($dayNumber, 'Transport') ?? 0.0,
                                 'manage_route' => null,
@@ -373,11 +374,27 @@ class TripController extends Controller
           return null;
         }
 
-        if (in_array($bookingType, ['open-group', 'close-group'], true)) {
+        if (in_array($bookingType, ['open-group', 'close-group', 'group'], true)) {
           return \App\Models\Group::find($serviceId);
         }
 
         return \App\Models\Package::find($serviceId) ?: \App\Models\Group::find($serviceId);
+      }
+
+      protected function countPackageTravellersForTrip(\App\Models\BookingLineItem $lineItem, Trip $trip): int
+      {
+        return $lineItem->travellers()
+          ->where('trip_id', $trip->id)
+          ->count();
+      }
+
+      protected function getTripBookedGuestCount(Trip $trip): int
+      {
+        $travellerCount = $trip->relationLoaded('travellers')
+          ? $trip->travellers->count()
+          : $trip->travellers()->count();
+
+        return max(1, $travellerCount);
       }
 
       protected function groupTripPricingItemsByDayAndType(array $items): array
@@ -513,7 +530,7 @@ class TripController extends Controller
           'request_method' => $request?->method(),
         ]);
 
-        $serviceType = strtolower((string) ($request?->query('service_type') ?? ''));
+        $serviceType = strtolower((string) ($request?->input('service_type') ?? ''));
 
         // Also log various ways of reading the parameter from the Laravel Request for debugging.
         \Log::info('SERVICE TYPE DEBUG', [
@@ -526,6 +543,7 @@ class TripController extends Controller
         ]);
 
         $packageLineItem = \App\Models\BookingLineItem::where('id', $bookingId)
+            ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id))
             ->with('booking')
             ->first();
 
@@ -543,7 +561,10 @@ class TripController extends Controller
         }
 
         if (!$booking && $packageLineItem && $packageLineItem->service_type === 'package') {
-          $package = $this->resolvePackageOrGroupModel((int) $packageLineItem->service_id);
+          $package = $this->resolvePackageOrGroupModelForBooking(
+              (int) $packageLineItem->service_id,
+              $packageLineItem->booking?->booking_type
+          );
             if (!$package) {
                 abort(404);
             }
@@ -573,7 +594,10 @@ class TripController extends Controller
                 }
             }
 
-          $packageGuests = $packageLineItem->travellers()->get()->map(function ($traveller) {
+          $packageGuests = $packageLineItem->travellers()
+            ->where('trip_id', $trip->id)
+            ->get()
+            ->map(function ($traveller) {
             $parts = preg_split('/\s+/', trim((string) ($traveller->name ?? '')), -1, PREG_SPLIT_NO_EMPTY);
             return (object) [
               'id' => $traveller->id,
@@ -581,6 +605,7 @@ class TripController extends Controller
               'middle_name' => '',
               'last_name' => implode(' ', array_slice($parts, 1)),
               'dob' => $traveller->date_of_birth,
+              'nationality' => null,
               'guest_number' => 1,
             ];
           })->values();
@@ -595,6 +620,8 @@ class TripController extends Controller
                 ? \App\Models\Transport::with(['routes', 'operator.profile'])->find((int) $packageEntry['transport'])
                 : null;
 
+          $bookedGuestCount = $this->getTripBookedGuestCount($trip);
+
           if ($packageServiceType === 'activity' && $activity) {
                 $booking = new \App\Models\ActivityBooking([
                     'id' => $packageLineItem->id,
@@ -604,7 +631,7 @@ class TripController extends Controller
                     'total_amount' => $packageLineItem->price ?? 0,
                     'currency' => $packageLineItem->currency ?? 'USD',
                     'activity_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today(),
-              'adults' => max(1, $packageGuests->count()),
+              'adults' => $bookedGuestCount,
                     'children' => 0,
                     'variant_name' => $activity->activity_name ?? 'Package Activity',
                 ]);
@@ -620,7 +647,7 @@ class TripController extends Controller
                     'currency' => $packageLineItem->currency ?? 'USD',
                     'check_in_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today(),
                     'check_out_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date)->addDay() : \Carbon\Carbon::today()->addDay(),
-                    'adults' => max(1, $packageGuests->count()),
+                    'adults' => $bookedGuestCount,
                     'children' => 0,
                 ]);
                 $booking->setRelation('accommodation', $accommodation);
@@ -695,6 +722,7 @@ class TripController extends Controller
             $serviceType = strtolower((string) ($request?->query('service_type') ?? ''));
             $allowedPackageTypes = ['accommodation', 'activity', 'transport'];
             $packageLineItem = \App\Models\BookingLineItem::where('id', $bookingId)
+              ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id))
               ->with('booking')
               ->first();
 
@@ -734,19 +762,29 @@ class TripController extends Controller
             }
 
               if (!$booking && $packageLineItem && $packageLineItem->service_type === 'package') {
-                $package = $this->resolvePackageOrGroupModel((int) $packageLineItem->service_id);
+                $package = $this->resolvePackageOrGroupModelForBooking(
+                  (int) $packageLineItem->service_id,
+                  $packageLineItem->booking?->booking_type
+                );
                 if (!$package) {
                   abort(404);
                 }
 
                 $packageItinerary = is_array($package->itinerary ?? null) ? $package->itinerary : [];
-                $travellers = $packageLineItem->travellers()->get()->map(function ($traveller) {
+                $bookedGuestCount = $this->getTripBookedGuestCount($trip);
+                $travellers = $packageLineItem->travellers()
+                  ->where('trip_id', $trip->id)
+                  ->get()
+                  ->map(function ($traveller) {
                   $parts = preg_split('/\s+/', trim((string) ($traveller->name ?? '')), -1, PREG_SPLIT_NO_EMPTY);
                   return (object) [
                     'id' => $traveller->id,
                     'first_name' => $parts[0] ?? '',
                     'middle_name' => '',
                     'last_name' => implode(' ', array_slice($parts, 1)),
+                    'dob' => $traveller->date_of_birth,
+                    'nationality' => null,
+                    'guest_number' => 1,
                   ];
                 })->values();
 
@@ -759,7 +797,7 @@ class TripController extends Controller
                     'total_amount' => $packageLineItem->price ?? 0,
                     'currency' => 'USD',
                     'trip_id' => $trip->id,
-                    'adults' => max(1, $travellers->count()),
+                    'adults' => $bookedGuestCount,
                     'children' => 0,
                     'guests' => $travellers,
                     'guest_name' => $traveler->name ?? null,
@@ -812,7 +850,7 @@ class TripController extends Controller
                         'booking_status' => $packageLineItem->status ?? 'Pending',
                         'total_amount' => $packageLineItem->price ?? 0,
                         'activity_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today(),
-                        'adults' => max(1, $travellers->count()),
+                        'adults' => $bookedGuestCount,
                         'children' => 0,
                         'variant_name' => $activity->activity_name ?? 'Package Activity',
                       ]);
@@ -830,7 +868,7 @@ class TripController extends Controller
                         'total_amount' => $packageLineItem->price ?? 0,
                         'check_in_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date) : \Carbon\Carbon::today(),
                         'check_out_date' => $trip->start_date ? \Carbon\Carbon::parse($trip->start_date)->addDay() : \Carbon\Carbon::today()->addDay(),
-                        'adults' => max(1, $travellers->count()),
+                        'adults' => $bookedGuestCount,
                         'children' => 0,
                       ]);
                       $booking->setRelation('accommodation', $accommodation);
@@ -1005,7 +1043,7 @@ class TripController extends Controller
         }
 
         $voucherGuest = null;
-        if ($guestId) {
+        if ($guestId !== null) {
             $voucherGuest = $booking->guests->firstWhere('id', $guestId);
             if (!$voucherGuest) {
                 abort(404);
@@ -1042,17 +1080,7 @@ class TripController extends Controller
             }
         }
         
-        $guestRows = '';
-        $guestNames = [];
-        foreach ($guestsForVoucher as $index => $guest) {
-            $fullName = trim($guest->first_name . ' ' . ($guest->last_name ?? ''));
-            $guestNames[] = $fullName;
-            $guestRows .= '<tr>' .
-                '<td>' . e($fullName ?: '-') . '</td>' .
-                '<td>' . e($guest->nationality ?? '-') . '</td>' .
-                '<td>' . ($guest->dob ? e(optional($guest->dob)->format('d/m/Y')) : '-') . '</td>' .
-                '</tr>';
-        }
+        ['rows' => $guestRows, 'names' => $guestNames] = $this->buildVoucherGuestDetails($guestsForVoucher);
 
         $issueDate = now()->format('d/m/Y');
         if ($isActivity) {
@@ -1578,25 +1606,58 @@ HTML;
 
   }
 
-        $pdf = new \TCPDF();
-        $pdf->SetCreator('Holidaysio');
-        $pdf->SetAuthor(str_replace(['<', '>', '"', "'"], '', $traveler->name ?? 'Traveler'));
-        $pdf->SetTitle('Invoice ' . $invoiceNumber);
-        $pdf->SetMargins(10, 10, 10);
-        $pdf->SetAutoPageBreak(true, 10);
+        $voucherType = $isActivity ? 'activity' : ($isTransport ? 'transport' : 'accommodation');
+        $voucherReference = (string) ($booking->booking_reference ?? ('booking-' . $booking->id));
+        $author = (string) ($traveler->full_name ?? $traveler->name ?? 'Traveler');
+
+        return $this->createVoucherPdfResponse($html, $voucherType, $voucherReference, $author);
+    }
+
+    private function createVoucherPdfResponse(
+        string $html,
+        string $voucherType,
+        string $voucherReference,
+        string $author
+    ): \Illuminate\Http\Response {
+        $safeReference = preg_replace('/[^A-Za-z0-9_-]/', '', $voucherReference) ?: 'booking';
+        $filename = strtolower($voucherType) . '-voucher-' . $safeReference . '.pdf';
 
         $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
-
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
-
+        $pdf->SetCreator('Holidaysio');
+        $pdf->SetAuthor(str_replace(['<', '>', '"', "'"], '', $author));
+        $pdf->SetTitle(ucfirst($voucherType) . ' Voucher - ' . $voucherReference);
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->SetAutoPageBreak(true, 10);
         $pdf->AddPage();
         $pdf->SetFont('helvetica', '', 9);
         $pdf->writeHTML($html, true, false, true, false, '');
 
-        $filename = 'invoice-' . $invoiceNumber . '.pdf';
-        $pdf->Output($filename, 'D');
-        exit;
+        return response($pdf->Output($filename, 'S'), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function buildVoucherGuestDetails(iterable $guests): array
+    {
+        $rows = '';
+        $names = [];
+        foreach ($guests as $guest) {
+            $fullName = trim((string) data_get($guest, 'first_name', '') . ' ' . (string) data_get($guest, 'last_name', ''));
+            $names[] = $fullName;
+            $dob = data_get($guest, 'dob');
+            $dobDisplay = $dob ? e(\Carbon\Carbon::parse($dob)->format('d/m/Y')) : '-';
+
+            $rows .= '<tr>' .
+                '<td>' . e($fullName ?: '-') . '</td>' .
+                '<td>' . e(data_get($guest, 'nationality') ?? '-') . '</td>' .
+                '<td>' . $dobDisplay . '</td>' .
+                '</tr>';
+        }
+
+        return ['rows' => $rows, 'names' => $names];
     }
 
     public function updateGuests(Request $request, Trip $trip, $bookingId)
@@ -1605,48 +1666,57 @@ HTML;
         if ($trip->traveler_account_id !== $traveler->id) {
             abort(403);
         }
+        $serviceType = strtolower((string) ($request->input('service_type') ?? ''));
+        $manageGuestsRouteParameters = [
+            'trip' => $trip->id,
+            'booking' => $bookingId,
+        ];
+        if ($serviceType !== '') {
+            $manageGuestsRouteParameters['service_type'] = $serviceType;
+        }
 
-        // Find the booking
+        $packageLineItem = \App\Models\BookingLineItem::where('id', $bookingId)
+            ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id))
+            ->first();
+
+        if ($packageLineItem && $packageLineItem->service_type === 'package') {
+            $packageLineItem->travellers()->detach();
+
+            $guestInput = $request->input('guests', []);
+            foreach (array_values((array) $guestInput) as $guestData) {
+                $firstName = trim((string) ($guestData['first_name'] ?? ''));
+                $lastName = trim((string) ($guestData['last_name'] ?? ''));
+                $fullName = trim($firstName . ' ' . $lastName);
+
+                if ($fullName === '') {
+                    continue;
+                }
+
+                $traveller = \App\Models\Traveller::create([
+                    'trip_id' => $trip->id,
+                    'name' => $fullName,
+                    'email' => null,
+                    'phone' => null,
+                    'date_of_birth' => isset($guestData['dob']) && $guestData['dob'] ? \Carbon\Carbon::parse($guestData['dob'])->format('Y-m-d') : null,
+                    'relationship' => 'guest',
+                ]);
+
+                \App\Models\BliTravellerAllocation::create([
+                    'bli_id' => $packageLineItem->id,
+                    'traveller_id' => $traveller->id,
+                ]);
+            }
+
+            $manageGuestsRouteParameters['booking'] = $packageLineItem->id;
+            return redirect()->route('traveler.trip.booking.manage-guests', $manageGuestsRouteParameters)->with('success', 'Guests updated successfully.');
+        }
+
+        // Find the standard service booking after package line items.
         $booking = \App\Models\AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->first();
         if (!$booking) {
             $booking = \App\Models\ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->first();
         }
         if (!$booking) {
-            $packageLineItem = \App\Models\BookingLineItem::where('id', $bookingId)
-                ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id))
-                ->first();
-
-            if ($packageLineItem && $packageLineItem->service_type === 'package') {
-                $packageLineItem->travellers()->detach();
-
-                $guestInput = $request->input('guests', []);
-                foreach (array_values((array) $guestInput) as $index => $guestData) {
-                    $firstName = trim((string) ($guestData['first_name'] ?? ''));
-                    $lastName = trim((string) ($guestData['last_name'] ?? ''));
-                    $fullName = trim($firstName . ' ' . $lastName);
-
-                    if ($fullName === '') {
-                        continue;
-                    }
-
-                    $traveller = \App\Models\Traveller::create([
-                        'trip_id' => $trip->id,
-                        'name' => $fullName,
-                        'email' => null,
-                        'phone' => null,
-                        'date_of_birth' => isset($guestData['dob']) && $guestData['dob'] ? \Carbon\Carbon::parse($guestData['dob'])->format('Y-m-d') : null,
-                        'relationship' => 'guest',
-                    ]);
-
-                    \App\Models\BliTravellerAllocation::create([
-                        'bli_id' => $packageLineItem->id,
-                        'traveller_id' => $traveller->id,
-                    ]);
-                }
-
-                return redirect()->route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $packageLineItem->id])->with('success', 'Guests updated successfully.');
-            }
-
             abort(404);
         }
 
@@ -1692,7 +1762,8 @@ HTML;
 
         // Removed participant_time_slots update - timeslots are set from activity page and apply to all participants
 
-        return redirect()->route('traveler.trip.booking.manage-guests', ['trip' => $trip->id, 'booking' => $booking->id])->with('success', 'Guests updated successfully.');
+        $manageGuestsRouteParameters['booking'] = $booking->id;
+        return redirect()->route('traveler.trip.booking.manage-guests', $manageGuestsRouteParameters)->with('success', 'Guests updated successfully.');
     }
 
     public function downloadInvoice(\Illuminate\Http\Request $request, Trip $trip)

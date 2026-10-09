@@ -300,6 +300,10 @@
                                                                 </div>
                                                             @endforeach
                                                         </div>
+                                                        <div style="margin-top:8px; font-size:13px;">
+                                                            <strong style="color:#334155;">Voucher:</strong>
+                                                            @include('operator.partials._status_badge', ['status' => $booking->voucher_available ? 'paid' : 'pending', 'statusBadgeLabel' => $booking->voucher_available ? 'Voucher: Available' : 'Voucher: Not Available'])
+                                                        </div>
                                                         <div style="margin-top:10px; font-size:13px;"><strong style="color:#334155;">Next Step:</strong> {{ $nextStep }}</div>
                                                     </div>
                                                 @endforeach

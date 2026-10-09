@@ -9,11 +9,16 @@ use App\Models\Trip;
 use App\Models\TravelerAccount;
 use App\Models\TransportBooking;
 use App\Services\TripListingFilters;
+use App\Services\VoucherAvailability;
 use Illuminate\Http\Request;
 
 class TripController extends Controller
 {
-    public function index(Request $request, TripListingFilters $tripListingFilters)
+    public function index(
+        Request $request,
+        TripListingFilters $tripListingFilters,
+        VoucherAvailability $voucherAvailability
+    )
     {
         if (!session('admin_id')) return redirect()->route('admin.login');
 
@@ -69,6 +74,18 @@ class TripController extends Controller
             $trip->payment_status_display = $tripListingFilters->resolvePaymentStatusDisplay($trip);
             $trip->payment_status_badges = $tripListingFilters->paymentStatusBadges($trip->payment_status_display);
             $trip->next_actions = $this->resolveNextActions($trip);
+            foreach ([
+                'accommodation' => $trip->accommodationBookings,
+                'activity' => $trip->activityBookings,
+                'transport' => $trip->transportBookings,
+            ] as $serviceType => $serviceBookings) {
+                foreach ($serviceBookings as $serviceBooking) {
+                    $serviceBooking->setAttribute(
+                        'voucher_available',
+                        $voucherAvailability->isAvailable($trip, $serviceBooking, $serviceType)
+                    );
+                }
+            }
         }
 
         $tripTypes = ['Trip', 'Group Trip', 'Package Trip'];

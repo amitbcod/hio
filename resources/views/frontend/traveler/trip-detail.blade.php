@@ -173,10 +173,12 @@
                                                 {{ __('traveler.trip_detail.manage') }}
                                             </a>
                                         @endif
-                                        <a href="{{ $service['voucher_route'] ?? '#' }}" class="btn btn-sm btn-secondary btn-download">
-                                            <i class="fa-solid fa-download"></i>
-                                            {{ __('traveler.trip_detail.download_voucher') }}
-                                        </a>
+                                        @if(($service['type'] ?? '') !== 'activity')
+                                            <a href="{{ $service['voucher_route'] ?? '#' }}" class="btn btn-sm btn-secondary btn-download">
+                                                <i class="fa-solid fa-download"></i>
+                                                {{ __('traveler.trip_detail.download_voucher') }}
+                                            </a>
+                                        @endif
                                     </div>
                                 @endforeach
 

@@ -307,6 +307,7 @@
                                                                                 @foreach($serviceMeta as $label => $value)
                                                                                     <div class="col-md-6"><strong>{{ $label }}:</strong> {{ $value }}</div>
                                                                                 @endforeach
+                                                                                <div class="col-md-6"><strong>Voucher:</strong> @include('admin.partials._status_badge', ['status' => $booking->voucher_available ? 'paid' : 'pending', 'badgeLabel' => $booking->voucher_available ? 'Voucher: Available' : 'Voucher: Not Available'])</div>
                                                                                 <div class="col-12"><strong>Next Step:</strong> {{ $nextStep }}</div>
                                                                             </div>
                                                                         </div>
