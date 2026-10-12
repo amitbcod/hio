@@ -1,5 +1,11 @@
 <div>
-    
+@php
+    $operatorSelectedServices = request()->attributes->get('operator.selected_services', []);
+    $canManageAccommodation = in_array('Accommodation', $operatorSelectedServices, true);
+    $canManageActivity = in_array('Activity', $operatorSelectedServices, true);
+    $canManageTransport = in_array('Transport', $operatorSelectedServices, true);
+@endphp
+
 @php $isTripManagement = request()->routeIs('operator.trips.*'); @endphp
 
 <div class="dropdownToggle" 
@@ -17,6 +23,7 @@
     </li>
 </ul>
 
+@if($canManageAccommodation)
 <div class="dropdownToggle" 
      style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; border-top: 1px solid rgba(255,255,255,0.2);">
    Property Management
@@ -43,6 +50,7 @@
         </a>
     </li>
 </ul>
+@endif
 
 <div class="dropdownToggle" 
      style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; border-top: 1px solid rgba(255,255,255,0.2);">
@@ -69,6 +77,7 @@
 
     {{-- Activity Management Section --}}
 
+@if($canManageActivity)
   <div class="dropdownToggle" 
      style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
    Activity Management
@@ -95,6 +104,7 @@
         </a>
     </li>
 </ul>
+@endif
 
 <div class="dropdownToggle" 
      style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
@@ -115,6 +125,7 @@
 
 @php $isDriverManagement = request()->routeIs('operator.drivers.*'); @endphp
 
+@if($canManageTransport)
 <div class="dropdownToggle" 
      style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
    Transport Management
@@ -147,6 +158,7 @@
         </a>
     </li>
 </ul>
+@endif
 
 {{-- Staff Management Section --}}
 

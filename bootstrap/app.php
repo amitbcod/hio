@@ -15,7 +15,6 @@ return Application::configure(basePath: dirname(dirname(__FILE__)))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             SetLocale::class,
-            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
         ]);
 
         $middleware->redirectGuestsTo(function (Request $request) {

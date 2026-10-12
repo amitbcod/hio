@@ -32,4 +32,11 @@ class ActivityBooking extends Model
     {
         return $this->hasMany(BookingGuest::class, 'booking_id')->where('booking_type', 'activity');
     }
+
+    public function scheduleChanges()
+    {
+        return $this->hasMany(BookingScheduleChange::class, 'service_booking_id')
+            ->where('service_type', 'activity')
+            ->orderByDesc('created_at');
+    }
 }

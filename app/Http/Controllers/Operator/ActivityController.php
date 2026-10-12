@@ -2199,10 +2199,12 @@ class ActivityController extends Controller
 
         $booking = \App\Models\ActivityBooking::whereIn('activity_id', $activityIds)
             ->where('id', $bookingId)
-            ->with(['activity', 'guests'])
+            ->with(['activity.schedulingTimeSlots', 'guests', 'scheduleChanges.actor'])
             ->firstOrFail();
+        $postponementActions = app(\App\Services\BookingPostponementService::class)
+            ->details($booking, 'activity', false);
 
-        return view('operator.activity.booking_details', compact('booking'));
+        return view('operator.activity.booking_details', compact('booking', 'postponementActions'));
     }
 
     /**

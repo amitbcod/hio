@@ -3421,10 +3421,12 @@ class AccommodationController extends Controller
         // Get the booking with relationships
         $booking = AccommodationBooking::whereIn('accommodation_id', $accommodationIds)
             ->where('id', $bookingId)
-            ->with(['accommodation', 'room', 'guests'])
+            ->with(['accommodation', 'room', 'guests', 'scheduleChanges.actor'])
             ->firstOrFail();
-        
-        return view('operator.accommodation.booking_details', compact('booking'));
+        $postponementActions = app(\App\Services\BookingPostponementService::class)
+            ->details($booking, 'accommodation', false);
+
+        return view('operator.accommodation.booking_details', compact('booking', 'postponementActions'));
     }
 
     /**

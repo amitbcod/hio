@@ -93,6 +93,11 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     Route::get('transport/bookings/{booking}', [\App\Http\Controllers\Admin\TransportBookingController::class, 'show'])->name('transport.booking.details');
     Route::post('transport/bookings/{booking}/status', [\App\Http\Controllers\Admin\TransportBookingController::class, 'updateBookingStatus'])->name('transport.booking.status');
     Route::post('transport-bookings/{booking}/assign-drivers', [\App\Http\Controllers\Admin\TransportBookingController::class, 'assignDrivers'])->name('transport.booking.assign-drivers');
+    Route::post('bookings/{serviceType}/{booking}/postpone', [\App\Http\Controllers\BookingPostponementController::class, 'admin'])
+        ->whereIn('serviceType', ['accommodation', 'activity', 'transport'])
+        ->name('bookings.postpone');
+    Route::get('bookings/{booking}/postpone/activity-slots', [\App\Http\Controllers\BookingPostponementController::class, 'adminActivitySlots'])
+        ->name('bookings.postpone.activity-slots');
 
     // Admin accommodation management for selected operator/business
     Route::get('accommodations/select-operator', [\App\Http\Controllers\Admin\AccommodationController::class, 'selectOperator'])->name('accommodation.select-operator');

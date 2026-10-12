@@ -288,7 +288,7 @@ class RegistrationController extends Controller
             'business_registration_number' => $request->business_registration_number,
             'registered_address' => $request->registered_address,
             'operational_address' => $request->operational_address,
-            'service_types' => $request->service_types ? json_encode($request->service_types) : null,
+            'service_types' => $serviceTypes ?: null,
             'years_in_operation' => $request->years_in_operation,
             'trading_name' => $request->trading_name,
             'company_description' => $request->company_description,

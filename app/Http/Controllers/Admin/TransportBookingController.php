@@ -78,7 +78,10 @@ class TransportBookingController extends Controller
             'assignments.driver',
             'assignments.assignedBy',
             'guests',
+            'scheduleChanges.actor',
         ]);
+        $postponementActions = app(\App\Services\BookingPostponementService::class)
+            ->details($booking, 'transport', true);
 
         $assignmentDrivers = collect();
         $assignmentVehicles = collect();
@@ -98,7 +101,7 @@ class TransportBookingController extends Controller
             }
         }
 
-        return view('admin.transport.bookings.show', compact('booking', 'assignmentDrivers', 'assignmentVehicles'));
+        return view('admin.transport.bookings.show', compact('booking', 'assignmentDrivers', 'assignmentVehicles', 'postponementActions'));
     }
 
     public function updateBookingStatus(Request $request, TransportBooking $booking)

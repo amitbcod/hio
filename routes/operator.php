@@ -14,9 +14,17 @@ Route::prefix('operator')->name('operator.')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::middleware('auth:operator,operator_staff')->group(function () {
+    Route::middleware([
+        'auth:operator,operator_staff',
+        \App\Http\Middleware\RestrictOperatorServiceModules::class,
+    ])->group(function () {
         Route::get('profile', [ProfileController::class, 'showProfile'])->name('profile');
         Route::get('trips', [\App\Http\Controllers\Operator\TripController::class, 'index'])->name('trips.index');
+        Route::post('bookings/{serviceType}/{booking}/postpone', [\App\Http\Controllers\BookingPostponementController::class, 'operator'])
+            ->whereIn('serviceType', ['accommodation', 'activity', 'transport'])
+            ->name('bookings.postpone');
+        Route::get('bookings/{booking}/postpone/activity-slots', [\App\Http\Controllers\BookingPostponementController::class, 'operatorActivitySlots'])
+            ->name('bookings.postpone.activity-slots');
 
         // Registration/Profile Steps
         // Step 1 (Set Password) skipped after registration

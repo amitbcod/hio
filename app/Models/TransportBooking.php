@@ -187,6 +187,13 @@ class TransportBooking extends Model
         return $this->belongsTo(GuestOtpToken::class, 'guest_otp_token_id');
     }
 
+    public function scheduleChanges()
+    {
+        return $this->hasMany(BookingScheduleChange::class, 'service_booking_id')
+            ->where('service_type', 'transport')
+            ->orderByDesc('created_at');
+    }
+
     public function assignments()
     {
         return $this->hasMany(TransportBookingAssignment::class, 'transport_booking_id');

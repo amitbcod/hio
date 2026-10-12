@@ -40,6 +40,13 @@ class AccommodationBooking extends Model
         return $this->hasMany(BookingGuest::class, 'booking_id')->where('booking_type', 'accommodation');
     }
 
+    public function scheduleChanges()
+    {
+        return $this->hasMany(BookingScheduleChange::class, 'service_booking_id')
+            ->where('service_type', 'accommodation')
+            ->orderByDesc('created_at');
+    }
+
     public function guestOtpToken()
     {
         return $this->belongsTo(GuestOtpToken::class, 'guest_otp_token_id');

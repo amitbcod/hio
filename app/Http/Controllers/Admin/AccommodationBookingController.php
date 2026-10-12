@@ -32,10 +32,12 @@ class AccommodationBookingController extends Controller
     {
         if ($redirect = $this->ensureAdmin()) return $redirect;
 
-        $booking = AccommodationBooking::with(['accommodation.operator', 'room', 'guests'])
+        $booking = AccommodationBooking::with(['accommodation.operator', 'room', 'guests', 'scheduleChanges.actor'])
             ->findOrFail($bookingId);
+        $postponementActions = app(\App\Services\BookingPostponementService::class)
+            ->details($booking, 'accommodation', true);
 
-        return view('admin.accommodation.bookings.show', compact('booking'));
+        return view('admin.accommodation.bookings.show', compact('booking', 'postponementActions'));
     }
 
     public function updateBookingStatus(Request $request, AccommodationBooking $booking)

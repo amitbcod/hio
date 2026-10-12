@@ -18,6 +18,7 @@ use App\Models\OperatorStatusReview;
 use App\Models\PolicyTemplate;
 use App\Models\Review;
 use App\Models\ReviewItem;
+use App\Services\ActivitySlotAvailabilityService;
 use App\Services\TransportAvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -1920,25 +1921,8 @@ class HomeController extends Controller
 
         $timeSlots = [];
         if ($detailed && $activity->relationLoaded('schedulingTimeSlots')) {
-            $activityBookings = ActivityBooking::where('activity_id', $activity->id)
-                ->whereDate('activity_date', $bookingContext['activity_date'])
-                ->whereIn('booking_status', ['Pending', 'Confirmed'])
-                ->get();
-
-            $bookedParticipantsBySlot = [];
-            foreach ($activityBookings as $booking) {
-                $participantTimeSlots = $booking->participant_time_slots ?? [];
-                if (!is_array($participantTimeSlots)) {
-                    continue;
-                }
-                foreach ($participantTimeSlots as $slotId) {
-                    $slotKey = (int) $slotId;
-                    if ($slotKey <= 0) {
-                        continue;
-                    }
-                    $bookedParticipantsBySlot[$slotKey] = ($bookedParticipantsBySlot[$slotKey] ?? 0) + 1;
-                }
-            }
+            $bookedParticipantsBySlot = app(ActivitySlotAvailabilityService::class)
+                ->bookedParticipantsBySlot($activity->id, $bookingContext['activity_date']);
 
             $timeSlotsByVariant = collect($activity->schedulingTimeSlots)
                 ->groupBy(fn ($slot) => (int) ($slot->variant_id ?? 0))

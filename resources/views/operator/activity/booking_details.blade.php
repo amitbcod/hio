@@ -38,6 +38,8 @@
                         </div>
                     @endif
 
+                    @include('shared.booking-postponement', ['booking' => $booking, 'serviceType' => 'activity', 'postponementActions' => $postponementActions, 'isAdmin' => false])
+
                     {{-- Booking Information --}}
                     <div style="margin-bottom: 32px;">
                         <h4 style="font-weight: 600; margin-bottom: 20px; color: #333;">📋 Booking Information</h4>

@@ -33,8 +33,10 @@ class ActivityBookingController extends Controller
 
         $booking = ActivityBooking::with(['activity.operator', 'activity.schedulingTimeSlots', 'guests'])
             ->findOrFail($bookingId);
+        $postponementActions = app(\App\Services\BookingPostponementService::class)
+            ->details($booking, 'activity', true);
 
-        return view('admin.activity.bookings.show', compact('booking'));
+        return view('admin.activity.bookings.show', compact('booking', 'postponementActions'));
     }
 
     public function updateBookingStatus(Request $request, ActivityBooking $booking)

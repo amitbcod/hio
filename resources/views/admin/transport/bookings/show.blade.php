@@ -23,6 +23,8 @@
         </div>
     </div>
 
+    @include('shared.booking-postponement', ['booking' => $booking, 'serviceType' => 'transport', 'postponementActions' => $postponementActions, 'isAdmin' => true])
+
     <div class="card mb-4 shadow-sm border-0">
         <div class="card-body">
             <h5 class="card-title mb-3">Booking Information</h5>

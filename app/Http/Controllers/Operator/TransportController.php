@@ -1502,10 +1502,13 @@ class TransportController extends Controller
             'assignments.vehicle',
             'assignments.driver',
             'assignments.assignedBy',
+            'scheduleChanges.actor',
         ])->findOrFail($bookingId);
         if ($booking->transport_id !== $transport->id) {
             abort(403);
         }
+        $postponementActions = app(\App\Services\BookingPostponementService::class)
+            ->details($booking, 'transport', false);
 
         $assignmentDrivers = collect();
         $assignmentVehicles = collect();
@@ -1532,7 +1535,8 @@ class TransportController extends Controller
             'booking',
             'packageRouteLabel',
             'assignmentDrivers',
-            'assignmentVehicles'
+            'assignmentVehicles',
+            'postponementActions'
         ));
     }
 
