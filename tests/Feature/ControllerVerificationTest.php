@@ -18,6 +18,33 @@ class ControllerVerificationTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_approved_operator_is_redirected_to_trip_listing_after_login()
+    {
+        $business = Business::create([
+            'business_id' => Business::generateBusinessId(),
+            'legal_name' => 'Approved Login Business',
+            'primary_contact_email' => 'trip-redirect@example.com',
+            'status' => 'approved',
+        ]);
+        Operator::create([
+            'operator_id' => uniqid('OP'),
+            'user_type' => 'Operator',
+            'is_owner' => 'yes',
+            'email' => 'trip-redirect@example.com',
+            'full_name' => 'Trip Redirect Operator',
+            'password_hash' => bcrypt('Password123!'),
+            'business_id' => $business->id,
+            'account_status' => 'active',
+        ]);
+
+        $response = $this->post('/operator/login', [
+            'email' => 'trip-redirect@example.com',
+            'password' => 'Password123!',
+        ]);
+
+        $response->assertRedirect(route('operator.trips.index'));
+    }
+
     public function test_acceptBy_updates_status_direct()
     {
         // direct model method should persist accepted state
@@ -560,4 +587,3 @@ class ControllerVerificationTest extends TestCase
         $response->assertDontSee('Create & Claim');
     }
 }
-

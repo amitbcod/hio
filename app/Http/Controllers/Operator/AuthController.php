@@ -113,11 +113,11 @@ class AuthController extends Controller
                 }
             }
 
-            // If operator is linked to a business and business is approved, redirect to accommodation index
+            // If operator is linked to an approved business, open the trip listing.
             if (!empty($operator->business_id)) {
                 $business = Business::find($operator->business_id);
                 if ($business && ($business->status === 'active' || $business->status === 'approved')) {
-                    return redirect()->route('operator.accommodation.index');
+                    return redirect()->route('operator.trips.index');
                 }
             }
 
