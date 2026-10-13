@@ -119,7 +119,14 @@
     @endif
 
     <div class="text-center mt-4 pt-3 border-top">
-        @if($booking->booking_status === 'Pending')
+        @php
+            $canConfirmBooking = in_array(
+                strtolower(trim((string) ($booking->booking_status ?? ''))),
+                ['pending', 'processing'],
+                true
+            );
+        @endphp
+        @if($canConfirmBooking)
             <form method="POST" action="{{ route('admin.accommodation.booking.status', $booking->id) }}" style="display:inline;" onsubmit="return confirm('Confirm this booking?');">
                 @csrf
                 <input type="hidden" name="booking_status" value="Confirmed">

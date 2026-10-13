@@ -270,11 +270,18 @@
                     {{-- Action Buttons --}}
                     <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
                         <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                            @php
+                                $canConfirmBooking = in_array(
+                                    strtolower(trim((string) ($booking->booking_status ?? ''))),
+                                    ['pending', 'processing'],
+                                    true
+                                );
+                            @endphp
                             <a href="{{ route('operator.accommodation.bookings') }}" class="btn btn-outline-blue" style="">
                                 ← Back to All Bookings
                             </a>
 
-                            @if($booking->booking_status === 'Pending')
+                            @if($canConfirmBooking)
                                 <form method="POST" action="{{ route('admin.accommodation.booking.status', $booking->id) }}" style="display:inline;" onsubmit="return confirm('Confirm this booking?');">
                                     @csrf
                                     <input type="hidden" name="booking_status" value="Confirmed">
