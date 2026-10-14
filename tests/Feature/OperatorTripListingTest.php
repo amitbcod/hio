@@ -12,6 +12,7 @@ use App\Models\Operator;
 use App\Models\Transport;
 use App\Models\TransportBooking;
 use App\Models\Trip;
+use Carbon\Carbon;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -19,13 +20,19 @@ use Tests\TestCase;
 
 class OperatorTripListingTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
 
         DB::statement('PRAGMA foreign_keys = OFF');
 
-        foreach (['bli_traveller_allocations', 'booking_guests', 'activity_scheduling_timeslots', 'travellers', 'traveler_accounts', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'operators', 'operator_users', 'businesses'] as $table) {
+        foreach (['trip_action_deadlines', 'trip_action_deadline_settings', 'bli_traveller_allocations', 'booking_guests', 'activity_scheduling_timeslots', 'travellers', 'traveler_accounts', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'operators', 'operator_users', 'businesses'] as $table) {
             if (Schema::hasTable($table)) {
                 Schema::drop($table);
             }
@@ -71,6 +78,32 @@ class OperatorTripListingTest extends TestCase
             $table->unsignedBigInteger('traveler_account_id')->nullable();
             $table->string('title')->nullable();
             $table->string('priority', 20)->default('normal');
+            $table->timestamps();
+        });
+
+        Schema::create('trip_action_deadline_settings', function (Blueprint $table) {
+            $table->string('action_type', 50)->primary();
+            $table->unsignedInteger('interval_hours')->default(24);
+            $table->unsignedBigInteger('updated_by_admin_id')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('trip_action_deadlines', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('trip_id');
+            $table->string('service_type', 30);
+            $table->unsignedBigInteger('service_booking_id');
+            $table->string('action_type', 50);
+            $table->string('action_key', 191)->unique();
+            $table->string('label', 255);
+            $table->dateTime('target_at')->nullable();
+            $table->dateTime('deadline_at')->nullable();
+            $table->string('time_zone', 64)->nullable();
+            $table->unsignedInteger('override_hours')->nullable();
+            $table->string('status', 20)->default('open');
+            $table->dateTime('completed_at')->nullable();
+            $table->unsignedBigInteger('changed_by_admin_id')->nullable();
+            $table->dateTime('changed_at')->nullable();
             $table->timestamps();
         });
 
@@ -228,9 +261,10 @@ class OperatorTripListingTest extends TestCase
         $otherAccommodation = Accommodation::create(['id' => 2, 'operator_id' => 20, 'business_id' => 200, 'property_name' => 'Other Property']);
 
         $accountHolder = \App\Models\TravelerAccount::create(['full_name' => 'John Smith']);
+        $mixedTripAccountHolder = \App\Models\TravelerAccount::create(['full_name' => 'Customer Not Travelling']);
         $visibleTrip = Trip::create(['id' => 1, 'traveler_account_id' => $accountHolder->id, 'title' => 'Visible Trip']);
         $hiddenTrip = Trip::create(['id' => 2, 'title' => 'Hidden Trip']);
-        $mixedTrip = Trip::create(['id' => 3, 'traveler_account_id' => $accountHolder->id, 'title' => 'Mixed Trip']);
+        $mixedTrip = Trip::create(['id' => 3, 'traveler_account_id' => $mixedTripAccountHolder->id, 'title' => 'Mixed Trip']);
         $visibleTrip->travellers()->createMany([
             ['name' => 'John Smith', 'relationship' => 'self'],
             ['name' => 'Sarah Smith', 'relationship' => 'guest'],
@@ -245,16 +279,27 @@ class OperatorTripListingTest extends TestCase
 
         AccommodationBooking::create(['id' => 1, 'trip_id' => 1, 'booking_ref_id' => $visibleRef->id, 'accommodation_id' => 1, 'room_id' => $room->id, 'booking_reference' => 'ACC-001', 'booking_status' => 'Confirmed', 'check_in_date' => '2026-10-01', 'check_out_date' => '2026-10-03', 'rooms_booked' => 2, 'adults' => 2, 'children' => 1, 'total_amount' => 120.00]);
         \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'accommodation', 'guest_number' => 1, 'first_name' => 'John', 'last_name' => 'Smith']);
+        \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'accommodation', 'guest_number' => 2, 'first_name' => 'Sarah', 'last_name' => 'Smith']);
+        \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'accommodation', 'guest_number' => 3, 'first_name' => 'John', 'last_name' => 'Smith']);
         ActivityBooking::create(['id' => 1, 'trip_id' => 1, 'booking_ref_id' => $visibleRef->id, 'activity_id' => 1, 'booking_reference' => 'ACT-001', 'booking_status' => 'Confirmed', 'activity_date' => '2026-10-02', 'activity_time_slot_id' => 1, 'adults' => 2, 'children' => 1, 'total_amount' => 80.00]);
         DB::table('activity_scheduling_timeslots')->insert(['timeslot_id' => 1, 'activity_id' => 1, 'start_time' => '09:00:00', 'end_time' => '11:00:00', 'created_at' => now(), 'updated_at' => now()]);
         \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'activity', 'guest_number' => 1, 'first_name' => 'Sarah', 'last_name' => 'Smith']);
+        \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'activity', 'guest_number' => 2, 'first_name' => 'Alex', 'last_name' => 'Smith']);
         $visibleTransportBooking = TransportBooking::create(['id' => 1, 'transport_id' => 1, 'booking_reference' => 'TRN-001', 'booking_status' => 'Confirmed', 'route_from' => 'Airport', 'route_to' => 'Hotel', 'pickup_date' => '2026-10-01', 'pickup_time' => '08:30:00', 'total_passengers' => 3, 'adults' => 2, 'children' => 1, 'traveler_first_name' => 'John', 'traveler_last_name' => 'Smith', 'transport_vehicle_id' => 1, 'total_amount' => 90.00]);
         $visibleTransportBooking->forceFill(['trip_id' => 1, 'booking_ref_id' => $visibleRef->id])->save();
         \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'transport', 'guest_number' => 1, 'first_name' => 'Sarah', 'last_name' => 'Smith']);
+        \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'transport', 'guest_number' => 2, 'first_name' => 'David', 'last_name' => 'Smith']);
         $secondVisibleRef = BookingRef::create(['id' => 3, 'trip_id' => 1, 'booking_ref_code' => 'BR-OP-001-B']);
         ActivityBooking::create(['id' => 3, 'trip_id' => 1, 'booking_ref_id' => $secondVisibleRef->id, 'activity_id' => 1, 'booking_reference' => 'ACT-001-B', 'booking_status' => 'Confirmed', 'total_amount' => 40.00]);
 
         AccommodationBooking::create(['id' => 2, 'trip_id' => 3, 'booking_ref_id' => $mixedRef->id, 'accommodation_id' => 2, 'booking_reference' => 'ACC-OTHER', 'booking_status' => 'Cancelled', 'total_amount' => 60.00]);
+        \App\Models\BookingGuest::create([
+            'booking_id' => 2,
+            'booking_type' => 'accommodation',
+            'guest_number' => 1,
+            'first_name' => 'Private',
+            'last_name' => 'Guest',
+        ]);
         ActivityBooking::create(['id' => 2, 'trip_id' => 3, 'booking_ref_id' => $mixedRef->id, 'activity_id' => 1, 'booking_reference' => 'ACT-OWN', 'booking_status' => 'Confirmed', 'total_amount' => 50.00]);
 
         AccommodationBooking::create(['id' => 3, 'trip_id' => 2, 'booking_ref_id' => 99, 'accommodation_id' => 2, 'booking_reference' => 'ACC-HIDDEN', 'booking_status' => 'Confirmed', 'total_amount' => 70.00]);
@@ -351,6 +396,7 @@ class OperatorTripListingTest extends TestCase
         $response->assertSee('Next Step:</strong> Awaiting Payment', false);
         $response->assertDontSee('background:#16a34a');
         $response->assertDontSee('Hidden Trip');
+        $response->assertDontSee('Private Guest');
         $response->assertSee('1 Booking Refs · 1 BLIs');
         $response->assertSee('BR-OP-001');
         $response->assertSee('2 Booking Refs · 4 BLIs');
@@ -362,7 +408,9 @@ class OperatorTripListingTest extends TestCase
         $response->assertSee('Pending</span>', false);
         $response->assertSee('Travel Party Size: 2');
         $response->assertSee('John Smith');
-        $response->assertSee('Account Holder not travelling · Responsible: Sarah Jones');
+        $response->assertSee('Customer Not Travelling');
+        $response->assertDontSee('Account Holder not travelling');
+        $response->assertDontSee('Responsible: Not specified');
         $response->assertSee('Standard yes');
         $response->assertSee('/operator/accommodation/bookings/1');
         $response->assertSee('/operator/activity/bookings/1');
@@ -370,14 +418,14 @@ class OperatorTripListingTest extends TestCase
         $response->assertSee('Check-in:</strong> 01/10/2026', false);
         $response->assertSee('Check-out:</strong> 03/10/2026', false);
         $response->assertSee('Rooms:</strong> 2', false);
-        $response->assertSee('Participant Names:</strong> John Smith', false);
+        $response->assertSee('Participant Names:</strong> John Smith, Sarah Smith, John Smith', false);
         $response->assertSee('Date:</strong> 02/10/2026', false);
         $response->assertSee('Time:</strong> 09:00:00 - 11:00:00', false);
         $response->assertSee('Participants:</strong> Adults: 2 · Children: 1 · Total: 3', false);
-        $response->assertSee('Participant Names:</strong> Sarah Smith', false);
+        $response->assertSee('Participant Names:</strong> Sarah Smith, Alex Smith', false);
         $response->assertSee('Passengers:</strong> 3', false);
         $response->assertSee('Pickup:</strong> 01/10/2026 08:30:00', false);
-        $response->assertSee('Passenger Names:</strong> Sarah Smith', false);
+        $response->assertSee('Passenger Names:</strong> Sarah Smith, David Smith, John Smith', false);
         $response->assertSee('Vehicles:</strong> 1', false);
         $response->assertDontSee('ACC-OTHER');
 
@@ -419,5 +467,169 @@ class OperatorTripListingTest extends TestCase
         $completeResponse->assertDontSee('Visible Trip');
         $completeResponse->assertDontSee('Mixed Trip');
         $completeResponse->assertDontSee('Hidden Trip');
+    }
+
+    public function test_operator_trip_listing_passes_due_for_an_action_inside_its_configured_window(): void
+    {
+        config(['app.timezone' => 'UTC']);
+        Carbon::setTestNow('2026-10-13 06:00:00');
+        DB::table('businesses')->insert([
+            'id' => 100,
+            'status' => 'active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $operator = Operator::create([
+            'id' => 10,
+            'name' => 'Operator One',
+            'email' => 'one@example.test',
+            'business_id' => 100,
+        ]);
+        $accommodation = Accommodation::create([
+            'id' => 1,
+            'operator_id' => 10,
+            'business_id' => 100,
+            'property_name' => 'Owned Property',
+        ]);
+        $trip = Trip::create(['id' => 1, 'title' => 'Due Window Trip']);
+        $bookingRef = BookingRef::create(['id' => 1, 'trip_id' => 1, 'booking_ref_code' => 'DUE-001']);
+        $booking = \App\Models\Booking::create([
+            'trip_id' => $trip->id,
+            'booking_ref_id' => $bookingRef->id,
+            'total_amount' => 100,
+            'status' => 'confirmed',
+            'booking_type' => 'open-group',
+        ]);
+        \App\Models\PaymentTransaction::create([
+            'booking_id' => $booking->id,
+            'booking_ref_id' => $bookingRef->id,
+            'amount' => 100,
+            'method' => 'card',
+            'status' => 'paid',
+        ]);
+        $serviceBooking = AccommodationBooking::create([
+            'id' => 5,
+            'trip_id' => $trip->id,
+            'booking_ref_id' => $bookingRef->id,
+            'accommodation_id' => $accommodation->id,
+            'booking_status' => 'Confirmed',
+            'check_in_date' => '2026-10-14',
+            'check_out_date' => '2026-10-15',
+            'adults' => 1,
+            'children' => 0,
+        ]);
+        DB::table('trip_action_deadline_settings')->insert([
+            'action_type' => 'guest_details',
+            'interval_hours' => 18,
+        ]);
+
+        $response = $this->actingAs($operator, 'operator')->get(route('operator.trips.index'));
+
+        $response->assertOk();
+        $response->assertSee('>DUE</span>', false);
+        $response->assertDontSee('OVERDUE');
+        $viewTrip = collect($response->viewData('trips')->items())->firstWhere('id', $trip->id);
+        $viewAction = collect($viewTrip->due_actions)->firstWhere('booking_id', $serviceBooking->id);
+        $this->assertSame('guest_details', $viewAction['type']);
+        $this->assertSame('due', $viewAction['status']);
+        $this->assertSame('14 Oct 2026, 00:00 · UTC+00:00', $viewAction['target_display']);
+        $response->assertSee('Complete guest details for accommodation booking #' . $serviceBooking->id);
+        $response->assertDontSee('The configured warning window has started.');
+        $response->assertSee('Deadline: 14 Oct 2026, 00:00 · UTC+00:00');
+    }
+
+    public function test_operator_trip_listing_shows_due_independently_of_payment_and_never_after_target(): void
+    {
+        config(['app.timezone' => 'UTC']);
+        Carbon::setTestNow('2026-10-13 06:00:00');
+        DB::table('trip_action_deadline_settings')->insert([
+            'action_type' => 'guest_details',
+            'interval_hours' => 18,
+        ]);
+        DB::table('businesses')->insert([
+            'id' => 100,
+            'status' => 'active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $operator = Operator::create([
+            'id' => 10,
+            'name' => 'Operator One',
+            'email' => 'one@example.test',
+            'business_id' => 100,
+        ]);
+        $accommodation = Accommodation::create([
+            'id' => 1,
+            'operator_id' => 10,
+            'business_id' => 100,
+            'property_name' => 'Owned Property',
+        ]);
+        $createTrip = function (string $title, string $targetDate, string $paymentStatus) use ($accommodation): array {
+            static $nextTripId = 901;
+            $trip = Trip::forceCreate([
+                'id' => $nextTripId++,
+                'title' => $title,
+            ]);
+            $bookingRef = BookingRef::create([
+                'trip_id' => $trip->id,
+                'booking_ref_code' => strtoupper(str_replace(' ', '-', $title)),
+            ]);
+            $booking = \App\Models\Booking::create([
+                'trip_id' => $trip->id,
+                'booking_ref_id' => $bookingRef->id,
+                'total_amount' => 100,
+                'status' => 'confirmed',
+                'booking_type' => 'open-group',
+            ]);
+            \App\Models\PaymentTransaction::create([
+                'booking_id' => $booking->id,
+                'booking_ref_id' => $bookingRef->id,
+                'amount' => 100,
+                'method' => 'card',
+                'status' => $paymentStatus,
+            ]);
+            $serviceBooking = AccommodationBooking::create([
+                'trip_id' => $trip->id,
+                'booking_ref_id' => $bookingRef->id,
+                'accommodation_id' => $accommodation->id,
+                'booking_status' => 'Confirmed',
+                'check_in_date' => $targetDate,
+                'check_out_date' => Carbon::parse($targetDate)->addDay()->toDateString(),
+                'adults' => 1,
+                'children' => 0,
+            ]);
+
+            return [$trip, $serviceBooking];
+        };
+
+        [$dueTrip, $dueBooking] = $createTrip('Operator Due Trip', '2026-10-14', 'paid');
+        [$pastTrip, $pastBooking] = $createTrip('Operator Past Target Trip', '2026-10-12', 'paid');
+        [$blockedTrip, $blockedBooking] = $createTrip('Operator Payment Blocked Trip', '2026-10-14', 'pending');
+
+        $response = $this->actingAs($operator, 'operator')->get(route('operator.trips.index'));
+
+        $response->assertOk();
+        $response->assertSee('>DUE</span>', false);
+        $response->assertDontSee('OVERDUE');
+        $viewTrips = collect($response->viewData('trips')->items());
+        $viewActionFor = function (Trip $trip, int $bookingId) use ($viewTrips): ?array {
+            $viewTrip = $viewTrips->firstWhere('id', $trip->id);
+            $this->assertNotNull($viewTrip, 'Expected trip in operator view: ' . $trip->title);
+            return collect($viewTrip->due_actions)->firstWhere('booking_id', $bookingId);
+        };
+
+        $dueAction = $viewActionFor($dueTrip, $dueBooking->id);
+        $pastAction = $viewActionFor($pastTrip, $pastBooking->id);
+        $blockedDueAction = $viewActionFor($blockedTrip, $blockedBooking->id);
+        $blockedTripData = $viewTrips->firstWhere('id', $blockedTrip->id);
+        $blockedNextAction = collect($blockedTripData->next_actions)->firstWhere('booking_id', 0);
+
+        $this->assertSame('due', $dueAction['status'] ?? null, json_encode($dueAction));
+        $this->assertSame('na', $pastAction['status'] ?? null, json_encode($pastAction));
+        $this->assertNull($pastAction['target_display']);
+        $this->assertNull($pastAction['due_since_display']);
+        $this->assertSame('payment', $blockedNextAction['type']);
+        $this->assertSame('due', $blockedDueAction['status'] ?? null, json_encode($blockedDueAction));
+        $this->assertSame('na', collect($blockedTripData->next_actions)->first()['status']);
     }
 }

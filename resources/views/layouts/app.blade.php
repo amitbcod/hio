@@ -18,7 +18,7 @@
             <i class="fa-solid fa-bars"></i>
         </button>
         <div class="container-fluid d-flex justify-content-between align-items-center">
-            <a class="navbar-brand d-flex align-items-center" href="{{ request()->routeIs('operator.*') ? route('operator.trips.index') : url('/operator/accommodation') }}">
+            <a class="navbar-brand d-flex align-items-center" href="{{ request()->routeIs('operator.*') ? route('operator.trips.index') : route('operator.trips.index') }}">
               
                 <img src="{{ asset('images/holidays-io-logo.png') }}" alt="Logo" width="130px">
               <!-- <i class="fa-solid fa-house me-2" aria-hidden="true"></i> -->

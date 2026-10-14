@@ -352,35 +352,99 @@ class TripListingFilters
             ? $trip->travellers
             : $trip->travellers()->get();
         $accountHolderName = trim((string) ($trip->traveler?->full_name ?? ''));
-        $accountHolderEmail = trim((string) ($trip->traveler?->email ?? ''));
-        $normalizeName = static fn (string $name): string => mb_strtolower(
-            preg_replace('/\s+/', ' ', trim($name)) ?? ''
-        );
-        $accountHolderKey = $normalizeName($accountHolderName);
-        $accountHolderEmailKey = mb_strtolower($accountHolderEmail);
-
-        $accountHolderTraveller = $travellers->first(function ($traveller) use ($accountHolderKey, $accountHolderEmailKey, $normalizeName) {
-            return ($accountHolderKey !== '' && $normalizeName((string) $traveller->name) === $accountHolderKey)
-                || ($accountHolderEmailKey !== ''
-                    && mb_strtolower(trim((string) $traveller->email)) === $accountHolderEmailKey)
-                || mb_strtolower((string) $traveller->relationship) === 'self';
-        });
-        $leadTraveller = $travellers->first(
-            fn ($traveller) => mb_strtolower((string) $traveller->relationship) === 'lead'
-        );
-
-        if ($accountHolderTraveller) {
-            $displayName = $accountHolderTraveller->name;
-        } elseif ($accountHolderName !== '') {
-            $displayName = 'Account Holder not travelling · Responsible: ' . ($leadTraveller?->name ?: 'Not specified');
-        } else {
-            $displayName = $leadTraveller?->name ?: 'N/A';
-        }
 
         return [
-            'name' => $displayName,
+            'name' => $accountHolderName !== '' ? $accountHolderName : 'Unknown Customer',
             'party_size' => $travellers->unique(fn ($traveller) => $traveller->getKey())->count(),
         ];
+    }
+
+    public function resolveServiceParticipantNames(Trip $trip, \Illuminate\Database\Eloquent\Model $serviceBooking, string $serviceType): array
+    {
+        $serviceType = strtolower($serviceType);
+        $serviceId = match ($serviceType) {
+            'accommodation' => (int) ($serviceBooking->accommodation_id ?? 0),
+            'activity' => (int) ($serviceBooking->activity_id ?? 0),
+            'transport' => (int) ($serviceBooking->transport_id ?? 0),
+            default => 0,
+        };
+        $bookingRefId = $serviceBooking->booking_ref_id ?? null;
+        $travellerRecords = collect();
+
+        foreach ($trip->bookings as $parentBooking) {
+            $sameBookingReference = $bookingRefId !== null
+                && (int) ($parentBooking->booking_ref_id ?? 0) === (int) $bookingRefId;
+
+            foreach ($parentBooking->lineItems as $lineItem) {
+                if (!$lineItem->relationLoaded('travellers')) {
+                    continue;
+                }
+
+                $isExactTransportBooking = $serviceType === 'transport'
+                    && (int) ($lineItem->transport_booking_id ?? 0) === (int) $serviceBooking->getKey();
+                $isRelatedServiceLine = $sameBookingReference
+                    && strtolower((string) ($lineItem->service_type ?? '')) === $serviceType
+                    && $serviceId > 0
+                    && (int) ($lineItem->service_id ?? 0) === $serviceId;
+                $isRelatedPackageLine = $sameBookingReference
+                    && strtolower((string) ($lineItem->service_type ?? '')) === 'package';
+
+                if ($isExactTransportBooking || $isRelatedServiceLine || $isRelatedPackageLine) {
+                    $travellerRecords = $travellerRecords->concat($lineItem->travellers);
+                }
+            }
+        }
+
+        $travellerRecords = $travellerRecords->unique(fn ($traveller) => $traveller->getKey());
+        $nameSources = [
+            $serviceBooking->relationLoaded('guests')
+                ? $serviceBooking->guests
+                    ->sortBy(fn ($guest) => [(int) ($guest->guest_number ?? 0), (int) $guest->getKey()])
+                    ->map(fn ($guest) => trim(implode(' ', array_filter([
+                        $guest->first_name,
+                        $guest->middle_name,
+                        $guest->last_name,
+                    ]))))
+                    ->all()
+                : [],
+            $travellerRecords->sortBy(fn ($traveller) => (int) $traveller->getKey())
+                ->pluck('name')
+                ->all(),
+        ];
+
+        if ($serviceType === 'transport') {
+            $storedPassengerName = trim(implode(' ', array_filter([
+                $serviceBooking->traveler_first_name ?? null,
+                $serviceBooking->traveler_middle_name ?? null,
+                $serviceBooking->traveler_last_name ?? null,
+            ])));
+            if ($storedPassengerName !== '') {
+                $nameSources[] = [$storedPassengerName];
+            }
+        }
+
+        $names = [];
+        $normalize = static fn (string $name): string => mb_strtolower(
+            preg_replace('/\s+/', ' ', trim($name)) ?? ''
+        );
+        foreach ($nameSources as $source) {
+            $sourceCounts = [];
+            foreach ($source as $name) {
+                if (!is_string($name) || trim($name) === '') {
+                    continue;
+                }
+
+                $name = trim($name);
+                $key = $normalize($name);
+                $sourceCounts[$key] = ($sourceCounts[$key] ?? 0) + 1;
+                $resultCount = collect($names)->filter(fn ($existing) => $normalize($existing) === $key)->count();
+                if ($resultCount < $sourceCounts[$key]) {
+                    $names[] = $name;
+                }
+            }
+        }
+
+        return $names;
     }
 
     public function resolveBookingStatusCounts(Trip $trip): array

@@ -431,7 +431,7 @@
                     <a href="{{ route('frontend.home', array_merge(['category' => 'tours'], $operatorQuery)) }}" class="{{ request()->routeIs('frontend.home') && request()->query('category') === 'tours' ? 'is-active' : '' }}">{{ __('site.activities') }}</a>
                     <a href="{{ route('frontend.home', array_merge(['category' => 'transport'], $operatorQuery)) }}" class="{{ request()->routeIs('frontend.home') && request()->query('category') === 'transport' ? 'is-active' : '' }}">{{ __('site.transport') }}</a>
                     <a href="{{ route('frontend.home', $operatorQuery) }}#discover-mauritius">{{ __('site.discover_mauritius') }}</a>
-                    <a href="{{ url('/operator/accommodation') }}">{{ __('site.operator') }}</a>
+                    <a href="{{ route('operator.trips.index') }}">{{ __('site.operator') }}</a>
                     <a href="{{ route('frontend.booking.cart', $operatorQuery) }}" id="headerCartToggle"><i class="fa-solid fa-cart-shopping"></i> {{ __('site.cart') }} <span id="headerCartCount" class="header-cart-badge">{{ count(session('booking_cart', [])) }}</span></a>
                 </nav>
             </div>
@@ -588,7 +588,7 @@
                         <li><a href="{{ route('frontend.packages.list', $operatorQuery) }}">Packages</a></li>
                         <li><a href="{{ route('frontend.home', array_merge(['category' => 'transport'], $operatorQuery)) }}#discover-mauritius">{{ __('footer.transport') }}</a></li>
                         <li><a href="{{ route('frontend.home', $operatorQuery) }}#discover-mauritius">{{ __('footer.discover_mauritius') }}</a></li>
-                        <li><a href="{{ url('/operator/accommodation') }}">{{ __('footer.operator') }}</a></li>
+                        <li><a href="{{ route('operator.trips.index') }}">{{ __('footer.operator') }}</a></li>
                     </ul>
                 </div>
                 <div>

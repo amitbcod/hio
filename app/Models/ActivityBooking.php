@@ -23,6 +23,11 @@ class ActivityBooking extends Model
         return $this->belongsTo(Activity::class, 'activity_id');
     }
 
+    public function activityTimeSlot()
+    {
+        return $this->belongsTo(ActivitySchedulingTimeSlot::class, 'activity_time_slot_id', 'timeslot_id');
+    }
+
     public function bookingRef()
     {
         return $this->belongsTo(BookingRef::class, 'booking_ref_id');

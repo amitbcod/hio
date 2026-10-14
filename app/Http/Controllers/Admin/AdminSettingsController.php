@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminUser;
+use App\Models\TripActionDeadlineSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -20,7 +21,9 @@ class AdminSettingsController extends Controller
             return redirect()->route('admin.login');
         }
 
-        return view('admin.settings', compact('admin'));
+        $tripActionDeadlineIntervals = TripActionDeadlineSetting::intervals();
+
+        return view('admin.settings', compact('admin', 'tripActionDeadlineIntervals'));
     }
 
     public function defaultPackagePolicy()
@@ -110,6 +113,11 @@ class AdminSettingsController extends Controller
             'vat_number' => 'nullable|string|max:100',
             'brn_number' => 'nullable|string|max:100',
             'logo' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
+            'trip_action_deadlines' => 'sometimes|array',
+            'trip_action_deadlines.guest_details' => 'required_with:trip_action_deadlines|integer|min:0|max:8760',
+            'trip_action_deadlines.driver_license_expire' => 'required_with:trip_action_deadlines|integer|min:0|max:8760',
+            'trip_action_deadlines.driver_assign' => 'required_with:trip_action_deadlines|integer|min:0|max:8760',
+            'trip_action_deadlines.vehicle_assign' => 'required_with:trip_action_deadlines|integer|min:0|max:8760',
         ]);
 
         $admin->business_name = $request->input('business_name');
@@ -118,6 +126,13 @@ class AdminSettingsController extends Controller
         $admin->phone_number = $request->input('phone_number');
         $admin->vat_number = $request->input('vat_number');
         $admin->brn_number = $request->input('brn_number');
+
+        if ($request->has('trip_action_deadlines')) {
+            TripActionDeadlineSetting::saveIntervals(
+                $request->input('trip_action_deadlines'),
+                (int) $admin->id
+            );
+        }
 
         if ($request->hasFile('logo')) {
             $uploadDir = public_path('uploads/admin-logos');

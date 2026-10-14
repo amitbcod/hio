@@ -8,6 +8,7 @@ use App\Models\BookingRef;
 use App\Models\TravelerAccount;
 use App\Models\TransportBooking;
 use App\Models\Trip;
+use Carbon\Carbon;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -15,13 +16,19 @@ use Tests\TestCase;
 
 class AdminTripListingTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
 
         DB::statement('PRAGMA foreign_keys = OFF');
 
-        foreach (['bli_traveller_allocations', 'booking_guests', 'activity_scheduling_timeslots', 'travellers', 'payment_transactions', 'booking_line_items', 'bookings', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'traveler_accounts'] as $table) {
+        foreach (['trip_action_deadlines', 'trip_action_deadline_settings', 'bli_traveller_allocations', 'booking_guests', 'activity_scheduling_timeslots', 'travellers', 'payment_transactions', 'booking_line_items', 'bookings', 'transport_bookings', 'transports', 'activity_bookings', 'activities', 'accommodation_bookings', 'accommodation_rooms', 'accommodations', 'booking_refs', 'trips', 'traveler_accounts'] as $table) {
             if (Schema::hasTable($table)) {
                 Schema::drop($table);
             }
@@ -44,6 +51,32 @@ class AdminTripListingTest extends TestCase
             $table->date('end_date')->nullable();
             $table->string('status')->nullable();
             $table->string('priority', 20)->default('normal');
+            $table->timestamps();
+        });
+
+        Schema::create('trip_action_deadline_settings', function (Blueprint $table) {
+            $table->string('action_type', 50)->primary();
+            $table->unsignedInteger('interval_hours')->default(24);
+            $table->unsignedBigInteger('updated_by_admin_id')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('trip_action_deadlines', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('trip_id');
+            $table->string('service_type', 30);
+            $table->unsignedBigInteger('service_booking_id');
+            $table->string('action_type', 50);
+            $table->string('action_key', 191)->unique();
+            $table->string('label', 255);
+            $table->dateTime('target_at')->nullable();
+            $table->dateTime('deadline_at')->nullable();
+            $table->string('time_zone', 64)->nullable();
+            $table->unsignedInteger('override_hours')->nullable();
+            $table->string('status', 20)->default('open');
+            $table->dateTime('completed_at')->nullable();
+            $table->unsignedBigInteger('changed_by_admin_id')->nullable();
+            $table->dateTime('changed_at')->nullable();
             $table->timestamps();
         });
 
@@ -348,6 +381,20 @@ class AdminTripListingTest extends TestCase
     public function test_admin_trip_listing_shows_grouped_service_bookings_and_links(): void
     {
         $trip = Trip::firstOrFail();
+        \App\Models\BookingGuest::create([
+            'booking_id' => 1,
+            'booking_type' => 'accommodation',
+            'guest_number' => 2,
+            'first_name' => 'Sarah',
+            'last_name' => 'Doe',
+        ]);
+        \App\Models\BookingGuest::create([
+            'booking_id' => 1,
+            'booking_type' => 'activity',
+            'guest_number' => 2,
+            'first_name' => 'Jamie',
+            'last_name' => 'Doe',
+        ]);
         $travellers = $trip->travellers()->createMany([
             ['name' => 'Jane Doe', 'relationship' => 'self'],
             ['name' => 'Alex Doe', 'relationship' => 'guest'],
@@ -363,7 +410,7 @@ class AdminTripListingTest extends TestCase
         $response->assertOk();
         $response->assertSee('data-trip-toggle', false);
         $response->assertSee('aria-label="Expand trip details"', false);
-        $response->assertSee('colspan="8"', false);
+        $response->assertSee('colspan="10"', false);
         $response->assertSee('Trip 202');
         $response->assertSee('Group Trip');
         $response->assertSee('Travel Party Size: 2');
@@ -397,12 +444,12 @@ class AdminTripListingTest extends TestCase
         $response->assertSee('Deluxe Room Type');
         $response->assertSee('Rooms:</strong> 2', false);
         $response->assertSee('Participants:</strong> Adults: 2 · Children: 1 · Total: 3', false);
-        $response->assertSee('Participant Names:</strong> Jane Doe', false);
+        $response->assertSee('Participant Names:</strong> Jane Doe, Sarah Doe', false);
         $response->assertSee('Check-in:</strong> 01/10/2026', false);
         $response->assertSee('Check-out:</strong> 02/10/2026', false);
         $response->assertSee('Date:</strong> 02/10/2026', false);
         $response->assertSee('Time:</strong> 09:00:00 - 11:00:00', false);
-        $response->assertSee('Participant Names:</strong> Alex Doe', false);
+        $response->assertSee('Participant Names:</strong> Alex Doe, Jamie Doe', false);
         $response->assertSee('Passenger Names:</strong> Alex Doe, Jane Doe', false);
         $response->assertSee('Vehicles:</strong> 1', false);
     }
@@ -611,5 +658,138 @@ class AdminTripListingTest extends TestCase
                 ->assertSee('admin-status-badge--' . $tone, false)
                 ->assertSee($status);
         }
+    }
+
+    public function test_admin_trip_listing_passes_due_for_an_action_inside_its_configured_window(): void
+    {
+        config(['app.timezone' => 'UTC']);
+        Carbon::setTestNow('2026-10-13 06:00:00');
+        DB::table('trip_action_deadline_settings')->insert([
+            'action_type' => 'guest_details',
+            'interval_hours' => 18,
+        ]);
+
+        $trip = Trip::firstOrFail();
+        $trip->start_date = '2026-10-13';
+        $trip->end_date = '2026-10-15';
+        $trip->save();
+        $accommodation = \App\Models\Accommodation::create(['property_name' => 'Due Window Hotel']);
+        $booking = AccommodationBooking::create([
+            'trip_id' => $trip->id,
+            'accommodation_id' => $accommodation->id,
+            'booking_status' => 'Confirmed',
+            'check_in_date' => '2026-10-14',
+            'check_out_date' => '2026-10-15',
+            'adults' => 1,
+            'children' => 0,
+        ]);
+        $secondBooking = AccommodationBooking::create([
+            'trip_id' => $trip->id,
+            'accommodation_id' => $accommodation->id,
+            'booking_status' => 'Confirmed',
+            'check_in_date' => '2026-10-14',
+            'check_out_date' => '2026-10-15',
+            'adults' => 1,
+            'children' => 0,
+        ]);
+
+        $response = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index'));
+
+        $response->assertOk();
+        $response->assertSee('>DUE</span>', false);
+        $response->assertDontSee('OVERDUE');
+        $viewTrip = collect($response->viewData('trips')->items())->firstWhere('id', $trip->id);
+        $viewAction = collect($viewTrip->due_actions)->firstWhere('booking_id', $booking->id);
+        $this->assertSame('guest_details', $viewAction['type']);
+        $this->assertSame('due', $viewAction['status']);
+        $this->assertSame('14 Oct 2026, 00:00 · UTC+00:00', $viewAction['target_display']);
+        $response->assertDontSee('The configured warning window has started.');
+        $response->assertSee('Deadline: 14 Oct 2026, 00:00 · UTC+00:00');
+        $response->assertSee('Complete guest details for accommodation booking #' . $booking->id);
+        $response->assertSee('Complete guest details for accommodation booking #' . $secondBooking->id);
+        $this->assertSame(2, substr_count($response->getContent(), 'Deadline:'));
+        $this->assertSame(2, substr_count($response->getContent(), 'Due since:'));
+        Carbon::setTestNow();
+    }
+
+    public function test_admin_trip_listing_shows_due_independently_of_payment_and_never_after_target(): void
+    {
+        config(['app.timezone' => 'UTC']);
+        Carbon::setTestNow('2026-10-13 06:00:00');
+        DB::table('trip_action_deadline_settings')->insert([
+            'action_type' => 'guest_details',
+            'interval_hours' => 18,
+        ]);
+
+        $createTrip = function (string $title, string $targetDate, string $paymentStatus): array {
+            $trip = Trip::create([
+                'title' => $title,
+                'start_date' => $targetDate,
+                'end_date' => $targetDate,
+                'status' => 'planned',
+            ]);
+            $bookingRef = BookingRef::create([
+                'trip_id' => $trip->id,
+                'booking_ref_code' => strtoupper(str_replace(' ', '-', $title)),
+            ]);
+            $booking = \App\Models\Booking::create([
+                'trip_id' => $trip->id,
+                'booking_ref_id' => $bookingRef->id,
+                'total_amount' => 100,
+                'status' => 'confirmed',
+                'booking_type' => 'open-group',
+            ]);
+            \App\Models\PaymentTransaction::create([
+                'booking_id' => $booking->id,
+                'booking_ref_id' => $bookingRef->id,
+                'amount' => 100,
+                'method' => 'card',
+                'status' => $paymentStatus,
+            ]);
+            $accommodation = \App\Models\Accommodation::create([
+                'property_name' => $title . ' Hotel',
+            ]);
+            $serviceBooking = AccommodationBooking::create([
+                'trip_id' => $trip->id,
+                'booking_ref_id' => $bookingRef->id,
+                'accommodation_id' => $accommodation->id,
+                'booking_status' => 'Confirmed',
+                'check_in_date' => $targetDate,
+                'check_out_date' => Carbon::parse($targetDate)->addDay()->toDateString(),
+                'adults' => 1,
+                'children' => 0,
+            ]);
+
+            return [$trip, $serviceBooking];
+        };
+
+        [$dueTrip, $dueBooking] = $createTrip('Admin Due Trip', '2026-10-14', 'paid');
+        [$pastTrip, $pastBooking] = $createTrip('Admin Past Target Trip', '2026-10-12', 'paid');
+        [$blockedTrip, $blockedBooking] = $createTrip('Admin Payment Blocked Trip', '2026-10-14', 'pending');
+
+        $response = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index'));
+
+        $response->assertOk();
+        $response->assertSee('>DUE</span>', false);
+        $response->assertDontSee('OVERDUE');
+        $viewTrips = collect($response->viewData('trips')->items());
+        $viewActionFor = function (Trip $trip, int $bookingId) use ($viewTrips): ?array {
+            $viewTrip = $viewTrips->firstWhere('id', $trip->id);
+            return collect($viewTrip->due_actions)->firstWhere('booking_id', $bookingId);
+        };
+
+        $dueAction = $viewActionFor($dueTrip, $dueBooking->id);
+        $pastAction = $viewActionFor($pastTrip, $pastBooking->id);
+        $blockedTripData = $viewTrips->firstWhere('id', $blockedTrip->id);
+        $blockedDueAction = $viewActionFor($blockedTrip, $blockedBooking->id);
+        $blockedNextAction = collect($blockedTripData->next_actions)->firstWhere('booking_id', 0);
+
+        $this->assertSame('due', $dueAction['status']);
+        $this->assertSame('na', $pastAction['status']);
+        $this->assertNull($pastAction['target_display']);
+        $this->assertNull($pastAction['due_since_display']);
+        $this->assertSame('payment', $blockedNextAction['type']);
+        $this->assertSame('due', $blockedDueAction['status']);
+        $this->assertSame('na', collect($blockedTripData->next_actions)->first()['status']);
     }
 }

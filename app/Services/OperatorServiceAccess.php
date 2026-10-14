@@ -33,23 +33,53 @@ class OperatorServiceAccess
                 ->first();
         }
 
-        $serviceTypes = $profile?->service_types;
-        if (is_string($serviceTypes)) {
-            $serviceTypes = json_decode($serviceTypes, true);
-        }
+        return $this->normalizeServiceTypes($profile?->service_types ?? []);
+    }
 
-        if (! is_array($serviceTypes)) {
+    private function normalizeServiceTypes(mixed $serviceTypes): array
+    {
+        $values = $serviceTypes;
+
+        if ($values === null) {
             return [];
         }
 
+        if (is_string($values)) {
+            $trimmed = trim($values);
+            if ($trimmed === '') {
+                return [];
+            }
+
+            $decoded = json_decode($trimmed, true);
+            if (is_array($decoded)) {
+                $values = $decoded;
+            } else {
+                $values = preg_split('/\s*,\s*/', $trimmed, -1, PREG_SPLIT_NO_EMPTY) ?: [$trimmed];
+            }
+        }
+
+        if (! is_array($values)) {
+            $values = [$values];
+        }
+
         $selected = [];
-        foreach ($serviceTypes as $serviceType) {
-            if (! is_string($serviceType)) {
+        foreach ($values as $serviceType) {
+            if (is_array($serviceType)) {
+                $selected = [...$selected, ...$this->normalizeServiceTypes($serviceType)];
+                continue;
+            }
+
+            if (! is_string($serviceType) && ! is_numeric($serviceType)) {
+                continue;
+            }
+
+            $serviceName = trim((string) $serviceType);
+            if ($serviceName === '') {
                 continue;
             }
 
             foreach (array_keys(self::SERVICE_MODULES) as $supportedService) {
-                if (strcasecmp(trim($serviceType), $supportedService) === 0) {
+                if (strcasecmp($serviceName, $supportedService) === 0) {
                     $selected[] = $supportedService;
                     break;
                 }

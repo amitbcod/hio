@@ -65,6 +65,7 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
 
     // Admin trips management
     Route::post('trips/confirm-booking/{bookingType}/{booking}', [\App\Http\Controllers\Admin\TripController::class, 'confirmBooking'])->name('trips.confirm-booking');
+    Route::post('trips/{trip}/actions/{actionDeadline}/deadline', [\App\Http\Controllers\Admin\TripController::class, 'updateActionDeadline'])->name('trips.action-deadline.update');
     Route::get('trips', [\App\Http\Controllers\Admin\TripController::class, 'index'])->name('trips.index');
     Route::get('trips/create', [\App\Http\Controllers\Admin\TripController::class, 'create'])->name('trips.create');
     Route::post('trips', [\App\Http\Controllers\Admin\TripController::class, 'store'])->name('trips.store');

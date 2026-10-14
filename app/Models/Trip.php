@@ -67,6 +67,11 @@ class Trip extends Model
         return $this->hasMany(\App\Models\BookingRef::class, 'trip_id');
     }
 
+    public function actionDeadlines()
+    {
+        return $this->hasMany(TripActionDeadline::class);
+    }
+
     public function getBookingReferencesAttribute(): array
     {
         $refs = [];

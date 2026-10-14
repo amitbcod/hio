@@ -89,6 +89,8 @@ class TripInvoiceOrderPricingTest extends TestCase
         Schema::create('accommodation_bookings', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('trip_id');
+            $table->unsignedSmallInteger('adults')->default(2);
+            $table->unsignedSmallInteger('children')->default(0);
             $table->timestamps();
         });
 
@@ -101,6 +103,7 @@ class TripInvoiceOrderPricingTest extends TestCase
             $table->string('last_name');
             $table->date('dob')->nullable();
             $table->string('nationality')->nullable();
+            $table->string('gender')->nullable();
             $table->timestamps();
         });
 
@@ -445,6 +448,94 @@ class TripInvoiceOrderPricingTest extends TestCase
         $countMethod->setAccessible(true);
         $this->assertSame(1, $countMethod->invoke(new TripController(), $lineItem, $trip));
         $this->assertStringContainsString('service_type=activity', $response->getTargetUrl());
+    }
+
+    public function test_saving_package_participants_does_not_increase_booked_traveller_count(): void
+    {
+        $trip = Trip::create([
+            'traveler_account_id' => 17,
+            'title' => 'Package participant count test',
+            'status' => 'planned',
+        ]);
+        $parentBooking = Booking::create([
+            'trip_id' => $trip->id,
+            'booking_type' => 'open-group',
+            'total_amount' => 200,
+            'status' => 'pending',
+        ]);
+        $lineItem = BookingLineItem::create([
+            'booking_id' => $parentBooking->id,
+            'service_type' => 'package',
+            'service_id' => 1,
+            'quantity' => 1,
+            'price' => 200,
+            'status' => 'active',
+        ]);
+        $travellers = collect([
+            \App\Models\Traveller::create([
+                'trip_id' => $trip->id,
+                'name' => 'Booked Traveller One',
+                'relationship' => 'guest',
+            ]),
+            \App\Models\Traveller::create([
+                'trip_id' => $trip->id,
+                'name' => 'Booked Traveller Two',
+                'relationship' => 'guest',
+            ]),
+        ]);
+        $lineItem->travellers()->sync($travellers->pluck('id')->all());
+
+        $traveler = new \App\Models\TravelerAccount();
+        $traveler->id = 17;
+        \Illuminate\Support\Facades\Auth::guard('traveler')->setUser($traveler);
+
+        $request = \Illuminate\Http\Request::create('/traveler/trips/' . $trip->id . '/booking/' . $lineItem->id . '/manage-guests', 'POST', [
+            'service_type' => 'accommodation',
+            'guests' => [
+                ['first_name' => 'First', 'last_name' => 'Participant', 'dob' => '1990-01-01'],
+                ['first_name' => 'Second', 'last_name' => 'Participant', 'dob' => '1992-02-02'],
+            ],
+        ]);
+
+        (new TripController())->updateGuests($request, $trip, $lineItem->id);
+
+        $this->assertSame(2, \App\Models\Traveller::where('trip_id', $trip->id)->count());
+        $this->assertSame(2, DB::table('bli_traveller_allocations')->where('bli_id', $lineItem->id)->count());
+        $this->assertSame(2, $trip->travellers()->count());
+    }
+
+    public function test_saving_accommodation_guests_does_not_change_booked_passenger_counts(): void
+    {
+        $trip = Trip::create([
+            'traveler_account_id' => 17,
+            'title' => 'Accommodation participant count test',
+            'status' => 'planned',
+        ]);
+        $booking = \App\Models\AccommodationBooking::create([
+            'trip_id' => $trip->id,
+            'adults' => 2,
+            'children' => 1,
+        ]);
+
+        $traveler = new \App\Models\TravelerAccount();
+        $traveler->id = 17;
+        \Illuminate\Support\Facades\Auth::guard('traveler')->setUser($traveler);
+
+        $request = \Illuminate\Http\Request::create('/traveler/trips/' . $trip->id . '/booking/' . $booking->id . '/manage-guests', 'POST', [
+            'service_type' => 'accommodation',
+            'guests' => [
+                ['first_name' => 'First', 'last_name' => 'Guest', 'dob' => '1990-01-01', 'nationality' => 'Country A'],
+                ['first_name' => 'Second', 'last_name' => 'Guest', 'dob' => '1992-02-02', 'nationality' => 'Country B'],
+                ['first_name' => 'Third', 'last_name' => 'Guest', 'dob' => '2015-03-03', 'nationality' => 'Country C'],
+            ],
+        ]);
+
+        (new TripController())->updateGuests($request, $trip, $booking->id);
+
+        $booking->refresh();
+        $this->assertSame(2, (int) $booking->adults);
+        $this->assertSame(1, (int) $booking->children);
+        $this->assertSame(3, $booking->guests()->count());
     }
 
     public function test_package_manage_guest_booked_count_matches_trip_detail_count(): void

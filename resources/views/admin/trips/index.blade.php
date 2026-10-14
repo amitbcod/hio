@@ -75,6 +75,8 @@
                                     <th>Booking References</th>
                                     <th>Attention / Priority</th>
                                     <th>Next Action</th>
+                                    <th>Travel / Next Service</th>
+                                    <th>Due / Overdue</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -102,6 +104,9 @@
                                             ->all();
 
                                         $tripNextActions = $trip->next_actions ?? [];
+                                        $tripDueActions = collect($trip->due_actions ?? [])
+                                            ->where('status', 'due')
+                                            ->values();
                                     @endphp
                                     <tr>
                                         <td class="text-center">
@@ -168,12 +173,40 @@
                                             @else
                                                 @foreach($tripNextActions as $action)
                                                     <div>{{ $action['label'] ?? 'No Action Required' }}</div>
+                                                    @if(!empty($action['record_id']))
+                                                        <form method="POST" action="{{ route('admin.trips.action-deadline.update', ['trip' => $trip->id, 'actionDeadline' => $action['record_id']]) }}" class="d-flex gap-1 align-items-center my-1">
+                                                            @csrf
+                                                            <label class="visually-hidden" for="deadline-override-{{ $action['record_id'] }}">Hours before target</label>
+                                                            <input id="deadline-override-{{ $action['record_id'] }}" class="form-control form-control-sm" style="max-width:100px;" type="number" min="0" max="8760" name="override_hours" value="{{ $action['override_hours'] ?? '' }}" placeholder="Default" aria-label="Override hours before target">
+                                                            <button class="btn btn-sm btn-outline-primary" type="submit">Save deadline</button>
+                                                        </form>
+                                                    @endif
                                                 @endforeach
                                             @endif
                                         </td>
+                                        <td>
+                                            <div class="small text-muted">{{ $trip->start_date ? $trip->start_date->format('d M Y') : 'N/A' }} – {{ $trip->end_date ? $trip->end_date->format('d M Y') : 'N/A' }}</div>
+                                            @if(!empty($trip->operations_overview['next_service']))
+                                                <div class="fw-semibold mt-1">{{ $trip->operations_overview['next_service']['name'] }}</div>
+                                                <div class="small text-muted">{{ $trip->operations_overview['next_service']['when'] }}</div>
+                                            @else
+                                                <div class="small text-muted mt-1">No upcoming service</div>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @forelse($tripDueActions as $action)
+                                                <div class="mb-2">
+                                                    <div><span class="badge rounded-pill" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;">DUE</span> — {{ $action['action_name'] }}</div>
+                                                    <div class="small">Deadline: {{ $action['target_display'] }}</div>
+                                                    <div class="small">Due since: {{ $action['due_since_display'] }}</div>
+                                                </div>
+                                            @empty
+                                                <span class="text-muted">N/A</span>
+                                            @endforelse
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <td colspan="8" class="p-0 border-top-0">
+                                        <td colspan="10" class="p-0 border-top-0">
                                             <div id="trip-{{ $trip->id }}" class="collapse">
                                                 <div class="p-3 bg-light">
                                                     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
@@ -228,33 +261,8 @@
                                                                                     : ($bookingType === 'transport' && ! $booking->hasCompleteAssignment()
                                                                                         ? 'Assign Driver & Vehicle'
                                                                                         : 'No Action Required'));
-                                                                            $participantNameList = $booking->guests
-                                                                                ->map(fn ($guest) => trim(implode(' ', array_filter([
-                                                                                    $guest->first_name,
-                                                                                    $guest->middle_name,
-                                                                                    $guest->last_name,
-                                                                                ]))))
-                                                                                ->push($booking->guest_name);
-                                                                            if ($bookingType === 'transport') {
-                                                                                $participantNameList->push(trim(implode(' ', array_filter([
-                                                                                    $booking->traveler_first_name,
-                                                                                    $booking->traveler_middle_name,
-                                                                                    $booking->traveler_last_name,
-                                                                                ]))));
-                                                                                foreach ($trip->bookings as $tripBooking) {
-                                                                                    foreach ($tripBooking->lineItems as $lineItem) {
-                                                                                        if ((int) ($lineItem->transport_booking_id ?? 0) === (int) $booking->id
-                                                                                            && $lineItem->relationLoaded('travellers')) {
-                                                                                            $participantNameList = $participantNameList->concat($lineItem->travellers->pluck('name'));
-                                                                                        }
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                            $guestNames = $participantNameList
-                                                                                ->filter(fn ($name) => is_string($name) && trim($name) !== '')
-                                                                                ->map(fn ($name) => trim($name))
-                                                                                ->unique()
-                                                                                ->implode(', ');
+                                                                            $guestNames = implode(', ', $booking->participant_names ?? []);
+                                                                            $guestNamesDisplay = $guestNames !== '' ? $guestNames : 'Not provided';
                                                                             $participantCounts = 'Adults: ' . (int) ($booking->adults ?? 0)
                                                                                 . ' · Children: ' . (int) ($booking->children ?? 0);
                                                                             $serviceMeta = match ($bookingType) {
@@ -265,9 +273,9 @@
                                                                                     'Check-out' => $booking->check_out_date ? $booking->check_out_date->format('d/m/Y') : 'N/A',
                                                                                     'Rooms' => (int) ($booking->rooms_booked ?? 0),
                                                                                     'Participants' => $participantCounts . ' · Total: ' . ((int) ($booking->adults ?? 0) + (int) ($booking->children ?? 0)),
-                                                                                    'Participant Names' => $guestNames !== '' ? $guestNames : ($booking->guest_name ?? 'N/A'),
+                                                                                    'Participant Names' => $guestNamesDisplay,
                                                                                 ],
-                                                                                'activity' => (function () use ($booking, $guestNames, $participantCounts) {
+                                                                                'activity' => (function () use ($booking, $guestNamesDisplay, $participantCounts) {
                                                                                     $slot = optional($booking->activity)->schedulingTimeSlots
                                                                                         ?->firstWhere('timeslot_id', $booking->activity_time_slot_id);
                                                                                     $infants = (int) ($booking->infants ?? 0);
@@ -278,7 +286,7 @@
                                                                                         'Date' => $booking->activity_date ? $booking->activity_date->format('d/m/Y') : 'N/A',
                                                                                         'Time' => $slot ? trim(($slot->start_time ?? '') . ' - ' . ($slot->end_time ?? '')) : 'N/A',
                                                                                         'Participants' => $counts . ' · Total: ' . ((int) ($booking->adults ?? 0) + (int) ($booking->children ?? 0) + $infants),
-                                                                                        'Participant Names' => $guestNames !== '' ? $guestNames : ($booking->guest_name ?? 'N/A'),
+                                                                                        'Participant Names' => $guestNamesDisplay,
                                                                                     ];
                                                                                 })(),
                                                                                 'transport' => [
@@ -287,7 +295,7 @@
                                                                                     'Pickup' => trim(($booking->pickup_date ? $booking->pickup_date->format('d/m/Y') : 'N/A') . ' ' . ($booking->pickup_time ?? '')),
                                                                                     'Passengers' => (int) ($booking->total_passengers ?? (($booking->adults ?? 0) + ($booking->children ?? 0))),
                                                                                     'Passenger Categories' => $participantCounts,
-                                                                                    'Passenger Names' => $guestNames !== '' ? $guestNames : (trim(($booking->traveler_first_name ?? '') . ' ' . ($booking->traveler_middle_name ?? '') . ' ' . ($booking->traveler_last_name ?? '')) ?: ($booking->guest_name ?? 'N/A')),
+                                                                                    'Passenger Names' => $guestNamesDisplay,
                                                                                     ...($booking->hasVehicleAssignment() ? ['Vehicles' => 1] : []),
                                                                                 ],
                                                                                 default => [],

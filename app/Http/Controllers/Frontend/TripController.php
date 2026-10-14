@@ -1680,10 +1680,32 @@ HTML;
             ->first();
 
         if ($packageLineItem && $packageLineItem->service_type === 'package') {
-            $packageLineItem->travellers()->detach();
-
             $guestInput = $request->input('guests', []);
-            foreach (array_values((array) $guestInput) as $guestData) {
+            $guestInput = is_array($guestInput) ? array_values($guestInput) : [];
+            $guestInput = array_values(array_filter($guestInput, function ($guestData) {
+                return is_array($guestData)
+                    && trim((string) ($guestData['first_name'] ?? '') . ' ' . (string) ($guestData['last_name'] ?? '')) !== '';
+            }));
+
+            $tripTravellers = $trip->travellers()->orderBy('id')->get();
+            $bookedGuestCount = max(1, $tripTravellers->count());
+            if (count($guestInput) > $bookedGuestCount) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'guests' => 'Participant details cannot exceed the number of travellers booked.',
+                ]);
+            }
+
+            $existingAllocatedTravellers = $packageLineItem->travellers()
+                ->where('travellers.trip_id', $trip->id)
+                ->orderBy('travellers.id')
+                ->get();
+            $travellersById = $existingAllocatedTravellers
+                ->concat($tripTravellers)
+                ->unique('id')
+                ->values();
+            $allocatedTravellerIds = [];
+
+            foreach ($guestInput as $index => $guestData) {
                 $firstName = trim((string) ($guestData['first_name'] ?? ''));
                 $lastName = trim((string) ($guestData['last_name'] ?? ''));
                 $fullName = trim($firstName . ' ' . $lastName);
@@ -1692,20 +1714,31 @@ HTML;
                     continue;
                 }
 
-                $traveller = \App\Models\Traveller::create([
-                    'trip_id' => $trip->id,
-                    'name' => $fullName,
-                    'email' => null,
-                    'phone' => null,
-                    'date_of_birth' => isset($guestData['dob']) && $guestData['dob'] ? \Carbon\Carbon::parse($guestData['dob'])->format('Y-m-d') : null,
-                    'relationship' => 'guest',
-                ]);
+                $traveller = $travellersById->get($index);
+                if (!$traveller && $tripTravellers->isEmpty() && $index === 0) {
+                    $traveller = \App\Models\Traveller::create([
+                        'trip_id' => $trip->id,
+                        'name' => $fullName,
+                        'email' => null,
+                        'phone' => null,
+                        'date_of_birth' => isset($guestData['dob']) && $guestData['dob'] ? \Carbon\Carbon::parse($guestData['dob'])->format('Y-m-d') : null,
+                        'relationship' => 'guest',
+                    ]);
+                } elseif (!$traveller) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'guests' => 'Participant details cannot exceed the number of travellers booked.',
+                    ]);
+                } else {
+                    $traveller->update([
+                        'name' => $fullName,
+                        'date_of_birth' => isset($guestData['dob']) && $guestData['dob'] ? \Carbon\Carbon::parse($guestData['dob'])->format('Y-m-d') : null,
+                    ]);
+                }
 
-                \App\Models\BliTravellerAllocation::create([
-                    'bli_id' => $packageLineItem->id,
-                    'traveller_id' => $traveller->id,
-                ]);
+                $allocatedTravellerIds[] = $traveller->id;
             }
+
+            $packageLineItem->travellers()->sync($allocatedTravellerIds);
 
             $manageGuestsRouteParameters['booking'] = $packageLineItem->id;
             return redirect()->route('traveler.trip.booking.manage-guests', $manageGuestsRouteParameters)->with('success', 'Guests updated successfully.');
@@ -1755,7 +1788,7 @@ HTML;
         // Add new guests with explicit guest_number ordering
         foreach (array_values($guestInput) as $index => $guestData) {
             $guestData['guest_number'] = $index + 1;
-            $guestData['gender'] = $genderMapping[$guestData['gender']] ?? $guestData['gender'];
+            $guestData['gender'] = $genderMapping[$guestData['gender'] ?? ''] ?? ($guestData['gender'] ?? null);
             $guestData['booking_type'] = $booking instanceof \App\Models\AccommodationBooking ? 'accommodation' : 'activity';
             $booking->guests()->create($guestData);
         }

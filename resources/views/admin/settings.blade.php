@@ -51,6 +51,34 @@
                 </div>
             @endif
         </div>
+
+        <hr class="my-4">
+        <h4>Trip Action Deadline Defaults</h4>
+        <p class="text-muted">Set how many hours before each action's target its deadline falls. These defaults do not replace individual overrides.</p>
+        @php
+            $deadlineSettings = [
+                'guest_details' => 'Guest Details',
+                'driver_license_expire' => 'Driver License Expire',
+                'driver_assign' => 'Driver Assign',
+                'vehicle_assign' => 'Vehicle Assign',
+            ];
+        @endphp
+        @foreach($deadlineSettings as $actionType => $label)
+            <div class="mb-3">
+                <label class="form-label" for="trip-action-deadline-{{ $actionType }}">{{ $label }} — hours before target</label>
+                <input
+                    id="trip-action-deadline-{{ $actionType }}"
+                    class="form-control"
+                    type="number"
+                    name="trip_action_deadlines[{{ $actionType }}]"
+                    min="0"
+                    max="8760"
+                    step="1"
+                    value="{{ old('trip_action_deadlines.' . $actionType, $tripActionDeadlineIntervals[$actionType] ?? 24) }}"
+                    required
+                >
+            </div>
+        @endforeach
         <button type="submit" class="btn btn-primary">Save Settings</button>
     </form>
 </div>

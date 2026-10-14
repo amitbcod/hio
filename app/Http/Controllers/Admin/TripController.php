@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\AccommodationBooking;
 use App\Models\ActivityBooking;
 use App\Models\Trip;
+use App\Models\TripActionDeadline;
+use App\Models\TripActionDeadlineSetting;
 use App\Models\TravelerAccount;
 use App\Models\TransportBooking;
 use App\Services\TripListingFilters;
+use App\Services\TripOperationsOverview;
 use App\Services\VoucherAvailability;
 use Illuminate\Http\Request;
 
@@ -17,7 +20,8 @@ class TripController extends Controller
     public function index(
         Request $request,
         TripListingFilters $tripListingFilters,
-        VoucherAvailability $voucherAvailability
+        VoucherAvailability $voucherAvailability,
+        TripOperationsOverview $operationsOverview
     )
     {
         if (!session('admin_id')) return redirect()->route('admin.login');
@@ -49,17 +53,23 @@ class TripController extends Controller
             'accommodationBookings.bookingRef',
             'accommodationBookings.guests',
             'activityBookings.activity.schedulingTimeSlots',
+            'activityBookings.activityTimeSlot',
             'activityBookings.bookingRef',
             'activityBookings.guests',
             'transportBookings.transport.operator.profile',
             'transportBookings.transport.vehicleName',
+            'transportBookings.pickupDriver',
+            'transportBookings.returnDriver',
+            'transportBookings.driver',
             'transportBookings.bookingRef',
             'transportBookings.guests',
+            'actionDeadlines',
             ])
             ->orderBy('created_at', 'desc')
             ->paginate(20)
             ->withQueryString();
 
+        $deadlineIntervals = TripActionDeadlineSetting::intervals();
         foreach ($trips as $trip) {
             $trip->trip_type = $tripListingFilters->resolveTripType($trip);
             $commonBookingCounts = $tripListingFilters->resolveCommonBookingCounts($trip);
@@ -73,7 +83,9 @@ class TripController extends Controller
             $trip->payment_status = $this->resolvePaymentStatus($trip);
             $trip->payment_status_display = $tripListingFilters->resolvePaymentStatusDisplay($trip);
             $trip->payment_status_badges = $tripListingFilters->paymentStatusBadges($trip->payment_status_display);
-            $trip->next_actions = $this->resolveNextActions($trip);
+            $trip->operations_overview = $operationsOverview->apply($trip, $deadlineIntervals, true);
+            $trip->next_actions = $trip->operations_overview['actions'];
+            $trip->due_actions = $trip->operations_overview['due_actions'];
             foreach ([
                 'accommodation' => $trip->accommodationBookings,
                 'activity' => $trip->activityBookings,
@@ -83,6 +95,10 @@ class TripController extends Controller
                     $serviceBooking->setAttribute(
                         'voucher_available',
                         $voucherAvailability->isAvailable($trip, $serviceBooking, $serviceType)
+                    );
+                    $serviceBooking->setAttribute(
+                        'participant_names',
+                        $tripListingFilters->resolveServiceParticipantNames($trip, $serviceBooking, $serviceType)
                     );
                 }
             }
@@ -118,6 +134,38 @@ class TripController extends Controller
         return back()->with('success', ucfirst($bookingTypeKey) . ' booking marked as confirmed.');
     }
 
+    public function updateActionDeadline(Request $request, Trip $trip, TripActionDeadline $actionDeadline)
+    {
+        if (!session('admin_id')) {
+            return redirect()->route('admin.login');
+        }
+
+        abort_unless(
+            (int) $actionDeadline->trip_id === (int) $trip->id
+                && $actionDeadline->status === 'open',
+            404
+        );
+
+        $validated = $request->validate([
+            'override_hours' => ['nullable', 'integer', 'min:0', 'max:8760'],
+        ]);
+
+        $hours = $validated['override_hours'] ?? null;
+        $actionDeadline->override_hours = $hours;
+        $actionDeadline->changed_by_admin_id = $hours === null ? null : (int) session('admin_id');
+        $actionDeadline->changed_at = $hours === null ? null : now('UTC');
+        $actionDeadline->deadline_at = $actionDeadline->target_at && $hours !== null
+            ? $actionDeadline->target_at->subHours((int) $hours)
+            : ($actionDeadline->target_at
+                ? $actionDeadline->target_at->subHours(
+                    (int) (TripActionDeadlineSetting::intervals()[$actionDeadline->action_type] ?? 24)
+                )
+                : null);
+        $actionDeadline->save();
+
+        return back()->with('success', 'Action deadline updated.');
+    }
+
     private function resolvePaymentStatus(Trip $trip): string
     {
         $payments = collect();
@@ -133,74 +181,6 @@ class TripController extends Controller
         }
 
         return 'pending';
-    }
-
-    private function resolveNextActions(Trip $trip): array
-    {
-        $paymentStatus = strtolower((string) $this->resolvePaymentStatus($trip));
-        $actions = [];
-
-        if ($paymentStatus !== 'paid') {
-            $actions[] = [
-                'type' => 'payment',
-                'label' => 'Awaiting Payment',
-            ];
-
-            return $actions;
-        }
-
-        foreach ($trip->accommodationBookings as $booking) {
-            if ((string) ($booking->booking_status ?? '') !== 'Confirmed') {
-                $actions[] = [
-                    'type' => 'confirm',
-                    'label' => 'Accommodation #' . $booking->id . ' — Mark as Confirmed',
-                    'url' => route('admin.trips.confirm-booking', ['bookingType' => 'accommodation', 'booking' => $booking->id]),
-                ];
-            }
-        }
-
-        foreach ($trip->activityBookings as $booking) {
-            if ((string) ($booking->booking_status ?? '') !== 'Confirmed') {
-                $actions[] = [
-                    'type' => 'confirm',
-                    'label' => 'Activity #' . $booking->id . ' — Mark as Confirmed',
-                    'url' => route('admin.trips.confirm-booking', ['bookingType' => 'activity', 'booking' => $booking->id]),
-                ];
-            }
-        }
-
-        foreach ($trip->transportBookings as $booking) {
-            if ((string) ($booking->booking_status ?? '') !== 'Confirmed') {
-                $actions[] = [
-                    'type' => 'confirm',
-                    'label' => 'Transport #' . $booking->id . ' — Mark as Confirmed',
-                    'url' => route('admin.trips.confirm-booking', ['bookingType' => 'transport', 'booking' => $booking->id]),
-                ];
-                continue;
-            }
-
-            if ($booking instanceof TransportBooking && !$booking->hasCompleteAssignment()) {
-                $actions[] = [
-                    'type' => 'assign',
-                    'label' => 'Transport #' . $booking->id . ' — Assign Driver & Vehicle',
-                    'url' => route('admin.transport.booking.details', $booking->id),
-                ];
-            } else {
-                $actions[] = [
-                    'type' => 'status',
-                    'label' => 'Transport #' . $booking->id . ' — Driver & Vehicle Assigned',
-                ];
-            }
-        }
-
-        if (empty($actions)) {
-            $actions[] = [
-                'type' => 'completed',
-                'label' => 'No Action Required',
-            ];
-        }
-
-        return $actions;
     }
 
     public function show(Trip $trip)

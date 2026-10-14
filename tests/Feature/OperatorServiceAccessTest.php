@@ -186,4 +186,15 @@ class OperatorServiceAccessTest extends TestCase
         $this->assertStringNotContainsString('Property Management', $sidebar);
         $this->assertStringNotContainsString('Transport Management', $sidebar);
     }
+
+    public function test_operator_navigation_links_prefer_trip_listing_over_accommodation_default(): void
+    {
+        $layout = view('layouts.app')->render();
+        $frontendLayout = view('frontend.layout')->render();
+
+        $this->assertStringContainsString(route('operator.trips.index'), $layout);
+        $this->assertStringContainsString(route('operator.trips.index'), $frontendLayout);
+        $this->assertStringNotContainsString('/operator/accommodation', $layout);
+        $this->assertStringNotContainsString('/operator/accommodation', $frontendLayout);
+    }
 }
