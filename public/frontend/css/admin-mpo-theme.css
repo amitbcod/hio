@@ -313,6 +313,8 @@ body.admin-mpo-auth a:not(:where(.btn, .button, .btn-link, .list-group-item, .na
 .admin-mpo-content table.admin-trip-listing th,
 .admin-mpo-content table.admin-trip-listing td {
     overflow-wrap: anywhere;
+    border-right: 0;
+    border-left: 0;
 }
 
 .admin-mpo-content table.admin-trip-listing td:nth-child(2) {
