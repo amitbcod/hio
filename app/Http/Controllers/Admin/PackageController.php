@@ -5,7 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Package;
+use App\Models\Country;
+use App\Support\CountryAccess;
+use App\Support\CountryOwnership;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class PackageController extends Controller
 {
@@ -90,7 +94,7 @@ class PackageController extends Controller
 
     public function index()
     {
-        $packages = Package::latest()->paginate(20);
+        $packages = Package::with('country')->latest()->paginate(20);
         return view('admin.packages.index', compact('packages'));
     }
 
@@ -98,17 +102,26 @@ class PackageController extends Controller
     {
         // ensure the view always has a $package variable (empty model for create)
         $package = new Package();
-        return view('admin.packages.create-step1', compact('package'));
+        return view('admin.packages.create-step1', [
+            'package' => $package,
+            'countries' => Country::where('is_active', true)->orderBy('name')->get(),
+            'isMpo' => CountryAccess::isMpoAdmin(),
+        ]);
     }
 
     public function edit(Package $package)
     {
         // show the same step1 view but with package data
-        return view('admin.packages.create-step1', compact('package'));
+        return view('admin.packages.create-step1', [
+            'package' => $package,
+            'countries' => Country::where('is_active', true)->orWhereKey($package->country_id)->orderBy('name')->get(),
+            'isMpo' => CountryAccess::isMpoAdmin(),
+        ]);
     }
 
     public function store(Request $request)
     {
+        $countryId = $this->countryId($request);
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'no_of_days' => 'nullable|integer|min:0',
@@ -121,6 +134,7 @@ class PackageController extends Controller
         ]);
 
         $data['created_by'] = session('admin_id') ?? null;
+        $data['country_id'] = $countryId;
 
         $package = Package::create($data);
 
@@ -129,6 +143,7 @@ class PackageController extends Controller
 
     public function update(Request $request, Package $package)
     {
+        $countryId = $this->countryId($request, $package->country_id);
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'no_of_days' => 'nullable|integer|min:0',
@@ -140,9 +155,24 @@ class PackageController extends Controller
             'maximum_pax' => 'nullable|integer|min:1',
         ]);
 
+        $data['country_id'] = $countryId;
+        CountryOwnership::assertItineraryCountry($package->itinerary ?? [], $countryId);
         $package->update($data);
 
         return redirect()->route('admin.packages.step2', $package->id)->with('success', 'Step 1 updated. Proceed to Step 2.');
+    }
+
+    private function countryId(Request $request, ?int $fallback = null): int
+    {
+        if (CountryAccess::isMpoAdmin()) {
+            return (int) CountryAccess::countryId();
+        }
+
+        $data = $request->validate([
+            'country_id' => ['required', 'integer', Rule::exists('countries', 'id')->where('is_active', true)],
+        ]);
+
+        return (int) ($data['country_id'] ?? $fallback);
     }
 
     public function step2(Package $package, Request $request)
@@ -162,10 +192,11 @@ class PackageController extends Controller
         }
 
         // Filtered lists
-        $accQuery = \App\Models\Accommodation::query()->where('status', 'Active');
-        $actQuery = \App\Models\Activity::query()->where('status', 'Active');
+        $accQuery = \App\Models\Accommodation::query()->where('country_id', $package->country_id)->where('status', 'Active');
+        $actQuery = \App\Models\Activity::query()->where('country_id', $package->country_id)->where('status', 'Active');
         $trnQuery = \App\Models\Transport::query()
             ->with(['operator.profile', 'vehicleName.vehicleType'])
+            ->where('country_id', $package->country_id)
             ->where('status', 'Active');
 
         // apply simple search filters
@@ -195,6 +226,7 @@ class PackageController extends Controller
 
         foreach ($dates as $dIndex => $date) {
             $accList = \App\Models\Accommodation::query()
+                ->where('country_id', $package->country_id)
                 ->where('approval_status', 'Approved')
                 ->where('status', 'Active')
                 ->get();
@@ -218,6 +250,7 @@ class PackageController extends Controller
             $availableAccommodations[$dIndex] = collect($accWithFlag);
 
             $actList = \App\Models\Activity::query()
+                ->where('country_id', $package->country_id)
                 ->where('approval_status', 'Approved')
                 ->where('status', 'Active')
                 ->get();
@@ -266,6 +299,7 @@ class PackageController extends Controller
     {
         $data = $request->validate([
             'itinerary' => 'required|array',
+            'itinerary.*' => 'array',
         ]);
 
         $existingItinerary = $package->itinerary ?? [];
@@ -291,6 +325,7 @@ class PackageController extends Controller
             }
         }
 
+        CountryOwnership::assertItineraryCountry($mergedItinerary, (int) $package->country_id);
         // Keep any previously saved values for days not included in the current post.
         $package->itinerary = $mergedItinerary;
         $package->save();
@@ -460,6 +495,11 @@ class PackageController extends Controller
     {
         $data = $request->validate([
             'allocations' => 'nullable|array',
+            'allocations.*' => 'array',
+            'allocations.*.rooms' => 'nullable|array',
+            'allocations.*.rooms.*' => 'required|integer|min:1',
+            'itinerary' => 'nullable|array',
+            'itinerary.*' => 'array',
         ]);
 
         $alloc = $data['allocations'] ?? [];
@@ -509,6 +549,7 @@ class PackageController extends Controller
             $itinerary[$dayIndex]['rooms'] = array_values(array_map('intval', $rooms));
         }
 
+        CountryOwnership::assertItineraryCountry($itinerary, (int) $package->country_id);
         $package->itinerary = $itinerary;
         $package->save();
 

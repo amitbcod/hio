@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class OperatorUser extends Authenticatable
 {
+    use ScopesToAdminCountry;
     protected $table = 'operator_users';
     protected $guarded = [];
     public $timestamps = true;

@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class ActivityCompliance extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'activity_compliance';
     protected $guarded = [];
     public $timestamps = true;

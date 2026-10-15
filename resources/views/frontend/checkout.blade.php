@@ -455,7 +455,7 @@
                                     <div class="form-grid col-3">
                                         <div class="form-group">
                                             <label for="guests_0_dob">{{ __('profile.date_of_birth') }} <span class="req">*</span></label>
-                                            <input type="date" id="guests_0_dob" name="guests[0][dob]" value="{{ old('guests.0.dob', $guestDefaults['dob'] ?? '') }}" class="form-input">
+                                            <input type="date" id="guests_0_dob" name="guests[0][dob]" value="{{ old('guests.0.dob', $guestDefaults['dob'] ?? '') }}" max="{{ now()->subDay()->toDateString() }}" class="form-input">
                                         </div>
 
                                         <div class="form-group">
@@ -811,7 +811,7 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="modal_dob">{{ __('profile.date_of_birth') }} <span class="req">*</span></label>
-                                <input type="date" id="modal_dob" name="dob" required class="form-input">
+                                <input type="date" id="modal_dob" name="dob" required max="{{ now()->subDay()->toDateString() }}" class="form-input">
                             </div>
 
                             <div class="form-group">

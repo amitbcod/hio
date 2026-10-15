@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class ActivitySeoSocial extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'activity_seo_social';
     protected $primaryKey = 'seo_id';
     public $timestamps = true;

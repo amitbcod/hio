@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class OperatorRegistrationProgress extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'operator_registration_progress';
     protected $guarded = [];
     public $timestamps = true;

@@ -29,4 +29,9 @@ class AdminUser extends Model
 
         return is_array($policy) ? $policy : [];
     }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
 }

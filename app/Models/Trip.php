@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesTripToAdminCountry;
 
 class Trip extends Model
 {
+    use ScopesTripToAdminCountry;
+
     public const PRIORITY_OPTIONS = [
         'low' => 'Low',
         'normal' => 'Normal',

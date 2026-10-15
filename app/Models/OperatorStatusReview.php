@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class OperatorStatusReview extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'operator_status_review';
     protected $guarded = [];
     public $timestamps = true;

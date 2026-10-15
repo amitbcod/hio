@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class ActivitySchedulingTimeSlot extends Model
 {
     use HasFactory;
+    use ScopesToAdminCountry;
 
     protected $table = 'activity_scheduling_timeslots';
     protected $primaryKey = 'timeslot_id';

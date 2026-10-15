@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class ActivityRate extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'activity_rates';
     protected $primaryKey = 'rate_id';
     protected $guarded = [];

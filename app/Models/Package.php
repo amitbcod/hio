@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class Package extends Model
 {
     use HasFactory;
+    use ScopesToAdminCountry;
 
     protected $fillable = [
         'name',
@@ -21,6 +23,7 @@ class Package extends Model
         'created_by',
         'status',
         'itinerary',
+        'country_id',
     ];
 
     protected $casts = [

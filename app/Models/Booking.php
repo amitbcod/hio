@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class Booking extends Model
 {
+    use ScopesToAdminCountry;
+
     protected $fillable = ['trip_id', 'booking_ref_id', 'operator_id', 'total_amount', 'status', 'booking_type', 'is_admin_created'];
 
     protected $casts = [

@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class Business extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'businesses';
     protected $guarded = [];
 

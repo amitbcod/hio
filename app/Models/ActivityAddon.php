@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class ActivityAddon extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'activity_addons';
     protected $primaryKey = 'addon_id';
 

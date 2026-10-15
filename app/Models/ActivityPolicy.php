@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class ActivityPolicy extends Model
 {
     use HasFactory;
+    use ScopesToAdminCountry;
 
     protected $table = 'activity_policies';
     protected $primaryKey = 'policy_id';

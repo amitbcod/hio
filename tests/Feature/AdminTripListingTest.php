@@ -36,6 +36,41 @@ class AdminTripListingTest extends TestCase
 
         DB::statement('PRAGMA foreign_keys = ON');
 
+        if (!Schema::hasTable('countries')) {
+            Schema::create('countries', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('iso_code', 2)->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+            });
+        }
+        DB::table('countries')->updateOrInsert(
+            ['iso_code' => 'MU'],
+            ['name' => 'Mauritius', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()]
+        );
+
+        if (!Schema::hasColumn('admin_users', 'admin_type')) {
+            Schema::table('admin_users', fn (Blueprint $table) => $table->string('admin_type', 20)->default('global'));
+        }
+        if (!Schema::hasColumn('admin_users', 'country_id')) {
+            Schema::table('admin_users', fn (Blueprint $table) => $table->unsignedBigInteger('country_id')->nullable());
+        }
+        DB::table('admin_users')->updateOrInsert(
+            ['id' => 1],
+            [
+                'name' => 'Trip Listing Admin',
+                'email' => 'trip-listing-admin@example.test',
+                'password_hash' => 'test',
+                'role' => 'super_admin',
+                'status' => 'active',
+                'admin_type' => 'global',
+                'country_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
         Schema::create('traveler_accounts', function (Blueprint $table) {
             $table->id();
             $table->string('full_name')->nullable();
@@ -55,10 +90,13 @@ class AdminTripListingTest extends TestCase
         });
 
         Schema::create('trip_action_deadline_settings', function (Blueprint $table) {
-            $table->string('action_type', 50)->primary();
+            $table->id();
+            $table->string('action_type', 50);
             $table->unsignedInteger('interval_hours')->default(24);
+            $table->unsignedBigInteger('country_id')->nullable();
             $table->unsignedBigInteger('updated_by_admin_id')->nullable();
             $table->timestamps();
+            $table->unique(['country_id', 'action_type']);
         });
 
         Schema::create('trip_action_deadlines', function (Blueprint $table) {
@@ -411,6 +449,21 @@ class AdminTripListingTest extends TestCase
         $response->assertSee('data-trip-toggle', false);
         $response->assertSee('aria-label="Expand trip details"', false);
         $response->assertSee('colspan="10"', false);
+        $response->assertSeeInOrder([
+            '>Trip</th>',
+            '>Travel / next service</th>',
+            '>Authority and Travel Party</th>',
+            '>Booking</th>',
+            '>Traveller</th>',
+            '>Payment</th>',
+            '>Attention / Priority</th>',
+            '>Next Action</th>',
+            '>Due / Overdue</th>',
+        ], false);
+        $response->assertSee('Trip ID: ' . $trip->getKey());
+        $response->assertSee('View Pending Actions');
+        $response->assertSee('<dialog id="pending-actions-' . $trip->id . '"', false);
+        $response->assertSee('dialog.showModal()', false);
         $response->assertSee('Trip 202');
         $response->assertSee('Group Trip');
         $response->assertSee('Travel Party Size: 2');
@@ -421,7 +474,7 @@ class AdminTripListingTest extends TestCase
         $response->assertSee('Processing: 1');
         $response->assertSee('Cancelled: 1');
         $response->assertDontSee('<th>Status</th>', false);
-        $response->assertSee('<th>Booking Status</th>', false);
+        $response->assertSee('<th>Booking</th>', false);
         $response->assertSee('admin-status-badge--warning', false);
         $response->assertSee('admin-status-badge--success', false);
         $response->assertSee('admin-status-badge--danger', false);
@@ -452,6 +505,70 @@ class AdminTripListingTest extends TestCase
         $response->assertSee('Participant Names:</strong> Alex Doe, Jamie Doe', false);
         $response->assertSee('Passenger Names:</strong> Alex Doe, Jane Doe', false);
         $response->assertSee('Vehicles:</strong> 1', false);
+    }
+
+    public function test_admin_trip_listing_uses_ordered_service_dates_when_trip_dates_are_missing(): void
+    {
+        config(['app.timezone' => 'UTC']);
+        Carbon::setTestNow('2026-10-15 12:00:00');
+
+        $trip = Trip::create(['title' => 'Transport Dates Trip']);
+        $transport = \App\Models\Transport::create(['vehicle_display_name' => 'Airport Shuttle']);
+        foreach ([
+            ['pickup_date' => '2026-10-23', 'pickup_time' => '10:00:00'],
+            ['pickup_date' => '2026-10-20', 'pickup_time' => '16:00:00'],
+        ] as $details) {
+            $booking = TransportBooking::create([
+                'transport_id' => $transport->id,
+                'booking_status' => 'Processing',
+                'route_from' => 'Airport',
+                'route_to' => 'North',
+                ...$details,
+            ]);
+            $booking->forceFill(['trip_id' => $trip->id])->save();
+        }
+
+        $response = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index'));
+
+        $response->assertOk();
+        $response->assertSee('20 Oct 2026 - 23 Oct 2026');
+        $response->assertSee('20 Oct 2026 – 23 Oct 2026');
+        $response->assertSee('20 Oct 2026, 16:00 · UTC+00:00');
+        $viewTrip = collect($response->viewData('trips')->items())->firstWhere('id', $trip->id);
+        $this->assertSame('20 Oct 2026', $viewTrip->operations_overview['travel_dates']['start']);
+        $this->assertSame('23 Oct 2026', $viewTrip->operations_overview['travel_dates']['end']);
+        $this->assertSame('20 Oct 2026, 16:00 · UTC+00:00', $viewTrip->operations_overview['next_service']['when']);
+    }
+
+    public function test_admin_trip_listing_keeps_an_earlier_activity_as_the_next_service(): void
+    {
+        config(['app.timezone' => 'UTC']);
+        Carbon::setTestNow('2026-10-15 12:00:00');
+
+        $trip = Trip::create(['title' => 'Activity Before Transport']);
+        $activity = \App\Models\Activity::create(['activity_name' => 'Island Tour']);
+        ActivityBooking::create([
+            'trip_id' => $trip->id,
+            'activity_id' => $activity->id,
+            'booking_status' => 'Confirmed',
+            'activity_date' => '2026-10-19',
+        ]);
+        $transport = \App\Models\Transport::create(['vehicle_display_name' => 'Airport Shuttle']);
+        $transportBooking = TransportBooking::create([
+            'transport_id' => $transport->id,
+            'booking_status' => 'Confirmed',
+            'pickup_date' => '2026-10-20',
+            'pickup_time' => '16:00:00',
+        ]);
+        $transportBooking->forceFill(['trip_id' => $trip->id])->save();
+
+        $response = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index'));
+
+        $response->assertOk();
+        $response->assertSee('Island Tour');
+        $response->assertSee('19 Oct 2026 - 20 Oct 2026');
+        $viewTrip = collect($response->viewData('trips')->items())->firstWhere('id', $trip->id);
+        $this->assertSame('Island Tour', $viewTrip->operations_overview['next_service']['name']);
     }
 
     public function test_admin_trip_listing_filters_all_fields_together(): void
@@ -639,6 +756,8 @@ class AdminTripListingTest extends TestCase
         $view->assertOk();
         $view->assertSee('Priority Trip');
         $view->assertSee('Urgent');
+        $view->assertSee('<dialog id="pending-actions-' . $trip->id . '"', false);
+        $view->assertSee('No pending actions for this trip.');
         $view->assertSee('onchange="this.form.requestSubmit()"', false);
         $view->assertDontSee('>Save</button>', false);
     }
@@ -667,6 +786,7 @@ class AdminTripListingTest extends TestCase
         DB::table('trip_action_deadline_settings')->insert([
             'action_type' => 'guest_details',
             'interval_hours' => 18,
+            'country_id' => DB::table('countries')->where('iso_code', 'MU')->value('id'),
         ]);
 
         $trip = Trip::firstOrFail();
@@ -692,6 +812,15 @@ class AdminTripListingTest extends TestCase
             'adults' => 1,
             'children' => 0,
         ]);
+        $beforeWarningBooking = AccommodationBooking::create([
+            'trip_id' => $trip->id,
+            'accommodation_id' => $accommodation->id,
+            'booking_status' => 'Confirmed',
+            'check_in_date' => '2026-10-25',
+            'check_out_date' => '2026-10-27',
+            'adults' => 1,
+            'children' => 0,
+        ]);
 
         $response = $this->withSession(['admin_id' => 1])->get(route('admin.trips.index'));
 
@@ -707,6 +836,13 @@ class AdminTripListingTest extends TestCase
         $response->assertSee('Deadline: 14 Oct 2026, 00:00 · UTC+00:00');
         $response->assertSee('Complete guest details for accommodation booking #' . $booking->id);
         $response->assertSee('Complete guest details for accommodation booking #' . $secondBooking->id);
+        $response->assertSee('View Pending Actions');
+        $response->assertSee('<dialog id="pending-actions-' . $trip->id . '"', false);
+        $response->assertSee('Accommodation #' . $beforeWarningBooking->id . ' — Complete Guest Details');
+        $viewBeforeWarning = collect($viewTrip->due_actions)->firstWhere('booking_id', $beforeWarningBooking->id);
+        $this->assertSame('scheduled', $viewBeforeWarning['status']);
+        $this->assertTrue(collect($viewTrip->operations_overview['pending_actions'])
+            ->contains(fn (array $action): bool => $action['booking_id'] === $beforeWarningBooking->id));
         $this->assertSame(2, substr_count($response->getContent(), 'Deadline:'));
         $this->assertSame(2, substr_count($response->getContent(), 'Due since:'));
         Carbon::setTestNow();
@@ -719,6 +855,7 @@ class AdminTripListingTest extends TestCase
         DB::table('trip_action_deadline_settings')->insert([
             'action_type' => 'guest_details',
             'interval_hours' => 18,
+            'country_id' => DB::table('countries')->where('iso_code', 'MU')->value('id'),
         ]);
 
         $createTrip = function (string $title, string $targetDate, string $paymentStatus): array {

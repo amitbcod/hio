@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Business;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class OperatorProfile extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'operator_profiles';
     protected $guarded = [];
     public $timestamps = true;

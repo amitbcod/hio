@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class ActivityAccounting extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'activity_accounting';
     
     protected $fillable = [

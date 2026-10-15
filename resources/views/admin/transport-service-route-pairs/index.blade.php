@@ -17,8 +17,23 @@
 
     <div class="card shadow-sm mb-4">
         <div class="card-body">
+            @if(!\App\Support\CountryAccess::isMpoAdmin())
+                <form method="GET" action="{{ route('admin.transport-service-route-pairs.index') }}" class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Country</label>
+                        <select name="country_id" class="form-select" onchange="this.form.submit()">
+                            @foreach($countries as $country)
+                                <option value="{{ $country->id }}" {{ (int) $countryId === (int) $country->id ? 'selected' : '' }}>{{ $country->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </form>
+            @endif
             <form method="POST" action="{{ route('admin.transport-service-route-pairs.store') }}" class="row g-3">
                 @csrf
+                @if(!\App\Support\CountryAccess::isMpoAdmin())
+                    <input type="hidden" name="country_id" value="{{ $countryId }}">
+                @endif
                 <div class="col-md-3">
                     <label class="form-label">Service Type</label>
                     <select name="service_type" class="form-select" required>
@@ -75,6 +90,7 @@
                 <table class="table table-bordered table-striped align-middle">
                     <thead>
                         <tr>
+                            <th>Country</th>
                             <th>Service Type</th>
                             <th>From</th>
                             <th>To</th>
@@ -88,6 +104,7 @@
                         @foreach($pairs as $pair)
                             @php $formId = 'route-pair-form-' . $pair->id; @endphp
                             <tr>
+                                <td>{{ $countries->firstWhere('id', $pair->country_id)?->name ?? '—' }}</td>
                                 <td>{{ $serviceTypes[$pair->service_type] ?? ucfirst(str_replace('_', ' ', $pair->service_type)) }}</td>
                                 <td>{{ $pair->route_from }}</td>
                                 <td>{{ $pair->route_to }}</td>
@@ -110,6 +127,9 @@
                                         <input type="hidden" name="service_type" value="{{ $pair->service_type }}">
                                         <input type="hidden" name="route_from" value="{{ $pair->route_from }}">
                                         <input type="hidden" name="route_to" value="{{ $pair->route_to }}">
+                                        @if(!\App\Support\CountryAccess::isMpoAdmin())
+                                            <input type="hidden" name="country_id" value="{{ $pair->country_id }}">
+                                        @endif
                                         <button class="btn btn-sm btn-success" type="submit">Save</button>
                                     </form>
                                     <form method="POST" action="{{ route('admin.transport-service-route-pairs.destroy', $pair->id) }}" style="display:inline">

@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class OperatorSystemProcess extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'operator_system_processes';
     protected $guarded = [];
     public $timestamps = true;

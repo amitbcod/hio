@@ -30,8 +30,12 @@ class TripOperationsOverview
             })
             ->sortBy(fn (array $service) => $service['at']->getTimestamp())
             ->first();
+        $servicesByDate = collect($candidates)
+            ->sortBy(fn (array $service) => $service['at']->getTimestamp())
+            ->values();
 
         $actions = $this->operationalActions($trip, $candidates, $admin);
+        $pendingActions = $this->pendingActions($trip, $candidates, $admin);
         $dueCandidates = $this->serviceActions($trip, $candidates, $admin, false);
         $deadlineData = $this->persistActions(
             $trip,
@@ -43,11 +47,16 @@ class TripOperationsOverview
         $dueActions = $this->evaluateDueActions($trip, $dueCandidates, $intervals);
 
         return [
+            'travel_dates' => $servicesByDate->isEmpty() ? null : [
+                'start' => $servicesByDate->first()['at']->format('d M Y'),
+                'end' => $servicesByDate->last()['at']->format('d M Y'),
+            ],
             'next_service' => $nextService ? [
                 'name' => $nextService['name'],
                 'when' => $this->formatServiceTime($nextService),
             ] : null,
             'actions' => $deadlineData,
+            'pending_actions' => $pendingActions,
             'due_actions' => $dueActions,
             'time_zone_fallback' => $timeZone,
         ];
@@ -408,6 +417,105 @@ class TripOperationsOverview
         }
 
         return $actions;
+    }
+
+    private function pendingActions(Trip $trip, array $services, bool $admin): array
+    {
+        return collect($this->serviceActions($trip, $services, $admin))
+            ->unique('key')
+            ->reject(fn (array $action): bool => $this->bookingOrderHasEnded($trip, $action, $services))
+            ->map(function (array $action) use ($trip, $services): array {
+                $booking = $this->serviceBooking($trip, $action['service_type'], $action['booking_id']);
+                $service = $this->serviceForAction($action, $services);
+
+                return [
+                    'key' => $action['key'],
+                    'label' => $action['label'],
+                    'type' => $action['type'],
+                    'service_type' => $action['service_type'],
+                    'booking_id' => $action['booking_id'],
+                    'booking_reference' => $booking?->getAttribute('booking_reference')
+                        ?: ($booking?->relationLoaded('bookingRef')
+                            ? $booking->getRelation('bookingRef')?->booking_ref_code
+                            : null),
+                    'booking_status' => $booking?->getAttribute('booking_status'),
+                    'service_date' => $service ? $this->formatServiceTime($service) : null,
+                    'url' => $action['url'],
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function bookingOrderHasEnded(Trip $trip, array $action, array $services): bool
+    {
+        $matchingServices = collect($services)->filter(
+            fn (array $service): bool => $service['type'] === $action['service_type']
+                && (int) $service['booking']->getKey() === $action['booking_id']
+        );
+
+        if ($action['service_type'] === 'accommodation') {
+            $booking = $matchingServices->first()['booking']
+                ?? $this->serviceBooking($trip, $action['service_type'], $action['booking_id']);
+            $checkoutDate = $booking ? $this->datePart($booking->getAttribute('check_out_date')) : null;
+            if ($checkoutDate) {
+                $timeZone = $this->bookingTimeZone($booking);
+
+                return $checkoutDate < CarbonImmutable::now($timeZone)->toDateString();
+            }
+
+            return $matchingServices->isNotEmpty()
+                && $this->serviceHasEnded($matchingServices->first());
+        }
+
+        $relevantService = $this->serviceForAction($action, $services);
+        if ($action['type'] === 'booking_confirm' || $action['type'] === 'guest_details') {
+            $relevantService = $matchingServices
+                ->sortBy(fn (array $service) => $service['at']->getTimestamp())
+                ->last();
+        }
+
+        return $relevantService !== null && $this->serviceHasEnded($relevantService);
+    }
+
+    private function serviceForAction(array $action, array $services): ?array
+    {
+        $matchingServices = collect($services)->filter(
+            fn (array $service): bool => $service['type'] === $action['service_type']
+                && (int) $service['booking']->getKey() === $action['booking_id']
+        );
+        if ($matchingServices->isEmpty()) {
+            return null;
+        }
+
+        if ($action['type'] === 'driver_license_expire') {
+            $leg = str_ends_with((string) $action['key'], '-return') ? 'return' : 'pickup';
+            return $matchingServices->first(
+                fn (array $service): bool => str_ends_with($service['key'], ':' . $leg)
+            );
+        }
+
+        if ($action['target'] instanceof CarbonImmutable) {
+            $matchingTarget = $matchingServices->first(
+                fn (array $service): bool => $service['at']->equalTo($action['target'])
+            );
+            if ($matchingTarget) {
+                return $matchingTarget;
+            }
+        }
+
+        return $matchingServices
+            ->sortBy(fn (array $service) => $service['at']->getTimestamp())
+            ->first();
+    }
+
+    private function serviceHasEnded(array $service): bool
+    {
+        $now = CarbonImmutable::now($service['time_zone']);
+
+        return $service['date_only']
+            ? $service['at']->toDateString() < $now->toDateString()
+            : $service['at']->lessThan($now);
     }
 
     private function paymentAction(Trip $trip): array

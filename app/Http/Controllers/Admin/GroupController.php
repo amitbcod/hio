@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Group;
+use App\Models\Country;
+use App\Support\CountryAccess;
+use App\Support\CountryOwnership;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class GroupController extends Controller
 {
@@ -89,23 +93,32 @@ class GroupController extends Controller
 
     public function index()
     {
-        $groups = Group::latest()->paginate(20);
+        $groups = Group::with('country')->latest()->paginate(20);
         return view('admin.groups.index', compact('groups'));
     }
 
     public function create()
     {
         $group = new Group();
-        return view('admin.groups.create-step1', compact('group'));
+        return view('admin.groups.create-step1', [
+            'group' => $group,
+            'countries' => Country::where('is_active', true)->orderBy('name')->get(),
+            'isMpo' => CountryAccess::isMpoAdmin(),
+        ]);
     }
 
     public function edit(Group $group)
     {
-        return view('admin.groups.create-step1', compact('group'));
+        return view('admin.groups.create-step1', [
+            'group' => $group,
+            'countries' => Country::where('is_active', true)->orWhereKey($group->country_id)->orderBy('name')->get(),
+            'isMpo' => CountryAccess::isMpoAdmin(),
+        ]);
     }
 
     public function store(Request $request)
     {
+        $countryId = $this->countryId($request);
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'group_type' => 'required|string|in:Open Group,Closed Group',
@@ -120,6 +133,7 @@ class GroupController extends Controller
         ]);
 
         $data['created_by'] = session('admin_id') ?? null;
+        $data['country_id'] = $countryId;
         $group = Group::create($data);
 
         return redirect()->route('admin.groups.step2', $group->id)->with('success', 'Step 1 saved. Proceed to Step 2.');
@@ -127,6 +141,7 @@ class GroupController extends Controller
 
     public function update(Request $request, Group $group)
     {
+        $countryId = $this->countryId($request, $group->country_id);
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'group_type' => 'required|string|in:Open Group,Closed Group',
@@ -140,9 +155,24 @@ class GroupController extends Controller
             'maximum_pax' => 'nullable|integer|min:1',
         ]);
 
+        $data['country_id'] = $countryId;
+        CountryOwnership::assertItineraryCountry($group->itinerary ?? [], $countryId);
         $group->update($data);
 
         return redirect()->route('admin.groups.step2', $group->id)->with('success', 'Step 1 updated. Proceed to Step 2.');
+    }
+
+    private function countryId(Request $request, ?int $fallback = null): int
+    {
+        if (CountryAccess::isMpoAdmin()) {
+            return (int) CountryAccess::countryId();
+        }
+
+        $data = $request->validate([
+            'country_id' => ['required', 'integer', Rule::exists('countries', 'id')->where('is_active', true)],
+        ]);
+
+        return (int) ($data['country_id'] ?? $fallback);
     }
 
     public function step2(Group $group, Request $request)
@@ -160,10 +190,11 @@ class GroupController extends Controller
             }
         }
 
-        $accQuery = \App\Models\Accommodation::query()->where('status', 'Active');
-        $actQuery = \App\Models\Activity::query()->where('status', 'Active');
+        $accQuery = \App\Models\Accommodation::query()->where('country_id', $group->country_id)->where('status', 'Active');
+        $actQuery = \App\Models\Activity::query()->where('country_id', $group->country_id)->where('status', 'Active');
         $trnQuery = \App\Models\Transport::query()
             ->with(['operator.profile', 'vehicleName.vehicleType'])
+            ->where('country_id', $group->country_id)
             ->where('status', 'Active');
 
         if ($request->filled('q_accommodation')) {
@@ -188,7 +219,11 @@ class GroupController extends Controller
         $availableActivities = [];
 
         foreach ($dates as $dIndex => $date) {
-            $accList = \App\Models\Accommodation::query()->where('approval_status', 'Approved')->where('status', 'Active')->get();
+            $accList = \App\Models\Accommodation::query()
+                ->where('country_id', $group->country_id)
+                ->where('approval_status', 'Approved')
+                ->where('status', 'Active')
+                ->get();
             $accWithFlag = [];
             foreach ($accList as $acc) {
                 $rooms = $acc->rooms()->get();
@@ -205,7 +240,11 @@ class GroupController extends Controller
             }
             $availableAccommodations[$dIndex] = collect($accWithFlag);
 
-            $actList = \App\Models\Activity::query()->where('approval_status', 'Approved')->where('status', 'Active')->get();
+            $actList = \App\Models\Activity::query()
+                ->where('country_id', $group->country_id)
+                ->where('approval_status', 'Approved')
+                ->where('status', 'Active')
+                ->get();
             $actWithFlag = [];
             foreach ($actList as $act) {
                 $variants = \App\Models\ActivityVariant::where('activity_id', $act->id)->get();
@@ -248,6 +287,7 @@ class GroupController extends Controller
     {
         $data = $request->validate([
             'itinerary' => 'required|array',
+            'itinerary.*' => 'array',
         ]);
 
         $existingItinerary = $group->itinerary ?? [];
@@ -273,6 +313,7 @@ class GroupController extends Controller
             }
         }
 
+        CountryOwnership::assertItineraryCountry($mergedItinerary, (int) $group->country_id);
         $group->itinerary = $mergedItinerary;
         $group->save();
 
@@ -422,7 +463,11 @@ class GroupController extends Controller
     {
         $data = $request->validate([
             'allocations' => 'nullable|array',
+            'allocations.*' => 'array',
+            'allocations.*.rooms' => 'nullable|array',
+            'allocations.*.rooms.*' => 'required|integer|min:1',
             'itinerary' => 'nullable|array',
+            'itinerary.*' => 'array',
         ]);
 
         $alloc = $data['allocations'] ?? [];
@@ -470,6 +515,7 @@ class GroupController extends Controller
             $itinerary[$dayIndex]['rooms'] = array_values(array_map('intval', $rooms));
         }
 
+        CountryOwnership::assertItineraryCountry($itinerary, (int) $group->country_id);
         $group->itinerary = $itinerary;
         $group->save();
 

@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class AccommodationBooking extends Model
 {
+    use ScopesToAdminCountry;
+
     protected $table = 'accommodation_bookings';
     protected $guarded = [];
     public $timestamps = true;

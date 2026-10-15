@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class AccommodationRate extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'accommodation_rates';
     protected $guarded = [];
     public $timestamps = true;

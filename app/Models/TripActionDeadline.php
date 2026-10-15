@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class TripActionDeadline extends Model
 {
+    use ScopesToAdminCountry;
+
     protected $guarded = [];
 
     public function getTargetAtAttribute($value): ?CarbonImmutable

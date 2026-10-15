@@ -32,6 +32,17 @@
 
                         <div class="group-plan-step-label">Step 1: Group Plan Creation</div>
 
+                        @unless($isMpo)
+                            <div class="form-group-row">
+                                <label>Country <span class="required-mark">*</span></label>
+                                <select name="country_id" class="form-control" required>
+                                    @foreach($countries as $country)
+                                        <option value="{{ $country->id }}" @selected((string) old('country_id', $group->country_id) === (string) $country->id)>{{ $country->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endunless
+
                         <div class="form-group-row">
                             <label for="group_name">Group Plan Name <span class="required-mark">*</span></label>
                             <input id="group_name" type="text" name="name" class="form-control" placeholder="e.g., Summer Camp 2026 / Verde Explorers Group" value="{{ old('name', $group->name ?? '') }}" required>

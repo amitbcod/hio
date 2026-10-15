@@ -23,7 +23,16 @@ class TransportAvailabilityService
             return null;
         }
 
-        $pair = TransportServiceRoutePair::query()
+        $hasTransportCountry = ! empty($bookingData['transport_id'])
+            && Schema::hasColumn('transports', 'country_id');
+        $countryId = null;
+        if ($hasTransportCountry) {
+            $countryId = Transport::query()->whereKey($bookingData['transport_id'])->value('country_id');
+        } else {
+            $countryId = $bookingData['country_id'] ?? null;
+        }
+
+        $pairQuery = TransportServiceRoutePair::query()
             ->where('is_active', true)
             ->where(function ($query) use ($routeFrom, $routeTo) {
                 $query->where(function ($q) use ($routeFrom, $routeTo) {
@@ -33,7 +42,11 @@ class TransportAvailabilityService
                     $q->whereRaw('LOWER(TRIM(route_from)) = ?', [strtolower($routeTo)])
                         ->whereRaw('LOWER(TRIM(route_to)) = ?', [strtolower($routeFrom)]);
                 });
-            })->first();
+            });
+        if (Schema::hasColumn('transport_service_route_pairs', 'country_id')) {
+            $pairQuery->where('country_id', $countryId ?? 0);
+        }
+        $pair = $pairQuery->first();
 
         $totalMinutes = ((int) ($pair->trip_time_minutes ?? 0)) + ((int) ($pair->buffer_time_minutes ?? 0));
         if ($totalMinutes <= 0) {
@@ -51,7 +64,7 @@ class TransportAvailabilityService
 
     public function overlappingBookings(Transport $transport, array $bookingData, ?int $ignoreBookingId = null)
     {
-        $window = $this->bookingWindow($bookingData);
+        $window = $this->bookingWindow(array_merge($bookingData, ['country_id' => $transport->country_id]));
         if (!$window) {
             return collect();
         }
@@ -69,6 +82,7 @@ class TransportAvailabilityService
                 'route_to' => $booking->route_to,
                 'pickup_date' => $booking->pickup_date?->toDateString(),
                 'pickup_time' => $booking->pickup_time,
+                'country_id' => $booking->country_id ?? $transport->country_id,
             ]);
 
             return $bookingWindow
@@ -196,6 +210,8 @@ class TransportAvailabilityService
     {
         $windows = [];
         $pickupWindow = $this->bookingWindow([
+            'country_id' => $booking->country_id,
+            'transport_id' => $booking->transport_id,
             'route_from' => $booking->route_from,
             'route_to' => $booking->route_to,
             'pickup_date' => $booking->pickup_date?->toDateString(),
@@ -207,6 +223,8 @@ class TransportAvailabilityService
 
         if ($booking->return_date && $booking->return_time) {
             $returnWindow = $this->bookingWindow([
+                'country_id' => $booking->country_id,
+                'transport_id' => $booking->transport_id,
                 'route_from' => $booking->route_to,
                 'route_to' => $booking->route_from,
                 'pickup_date' => $booking->return_date->toDateString(),

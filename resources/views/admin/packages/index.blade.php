@@ -10,6 +10,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
+                    <th>Country</th>
                     <th>Status</th>
                     <th>Days</th>
                     <th>Available From</th>
@@ -22,6 +23,7 @@
                 <tr>
                     <td>{{ $p->id }}</td>
                     <td>{{ $p->name }}</td>
+                    <td>{{ $p->country?->name ?? '—' }}</td>
                     <td>
                         <span class="badge {{ $p->status === 'published' ? 'bg-success' : 'bg-warning text-dark' }}">
                             {{ ucfirst($p->status ?? 'draft') }}

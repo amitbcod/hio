@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class TransportRate extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'transport_rates';
     protected $fillable = [
         'transport_id',

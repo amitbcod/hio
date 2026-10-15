@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class OperatorAccountingPayout extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'operator_accounting_payouts';
     protected $guarded = [];
     public $timestamps = true;

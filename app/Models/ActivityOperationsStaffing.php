@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class ActivityOperationsStaffing extends Model
 {
     use HasFactory;
+    use ScopesToAdminCountry;
 
     protected $table = 'activity_operations_staffing';
     protected $primaryKey = 'operation_id';

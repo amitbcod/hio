@@ -688,6 +688,7 @@ class TransportController extends Controller
         }
 
         $configuredPairs = \App\Models\TransportServiceRoutePair::query()
+            ->where('country_id', $transport->country_id)
             ->where('is_active', true)
             ->get()
             ->groupBy('service_type');
@@ -817,6 +818,7 @@ class TransportController extends Controller
         $regionOptions = Region::orderBy('name')->pluck('name')->toArray();
         $regionOptions = array_values(array_unique(array_merge(['Airport'], array_filter(array_map('trim', $regionOptions)))));
         $configuredServiceTypes = \App\Models\TransportServiceRoutePair::query()
+            ->where('country_id', $transport->country_id)
             ->where('is_active', true)
             ->pluck('service_type')
             ->unique()

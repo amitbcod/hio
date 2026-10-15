@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class OperatorLegalCompliance extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'operator_legal_compliance';
     protected $guarded = [];
     public $timestamps = true;

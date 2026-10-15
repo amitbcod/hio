@@ -29,6 +29,17 @@
                 <form id="package-step1-form" method="POST" action="{{ (isset($package) && $package->exists) ? route('admin.packages.update', $package->id) : route('admin.packages.store') }}">
                     @csrf
 
+                    @unless($isMpo)
+                        <div class="mb-3">
+                            <label class="form-label">Country *</label>
+                            <select name="country_id" class="form-select" required>
+                                @foreach($countries as $country)
+                                    <option value="{{ $country->id }}" @selected((string) old('country_id', $package->country_id) === (string) $country->id)>{{ $country->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endunless
+
                     <div class="mb-3">
                         <label class="form-label">Package Name *</label>
                         <input type="text" name="name" class="form-control" placeholder="e.g., 4 Nights Coco Verde Escape" value="{{ old('name', $package->name ?? '') }}" required>

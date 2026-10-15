@@ -17,6 +17,16 @@
     <form method="POST" action="{{ route('admin.places.update', $place->id) }}">
         @csrf
         @method('PUT')
+        @unless($isMpo)
+            <div class="mb-3">
+                <label class="form-label">Country</label>
+                <select name="country_id" class="form-control" required>
+                    @foreach($countries as $country)
+                        <option value="{{ $country->id }}" @selected((string) old('country_id', $place->country_id) === (string) $country->id)>{{ $country->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        @endunless
         <div class="mb-3">
             <label class="form-label">Hotel / City Mapping</label>
             <input type="text" name="place_name" class="form-control" value="{{ old('place_name', $place->place_name) }}" required>

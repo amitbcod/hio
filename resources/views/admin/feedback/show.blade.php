@@ -11,9 +11,9 @@
         <div class="card-body">
             <h5>Traveler</h5>
             <p class="small">
-                Name: {{ optional($review->trip->traveler)->full_name ?? optional($review->trip->traveler)->email ?? 'N/A' }}
+                Name: {{ $review->trip?->traveler?->full_name ?? $review->trip?->traveler?->email ?? 'N/A' }}
                 &nbsp; | &nbsp;
-                Email: {{ optional($review->trip->traveler)->email ?? 'N/A' }}
+                Email: {{ $review->trip?->traveler?->email ?? 'N/A' }}
             </p>
 
             <h5>Overall Rating</h5>
@@ -39,7 +39,7 @@
             @else
                 @foreach($accommodations as $item)
                     @php
-                        $booking = optional($review->trip->accommodationBookings)->firstWhere('id', $item->service_id);
+                        $booking = optional($review->trip?->accommodationBookings)->firstWhere('id', $item->service_id);
                         $serviceName = optional(optional($booking)->accommodation)->property_name ?? ('Accommodation #' . $item->service_id);
                         $criteria = is_array($item->criteria) ? $item->criteria : [];
                         $statusColor = $item->status === 'approved' ? 'success' : ($item->status === 'rejected' ? 'danger' : 'warning');
@@ -103,7 +103,7 @@
             @else
                 @foreach($activities as $item)
                     @php
-                        $booking = optional($review->trip->activityBookings)->firstWhere('id', $item->service_id);
+                        $booking = optional($review->trip?->activityBookings)->firstWhere('id', $item->service_id);
                         $serviceName = optional(optional($booking)->activity)->activity_name ?? ('Activity #' . $item->service_id);
                         $criteria = is_array($item->criteria) ? $item->criteria : [];
                         $statusColor = $item->status === 'approved' ? 'success' : ($item->status === 'rejected' ? 'danger' : 'warning');

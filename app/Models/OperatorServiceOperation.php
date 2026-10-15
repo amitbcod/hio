@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Models\Business;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class OperatorServiceOperation extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'operator_service_operations';
     protected $guarded = [];
     public $timestamps = true;

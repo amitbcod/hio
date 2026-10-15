@@ -20,7 +20,7 @@
                 <tr>
                     <td>{{ $feedback->id }}</td>
                     <td>{{ $feedback->trip_id }}</td>
-                    <td>{{ optional($feedback->trip->traveler)->full_name ?? optional($feedback->trip->traveler)->email ?? 'N/A' }}</td>
+                    <td>{{ $feedback->trip?->traveler?->full_name ?? $feedback->trip?->traveler?->email ?? 'N/A' }}</td>
                     <td>{{ $feedback->overall_rating ?? 'N/A' }}</td>
                     <td>{{ $feedback->created_at ? $feedback->created_at->format('Y-m-d H:i') : 'N/A' }}</td>
                     <td>

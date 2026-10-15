@@ -85,6 +85,77 @@ class TripOperationsOverviewTest extends TestCase
 
         $this->assertSame('Activity Walk', $result['next_service']['name']);
         $this->assertSame('Tomorrow, 10:30 · UTC+00:00', $result['next_service']['when']);
+        $this->assertSame('14 Oct 2026', $result['travel_dates']['start']);
+        $this->assertSame('16 Oct 2026', $result['travel_dates']['end']);
+    }
+
+    public function test_pending_actions_are_not_limited_to_due_window_and_exclude_ended_service_orders(): void
+    {
+        Carbon::setTestNow('2026-10-15 12:00:00');
+        $trip = $this->trip();
+        $trip->setAttribute('payment_status', 'pending');
+
+        $currentStay = $this->accommodationBooking(60, '2026-10-10', 'Confirmed');
+        $currentStay->setAttribute('check_out_date', '2026-10-17');
+        $currentStay->setRelation('guests', new EloquentCollection());
+
+        $pastStay = $this->accommodationBooking(61, '2026-10-10', 'Confirmed');
+        $pastStay->setAttribute('check_out_date', '2026-10-14');
+        $pastStay->setRelation('guests', new EloquentCollection());
+
+        $futureStay = $this->accommodationBooking(67, '2026-10-25', 'Confirmed');
+        $futureStay->setAttribute('check_out_date', '2026-10-27');
+        $futureStay->setRelation('guests', new EloquentCollection());
+
+        $pastActivity = $this->activityBooking(62, '2026-10-14', '10:00:00', 'Confirmed');
+        $pastActivity->setRelation('guests', new EloquentCollection());
+        $pastTransport = $this->transportBooking(63, '2026-10-14', '09:00:00', 'Confirmed');
+        $futureTransport = $this->transportBooking(64, '2026-10-20', '09:00:00', 'Processing');
+        $futureTransport->setAttribute('transport_id', 1);
+        $futureTransport->setRelation('bookingRef', null);
+        $returnTransport = $this->transportBooking(68, '2026-10-14', '09:00:00', 'Confirmed');
+        $returnTransport->setAttribute('transport_id', 1);
+        $returnTransport->setAttribute('return_date', '2026-10-22');
+        $returnTransport->setAttribute('return_time', '09:00:00');
+        $returnTransport->setAttribute('pickup_driver_id', 5);
+        $returnTransport->setAttribute('transport_vehicle_id', 9);
+        $cancelledTransport = $this->transportBooking(65, '2026-10-20', '10:00:00', 'Cancelled');
+        $completedActivity = $this->activityBooking(66, '2026-10-20', '11:00:00', 'Completed');
+
+        $trip->setRelation('accommodationBookings', new EloquentCollection([$currentStay, $pastStay, $futureStay]));
+        $trip->setRelation('activityBookings', new EloquentCollection([$pastActivity, $completedActivity]));
+        $trip->setRelation('transportBookings', new EloquentCollection([$pastTransport, $futureTransport, $returnTransport, $cancelledTransport]));
+
+        $result = $this->overview->apply($trip, $this->defaultIntervals(), false);
+        $pendingActions = collect($result['pending_actions']);
+
+        $this->assertSame('payment', $result['actions'][0]['type']);
+        $this->assertSame('na', collect($result['due_actions'])->firstWhere('booking_id', 60)['status']);
+        $this->assertSame('scheduled', collect($result['due_actions'])->firstWhere('booking_id', 67)['status']);
+        $this->assertSame(['booking_confirm'], $pendingActions
+            ->where('booking_id', 64)
+            ->pluck('type')
+            ->all());
+        $this->assertSame(['driver_assign'], $pendingActions
+            ->where('booking_id', 68)
+            ->pluck('type')
+            ->all());
+        $this->assertTrue($pendingActions->contains(
+            fn (array $action): bool => $action['booking_id'] === 60 && $action['type'] === 'guest_details'
+        ));
+        $this->assertTrue($pendingActions->contains(
+            fn (array $action): bool => $action['booking_id'] === 67 && $action['type'] === 'guest_details'
+        ));
+        $this->assertFalse($pendingActions->contains(
+            fn (array $action): bool => in_array($action['booking_id'], [61, 62, 63, 65, 66], true)
+        ));
+        $this->assertSame(4, $pendingActions->count());
+        $this->assertSame('Accommodation #60 — Complete Guest Details', $pendingActions
+            ->firstWhere('booking_id', 60)['label']);
+        $this->assertSame('Transport #64 — Mark as Confirmed', $pendingActions
+            ->firstWhere('booking_id', 64)['label']);
+        $this->assertSame('22 Oct 2026, 09:00 · UTC+00:00', $pendingActions
+            ->firstWhere('booking_id', 68)['service_date']);
     }
 
     public function test_driver_and_vehicle_deadlines_are_independent_and_can_be_overridden_per_action(): void

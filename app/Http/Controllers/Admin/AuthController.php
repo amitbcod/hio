@@ -22,8 +22,17 @@ class AuthController extends Controller
 
         $admin = AdminUser::where('email', $request->email)->first();
         if ($admin && \Illuminate\Support\Facades\Hash::check($request->password, $admin->password_hash)) {
+            if ($admin->status !== 'active'
+                || ($admin->admin_type === 'mpo'
+                    && (! $admin->country_id || ! $admin->country?->is_active))) {
+                return back()->withErrors(['email' => 'This administrator account is inactive or has no active country assignment.']);
+            }
+
             session()->regenerate();
-            session(['admin_id' => $admin->id]);
+            session([
+                'admin_id' => $admin->id,
+                'admin_country_id' => $admin->admin_type === 'mpo' ? $admin->country_id : null,
+            ]);
             return redirect()->intended(route('admin.dashboard'));
         }
 
@@ -32,7 +41,7 @@ class AuthController extends Controller
 
     public function logout()
     {
-        session()->forget('admin_id');
+        session()->forget(['admin_id', 'admin_country_id']);
         return redirect()->route('admin.login');
     }
 }

@@ -3,9 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
+use App\Support\CountryOwnership;
 
 class BookingLineItem extends Model
 {
+    use ScopesToAdminCountry;
+
+    protected static function booted(): void
+    {
+        static::created(fn (self $item) => CountryOwnership::refreshBooking((int) $item->booking_id));
+        static::updated(fn (self $item) => CountryOwnership::refreshBooking((int) $item->booking_id));
+        static::deleted(fn (self $item) => CountryOwnership::refreshBooking((int) $item->booking_id));
+    }
+
     protected $fillable = ['booking_id', 'service_type', 'service_id', 'transport_booking_id', 'trip_type', 'quantity', 'price', 'start_date', 'end_date', 'status'];
 
     protected $casts = [

@@ -14,6 +14,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
+                        <th>Country</th>
                         <th>Group Type</th>
                         <th>Status</th>
                         <th>Days</th>
@@ -28,6 +29,7 @@
                         <tr>
                             <td>{{ $group->id }}</td>
                             <td>{{ $group->name }}</td>
+                            <td>{{ $group->country?->name ?? '—' }}</td>
                             <td>{{ $group->group_type ?? '-' }}</td>
                             <td>
                                 <span class="badge {{ ($group->status === 'published') ? 'bg-success' : 'bg-warning text-dark' }}">
@@ -44,7 +46,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-4">No groups found.</td>
+                            <td colspan="10" class="text-center py-4">No groups found.</td>
                         </tr>
                     @endforelse
                 </tbody>

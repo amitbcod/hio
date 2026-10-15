@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class ActivityAllotment extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'activity_allotments';
     protected $primaryKey = 'allotment_id';
 

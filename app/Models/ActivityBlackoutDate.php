@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class ActivityBlackoutDate extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'activity_blackout_dates';
     protected $primaryKey = 'blackout_id';
 

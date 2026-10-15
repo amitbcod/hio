@@ -1,10 +1,14 @@
 <div class="list-group">
-    
+    @php($isMpoAdmin = \App\Support\CountryAccess::isMpoAdmin())
     <a href="{{ route('admin.dashboard') }}" class="list-group-item list-group-item-action {{ request()->is('admin/dashboard') ? 'active' : '' }}">Dashboard</a>
     <a href="{{ route('admin.trips.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/trips*') ? 'active' : '' }}">Trips</a>
     <a href="{{ route('admin.settings.edit') }}" class="list-group-item list-group-item-action {{ request()->is('admin/settings*') ? 'active' : '' }}">Settings</a>
+    @unless($isMpoAdmin)
+    <a href="{{ route('admin.country-admins.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/country-admins*') ? 'active' : '' }}">MPO Management</a>
+    <a href="{{ route('admin.countries.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/countries*') ? 'active' : '' }}">Countries</a>
     <a href="{{ route('admin.roles.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/roles*') ? 'active' : '' }}">Roles</a>
     <a href="{{ route('admin.modules.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/modules*') ? 'active' : '' }}">Modules</a>
+    @endunless
     <a href="{{ route('admin.operators.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/operators*') ? 'active' : '' }}">Operators</a>
     <a href="{{ route('admin.travellers.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/travellers*') ? 'active' : '' }}">Travellers</a>
     

@@ -16,6 +16,16 @@
 
         <form method="POST" action="{{ route('admin.regions.update', $region->id) }}">
             @csrf
+            @unless($isMpo)
+                <div class="mb-3">
+                    <label class="form-label">Country</label>
+                    <select name="country_id" class="form-select" required>
+                        @foreach($countries as $country)
+                            <option value="{{ $country->id }}" @selected((string) old('country_id', $region->country_id) === (string) $country->id)>{{ $country->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endunless
             <div class="mb-3">
                 <label class="form-label">Region Name</label>
                 <input name="name" class="form-control" value="{{ old('name', $region->name) }}" required />

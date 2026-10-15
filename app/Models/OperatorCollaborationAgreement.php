@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class OperatorCollaborationAgreement extends Model
 {
+    use ScopesToAdminCountry;
     protected $table = 'operator_collaboration_agreements';
     protected $guarded = [];
     public $timestamps = true;

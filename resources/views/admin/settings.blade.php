@@ -16,8 +16,19 @@
         </div>
     @endif
 
+        @if(!$isMpo)
+            <form method="GET" action="{{ route('admin.settings.edit') }}" class="mb-3">
+                <label class="form-label" for="country-id">Country for country-specific settings</label>
+                <select id="country-id" name="country_id" class="form-select" onchange="this.form.submit()">
+                    @foreach($countries as $country)
+                        <option value="{{ $country->id }}" @selected((int) $selectedCountryId === (int) $country->id)>{{ $country->name }}</option>
+                    @endforeach
+                </select>
+            </form>
+        @endif
     <form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data">
         @csrf
+        @unless($isMpo)
         <div class="mb-3">
             <label class="form-label">Business Name</label>
             <input type="text" name="business_name" class="form-control" value="{{ old('business_name', $admin->business_name) }}">
@@ -51,10 +62,14 @@
                 </div>
             @endif
         </div>
+        @endunless
 
         <hr class="my-4">
-        <h4>Trip Action Deadline Defaults</h4>
-        <p class="text-muted">Set how many hours before each action's target its deadline falls. These defaults do not replace individual overrides.</p>
+        <h4>Trip Action Deadline Defaults — {{ $countries->firstWhere('id', $selectedCountryId)?->name }}</h4>
+        <p class="text-muted">Set how many hours before each action's target its deadline falls for this country. These defaults do not replace individual overrides.</p>
+        @unless($isMpo)
+            <input type="hidden" name="country_id" value="{{ $selectedCountryId }}">
+        @endunless
         @php
             $deadlineSettings = [
                 'guest_details' => 'Guest Details',

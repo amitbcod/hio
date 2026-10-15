@@ -60,6 +60,7 @@ class BookingController extends Controller
         if (in_array($type, ['accommodation', 'activity', 'transport'], true)) {
             $request->session()->put('booking_service', $type);
         }
+
         $sharedCartToken = $request->input('shared_cart_token') ?? session('booking_shared_cart_token');
         if ($sharedCartToken) {
             session()->put('booking_shared_cart_token', $sharedCartToken);
@@ -974,6 +975,8 @@ class BookingController extends Controller
         }
 
         $window = $availability->bookingWindow([
+            'country_id' => $transport->country_id,
+            'transport_id' => $transport->id,
             'route_from' => $booking->route_from,
             'route_to' => $booking->route_to,
             'pickup_date' => $booking->pickup_date?->toDateString(),
@@ -1306,7 +1309,7 @@ class BookingController extends Controller
             'first_name' => ['nullable', 'string', 'max:100'],
             'middle_name' => ['nullable', 'string', 'max:100'],
             'last_name' => ['nullable', 'string', 'max:100'],
-            'dob' => ['nullable', 'date'],
+            'dob' => $this->dateOfBirthRules(),
             'gender' => ['nullable', 'string', 'max:20'],
             'nationality' => ['nullable', 'string', 'max:100'],
             'guest_phone' => ['nullable', 'string', 'max:25', 'unique:traveler_accounts,mobile_phone'],
@@ -1517,6 +1520,12 @@ class BookingController extends Controller
         }
 
         $guestsInput = $request->input('guests', []);
+        Validator::make($request->all(), [
+            'guests' => ['sometimes', 'array'],
+            'guests.*.dob' => $this->dateOfBirthRules(),
+            'guests.*.*.dob' => $this->dateOfBirthRules(),
+        ])->validate();
+
         $guestEmail = $request->input('guest_email');
         $guestPhone = $request->input('guest_phone');
         $special    = $request->input('special_requests', '');
@@ -3987,6 +3996,14 @@ class BookingController extends Controller
         return $traveler ? (int) $traveler->id : null;
     }
 
+    private function dateOfBirthRules(bool $required = false): array
+    {
+        return array_merge(
+            [$required ? 'required' : 'nullable'],
+            ['date', 'before:today']
+        );
+    }
+
     public function saveGuest(Request $request)
     {
         $input = $request->all();
@@ -3999,7 +4016,7 @@ class BookingController extends Controller
             'first_name' => 'required|string|max:150',
             'middle_name' => 'nullable|string|max:150',
             'last_name' => 'required|string|max:150',
-            'dob' => 'required|date|before_or_equal:today',
+            'dob' => $this->dateOfBirthRules(true),
             'gender' => 'nullable|in:male,female,non_binary,other',
             'nationality' => 'required|string|max:100',
             'passport_number' => 'nullable|string|max:100',
@@ -4219,4 +4236,3 @@ class BookingController extends Controller
         );
     }
 }
-

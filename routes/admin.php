@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SharedCartController;
 use App\Http\Controllers\Admin\AdminSettingsController;
+use App\Http\Middleware\GlobalAdminMiddleware;
 
 // Public admin auth routes (no middleware)
 Route::get('admin/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
@@ -14,14 +15,37 @@ Route::post('admin/login', [AdminAuthController::class, 'login']);
 Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAuthMiddleware::class)->group(function () {
     Route::post('logout', [AdminAuthController::class, 'logout'])->name('logout');
 
+    Route::middleware(GlobalAdminMiddleware::class)->group(function (): void {
+        Route::get('countries', [\App\Http\Controllers\Admin\CountryController::class, 'index'])->name('countries.index');
+        Route::get('countries/create', [\App\Http\Controllers\Admin\CountryController::class, 'create'])->name('countries.create');
+        Route::post('countries', [\App\Http\Controllers\Admin\CountryController::class, 'store'])->name('countries.store');
+        Route::get('countries/{country}/edit', [\App\Http\Controllers\Admin\CountryController::class, 'edit'])->name('countries.edit');
+        Route::put('countries/{country}', [\App\Http\Controllers\Admin\CountryController::class, 'update'])->name('countries.update');
+
+        Route::get('country-admins', [\App\Http\Controllers\Admin\CountryAdminController::class, 'index'])->name('country-admins.index');
+        Route::get('country-admins/create', [\App\Http\Controllers\Admin\CountryAdminController::class, 'create'])->name('country-admins.create');
+        Route::post('country-admins', [\App\Http\Controllers\Admin\CountryAdminController::class, 'store'])->name('country-admins.store');
+        Route::get('country-admins/{administrator}/edit', [\App\Http\Controllers\Admin\CountryAdminController::class, 'edit'])->name('country-admins.edit');
+        Route::put('country-admins/{administrator}', [\App\Http\Controllers\Admin\CountryAdminController::class, 'update'])->name('country-admins.update');
+
+        Route::get('roles', [\App\Http\Controllers\Admin\RoleController::class, 'index'])->name('roles.index');
+        Route::post('roles', [\App\Http\Controllers\Admin\RoleController::class, 'store'])->name('roles.store');
+        Route::get('modules', [\App\Http\Controllers\Admin\ModuleController::class, 'index'])->name('modules.index');
+        Route::get('modules/create', [\App\Http\Controllers\Admin\ModuleController::class, 'create'])->name('modules.create');
+        Route::post('modules', [\App\Http\Controllers\Admin\ModuleController::class, 'store'])->name('modules.store');
+        Route::get('modules/{module}/edit', [\App\Http\Controllers\Admin\ModuleController::class, 'edit'])->name('modules.edit');
+        Route::post('modules/{module}', [\App\Http\Controllers\Admin\ModuleController::class, 'update'])->name('modules.update');
+        Route::delete('modules/{module}', [\App\Http\Controllers\Admin\ModuleController::class, 'destroy'])->name('modules.destroy');
+        Route::get('policy/package-default-policy', [AdminSettingsController::class, 'defaultPackagePolicy'])->name('policy.package-default-policy');
+        Route::post('policy/package-default-policy', [AdminSettingsController::class, 'saveDefaultPackagePolicy'])->name('policy.package-default-policy.save');
+        Route::get('policy/group-default-policy', [AdminSettingsController::class, 'defaultGroupPolicy'])->name('policy.group-default-policy');
+        Route::post('policy/group-default-policy', [AdminSettingsController::class, 'saveDefaultGroupPolicy'])->name('policy.group-default-policy.save');
+    });
+
     // simple session-based guard (controller checks session before actions)
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('settings', [AdminSettingsController::class, 'edit'])->name('settings.edit');
     Route::post('settings', [AdminSettingsController::class, 'update'])->name('settings.update');
-    Route::get('policy/package-default-policy', [AdminSettingsController::class, 'defaultPackagePolicy'])->name('policy.package-default-policy');
-    Route::post('policy/package-default-policy', [AdminSettingsController::class, 'saveDefaultPackagePolicy'])->name('policy.package-default-policy.save');
-    Route::get('policy/group-default-policy', [AdminSettingsController::class, 'defaultGroupPolicy'])->name('policy.group-default-policy');
-    Route::post('policy/group-default-policy', [AdminSettingsController::class, 'saveDefaultGroupPolicy'])->name('policy.group-default-policy.save');
     Route::post('businesses/{business}/approve', [DashboardController::class, 'approveBusiness'])->name('business.approve');
     Route::post('businesses/{business}/reject', [DashboardController::class, 'rejectBusiness'])->name('business.reject');
     Route::post('mpos/{mpo}/approve', [DashboardController::class, 'approveMpo'])->name('mpo.approve');
@@ -34,18 +58,6 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     // Admin transport approvals
     Route::post('transports/{transport}/approve', [DashboardController::class, 'approveTransport'])->name('transport.approve');
     Route::post('transports/{transport}/reject', [DashboardController::class, 'rejectTransport'])->name('transport.reject');
-
-    // Admin role management (create global / business-scoped roles)
-    Route::get('roles', [\App\Http\Controllers\Admin\RoleController::class, 'index'])->name('roles.index');
-    Route::post('roles', [\App\Http\Controllers\Admin\RoleController::class, 'store'])->name('roles.store');
-
-    // Admin modules management (CRUD)
-    Route::get('modules', [\App\Http\Controllers\Admin\ModuleController::class, 'index'])->name('modules.index');
-    Route::get('modules/create', [\App\Http\Controllers\Admin\ModuleController::class, 'create'])->name('modules.create');
-    Route::post('modules', [\App\Http\Controllers\Admin\ModuleController::class, 'store'])->name('modules.store');
-    Route::get('modules/{module}/edit', [\App\Http\Controllers\Admin\ModuleController::class, 'edit'])->name('modules.edit');
-    Route::post('modules/{module}', [\App\Http\Controllers\Admin\ModuleController::class, 'update'])->name('modules.update');
-    Route::delete('modules/{module}', [\App\Http\Controllers\Admin\ModuleController::class, 'destroy'])->name('modules.destroy');
 
     // Admin operators management (CRUD)
     Route::get('operators', [\App\Http\Controllers\Admin\OperatorController::class, 'index'])->name('operators.index');

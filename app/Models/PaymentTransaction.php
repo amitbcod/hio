@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ScopesToAdminCountry;
 
 class PaymentTransaction extends Model
 {
+    use ScopesToAdminCountry;
+
     protected $fillable = [
         'booking_id',
         'booking_ref_id',

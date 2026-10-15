@@ -80,13 +80,13 @@
                         <tr style="background:#f8fafc; color:#475569; font-size:13px; text-transform:uppercase; letter-spacing:.04em;">
                             <th scope="col" aria-label="Expand trip details" style="width:48px; padding:8px; border-bottom:1px solid #e5e7eb;"></th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Trip</th>
-                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Common Booking</th>
+                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Travel / next service</th>
+                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Authority and Travel Party</th>
+                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Booking</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Traveller</th>
-                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Booking Status</th>
-                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Payment Status</th>
+                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Payment</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Attention / Priority</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Next Action</th>
-                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Travel / Next Service</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Due / Overdue</th>
                         </tr>
                     </thead>
@@ -95,6 +95,7 @@
                             @php
                                 $tripRef = $trip->common_booking_reference ?? null;
                                 $tripNextActions = $trip->next_actions ?? [];
+                                $tripPendingActions = collect($trip->operations_overview['pending_actions'] ?? []);
                                 $tripDueActions = collect($trip->due_actions ?? [])
                                     ->where('status', 'due')
                                     ->values();
@@ -102,6 +103,11 @@
                                     ->merge($trip->accommodationBookings->map(fn ($booking) => ['type' => 'accommodation', 'booking' => $booking]))
                                     ->merge($trip->activityBookings->map(fn ($booking) => ['type' => 'activity', 'booking' => $booking]))
                                     ->merge($trip->transportBookings->map(fn ($booking) => ['type' => 'transport', 'booking' => $booking]));
+                                $tripParticipants = $serviceBookings
+                                    ->flatMap(fn ($item) => $item['booking']->participant_names ?? [])
+                                    ->filter()
+                                    ->unique()
+                                    ->values();
                             @endphp
                             <tr style="border-bottom:1px solid #eef2f7;">
                                 <td style="padding:10px 8px; vertical-align:top; text-align:center;">
@@ -111,7 +117,10 @@
                                     @php
                                         $resolvedTripType = $trip->trip_type ?? 'Trip';
                                         $tripDisplayName = $resolvedTripType === 'Trip' ? null : ($trip->title ?: 'Trip #' . $trip->id);
-                                        $tripDateRange = ($trip->start_date ? $trip->start_date->format('d M Y') : 'N/A') . ' - ' . ($trip->end_date ? $trip->end_date->format('d M Y') : 'N/A');
+                                        $travelDates = $trip->operations_overview['travel_dates'] ?? [];
+                                        $tripStartDate = $trip->start_date?->format('d M Y') ?? ($travelDates['start'] ?? 'N/A');
+                                        $tripEndDate = $trip->end_date?->format('d M Y') ?? ($travelDates['end'] ?? 'N/A');
+                                        $tripDateRange = $tripStartDate . ' - ' . $tripEndDate;
                                     @endphp
                                     @if(in_array($resolvedTripType, ['Package Trip', 'Group Trip'], true))
                                         <div style="font-weight:700; color:#0f172a;">{{ $tripDisplayName ?: ($trip->title ?: 'Trip #' . $trip->id) }}</div>
@@ -121,19 +130,28 @@
                                         <div style="font-weight:700; color:#0f172a;">Trip #{{ $trip->id }}</div>
                                         <div style="margin-top:6px; color:#64748b; font-size:12px;">{{ $tripDateRange }}</div>
                                     @endif
-                                    <div style="margin-top:6px; color:#64748b; font-size:12px;">{{ $trip->common_booking_ref_count }} Booking Refs · {{ $trip->common_booking_bli_count }} BLIs</div>
                                     @forelse($trip->total_amounts as $totalAmount)
                                         <div style="margin-top:6px; color:#64748b; font-size:12px;">Total Amount {{ $totalAmount['currency'] }}{{ $totalAmount['amount'] }}</div>
                                     @empty
                                         <div style="margin-top:6px; color:#64748b; font-size:12px;">Total Amount USD0</div>
                                     @endforelse
                                 </td>
-                                <td style="padding:14px; vertical-align:top;">{{ $tripRef ?: 'N/A' }}</td>
                                 <td style="padding:14px; vertical-align:top;">
-                                    <div>{{ $trip->traveller_display_name }}</div>
+                                    <div style="font-size:12px; color:#64748b;">{{ $tripStartDate }} – {{ $tripEndDate }}</div>
+                                    @if(!empty($trip->operations_overview['next_service']))
+                                        <div style="font-weight:600; margin-top:5px;">{{ $trip->operations_overview['next_service']['name'] }}</div>
+                                        <div style="font-size:12px; color:#64748b;">{{ $trip->operations_overview['next_service']['when'] }}</div>
+                                    @else
+                                        <div style="font-size:12px; color:#64748b; margin-top:5px;">No upcoming service</div>
+                                    @endif
+                                </td>
+                                <td style="padding:14px; vertical-align:top;">
+                                    <div><strong>Authority:</strong> {{ $trip->traveller_display_name }}</div>
                                     <div style="margin-top:6px; color:#64748b; font-size:12px;">Travel Party Size: {{ $trip->travel_party_size }}</div>
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
+                                    <div style="font-size:12px; margin-bottom:4px;"><strong>Reference:</strong> {{ $tripRef ?: 'N/A' }}</div>
+                                    <div style="font-size:12px; color:#64748b; margin-bottom:4px;">{{ $trip->common_booking_ref_count }} Booking Refs · {{ $trip->common_booking_bli_count }} BLIs</div>
                                     <div style="display:flex; flex-wrap:wrap; gap:4px;">
                                         @forelse($trip->booking_status_counts as $statusCount)
                                             @include('operator.partials._status_badge', ['status' => $statusCount['status'], 'statusBadgeLabel' => $statusCount['status'] . ': ' . $statusCount['count']])
@@ -141,6 +159,13 @@
                                             <span style="color:#64748b;">N/A</span>
                                         @endforelse
                                     </div>
+                                </td>
+                                <td style="padding:14px; vertical-align:top;">
+                                    @forelse($tripParticipants as $participantName)
+                                        <div>{{ $participantName }}</div>
+                                    @empty
+                                        <span style="color:#64748b;">N/A</span>
+                                    @endforelse
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
                                     <div style="display:flex; flex-wrap:wrap; gap:4px;">
@@ -164,6 +189,41 @@
                                         };
                                     @endphp
                                     <span style="display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:700; {{ $priorityTone }};">{{ $priorityLabel }}</span>
+                                    <div>
+                                        <button type="button" class="btn btn-link btn-sm px-0" data-pending-actions-trigger aria-haspopup="dialog" aria-controls="pending-actions-{{ $trip->id }}">
+                                            View Pending Actions
+                                        </button>
+                                    </div>
+                                    <dialog id="pending-actions-{{ $trip->id }}" aria-labelledby="pending-actions-title-{{ $trip->id }}" style="width:min(42rem, calc(100% - 2rem)); max-height:80vh; padding:0; border:1px solid #cbd5e1; border-radius:10px; box-shadow:0 20px 50px rgba(15,23,42,.25);">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid #e5e7eb;">
+                                            <h2 id="pending-actions-title-{{ $trip->id }}" style="font-size:18px; margin:0;">Pending Actions — {{ $trip->title ?: 'Trip #' . $trip->id }}</h2>
+                                            <form method="dialog">
+                                                <button type="submit" class="btn-close" autofocus aria-label="Close pending actions"></button>
+                                            </form>
+                                        </div>
+                                        <div style="padding:16px; overflow-y:auto; max-height:65vh;">
+                                            @forelse($tripPendingActions as $pendingAction)
+                                                <article style="border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-bottom:10px;">
+                                                    <div style="font-weight:700;">{{ $pendingAction['label'] }}</div>
+                                                    <div style="font-size:12px; color:#64748b; margin-top:5px;">
+                                                        {{ ucfirst($pendingAction['service_type']) }} booking
+                                                        {{ $pendingAction['booking_reference'] ?: '#' . $pendingAction['booking_id'] }}
+                                                        @if($pendingAction['booking_status'])
+                                                            · {{ $pendingAction['booking_status'] }}
+                                                        @endif
+                                                    </div>
+                                                    @if($pendingAction['service_date'])
+                                                        <div style="font-size:12px; margin-top:5px;">Service date: {{ $pendingAction['service_date'] }}</div>
+                                                    @endif
+                                                    @if($pendingAction['url'])
+                                                        <a class="btn btn-sm btn-outline-primary mt-2" href="{{ $pendingAction['url'] }}">View booking</a>
+                                                    @endif
+                                                </article>
+                                            @empty
+                                                <p style="margin:0; color:#64748b;">No pending actions for this trip.</p>
+                                            @endforelse
+                                        </div>
+                                    </dialog>
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
                                     @if(empty($tripNextActions))
@@ -172,15 +232,6 @@
                                         @foreach($tripNextActions as $action)
                                             <div>{{ $action['label'] ?? 'No Action Required' }}</div>
                                         @endforeach
-                                    @endif
-                                </td>
-                                <td style="padding:14px; vertical-align:top;">
-                                    <div style="font-size:12px; color:#64748b;">{{ $trip->start_date ? $trip->start_date->format('d M Y') : 'N/A' }} – {{ $trip->end_date ? $trip->end_date->format('d M Y') : 'N/A' }}</div>
-                                    @if(!empty($trip->operations_overview['next_service']))
-                                        <div style="font-weight:600; margin-top:5px;">{{ $trip->operations_overview['next_service']['name'] }}</div>
-                                        <div style="font-size:12px; color:#64748b;">{{ $trip->operations_overview['next_service']['when'] }}</div>
-                                    @else
-                                        <div style="font-size:12px; color:#64748b; margin-top:5px;">No upcoming service</div>
                                     @endif
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
@@ -329,6 +380,20 @@
 @push('scripts')
 @include('operator.partials._sidebar_scripts')
 <script>
+    document.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-pending-actions-trigger]');
+        if (!trigger) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        const dialog = document.getElementById(trigger.getAttribute('aria-controls'));
+        if (dialog && !dialog.open) {
+            dialog.showModal();
+        }
+    });
+
     document.querySelectorAll('[data-trip-toggle]').forEach((button) => {
         button.addEventListener('click', () => {
             const panel = document.getElementById(button.getAttribute('aria-controls'));
