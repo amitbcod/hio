@@ -7,7 +7,7 @@ body.admin-mpo-auth {
     --admin-mpo-canvas: #fff;
     --admin-mpo-sidebar: #f4ecd0;
     --admin-mpo-navy: #0e2a56;
-    --admin-mpo-link: #244d70;
+    --admin-mpo-link: #874300;
     --admin-mpo-orange: #ff8a00;
     --admin-mpo-green: #d3eddb;
     --admin-mpo-green-ink: #124326;
@@ -39,8 +39,8 @@ body.admin-mpo-auth {
     box-sizing: border-box;
 }
 
-.admin-mpo-layout a,
-.admin-mpo-auth a {
+body.admin-mpo-layout a:not(:where(.btn, .button, .btn-link, .list-group-item, .nav-link, .dropdown-item, .badge, .admin-status-badge, .admin-mpo-brand)),
+body.admin-mpo-auth a:not(:where(.btn, .button, .btn-link, .list-group-item, .nav-link, .dropdown-item, .badge, .admin-status-badge, .admin-mpo-brand)) {
     color: var(--admin-mpo-link);
     text-underline-offset: 2px;
 }
@@ -487,7 +487,7 @@ body.admin-mpo-auth {
 
 .admin-mpo-content .page-link {
     border-color: var(--admin-mpo-line);
-    color: var(--admin-mpo-navy);
+    color: var(--admin-mpo-link);
 }
 
 .admin-mpo-content .page-item.active .page-link {
@@ -750,4 +750,20 @@ body.admin-mpo-auth {
     .admin-mpo-sidebar {
         transition: none;
     }
+}
+
+body.admin-mpo-layout a:not(:where(.btn, .button, .btn-link, .list-group-item, .nav-link, .dropdown-item, .badge, .admin-status-badge, .admin-mpo-brand)):hover,
+body.admin-mpo-auth a:not(:where(.btn, .button, .btn-link, .list-group-item, .nav-link, .dropdown-item, .badge, .admin-status-badge, .admin-mpo-brand)):hover {
+    color: #5c2e00;
+}
+
+body.admin-mpo-layout a:not(:where(.btn, .button, .btn-link, .list-group-item, .nav-link, .dropdown-item, .badge, .admin-status-badge, .admin-mpo-brand)):visited,
+body.admin-mpo-layout a:not(:where(.btn, .button, .btn-link, .list-group-item, .nav-link, .dropdown-item, .badge, .admin-status-badge, .admin-mpo-brand)):active,
+body.admin-mpo-auth a:not(:where(.btn, .button, .btn-link, .list-group-item, .nav-link, .dropdown-item, .badge, .admin-status-badge, .admin-mpo-brand)):visited,
+body.admin-mpo-auth a:not(:where(.btn, .button, .btn-link, .list-group-item, .nav-link, .dropdown-item, .badge, .admin-status-badge, .admin-mpo-brand)):active {
+    color: #874300;
+}
+
+body.admin-mpo-layout .admin-mpo-content .page-link:hover {
+    color: #5c2e00;
 }
