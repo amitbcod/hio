@@ -235,15 +235,33 @@
                                     @endif
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
-                                    @forelse($tripDueActions as $action)
-                                        <div style="margin-bottom:8px;">
-                                            <div><span style="display:inline-block;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">DUE</span> — {{ $action['action_name'] }}</div>
-                                            <div style="font-size:12px;">Deadline: {{ $action['target_display'] }}</div>
-                                            <div style="font-size:12px;">Due since: {{ $action['due_since_display'] }}</div>
-                                        </div>
-                                    @empty
+                                    @if($tripDueActions->isEmpty())
                                         <span style="color:#64748b;">N/A</span>
-                                    @endforelse
+                                    @else
+                                        @php
+                                            $firstDueAction = $tripDueActions->first();
+                                            $additionalDueActions = $tripDueActions->skip(1);
+                                        @endphp
+                                        <div style="margin-bottom:8px;">
+                                            <div><span style="display:inline-block;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">DUE</span> — {{ $firstDueAction['action_name'] }}</div>
+                                            <div style="font-size:12px;">Deadline: {{ $firstDueAction['target_display'] }}</div>
+                                            <div style="font-size:12px;">Due since: {{ $firstDueAction['due_since_display'] }}</div>
+                                        </div>
+                                        @if($additionalDueActions->isNotEmpty())
+                                            <div id="additional-due-actions-{{ $trip->id }}" hidden>
+                                                @foreach($additionalDueActions as $action)
+                                                    <div style="margin-bottom:8px;">
+                                                        <div><span style="display:inline-block;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">DUE</span> — {{ $action['action_name'] }}</div>
+                                                        <div style="font-size:12px;">Deadline: {{ $action['target_display'] }}</div>
+                                                        <div style="font-size:12px;">Due since: {{ $action['due_since_display'] }}</div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                            <button type="button" class="btn btn-link btn-sm p-0" data-due-actions-toggle aria-expanded="false" aria-controls="additional-due-actions-{{ $trip->id }}" style="font-size:12px;">
+                                                + {{ $additionalDueActions->count() }} more
+                                            </button>
+                                        @endif
+                                    @endif
                                 </td>
                             </tr>
                             <tr>
@@ -380,6 +398,20 @@
 @push('scripts')
 @include('operator.partials._sidebar_scripts')
 <script>
+    document.addEventListener('click', (event) => {
+        const dueToggle = event.target.closest('[data-due-actions-toggle]');
+        if (dueToggle) {
+            event.preventDefault();
+            event.stopPropagation();
+            const panel = document.getElementById(dueToggle.getAttribute('aria-controls'));
+            const expanded = dueToggle.getAttribute('aria-expanded') === 'true';
+            panel.hidden = expanded;
+            dueToggle.setAttribute('aria-expanded', String(!expanded));
+            dueToggle.textContent = expanded
+                ? `+ ${panel.children.length} more`
+                : 'Show less';
+            return;
+        }
     document.addEventListener('click', (event) => {
         const trigger = event.target.closest('[data-pending-actions-trigger]');
         if (!trigger) {

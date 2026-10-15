@@ -464,6 +464,7 @@ class AdminTripListingTest extends TestCase
         $response->assertSee('View Pending Actions');
         $response->assertSee('<dialog id="pending-actions-' . $trip->id . '"', false);
         $response->assertSee('dialog.showModal()', false);
+        $response->assertDontSee('aria-controls="additional-due-actions-' . $trip->id . '"', false);
         $response->assertSee('Trip 202');
         $response->assertSee('Group Trip');
         $response->assertSee('Travel Party Size: 2');
@@ -812,6 +813,35 @@ class AdminTripListingTest extends TestCase
             'adults' => 1,
             'children' => 0,
         ]);
+        $moreDueBookings = collect();
+        for ($index = 0; $index < 3; $index++) {
+            $moreDueBookings->push(AccommodationBooking::create([
+                'trip_id' => $trip->id,
+                'accommodation_id' => $accommodation->id,
+                'booking_status' => 'Confirmed',
+                'check_in_date' => '2026-10-14',
+                'check_out_date' => '2026-10-15',
+                'adults' => 1,
+                'children' => 0,
+            ]));
+        }
+        $twoDueTrip = Trip::create([
+            'title' => 'Two Due Actions Trip',
+            'start_date' => '2026-10-13',
+            'end_date' => '2026-10-15',
+            'status' => 'planned',
+        ]);
+        for ($index = 0; $index < 2; $index++) {
+            AccommodationBooking::create([
+                'trip_id' => $twoDueTrip->id,
+                'accommodation_id' => $accommodation->id,
+                'booking_status' => 'Confirmed',
+                'check_in_date' => '2026-10-14',
+                'check_out_date' => '2026-10-15',
+                'adults' => 1,
+                'children' => 0,
+            ]);
+        }
         $beforeWarningBooking = AccommodationBooking::create([
             'trip_id' => $trip->id,
             'accommodation_id' => $accommodation->id,
@@ -828,6 +858,7 @@ class AdminTripListingTest extends TestCase
         $response->assertSee('>DUE</span>', false);
         $response->assertDontSee('OVERDUE');
         $viewTrip = collect($response->viewData('trips')->items())->firstWhere('id', $trip->id);
+        $viewTwoDueTrip = collect($response->viewData('trips')->items())->firstWhere('id', $twoDueTrip->id);
         $viewAction = collect($viewTrip->due_actions)->firstWhere('booking_id', $booking->id);
         $this->assertSame('guest_details', $viewAction['type']);
         $this->assertSame('due', $viewAction['status']);
@@ -836,6 +867,13 @@ class AdminTripListingTest extends TestCase
         $response->assertSee('Deadline: 14 Oct 2026, 00:00 · UTC+00:00');
         $response->assertSee('Complete guest details for accommodation booking #' . $booking->id);
         $response->assertSee('Complete guest details for accommodation booking #' . $secondBooking->id);
+        $response->assertSee('+ 4 more');
+        $response->assertSee('aria-expanded="false" aria-controls="additional-due-actions-' . $trip->id . '"', false);
+        $response->assertSee('<div id="additional-due-actions-' . $trip->id . '" hidden>', false);
+        $response->assertSee('Show less', false);
+        $response->assertSee('+ 1 more');
+        $response->assertSee('aria-controls="additional-due-actions-' . $twoDueTrip->id . '"', false);
+        $this->assertCount(2, collect($viewTwoDueTrip->due_actions)->where('status', 'due'));
         $response->assertSee('View Pending Actions');
         $response->assertSee('<dialog id="pending-actions-' . $trip->id . '"', false);
         $response->assertSee('Accommodation #' . $beforeWarningBooking->id . ' — Complete Guest Details');
@@ -843,8 +881,9 @@ class AdminTripListingTest extends TestCase
         $this->assertSame('scheduled', $viewBeforeWarning['status']);
         $this->assertTrue(collect($viewTrip->operations_overview['pending_actions'])
             ->contains(fn (array $action): bool => $action['booking_id'] === $beforeWarningBooking->id));
-        $this->assertSame(2, substr_count($response->getContent(), 'Deadline:'));
-        $this->assertSame(2, substr_count($response->getContent(), 'Due since:'));
+        $this->assertSame(7, substr_count($response->getContent(), 'Deadline:'));
+        $this->assertSame(7, substr_count($response->getContent(), 'Due since:'));
+        $this->assertCount(5, collect($viewTrip->due_actions)->where('status', 'due'));
         Carbon::setTestNow();
     }
 
@@ -922,6 +961,9 @@ class AdminTripListingTest extends TestCase
         $blockedNextAction = collect($blockedTripData->next_actions)->firstWhere('booking_id', 0);
 
         $this->assertSame('due', $dueAction['status']);
+        $response->assertDontSee('aria-controls="additional-due-actions-' . $dueTrip->id . '"', false);
+        $this->assertCount(1, collect($viewTrips->firstWhere('id', $dueTrip->id)->due_actions)->where('status', 'due'));
+        $this->assertCount(0, collect($viewTrips->firstWhere('id', $pastTrip->id)->due_actions)->where('status', 'due'));
         $this->assertSame('na', $pastAction['status']);
         $this->assertNull($pastAction['target_display']);
         $this->assertNull($pastAction['due_since_display']);

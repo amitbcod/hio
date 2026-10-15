@@ -632,6 +632,18 @@ class OperatorTripListingTest extends TestCase
             'adults' => 1,
             'children' => 0,
         ]);
+        for ($index = 0; $index < 4; $index++) {
+            AccommodationBooking::create([
+                'trip_id' => $trip->id,
+                'booking_ref_id' => $bookingRef->id,
+                'accommodation_id' => $accommodation->id,
+                'booking_status' => 'Confirmed',
+                'check_in_date' => '2026-10-14',
+                'check_out_date' => '2026-10-15',
+                'adults' => 1,
+                'children' => 0,
+            ]);
+        }
         DB::table('trip_action_deadline_settings')->insert([
             'action_type' => 'guest_details',
             'interval_hours' => 18,
@@ -649,6 +661,11 @@ class OperatorTripListingTest extends TestCase
         $this->assertSame('due', $viewAction['status']);
         $this->assertSame('14 Oct 2026, 00:00 · UTC+00:00', $viewAction['target_display']);
         $response->assertSee('Complete guest details for accommodation booking #' . $serviceBooking->id);
+        $response->assertSee('+ 4 more');
+        $response->assertSee('aria-expanded="false" aria-controls="additional-due-actions-' . $trip->id . '"', false);
+        $response->assertSee('<div id="additional-due-actions-' . $trip->id . '" hidden>', false);
+        $response->assertSee('Show less', false);
+        $this->assertCount(5, collect($viewTrip->due_actions)->where('status', 'due'));
         $response->assertSee('<dialog id="pending-actions-' . $trip->id . '"', false);
         $response->assertSee('Accommodation #' . $beforeWarningBooking->id . ' — Complete Guest Details');
         $viewBeforeWarning = collect($viewTrip->due_actions)->firstWhere('booking_id', $beforeWarningBooking->id);
@@ -747,6 +764,7 @@ class OperatorTripListingTest extends TestCase
         $blockedNextAction = collect($blockedTripData->next_actions)->firstWhere('booking_id', 0);
 
         $this->assertSame('due', $dueAction['status'] ?? null, json_encode($dueAction));
+        $response->assertDontSee('aria-controls="additional-due-actions-' . $dueTrip->id . '"', false);
         $this->assertSame('na', $pastAction['status'] ?? null, json_encode($pastAction));
         $this->assertNull($pastAction['target_display']);
         $this->assertNull($pastAction['due_since_display']);

@@ -246,15 +246,33 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @forelse($tripDueActions as $action)
-                                                <div class="mb-2">
-                                                    <div><span class="badge rounded-pill" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;">DUE</span> — {{ $action['action_name'] }}</div>
-                                                    <div class="small">Deadline: {{ $action['target_display'] }}</div>
-                                                    <div class="small">Due since: {{ $action['due_since_display'] }}</div>
-                                                </div>
-                                            @empty
+                                            @if($tripDueActions->isEmpty())
                                                 <span class="text-muted">N/A</span>
-                                            @endforelse
+                                            @else
+                                                @php
+                                                    $firstDueAction = $tripDueActions->first();
+                                                    $additionalDueActions = $tripDueActions->skip(1);
+                                                @endphp
+                                                <div class="mb-2">
+                                                    <div><span class="badge rounded-pill" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;">DUE</span> — {{ $firstDueAction['action_name'] }}</div>
+                                                    <div class="small">Deadline: {{ $firstDueAction['target_display'] }}</div>
+                                                    <div class="small">Due since: {{ $firstDueAction['due_since_display'] }}</div>
+                                                </div>
+                                                @if($additionalDueActions->isNotEmpty())
+                                                    <div id="additional-due-actions-{{ $trip->id }}" hidden>
+                                                        @foreach($additionalDueActions as $action)
+                                                            <div class="mb-2">
+                                                                <div><span class="badge rounded-pill" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;">DUE</span> — {{ $action['action_name'] }}</div>
+                                                                <div class="small">Deadline: {{ $action['target_display'] }}</div>
+                                                                <div class="small">Due since: {{ $action['due_since_display'] }}</div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                    <button type="button" class="btn btn-link btn-sm p-0" data-due-actions-toggle aria-expanded="false" aria-controls="additional-due-actions-{{ $trip->id }}">
+                                                        + {{ $additionalDueActions->count() }} more
+                                                    </button>
+                                                @endif
+                                            @endif
                                         </td>
                                     </tr>
                                     <tr>
@@ -400,6 +418,20 @@
 @push('scripts')
 <script>
     document.addEventListener('click', (event) => {
+        const dueToggle = event.target.closest('[data-due-actions-toggle]');
+        if (dueToggle) {
+            event.preventDefault();
+            event.stopPropagation();
+            const panel = document.getElementById(dueToggle.getAttribute('aria-controls'));
+            const expanded = dueToggle.getAttribute('aria-expanded') === 'true';
+            panel.hidden = expanded;
+            dueToggle.setAttribute('aria-expanded', String(!expanded));
+            dueToggle.textContent = expanded
+                ? `+ ${panel.children.length} more`
+                : 'Show less';
+            return;
+        }
+
         const trigger = event.target.closest('[data-pending-actions-trigger]');
         if (!trigger) {
             return;
