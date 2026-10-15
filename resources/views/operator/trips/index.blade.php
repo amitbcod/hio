@@ -412,7 +412,7 @@
                 : 'Show less';
             return;
         }
-    document.addEventListener('click', (event) => {
+
         const trigger = event.target.closest('[data-pending-actions-trigger]');
         if (!trigger) {
             return;

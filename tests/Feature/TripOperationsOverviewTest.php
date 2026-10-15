@@ -132,7 +132,7 @@ class TripOperationsOverviewTest extends TestCase
         $this->assertSame('payment', $result['actions'][0]['type']);
         $this->assertSame('na', collect($result['due_actions'])->firstWhere('booking_id', 60)['status']);
         $this->assertSame('scheduled', collect($result['due_actions'])->firstWhere('booking_id', 67)['status']);
-        $this->assertSame(['booking_confirm'], $pendingActions
+        $this->assertEqualsCanonicalizing(['booking_confirm', 'driver_assign', 'vehicle_assign'], $pendingActions
             ->where('booking_id', 64)
             ->pluck('type')
             ->all());
@@ -149,13 +149,71 @@ class TripOperationsOverviewTest extends TestCase
         $this->assertFalse($pendingActions->contains(
             fn (array $action): bool => in_array($action['booking_id'], [61, 62, 63, 65, 66], true)
         ));
-        $this->assertSame(4, $pendingActions->count());
+        $this->assertSame(6, $pendingActions->count());
         $this->assertSame('Accommodation #60 — Complete Guest Details', $pendingActions
             ->firstWhere('booking_id', 60)['label']);
         $this->assertSame('Transport #64 — Mark as Confirmed', $pendingActions
             ->firstWhere('booking_id', 64)['label']);
         $this->assertSame('22 Oct 2026, 09:00 · UTC+00:00', $pendingActions
             ->firstWhere('booking_id', 68)['service_date']);
+    }
+
+    public function test_pending_actions_include_due_candidates_and_unresolved_assignment_and_license_items_before_due_time(): void
+    {
+        Carbon::setTestNow('2026-10-13 08:00:00');
+        $trip = $this->trip();
+
+        $accommodation = $this->accommodationBooking(70, '2026-10-25', 'Confirmed');
+        $accommodation->setRelation('guests', new EloquentCollection());
+
+        $processingTransport = $this->transportBooking(71, '2026-10-25', '09:00:00', 'Processing');
+        $processingTransport->setRelation('guests', new EloquentCollection());
+        $processingTransport->setAttribute('traveler_first_name', null);
+        $processingTransport->setAttribute('traveler_last_name', null);
+
+        $expiredLicenseTransport = $this->transportBooking(72, '2026-10-25', '10:00:00', 'Confirmed');
+        $expiredLicenseTransport->setAttribute('pickup_driver_id', 7);
+        $expiredLicenseTransport->setAttribute('transport_vehicle_id', 3);
+        $driver = new OperatorDriver();
+        $driver->forceFill([
+            'id' => 7,
+            'driver_name' => 'Expired License Driver',
+            'license_expiry_date' => '2026-10-12',
+        ]);
+        $expiredLicenseTransport->setRelation('pickupDriver', $driver);
+
+        $completedTransport = $this->transportBooking(73, '2026-10-25', '11:00:00', 'Confirmed');
+        $completedTransport->setAttribute('pickup_driver_id', 8);
+        $completedTransport->setAttribute('transport_vehicle_id', 4);
+
+        $trip->setRelation('accommodationBookings', new EloquentCollection([$accommodation]));
+        $trip->setRelation('activityBookings', new EloquentCollection());
+        $trip->setRelation('transportBookings', new EloquentCollection([
+            $processingTransport,
+            $expiredLicenseTransport,
+            $completedTransport,
+        ]));
+
+        $result = $this->overview->apply($trip, $this->defaultIntervals(), false);
+        $pendingActions = collect($result['pending_actions']);
+        $processingActions = $pendingActions->where('booking_id', 71);
+
+        $this->assertEqualsCanonicalizing(
+            ['booking_confirm', 'guest_details', 'driver_assign', 'vehicle_assign'],
+            $processingActions->pluck('type')->all()
+        );
+        $this->assertTrue($pendingActions->contains(
+            fn (array $action): bool => $action['booking_id'] === 70 && $action['type'] === 'guest_details'
+        ));
+        $this->assertTrue($pendingActions->contains(
+            fn (array $action): bool => $action['booking_id'] === 72 && $action['type'] === 'driver_license_expire'
+        ));
+        $this->assertSame($pendingActions->count(), $pendingActions->unique('key')->count());
+        $this->assertFalse($pendingActions->contains(
+            fn (array $action): bool => $action['booking_id'] === 73
+        ));
+        $this->assertNotSame('due', collect($result['due_actions'])
+            ->first(fn (array $action): bool => $action['booking_id'] === 71 && $action['type'] === 'guest_details')['status']);
     }
 
     public function test_driver_and_vehicle_deadlines_are_independent_and_can_be_overridden_per_action(): void

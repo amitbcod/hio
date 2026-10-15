@@ -876,6 +876,8 @@ class AdminTripListingTest extends TestCase
         $this->assertCount(2, collect($viewTwoDueTrip->due_actions)->where('status', 'due'));
         $response->assertSee('View Pending Actions');
         $response->assertSee('<dialog id="pending-actions-' . $trip->id . '"', false);
+        $this->assertSame(1, substr_count($response->getContent(), "const trigger = event.target.closest('[data-pending-actions-trigger]');"));
+        $response->assertSee('dialog.showModal()', false);
         $response->assertSee('Accommodation #' . $beforeWarningBooking->id . ' — Complete Guest Details');
         $viewBeforeWarning = collect($viewTrip->due_actions)->firstWhere('booking_id', $beforeWarningBooking->id);
         $this->assertSame('scheduled', $viewBeforeWarning['status']);
@@ -884,6 +886,11 @@ class AdminTripListingTest extends TestCase
         $this->assertSame(7, substr_count($response->getContent(), 'Deadline:'));
         $this->assertSame(7, substr_count($response->getContent(), 'Due since:'));
         $this->assertCount(5, collect($viewTrip->due_actions)->where('status', 'due'));
+        $pendingActions = collect($viewTrip->operations_overview['pending_actions']);
+        foreach (collect($viewTrip->due_actions)->where('status', 'due') as $dueAction) {
+            $this->assertTrue($pendingActions->contains('key', $dueAction['key']));
+            $response->assertSee($pendingActions->firstWhere('key', $dueAction['key'])['label']);
+        }
         Carbon::setTestNow();
     }
 

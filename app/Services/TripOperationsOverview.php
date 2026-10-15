@@ -422,6 +422,7 @@ class TripOperationsOverview
     private function pendingActions(Trip $trip, array $services, bool $admin): array
     {
         return collect($this->serviceActions($trip, $services, $admin))
+            ->merge($this->serviceActions($trip, $services, $admin, false))
             ->unique('key')
             ->reject(fn (array $action): bool => $this->bookingOrderHasEnded($trip, $action, $services))
             ->map(function (array $action) use ($trip, $services): array {
