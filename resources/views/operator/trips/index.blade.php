@@ -75,15 +75,25 @@
             <div style="padding:40px 20px; text-align:center; color:#64748b;">No trips found for your services.</div>
         @else
             <div style="overflow-x:auto;">
-                <table style="width:100%; border-collapse:collapse; min-width:1100px;">
+                <table class="operator-trip-listing" style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:1320px;">
+                    <colgroup>
+                        <col style="width:4%">
+                        <col style="width:17%">
+                        <col style="width:11%">
+                        <col style="width:14%">
+                        <col style="width:11%">
+                        <col style="width:7%">
+                        <col style="width:10%">
+                        <col style="width:10%">
+                        <col style="width:16%">
+                    </colgroup>
                     <thead>
                         <tr style="background:#f8fafc; color:#475569; font-size:13px; text-transform:uppercase; letter-spacing:.04em;">
-                            <th scope="col" aria-label="Expand trip details" style="width:48px; padding:8px; border-bottom:1px solid #e5e7eb;"></th>
+                            <th scope="col" aria-label="Expand trip details" style="padding:8px; border-bottom:1px solid #e5e7eb;"></th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Trip</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Travel / next service</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Authority and Travel Party</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Booking</th>
-                            <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Traveller</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Payment</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Attention / Priority</th>
                             <th style="padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left;">Next Action</th>
@@ -107,6 +117,12 @@
                                     ->flatMap(fn ($item) => $item['booking']->participant_names ?? [])
                                     ->filter()
                                     ->unique()
+                                    ->values();
+                                $accountHolderName = trim((string) $trip->traveller_display_name);
+                                $tripParticipantsForDisplay = $tripParticipants
+                                    ->reject(fn ($participantName) => $accountHolderName !== ''
+                                        && $accountHolderName !== 'Unknown Customer'
+                                        && strcasecmp(trim((string) $participantName), $accountHolderName) === 0)
                                     ->values();
                             @endphp
                             <tr style="border-bottom:1px solid #eef2f7;">
@@ -146,8 +162,16 @@
                                     @endif
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
-                                    <div><strong>Authority:</strong> {{ $trip->traveller_display_name }}</div>
+                                    <div><strong>Booking Authority / Account Holder:</strong> {{ $trip->traveller_display_name }}</div>
                                     <div style="margin-top:6px; color:#64748b; font-size:12px;">Travel Party Size: {{ $trip->travel_party_size }}</div>
+                                    <div style="margin-top:8px; font-size:12px;"><strong>Travellers:</strong></div>
+                                    <div class="operator-trip-participants">
+                                        @forelse($tripParticipantsForDisplay as $participantName)
+                                            <div>{{ $participantName }}</div>
+                                        @empty
+                                            <span style="color:#64748b;">N/A</span>
+                                        @endforelse
+                                    </div>
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
                                     <div style="font-size:12px; margin-bottom:4px;"><strong>Reference:</strong> {{ $tripRef ?: 'N/A' }}</div>
@@ -160,14 +184,7 @@
                                         @endforelse
                                     </div>
                                 </td>
-                                <td style="padding:14px; vertical-align:top;">
-                                    @forelse($tripParticipants as $participantName)
-                                        <div>{{ $participantName }}</div>
-                                    @empty
-                                        <span style="color:#64748b;">N/A</span>
-                                    @endforelse
-                                </td>
-                                <td style="padding:14px; vertical-align:top;">
+                                <td class="operator-trip-payment" style="padding:14px; vertical-align:top;">
                                     <div style="display:flex; flex-wrap:wrap; gap:4px;">
                                         @forelse($trip->payment_status_badges as $statusBadge)
                                             @include('operator.partials._status_badge', ['status' => $statusBadge['status']])
@@ -265,7 +282,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="10" style="padding:0; border-bottom:1px solid #e5e7eb;">
+                                <td colspan="9" style="padding:0; border-bottom:1px solid #e5e7eb;">
                                     <div id="operator-trip-{{ $trip->id }}" hidden>
                                         <div style="padding:18px; background:#f8fafc;">
                                             <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
@@ -394,6 +411,30 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+    .operator-trip-listing th,
+    .operator-trip-listing td {
+        overflow-wrap: anywhere;
+    }
+
+    .operator-trip-listing td:nth-child(2) {
+        overflow-wrap: break-word;
+    }
+
+    .operator-trip-listing .operator-trip-participants {
+        font-size: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    .operator-trip-listing .operator-trip-payment .operator-status-badge {
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+</style>
+@endpush
 
 @push('scripts')
 @include('operator.partials._sidebar_scripts')

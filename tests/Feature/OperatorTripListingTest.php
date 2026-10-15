@@ -409,6 +409,7 @@ class OperatorTripListingTest extends TestCase
         $response->assertSee('>+</button>', false);
         $response->assertSee('aria-expanded="false"', false);
         $response->assertSee('id="operator-trip-1" hidden', false);
+        $response->assertSee('class="operator-trip-listing"', false);
         $response->assertSee('View Pending Actions');
         $response->assertSee('No pending actions for this trip.');
         $response->assertSee('dialog.showModal()', false);
@@ -417,12 +418,12 @@ class OperatorTripListingTest extends TestCase
             '>Travel / next service</th>',
             '>Authority and Travel Party</th>',
             '>Booking</th>',
-            '>Traveller</th>',
             '>Payment</th>',
             '>Attention / Priority</th>',
             '>Next Action</th>',
             '>Due / Overdue</th>',
         ], false);
+        $response->assertDontSee('>Traveller</th>', false);
         $response->assertSee('name="traveller_information"', false);
         $response->assertSee('Next Step:</strong> Awaiting Payment', false);
         $response->assertDontSee('background:#16a34a');
@@ -438,6 +439,8 @@ class OperatorTripListingTest extends TestCase
         $response->assertSee('>Booking</th>', false);
         $response->assertSee('Pending</span>', false);
         $response->assertSee('Travel Party Size: 2');
+        $response->assertSee('Booking Authority / Account Holder:');
+        $response->assertSee('Travellers:');
         $response->assertSee('John Smith');
         $response->assertSee('Customer Not Travelling');
         $response->assertDontSee('Account Holder not travelling');

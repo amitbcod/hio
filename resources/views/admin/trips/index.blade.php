@@ -64,19 +64,29 @@
                         </div>
                     </form>
                     <div class="table-responsive trips-table">
-                        <table class="table table-bordered align-middle mb-0">
+                        <table class="table table-bordered align-middle mb-0 admin-trip-listing">
+                            <colgroup>
+                                <col style="width:4%">
+                                <col style="width:17%">
+                                <col style="width:11%">
+                                <col style="width:14%">
+                                <col style="width:11%">
+                                <col style="width:7%">
+                                <col style="width:10%">
+                                <col style="width:10%">
+                                <col style="width:16%">
+                            </colgroup>
                             <thead>
                                 <tr>
-                                    <th scope="col" style="width:48px;"><span class="visually-hidden">Expand trip details</span></th>
-                                    <th>Trip</th>
-                                    <th>Travel / next service</th>
-                                    <th>Authority and Travel Party</th>
-                                    <th>Booking</th>
-                                    <th>Traveller</th>
-                                    <th>Payment</th>
-                                    <th>Attention / Priority</th>
-                                    <th>Next Action</th>
-                                    <th>Due / Overdue</th>
+                                    <th scope="col"><span class="visually-hidden">Expand trip details</span></th>
+                                    <th scope="col">Trip</th>
+                                    <th scope="col">Travel / next service</th>
+                                    <th scope="col">Authority and Travel Party</th>
+                                    <th scope="col">Booking</th>
+                                    <th scope="col">Payment</th>
+                                    <th scope="col">Attention / Priority</th>
+                                    <th scope="col">Next Action</th>
+                                    <th scope="col">Due / Overdue</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -112,6 +122,12 @@
                                             ->flatMap(fn ($item) => $item['booking']->participant_names ?? [])
                                             ->filter()
                                             ->unique()
+                                            ->values();
+                                        $accountHolderName = trim((string) $trip->traveller_display_name);
+                                        $tripParticipantsForDisplay = $tripParticipants
+                                            ->reject(fn ($participantName) => $accountHolderName !== ''
+                                                && $accountHolderName !== 'Unknown Customer'
+                                                && strcasecmp(trim((string) $participantName), $accountHolderName) === 0)
                                             ->values();
                                     @endphp
                                     <tr>
@@ -150,8 +166,16 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <div><strong>Authority:</strong> {{ $trip->traveller_display_name }}</div>
+                                            <div><strong>Booking Authority / Account Holder:</strong> {{ $trip->traveller_display_name }}</div>
                                             <div class="small text-muted mt-1">Travel Party Size: {{ $trip->travel_party_size }}</div>
+                                            <div class="small mt-2"><strong>Travellers:</strong></div>
+                                            <div class="admin-trip-participants">
+                                                @forelse($tripParticipantsForDisplay as $participantName)
+                                                    <div>{{ $participantName }}</div>
+                                                @empty
+                                                    <span class="text-muted">N/A</span>
+                                                @endforelse
+                                            </div>
                                         </td>
                                         <td>
                                             <div class="small mb-1">
@@ -167,14 +191,7 @@
                                                 @endforelse
                                             </div>
                                         </td>
-                                        <td>
-                                            @forelse($tripParticipants as $participantName)
-                                                <div>{{ $participantName }}</div>
-                                            @empty
-                                                <span class="text-muted">N/A</span>
-                                            @endforelse
-                                        </td>
-                                        <td>
+                                        <td class="admin-trip-payment">
                                             <div style="display:flex; flex-wrap:wrap; gap:4px;">
                                                 @forelse($trip->payment_status_badges as $statusBadge)
                                                     @include('admin.partials._status_badge', ['status' => $statusBadge['status']])
@@ -276,7 +293,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td colspan="10" class="p-0 border-top-0">
+                                        <td colspan="9" class="p-0 border-top-0">
                                             <div id="trip-{{ $trip->id }}" class="collapse">
                                                 <div class="p-3 bg-light">
                                                     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
@@ -401,7 +418,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="10" class="text-center text-muted">No trips found.</td>
+                                        <td colspan="9" class="text-center text-muted">No trips found.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

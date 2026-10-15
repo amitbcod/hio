@@ -448,18 +448,19 @@ class AdminTripListingTest extends TestCase
         $response->assertOk();
         $response->assertSee('data-trip-toggle', false);
         $response->assertSee('aria-label="Expand trip details"', false);
-        $response->assertSee('colspan="10"', false);
+        $response->assertSee('colspan="9"', false);
+        $response->assertSee('class="table table-bordered align-middle mb-0 admin-trip-listing"', false);
         $response->assertSeeInOrder([
             '>Trip</th>',
             '>Travel / next service</th>',
             '>Authority and Travel Party</th>',
             '>Booking</th>',
-            '>Traveller</th>',
             '>Payment</th>',
             '>Attention / Priority</th>',
             '>Next Action</th>',
             '>Due / Overdue</th>',
         ], false);
+        $response->assertDontSee('>Traveller</th>', false);
         $response->assertSee('Trip ID: ' . $trip->getKey());
         $response->assertSee('View Pending Actions');
         $response->assertSee('<dialog id="pending-actions-' . $trip->id . '"', false);
@@ -468,6 +469,8 @@ class AdminTripListingTest extends TestCase
         $response->assertSee('Trip 202');
         $response->assertSee('Group Trip');
         $response->assertSee('Travel Party Size: 2');
+        $response->assertSee('Booking Authority / Account Holder:');
+        $response->assertSee('Travellers:');
         $response->assertSee('Jane Doe');
         $response->assertSee('1 Booking Refs · 3 BLIs');
         $response->assertSee('Total Amount USD410');
@@ -475,7 +478,7 @@ class AdminTripListingTest extends TestCase
         $response->assertSee('Processing: 1');
         $response->assertSee('Cancelled: 1');
         $response->assertDontSee('<th>Status</th>', false);
-        $response->assertSee('<th>Booking</th>', false);
+        $response->assertSee('>Booking</th>', false);
         $response->assertSee('admin-status-badge--warning', false);
         $response->assertSee('admin-status-badge--success', false);
         $response->assertSee('admin-status-badge--danger', false);

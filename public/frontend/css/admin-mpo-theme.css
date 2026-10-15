@@ -298,6 +298,42 @@ body.admin-mpo-auth {
     border-radius: 4px;
 }
 
+.admin-mpo-content .table-responsive.trips-table {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.admin-mpo-content table.admin-trip-listing {
+    display: table;
+    width: 100%;
+    min-width: 1320px;
+    table-layout: fixed;
+}
+
+.admin-mpo-content table.admin-trip-listing th,
+.admin-mpo-content table.admin-trip-listing td {
+    overflow-wrap: anywhere;
+}
+
+.admin-mpo-content table.admin-trip-listing td:nth-child(2) {
+    overflow-wrap: break-word;
+}
+
+.admin-trip-participants {
+    overflow-wrap: anywhere;
+}
+
+.admin-mpo-content table.admin-trip-listing .admin-trip-payment .badge,
+.admin-mpo-content table.admin-trip-listing .admin-trip-payment .admin-status-badge {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.admin-mpo-content table.admin-trip-listing td:nth-child(9) {
+    min-width: 0;
+}
+
 .admin-mpo-content label,
 .admin-mpo-content .form-label {
     color: #38434e;
