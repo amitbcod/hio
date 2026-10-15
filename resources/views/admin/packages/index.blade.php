@@ -40,7 +40,7 @@
             @endforeach
             </tbody>
         </table>
-        {{ $packages->links() }}
+        {{ $packages->links('pagination::bootstrap-5') }}
     @else
         <p>No packages yet.</p>
     @endif

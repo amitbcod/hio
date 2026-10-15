@@ -3,47 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Portal</title>
+    <title>@yield('title', 'Admin Portal | Holidays.io')</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-     <link rel="stylesheet" href="{{ asset('frontend/css/admin-style.css') }}">
+    <link rel="stylesheet" href="{{ asset('frontend/css/admin-mpo-theme.css') }}">
     @stack('styles')
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-light mb-0">
-        <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-brand" href="{{ route('admin.dashboard') }}">
-                <img src="https://hio.whuso.in/public/images/holidays-io-logo.png" alt="Logo" width="130px">
-            </a>
-            <div>
+<body class="admin-mpo-layout{{ request()->routeIs('admin.login') ? ' admin-mpo-layout--auth' : '' }}">
+    <header class="admin-mpo-header">
+        <button type="button" class="admin-mpo-menu-toggle" data-admin-mpo-sidebar-toggle aria-controls="admin-mpo-sidebar" aria-expanded="false">
+            Menu
+        </button>
+        <a class="admin-mpo-brand" href="{{ route('admin.dashboard') }}">
+            <img src="{{ asset('images/holidays-io-logo.png') }}" alt="Holidays.io" width="130">
+        </a>
+        <div class="admin-mpo-account">
+            <span class="admin-mpo-account-label">
                 @if(session('admin_id'))
                     @php $admin = \App\Models\AdminUser::find(session('admin_id')); @endphp
-                    <span class="me-3">{{ $admin->email ?? 'Admin' }}</span>
-                    <form action="{{ route('admin.logout') }}" method="POST" style="display:inline;">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
-                    </form>
+                    {{ $admin->email ?? 'Admin' }}
                 @else
-                    <a href="{{ route('admin.login') }}" class="btn btn-outline-light btn-sm">Login</a>
+                    Admin Portal
                 @endif
-            </div>
+            </span>
+            @if(session('admin_id'))
+                <form action="{{ route('admin.logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-primary btn-sm">Logout</button>
+                </form>
+            @else
+                <a href="{{ route('admin.login') }}" class="btn btn-outline-primary btn-sm">Login</a>
+            @endif
         </div>
-    </nav>
-    <main>
-        <div class="container-fluid main-setion">
-            <div class="row">
-                <div class="col-md-2 list-section">
-                    @if(isset($sidebar) && view()->exists($sidebar))
-                        @include($sidebar)
-                    @else
-                        @include('admin._sidebar')
-                    @endif
-                </div>
-                <div class="col-md-10 login-full-section">
-                    @yield('content')
-                </div>
+    </header>
+    <div class="admin-mpo-shell">
+        <aside class="admin-mpo-sidebar" id="admin-mpo-sidebar" aria-label="Admin and MPO navigation">
+            @if(isset($sidebar) && view()->exists($sidebar))
+                @include($sidebar)
+            @else
+                @include('admin._sidebar')
+            @endif
+        </aside>
+        <main class="admin-mpo-main">
+            <div class="admin-mpo-content">
+                @yield('content')
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
+    <script src="{{ asset('frontend/js/admin-mpo.js') }}" defer></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')

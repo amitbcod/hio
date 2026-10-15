@@ -38,6 +38,6 @@
         </tbody>
     </table>
 
-    {{ $operators->links() }}
+    {{ $operators->links('pagination::bootstrap-5') }}
 </div>
 @endsection

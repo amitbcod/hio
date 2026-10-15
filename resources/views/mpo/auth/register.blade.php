@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.mpo-auth')
 
 @section('content')
 <div class="container py-4">
@@ -7,6 +7,14 @@
             <div class="card shadow-sm">
                 <div class="card-body p-4">
                     <h1 class="mb-4">MPO Registration</h1>
+
+                    @if ($errors->any())
+                        <div class="alert alert-danger" role="alert">
+                            @foreach ($errors->all() as $error)
+                                <div>{{ $error }}</div>
+                            @endforeach
+                        </div>
+                    @endif
 
                     <form method="POST" action="{{ route('mpo.register.post') }}">
                         @csrf

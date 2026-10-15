@@ -1,4 +1,4 @@
-<div class="list-group">
+<nav class="list-group admin-mpo-nav" aria-label="Admin and MPO sections">
     @php($isMpoAdmin = \App\Support\CountryAccess::isMpoAdmin())
     <a href="{{ route('admin.dashboard') }}" class="list-group-item list-group-item-action {{ request()->is('admin/dashboard') ? 'active' : '' }}">Dashboard</a>
     <a href="{{ route('admin.trips.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/trips*') ? 'active' : '' }}">Trips</a>
@@ -52,4 +52,4 @@
         <div class="list-group-item list-group-item-action mt-2 font-weight-bold">Pages</div>
     @endif
     <a href="{{ route('admin.static-pages.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/static-pages*') ? 'active' : '' }}">Static Pages</a>
-</div>
+</nav>

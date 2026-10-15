@@ -36,6 +36,6 @@
             </tbody>
         </table>
     </div>
-    {{ $vehicleNames->links() }}
+    {{ $vehicleNames->links('pagination::bootstrap-5') }}
 </div>
 @endsection

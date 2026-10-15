@@ -26,6 +26,6 @@
             </tbody>
         </table>
     </div>
-    {{ $countries->links() }}
+    {{ $countries->links('pagination::bootstrap-5') }}
 </div>
 @endsection

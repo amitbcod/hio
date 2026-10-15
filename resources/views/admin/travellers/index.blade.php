@@ -39,6 +39,6 @@
         </tbody>
     </table>
 
-    {{ $travellers->links() }}
+    {{ $travellers->links('pagination::bootstrap-5') }}
 </div>
 @endsection

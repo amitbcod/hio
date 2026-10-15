@@ -81,7 +81,7 @@
 
                     {{-- Pagination --}}
                     <div style="margin-top:20px;">
-                        {{ $activities->links() }}
+                        {{ $activities->links('pagination::bootstrap-5') }}
                     </div>
                 @else
                     {{-- Empty State --}}

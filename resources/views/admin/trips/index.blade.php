@@ -407,7 +407,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-3">{{ $trips->links() }}</div>
+                    <div class="mt-3">{{ $trips->links('pagination::bootstrap-5') }}</div>
                 </div>
             </div>
         </div>

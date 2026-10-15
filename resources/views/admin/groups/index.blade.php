@@ -55,7 +55,7 @@
     </div>
 
     <div class="mt-3">
-        {{ $groups->links() }}
+        {{ $groups->links('pagination::bootstrap-5') }}
     </div>
 </div>
 @endsection

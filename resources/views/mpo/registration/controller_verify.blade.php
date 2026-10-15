@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.mpo-auth')
 
 @section('content')
 <div class="col-md-8 offset-md-2">

@@ -261,7 +261,7 @@
                     {{-- Pagination --}}
                     @if($inventoryAllotments->hasPages())
                     <div style="margin-top:16px;text-align:center;">
-                        {{ $inventoryAllotments->links() }}
+                        {{ $inventoryAllotments->links('pagination::bootstrap-5') }}
                     </div>
                     @endif
                 </div>

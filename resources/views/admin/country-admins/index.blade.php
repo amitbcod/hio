@@ -25,6 +25,6 @@
             </tbody>
         </table>
     </div>
-    {{ $administrators->links() }}
+    {{ $administrators->links('pagination::bootstrap-5') }}
 </div>
 @endsection

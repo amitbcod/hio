@@ -253,7 +253,7 @@
                     {{-- Pagination --}}
                     @if($promotions->hasPages())
                     <div style="margin-top:16px;text-align:center;">
-                        {{ $promotions->links() }}
+                        {{ $promotions->links('pagination::bootstrap-5') }}
                     </div>
                     @endif
                 </div>

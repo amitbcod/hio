@@ -163,7 +163,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="mt-3">{{ $recentOrders->links() }}</div>
+        <div class="mt-3">{{ $recentOrders->links('pagination::bootstrap-5') }}</div>
     </section>
 </div>
 @endsection
