@@ -15,7 +15,7 @@
                 9 => ['name' => 'Pricing', 'field' => 'step9_pricing'],
                 10 => ['name' => 'Allotment', 'field' => 'step10_inventory_allotment'],
                 11 => ['name' => 'Promotions', 'field' => 'step11_promotions_offers'],
-                12 => ['name' => 'SEO & Social', 'field' => 'step12_review'],
+                12 => ['name' => 'SEO - Social', 'field' => 'step12_review'],
                 13 => ['name' => 'Publish', 'field' => 'step13_publish'],
             ];
             $currentStep = isset($currentStep) ? $currentStep : null;
