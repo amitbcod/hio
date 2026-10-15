@@ -43,8 +43,9 @@
 
                         {{-- Step Header --}}
                         <div style="background: #19b5b5; color: #fff; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-weight: bold;">
-                            Step 1: Accommodation Basics
+                            Accommodation Basics
                         </div>
+                        <p >Providing basic property information</p>
 
                         {{-- Alerts --}}
                         @if(session('success'))
@@ -73,18 +74,9 @@
                                 @enderror
                             </div>
                             <div class="col-md-6">
-                                <label style="font-weight: 600; margin-bottom: 8px; display: block;">Property Name (French)</label>
-                                <input type="text" name="property_name_fr" class="form-control"
-                                    value="{{ old('property_name_fr', $accommodation->property_name_fr ?? '') }}"
-                                    placeholder="e.g., Résidence Plage du Soleil">
-                                @error('property_name_fr')
-                                    <small style="color: #dc3545;">{{ $message }}</small>
-                                @enderror
-                            </div>
-                            <div class="col-md-6">
                                 <label style="font-weight: 600; margin-bottom: 8px; display: block;">Property Type *</label>
                                 <select name="property_type" class="form-control" required>
-                                    <option value="">Select Property Type</option>
+                                    <option value="">Select User Property type list</option>
                                     @foreach(\App\Models\Accommodation::TYPES as $type)
                                         <option value="{{ $type }}" {{ old('property_type', $accommodation->property_type ?? '') === $type ? 'selected' : '' }}>
                                             {{ $type }}
@@ -158,7 +150,7 @@
                             <div class="col-md-6">
                                 <label style="font-weight: 600; margin-bottom: 8px; display: block;">Region</label>
                                 <select name="region" class="form-control">
-                                    <option value="">Select Region</option>
+                                    <option value="">Select User Region list</option>
                                     @foreach(\App\Models\Region::orderBy('name')->pluck('name') as $regionName)
                                         <option value="{{ $regionName }}" {{ old('region', $accommodation->region ?? '') === $regionName ? 'selected' : '' }}>{{ $regionName }}</option>
                                     @endforeach
@@ -187,7 +179,7 @@
                                 <label style="font-weight: 600; margin-bottom: 8px; display: block;">Postal Code</label>
                                 <input type="text" name="postal_code" class="form-control"
                                     value="{{ old('postal_code', $accommodation->postal_code ?? '') }}"
-                                    placeholder="ZIP/Postal code">
+                                    placeholder="e.g. 77725">
                             </div>
                         </div>
 
@@ -197,13 +189,13 @@
                                 <label style="font-weight: 600; margin-bottom: 8px; display: block;">Latitude</label>
                                 <input type="number" name="latitude" class="form-control" step="0.00000001"
                                     value="{{ old('latitude', $accommodation->latitude ?? '') }}"
-                                    placeholder="-20.1609">
+                                    placeholder="e.g. -20.5470224">
                             </div>
                             <div class="col-md-6">
                                 <label style="font-weight: 600; margin-bottom: 8px; display: block;">Longitude</label>
                                 <input type="number" name="longitude" class="form-control" step="0.00000001"
                                     value="{{ old('longitude', $accommodation->longitude ?? '') }}"
-                                    placeholder="57.5012">
+                                    placeholder="e.g. 57.5052759,8.38z">
                             </div>
                         </div>
 
@@ -218,10 +210,22 @@
                         <div class="row mb-4">
                             <div class="col-md-12">
                                 <label style="font-weight: 600; margin-bottom: 8px; display: block;">Legal Holder Name</label>
+                                <div class="form-check mt-2">
+                                    <input type="hidden" name="property_owned_by_operator" value="0">
+                                    <input type="checkbox" name="property_owned_by_operator" value="1" class="form-check-input" id="property_owned_by_operator"
+                                        {{ old('property_owned_by_operator', $accommodation->property_owned_by_operator ?? false) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="property_owned_by_operator">This property is owned by Operator.</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="hidden" name="has_legal_business_identity" value="0">
+                                    <input type="checkbox" name="has_legal_business_identity" value="1" class="form-check-input" id="has_legal_business_identity"
+                                        {{ old('has_legal_business_identity', $accommodation->has_legal_business_identity ?? false) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="has_legal_business_identity">This property has its own legal business identity.</label>
+                                </div>
                                 <input type="text" name="legal_holder_name" class="form-control"
                                     value="{{ old('legal_holder_name', $accommodation->legal_holder_name ?? $operator->business_legal_name) }}"
-                                    placeholder="Leave empty to use business legal name">
-                                <small style="color: #999;">May differ from operator. Used for tax and legal documents.</small>
+                                    placeholder="Enter business´ legal name">
+                                <small style="color: #999;">Used for tax and legal documents.</small>
                             </div>
                         </div>
 
@@ -231,8 +235,8 @@
                                 <select name="legal_holder_id_type" class="form-control">
                                     <option value="">Select ID Type</option>
                                     <option value="BRN" {{ old('legal_holder_id_type', $accommodation->legal_holder_id_type ?? '') === 'BRN' ? 'selected' : '' }}>Business Registration Number</option>
-                                    <option value="NIC" {{ old('legal_holder_id_type', $accommodation->legal_holder_id_type ?? '') === 'NIC' ? 'selected' : '' }}>National ID Card</option>
-                                    <option value="Passport" {{ old('legal_holder_id_type', $accommodation->legal_holder_id_type ?? '') === 'Passport' ? 'selected' : '' }}>Passport</option>
+                                    <option value="NIC" {{ old('legal_holder_id_type', $accommodation->legal_holder_id_type ?? '') === 'NIC' ? 'selected' : '' }}>Tourism License Number</option>
+                                    <option value="Passport" {{ old('legal_holder_id_type', $accommodation->legal_holder_id_type ?? '') === 'Passport' ? 'selected' : '' }}>Tan Number</option>
                                 </select>
                             </div>
                             <div class="col-md-6">

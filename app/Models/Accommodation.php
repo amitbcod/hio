@@ -29,6 +29,8 @@ class Accommodation extends Model
     public $timestamps = true;
     
     protected $casts = [
+        'property_owned_by_operator' => 'boolean',
+        'has_legal_business_identity' => 'boolean',
         'submitted_for_approval_at' => 'datetime',
         'approved_at' => 'datetime',
         'published_at' => 'datetime',
