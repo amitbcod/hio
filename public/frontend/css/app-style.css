@@ -707,6 +707,14 @@ code {
     /* display: none !important */
 }
 
+#sidebar ul > li {
+    padding:0px 0px 5px 20px !important
+}
+
+#sidebar ul > li > a {
+    background: transparent !important;
+    font-weight: 400 !important;
+}
 
 
 
