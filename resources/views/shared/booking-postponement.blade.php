@@ -5,7 +5,8 @@
         || $errors->has('new_time')
         || $errors->has('new_time_slot_id')
         || $errors->has('reason');
-    $isPostponementPanelOpen = session()->has('success')
+    $isPostponementPanelOpen = ($isAdmin && session()->has('success'))
+        || (!$isAdmin && session('success') === __('booking_postponement.success'))
         || ($hasPostponementErrors && collect($postponementActions)
             ->contains(fn ($action) => old('expected_schedule') === $action['expected_schedule']));
 @endphp
@@ -20,7 +21,7 @@
     </button>
     <div id="{{ $postponementPanelId }}" class="card mt-3 shadow-sm border-0" data-postponement-panel @if(!$isPostponementPanelOpen) hidden @endif>
         <div class="card-body">
-            @if(session('success'))
+            @if($isAdmin && session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
             @error('schedule')

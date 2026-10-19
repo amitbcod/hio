@@ -700,6 +700,7 @@
     "booking.transport_details": "Détails du transport",
     "booking.payment_pending_detail": "Votre paiement est en cours de traitement. Nous mettrons à jour votre réservation une fois la confirmation reçue.",
     "booking.transport_pickup_date": "Date de ramassage",
+    "booking_postponement.pickup": "Date de prise en charge reportée",
     "booking.transport_pickup_time": "Heure de ramassage",
     "booking.transport_return_date": "Date de retour",
     "booking.transport_return_time": "Heure de retour",

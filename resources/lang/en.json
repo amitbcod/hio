@@ -758,7 +758,7 @@
     "booking_postponement.activity": "Activity",
     "booking_postponement.multiple_participant_slots": "Multiple participant time slots",
     "booking_postponement.participant_slot_missing": "A participant time slot is missing",
-    "booking_postponement.pickup": "Pickup",
+    "booking_postponement.pickup": "Postponement Pickup Date",
     "booking_postponement.return": "Return",
     "booking_postponement.success": "Booking schedule postponed successfully.",
     "booking_postponement.user_number": "User #:id",

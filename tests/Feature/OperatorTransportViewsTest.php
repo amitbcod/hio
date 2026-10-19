@@ -83,6 +83,37 @@ class OperatorTransportViewsTest extends TestCase
         $this->assertStringContainsString('Basic details', $html);
     }
 
+    public function test_postponement_partial_does_not_duplicate_operator_success_flash(): void
+    {
+        session()->put('success', 'Booking status updated to Confirmed.');
+
+        $data = [
+            'booking' => new \App\Models\TransportBooking(['id' => 7]),
+            'serviceType' => 'transport',
+            'postponementActions' => [[
+                'label' => __('booking_postponement.pickup'),
+                'date' => '2026-10-20',
+                'time' => '09:00',
+                'leg' => 'pickup',
+                'can_submit' => false,
+                'active' => false,
+                'expected_schedule' => 'schedule',
+                'checkout_date' => null,
+                'checkout_time' => null,
+                'time_slot_label' => null,
+            ]],
+            'errors' => new \Illuminate\Support\ViewErrorBag(),
+        ];
+
+        $operatorHtml = view('shared.booking-postponement', $data + ['isAdmin' => false])->render();
+        $adminHtml = view('shared.booking-postponement', $data + ['isAdmin' => true])->render();
+
+        $this->assertStringNotContainsString('Booking status updated to Confirmed.', $operatorHtml);
+        $this->assertMatchesRegularExpression('/data-postponement-panel\s+hidden/', $operatorHtml);
+        $this->assertSame(1, substr_count($adminHtml, 'Booking status updated to Confirmed.'));
+        $this->assertStringContainsString('Postponement Pickup Date', $operatorHtml);
+    }
+
     public function test_operator_step2_routes_pricing_resolves_region_model(): void
     {
         if (!Schema::hasTable('regions')) {
