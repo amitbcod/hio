@@ -671,7 +671,7 @@ class TransportController extends Controller
     // Step 2: Routes & Pricing
     // ════════════════════════════════════════════════════════════════════════
 
-    private function getTransportPricingServiceDefinitions(array $regions): array
+    private function getTransportPricingServiceDefinitions(array $regions, Transport $transport): array
     {
         $regionOptions = array_values(array_unique(array_filter(array_map('trim', $regions))));
         $regionOptions = array_values(array_unique(array_merge(['Airport'], $regionOptions)));
@@ -794,7 +794,7 @@ class TransportController extends Controller
         $routes = $transport->routes()->get();
         $vehicleTypes = TransportVehicleType::activeList();
         $regionOptions = Region::orderBy('name')->pluck('name')->toArray();
-        $serviceDefinitions = $this->getTransportPricingServiceDefinitions($regionOptions);
+        $serviceDefinitions = $this->getTransportPricingServiceDefinitions($regionOptions, $transport);
 
         $serviceGroups = [];
         $savedRoutes = old('routes', []);
