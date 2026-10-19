@@ -103,6 +103,7 @@
     "home.search.passengers": "Passengers",
     "home.search.arrival_date_time": "Pick Up Date",
     "home.search.return_date_time": "Return Date",
+    "home.search.time": "Time",
     "home.search.proceed": "Proceed",
     "home.search.participants": "Participants",
     "home.search.adults_label": "Adults",

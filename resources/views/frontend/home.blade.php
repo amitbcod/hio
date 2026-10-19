@@ -231,7 +231,7 @@
                                             </div>
                                         </div>
                                         <div class="transport-field" style="flex: 1 1 120px;">
-                                            <h5>&nbsp;</h5>
+                                            <h5>{{ __('home.search.time') }}</h5>
                                             <div class="custom-picker-wrapper time-picker" style="position:relative;">
                                                     <label class="booking-input booking-input-text booking-input-time" style="">
                                                         <span class="time-value">{{ request()->query('arrival_time', '--:--') }}</span>
@@ -253,7 +253,7 @@
                                             </div>
                                         </div>
                                         <div class="transport-field" style="flex: 1 1 120px">
-                                            <h5>&nbsp;</h5>
+                                            <h5>{{ __('home.search.time') }}</h5>
                                             <div class="custom-picker-wrapper time-picker" style="position:relative;">
                                                 <label class="booking-input booking-input-text booking-input-time" style="">
                                                     <span class="time-value">{{ request()->query('return_time', '--:--') }}</span>
