@@ -10,6 +10,7 @@
     <a href="{{ route('admin.modules.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/modules*') ? 'active' : '' }}">Modules</a>
     @endunless
     <a href="{{ route('admin.operators.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/operators*') ? 'active' : '' }}">Operators</a>
+    <a href="{{ route('admin.agents.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/agents*') || request()->is('admin/agent-compliance*') ? 'active' : '' }}">Agents</a>
     <a href="{{ route('admin.travellers.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/travellers*') ? 'active' : '' }}">Travellers</a>
     
     <a href="{{ route('admin.feedback.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/feedback*') ? 'active' : '' }}">Feedback</a>

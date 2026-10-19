@@ -124,10 +124,6 @@
                             <input class="form-check-input" type="radio" name="user_type" value="MPO" {{ old('user_type') == 'MPO' ? 'checked' : '' }}>
                             <label class="form-check-label">MPO</label>
                         </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="user_type" value="Agent" {{ old('user_type') == 'Agent' ? 'checked' : '' }}>
-                            <label class="form-check-label">Agent</label>
-                        </div>
                     </div>
                     <div class="form-group mb-3">
                         <label>Business Legal Name *</label>
@@ -275,6 +271,7 @@
                 </form>
                 <div class="text-center mt-2">
                     Already have an account? <a href="{{ route('operator.login') }}">Sign in here</a>
+                    <div class="mt-2">Travel agent? <a href="{{ route('agent.register') }}">Register your agency</a></div>
                 </div>
             </div>
 

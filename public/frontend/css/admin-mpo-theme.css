@@ -381,7 +381,6 @@ body.admin-mpo-auth a:not(:where(.btn, .button, .btn-link, .list-group-item, .na
 
 .admin-mpo-content .btn,
 .admin-mpo-auth .btn {
-    min-height: 36px;
     border-radius: 4px;
     font-size: 13px;
     font-weight: 600;

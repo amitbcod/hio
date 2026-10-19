@@ -56,6 +56,14 @@ return [
             'driver' => 'session',
             'provider' => 'operator_users',
         ],
+        'agent' => [
+            'driver' => 'session',
+            'provider' => 'agents',
+        ],
+        'agent_staff' => [
+            'driver' => 'session',
+            'provider' => 'agent_staff_users',
+        ],
     ],
 
     /*
@@ -95,6 +103,14 @@ return [
         'mpos' => [
             'driver' => 'eloquent',
             'model' => App\Models\Mpo::class,
+        ],
+        'agents' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\AgentAccount::class,
+        ],
+        'agent_staff_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\AgentStaffUser::class,
         ],
     ],
 

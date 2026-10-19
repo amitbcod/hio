@@ -68,6 +68,13 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     Route::post('operators/{operator}/select', [\App\Http\Controllers\Admin\OperatorController::class, 'select'])->name('operators.select');
     Route::delete('operators/{operator}', [\App\Http\Controllers\Admin\OperatorController::class, 'destroy'])->name('operators.destroy');
 
+    Route::get('agents', [\App\Http\Controllers\Admin\AgentController::class, 'index'])->name('agents.index');
+    Route::get('agents/{agent}', [\App\Http\Controllers\Admin\AgentController::class, 'show'])->name('agents.show');
+    Route::post('agents/{agent}/approve', [\App\Http\Controllers\Admin\AgentController::class, 'approve'])->name('agents.approve');
+    Route::post('agents/{agent}/suspend', [\App\Http\Controllers\Admin\AgentController::class, 'suspend'])->name('agents.suspend');
+    Route::post('agents/{agent}/staff/{user}', [\App\Http\Controllers\Admin\AgentController::class, 'updateStaff'])->name('agents.staff.update');
+    Route::get('agent-compliance/{document}/download', [\App\Http\Controllers\Admin\AgentController::class, 'download'])->name('agents.compliance.download');
+
     // Admin travellers management
     Route::get('travellers', [\App\Http\Controllers\Admin\TravelerController::class, 'index'])->name('travellers.index');
     Route::get('travellers/{traveler}/edit', [\App\Http\Controllers\Admin\TravelerController::class, 'edit'])->name('travellers.edit');

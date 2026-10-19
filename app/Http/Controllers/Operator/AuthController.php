@@ -48,7 +48,7 @@ class AuthController extends Controller
                 $roleModel = \Spatie\Permission\Models\Role::where('name', 'Head of Department')
                     ->where('business_id', $operatorUser->business_id)
                     ->first();
-                
+
                 if ($roleModel && \Illuminate\Support\Facades\Schema::hasTable('role_module_permissions')) {
                     // Find the Users module and check if role has at least read permission
                     $usersModule = \App\Models\Module::where('slug', 'users')->orWhere('name', 'Users')->first();
@@ -57,7 +57,7 @@ class AuthController extends Controller
                             ->where('module_id', $usersModule->id)
                             ->where('can_read', true)
                             ->exists();
-                        
+
                         if (!$hasPermission) {
                             return back()->withErrors(['email' => 'Your role does not have permission to access required modules.']);
                         }
@@ -187,7 +187,7 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $rules = [
-            'user_type' => 'required|in:Operator,MPO,Agent',
+            'user_type' => 'required|in:Operator,MPO',
             'business_legal_name' => 'required',
             'country_of_operation' => 'required',
             'is_owner' => 'required|in:yes,no',
