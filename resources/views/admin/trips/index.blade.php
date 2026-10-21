@@ -252,12 +252,12 @@
                                                 @foreach($tripNextActions as $action)
                                                     <div>{{ $action['label'] ?? 'No Action Required' }}</div>
                                                     @if(!empty($action['record_id']))
-                                                        <form method="POST" action="{{ route('admin.trips.action-deadline.update', ['trip' => $trip->id, 'actionDeadline' => $action['record_id']]) }}" class="d-flex gap-1 align-items-center my-1">
+                                                        <!-- <form method="POST" action="{{ route('admin.trips.action-deadline.update', ['trip' => $trip->id, 'actionDeadline' => $action['record_id']]) }}" class="d-flex gap-1 align-items-center my-1">
                                                             @csrf
                                                             <label class="visually-hidden" for="deadline-override-{{ $action['record_id'] }}">Hours before target</label>
                                                             <input id="deadline-override-{{ $action['record_id'] }}" class="form-control form-control-sm" style="max-width:100px;" type="number" min="0" max="8760" name="override_hours" value="{{ $action['override_hours'] ?? '' }}" placeholder="Default" aria-label="Override hours before target">
-                                                            <!-- <button class="btn btn-sm btn-outline-primary" type="submit">Save deadline</button> -->
-                                                        </form>
+                                                            <button class="btn btn-sm btn-outline-primary" type="submit">Save deadline</button>
+                                                        </form> -->
                                                     @endif
                                                 @endforeach
                                             @endif
