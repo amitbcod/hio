@@ -1135,6 +1135,7 @@ class TripController extends Controller
 
         $providerName = $accommodation->property_name ?? ($activity->activity_name ?? ($transport->vehicle_display_name ?? 'Service Provider'));
         if ($isActivity) {
+            $operatorCountry = $operator->country?->name;
             if (is_numeric($activity->regions)) {
               $regionModel = \App\Models\Region::find((int) $activity->regions);
               $activityRegionValue = $regionModel?->name ?? $activity->address ?? null;
@@ -1145,19 +1146,20 @@ class TripController extends Controller
             $activity->destination ?? null,
             $activity->town ?? null,
             $activityRegionValue ?? null,
-            $operator->country ?? null,
+            $operatorCountry,
           ])), ', ');
-          $locationLabel = $activity->town ?: ($activityRegionValue ?: ($operator->country ?? 'Mauritius'));
+          $locationLabel = $activity->town ?: ($activityRegionValue ?: ($operatorCountry ?? 'Mauritius'));
             $emergencyContact = $activity->emergency_contact_phone ?? $operator->emergency_contact_phone ?? null;
             $receptionContact = $activity->reception_contact_phone ?? $operator->reception_contact_phone ?? null;
         } elseif ($isTransport) {
+            $operatorCountry = $operator->country?->name;
             $providerAddress = trim(implode(', ', array_filter([
                 $operator->address_line_1 ?? null,
                 $operator->address_line_2 ?? null,
                 $operator->city ?? null,
-                $operator->country ?? null,
+                $operatorCountry,
             ])), ', ');
-            $locationLabel = $booking->route_to ?: ($operator->country ?? 'Mauritius');
+            $locationLabel = $booking->route_to ?: ($operatorCountry ?? 'Mauritius');
             $emergencyContact = $operator->emergency_contact_phone ?? $operator->phone ?? null;
             $receptionContact = $operator->reception_contact_phone ?? $operator->mobile ?? null;
         } else {
@@ -1207,7 +1209,7 @@ class TripController extends Controller
             ? (($booking->total_passengers !== null ? (int) $booking->total_passengers . ' Passengers' : ((($booking->adults ?? 0) + ($booking->children ?? 0)) . ' Passengers')))
             : ($adultCount !== null ? (int) $adultCount . ' Adults' . ($childCount ? ' • ' . (int) $childCount . ' Children' : '') : '-');
         $mealPlan = $isTransport
-            ? (($booking->route_from || $booking->route_to) ? trim(($booking->route_from ?? '') . ' → ' . ($booking->route_to ?? '')) : 'N/A')
+            ? \App\Support\TransportVoucherDisplay::routeLabel($booking->route_from, $booking->route_to)
             : ($booking->meal_plan ?? $booking->package_name ?? 'N/A');
         $vehicleRegistration = $isTransport ? ($transport->registration_number ?? 'N/A') : 'N/A';
         $seatingCapacity = $isTransport ? ($transport->seating_capacity ? (int)$transport->seating_capacity . ' Seats' : 'N/A') : 'N/A';
