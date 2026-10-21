@@ -11,6 +11,7 @@ use App\Models\TripActionDeadline;
 use Carbon\CarbonImmutable;
 use DateTimeZone;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class TripOperationsOverview
 {
@@ -20,15 +21,32 @@ class TripOperationsOverview
     {
         $timeZone = config('app.timezone', 'UTC');
         $candidates = $this->scheduledServices($trip);
-        $nextService = collect($candidates)
+        $eligibleServices = collect($candidates)
             ->filter(function (array $service): bool {
                 $now = CarbonImmutable::now($service['time_zone']);
 
                 return $service['date_only']
                     ? $service['at']->toDateString() >= $now->toDateString()
                     : $service['at']->greaterThanOrEqualTo($now);
-            })
-            ->sortBy(fn (array $service) => $service['at']->getTimestamp())
+            });
+        $nextService = $eligibleServices
+            ->sortBy(function (array $service, int $index) use ($eligibleServices): array {
+                $sortAt = $service['next_service_at'] ?? $service['at'];
+                if (
+                    $service['type'] === 'accommodation'
+                    && $service['date_only']
+                    && ! isset($service['next_service_at'])
+                    && $this->hasSameDayAirportPickup($service, $eligibleServices)
+                ) {
+                    $sortAt = $sortAt->endOfDay();
+                }
+
+                return [
+                    $sortAt->getTimestamp(),
+                    $this->isAirportPickup($service) ? 0 : 1,
+                    $index,
+                ];
+            }, SORT_REGULAR)
             ->first();
         $servicesByDate = collect($candidates)
             ->sortBy(fn (array $service) => $service['at']->getTimestamp())
@@ -219,9 +237,13 @@ class TripOperationsOverview
 
             $date = $this->datePart($booking->check_in_date);
             if ($date) {
+                $checkInTime = trim((string) ($booking->accommodation?->checkin_time ?? ''));
                 $services[] = [
                     'name' => trim((string) ($booking->accommodation?->property_name ?? 'Accommodation')) . ' — Check-in',
                     'at' => CarbonImmutable::parse($date, $this->bookingTimeZone($booking))->startOfDay(),
+                    'next_service_at' => $checkInTime !== ''
+                        ? CarbonImmutable::parse($date . ' ' . $checkInTime, $this->bookingTimeZone($booking))
+                        : null,
                     'time_zone' => $this->bookingTimeZone($booking),
                     'date_only' => true,
                     'type' => 'accommodation',
@@ -263,7 +285,7 @@ class TripOperationsOverview
 
             $timeZone = $this->bookingTimeZone($booking);
             foreach ([
-                ['date' => $booking->pickup_date, 'time' => $booking->pickup_time, 'label' => $booking->service_type ?: 'Transfer', 'key' => 'pickup'],
+                ['date' => $booking->pickup_date, 'time' => $booking->pickup_time, 'label' => $this->transportServiceLabel($booking), 'key' => 'pickup'],
                 ['date' => $booking->return_date, 'time' => $booking->return_time, 'label' => 'Return Transfer', 'key' => 'return'],
             ] as $leg) {
                 $date = $this->datePart($leg['date']);
@@ -286,6 +308,66 @@ class TripOperationsOverview
         }
 
         return $services;
+    }
+
+    private function hasSameDayAirportPickup(array $accommodation, Collection $services): bool
+    {
+        $accommodationDate = $accommodation['at']->setTimezone($accommodation['time_zone'])->toDateString();
+
+        return $services->contains(function (array $service) use ($accommodationDate, $accommodation): bool {
+            return $this->isAirportPickup($service)
+                && $service['at']->setTimezone($service['time_zone'])->toDateString() === $accommodationDate;
+        });
+    }
+
+    private function isAirportPickup(array $service): bool
+    {
+        if (
+            $service['type'] !== 'transport'
+            || ! str_ends_with($service['key'], ':pickup')
+        ) {
+            return false;
+        }
+
+        return $this->isAirportTransferBooking($service['booking']);
+    }
+
+    private function isAirportTransferBooking(TransportBooking $booking): bool
+    {
+        $serviceType = $this->normalizedTransportServiceType($booking->service_type ?? null);
+        if ($serviceType !== '' && $serviceType !== 'airport_transfer') {
+            return false;
+        }
+
+        $origin = strtolower(trim((string) ($booking->route_from ?: $booking->pickup_address)));
+        $destination = strtolower(trim((string) ($booking->route_to ?: $booking->dropoff_address)));
+
+        return str_contains($origin, 'airport')
+            && ! str_contains($destination, 'airport');
+    }
+
+    private function transportServiceLabel(TransportBooking $booking): string
+    {
+        $serviceType = $this->normalizedTransportServiceType($booking->service_type);
+        if ($serviceType === '' && $this->isAirportTransferBooking($booking)) {
+            return 'Airport Transfer';
+        }
+
+        return match ($serviceType) {
+            'airport_transfer' => 'Airport Transfer',
+            'activity_transfer' => 'Activity Transfer',
+            'hotel_transfer' => 'Hotel Transfer',
+            'full_day_sightseeing' => 'Full Day Sightseeing',
+            'half_day_sightseeing' => 'Half Day Sightseeing',
+            default => $serviceType !== ''
+                ? ucwords(str_replace(['_', '-'], ' ', $serviceType))
+                : 'Transfer',
+        };
+    }
+
+    private function normalizedTransportServiceType(?string $serviceType): string
+    {
+        return str_replace([' ', '-'], '_', strtolower(trim((string) $serviceType)));
     }
 
     private function operationalActions(Trip $trip, array $services, bool $admin): array

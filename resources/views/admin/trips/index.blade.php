@@ -144,6 +144,7 @@
                                             @endphp
                                             @if(in_array($resolvedTripType, ['Package Trip', 'Group Trip'], true))
                                                 <div><strong>{{ $trip->title ?: 'Trip #' . $trip->id }}</strong></div>
+                                                <div class="small text-muted mt-1">Trip #{{ $trip->id }}</div>
                                                 <div class="small text-muted mt-1">{{ $resolvedTripType }}</div>
                                                 <div class="small text-muted mt-1">{{ $tripDateRange }}</div>
                                             @else

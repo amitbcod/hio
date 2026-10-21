@@ -140,6 +140,7 @@
                                     @endphp
                                     @if(in_array($resolvedTripType, ['Package Trip', 'Group Trip'], true))
                                         <div style="font-weight:700; color:#0f172a;">{{ $tripDisplayName ?: ($trip->title ?: 'Trip #' . $trip->id) }}</div>
+                                        <div style="margin-top:6px; color:#64748b; font-size:12px;">Trip #{{ $trip->id }}</div>
                                         <div style="margin-top:6px; color:#334155; font-size:12px;">{{ $resolvedTripType }}</div>
                                         <div style="margin-top:6px; color:#64748b; font-size:12px;">{{ $tripDateRange }}</div>
                                     @else

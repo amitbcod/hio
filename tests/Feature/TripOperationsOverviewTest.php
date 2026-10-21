@@ -436,6 +436,89 @@ class TripOperationsOverviewTest extends TestCase
         $this->assertSame('14 Oct 2026 · Time not specified', $result['next_service']['when']);
     }
 
+    public function test_airport_transfer_precedes_accommodation_when_its_pickup_is_before_check_in(): void
+    {
+        Carbon::setTestNow('2026-10-19 08:00:00');
+        $trip = $this->trip();
+        $accommodation = $this->accommodationBooking(31, '2026-10-20', 'Confirmed');
+        $accommodation->accommodation->setAttribute('checkin_time', '14:00:00');
+        $transport = $this->transportBooking(32, '2026-10-20', '09:00:00', 'Confirmed', 'airport_transfer');
+        $trip->setRelation('accommodationBookings', new EloquentCollection([$accommodation]));
+        $trip->setRelation('activityBookings', new EloquentCollection());
+        $trip->setRelation('transportBookings', new EloquentCollection([$transport]));
+
+        $result = $this->overview->apply($trip, $this->defaultIntervals(), false);
+
+        $this->assertSame('Airport Transfer — Airport to Hotel', $result['next_service']['name']);
+    }
+
+    public function test_accommodation_precedes_airport_transfer_when_check_in_is_earlier(): void
+    {
+        Carbon::setTestNow('2026-10-19 08:00:00');
+        $trip = $this->trip();
+        $accommodation = $this->accommodationBooking(33, '2026-10-20', 'Confirmed');
+        $accommodation->accommodation->setAttribute('checkin_time', '10:00:00');
+        $transport = $this->transportBooking(34, '2026-10-20', '18:00:00', 'Confirmed', 'airport_transfer');
+        $trip->setRelation('accommodationBookings', new EloquentCollection([$accommodation]));
+        $trip->setRelation('activityBookings', new EloquentCollection());
+        $trip->setRelation('transportBookings', new EloquentCollection([$transport]));
+
+        $result = $this->overview->apply($trip, $this->defaultIntervals(), false);
+
+        $this->assertSame('Test Lodge — Check-in', $result['next_service']['name']);
+    }
+
+    public function test_same_day_airport_transfer_precedes_accommodation_with_unspecified_check_in_time(): void
+    {
+        Carbon::setTestNow('2026-10-19 08:00:00');
+        $trip = $this->trip();
+        $accommodation = $this->accommodationBooking(35, '2026-10-20', 'Confirmed');
+        $transport = $this->transportBooking(36, '2026-10-20', '09:00:00', 'Confirmed', 'airport_transfer');
+        $trip->setRelation('accommodationBookings', new EloquentCollection([$accommodation]));
+        $trip->setRelation('activityBookings', new EloquentCollection());
+        $trip->setRelation('transportBookings', new EloquentCollection([$transport]));
+
+        $result = $this->overview->apply($trip, $this->defaultIntervals(), false);
+
+        $this->assertSame('Airport Transfer — Airport to Hotel', $result['next_service']['name']);
+    }
+
+    public function test_airport_route_without_transport_service_type_precedes_same_day_package_accommodation(): void
+    {
+        Carbon::setTestNow('2026-10-29 08:00:00');
+        $trip = $this->trip();
+        $accommodation = $this->accommodationBooking(39, '2026-10-30', 'Confirmed');
+        $accommodation->accommodation->setAttribute('property_name', 'Amit Resort');
+        $transport = $this->transportBooking(40, '2026-10-30', '09:00:00', 'Confirmed');
+        $transport->setAttribute('route_from', 'Airport');
+        $transport->setAttribute('route_to', 'Hotel');
+        $trip->setRelation('accommodationBookings', new EloquentCollection([$accommodation]));
+        $trip->setRelation('activityBookings', new EloquentCollection());
+        $trip->setRelation('transportBookings', new EloquentCollection([$transport]));
+
+        $result = $this->overview->apply($trip, $this->defaultIntervals(), false);
+
+        $this->assertSame('Airport Transfer — Airport to Hotel', $result['next_service']['name']);
+        $this->assertSame('Tomorrow, 09:00 · UTC+00:00', $result['next_service']['when']);
+    }
+
+    public function test_hotel_to_airport_transfer_does_not_receive_arrival_transfer_priority(): void
+    {
+        Carbon::setTestNow('2026-10-19 08:00:00');
+        $trip = $this->trip();
+        $accommodation = $this->accommodationBooking(37, '2026-10-20', 'Confirmed');
+        $transport = $this->transportBooking(38, '2026-10-20', '09:00:00', 'Confirmed', 'airport_transfer');
+        $transport->setAttribute('route_from', 'Hotel');
+        $transport->setAttribute('route_to', 'Airport');
+        $trip->setRelation('accommodationBookings', new EloquentCollection([$accommodation]));
+        $trip->setRelation('activityBookings', new EloquentCollection());
+        $trip->setRelation('transportBookings', new EloquentCollection([$transport]));
+
+        $result = $this->overview->apply($trip, $this->defaultIntervals(), false);
+
+        $this->assertSame('Test Lodge — Check-in', $result['next_service']['name']);
+    }
+
     public function test_driver_license_deadline_uses_the_assigned_drivers_real_expiry_date(): void
     {
         Carbon::setTestNow('2026-10-13 00:00:00');
@@ -717,13 +800,20 @@ class TripOperationsOverviewTest extends TestCase
         return $booking;
     }
 
-    private function transportBooking(int $id, string $date, string $time, string $status): TransportBooking
+    private function transportBooking(
+        int $id,
+        string $date,
+        string $time,
+        string $status,
+        ?string $serviceType = null
+    ): TransportBooking
     {
         $booking = new TransportBooking();
         $booking->forceFill([
             'id' => $id,
             'pickup_date' => $date,
             'pickup_time' => $time,
+            'service_type' => $serviceType,
             'booking_status' => $status,
             'total_passengers' => 1,
             'route_from' => 'Airport',
