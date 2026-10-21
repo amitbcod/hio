@@ -176,6 +176,9 @@
                                 </td>
                                 <td style="padding:14px; vertical-align:top;">
                                     <div style="font-size:12px; margin-bottom:4px;"><strong>Reference:</strong> {{ $tripRef ?: 'N/A' }}</div>
+                                    @if($trip->listing_booking_reference?->created_at)
+                                        <div style="font-size:12px; color:#64748b; margin-bottom:4px;">{{ $trip->listing_booking_reference->created_at->timezone(config('app.timezone'))->format('d M Y, H:i') }}</div>
+                                    @endif
                                     <div style="font-size:12px; color:#64748b; margin-bottom:4px;">{{ $trip->common_booking_ref_count }} Booking Refs · {{ $trip->common_booking_bli_count }} BLIs</div>
                                     <div style="display:flex; flex-wrap:wrap; gap:4px;">
                                         @forelse($trip->booking_status_counts as $statusCount)

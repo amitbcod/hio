@@ -158,7 +158,8 @@ class TripController extends Controller
             $trip->operations_overview = $operationsOverview->apply($trip, $deadlineIntervals, false);
             $trip->next_actions = $trip->operations_overview['actions'];
             $trip->due_actions = $trip->operations_overview['due_actions'];
-            $trip->common_booking_reference = $this->resolvePrimaryBookingReference($trip);
+            $trip->listing_booking_reference = $tripListingFilters->resolvePrimaryBookingReference($trip);
+            $trip->common_booking_reference = $trip->listing_booking_reference?->booking_ref_code;
             foreach ([
                 'accommodation' => $trip->accommodationBookings,
                 'activity' => $trip->activityBookings,
@@ -347,26 +348,6 @@ class TripController extends Controller
         }
 
         return 'pending';
-    }
-
-    private function resolvePrimaryBookingReference(Trip $trip): ?string
-    {
-        $commonReference = $trip->bookingRefs
-            ->pluck('booking_ref_code')
-            ->first(fn ($reference) => is_string($reference) && trim($reference) !== '');
-
-        if ($commonReference) {
-            return $commonReference;
-        }
-
-        $references = collect()
-            ->merge($trip->accommodationBookings->map(fn ($booking) => $booking->bookingRef?->booking_ref_code))
-            ->merge($trip->activityBookings->map(fn ($booking) => $booking->bookingRef?->booking_ref_code))
-            ->merge($trip->transportBookings->map(fn ($booking) => $booking->bookingRef?->booking_ref_code))
-            ->filter(fn ($reference) => is_string($reference) && trim($reference) !== '')
-            ->unique();
-
-        return $references->first() ?: null;
     }
 
 }

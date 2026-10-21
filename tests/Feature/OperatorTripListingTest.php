@@ -264,6 +264,8 @@ class OperatorTripListingTest extends TestCase
 
     public function test_operator_trip_listing_only_shows_trips_with_their_own_services(): void
     {
+        config(['app.timezone' => 'UTC']);
+
         DB::table('businesses')->insert([
             ['id' => 100, 'status' => 'active', 'created_at' => now(), 'updated_at' => now()],
             ['id' => 200, 'status' => 'active', 'created_at' => now(), 'updated_at' => now()],
@@ -291,7 +293,13 @@ class OperatorTripListingTest extends TestCase
             ['name' => 'David Jones', 'relationship' => 'guest'],
         ]);
 
-        $visibleRef = BookingRef::create(['id' => 1, 'trip_id' => 1, 'booking_ref_code' => 'BR-OP-001']);
+        $visibleRef = BookingRef::create([
+            'id' => 1,
+            'trip_id' => 1,
+            'booking_ref_code' => 'BR-OP-001',
+            'created_at' => '2026-10-20 14:35:22',
+            'updated_at' => '2026-10-20 14:35:22',
+        ]);
         $mixedRef = BookingRef::create(['id' => 2, 'trip_id' => 3, 'booking_ref_code' => 'BR-OP-003']);
 
         AccommodationBooking::create(['id' => 1, 'trip_id' => 1, 'booking_ref_id' => $visibleRef->id, 'accommodation_id' => 1, 'room_id' => $room->id, 'booking_reference' => 'ACC-001', 'booking_status' => 'Confirmed', 'check_in_date' => '2026-10-01', 'check_out_date' => '2026-10-03', 'rooms_booked' => 2, 'adults' => 2, 'children' => 1, 'total_amount' => 120.00]);
@@ -438,7 +446,8 @@ class OperatorTripListingTest extends TestCase
         $response->assertDontSee('Cancelled: 1');
         $response->assertSee('>Booking</th>', false);
         $response->assertSee('Pending</span>', false);
-        $response->assertSee('Travel Party Size: 2');
+        $response->assertSee('Travel Party Size: 3');
+        $response->assertSee('20 Oct 2026, 14:35');
         $response->assertSee('Booking Authority / Account Holder:');
         $response->assertSee('Travellers:');
         $response->assertSee('John Smith');

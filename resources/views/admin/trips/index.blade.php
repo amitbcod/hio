@@ -183,6 +183,9 @@
                                                 <strong>References:</strong>
                                                 {{ !empty($bookingReferenceCodes) ? implode(', ', $bookingReferenceCodes) : ($allServiceBookings->count() ? $allServiceBookings->count() : 0) }}
                                             </div>
+                                            @if($trip->listing_booking_reference?->created_at)
+                                                <div class="small text-muted mb-1">{{ $trip->listing_booking_reference->created_at->timezone(config('app.timezone'))->format('d M Y, H:i') }}</div>
+                                            @endif
                                             <div class="small text-muted mb-1">{{ $trip->common_booking_ref_count }} Booking Refs · {{ $trip->common_booking_bli_count }} BLIs</div>
                                             <div style="display:flex; flex-wrap:wrap; gap:4px;">
                                                 @forelse($trip->booking_status_counts as $statusCount)

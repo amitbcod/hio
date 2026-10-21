@@ -80,6 +80,7 @@ class TripController extends Controller
             $travellerDisplay = $tripListingFilters->resolveTravellerDisplay($trip);
             $trip->traveller_display_name = $travellerDisplay['name'];
             $trip->travel_party_size = $travellerDisplay['party_size'];
+            $trip->listing_booking_reference = $tripListingFilters->resolvePrimaryBookingReference($trip);
             $trip->payment_status = $this->resolvePaymentStatus($trip);
             $trip->payment_status_display = $tripListingFilters->resolvePaymentStatusDisplay($trip);
             $trip->payment_status_badges = $tripListingFilters->paymentStatusBadges($trip->payment_status_display);

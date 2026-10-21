@@ -352,11 +352,63 @@ class TripListingFilters
             ? $trip->travellers
             : $trip->travellers()->get();
         $accountHolderName = trim((string) ($trip->traveler?->full_name ?? ''));
+        $servicePartySizes = collect();
+
+        foreach (['accommodationBookings', 'activityBookings', 'transportBookings'] as $relationName) {
+            if (!$trip->relationLoaded($relationName)) {
+                continue;
+            }
+
+            foreach ($trip->getRelation($relationName) as $booking) {
+                $servicePartySizes->push(
+                    max(0, (int) ($booking->adults ?? 0))
+                    + max(0, (int) ($booking->children ?? 0))
+                );
+            }
+        }
+
+        $bookedPartySize = $servicePartySizes->filter(fn (int $size) => $size > 0)->max();
 
         return [
             'name' => $accountHolderName !== '' ? $accountHolderName : 'Unknown Customer',
-            'party_size' => $travellers->unique(fn ($traveller) => $traveller->getKey())->count(),
+            'party_size' => $bookedPartySize ?? $travellers->unique(fn ($traveller) => $traveller->getKey())->count(),
         ];
+    }
+
+    public function resolvePrimaryBookingReference(Trip $trip): ?BookingRef
+    {
+        $bookingRefs = $trip->relationLoaded('bookingRefs')
+            ? $trip->bookingRefs
+            : $trip->bookingRefs()->get();
+        $primaryBookingRef = $bookingRefs->first(
+            fn (BookingRef $bookingRef) => is_string($bookingRef->booking_ref_code)
+                && trim($bookingRef->booking_ref_code) !== ''
+        );
+
+        if ($primaryBookingRef) {
+            return $primaryBookingRef;
+        }
+
+        foreach (['accommodationBookings', 'activityBookings', 'transportBookings'] as $relationName) {
+            if (!$trip->relationLoaded($relationName)) {
+                continue;
+            }
+
+            foreach ($trip->getRelation($relationName) as $booking) {
+                if (!$booking->relationLoaded('bookingRef')) {
+                    continue;
+                }
+
+                $bookingRef = $booking->getRelation('bookingRef');
+                if ($bookingRef instanceof BookingRef
+                    && is_string($bookingRef->booking_ref_code)
+                    && trim($bookingRef->booking_ref_code) !== '') {
+                    return $bookingRef;
+                }
+            }
+        }
+
+        return null;
     }
 
     public function resolveServiceParticipantNames(Trip $trip, \Illuminate\Database\Eloquent\Model $serviceBooking, string $serviceType): array

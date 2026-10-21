@@ -418,7 +418,14 @@ class AdminTripListingTest extends TestCase
 
     public function test_admin_trip_listing_shows_grouped_service_bookings_and_links(): void
     {
+        config(['app.timezone' => 'UTC']);
         $trip = Trip::firstOrFail();
+        DB::table('booking_refs')
+            ->where('booking_ref_code', 'BR-202-20261001-0001')
+            ->update([
+                'created_at' => '2026-10-20 14:35:22',
+                'updated_at' => '2026-10-20 14:35:22',
+            ]);
         \App\Models\BookingGuest::create([
             'booking_id' => 1,
             'booking_type' => 'accommodation',
@@ -468,7 +475,8 @@ class AdminTripListingTest extends TestCase
         $response->assertDontSee('aria-controls="additional-due-actions-' . $trip->id . '"', false);
         $response->assertSee('Trip 202');
         $response->assertSee('Group Trip');
-        $response->assertSee('Travel Party Size: 2');
+        $response->assertSee('Travel Party Size: 3');
+        $response->assertSee('20 Oct 2026, 14:35');
         $response->assertSee('Booking Authority / Account Holder:');
         $response->assertSee('Travellers:');
         $response->assertSee('Jane Doe');
