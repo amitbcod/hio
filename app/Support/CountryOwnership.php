@@ -145,6 +145,9 @@ class CountryOwnership
         $errors = [];
 
         foreach ($itinerary as $dayIndex => $day) {
+            if (! ctype_digit((string) $dayIndex)) {
+                continue;
+            }
             if (! is_array($day)) {
                 $errors["itinerary.{$dayIndex}"] = 'Each itinerary day must be a valid object.';
                 continue;

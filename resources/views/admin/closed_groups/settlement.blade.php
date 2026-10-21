@@ -5,7 +5,7 @@
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
         <div>
             <h2 class="mb-1">Bank Transfer Settlement</h2>
-            <p class="text-muted mb-0">Review admin-created group invoices and record transfer verification.</p>
+            <p class="text-muted mb-0">Review Agent bookings and record bank-transfer verification.</p>
         </div>
         <a href="{{ route('admin.closed-groups.book') }}" class="btn btn-outline-secondary">Closed Group Booking</a>
     </div>
@@ -38,6 +38,8 @@
             $settlementStatus = $payment->settlement_status ?: 'pending_verification';
             $statusLabel = $settlementStatus === 'verified_settled' ? 'VERIFIED & SETTLED' : 'PENDING VERIFICATION';
             $traveller = $order['traveller'];
+            $agentReviewPending = $order['booking']->agent_account_id
+                && $order['booking']->agent_verification_status !== 'verified';
         @endphp
         <section class="bg-white border rounded p-4 mb-4">
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 border-bottom pb-3 mb-3">
@@ -59,11 +61,46 @@
                 <dd class="col-sm-8">Bank Transfer</dd>
                 <dt class="col-sm-4">Booking Status</dt>
                 <dd class="col-sm-8">{{ ucfirst($order['booking']->status ?? 'pending') }}</dd>
+                @if($order['agent'])
+                    <dt class="col-sm-4">Created by Agency</dt>
+                    <dd class="col-sm-8">{{ $order['agent']->agency_name }}{{ $order['agent_staff'] ? ' · ' . $order['agent_staff']->full_name : '' }}</dd>
+                    <dt class="col-sm-4">Agent Review</dt>
+                    <dd class="col-sm-8">{{ strtoupper(str_replace('_', ' ', $order['booking']->agent_verification_status ?? 'pending_admin_verification')) }}</dd>
+                @endif
                 <dt class="col-sm-4">Payment Status</dt>
                 <dd class="col-sm-8">{{ $statusLabel }}</dd>
                 <dt class="col-sm-4">Total Amount</dt>
                 <dd class="col-sm-8 fw-bold">{{ $order['currency'] }} {{ number_format($order['total'], 2) }}</dd>
             </dl>
+
+            @if($order['agent'])
+                <div class="border rounded p-3 mb-3">
+                    <h4 class="h6 mb-2">Agent-submitted Traveller Roster</h4>
+                    <ul class="mb-0">
+                        @foreach($order['trip']?->travellers ?? [] as $rosterTraveller)
+                            <li>
+                                {{ $rosterTraveller->name }}
+                                @if($rosterTraveller->relationship === 'lead') (Responsible Traveller) @endif
+                                @if($rosterTraveller->email) · {{ $rosterTraveller->email }} @endif
+                                @if($rosterTraveller->phone) · {{ $rosterTraveller->phone }} @endif
+                                @if($rosterTraveller->relationship === 'lead' && $rosterTraveller->passport_number) · Passport: {{ $rosterTraveller->passport_number }} @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @if($agentReviewPending)
+                <div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <span>This Agent-created booking must be reviewed before payment settlement can continue.</span>
+                    <form method="POST" action="{{ route('admin.closed-groups.booking.verify-agent', $order['booking']->id) }}" onsubmit="return confirm('Approve this Agent-created group booking?')">
+                        @csrf
+                        <button type="submit" class="btn btn-success">Approve Agent Booking</button>
+                    </form>
+                </div>
+            @elseif($order['agent'])
+                <div class="alert alert-success">Agent booking approved {{ $order['booking']->agent_verified_at?->format('d/m/Y H:i') ?? '' }}.</div>
+            @endif
 
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                 <h4 class="h6 mb-0">Invoice Line Items</h4>
@@ -104,14 +141,20 @@
             @if($payment->bank_transfer_receipt_path)
                 <div class="alert alert-light border d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
-                        <strong>Receipt submitted</strong>
+                        <strong>{{ $order['agent'] ? 'Agent-submitted receipt' : 'Receipt submitted' }}</strong>
                         <div class="small text-muted">Transfer date: {{ $payment->bank_transfer_date?->format('d/m/Y') ?? 'N/A' }} · Submitted {{ $payment->submitted_at?->format('d/m/Y H:i') ?? '' }}</div>
                         @if($payment->admin_notes)<div class="small mt-1">Notes: {{ $payment->admin_notes }}</div>@endif
                     </div>
                     <a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.closed-groups.settlement.receipt', $order['booking_ref']->id) }}">Download Receipt</a>
                 </div>
+                @if($agentReviewPending)
+                    <div class="alert alert-warning mt-3 mb-0">The Agent has submitted bank-transfer proof. Approve the Agent booking above before verifying and settling the payment.</div>
+                @endif
+            @elseif($agentReviewPending)
+                <div class="alert alert-secondary mb-0">Waiting for the Agent to upload bank-transfer proof. You can approve the booking above; settlement verification will be available after proof is submitted.</div>
             @elseif($settlementStatus !== 'verified_settled')
-                <form method="POST" enctype="multipart/form-data" action="{{ route('admin.closed-groups.settlement.proof', $order['booking_ref']->id) }}" class="row g-3">
+                @if(!$order['agent'])
+                    <form method="POST" enctype="multipart/form-data" action="{{ route('admin.closed-groups.settlement.proof', $order['booking_ref']->id) }}" class="row g-3">
                     @csrf
                     <div class="col-md-4">
                         <label class="form-label" for="bank_transfer_date">Date of Transfer <span class="text-danger">*</span></label>
@@ -129,10 +172,13 @@
                     <div class="col-12">
                         <button type="submit" class="btn btn-primary">Submit Bank Transfer Proof</button>
                     </div>
-                </form>
+                    </form>
+                @else
+                    <div class="alert alert-secondary mb-0">Waiting for the Agent to upload bank-transfer proof.</div>
+                @endif
             @endif
 
-            @if($payment->bank_transfer_receipt_path && $settlementStatus !== 'verified_settled')
+            @if($payment->bank_transfer_receipt_path && $settlementStatus !== 'verified_settled' && !$agentReviewPending)
                 <form method="POST" action="{{ route('admin.closed-groups.settlement.verify', $order['booking_ref']->id) }}" class="mt-3" onsubmit="return confirm('Verify this bank transfer and mark the group order as settled?')">
                     @csrf
                     <button type="submit" class="btn btn-success">Verify &amp; Settle</button>
@@ -144,7 +190,7 @@
     @endif
 
     <section class="bg-white border rounded p-4">
-        <h3 class="h5 mb-3">Recent Admin Group Orders</h3>
+        <h3 class="h5 mb-3">Recent Group Orders</h3>
         <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
                 <thead><tr><th>Common Booking Reference</th><th>Group / Trip</th><th>Amount</th><th>Settlement Status</th><th></th></tr></thead>
@@ -152,13 +198,13 @@
                     @forelse($recentOrders as $recent)
                         <tr>
                             <td>{{ $recent->booking_ref_code }}</td>
-                            <td>{{ $recent->trip?->title ?? 'Group booking' }}</td>
+                            <td>{{ $recent->trip?->title ?? 'Group booking' }}@php($recentAgent = $recent->bookings->first()?->agentAccount)@if($recentAgent)<small class="d-block text-muted">Agent: {{ $recentAgent->agency_name }}</small>@endif</td>
                             <td>USD {{ number_format((float) $recent->total_amount, 2) }}</td>
                             <td>{{ strtoupper(str_replace('_', ' ', $recent->paymentTransaction?->settlement_status ?? 'pending_verification')) }}</td>
                             <td><a class="btn btn-sm btn-outline-primary" href="{{ route('admin.closed-groups.settlement', ['booking_reference' => $recent->booking_ref_code]) }}">Open</a></td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-muted">No admin-created group orders found.</td></tr>
+                        <tr><td colspan="5" class="text-muted">No group orders found.</td></tr>
                     @endforelse
                 </tbody>
             </table>

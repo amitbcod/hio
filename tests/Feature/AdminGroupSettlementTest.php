@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\Admin\ClosedGroupSettlementController;
+use App\Http\Controllers\Agent\ClosedGroupBookingController as AgentClosedGroupBookingController;
 use App\Http\Controllers\Frontend\BookingController;
+use App\Models\AgentAccount;
+use App\Models\Booking;
 use App\Models\BookingRef;
 use App\Models\PaymentTransaction;
 use App\Services\AdminGroupBookingSettlementService;
@@ -12,8 +15,10 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class AdminGroupSettlementTest extends TestCase
@@ -100,6 +105,126 @@ class AdminGroupSettlementTest extends TestCase
         $this->assertNotNull($payment->verified_at);
         $this->assertDatabaseHas('bookings', ['id' => 1, 'status' => 'pending']);
         $this->assertServiceStatuses(1, 'Processing');
+    }
+
+    public function test_agent_bookings_require_admin_review_before_settlement(): void
+    {
+        DB::table('agent_accounts')->insert([
+            'id' => 1,
+            'agency_name' => 'Example Agency',
+            'contact_person' => 'Agency Contact',
+        ]);
+        DB::table('bookings')->where('id', 1)->update([
+            'is_admin_created' => false,
+            'agent_account_id' => 1,
+            'agent_verification_status' => 'pending_admin_verification',
+        ]);
+
+        $order = app(AdminGroupBookingSettlementService::class)->findEligibleOrder('BR-202-20261001-2885');
+        $this->assertSame('Example Agency', $order['agent']->agency_name);
+        $order['payment']->transaction_ref = 'unreviewed-agent-payment';
+        $order['payment']->save();
+
+        $callback = (new BookingController())->paymentCallback(
+            Request::create('/booking/payment/callback', 'POST', [
+                'transaction_ref' => 'unreviewed-agent-payment',
+                'status' => 'success',
+            ]),
+            app(BookingOrderStatusSynchronizer::class)
+        );
+        $this->assertSame(409, $callback->getStatusCode());
+        $this->assertSame('pending', $order['payment']->fresh()->status);
+        $this->assertServiceStatuses(1, 'Pending');
+
+        Storage::fake('local');
+        $request = Request::create('/admin/closed-groups/bank-transfer-settlement', 'POST', [
+            'bank_transfer_date' => now()->toDateString(),
+        ], [], [
+            'receipt' => UploadedFile::fake()->create('transfer.pdf', 32, 'application/pdf'),
+        ]);
+        $request->setLaravelSession(app('session.store'));
+
+        try {
+            (new ClosedGroupSettlementController())->submitProof(
+                $request,
+                BookingRef::where('booking_ref_code', 'BR-202-20261001-2885')->firstOrFail(),
+                app(AdminGroupBookingSettlementService::class)
+            );
+            $this->fail('An unreviewed Agent booking must not accept settlement proof.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('booking', $exception->errors());
+        }
+
+        $controller = new ClosedGroupSettlementController();
+        $controller->verifyAgentBooking(Booking::findOrFail(1));
+        $this->assertSame('verified', Booking::findOrFail(1)->agent_verification_status);
+    }
+
+    public function test_agent_can_upload_bank_transfer_proof_and_admin_can_download_it(): void
+    {
+        Storage::fake('local');
+        DB::table('agent_accounts')->insert([
+            'id' => 1,
+            'agency_name' => 'Example Agency',
+            'contact_person' => 'Agency Contact',
+        ]);
+        DB::table('bookings')->where('id', 1)->update([
+            'is_admin_created' => false,
+            'agent_account_id' => 1,
+            'agent_verification_status' => 'pending_admin_verification',
+        ]);
+
+        $bookingRef = BookingRef::where('booking_ref_code', 'BR-202-20261001-2885')->firstOrFail();
+        app(AdminGroupBookingSettlementService::class)->findEligibleOrder($bookingRef->booking_ref_code);
+        Auth::guard('agent')->setUser(AgentAccount::findOrFail(1));
+        $request = Request::create('/agent/closed-groups/1/bank-transfer-proof', 'POST', [
+            'bank_transfer_date' => now()->toDateString(),
+        ], [], [
+            'receipt' => UploadedFile::fake()->create('agent-transfer.pdf', 32, 'application/pdf'),
+        ]);
+
+        $response = (new AgentClosedGroupBookingController())->submitBankTransferProof($request, 1);
+        $payment = PaymentTransaction::where('booking_ref_id', $bookingRef->id)->firstOrFail();
+
+        $this->assertSame(route('agent.closed-groups.show', 1), $response->getTargetUrl());
+        $this->assertSame('pending', $payment->status);
+        $this->assertSame('pending_verification', $payment->settlement_status);
+        $this->assertNotEmpty($payment->bank_transfer_receipt_path);
+        $this->assertNotNull($payment->submitted_at);
+        Storage::disk('local')->assertExists($payment->bank_transfer_receipt_path);
+        $this->assertDatabaseHas('bookings', [
+            'id' => 1,
+            'agent_verification_status' => 'pending_admin_verification',
+        ]);
+
+        app('session.store')->put('admin_id', 7);
+        $settlementController = new ClosedGroupSettlementController();
+        try {
+            $settlementController->verify(
+                $bookingRef,
+                app(AdminGroupBookingSettlementService::class),
+                app(BookingOrderStatusSynchronizer::class)
+            );
+            $this->fail('Admin must review the Agent booking before settling the uploaded proof.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('booking', $exception->errors());
+        }
+
+        $settlementController->verifyAgentBooking(Booking::findOrFail(1));
+        $settlementController->verify(
+            $bookingRef,
+            app(AdminGroupBookingSettlementService::class),
+            app(BookingOrderStatusSynchronizer::class)
+        );
+        $this->assertSame('verified_settled', $payment->fresh()->settlement_status);
+
+        $order = app(AdminGroupBookingSettlementService::class)->findEligibleOrder($bookingRef->booking_ref_code);
+        $this->assertSame($payment->bank_transfer_receipt_path, $order['payment']->bank_transfer_receipt_path);
+        $download = $settlementController->downloadReceipt(
+            $bookingRef,
+            app(AdminGroupBookingSettlementService::class)
+        );
+        $this->assertStringContainsString('bank-transfer-receipt-' . $bookingRef->id, $download->headers->get('Content-Disposition'));
     }
 
     public function test_agency_success_processes_only_service_orders_for_the_payment_common_reference(): void
@@ -253,6 +378,7 @@ class AdminGroupSettlementTest extends TestCase
             $table->string('name')->nullable();
             $table->string('email')->nullable();
             $table->string('relationship')->nullable();
+            $table->string('passport_number')->nullable();
             $table->timestamps();
         });
         Schema::create('groups', function (Blueprint $table): void {
@@ -275,7 +401,21 @@ class AdminGroupSettlementTest extends TestCase
             $table->string('status')->nullable();
             $table->string('booking_type')->nullable();
             $table->boolean('is_admin_created')->default(false);
+            $table->unsignedBigInteger('agent_account_id')->nullable();
+            $table->unsignedBigInteger('agent_staff_user_id')->nullable();
+            $table->string('agent_verification_status')->nullable();
+            $table->unsignedBigInteger('agent_verified_by')->nullable();
+            $table->timestamp('agent_verified_at')->nullable();
             $table->timestamps();
+        });
+        Schema::create('agent_accounts', function (Blueprint $table): void {
+            $table->id();
+            $table->string('agency_name');
+            $table->string('contact_person')->nullable();
+        });
+        Schema::create('agent_staff_users', function (Blueprint $table): void {
+            $table->id();
+            $table->string('full_name')->nullable();
         });
         Schema::create('booking_line_items', function (Blueprint $table): void {
             $table->id();

@@ -321,6 +321,7 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     Route::get('closed-groups/bank-transfer-settlement/{bookingRef}/receipt', [\App\Http\Controllers\Admin\ClosedGroupSettlementController::class, 'downloadReceipt'])->name('closed-groups.settlement.receipt');
     Route::post('closed-groups/bank-transfer-settlement/{bookingRef}/proof', [\App\Http\Controllers\Admin\ClosedGroupSettlementController::class, 'submitProof'])->name('closed-groups.settlement.proof');
     Route::post('closed-groups/bank-transfer-settlement/{bookingRef}/verify', [\App\Http\Controllers\Admin\ClosedGroupSettlementController::class, 'verify'])->name('closed-groups.settlement.verify');
+    Route::post('closed-groups/bookings/{booking}/verify-agent', [\App\Http\Controllers\Admin\ClosedGroupSettlementController::class, 'verifyAgentBooking'])->name('closed-groups.booking.verify-agent');
     Route::get('closed-groups/{group}/price', [\App\Http\Controllers\Admin\ClosedGroupBookingController::class, 'price'])->name('closed-groups.price');
     Route::get('closed-groups/{group}/rooms', [\App\Http\Controllers\Admin\ClosedGroupBookingController::class, 'rooms'])->name('closed-groups.rooms');
 

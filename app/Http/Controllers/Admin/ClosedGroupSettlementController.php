@@ -26,15 +26,17 @@ class ClosedGroupSettlementController extends Controller
             } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
                 return redirect()->route('admin.closed-groups.settlement')
                     ->withInput(['booking_reference' => $reference])
-                    ->with('error', 'No eligible admin-created group booking was found for that common booking reference.');
+                    ->with('error', 'No eligible group booking was found for that common booking reference.');
             }
         }
 
         $recentOrders = BookingRef::query()
             ->whereHas('bookings', fn ($query) => $query
                 ->where('booking_type', 'open-group')
-                ->where('is_admin_created', true))
-            ->with(['trip', 'paymentTransaction'])
+                ->where(fn ($bookingQuery) => $bookingQuery
+                    ->where('is_admin_created', true)
+                    ->orWhereNotNull('agent_account_id')))
+            ->with(['trip', 'paymentTransaction', 'bookings.agentAccount'])
             ->orderByDesc('created_at')
             ->paginate(10);
 
@@ -109,6 +111,12 @@ class ClosedGroupSettlementController extends Controller
         ]);
 
         $order = $settlements->findEligibleOrder($bookingRef->booking_ref_code);
+        $this->ensureAgentBookingReviewed($order['booking']);
+        if ($order['agent']) {
+            throw ValidationException::withMessages([
+                'receipt' => 'The Agent must submit bank-transfer proof from its booking details page.',
+            ]);
+        }
         $payment = $order['payment'];
         if ($payment->status === 'paid' || $payment->settlement_status === 'verified_settled') {
             throw ValidationException::withMessages(['receipt' => 'This group booking has already been verified and settled.']);
@@ -166,6 +174,7 @@ class ClosedGroupSettlementController extends Controller
     )
     {
         $order = $settlements->findEligibleOrder($bookingRef->booking_ref_code);
+        $this->ensureAgentBookingReviewed($order['booking']);
 
         DB::transaction(function () use ($order, $statusSynchronizer): void {
             $payment = PaymentTransaction::whereKey($order['payment']->id)->lockForUpdate()->firstOrFail();
@@ -189,5 +198,34 @@ class ClosedGroupSettlementController extends Controller
 
         return redirect()->route('admin.closed-groups.settlement', ['booking_reference' => $bookingRef->booking_ref_code])
             ->with('status', 'Bank transfer verified and settled.');
+    }
+
+    public function verifyAgentBooking(Booking $booking)
+    {
+        abort_unless(
+            $booking->booking_type === 'open-group'
+            && $booking->agent_account_id
+            && $booking->agent_verification_status === 'pending_admin_verification',
+            404
+        );
+
+        $booking->forceFill([
+            'agent_verification_status' => 'verified',
+            'agent_verified_by' => (int) session('admin_id'),
+            'agent_verified_at' => now(),
+        ])->save();
+
+        return redirect()->route('admin.closed-groups.settlement', [
+            'booking_reference' => $booking->bookingRef?->booking_ref_code,
+        ])->with('status', 'Agent booking verified. The booking can proceed to bank-transfer settlement.');
+    }
+
+    private function ensureAgentBookingReviewed(Booking $booking): void
+    {
+        if ($booking->agent_account_id && $booking->agent_verification_status !== 'verified') {
+            throw ValidationException::withMessages([
+                'booking' => 'This Agent booking must be approved before bank-transfer settlement.',
+            ]);
+        }
     }
 }

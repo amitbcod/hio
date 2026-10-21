@@ -21,7 +21,9 @@ use App\Models\Activity;
 use App\Models\Transport;
 use Carbon\Carbon;
 use App\Services\PackagePricingService;
+use App\Support\ClosedGroupBookingDates;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class ClosedGroupBookingController extends Controller
 {
@@ -29,7 +31,18 @@ class ClosedGroupBookingController extends Controller
     {
         // show available closed groups to admin
         $groups = Group::orderBy('available_from', 'desc')->get();
-        return view('admin.closed_groups.book', ['groups' => $groups]);
+        return view('admin.closed_groups.book', [
+            'groups' => $groups,
+            'isAgent' => false,
+            'bookingCreatorLabel' => '',
+            'closedGroupRoutes' => [
+                'rooms' => route('admin.closed-groups.rooms', ['group' => '__GROUP__']),
+                'price' => route('admin.closed-groups.price', ['group' => '__GROUP__']),
+                'csrf' => route('admin.closed-groups.csrf-token'),
+                'store' => route('admin.closed-groups.book.store'),
+                'success' => route('admin.closed-groups.settlement'),
+            ],
+        ]);
     }
 
     public function csrfToken()
@@ -378,22 +391,35 @@ class ClosedGroupBookingController extends Controller
 
     public function store(Request $request)
     {
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+        $agent = Auth::guard('agent')->user();
+        $agentStaff = Auth::guard('agent_staff')->user();
+        $agentAccount = $agent ?? $agentStaff?->agent;
+        if ($agentAccount) {
+            abort_unless($agentAccount->account_status === 'approved', 403);
+        }
+
+        $rules = [
             'group_id' => 'required|integer|exists:groups,id',
+            'travel_start_date' => $agentAccount ? 'required|date_format:Y-m-d' : 'nullable|date_format:Y-m-d',
             'lead_first_name' => 'required|string|max:255',
             'lead_last_name' => 'nullable|string|max:255',
-            'lead_email' => 'nullable|email|max:255',
-            'lead_phone' => 'nullable|string|max:50',
-            'pax' => 'required|integer|min:1',
+            'lead_email' => $agentAccount ? 'required|email|max:255' : 'nullable|email|max:255',
+            'lead_phone' => $agentAccount ? 'required|string|max:50' : 'nullable|string|max:50',
+            'passport_number' => $agentAccount ? 'required|string|max:100' : 'nullable|string|max:100',
+            'pax' => $agentAccount ? 'required|integer|min:2|max:20' : 'required|integer|min:1',
             'total_amount' => 'nullable|numeric|min:0',
             'idempotency_key' => 'nullable|uuid',
-            'guests' => 'nullable|array',
+            'guests' => $agentAccount ? 'required|array' : 'nullable|array',
+            'guests.*.first_name' => $agentAccount ? 'required|string|max:255' : 'nullable|string|max:255',
+            'guests.*.last_name' => 'nullable|string|max:255',
+            'guests.*.dob' => 'nullable|date',
             'selected_rooms' => 'nullable|array',
             'selected_rooms.*.day_index' => 'required|integer|min:0',
             'selected_rooms.*.accommodation_id' => 'required|integer|min:1',
             'selected_rooms.*.room_id' => 'required|integer|min:1',
             'guest_assignments' => 'nullable|array',
-        ]);
+        ];
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             if ($request->expectsJson() || $request->ajax()) {
@@ -411,6 +437,30 @@ class ClosedGroupBookingController extends Controller
 
         if (!$group) {
             throw new \RuntimeException('Closed group not found.');
+        }
+        if ($agentAccount) {
+            abort_unless(
+                (int) $group->country_id === (int) $agentAccount->country_id
+                && in_array(strtolower(trim((string) $group->group_type)), ['closed group', 'close group'], true)
+                && strtolower((string) $group->status) === 'published'
+                && $group->available_from
+                && $group->available_to
+                && ClosedGroupBookingDates::hasBookableStartDate($group),
+                404,
+                'This group is not available to your agency.'
+            );
+            if (!ClosedGroupBookingDates::isBookableStartDate($group, $data['travel_start_date'])) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'travel_start_date' => 'Choose a trip start date within the group availability window and booking cutoff.',
+                ]);
+            }
+            abort_if(
+                (int) $data['pax'] < (int) ($group->minimum_pax ?? 1)
+                || ((int) ($group->maximum_pax ?? 0) > 0 && (int) $data['pax'] > (int) $group->maximum_pax)
+                || count($data['guests'] ?? []) !== ((int) $data['pax'] - 1),
+                422,
+                'Traveller count must match the group requirements and guest profiles.'
+            );
         }
 
         $groupItinerary = is_array($group->itinerary ?? null) ? $group->itinerary : [];
@@ -453,12 +503,21 @@ class ClosedGroupBookingController extends Controller
         if ($existingBookingRef) {
             $existingBooking = Booking::where('booking_ref_id', $existingBookingRef->id)
                 ->where('booking_type', 'open-group')
+                ->when($agentAccount, fn ($query) => $query->where('agent_account_id', $agentAccount->id))
                 ->first();
             if ($existingBooking) {
                 if ($request->expectsJson() || $request->ajax()) {
-                    return response()->json(['success' => true, 'booking_id' => $existingBooking->id]);
+                    return response()->json([
+                        'success' => true,
+                        'booking_id' => $existingBooking->id,
+                        'verification_status' => $existingBooking->agent_verification_status,
+                    ]);
                 }
-                return redirect()->route('admin.closed-groups.book')->with('success', 'Closed group booking created. REF: ' . $existingBooking->id);
+                return redirect()->route($agentAccount ? 'agent.closed-groups.index' : 'admin.closed-groups.book')
+                    ->with('success', 'Closed group booking created. REF: ' . $existingBooking->id);
+            }
+            if ($agentAccount) {
+                abort(409, 'The booking request could not be safely retried. Please start a new booking.');
             }
         }
 
@@ -504,8 +563,12 @@ class ClosedGroupBookingController extends Controller
         DB::beginTransaction();
         try {
             Log::channel('closed_group')->info('Creating Trip record', ['group_id' => $group->id, 'title' => $group->name ?? null]);
-            $groupStartDate = $this->resolveGroupDateValue($group, 'available_from');
-            $groupEndDate = $this->resolveGroupDateValue($group, 'available_to');
+            $groupStartDate = $agentAccount
+                ? Carbon::parse($data['travel_start_date'])->toDateString()
+                : $this->resolveGroupDateValue($group, 'available_from');
+            $groupEndDate = $agentAccount
+                ? Carbon::parse($groupStartDate)->addDays(ClosedGroupBookingDates::durationDays($group) - 1)->toDateString()
+                : $this->resolveGroupDateValue($group, 'available_to');
             $leadFullName = trim(($data['lead_first_name'] ?? '') . ' ' . ($data['lead_last_name'] ?? ''));
 
             $trip = Trip::create([
@@ -525,8 +588,12 @@ class ClosedGroupBookingController extends Controller
                 'total_amount' => $computedTotal,
                 'status' => 'pending',
                 'booking_type' => 'open-group',
-                'is_admin_created' => true,
+                'is_admin_created' => !$agentAccount,
+                'agent_account_id' => $agentAccount?->id,
+                'agent_staff_user_id' => $agentStaff?->id,
+                'agent_verification_status' => $agentAccount ? 'pending_admin_verification' : null,
             ]);
+            $booking->forceFill(['country_id' => $group->country_id])->save();
 
             Log::channel('closed_group')->info('Booking created', ['booking_id' => $booking->id]);
 
@@ -540,15 +607,17 @@ class ClosedGroupBookingController extends Controller
                 'end_date' => $groupEndDate,
                 'status' => 'active',
             ]);
-            $travellersByName = [];
+            $packageLineItem->forceFill(['country_id' => $group->country_id])->save();
+            $travellers = [];
             $leadTraveller = Traveller::create([
                 'trip_id' => $trip->id,
                 'name' => $leadFullName,
                 'email' => $data['lead_email'] ?? null,
                 'phone' => $data['lead_phone'] ?? null,
+                'passport_number' => $data['passport_number'] ?? null,
                 'relationship' => 'lead',
             ]);
-            $travellersByName[$leadFullName] = $leadTraveller;
+            $travellers[] = $leadTraveller;
 
             if (!empty($data['guests']) && is_array($data['guests'])) {
                 foreach ($data['guests'] as $g) {
@@ -562,11 +631,11 @@ class ClosedGroupBookingController extends Controller
                             'date_of_birth' => $g['dob'] ?? null,
                             'relationship' => $g['relation'] ?? 'guest',
                         ]);
-                        $travellersByName[$full] = $traveller;
+                        $travellers[] = $traveller;
                     }
                 }
             }
-            foreach ($travellersByName as $traveller) {
+            foreach ($travellers as $traveller) {
                 BliTravellerAllocation::create([
                     'bli_id' => $packageLineItem->id,
                     'traveller_id' => $traveller->id,
@@ -579,6 +648,7 @@ class ClosedGroupBookingController extends Controller
                 'idempotency_key' => $idempotencyKey,
                 'total_amount' => $computedTotal,
             ]);
+            $bookingRef->forceFill(['country_id' => $group->country_id])->save();
             $booking->booking_ref_id = $bookingRef->id;
             $booking->save();
 
@@ -590,13 +660,14 @@ class ClosedGroupBookingController extends Controller
                 'status' => 'pending',
                 'settlement_status' => 'pending_verification',
             ]);
+            $paymentTransaction->forceFill(['country_id' => $group->country_id])->save();
             $bookingRef->payment_transaction_id = $paymentTransaction->id;
             $bookingRef->save();
 
             $itinerary = $bookingItinerary;
             // pricing service for computing authoritative per-service amounts
             $pricingService = new PackagePricingService();
-            $travelerAccount = !empty($data['lead_email'])
+            $travelerAccount = !$agentAccount && !empty($data['lead_email'])
                 ? \App\Models\TravelerAccount::where('email', $data['lead_email'])->first()
                 : null;
             $pricingAmounts = [];
@@ -733,6 +804,7 @@ class ClosedGroupBookingController extends Controller
                             'trip_id' => $trip->id,
                         ];
                         $acc = AccommodationBooking::create($accData);
+                        $acc->forceFill(['country_id' => $group->country_id])->save();
                         Log::channel('closed_group')->info('AccommodationBooking created', ['id' => $acc->id ?? null, 'room_id' => $roomId]);
                     }
                 }
@@ -813,7 +885,8 @@ class ClosedGroupBookingController extends Controller
                             'trip_id' => $trip->id,
                         ];
                             $ab = ActivityBooking::create($abData);
-                            Log::channel('closed_group')->info('ActivityBooking created', ['id' => $ab->id ?? null, 'activity_id' => $activity->id, 'variant_id' => $variantId]);
+                        $ab->forceFill(['country_id' => $group->country_id])->save();
+                        Log::channel('closed_group')->info('ActivityBooking created', ['id' => $ab->id ?? null, 'activity_id' => $activity->id, 'variant_id' => $variantId]);
                         }
                     }
                 }
@@ -949,6 +1022,7 @@ class ClosedGroupBookingController extends Controller
                                 'booked_at' => now(),
                             ];
                             $tb = TransportBooking::create($tbData);
+                            $tb->forceFill(['country_id' => $group->country_id])->save();
                             Log::channel('closed_group')->info('TransportBooking created', ['id' => $tb->id ?? null, 'route_id' => $route->id]);
                         }
                     }
@@ -958,10 +1032,15 @@ class ClosedGroupBookingController extends Controller
             DB::commit();
 
             if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['success' => true, 'booking_id' => $booking->id]);
+                return response()->json([
+                    'success' => true,
+                    'booking_id' => $booking->id,
+                    'verification_status' => $booking->agent_verification_status,
+                ]);
             }
 
-            return redirect()->route('admin.closed-groups.book')->with('success', 'Closed group booking created. REF: ' . $booking->id);
+            return redirect()->route($agentAccount ? 'agent.closed-groups.index' : 'admin.closed-groups.book')
+                ->with('success', 'Closed group booking created. REF: ' . $booking->id);
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Admin closed group booking create failed: ' . $e->getMessage());

@@ -9,6 +9,9 @@
         <div class="wrap">
 
             <div class="confirm-box">
+                @if(session('error'))
+                    <div class="alert alert-warning" role="alert">{{ session('error') }}</div>
+                @endif
 
                 {{-- Status Icon & Heading --}}
                 @php

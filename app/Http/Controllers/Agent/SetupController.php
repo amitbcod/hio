@@ -20,8 +20,25 @@ class SetupController extends Controller
     {
         $agent = $this->agent($request);
         $progress = $agent->setupProgress()->firstOrCreate([]);
+        $groupBookings = $agent->bookings()->where('booking_type', 'open-group');
+        $metrics = [
+            'total_bookings' => (clone $groupBookings)->count(),
+            'pending_review' => (clone $groupBookings)->where(function ($query): void {
+                $query->whereNull('agent_verification_status')
+                    ->orWhere('agent_verification_status', '!=', 'verified');
+            })->count(),
+            'booking_value' => (float) (clone $groupBookings)->sum('total_amount'),
+            'pending_payments' => (clone $groupBookings)->whereHas('payments', function ($query): void {
+                $query->where(function ($paymentQuery): void {
+                    $paymentQuery->whereNull('settlement_status')
+                        ->orWhere('settlement_status', '!=', 'verified_settled');
+                });
+            })->count(),
+            'upcoming_travel' => (clone $groupBookings)->whereHas('trip', fn ($query) => $query->whereDate('start_date', '>=', today()))->count(),
+        ];
+        $complianceDocument = $agent->complianceDocuments()->latest('id')->first();
         if ($request->user('agent_staff')) {
-            return view('agent.dashboard', compact('agent', 'progress'));
+            return view('agent.dashboard', compact('agent', 'progress', 'metrics', 'complianceDocument'));
         }
 
         foreach ([
@@ -35,7 +52,7 @@ class SetupController extends Controller
             }
         }
 
-        return view('agent.dashboard', compact('agent', 'progress'));
+        return view('agent.dashboard', compact('agent', 'progress', 'metrics', 'complianceDocument'));
     }
 
     public function profile(Request $request)

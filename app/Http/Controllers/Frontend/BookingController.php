@@ -3063,6 +3063,17 @@ class BookingController extends Controller
         if (!$paymentTransaction) {
             return response()->json(['error' => 'Payment transaction not found'], 404);
         }
+        if ($this->isAgentBooking($paymentTransaction)) {
+            Log::warning('Payment callback blocked for Agent booking; Admin settlement is required', [
+                'booking_id' => $paymentTransaction->booking_id,
+                'booking_ref_id' => $paymentTransaction->booking_ref_id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Agent bookings must be settled through Admin review.',
+            ], 409);
+        }
 
         $status = AgaingencyPaymentService::resolveCallbackStatus($request->input('status', $request->input('payment_status', 'pending')));
         $paymentId = AgaingencyPaymentService::parsePaymentId($request->json()->all() ?: $request->all());
@@ -3084,19 +3095,28 @@ class BookingController extends Controller
         $status = AgaingencyPaymentService::resolveCallbackStatus($request->input('status', $request->input('payment_status', 'pending')));
         $transactionRef = $request->input('transaction_ref') ?: $request->input('reference');
         $primaryRef = $request->input('ref');
+        $agentSettlementBlocked = false;
 
         if ($transactionRef) {
             $paymentTransaction = PaymentTransaction::where('transaction_ref', $transactionRef)->first();
             if ($paymentTransaction) {
-                $paymentId = AgaingencyPaymentService::parsePaymentId($request->json()->all() ?: $request->all());
-                $notificationTripId = $this->applyAgencyPaymentStatus(
-                    $paymentTransaction,
-                    $status,
-                    $paymentId,
-                    $statusSynchronizer
-                );
-                if ($notificationTripId) {
-                    $this->sendGuestBookingOtpNotificationsForTrip($notificationTripId);
+                if ($this->isAgentBooking($paymentTransaction)) {
+                    $agentSettlementBlocked = true;
+                    Log::warning('Payment return blocked for Agent booking; Admin settlement is required', [
+                        'booking_id' => $paymentTransaction->booking_id,
+                        'booking_ref_id' => $paymentTransaction->booking_ref_id,
+                    ]);
+                } else {
+                    $paymentId = AgaingencyPaymentService::parsePaymentId($request->json()->all() ?: $request->all());
+                    $notificationTripId = $this->applyAgencyPaymentStatus(
+                        $paymentTransaction,
+                        $status,
+                        $paymentId,
+                        $statusSynchronizer
+                    );
+                    if ($notificationTripId) {
+                        $this->sendGuestBookingOtpNotificationsForTrip($notificationTripId);
+                    }
                 }
             }
         }
@@ -3139,16 +3159,29 @@ class BookingController extends Controller
             $confirmationParams['operator_token'] = $operatorToken;
         }
 
-        return redirect()->route('frontend.booking.confirmation', $confirmationParams)
+        $redirect = redirect()->route('frontend.booking.confirmation', $confirmationParams)
             ->with('booking_refs', session('booking_refs', [$primaryRef]))
             ->with('guest_name', session('guest_name'))
             ->with('summary', session('summary'))
             ->with('payment_method', 'againgency');
+        if ($agentSettlementBlocked) {
+            $redirect->with('error', 'Agent bookings must be settled through Admin review; payment was not updated.');
+        }
+
+        return $redirect;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     //  PRIVATE HELPERS
     // ═══════════════════════════════════════════════════════════════════════
+
+    private function isAgentBooking(PaymentTransaction $paymentTransaction): bool
+    {
+        return Booking::query()
+            ->whereKey($paymentTransaction->booking_id)
+            ->whereNotNull('agent_account_id')
+            ->exists();
+    }
 
     private function applyAgencyPaymentStatus(
         PaymentTransaction $paymentTransaction,

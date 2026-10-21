@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Agent\AuthController;
+use App\Http\Controllers\Agent\ClosedGroupBookingController;
 use App\Http\Controllers\Agent\SetupController;
 use App\Http\Middleware\AgentAccountNotSuspended;
 use App\Http\Middleware\AgentModuleAccess;
@@ -15,6 +16,16 @@ Route::prefix('agent')->name('agent.')->group(function (): void {
 
     Route::middleware(['auth:agent,agent_staff', AgentAccountNotSuspended::class])->group(function (): void {
         Route::get('/', [SetupController::class, 'dashboard'])->name('dashboard');
+
+        Route::get('closed-groups', [ClosedGroupBookingController::class, 'index'])->middleware(AgentModuleAccess::class.':reservation,read')->name('closed-groups.index');
+        Route::get('closed-groups/book', [ClosedGroupBookingController::class, 'create'])->middleware(AgentModuleAccess::class.':reservation,create')->name('closed-groups.book');
+        Route::post('closed-groups/book', [ClosedGroupBookingController::class, 'store'])->middleware(AgentModuleAccess::class.':reservation,create')->name('closed-groups.book.store');
+        Route::get('closed-groups/csrf-token', [ClosedGroupBookingController::class, 'csrfToken'])->middleware(AgentModuleAccess::class.':reservation,create')->name('closed-groups.csrf-token');
+        Route::post('closed-groups/{booking}/bank-transfer-proof', [ClosedGroupBookingController::class, 'submitBankTransferProof'])->middleware(AgentModuleAccess::class.':reservation,update')->name('closed-groups.bank-transfer-proof');
+        Route::get('closed-groups/{booking}/bank-transfer-proof', [ClosedGroupBookingController::class, 'downloadBankTransferProof'])->middleware(AgentModuleAccess::class.':reservation,read')->name('closed-groups.bank-transfer-proof.download');
+        Route::get('closed-groups/{booking}', [ClosedGroupBookingController::class, 'show'])->middleware(AgentModuleAccess::class.':reservation,read')->name('closed-groups.show');
+        Route::get('closed-groups/{group}/rooms', [ClosedGroupBookingController::class, 'rooms'])->middleware(AgentModuleAccess::class.':reservation,create')->name('closed-groups.rooms');
+        Route::get('closed-groups/{group}/price', [ClosedGroupBookingController::class, 'price'])->middleware(AgentModuleAccess::class.':reservation,create')->name('closed-groups.price');
 
         Route::get('setup/profile', [SetupController::class, 'profile'])->middleware(AgentModuleAccess::class.':profile,read')->name('profile');
         Route::post('setup/profile', [SetupController::class, 'saveProfile'])->middleware(AgentModuleAccess::class.':profile,update')->name('profile.save');

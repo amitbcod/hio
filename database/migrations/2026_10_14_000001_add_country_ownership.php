@@ -89,6 +89,7 @@ return new class extends Migration
         DB::table('countries')->insertOrIgnore([
             'name' => 'Mauritius',
             'iso_code' => 'MU',
+            'currency_code' => 'MUR',
             'is_active' => true,
             'created_at' => $now,
             'updated_at' => $now,

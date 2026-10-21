@@ -12,6 +12,10 @@ class AgentAccount extends Authenticatable
 
     protected $hidden = ['password_hash'];
 
+    protected $casts = [
+        'approved_at' => 'datetime',
+    ];
+
     public function getAuthPassword(): string
     {
         return $this->password_hash;
@@ -45,5 +49,10 @@ class AgentAccount extends Authenticatable
     public function operations()
     {
         return $this->hasOne(AgentOperation::class);
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'agent_account_id');
     }
 }

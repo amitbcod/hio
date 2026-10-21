@@ -2,6 +2,26 @@
 @section('title', 'Agent Compliance')
 @section('content')
 <h1 class="h3 mb-4">Agent Compliance</h1>
+@if($document)
+    <section class="card mb-4">
+        <div class="card-header py-3">Current Compliance Record</div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Document ID</dt>
+                <dd class="col-sm-8">{{ $document->id }}</dd>
+                <dt class="col-sm-4">Status</dt>
+                <dd class="col-sm-8">
+                    @php($documentStatus = strtolower((string) $document->status))
+                    <span class="badge {{ $documentStatus === 'approved' ? 'bg-success' : ($documentStatus === 'expired' ? 'bg-danger' : 'bg-warning text-dark') }}">
+                        {{ ucfirst($document->status ?? 'pending') }}
+                    </span>
+                </dd>
+                <dt class="col-sm-4">Renewal Reminder</dt>
+                <dd class="col-sm-8">{{ $document->renewal_reminder_date ?? 'Not scheduled' }}</dd>
+            </dl>
+        </div>
+    </section>
+@endif
 <form method="POST" action="{{ route('agent.compliance.save') }}" enctype="multipart/form-data" class="card"><div class="card-body">@csrf
     <div class="mb-3"><label class="form-label">Business Registration No. *</label><input class="form-control" name="business_registration_number" value="{{ old('business_registration_number', $document?->business_registration_number) }}" required></div>
     <div class="mb-3"><label class="form-label">IATA No.</label><input class="form-control" name="iata_number" value="{{ old('iata_number', $document?->iata_number) }}"></div>

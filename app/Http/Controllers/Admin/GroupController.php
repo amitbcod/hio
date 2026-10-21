@@ -111,7 +111,7 @@ class GroupController extends Controller
     {
         return view('admin.groups.create-step1', [
             'group' => $group,
-            'countries' => Country::where('is_active', true)->orWhereKey($group->country_id)->orderBy('name')->get(),
+            'countries' => Country::where('is_active', true)->orWhere('id', $group->country_id)->orderBy('name')->get(),
             'isMpo' => CountryAccess::isMpoAdmin(),
         ]);
     }
@@ -156,7 +156,9 @@ class GroupController extends Controller
         ]);
 
         $data['country_id'] = $countryId;
-        CountryOwnership::assertItineraryCountry($group->itinerary ?? [], $countryId);
+        if ((int) $group->country_id !== $countryId) {
+            CountryOwnership::assertItineraryCountry($group->itinerary ?? [], $countryId);
+        }
         $group->update($data);
 
         return redirect()->route('admin.groups.step2', $group->id)->with('success', 'Step 1 updated. Proceed to Step 2.');

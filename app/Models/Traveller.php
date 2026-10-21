@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Traveller extends Model
 {
-    protected $fillable = ['trip_id', 'name', 'email', 'phone', 'date_of_birth', 'relationship'];
+    protected $fillable = ['trip_id', 'name', 'email', 'phone', 'date_of_birth', 'passport_number', 'relationship'];
 
     protected $casts = [
         'date_of_birth' => 'date',

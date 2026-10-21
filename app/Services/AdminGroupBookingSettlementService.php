@@ -21,10 +21,13 @@ class AdminGroupBookingSettlementService
             throw (new ModelNotFoundException())->setModel(BookingRef::class);
         }
 
-        $parentBooking = Booking::with(['trip.travellers', 'lineItems'])
+        $parentBooking = Booking::with(['trip.travellers', 'lineItems', 'agentAccount', 'agentStaffUser'])
             ->where('booking_ref_id', $bookingRef->id)
             ->where('booking_type', 'open-group')
-            ->where('is_admin_created', true)
+            ->where(function ($query): void {
+                $query->where('is_admin_created', true)
+                    ->orWhereNotNull('agent_account_id');
+            })
             ->first();
 
         if (!$parentBooking) {
@@ -96,6 +99,8 @@ class AdminGroupBookingSettlementService
         return [
             'booking_ref' => $bookingRef,
             'booking' => $parentBooking,
+            'agent' => $parentBooking->agentAccount,
+            'agent_staff' => $parentBooking->agentStaffUser,
             'trip' => $parentBooking->trip,
             'group' => $group,
             'traveller' => $leadTraveller,

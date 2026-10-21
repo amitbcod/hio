@@ -9,6 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('agent_accounts', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->string('agent_id', 50)->unique();
             $table->foreignId('country_id')->constrained()->restrictOnDelete();
@@ -26,6 +27,7 @@ return new class extends Migration
         });
 
         Schema::create('agent_profiles', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('agent_account_id')->unique()->constrained('agent_accounts')->cascadeOnDelete();
             $table->string('address');
@@ -38,6 +40,7 @@ return new class extends Migration
         });
 
         Schema::create('agent_compliance_documents', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('agent_account_id')->constrained('agent_accounts')->cascadeOnDelete();
             $table->string('business_registration_number');
@@ -54,6 +57,7 @@ return new class extends Migration
         });
 
         Schema::create('agent_setup_progress', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('agent_account_id')->unique()->constrained('agent_accounts')->cascadeOnDelete();
             $table->boolean('profile_complete')->default(false);
@@ -65,6 +69,7 @@ return new class extends Migration
         });
 
         Schema::create('agent_staff_users', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->string('user_id', 50)->unique();
             $table->foreignId('agent_account_id')->constrained('agent_accounts')->cascadeOnDelete();
@@ -81,6 +86,7 @@ return new class extends Migration
         });
 
         Schema::create('agent_staff_permissions', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('agent_staff_user_id')->constrained('agent_staff_users')->cascadeOnDelete();
             $table->foreignId('module_id')->constrained('modules')->cascadeOnDelete();
@@ -96,13 +102,14 @@ return new class extends Migration
         });
 
         Schema::create('agent_operations', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('agent_account_id')->unique()->constrained('agent_accounts')->cascadeOnDelete();
             $table->string('preferred_language_ui', 2)->nullable();
             $table->string('preferred_language_communication', 2)->nullable();
             $table->string('time_zone', 64)->nullable();
             $table->string('primary_currency', 3)->nullable();
-            $table->json('bank_details')->nullable();
+            $table->text('bank_details')->nullable();
             $table->string('emergency_contact_name');
             $table->string('emergency_contact_mobile', 20);
             $table->string('commission_type', 24)->nullable();

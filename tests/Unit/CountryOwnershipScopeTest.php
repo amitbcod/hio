@@ -132,6 +132,17 @@ class CountryOwnershipScopeTest extends TestCase
         ], 10);
     }
 
+    public function test_itinerary_country_validation_ignores_non_day_metadata(): void
+    {
+        CountryOwnership::assertItineraryCountry([
+            0 => ['accommodation' => 1, 'rooms' => [1]],
+            'pricing_modes' => ['transport' => 'package_rate'],
+            'discounts' => ['activity' => '10'],
+        ], 10);
+
+        $this->assertTrue(true);
+    }
+
     public function test_transport_route_identity_is_stable_and_includes_each_route_field(): void
     {
         $identity = TransportServiceRoutePair::identityFor('airport_transfer', 'Airport', 'North');

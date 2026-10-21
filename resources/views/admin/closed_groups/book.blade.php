@@ -1,4 +1,5 @@
-@extends('layouts.admin')
+@php($isAgent = $isAgent ?? false)
+@extends($isAgent ? 'layouts.agent' : 'layouts.admin')
 
 @push('styles')
 <style>
@@ -373,13 +374,24 @@
 
 @section('content')
 <div class="container-wizard">
-    <h2>Closed Group Booking (Admin)</h2>
-    <p>Select a closed group plan and proceed to register guests and create a booking.</p>
-    <p><a href="{{ route('admin.closed-groups.settlement') }}">Bank Transfer Settlement</a></p>
+    @if($isAgent)
+        <h2>Closed Group Booking</h2>
+        <p>Create a booking on behalf of a Traveller. The booking will require Admin review before settlement.</p>
+        <p><a href="{{ route('agent.closed-groups.index') }}">My Group Bookings</a></p>
+    @else
+        <h2>Closed Group Booking (Admin)</h2>
+        <p>Select a closed group plan and proceed to register guests and create a booking.</p>
+        <p><a href="{{ route('admin.closed-groups.settlement') }}">Bank Transfer Settlement</a></p>
+    @endif
 
     <div id="step1">
         <h4>Step 1: Choose Your Approved Group Plan</h4>
         <div class="row" id="plans-grid">
+            @if($groups->isEmpty())
+                <div class="col-12">
+                    <div class="alert alert-info mb-3">There are no eligible published closed groups available{{ $isAgent ? ' for your agency country' : '' }} at this time.</div>
+                </div>
+            @endif
             @foreach($groups as $grp)
             <div class="col-md-4 mb-3">
                 <div class="plan-card" data-group='@json($grp)'>
@@ -398,7 +410,7 @@
     </div>
 
     <div id="step2" style="display:none; margin-top:18px">
-        <h4>Step 2: Set Travellers Count and Responsible Traveller</h4>
+        <h4>Step 2: Set Travel Dates, Travellers Count and Responsible Traveller</h4>
         <p class="sub">Specify how many individuals are in this group booking. Fill out the details of the Lead Account Holder who is responsible for the overall booking management.</p>
 
         <div class="alert" style="background:#ecfdf5;border:1px solid #bbf0d6;padding:12px;border-radius:6px;color:#065f46">
@@ -407,6 +419,15 @@
 
         <form id="admin-booking-form">
             <input type="hidden" name="group_id" id="group_id">
+            @if($isAgent)
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <label for="travel_start_date">Trip Start Date <span class="req">*</span></label>
+                        <input class="form-control" type="date" id="travel_start_date" name="travel_start_date" required>
+                        <small class="text-muted">Choose a start date that allows the full trip to finish within the group’s available dates.</small>
+                    </div>
+                </div>
+            @endif
             <div class="row mt-3">
                 <div class="col-md-4">
                     <label>Total Number of Travellers <span class="req">*</span></label>
@@ -425,18 +446,18 @@
             <div class="row mt-3">
                 <div class="col-md-6">
                     <label>Email Address <span class="req">*</span></label>
-                    <input class="form-control" name="lead_email" id="lead_email" type="email" placeholder="amit29592@gmail.com">
+                    <input class="form-control" name="lead_email" id="lead_email" type="email" placeholder="amit29592@gmail.com" @if($isAgent) required @endif>
                 </div>
                 <div class="col-md-6">
                     <label>Mobile Number <span class="req">*</span></label>
-                    <input class="form-control" name="lead_phone" id="lead_phone" placeholder="+91 9876543210">
+                    <input class="form-control" name="lead_phone" id="lead_phone" placeholder="+91 9876543210" @if($isAgent) required @endif>
                 </div>
             </div>
 
             <div class="row mt-3">
                 <div class="col-md-6">
                     <label>Passport Number <span class="req">*</span></label>
-                    <input class="form-control" name="passport_number" id="passport_number" placeholder="PP980123">
+                    <input class="form-control" name="passport_number" id="passport_number" placeholder="PP980123" @if($isAgent) required @endif>
                 </div>
                 <div class="col-md-6"></div>
             </div>
@@ -537,9 +558,38 @@
 @push('scripts')
 <script>
 const groups = @json($groups->toArray());
-const adminBookingIdempotencyKey = @json((string) \Illuminate\Support\Str::uuid());
+const bookingIdempotencyKey = @json((string) \Illuminate\Support\Str::uuid());
+const bookingCreatorLabel = @json($bookingCreatorLabel);
+const groupRoomsUrlTemplate = @json($closedGroupRoutes['rooms']);
+const groupPriceUrlTemplate = @json($closedGroupRoutes['price']);
+const bookingCsrfUrl = @json($closedGroupRoutes['csrf']);
+const bookingStoreUrl = @json($closedGroupRoutes['store']);
+const bookingSuccessUrl = @json($closedGroupRoutes['success']);
+const isAgentBooking = @json($isAgent);
 let selectedGroup = null;
 let bookingSubmissionInProgress = false;
+
+function dateOnly(value){
+    return String(value || '').slice(0, 10);
+}
+
+function addDaysToDateString(value, days){
+    const parts = dateOnly(value).split('-').map(Number);
+    if (parts.length !== 3 || parts.some(Number.isNaN)) return '';
+    const date = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2] + Number(days || 0)));
+    return date.toISOString().slice(0, 10);
+}
+
+function updatePaxOptions(){
+    if(!isAgentBooking || !selectedGroup) return;
+    const minimum = Math.max(2, Number(selectedGroup.minimum_pax || 2));
+    const configuredMaximum = Number(selectedGroup.maximum_pax || 20);
+    const maximum = Math.min(20, configuredMaximum > 0 ? configuredMaximum : 20);
+    const paxSelect = $('#pax').empty();
+    for(let pax = minimum; pax <= maximum; pax++){
+        paxSelect.append($('<option>', { value: pax, text: pax + ' Travellers' }));
+    }
+}
 
 $(function(){
     // setup CSRF for AJAX
@@ -551,6 +601,8 @@ $(function(){
         $(this).addClass('selected');
         selectedGroup = $(this).data('group');
         $('#group_id').val(selectedGroup.id);
+        configureTravelDateRange(selectedGroup);
+        updatePaxOptions();
         $('#to-step2').prop('disabled', false);
         // fetch itinerary rooms for selected group
         fetchRoomsForGroup(selectedGroup.id);
@@ -560,8 +612,18 @@ $(function(){
         $('#step1').hide(); $('#step2').show(); window.scrollTo(0,0);
     });
 
+    function configureTravelDateRange(group){
+        if (!isAgentBooking) return;
+        const input = $('#travel_start_date');
+        input.attr('min', group.agent_booking_min_start_date || '');
+        input.attr('max', group.agent_booking_max_start_date || '');
+        input.val(group.agent_booking_min_start_date || '');
+    }
+
     $('#to-step3').on('click', function(){
         if(!$('#lead_first_name').val()) { alert('Lead first name required'); return; }
+        const travelDateInput = document.getElementById('travel_start_date');
+        if (travelDateInput && !travelDateInput.reportValidity()) return;
         // get pax number from select value (supports strings like '15 Travellers')
         let paxVal = $('#pax').val();
         let paxCount = 0;
@@ -631,7 +693,7 @@ function addGuestWithDefaults(number, first='', last='', dob=''){
 }
 
 function fetchRoomsForGroup(groupId){
-    $.get("/admin/closed-groups/"+groupId+"/rooms")
+    $.get(groupRoomsUrlTemplate.replace('__GROUP__', encodeURIComponent(groupId)))
     .done(function(resp){
         // render itinerary daywise into step3 area when opened
         // normalize itinerary: API may return array, object or JSON string
@@ -911,6 +973,12 @@ function resetAssignments(){
 
 function buildReview(){
     const groupName = selectedGroup && selectedGroup.name ? selectedGroup.name : 'Closed Group';
+    const travelStartDate = isAgentBooking
+        ? $('#travel_start_date').val()
+        : dateOnly(selectedGroup && selectedGroup.available_from);
+    const tripEndDate = isAgentBooking
+        ? addDaysToDateString(travelStartDate, Number(selectedGroup && selectedGroup.no_of_days || 1) - 1)
+        : dateOnly(selectedGroup && selectedGroup.available_to);
     const leadName = ($('#lead_first_name').val() || '').trim() || 'Lead Traveller';
     const leadEmail = ($('#lead_email').val() || '').trim() || 'Not provided';
     const leadPhone = ($('#lead_phone').val() || '').trim() || 'Not provided';
@@ -930,6 +998,7 @@ function buildReview(){
     if (selectedGroup && selectedGroup.id) {
         // collect minimal payload (selected rooms + guest assignments) to send so server pricing matches admin selections
         const pricePayload = { pax: pax, selected_rooms: [], guest_assignments: {} };
+        if (isAgentBooking) pricePayload.travel_start_date = $('#travel_start_date').val();
         // collect selected rooms similarly to submitBooking
         $('#properties-list .room-card').each(function(){
             const card = $(this);
@@ -937,12 +1006,10 @@ function buildReview(){
             const accomId = card.closest('.property-card').data('accommodation-id') || null;
             const roomId = card.find('.room-select').val();
             let checkIn = null, checkOut = null;
-            if(selectedGroup && selectedGroup.available_from){
-                const base = new Date(selectedGroup.available_from);
-                base.setDate(base.getDate() + Number(dayIndex));
-                checkIn = base.toISOString().slice(0,10);
-                const out = new Date(base); out.setDate(out.getDate() + 1);
-                checkOut = out.toISOString().slice(0,10);
+            const startDate = isAgentBooking ? $('#travel_start_date').val() : dateOnly(selectedGroup && selectedGroup.available_from);
+            if(startDate){
+                checkIn = addDaysToDateString(startDate, Number(dayIndex));
+                checkOut = addDaysToDateString(checkIn, 1);
             }
             pricePayload.selected_rooms.push({ day_index: dayIndex, accommodation_id: accomId, room_id: roomId, check_in: checkIn, check_out: checkOut });
             const assigned = [];
@@ -951,7 +1018,7 @@ function buildReview(){
             pricePayload.guest_assignments[key] = assigned;
         });
 
-        $.get("{{ url('admin/closed-groups') }}/" + selectedGroup.id + "/price", pricePayload)
+        $.get(groupPriceUrlTemplate.replace('__GROUP__', encodeURIComponent(selectedGroup.id)), pricePayload)
             .done(function(resp){
                 totalAmount = Number(resp.total || totalAmount);
                 window.__finalTotalAmount = totalAmount;
@@ -1014,17 +1081,17 @@ function buildReview(){
     $('#review-block').html(`
         <div class="review-success">
             <span class="success-icon">🎉</span>
-            <h3>Booking Registration Successful!</h3>
-            <p>Your booking has been recorded. Payment must be settled via bank transfer as per the single invoice instructions below.</p>
+            <h3>${isAgentBooking ? 'Booking Submitted for Admin Review' : 'Booking Registration Successful!'}</h3>
+            <p>${isAgentBooking ? 'The booking is pending Admin approval. Bank-transfer settlement will be available after the booking is reviewed.' : 'Your booking has been recorded. Payment must be settled via bank transfer as per the single invoice instructions below.'}</p>
         </div>
 
         <div class="review-card review-summary">
             <div class="review-summary-header">
                 <div>
                     <h3>${groupName}</h3>
-                    <div class="trip-meta">Requested by: ACME Industries Ltd.</div>
+                    <div class="trip-meta">Requested by: ${bookingCreatorLabel || 'Admin'}</div>
                 </div>
-                <span class="review-status">Pending Bank Transfer</span>
+                <span class="review-status">${isAgentBooking ? 'Pending Admin Review' : 'Pending Bank Transfer'}</span>
             </div>
 
             <div class="review-meta">
@@ -1035,6 +1102,10 @@ function buildReview(){
                 <div class="review-meta-row">
                     <strong>Group Size:</strong>
                     <span>${pax} Travellers (${leaderFree ? '1 Tour Leader - Free' : '0 Tour Leader - Free'}, ${Math.max(0, billedTravellers)} Billed Guests)</span>
+                </div>
+                <div class="review-meta-row">
+                    <strong>Trip Dates:</strong>
+                    <span>${travelStartDate || 'N/A'} to ${tripEndDate || 'N/A'}</span>
                 </div>
             </div>
 
@@ -1106,13 +1177,15 @@ function submitBooking(){
     $('#submit-booking').prop('disabled', true);
     const payload = {
         group_id: $('#group_id').val(),
+        travel_start_date: isAgentBooking ? $('#travel_start_date').val() : '',
         lead_first_name: $('#lead_first_name').val(),
         lead_last_name: '',
         lead_email: $('#lead_email').val(),
         lead_phone: $('#lead_phone').val(),
         pax: $('#pax').val(),
         total_amount: window.__finalTotalAmount ?? null,
-        idempotency_key: adminBookingIdempotencyKey,
+        idempotency_key: bookingIdempotencyKey,
+        passport_number: $('#passport_number').val(),
         _token: '{{ csrf_token() }}',
         guests: []
     };
@@ -1135,13 +1208,10 @@ function submitBooking(){
         const roomId = card.find('.room-select').val();
         // compute check_in/check_out from group's available_from/available_to using dayIndex if available
         let checkIn = null, checkOut = null;
-        if(selectedGroup && selectedGroup.available_from){
-            const base = new Date(selectedGroup.available_from);
-            base.setDate(base.getDate() + Number(dayIndex));
-            checkIn = base.toISOString().slice(0,10);
-            // assume one night for day index
-            const out = new Date(base); out.setDate(out.getDate() + 1);
-            checkOut = out.toISOString().slice(0,10);
+        const startDate = isAgentBooking ? $('#travel_start_date').val() : dateOnly(selectedGroup && selectedGroup.available_from);
+        if(startDate){
+            checkIn = addDaysToDateString(startDate, Number(dayIndex));
+            checkOut = addDaysToDateString(checkIn, 1);
         }
         payload.selected_rooms.push({ day_index: dayIndex, accommodation_id: accomId, room_id: roomId, check_in: checkIn, check_out: checkOut });
         // collect assigned guests (array of indices)
@@ -1151,19 +1221,21 @@ function submitBooking(){
         payload.guest_assignments[key] = assigned;
     });
 
-    $.getJSON("{{ route('admin.closed-groups.csrf-token') }}").done(function(csrfResponse){
+    $.getJSON(bookingCsrfUrl).done(function(csrfResponse){
         const csrfToken = csrfResponse.token;
         payload._token = csrfToken;
         $.ajax({
-            url: "{{ route('admin.closed-groups.book.store') }}",
+            url: bookingStoreUrl,
             method: 'POST',
             data: payload,
             dataType: 'json',
             headers: { 'X-CSRF-TOKEN': csrfToken }
         }).done(function(resp){
             if(resp && resp.success){
-                alert('Booking created successfully (ID: ' + resp.booking_id + ')');
-                location.reload();
+                alert(isAgentBooking
+                    ? 'Booking submitted for Admin review (ID: ' + resp.booking_id + ').'
+                    : 'Booking created successfully (ID: ' + resp.booking_id + ')');
+                location.href = bookingSuccessUrl;
             } else {
                 bookingSubmissionInProgress = false;
                 $('#submit-booking').prop('disabled', false);

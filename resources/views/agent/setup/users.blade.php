@@ -2,9 +2,39 @@
 @section('title', 'Agent Users')
 @section('content')
 <h1 class="h3 mb-4">Agent Users</h1>
-<div class="card mb-4"><div class="card-header">Team Members</div><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead><tbody>
+<div class="card mb-4"><div class="card-header py-3">Team Members</div><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Access Rights</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead><tbody>
 @forelse($users as $user)
-<tr><td>{{ $user->full_name }}</td><td>{{ $user->email }}</td><td>{{ $user->role }}</td><td>{{ $user->status }}</td><td>{{ $user->last_login?->format('Y-m-d H:i') ?? '—' }}</td>
+<tr>
+    <td>{{ $user->full_name }}</td>
+    <td>{{ $user->email }}</td>
+    <td>{{ $user->role }}</td>
+    <td>
+        @php
+            $accessRights = $user->permissions
+                ->map(function ($permission): ?string {
+                    $actions = collect(['read' => 'Read', 'create' => 'Create', 'update' => 'Update', 'approve' => 'Approve', 'publish' => 'Publish'])
+                        ->filter(fn ($label, $action) => (bool) $permission->{'can_'.$action})
+                        ->values();
+
+                    return $actions->isNotEmpty()
+                        ? ($permission->module?->name ?? 'Module') . ': ' . $actions->join(', ')
+                        : null;
+                })
+                ->filter()
+                ->values();
+        @endphp
+        @if($accessRights->isNotEmpty())
+            <div class="d-flex flex-wrap gap-1">
+                @foreach($accessRights as $accessRight)
+                    <span class="badge bg-light text-dark border">{{ $accessRight }}</span>
+                @endforeach
+            </div>
+        @else
+            <span class="text-muted">No access granted</span>
+        @endif
+    </td>
+    <td><span class="badge {{ $user->status === 'Active' ? 'bg-success' : 'bg-secondary' }}">{{ $user->status }}</span></td>
+    <td>{{ $user->last_login?->format('Y-m-d H:i') ?? '—' }}</td>
     <td>@if(auth('agent')->check() || auth('agent_staff')->user()?->role === 'Manager')
         <form method="POST" action="{{ route('agent.users.status', $user) }}">@csrf
             <input type="hidden" name="status" value="{{ $user->status === 'Active' ? 'Disabled' : 'Active' }}">
@@ -12,7 +42,7 @@
         </form>
     @endif</td>
 </tr>
-@empty<tr><td colspan="6">No Agent staff users yet.</td></tr>@endforelse
+@empty<tr><td colspan="7" class="text-center text-muted py-4">No Agent staff users yet.</td></tr>@endforelse
 </tbody></table></div></div>
 @if(auth('agent')->check() || auth('agent_staff')->user()?->role === 'Manager')
 <form method="POST" action="{{ route('agent.users.save') }}" class="card"><div class="card-header">Add Agent User</div><div class="card-body">@csrf

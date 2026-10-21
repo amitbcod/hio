@@ -12,6 +12,16 @@
     <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
         <h5 style="background:#0e8f84;color:#fff;padding:10px;border-radius:6px;display:inline-block;">Step 2: Add Group</h5>
 
+        @if($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         @php $itinerary = $group->itinerary ?? []; @endphp
         <form method="POST" action="{{ route('admin.groups.step2.store', $group->id) }}">
             @csrf
