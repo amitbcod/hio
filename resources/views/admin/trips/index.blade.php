@@ -256,7 +256,7 @@
                                                             @csrf
                                                             <label class="visually-hidden" for="deadline-override-{{ $action['record_id'] }}">Hours before target</label>
                                                             <input id="deadline-override-{{ $action['record_id'] }}" class="form-control form-control-sm" style="max-width:100px;" type="number" min="0" max="8760" name="override_hours" value="{{ $action['override_hours'] ?? '' }}" placeholder="Default" aria-label="Override hours before target">
-                                                            <button class="btn btn-sm btn-outline-primary" type="submit">Save deadline</button>
+                                                            <!-- <button class="btn btn-sm btn-outline-primary" type="submit">Save deadline</button> -->
                                                         </form>
                                                     @endif
                                                 @endforeach
