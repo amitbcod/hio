@@ -157,7 +157,7 @@
                         </div>
 
                         {{-- Capacity and Allotment --}}
-                        <div class="row">
+                        <div style="margin-bottom:16px;">
                             <div class="col-md-6 mb-3">
                                 <label style="font-weight:600;">Capacity (Max Rooms/Units) *</label>
                                 <input type="number" id="max_capacity" name="max_capacity" class="form-control" min="0" required value="{{ old('max_capacity', $room->max_capacity ?? '') }}">
@@ -172,7 +172,7 @@
                                 <small style="color:#666;display:block;margin-top:4px;">Maximum total persons allowed by this room type (adults + children + infants beyond the first).</small>
                             </div>
                         </div>
-                        <div class="row">
+                        <div style="margin-bottom:16px;">
                             <div class="col-md-6 mb-3">
                                 <label style="font-weight:600;">Allotment (Sellable Units) *</label>
                                 <input type="number" id="allotment" name="allotment" class="form-control" min="0" required value="{{ old('allotment', $room->allotment ?? '') }}">
@@ -180,7 +180,7 @@
                             </div>
                         </div>
 
-                        <div class="row">
+                        <div style="margin-bottom:16px;">
                             <div class="col-md-12 mb-3">
                                 <label style="font-weight:600;">Images (select from uploaded media) *</label>
                                 <select name="images[]" class="form-control" multiple required>
@@ -195,7 +195,7 @@
                             </div>
                         </div>
 
-                        <div style="display:flex;justify-content:space-between;gap:12px;float: right;">
+                        <div style="display:flex;justify-content:space-between;gap:12px;float: right;padding:0;margin-top:30px">
                             <!-- <a href="{{ route('operator.accommodation.show', $accommodation->id) }}" class="btn" style="background:#f0f0f0;color:#333;padding:8px 12px;border-radius:4px;">← Back</a> -->
                             <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:8px 14px;border-radius:4px;">Save Room</button>
                         </div>
