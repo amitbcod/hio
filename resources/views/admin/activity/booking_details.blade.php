@@ -15,7 +15,7 @@
                             <h2 style="font-weight: bold; margin-bottom: 8px;">Activity Booking Details</h2>
                             <p style="color: #666; margin-bottom: 0;">Booking Reference: {{ $booking->booking_reference }}</p>
                         </div>
-                        <div style="display: flex; gap: 12px;">
+                        <div style="display: flex; gap: 12px; align-items-center">
                             <a href="{{ route('operator.activity.bookings') }}" class="btn" style="background: #6c757d; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600;">
                                 ← Back to Bookings
                             </a>
