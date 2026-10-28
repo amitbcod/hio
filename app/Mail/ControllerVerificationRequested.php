@@ -28,6 +28,9 @@ class ControllerVerificationRequested extends Mailable
 
         if ($this->requester instanceof \App\Models\Mpo) {
             $prefix = '/mpo';
+        } elseif ($this->requester instanceof \App\Models\AgentAccount
+            || $this->requester instanceof \App\Models\AgentStaffUser) {
+            $prefix = '/operator';
         }
 
         $url = url("{$prefix}/register/controller/verify/{$token}");

@@ -64,17 +64,25 @@ class ControllerVerificationController extends Controller
         }
 
         // activate the requester account so they can login after owner approval
-        try {
-            if ($cv->requester) {
-                $rq = $cv->requester;
-                $rq->account_status = 'active';
-                $rq->save();
+        $requester = $cv->requester;
+        if ($cv->requester_agent_account_id) {
+            $cv->releaseRequesterAfterApproval();
+        } else {
+            try {
+                if ($requester) {
+                    $requester->account_status = 'active';
+                    $requester->save();
+                }
+            } catch (\Exception $e) {
+                \Log::error('ControllerVerificationController::accept - activating requester failed', ['err' => $e->getMessage()]);
             }
-        } catch (\Exception $e) {
-            \Log::error('ControllerVerificationController::accept - activating requester failed', ['err' => $e->getMessage()]);
         }
 
         // notify requester (not implemented - simple flash)
+        if ($cv->requester_agent_account_id) {
+            return redirect()->route('agent.login')->with('success', 'The business owner approved your request. You may now sign in and complete your Agent setup.');
+        }
+
         return redirect()->route('operator.register.step2')->with('success', 'You have accepted the request. Business is pending admin approval.');
     }
 
@@ -187,6 +195,10 @@ class ControllerVerificationController extends Controller
         // reload from DB to see persisted value
         $cv_db = ControllerVerification::find($cv->id);
         \Log::info('ControllerVerificationController::claim - verification from DB', ['db_status' => $cv_db->status, 'db_accepted_by' => $cv_db->accepted_by]);
+        $requester = $cv->requester;
+        if ($cv->requester_agent_account_id) {
+            $cv->releaseRequesterAfterApproval();
+        }
 
         // notify requester (if exists) and admins
         try {
@@ -203,15 +215,34 @@ class ControllerVerificationController extends Controller
             // swallow for now
         }
 
+        if ($cv->requester_agent_account_id) {
+            return redirect()->route('agent.login')->with('success', 'The owner claimed and approved the business. You may now sign in and complete your Agent setup.');
+        }
+
         return redirect()->route('operator.login')->with('success', 'Owner account created. Please login to continue and confirm the business.');
     }
 
     public function reject(Request $request, $token)
     {
         $cv = ControllerVerification::where('token', $token)->firstOrFail();
+        if ($cv->requester_agent_account_id) {
+            if (auth()->user()?->email !== $cv->owner_email) {
+                return redirect()->route('operator.login')->with('error', 'Please login with the business owner account to reject this request.');
+            }
+            if ($cv->status !== 'pending') {
+                return redirect()->route('operator.login')->with('error', 'Verification is no longer pending.');
+            }
+        }
+
         $cv->status = 'rejected';
         $cv->notes = $request->notes ?? null;
         $cv->save();
+
+        if ($cv->requester_agent_account_id) {
+            $cv->blockRequesterAfterRejection();
+            return redirect()->route('agent.login')->with('success', 'The Agent registration request was rejected.');
+        }
+
         return redirect()->route('operator.register.step2')->with('success', 'Verification request rejected.');
     }
 }

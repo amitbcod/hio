@@ -24,6 +24,14 @@ class ControllerVerification extends Model
 
     public function requester()
     {
+        if (!empty($this->requester_agent_staff_user_id)) {
+            return AgentStaffUser::find($this->requester_agent_staff_user_id);
+        }
+
+        if (!empty($this->requester_agent_account_id)) {
+            return AgentAccount::find($this->requester_agent_account_id);
+        }
+
         if (empty($this->requester_operator_id)) {
             return null;
         }
@@ -34,6 +42,43 @@ class ControllerVerification extends Model
         }
 
         return Mpo::where('mpo_id', $this->requester_operator_id)->first();
+    }
+
+    public function releaseRequesterAfterApproval(): void
+    {
+        $agent = $this->requesterAgentAccount();
+        if ($agent) {
+            $agent->account_status = 'pending';
+            $agent->save();
+
+            return;
+        }
+
+        $requester = $this->requester;
+        if ($requester) {
+            $requester->account_status = 'active';
+            $requester->save();
+        }
+    }
+
+    public function blockRequesterAfterRejection(): void
+    {
+        $agent = $this->requesterAgentAccount();
+        if ($agent) {
+            $agent->account_status = 'owner_rejected';
+            $agent->save();
+        }
+    }
+
+    public function requesterAgentAccount(): ?AgentAccount
+    {
+        if (!empty($this->requester_agent_account_id)) {
+            return AgentAccount::find($this->requester_agent_account_id);
+        }
+
+        $requester = $this->requester;
+
+        return $requester instanceof AgentStaffUser ? $requester->agent : null;
     }
 
     public function acceptBy($actor)

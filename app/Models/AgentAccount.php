@@ -26,6 +26,16 @@ class AgentAccount extends Authenticatable
         return $this->belongsTo(Country::class);
     }
 
+    public function business()
+    {
+        return $this->belongsTo(Business::class);
+    }
+
+    public function ownerVerifications()
+    {
+        return $this->hasMany(ControllerVerification::class, 'requester_agent_account_id');
+    }
+
     public function profile()
     {
         return $this->hasOne(AgentProfile::class);

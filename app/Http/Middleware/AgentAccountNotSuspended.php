@@ -16,7 +16,8 @@ class AgentAccountNotSuspended
         $agent = $user instanceof AgentStaffUser ? $user->agent : $user;
 
         abort_unless(
-            $agent instanceof AgentAccount && $agent->account_status !== 'suspended',
+            $agent instanceof AgentAccount
+                && !in_array($agent->account_status, ['suspended', 'owner_approval_pending', 'owner_rejected'], true),
             Response::HTTP_FORBIDDEN
         );
 

@@ -10,6 +10,7 @@ use App\Models\AgentStaffUser;
 use App\Services\AgentPermissionService;
 use DateTimeZone;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -169,8 +170,20 @@ class SetupController extends Controller
         }
         $users = $agent->staffUsers()->with('permissions.module')->orderBy('full_name')->get();
         $modules = \App\Models\Module::query()->orderBy('name')->get();
+        $roleDefaults = [];
+        foreach (['Manager', 'Consultant', 'Accountant', 'Support'] as $role) {
+            foreach ($modules as $module) {
+                foreach (['read', 'create', 'update', 'approve', 'publish'] as $action) {
+                    if (app(AgentPermissionService::class)->roleAllows($role, $module->slug, $action)) {
+                        $roleDefaults[$role][$module->slug][] = $action;
+                    }
+                }
+            }
+        }
+        $staffUser = $request->user('agent_staff');
+        $canManageUsers = ! $staffUser || app(AgentPermissionService::class)->canManageUsers($staffUser);
 
-        return view('agent.setup.users', compact('agent', 'users', 'modules'));
+        return view('agent.setup.users', compact('agent', 'users', 'modules', 'roleDefaults', 'canManageUsers'));
     }
 
     public function saveUser(Request $request, AgentPermissionService $permissions)
@@ -179,7 +192,8 @@ class SetupController extends Controller
         if ($redirect = $this->requireEarlierSteps($agent, ['profile_complete', 'compliance_complete'])) {
             return $redirect;
         }
-        abort_if($request->user('agent_staff') && $request->user('agent_staff')->role !== 'Manager', 403);
+        $staffUser = $request->user('agent_staff');
+        abort_if($staffUser && ! $permissions->canManageUsers($staffUser), 403);
 
         $data = $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
@@ -200,43 +214,110 @@ class SetupController extends Controller
             'mobile' => ['nullable', 'string', 'regex:/^\+[1-9]\d{7,14}$/'],
             'password' => ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[a-z]/', 'regex:/[0-9]/', 'regex:/[@#%!*^$&]/'],
             'role' => ['required', Rule::in(['Manager', 'Consultant', 'Accountant', 'Support'])],
+            'permission_modules' => ['required', 'array'],
+            'permission_modules.*' => ['required', 'string', 'distinct', Rule::exists('modules', 'slug')],
             'module_actions' => ['nullable', 'array'],
             'module_actions.*' => ['array'],
             'module_actions.*.*' => ['string', Rule::in(['read', 'create', 'update', 'approve', 'publish'])],
         ], ['mobile.regex' => 'Enter the mobile number in E.164 format, including the +country code.']);
 
-        foreach (array_keys($data['module_actions'] ?? []) as $moduleSlug) {
-            abort_unless(\App\Models\Module::query()->where('slug', $moduleSlug)->exists(), 422, 'Unknown permission module.');
-        }
-        if ($request->user('agent_staff') && $data['role'] === 'Manager') {
-            abort(403);
-        }
+        abort_unless(
+            count(array_unique($data['permission_modules'])) === \App\Models\Module::query()->count(),
+            422,
+            'Permission selections are incomplete. Reload the page and try again.'
+        );
 
-        $staff = $agent->staffUsers()->create([
-            'user_id' => 'AGU-'.strtoupper(bin2hex(random_bytes(6))),
-            'full_name' => $data['full_name'],
-            'email' => mb_strtolower(trim($data['email'])),
-            'password_hash' => Hash::make($data['password']),
-            'mobile' => $data['mobile'] ?? null,
-            'role' => $data['role'],
-            'status' => 'Active',
-            'account_reset_required' => false,
-        ]);
-        $permissions->applyRoleDefaults($staff);
-        if (! empty($data['module_actions'])) {
-            $permissions->applyOverrides($staff, $data['module_actions']);
-        }
-
-        $this->progress($agent)->update(['users_complete' => true, 'current_step' => 5]);
+        DB::transaction(function () use ($agent, $data, $permissions): void {
+            $staff = $agent->staffUsers()->create([
+                'user_id' => 'AGU-'.strtoupper(bin2hex(random_bytes(6))),
+                'full_name' => $data['full_name'],
+                'email' => mb_strtolower(trim($data['email'])),
+                'password_hash' => Hash::make($data['password']),
+                'mobile' => $data['mobile'] ?? null,
+                'role' => $data['role'],
+                'status' => 'Active',
+                'account_reset_required' => false,
+            ]);
+            $permissions->syncPermissions($staff, $data['module_actions'] ?? []);
+            $this->progress($agent)->update(['users_complete' => true, 'current_step' => 5]);
+        });
 
         return redirect()->route('agent.operations')->with('success', 'Agent user created.');
+    }
+
+    public function editUser(Request $request, AgentStaffUser $user, AgentPermissionService $permissions)
+    {
+        $agent = $this->agent($request);
+        abort_unless((int) $user->agent_account_id === (int) $agent->id, 404);
+        $staffUser = $request->user('agent_staff');
+        abort_if($staffUser && ! $permissions->canManageUsers($staffUser), 403);
+        abort_if($staffUser && (int) $staffUser->id === (int) $user->id, 403);
+
+        $user->load('permissions');
+        $modules = \App\Models\Module::query()->orderBy('name')->get();
+
+        return view('agent.setup.user-edit', compact('agent', 'user', 'modules'));
+    }
+
+    public function updateUser(Request $request, AgentStaffUser $user, AgentPermissionService $permissions)
+    {
+        $agent = $this->agent($request);
+        abort_unless((int) $user->agent_account_id === (int) $agent->id, 404);
+        $staffUser = $request->user('agent_staff');
+        abort_if($staffUser && ! $permissions->canManageUsers($staffUser), 403);
+        abort_if($staffUser && (int) $staffUser->id === (int) $user->id, 403);
+
+        $data = $request->validate([
+            'full_name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required', 'email', 'max:191',
+                function (string $attribute, mixed $value, \Closure $fail) use ($user): void {
+                    $email = mb_strtolower(trim((string) $value));
+                    if (\Illuminate\Support\Facades\DB::table('agent_staff_users')->whereRaw('LOWER(email) = ?', [$email])->where('id', '!=', $user->id)->exists()
+                        || \Illuminate\Support\Facades\DB::table('agent_accounts')->whereRaw('LOWER(email) = ?', [$email])->exists()
+                        || \Illuminate\Support\Facades\DB::table('operators')->whereRaw('LOWER(email) = ?', [$email])->exists()
+                        || \Illuminate\Support\Facades\DB::table('mpos')->whereRaw('LOWER(email) = ?', [$email])->exists()
+                        || \Illuminate\Support\Facades\DB::table('operator_users')->whereRaw('LOWER(email) = ?', [$email])->exists()
+                        || \Illuminate\Support\Facades\DB::table('traveler_accounts')->whereRaw('LOWER(email) = ?', [$email])->exists()) {
+                        $fail('This email is already in use. Please use another email address.');
+                    }
+                },
+            ],
+            'mobile' => ['nullable', 'string', 'regex:/^\+[1-9]\d{7,14}$/'],
+            'role' => ['required', Rule::in(['Manager', 'Consultant', 'Accountant', 'Support'])],
+            'permission_modules' => ['required', 'array'],
+            'permission_modules.*' => ['required', 'string', 'distinct', Rule::exists('modules', 'slug')],
+            'module_actions' => ['nullable', 'array'],
+            'module_actions.*' => ['array'],
+            'module_actions.*.*' => ['string', Rule::in(['read', 'create', 'update', 'approve', 'publish'])],
+        ], ['mobile.regex' => 'Enter the mobile number in E.164 format, including the +country code.']);
+
+        abort_unless(
+            count(array_unique($data['permission_modules'])) === \App\Models\Module::query()->count(),
+            422,
+            'Permission selections are incomplete. Reload the page and try again.'
+        );
+
+        DB::transaction(function () use ($user, $data, $permissions): void {
+            $user->update([
+                'full_name' => $data['full_name'],
+                'email' => mb_strtolower(trim($data['email'])),
+                'mobile' => $data['mobile'] ?? null,
+                'role' => $data['role'],
+            ]);
+            $permissions->syncPermissions($user, $data['module_actions'] ?? []);
+        });
+
+        return redirect()->route('agent.users')->with('success', 'Agent user and access rights updated.');
     }
 
     public function resetUserPassword(Request $request, AgentStaffUser $user)
     {
         $agent = $this->agent($request);
         abort_unless((int) $user->agent_account_id === (int) $agent->id, 404);
-        abort_if($request->user('agent_staff') && $request->user('agent_staff')->role !== 'Manager', 403);
+        $staffUser = $request->user('agent_staff');
+        abort_if($staffUser && ! app(AgentPermissionService::class)->canManageUsers($staffUser), 403);
+        abort_if($staffUser && (int) $staffUser->id === (int) $user->id, 403);
 
         $data = $request->validate([
             'password' => ['required', 'confirmed', 'min:8', 'regex:/[A-Z]/', 'regex:/[a-z]/', 'regex:/[0-9]/', 'regex:/[@#%!*^$&]/'],
@@ -253,7 +334,9 @@ class SetupController extends Controller
     {
         $agent = $this->agent($request);
         abort_unless((int) $user->agent_account_id === (int) $agent->id, 404);
-        abort_if($request->user('agent_staff') && $request->user('agent_staff')->role !== 'Manager', 403);
+        $staffUser = $request->user('agent_staff');
+        abort_if($staffUser && ! app(AgentPermissionService::class)->canManageUsers($staffUser), 403);
+        abort_if($staffUser && (int) $staffUser->id === (int) $user->id, 403);
         $data = $request->validate(['status' => ['required', Rule::in(['Active', 'Disabled'])]]);
         $user->update(['status' => $data['status']]);
 

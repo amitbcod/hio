@@ -31,10 +31,16 @@
                 <form method="POST" action="{{ url('/operator/register/controller/verify/'.$cv->token.'/accept') }}">
                     @csrf
                     <h6>Approve Verification</h6>
-                    <p class="text-muted">By approving, you confirm that <strong>{{ $requester->full_name ?? 'the requester' }}</strong> is authorized to manage this business on your behalf.</p>
+                    <p class="text-muted">By approving, you confirm that <strong>{{ $requester->full_name ?? $requester->contact_person ?? 'the requester' }}</strong> is authorized to manage this business on your behalf.</p>
                     <button class="btn btn-success">Approve Verification</button>
                     <a class="btn btn-secondary" href="{{ url('/') }}">Cancel</a>
                 </form>
+                @if($cv->requester_agent_account_id)
+                    <form method="POST" action="{{ url('/operator/register/controller/verify/'.$cv->token.'/reject') }}" class="mt-2">
+                        @csrf
+                        <button class="btn btn-outline-danger">Reject Verification</button>
+                    </form>
+                @endif
             @else
                 <p>No existing owner account found for <strong>{{ $cv->owner_email }}</strong>.</p>
                 <p>You can claim and create an owner account below. We will not ask you to re-enter business details — they are shown below for confirmation.</p>

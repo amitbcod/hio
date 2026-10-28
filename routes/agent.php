@@ -34,6 +34,8 @@ Route::prefix('agent')->name('agent.')->group(function (): void {
         Route::get('setup/compliance/{document}/download', [SetupController::class, 'downloadCompliance'])->middleware(AgentModuleAccess::class.':compliance,read')->name('compliance.download');
         Route::get('setup/users', [SetupController::class, 'users'])->middleware(AgentModuleAccess::class.':users,read')->name('users');
         Route::post('setup/users', [SetupController::class, 'saveUser'])->middleware(AgentModuleAccess::class.':users,create')->name('users.save');
+        Route::get('setup/users/{user}/edit', [SetupController::class, 'editUser'])->middleware(AgentModuleAccess::class.':users,update')->name('users.edit');
+        Route::put('setup/users/{user}', [SetupController::class, 'updateUser'])->middleware(AgentModuleAccess::class.':users,update')->name('users.update');
         Route::post('setup/users/{user}/reset-password', [SetupController::class, 'resetUserPassword'])->middleware(AgentModuleAccess::class.':users,update')->name('users.reset-password');
         Route::post('setup/users/{user}/status', [SetupController::class, 'updateUserStatus'])->middleware(AgentModuleAccess::class.':users,update')->name('users.status');
         Route::get('setup/operations', [SetupController::class, 'operations'])->middleware(AgentModuleAccess::class.':operations,read')->name('operations');

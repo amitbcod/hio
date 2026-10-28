@@ -27,11 +27,13 @@ class AgentController extends Controller
         $this->assertCountryAccess($agent);
         $agent->load([
             'country',
+            'business',
             'profile',
             'complianceDocuments',
             'setupProgress',
             'staffUsers.permissions.module',
             'operations',
+            'ownerVerifications',
         ]);
 
         return view('admin.agents.show', compact('agent'));
@@ -40,6 +42,12 @@ class AgentController extends Controller
     public function approve(AgentAccount $agent)
     {
         $this->assertCountryAccess($agent);
+        abort_unless(
+            $agent->is_owner !== 'no'
+                || $agent->ownerVerifications()->where('status', 'accepted')->exists(),
+            422,
+            'Business owner approval is required before approving this Agent account.'
+        );
         $progress = $agent->setupProgress()->first();
         abort_unless(
             $progress

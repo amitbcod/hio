@@ -101,10 +101,9 @@ class AuthController extends Controller
                             $operator->save();
                         }
                         // activate requester
-                        if ($cv->requester) {
-                            $rq = $cv->requester;
-                            $rq->account_status = 'active';
-                            $rq->save();
+                        $cv->releaseRequesterAfterApproval();
+                        if ($cv->requester_agent_account_id) {
+                            return redirect()->route('agent.login')->with('success', 'The business owner approved your request. You may now sign in and complete your Agent setup.');
                         }
                         return redirect()->route('operator.register.step2')->with('success', 'You have accepted the request. Business is pending admin approval.');
                     }

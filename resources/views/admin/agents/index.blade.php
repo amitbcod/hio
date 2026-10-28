@@ -15,7 +15,7 @@
                     <tr>
                         <td>{{ $agent->agency_name }}</td>
                         <td>{{ $agent->contact_person }}</td>
-                        <td>{{ $agent->email }}</td>
+                        <td>{{ $agent->agency_email ?? $agent->email }}</td>
                         <td>{{ $agent->country?->name ?? '—' }}</td>
                         <td>{{ ucfirst($agent->account_status) }}</td>
                         <td>{{ $agent->created_at?->format('Y-m-d') }}</td>

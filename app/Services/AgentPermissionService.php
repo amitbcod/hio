@@ -27,6 +27,10 @@ class AgentPermissionService
             return false;
         }
 
+        if ($this->canAccessSetup($user, $module, $action)) {
+            return true;
+        }
+
         $moduleRecord = Module::query()
             ->whereRaw('LOWER(slug) = ?', [strtolower($module)])
             ->orWhereRaw('LOWER(name) = ?', [strtolower($module)])
@@ -44,6 +48,31 @@ class AgentPermissionService
 
         return in_array('*', $roleModules, true)
             || in_array(strtolower($moduleRecord->slug), $roleModules, true);
+    }
+
+    public function canAccessSetup(AgentStaffUser $user, string $module, string $action): bool
+    {
+        $module = strtolower($module);
+        if (! in_array($module, ['profile', 'compliance', 'users', 'operations'], true)) {
+            return false;
+        }
+
+        $agent = $user->agent;
+        if (! $agent || mb_strtolower($user->email) !== mb_strtolower($agent->email)) {
+            return false;
+        }
+
+        if ($module === 'users') {
+            return in_array($action, ['read', 'create', 'update'], true);
+        }
+
+        return in_array($action, ['read', 'update'], true);
+    }
+
+    public function canManageUsers(AgentStaffUser $user): bool
+    {
+        return $user->role === 'Manager'
+            || ($user->agent && mb_strtolower($user->email) === mb_strtolower($user->agent->email));
     }
 
     public function applyRoleDefaults(AgentStaffUser $user): void
@@ -68,22 +97,20 @@ class AgentPermissionService
         }
     }
 
-    public function applyOverrides(AgentStaffUser $user, array $overrides): void
+    public function syncPermissions(AgentStaffUser $user, array $permissions): void
     {
-        foreach ($overrides as $slug => $actions) {
-            $module = Module::query()->where('slug', $slug)->firstOrFail();
-            $current = $user->permissions()->where('module_id', $module->id)->firstOrFail();
-            $allowedActions = [];
-            foreach (['read', 'create', 'update', 'approve', 'publish'] as $action) {
-                if ($this->roleAllows($user->role, $module->slug, $action)) {
-                    $allowedActions[] = $action;
-                }
-            }
-            $selectedActions = array_values(array_intersect($actions, $allowedActions));
-            foreach (['read', 'create', 'update', 'approve', 'publish'] as $action) {
-                $current->{'can_'.$action} = in_array($action, $selectedActions, true);
-            }
-            $current->save();
+        foreach (Module::query()->get() as $module) {
+            $actions = $permissions[$module->slug] ?? [];
+            $user->permissions()->updateOrCreate(
+                ['module_id' => $module->id],
+                [
+                    'can_read' => in_array('read', $actions, true),
+                    'can_create' => in_array('create', $actions, true),
+                    'can_update' => in_array('update', $actions, true),
+                    'can_approve' => in_array('approve', $actions, true),
+                    'can_publish' => in_array('publish', $actions, true),
+                ]
+            );
         }
     }
 

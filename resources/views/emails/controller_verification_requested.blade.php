@@ -5,7 +5,7 @@
 @if(isset($requester) && $requester)
     <p><strong>Requester details:</strong></p>
     <ul>
-        <li>Name: {{ $requester->full_name ?? 'N/A' }}</li>
+        <li>Name: {{ $requester->full_name ?? $requester->contact_person ?? 'N/A' }}</li>
         <li>Email: {{ $requester->email ?? 'N/A' }}</li>
     </ul>
 @endif

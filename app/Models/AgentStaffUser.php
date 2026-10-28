@@ -12,6 +12,11 @@ class AgentStaffUser extends Authenticatable
 
     protected $hidden = ['password_hash'];
 
+    protected $casts = [
+        'last_login' => 'datetime',
+        'account_reset_required' => 'boolean',
+    ];
+
     public function getAuthPassword(): string
     {
         return $this->password_hash;

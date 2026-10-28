@@ -13,9 +13,18 @@
         <dl class="row mb-0">
             <dt class="col-sm-3">Agent ID</dt><dd class="col-sm-9">{{ $agent->agent_id }}</dd>
             <dt class="col-sm-3">Agency</dt><dd class="col-sm-9">{{ $agent->agency_name }}</dd>
-            <dt class="col-sm-3">Contact</dt><dd class="col-sm-9">{{ $agent->contact_person }} · {{ $agent->email }}</dd>
+            <dt class="col-sm-3">Agency contact</dt><dd class="col-sm-9">{{ $agent->contact_person }} · {{ $agent->agency_email ?? $agent->email }}</dd>
+            @php($applicantUser = $agent->staffUsers->firstWhere('email', $agent->email))
+            <dt class="col-sm-3">Registration applicant</dt><dd class="col-sm-9">{{ $applicantUser?->full_name }} · {{ $applicantUser?->email }} · {{ $applicantUser?->mobile }} ({{ $applicantUser?->role }})</dd>
             <dt class="col-sm-3">Country</dt><dd class="col-sm-9">{{ $agent->country?->name }}</dd>
             <dt class="col-sm-3">Status</dt><dd class="col-sm-9">{{ ucfirst($agent->account_status) }}</dd>
+            <dt class="col-sm-3">Business owner</dt><dd class="col-sm-9">
+                {{ $agent->owner_full_name }} · {{ $agent->owner_email }} · {{ $agent->owner_phone }}
+            </dd>
+            @if($agent->is_owner === 'no')
+                <dt class="col-sm-3">Owner approval</dt><dd class="col-sm-9">{{ ucfirst($agent->ownerVerifications->sortByDesc('id')->first()?->status ?? $agent->account_status) }}</dd>
+            @endif
+            <dt class="col-sm-3">Linked business</dt><dd class="col-sm-9">{{ $agent->business?->legal_name ?? '—' }}</dd>
             <dt class="col-sm-3">Approved at</dt><dd class="col-sm-9">{{ $agent->approved_at?->format('Y-m-d H:i') ?? '—' }}</dd>
             <dt class="col-sm-3">Setup progress</dt><dd class="col-sm-9">
                 @php($progress = $agent->setupProgress)
@@ -66,10 +75,11 @@
     <div class="d-flex gap-2">
         @if($agent->account_status !== 'approved')
             @php($progress = $agent->setupProgress)
-            @if($progress?->profile_complete && $progress?->compliance_complete && $progress?->users_complete && $progress?->operations_complete)
+            @if(($agent->is_owner !== 'no' || $agent->ownerVerifications->contains('status', 'accepted'))
+                && $progress?->profile_complete && $progress?->compliance_complete && $progress?->users_complete && $progress?->operations_complete)
                 <form method="POST" action="{{ route('admin.agents.approve', $agent) }}">@csrf<button class="btn btn-success">Approve Agent</button></form>
             @else
-                <button class="btn btn-success" disabled title="Complete all setup steps before approval">Approve Agent</button>
+                <button class="btn btn-success" disabled title="{{ $agent->is_owner === 'no' && !$agent->ownerVerifications->contains('status', 'accepted') ? 'Business owner approval is required before Agent approval' : 'Complete all setup steps before approval' }}">Approve Agent</button>
             @endif
         @endif
         @if($agent->account_status !== 'suspended')
