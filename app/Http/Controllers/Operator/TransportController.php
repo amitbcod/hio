@@ -12,6 +12,7 @@ use App\Models\TransportVehicleType;
 use App\Models\TransportVehicleName;
 use App\Models\TransportVehicle;
 use App\Models\OperatorDriver;
+use App\Models\MpoStaffUser;
 use App\Services\TransportAvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
@@ -1867,7 +1868,8 @@ class TransportController extends Controller
                     : TransportBookingAssignment::STATUS_UNASSIGNED,
                 'reason' => $validated['reason'] ?? null,
                 'assigned_at' => now(),
-                'assigned_by' => $actor->id,
+                'assigned_by' => $actor instanceof MpoStaffUser ? null : $actor->id,
+                'assigned_by_mpo_staff_user_id' => $actor instanceof MpoStaffUser ? $actor->id : null,
             ]);
         });
 

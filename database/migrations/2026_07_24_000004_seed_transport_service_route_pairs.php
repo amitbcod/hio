@@ -1,9 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-use App\Models\TransportServiceRoutePair;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -42,19 +40,19 @@ return new class extends Migration
         ];
 
         foreach ($pairs as $pair) {
-            TransportServiceRoutePair::firstOrCreate(
-                [
+            DB::table('transport_service_route_pairs')->insertOrIgnore([
                     'service_type' => $pair['service_type'],
                     'route_from' => $pair['route_from'],
                     'route_to' => $pair['route_to'],
-                ],
-                ['is_active' => $pair['is_active']]
-            );
+                    'is_active' => $pair['is_active'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
         }
     }
 
     public function down(): void
     {
-        TransportServiceRoutePair::query()->delete();
+        // Keep shared route configuration when rolling back this seed migration.
     }
 };

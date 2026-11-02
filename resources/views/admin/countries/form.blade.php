@@ -11,6 +11,7 @@
         <div class="mb-3"><label class="form-label">ISO 3166-1 alpha-2 code</label><input class="form-control text-uppercase" name="iso_code" maxlength="2" value="{{ old('iso_code', $country->iso_code) }}" required></div>
         <div class="mb-3"><label class="form-label">Currency code</label><input class="form-control text-uppercase" name="currency_code" maxlength="3" value="{{ old('currency_code', $country->currency_code) }}"></div>
         <div class="mb-3"><label class="form-label">Timezone</label><input class="form-control" name="time_zone" value="{{ old('time_zone', $country->time_zone) }}" placeholder="e.g. Indian/Mauritius"></div>
+        <div class="mb-3"><label class="form-label" for="vat_percentage">VAT percentage</label><input class="form-control" id="vat_percentage" name="vat_percentage" type="number" min="0" max="100" step="0.0001" value="{{ old('vat_percentage', $country->vat_percentage) }}"><div class="form-text">Optional. Leave unset until the applicable country VAT rate is confirmed; no default rate is assumed.</div></div>
         <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="is_active" value="1" id="is-active" @checked(old('is_active', $country->exists ? $country->is_active : true))><label class="form-check-label" for="is-active">Active</label></div>
         <button class="btn btn-primary" type="submit">Save Country</button>
         <a class="btn btn-secondary" href="{{ route('admin.countries.index') }}">Cancel</a>

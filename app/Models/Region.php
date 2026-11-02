@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\ScopesToAdminCountry;
+use Illuminate\Database\Eloquent\Model;
 
 class Region extends Model
 {
     use ScopesToAdminCountry;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'country_id'];
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
 }

@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         if (Schema::hasTable('accommodation_bookings') && Schema::hasColumn('accommodation_bookings', 'booking_status')) {
             DB::statement("ALTER TABLE `accommodation_bookings` MODIFY `booking_status` ENUM('Pending', 'Processing', 'Confirmed', 'Cancelled') NOT NULL DEFAULT 'Pending'");
         }

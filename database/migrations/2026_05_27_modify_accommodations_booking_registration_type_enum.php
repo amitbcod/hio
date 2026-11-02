@@ -7,14 +7,19 @@ return new class extends Migration
 {
     public function up()
     {
-        // Modify enum values to match operator agreement types
-        // Allow both old and new values during migration to avoid blocking existing rows.
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement("ALTER TABLE `accommodations` MODIFY `booking_registration_type` ENUM('Listing','Listing Only','OTO','Widget','Widget Only','MYP','OTO + Widget','Full Service') NULL;");
     }
 
     public function down()
     {
-        // Revert to previous enum values
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement("ALTER TABLE `accommodations` MODIFY `booking_registration_type` ENUM('Listing','OTO','MYP','Widget') NULL;");
     }
 };

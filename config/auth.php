@@ -52,6 +52,10 @@ return [
             'driver' => 'session',
             'provider' => 'mpos',
         ],
+        'mpo_staff' => [
+            'driver' => 'session',
+            'provider' => 'mpo_staff_users',
+        ],
         'operator_staff' => [
             'driver' => 'session',
             'provider' => 'operator_users',
@@ -101,8 +105,12 @@ return [
             'model' => App\Models\OperatorUser::class,
         ],
         'mpos' => [
-            'driver' => 'eloquent',
+            'driver' => 'mpo',
             'model' => App\Models\Mpo::class,
+        ],
+        'mpo_staff_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\MpoStaffUser::class,
         ],
         'agents' => [
             'driver' => 'eloquent',
@@ -142,6 +150,12 @@ return [
         ],
         'travelers' => [
             'provider' => 'travelers',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+        'mpo_staff' => [
+            'provider' => 'mpo_staff_users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
             'expire' => 60,
             'throttle' => 60,

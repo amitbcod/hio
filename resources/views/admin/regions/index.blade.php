@@ -15,6 +15,7 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Country</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -22,6 +23,7 @@
                     @foreach($regions as $region)
                         <tr>
                             <td>{{ $region->name }}</td>
+                            <td>{{ $region->country?->name ?? 'Unassigned' }}</td>
                             <td>
                                 <a class="btn btn-sm btn-secondary" href="{{ route('admin.regions.edit', $region->id) }}">Edit</a>
                                 <form method="POST" action="{{ route('admin.regions.destroy', $region->id) }}" style="display:inline">

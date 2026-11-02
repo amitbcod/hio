@@ -14,6 +14,11 @@
         <div class="mb-3"><label class="form-label">{{ $administrator->exists ? 'Reset password (optional)' : 'Password' }}</label><input class="form-control" type="password" name="password" @required(!$administrator->exists) minlength="8" autocomplete="new-password"></div>
         <div class="mb-3"><label class="form-label">Confirm password</label><input class="form-control" type="password" name="password_confirmation" @required(!$administrator->exists) minlength="8" autocomplete="new-password"></div>
         <button class="btn btn-primary" type="submit">Save MPO</button>
+        @if($administrator->exists && $administrator->admin_type === 'mpo')
+            <a class="btn btn-outline-primary" href="{{ route('admin.country-admins.profile.edit', $administrator) }}">Edit MPO Profile</a>
+            <a class="btn btn-outline-primary" href="{{ route('admin.country-admins.compliance.show', $administrator) }}">Review Compliance</a>
+            <a class="btn btn-outline-primary" href="{{ route('admin.country-admins.users', $administrator) }}">Manage MPO Users</a>
+        @endif
         <a class="btn btn-secondary" href="{{ route('admin.country-admins.index') }}">Cancel</a>
     </form>
 </div>

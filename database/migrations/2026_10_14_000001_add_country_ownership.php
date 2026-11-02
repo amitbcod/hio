@@ -101,7 +101,8 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasTable('trip_action_deadline_settings')
+        if (DB::connection()->getDriverName() !== 'sqlite'
+            && Schema::hasTable('trip_action_deadline_settings')
             && ! Schema::hasColumn('trip_action_deadline_settings', 'id')) {
             Schema::table('trip_action_deadline_settings', function (Blueprint $table): void {
                 $table->dropPrimary();
@@ -122,6 +123,14 @@ return new class extends Migration
             });
         }
 
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            if (Schema::hasTable('transport_service_route_pairs')
+                && ! Schema::hasColumn('transport_service_route_pairs', 'route_identity')) {
+                Schema::table('transport_service_route_pairs', function (Blueprint $table): void {
+                    $table->char('route_identity', 64)->nullable();
+                });
+            }
+        } else {
         if (Schema::hasTable('businesses')) {
             DB::table('businesses')->update(['country_id' => $mauritiusId]);
         }
@@ -227,6 +236,7 @@ return new class extends Migration
         $this->fillCountry('packages', $mauritiusId);
         $this->fillCountry('groups', $mauritiusId);
         $this->scopeGeographicUniqueKeys();
+        }
 
         foreach ($this->countryTables as $table) {
             if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'country_id')) {
@@ -315,6 +325,19 @@ return new class extends Migration
     private function copyFromParent(string $child, string $foreignKey, string $parent): void
     {
         if (! $this->canCopy($child, $foreignKey, $parent)) {
+            return;
+        }
+
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            DB::statement(
+                'UPDATE "'.$child.'" SET "country_id" = ('
+                .'SELECT "'.$parent.'"."country_id" FROM "'.$parent.'" '
+                .'WHERE "'.$parent.'"."id" = "'.$child.'"."'.$foreignKey.'"'
+                .') WHERE "country_id" IS NULL AND EXISTS ('
+                .'SELECT 1 FROM "'.$parent.'" WHERE "'.$parent.'"."id" = "'.$child.'"."'.$foreignKey.'"'
+                .')',
+            );
+
             return;
         }
 

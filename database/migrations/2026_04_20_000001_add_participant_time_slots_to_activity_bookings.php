@@ -8,17 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('activity_bookings', function (Blueprint $table) {
-            // Store time slot selections per participant as JSON
-            // Format: { "participant_1": "08:00-11:30", "participant_2": "13:00-16:30", ... }
-            $table->json('participant_time_slots')->nullable()->after('special_requests');
-        });
+        if (Schema::hasTable('activity_bookings') && ! Schema::hasColumn('activity_bookings', 'participant_time_slots')) {
+            Schema::table('activity_bookings', function (Blueprint $table) {
+                $table->json('participant_time_slots')->nullable()->after('special_requests');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('activity_bookings', function (Blueprint $table) {
-            $table->dropColumn('participant_time_slots');
-        });
+        if (Schema::hasTable('activity_bookings') && Schema::hasColumn('activity_bookings', 'participant_time_slots')) {
+            Schema::table('activity_bookings', function (Blueprint $table) {
+                $table->dropColumn('participant_time_slots');
+            });
+        }
     }
 };

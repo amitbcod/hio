@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\AdminUser;
 use Illuminate\Support\Facades\DB;
 
 class CountryAccess
@@ -15,11 +16,21 @@ class CountryAccess
 
     public static function isMpoAdmin(): bool
     {
+        $mpoAdmin = request()->attributes->get('mpo_admin');
+        if ($mpoAdmin instanceof AdminUser) {
+            return $mpoAdmin->admin_type === 'mpo';
+        }
+
         return request()->is('admin/*') && self::admin()['admin_type'] === 'mpo';
     }
 
     public static function countryId(): ?int
     {
+        $mpoAdmin = request()->attributes->get('mpo_admin');
+        if ($mpoAdmin instanceof AdminUser && $mpoAdmin->admin_type === 'mpo') {
+            return $mpoAdmin->country_id === null ? null : (int) $mpoAdmin->country_id;
+        }
+
         $admin = self::admin();
 
         return $admin['admin_type'] === 'mpo' && $admin['country_id'] !== null

@@ -19,10 +19,20 @@ return new class extends Migration
         });
 
         $indexName = 'transport_routes_route_from_route_to_index';
-        $indexExists = count(DB::select('SHOW INDEX FROM `transport_routes` WHERE Key_name = ?', [$indexName])) > 0;
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            $indexes = DB::select("PRAGMA index_list('transport_routes')");
+            $indexExists = collect($indexes)->contains(fn (object $index): bool => $index->name === $indexName);
 
-        if (! $indexExists) {
+            if (! $indexExists) {
+                Schema::table('transport_routes', function (Blueprint $table) use ($indexName): void {
+                    $table->index(['route_from', 'route_to'], $indexName);
+                });
+            }
+        } else {
+            $indexExists = count(DB::select('SHOW INDEX FROM `transport_routes` WHERE Key_name = ?', [$indexName])) > 0;
+            if (! $indexExists) {
             DB::statement("ALTER TABLE `transport_routes` ADD INDEX `{$indexName}` (`route_from`(100), `route_to`(100))");
+            }
         }
 
         DB::table('transport_routes')

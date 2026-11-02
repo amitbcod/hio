@@ -7,6 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         // First include Processing so MySQL can accept it during data cleanup.
         DB::statement("ALTER TABLE `transport_bookings` MODIFY `booking_status` ENUM('Pending','Processing','Confirmed','Scheduled','Cancelled','Completed') NULL DEFAULT 'Processing'");
 
@@ -20,6 +24,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE `transport_bookings` MODIFY `booking_status` ENUM('Pending','Confirmed','Cancelled','Completed') NOT NULL DEFAULT 'Pending'");
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE `transport_bookings` MODIFY `booking_status` ENUM('Pending','Confirmed','Cancelled','Completed') NOT NULL DEFAULT 'Pending'");
+        }
     }
 };

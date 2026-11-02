@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('operator_drivers')) {
+        if (DB::connection()->getDriverName() === 'sqlite' || ! Schema::hasTable('operator_drivers')) {
             return;
         }
 

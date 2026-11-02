@@ -10,6 +10,7 @@ class Country extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'vat_percentage' => 'decimal:4',
     ];
 
     public function adminUsers()

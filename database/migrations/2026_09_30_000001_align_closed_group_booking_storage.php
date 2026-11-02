@@ -21,6 +21,10 @@ return new class extends Migration
 
     public function up(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         foreach ($this->transactionalTables as $table) {
             if (Schema::hasTable($table)) {
                 DB::statement("ALTER TABLE `{$table}` ENGINE=InnoDB");
@@ -34,6 +38,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         if (Schema::hasTable('transport_bookings')) {
             DB::table('transport_bookings')
                 ->where('booking_status', 'Pending')

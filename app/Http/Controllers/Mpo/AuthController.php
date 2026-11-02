@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Mpo;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Mpo;
+use App\Models\AdminUser;
 use App\Models\Business;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Hash;
+use App\Models\Mpo;
+use App\Models\MpoStaffUser;
+use App\Services\MpoStaffPermissionService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -29,12 +32,79 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $mpo = Mpo::where('email', $request->email)->first();
+        $email = mb_strtolower(trim($request->input('email')));
+        $staffUser = MpoStaffUser::query()
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->first();
+
+        if ($staffUser) {
+            if (! Hash::check($request->password, $staffUser->password_hash)) {
+                return back()->withErrors(['email' => 'Invalid credentials.']);
+            }
+
+            $owner = $staffUser->mpo;
+            if ($staffUser->status !== 'Active'
+                || ! $owner
+                || $owner->admin_type !== 'mpo'
+                || $owner->status !== 'active'
+                || ! $owner->country_id
+                || ! $owner->country?->is_active) {
+                return back()->withErrors(['email' => 'This MPO staff account is inactive.']);
+            }
+            if ($staffUser->account_reset_required) {
+                return back()->withErrors(['email' => 'Use the password reset link sent to your email before signing in.']);
+            }
+            $landingRoute = $this->staffLandingRoute($staffUser);
+            if ($landingRoute === null) {
+                return back()->withErrors(['email' => 'No access has been assigned to this staff account. Contact your MPO administrator.']);
+            }
+
+            Auth::guard('mpo')->logout();
+            Auth::guard('mpo_staff')->logout();
+            Auth::guard('mpo_staff')->login($staffUser);
+            session()->forget(['admin_id', 'admin_country_id']);
+            session()->regenerate();
+            if (! $staffUser->forceFill(['last_login' => now()])->save()) {
+                Auth::guard('mpo_staff')->logout();
+
+                return back()->withErrors(['email' => 'Sign-in could not be completed. Please try again.']);
+            }
+
+            return redirect()->to($landingRoute);
+        }
+
+        $adminMpo = AdminUser::query()
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->first();
+
+        if ($adminMpo) {
+            if ($adminMpo->admin_type !== 'mpo' || ! Hash::check($request->password, $adminMpo->password_hash)) {
+                return back()->withErrors(['email' => 'Invalid credentials.']);
+            }
+
+            if ($adminMpo->status !== 'active'
+                || ! $adminMpo->country_id
+                || ! $adminMpo->country?->is_active) {
+                return back()->withErrors(['email' => 'This MPO account is inactive or has no active country assignment.']);
+            }
+
+            Auth::guard('mpo')->logout();
+            Auth::guard('mpo_staff')->logout();
+            session()->forget(['admin_id', 'admin_country_id']);
+            Auth::guard('mpo')->login($adminMpo);
+            session()->regenerate();
+
+            return redirect()->route('mpo.profile');
+        }
+
+        $mpo = Mpo::whereRaw('LOWER(email) = ?', [$email])->first();
         if ($mpo && Hash::check($request->password, $mpo->password_hash)) {
             $isApprovedByAdmin = (bool) ($mpo->admin_approve_flag ?? 0);
-            if (($mpo->account_status ?? '') !== 'active' || !$isApprovedByAdmin) {
+            if (($mpo->account_status ?? '') !== 'active' || ! $isApprovedByAdmin) {
                 return back()->withErrors(['email' => 'Account is pending admin approval.']);
             }
+            session()->forget(['admin_id', 'admin_country_id']);
+            Auth::guard('mpo_staff')->logout();
             Auth::guard('mpo')->login($mpo);
 
             // Handle accept token flow (owner accepting a ControllerVerification)
@@ -54,6 +124,7 @@ class AuthController extends Controller
                             $rq->account_status = 'active';
                             $rq->save();
                         }
+
                         return redirect()->route('mpo.register.step2')->with('success', 'You have accepted the request. Business is pending admin approval.');
                     }
                 } catch (\Exception $e) {
@@ -67,9 +138,41 @@ class AuthController extends Controller
         return back()->withErrors(['email' => 'Invalid credentials.']);
     }
 
+    private function staffLandingRoute(MpoStaffUser $staffUser): ?string
+    {
+        $permissions = app(MpoStaffPermissionService::class);
+        foreach ([
+            ['users', 'mpo.users'],
+            ['profile', 'mpo.profile'],
+            ['compliance', 'mpo.compliances'],
+            ['capacity-permissions', 'mpo.capacity-permissions'],
+            ['collaboration-agreements', 'mpo.collaboration-agreements'],
+            ['accounting', 'mpo.accounting-commission'],
+        ] as [$module, $route]) {
+            if ($permissions->can($staffUser, $module, 'read')) {
+                return route($route);
+            }
+        }
+
+        if ($permissions->can($staffUser, 'users', 'create')) {
+            return route('mpo.users.create');
+        }
+
+        foreach (array_keys(config('mpo_staff.registry', [])) as $module) {
+            if ($permissions->can($staffUser, $module, 'read')) {
+                return route('mpo.operations.module', ['module' => $module]);
+            }
+        }
+
+        return null;
+    }
+
     public function logout()
     {
         Auth::guard('mpo')->logout();
+        Auth::guard('mpo_staff')->logout();
+        session()->forget(['admin_id', 'admin_country_id']);
+
         return redirect()->route('mpo.login');
     }
 
@@ -120,9 +223,9 @@ class AuthController extends Controller
             ]);
         } else {
             $business = Business::where('legal_name', $request->business_legal_name)
-                        ->where('country', $request->country_of_operation)
-                        ->first();
-            if (!$business) {
+                ->where('country', $request->country_of_operation)
+                ->first();
+            if (! $business) {
                 $business = Business::create([
                     'business_id' => Business::generateBusinessId(),
                     'legal_name' => $request->business_legal_name,
@@ -131,7 +234,7 @@ class AuthController extends Controller
                     'status' => 'pending',
                 ]);
 
-                if (!empty($request->owner_email)) {
+                if (! empty($request->owner_email)) {
                     $cv = \App\Models\ControllerVerification::create([
                         'token' => \App\Models\ControllerVerification::generateToken(),
                         'business_id' => $business->id,
@@ -153,12 +256,12 @@ class AuthController extends Controller
                         ]);
 
                         return back()->withErrors([
-                            'owner_email' => 'The owner verification email could not be sent. Please check the owner email or SMTP configuration.'
+                            'owner_email' => 'The owner verification email could not be sent. Please check the owner email or SMTP configuration.',
                         ])->withInput();
                     }
                 }
             } else {
-                if (!empty($request->owner_email)) {
+                if (! empty($request->owner_email)) {
                     $cv = \App\Models\ControllerVerification::create([
                         'token' => \App\Models\ControllerVerification::generateToken(),
                         'business_id' => $business->id,
@@ -179,7 +282,7 @@ class AuthController extends Controller
                         ]);
 
                         return back()->withErrors([
-                            'owner_email' => 'The owner verification email could not be sent. Please check the owner email or SMTP configuration.'
+                            'owner_email' => 'The owner verification email could not be sent. Please check the owner email or SMTP configuration.',
                         ])->withInput();
                     }
                 }

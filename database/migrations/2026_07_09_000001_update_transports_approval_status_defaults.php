@@ -12,14 +12,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('transports', function (Blueprint $table) {
+        if (DB::connection()->getDriverName() !== 'sqlite' && Schema::hasTable('transports')) {
             DB::statement("ALTER TABLE `transports` MODIFY `approval_status` ENUM('Draft', 'Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Draft'");
-        });
+        }
 
-        DB::table('transports')
-            ->where('approval_status', 'Pending')
-            ->whereNull('submitted_for_approval_at')
-            ->update(['approval_status' => 'Draft']);
+        if (Schema::hasTable('transports') && Schema::hasColumn('transports', 'submitted_for_approval_at')) {
+            DB::table('transports')
+                ->where('approval_status', 'Pending')
+                ->whereNull('submitted_for_approval_at')
+                ->update(['approval_status' => 'Draft']);
+        }
     }
 
     /**
@@ -27,13 +29,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('transports', function (Blueprint $table) {
+        if (DB::connection()->getDriverName() !== 'sqlite' && Schema::hasTable('transports')) {
             DB::statement("ALTER TABLE `transports` MODIFY `approval_status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Pending'");
-        });
+        }
 
-        DB::table('transports')
-            ->where('approval_status', 'Draft')
-            ->whereNull('submitted_for_approval_at')
-            ->update(['approval_status' => 'Pending']);
+        if (Schema::hasTable('transports') && Schema::hasColumn('transports', 'submitted_for_approval_at')) {
+            DB::table('transports')
+                ->where('approval_status', 'Draft')
+                ->whereNull('submitted_for_approval_at')
+                ->update(['approval_status' => 'Pending']);
+        }
     }
 };

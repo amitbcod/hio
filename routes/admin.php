@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SharedCartController;
-use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Middleware\GlobalAdminMiddleware;
+use Illuminate\Support\Facades\Route;
 
 // Public admin auth routes (no middleware)
 Route::get('admin/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
@@ -27,6 +27,32 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
         Route::post('country-admins', [\App\Http\Controllers\Admin\CountryAdminController::class, 'store'])->name('country-admins.store');
         Route::get('country-admins/{administrator}/edit', [\App\Http\Controllers\Admin\CountryAdminController::class, 'edit'])->name('country-admins.edit');
         Route::put('country-admins/{administrator}', [\App\Http\Controllers\Admin\CountryAdminController::class, 'update'])->name('country-admins.update');
+        Route::get('country-admins/{administrator}/profile', [\App\Http\Controllers\Mpo\ProfileController::class, 'editAdmin'])->name('country-admins.profile.edit');
+        Route::put('country-admins/{administrator}/profile', [\App\Http\Controllers\Mpo\ProfileController::class, 'updateAdmin'])->name('country-admins.profile.update');
+        Route::get('country-admins/{administrator}/compliance', [\App\Http\Controllers\Mpo\ComplianceController::class, 'adminShow'])->name('country-admins.compliance.show');
+        Route::get('country-admins/{administrator}/accounting-commission', [\App\Http\Controllers\Mpo\AccountingCommissionController::class, 'adminShow'])->name('country-admins.accounting-commission.show');
+        Route::get('country-admins/{administrator}/accounting-payouts', [\App\Http\Controllers\Mpo\AccountingPayoutController::class, 'adminShow'])->name('country-admins.accounting-payouts.show');
+        Route::patch('country-admins/{administrator}/compliance', [\App\Http\Controllers\Mpo\ComplianceController::class, 'adminSubmit'])->name('country-admins.compliance.save');
+        Route::patch('country-admins/{administrator}/compliance/review', [\App\Http\Controllers\Mpo\ComplianceController::class, 'adminReview'])->name('country-admins.compliance.review');
+        Route::get('country-admins/{administrator}/collaboration-agreements/create', [\App\Http\Controllers\Mpo\CollaborationAgreementController::class, 'adminCreate'])->name('country-admins.collaboration-agreements.create');
+        Route::post('country-admins/{administrator}/collaboration-agreements', [\App\Http\Controllers\Mpo\CollaborationAgreementController::class, 'adminStore'])->name('country-admins.collaboration-agreements.store');
+        Route::get('country-admins/{administrator}/collaboration-agreements/{agreement}/edit', [\App\Http\Controllers\Mpo\CollaborationAgreementController::class, 'adminEdit'])->name('country-admins.collaboration-agreements.edit');
+        Route::put('country-admins/{administrator}/collaboration-agreements/{agreement}', [\App\Http\Controllers\Mpo\CollaborationAgreementController::class, 'adminUpdate'])->name('country-admins.collaboration-agreements.update');
+        Route::post('country-admins/{administrator}/collaboration-agreements/{agreement}/status', [\App\Http\Controllers\Mpo\CollaborationAgreementController::class, 'adminTransition'])->name('country-admins.collaboration-agreements.status');
+        Route::get('country-admins/{administrator}/collaboration-agreements/documents/{document}', [\App\Http\Controllers\Mpo\CollaborationAgreementController::class, 'adminDownload'])
+            ->whereNumber('document')
+            ->name('country-admins.collaboration-agreements.documents.download');
+        Route::get('country-admins/{administrator}/users', [\App\Http\Controllers\Mpo\StaffUserController::class, 'adminIndex'])->name('country-admins.users');
+        Route::get('country-admins/{administrator}/users/create', [\App\Http\Controllers\Mpo\StaffUserController::class, 'adminCreate'])->name('country-admins.users.create');
+        Route::post('country-admins/{administrator}/users', [\App\Http\Controllers\Mpo\StaffUserController::class, 'adminStore'])->name('country-admins.users.store');
+        Route::get('country-admins/{administrator}/users/{staffUser}', [\App\Http\Controllers\Mpo\StaffUserController::class, 'adminShow'])->whereNumber('staffUser')->name('country-admins.users.show');
+        Route::get('country-admins/{administrator}/users/{staffUser}/edit', [\App\Http\Controllers\Mpo\StaffUserController::class, 'adminEdit'])->whereNumber('staffUser')->name('country-admins.users.edit');
+        Route::put('country-admins/{administrator}/users/{staffUser}', [\App\Http\Controllers\Mpo\StaffUserController::class, 'adminUpdate'])->whereNumber('staffUser')->name('country-admins.users.update');
+        Route::post('country-admins/{administrator}/users/{staffUser}/status', [\App\Http\Controllers\Mpo\StaffUserController::class, 'adminUpdateStatus'])->whereNumber('staffUser')->name('country-admins.users.status');
+        Route::post('country-admins/{administrator}/users/{staffUser}/reset-password', [\App\Http\Controllers\Mpo\StaffUserController::class, 'adminSendPasswordReset'])->whereNumber('staffUser')->name('country-admins.users.reset-password');
+        Route::get('mpo-compliance/{compliance}/{document}', [\App\Http\Controllers\Mpo\ComplianceController::class, 'adminDownload'])
+            ->whereIn('document', ['proof-of-license', 'insurance-certificate'])
+            ->name('mpo-compliance.download');
 
         Route::get('roles', [\App\Http\Controllers\Admin\RoleController::class, 'index'])->name('roles.index');
         Route::post('roles', [\App\Http\Controllers\Admin\RoleController::class, 'store'])->name('roles.store');
@@ -256,7 +282,7 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     Route::get('policy-templates/create', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'create'])->name('policy-templates.create');
     Route::post('policy-templates', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'store'])->name('policy-templates.store');
     Route::get('policy-templates/{policyTemplate}/edit', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'edit'])->name('policy-templates.edit');
-    Route::match(['put','patch','post'], 'policy-templates/{policyTemplate}', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'update'])->name('policy-templates.update');
+    Route::match(['put', 'patch', 'post'], 'policy-templates/{policyTemplate}', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'update'])->name('policy-templates.update');
     Route::delete('policy-templates/{policyTemplate}', [\App\Http\Controllers\Admin\PolicyTemplateController::class, 'destroy'])->name('policy-templates.destroy');
 
     // Static pages - admin CRUD
@@ -264,7 +290,7 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     Route::get('static-pages/create', [\App\Http\Controllers\Admin\StaticPageController::class, 'create'])->name('static-pages.create');
     Route::post('static-pages', [\App\Http\Controllers\Admin\StaticPageController::class, 'store'])->name('static-pages.store');
     Route::get('static-pages/{staticPage}/edit', [\App\Http\Controllers\Admin\StaticPageController::class, 'edit'])->name('static-pages.edit');
-    Route::match(['put','patch','post'], 'static-pages/{staticPage}', [\App\Http\Controllers\Admin\StaticPageController::class, 'update'])->name('static-pages.update');
+    Route::match(['put', 'patch', 'post'], 'static-pages/{staticPage}', [\App\Http\Controllers\Admin\StaticPageController::class, 'update'])->name('static-pages.update');
     Route::delete('static-pages/{staticPage}', [\App\Http\Controllers\Admin\StaticPageController::class, 'destroy'])->name('static-pages.destroy');
 
     Route::get('places', [\App\Http\Controllers\Admin\PlaceController::class, 'index'])->name('places.index');

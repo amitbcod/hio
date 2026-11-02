@@ -7,6 +7,7 @@ use App\Models\ActivityBooking;
 use App\Models\ActivitySchedulingTimeSlot;
 use App\Models\AdminUser;
 use App\Models\BookingScheduleChange;
+use App\Models\MpoStaffUser;
 use App\Models\Operator;
 use App\Models\OperatorUser;
 use App\Models\TransportBooking;
@@ -62,10 +63,11 @@ class BookingPostponementService
         int $bookingId,
         string $date,
         Model $actor,
-        bool $isAdmin
+        bool $isAdmin,
+        bool $isMpoStaff = false
     ): array {
         $booking = $this->bookingQuery('activity', $bookingId)->firstOrFail();
-        $this->authorizeBooking($booking, 'activity', $actor, $isAdmin);
+        $this->authorizeBooking($booking, 'activity', $actor, $isAdmin, $isMpoStaff);
         $selectedDate = Carbon::createFromFormat('!Y-m-d', $date, config('app.timezone'));
         if (! $selectedDate || $selectedDate->toDateString() !== $date) {
             throw ValidationException::withMessages([
@@ -175,15 +177,16 @@ class BookingPostponementService
         string $serviceType,
         int $bookingId,
         Model $actor,
-        bool $isAdmin
+        bool $isAdmin,
+        bool $isMpoStaff = false
     ): void {
         if (! isset(self::BOOKING_MODELS[$serviceType])) {
             abort(404);
         }
 
-        DB::transaction(function () use ($request, $serviceType, $bookingId, $actor, $isAdmin): void {
+        DB::transaction(function () use ($request, $serviceType, $bookingId, $actor, $isAdmin, $isMpoStaff): void {
             $booking = $this->bookingQuery($serviceType, $bookingId)->lockForUpdate()->firstOrFail();
-            $this->authorizeBooking($booking, $serviceType, $actor, $isAdmin);
+            $this->authorizeBooking($booking, $serviceType, $actor, $isAdmin, $isMpoStaff);
             $this->loadBookingRelations($booking, $serviceType);
 
             if (! $this->isEligibleStatus($booking)) {
@@ -263,7 +266,7 @@ class BookingPostponementService
                 'reason' => trim($validated['reason']),
                 'actor_type' => $actor->getMorphClass(),
                 'actor_id' => $actor->getKey(),
-                'actor_role' => $isAdmin ? 'admin' : 'operator',
+                'actor_role' => $isMpoStaff ? 'mpo_staff' : ($isAdmin ? 'admin' : 'operator'),
             ]);
         });
     }
@@ -292,12 +295,33 @@ class BookingPostponementService
         $booking->loadMissing($relations[$serviceType]);
     }
 
-    private function authorizeBooking(Model $booking, string $serviceType, Model $actor, bool $isAdmin): void
+    private function authorizeBooking(
+        Model $booking,
+        string $serviceType,
+        Model $actor,
+        bool $isAdmin,
+        bool $isMpoStaff = false
+    ): void
     {
         if ($isAdmin) {
             if (! $actor instanceof AdminUser) {
                 abort(403);
             }
+
+            return;
+        }
+
+        if ($isMpoStaff) {
+            abort_unless($actor instanceof MpoStaffUser, 403);
+            $mpo = $actor->mpo;
+            abort_unless(
+                $mpo
+                    && $mpo->admin_type === 'mpo'
+                    && $mpo->status === 'active'
+                    && $mpo->country_id
+                    && (int) $booking->country_id === (int) $mpo->country_id,
+                404,
+            );
 
             return;
         }

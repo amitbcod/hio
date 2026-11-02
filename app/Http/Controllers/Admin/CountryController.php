@@ -18,7 +18,7 @@ class CountryController extends Controller
 
     public function create()
     {
-        return view('admin.countries.form', ['country' => new Country()]);
+        return view('admin.countries.form', ['country' => new Country]);
     }
 
     public function store(Request $request)
@@ -51,6 +51,7 @@ class CountryController extends Controller
             'iso_code' => ['required', 'string', 'size:2', Rule::unique('countries', 'iso_code')->ignore($country?->id)],
             'currency_code' => ['nullable', 'string', 'size:3'],
             'time_zone' => ['nullable', 'timezone'],
+            'vat_percentage' => ['nullable', 'numeric', 'between:0,100', 'decimal:0,4'],
             'is_active' => ['nullable', 'boolean'],
         ]);
     }

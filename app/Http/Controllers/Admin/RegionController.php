@@ -3,24 +3,30 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Region;
 use App\Models\Country;
+use App\Models\Region;
 use App\Support\CountryAccess;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class RegionController extends Controller
 {
     public function index()
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if (! session('admin_id')) {
+            return redirect()->route('admin.login');
+        }
         $regions = Region::with('country')->orderBy('name')->get();
+
         return view('admin.regions.index', compact('regions'));
     }
 
     public function create()
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if (! session('admin_id')) {
+            return redirect()->route('admin.login');
+        }
+
         return view('admin.regions.create', [
             'countries' => Country::where('is_active', true)->orderBy('name')->get(),
             'isMpo' => CountryAccess::isMpoAdmin(),
@@ -29,7 +35,9 @@ class RegionController extends Controller
 
     public function store(Request $request)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if (! session('admin_id')) {
+            return redirect()->route('admin.login');
+        }
 
         $countryId = $this->countryId($request);
         $request->validate([
@@ -46,17 +54,28 @@ class RegionController extends Controller
 
     public function edit(Region $region)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if (! session('admin_id')) {
+            return redirect()->route('admin.login');
+        }
+
         return view('admin.regions.edit', [
             'region' => $region,
-            'countries' => Country::where('is_active', true)->orWhereKey($region->country_id)->orderBy('name')->get(),
+            'countries' => Country::query()
+                ->where(function ($query) use ($region): void {
+                    $query->where('is_active', true)
+                        ->orWhere('id', $region->country_id);
+                })
+                ->orderBy('name')
+                ->get(),
             'isMpo' => CountryAccess::isMpoAdmin(),
         ]);
     }
 
     public function update(Request $request, Region $region)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if (! session('admin_id')) {
+            return redirect()->route('admin.login');
+        }
 
         $countryId = $this->countryId($request, $region->country_id);
         $request->validate([
@@ -72,9 +91,12 @@ class RegionController extends Controller
 
     public function destroy(Region $region)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if (! session('admin_id')) {
+            return redirect()->route('admin.login');
+        }
 
         $region->delete();
+
         return redirect()->route('admin.regions.index')->with('success', 'Region deleted successfully.');
     }
 

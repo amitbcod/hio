@@ -9,7 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasColumn('transport_bookings', 'transport_vehicle_id')) {
+        if (Schema::hasTable('transport_bookings') && ! Schema::hasColumn('transport_bookings', 'transport_vehicle_id')) {
             Schema::table('transport_bookings', function (Blueprint $table) {
                 $table->foreignId('transport_vehicle_id')
                     ->nullable()
@@ -20,8 +20,7 @@ return new class extends Migration
         }
 
         $indexName = 'tb_transport_vehicle_status_idx';
-        $indexExists = collect(DB::select('SHOW INDEX FROM `transport_bookings`'))
-            ->contains(fn ($index) => ($index->Key_name ?? null) === $indexName);
+        $indexExists = $this->hasIndex($indexName);
 
         if (!$indexExists) {
             Schema::table('transport_bookings', function (Blueprint $table) use ($indexName) {
@@ -35,13 +34,12 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (!Schema::hasColumn('transport_bookings', 'transport_vehicle_id')) {
+        if (! Schema::hasTable('transport_bookings') || ! Schema::hasColumn('transport_bookings', 'transport_vehicle_id')) {
             return;
         }
 
         $indexName = 'tb_transport_vehicle_status_idx';
-        $indexExists = collect(DB::select('SHOW INDEX FROM `transport_bookings`'))
-            ->contains(fn ($index) => ($index->Key_name ?? null) === $indexName);
+        $indexExists = $this->hasIndex($indexName);
 
         Schema::table('transport_bookings', function (Blueprint $table) use ($indexName, $indexExists) {
             if ($indexExists) {
@@ -51,5 +49,16 @@ return new class extends Migration
             $table->dropForeign(['transport_vehicle_id']);
             $table->dropColumn('transport_vehicle_id');
         });
+    }
+
+    private function hasIndex(string $indexName): bool
+    {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return collect(DB::select("PRAGMA index_list('transport_bookings')"))
+                ->contains(fn (object $index): bool => $index->name === $indexName);
+        }
+
+        return collect(DB::select('SHOW INDEX FROM `transport_bookings`'))
+            ->contains(fn (object $index): bool => ($index->Key_name ?? null) === $indexName);
     }
 };

@@ -21,6 +21,7 @@ class TransportBookingAssignment extends Model
         'assigned_at',
         'unassigned_at',
         'assigned_by',
+        'assigned_by_mpo_staff_user_id',
     ];
 
     protected $casts = [
@@ -50,5 +51,10 @@ class TransportBookingAssignment extends Model
     public function assignedBy()
     {
         return $this->belongsTo(Operator::class, 'assigned_by');
+    }
+
+    public function assignedByMpoStaff()
+    {
+        return $this->belongsTo(MpoStaffUser::class, 'assigned_by_mpo_staff_user_id');
     }
 }

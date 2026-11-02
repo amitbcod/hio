@@ -1,11 +1,18 @@
 @php
     $postponementPanelId = 'postponement-panel-' . $serviceType . '-' . $booking->getKey();
+    $isMpoStaff = $isMpoStaff ?? false;
+    $postponeRoute = $isMpoStaff
+        ? 'mpo.operations.booking.update'
+        : ($isAdmin ? 'admin.bookings.postpone' : 'operator.bookings.postpone');
+    $activitySlotsRoute = $isMpoStaff
+        ? 'mpo.operations.booking.activity-slots'
+        : ($isAdmin ? 'admin.bookings.postpone.activity-slots' : 'operator.bookings.postpone.activity-slots');
     $hasPostponementErrors = $errors->has('schedule')
         || $errors->has('new_date')
         || $errors->has('new_time')
         || $errors->has('new_time_slot_id')
         || $errors->has('reason');
-    $isPostponementPanelOpen = ($isAdmin && session()->has('success'))
+    $isPostponementPanelOpen = (($isAdmin || $isMpoStaff) && session()->has('success'))
         || (!$isAdmin && session('success') === __('booking_postponement.success'))
         || ($hasPostponementErrors && collect($postponementActions)
             ->contains(fn ($action) => old('expected_schedule') === $action['expected_schedule']));
@@ -21,7 +28,7 @@
     </button>
     <div id="{{ $postponementPanelId }}" class="card mt-3 shadow-sm border-0" data-postponement-panel @if(!$isPostponementPanelOpen) hidden @endif>
         <div class="card-body">
-            @if($isAdmin && session('success'))
+            @if(($isAdmin || $isMpoStaff) && session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
             @error('schedule')
@@ -54,7 +61,7 @@
 
                 @if($action['can_submit'])
                     <form method="POST"
-                              action="{{ route($isAdmin ? 'admin.bookings.postpone' : 'operator.bookings.postpone', ['serviceType' => $serviceType, 'booking' => $booking->getKey()]) }}"
+                              action="{{ route($postponeRoute, ['serviceType' => $serviceType, 'booking' => $booking->getKey()]) }}"
                               onsubmit="const button = this.querySelector('button[type=submit]'); if (button) button.disabled = true;">
                             @csrf
                             @if($serviceType === 'transport')
@@ -74,7 +81,7 @@
                                            min="{{ now(config('app.timezone'))->toDateString() }}"
                                            value="{{ old('new_date') }}"
                                            @if($serviceType === 'accommodation') data-stay-nights="{{ $action['stay_nights'] ?? '' }}" @endif
-                                           @if($serviceType === 'activity') data-activity-date data-slots-url="{{ route($isAdmin ? 'admin.bookings.postpone.activity-slots' : 'operator.bookings.postpone.activity-slots', ['booking' => $booking->getKey()]) }}" data-loading-label="{{ __('booking_postponement.loading_slots') }}" data-empty-label="{{ __('booking_postponement.no_slots_available') }}" data-error-label="{{ __('booking_postponement.slots_load_error') }}" @endif
+                                           @if($serviceType === 'activity') data-activity-date data-slots-url="{{ route($activitySlotsRoute, ['booking' => $booking->getKey()]) }}" data-loading-label="{{ __('booking_postponement.loading_slots') }}" data-empty-label="{{ __('booking_postponement.no_slots_available') }}" data-error-label="{{ __('booking_postponement.slots_load_error') }}" @endif
                                            required>
                                     @error('new_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     @if($serviceType === 'accommodation')

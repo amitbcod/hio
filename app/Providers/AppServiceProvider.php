@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Auth\MpoUserProvider;
 use App\Models\BookingWidget;
 use App\Models\Operator;
 use App\Models\OperatorProfile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -25,6 +27,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+        Auth::provider('mpo', function ($app, array $config): MpoUserProvider {
+            return new MpoUserProvider($app['hash'], $config['model']);
+        });
 
         View::composer('frontend.*', function ($view) {
             $operatorToken = (string) request()->query('operator_token', session('operator_token', ''));
@@ -44,7 +49,7 @@ class AppServiceProvider extends ServiceProvider
                     if ($operator && $operator->business_id) {
                         $operatorProfile = OperatorProfile::where(function ($query) use ($operator) {
                             $query->where('business_id', $operator->business_id);
-                            if (!empty($operator->operator_id)) {
+                            if (! empty($operator->operator_id)) {
                                 $query->orWhere('operator_id', $operator->operator_id);
                             }
                         })->first();

@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\AdminUser;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -28,11 +29,22 @@ class AuthController extends Controller
                 return back()->withErrors(['email' => 'This administrator account is inactive or has no active country assignment.']);
             }
 
+            Auth::guard('mpo')->logout();
+            Auth::guard('mpo_staff')->logout();
+            if ($admin->admin_type === 'mpo') {
+                session()->forget(['admin_id', 'admin_country_id']);
+                session()->regenerate();
+                Auth::guard('mpo')->login($admin);
+
+                return redirect()->route('mpo.profile');
+            }
+
             session()->regenerate();
             session([
                 'admin_id' => $admin->id,
-                'admin_country_id' => $admin->admin_type === 'mpo' ? $admin->country_id : null,
+                'admin_country_id' => null,
             ]);
+
             return redirect()->intended(route('admin.dashboard'));
         }
 
@@ -41,7 +53,10 @@ class AuthController extends Controller
 
     public function logout()
     {
+        Auth::guard('mpo')->logout();
+        Auth::guard('mpo_staff')->logout();
         session()->forget(['admin_id', 'admin_country_id']);
+
         return redirect()->route('admin.login');
     }
 }
