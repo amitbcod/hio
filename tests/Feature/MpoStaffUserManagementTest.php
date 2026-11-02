@@ -25,6 +25,15 @@ class MpoStaffUserManagementTest extends TestCase
     public function test_a_country_cannot_be_assigned_to_two_mpo_accounts(): void
     {
         $mpo = $this->mpo();
+        AdminUser::query()->create([
+            'name' => 'Global Admin With Country',
+            'email' => 'global-admin-with-country@example.test',
+            'password_hash' => Hash::make('GlobalPassword1!'),
+            'role' => 'super_admin',
+            'admin_type' => 'global',
+            'country_id' => $mpo->country_id,
+            'status' => 'active',
+        ]);
 
         $this->expectException(\Illuminate\Database\QueryException::class);
         AdminUser::query()->create([
