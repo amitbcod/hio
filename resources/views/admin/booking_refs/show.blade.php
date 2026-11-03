@@ -9,6 +9,7 @@
         <p><strong>Trip ID:</strong> {{ $bookingRef->trip_id }}</p>
         <p><strong>Total:</strong> {{ $bookingRef->total_amount }}</p>
         <p><strong>Payment Transaction:</strong> {{ $bookingRef->payment_transaction_id }}</p>
+        <p><strong>Payment Status:</strong> {{ $bookingRef->payment_status_display }}</p>
 
         <h3>Linked Service Bookings</h3>
         <ul>

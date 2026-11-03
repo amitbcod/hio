@@ -147,8 +147,52 @@
             </div>
         @endif
 
+        @if ($transportBookings->isNotEmpty())
+            <div class="bookings-section">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-car"></i>
+                    Transport Bookings
+                </h2>
+                <div class="bookings-grid">
+                    @foreach ($transportBookings as $booking)
+                        <div class="booking-card">
+                            <div class="booking-header">
+                                <div>
+                                    <h3 class="booking-title">{{ $booking->transport->vehicle_display_name ?? 'Transport' }}</h3>
+                                    <p class="booking-ref">{{ __('guest_trip.booking_reference') }} <strong>{{ $booking->booking_reference }}</strong></p>
+                                </div>
+                                <span class="booking-status {{ strtolower($booking->booking_status) }}">{{ $booking->booking_status }}</span>
+                            </div>
+                            <div class="booking-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Pickup date:</span>
+                                    <span class="detail-value">{{ $booking->pickup_date?->format('F d, Y') ?? '-' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Route:</span>
+                                    <span class="detail-value">{{ $booking->route_from }} → {{ $booking->route_to }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">{{ __('guest_trip.total_amount_label') }}</span>
+                                    <span class="detail-value font-bold">{{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}</span>
+                                </div>
+                            </div>
+                            @php
+                                $tripDetailUrl = $booking->trip_id ? route('traveler.guest-trip.detail', ['otp' => $otpToken->otp_code, 'trip' => $booking->trip_id]) : route('traveler.guest-trip.show', ['otp' => $otpToken->otp_code]);
+                                $voucherUrl = $booking->trip_id ? route('traveler.guest-trip.trip.booking.download-voucher', ['otp' => $otpToken->otp_code, 'trip' => $booking->trip_id, 'booking' => $booking->id]) : '#';
+                            @endphp
+                            <div class="booking-actions">
+                                <a href="{{ $tripDetailUrl }}" class="btn-secondary btn-sm">{{ __('guest_trip.view_details') }}</a>
+                                <a href="{{ $voucherUrl }}" class="btn-secondary btn-sm">{{ __('guest_trip.download_voucher') }}</a>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         <!-- Empty State -->
-        @if ($accommodationBookings->isEmpty() && $activityBookings->isEmpty())
+        @if ($accommodationBookings->isEmpty() && $activityBookings->isEmpty() && $transportBookings->isEmpty())
             <div class="empty-state">
                 <i class="fa-solid fa-inbox"></i>
                 <h3>{{ __('guest_trip.empty_title') }}</h3>
@@ -430,4 +474,3 @@
 }
 </style>
 @endpush
-

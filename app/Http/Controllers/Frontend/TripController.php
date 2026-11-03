@@ -20,7 +20,21 @@ class TripController extends Controller
     {
         $traveler = auth('traveler')->user();
         $trips = Trip::where('traveler_account_id', $traveler->id)
-          ->with(['accommodationBookings', 'activityBookings', 'transportBookings.transport.operator.profile', 'transportBookings.transport.vehicleName', 'bookings.lineItems', 'bookingRefs'])
+            ->where(function ($query) {
+                $query->whereHas('accommodationBookings', fn ($bookingQuery) => $bookingQuery->paymentComplete())
+                    ->orWhereHas('activityBookings', fn ($bookingQuery) => $bookingQuery->paymentComplete())
+                    ->orWhereHas('transportBookings', fn ($bookingQuery) => $bookingQuery->paymentComplete());
+            })
+            ->with([
+                'accommodationBookings' => fn ($query) => $query->paymentComplete(),
+                'activityBookings' => fn ($query) => $query->paymentComplete(),
+                'transportBookings' => fn ($query) => $query->paymentComplete()->with(['transport.operator.profile', 'transport.vehicleName']),
+                'bookings' => fn ($query) => $query->paymentComplete()->with('lineItems'),
+                'bookingRefs' => fn ($query) => $query->where(function ($referenceQuery) {
+                    $referenceQuery->whereHas('paymentTransactions', fn ($paymentQuery) => $paymentQuery->paymentComplete())
+                        ->orWhereHas('paymentTransaction', fn ($paymentQuery) => $paymentQuery->paymentComplete());
+                }),
+            ])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -44,7 +58,16 @@ class TripController extends Controller
         if ($trip->traveler_account_id !== $traveler->id) {
             abort(403);
         }
-        $trip->load('bookings.lineItems.travellers', 'travellers');
+        abort_unless(
+            AccommodationBooking::where('trip_id', $trip->id)->paymentComplete()->exists()
+            || ActivityBooking::where('trip_id', $trip->id)->paymentComplete()->exists()
+            || TransportBooking::where('trip_id', $trip->id)->paymentComplete()->exists(),
+            404
+        );
+        $trip->load([
+            'bookings' => fn ($query) => $query->paymentComplete()->with('lineItems.travellers'),
+            'travellers',
+        ]);
 
         $packageBooking = $trip->bookings->first(function ($booking) {
           return ($booking->lineItems ?? collect())->contains(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');
@@ -53,18 +76,21 @@ class TripController extends Controller
           ->first(fn ($lineItem) => ($lineItem->service_type ?? null) === 'package');
 
         $tripAccommodationBookings = \App\Models\AccommodationBooking::where('trip_id', $trip->id)
+          ->paymentComplete()
           ->where('is_guest', 0)
           ->with(['accommodation', 'room', 'guests'])
           ->orderBy('check_in_date', 'asc')
           ->get();
         $accommodationBookings = $this->filterPackageGeneratedBookings($tripAccommodationBookings);
         $tripActivityBookings = \App\Models\ActivityBooking::where('trip_id', $trip->id)
+          ->paymentComplete()
           ->where('is_guest', 0)
           ->with(['activity', 'guests'])
           ->orderBy('activity_date', 'asc')
           ->get();
         $activityBookings = $this->filterPackageGeneratedBookings($tripActivityBookings);
         $tripTransportBookings = TransportBooking::where('trip_id', $trip->id)
+          ->paymentComplete()
           ->where('is_guest', 0)
           ->with(['transport.operator.profile', 'transport.vehicleName', 'pickupDriver', 'returnDriver'])
           ->orderBy('pickup_date', 'asc')
@@ -488,9 +514,9 @@ class TripController extends Controller
             abort(403);
         }
 
-        $booking = AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->first();
+        $booking = AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->paymentComplete()->first();
         if (!$booking) {
-            $booking = ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->first();
+            $booking = ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->paymentComplete()->first();
         }
 
         if (!$booking) {
@@ -543,7 +569,7 @@ class TripController extends Controller
         ]);
 
         $packageLineItem = \App\Models\BookingLineItem::where('id', $bookingId)
-            ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id))
+            ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id)->paymentComplete())
             ->with('booking')
             ->first();
 
@@ -551,12 +577,12 @@ class TripController extends Controller
             $booking = null;
         } else {
             $packageLineItem = null;
-            $booking = \App\Models\AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->with('guests')->first();
+            $booking = \App\Models\AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->paymentComplete()->with('guests')->first();
             if (!$booking) {
-                $booking = \App\Models\ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->with('guests')->first();
+                $booking = \App\Models\ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->paymentComplete()->with('guests')->first();
             }
             if (!$booking) {
-                $booking = TransportBooking::where('id', $bookingId)->where('trip_id', $trip->id)->with(['transport.operator.profile', 'transport.vehicleName', 'guests'])->first();
+                $booking = TransportBooking::where('id', $bookingId)->where('trip_id', $trip->id)->paymentComplete()->with(['transport.operator.profile', 'transport.vehicleName', 'guests'])->first();
             }
         }
 
@@ -722,7 +748,7 @@ class TripController extends Controller
             $serviceType = strtolower((string) ($request?->query('service_type') ?? ''));
             $allowedPackageTypes = ['accommodation', 'activity', 'transport'];
             $packageLineItem = \App\Models\BookingLineItem::where('id', $bookingId)
-              ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id))
+              ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id)->paymentComplete())
               ->with('booking')
               ->first();
 
@@ -745,17 +771,20 @@ class TripController extends Controller
               $packageLineItem = null;
               $booking = \App\Models\AccommodationBooking::where('id', $bookingId)
                 ->where('trip_id', $trip->id)
+                ->paymentComplete()
                 ->with(['accommodation', 'room', 'guests'])
                 ->first();
               if (!$booking) {
                 $booking = \App\Models\ActivityBooking::where('id', $bookingId)
                   ->where('trip_id', $trip->id)
+                  ->paymentComplete()
                   ->with(['activity.operator', 'activity.operationsStaffing', 'activity.schedulingTimeSlots', 'guests'])
                   ->first();
               }
               if (!$booking) {
                 $booking = TransportBooking::where('id', $bookingId)
                   ->where('trip_id', $trip->id)
+                  ->paymentComplete()
                   ->with(['transport.operator.profile', 'transport.vehicleName', 'driver', 'guests'])
                   ->first();
               }
@@ -1678,7 +1707,7 @@ HTML;
         }
 
         $packageLineItem = \App\Models\BookingLineItem::where('id', $bookingId)
-            ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id))
+            ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id)->paymentComplete())
             ->first();
 
         if ($packageLineItem && $packageLineItem->service_type === 'package') {
@@ -1747,9 +1776,9 @@ HTML;
         }
 
         // Find the standard service booking after package line items.
-        $booking = \App\Models\AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->first();
+        $booking = \App\Models\AccommodationBooking::where('id', $bookingId)->where('trip_id', $trip->id)->paymentComplete()->first();
         if (!$booking) {
-            $booking = \App\Models\ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->first();
+            $booking = \App\Models\ActivityBooking::where('id', $bookingId)->where('trip_id', $trip->id)->paymentComplete()->first();
         }
         if (!$booking) {
             abort(404);
@@ -1813,14 +1842,25 @@ HTML;
         $selectedBookingRef = null;
 
         if ($bookingRefId) {
-          $selectedBookingRef = \App\Models\BookingRef::where('trip_id', $trip->id)->findOrFail($bookingRefId);
-          $accommodationBookings = $this->filterPackageGeneratedBookings(\App\Models\AccommodationBooking::where('trip_id', $trip->id)->where('booking_ref_id', $bookingRefId)->with(['accommodation'])->get());
-          $activityBookings = $this->filterPackageGeneratedBookings(\App\Models\ActivityBooking::where('trip_id', $trip->id)->where('booking_ref_id', $bookingRefId)->with(['activity'])->get());
-          $transportBookings = $this->filterPackageGeneratedBookings(\App\Models\TransportBooking::where('trip_id', $trip->id)->where('booking_ref_id', $bookingRefId)->with(['transport.operator.profile', 'transport.vehicleName'])->get());
+          $selectedBookingRef = \App\Models\BookingRef::where('trip_id', $trip->id)
+              ->where(function ($referenceQuery) {
+                  $referenceQuery->whereHas('paymentTransactions', fn ($paymentQuery) => $paymentQuery->paymentComplete())
+                      ->orWhereHas('paymentTransaction', fn ($paymentQuery) => $paymentQuery->paymentComplete());
+              })
+              ->findOrFail($bookingRefId);
+          $accommodationBookings = $this->filterPackageGeneratedBookings(\App\Models\AccommodationBooking::where('trip_id', $trip->id)->where('booking_ref_id', $bookingRefId)->paymentComplete()->with(['accommodation'])->get());
+          $activityBookings = $this->filterPackageGeneratedBookings(\App\Models\ActivityBooking::where('trip_id', $trip->id)->where('booking_ref_id', $bookingRefId)->paymentComplete()->with(['activity'])->get());
+          $transportBookings = $this->filterPackageGeneratedBookings(\App\Models\TransportBooking::where('trip_id', $trip->id)->where('booking_ref_id', $bookingRefId)->paymentComplete()->with(['transport.operator.profile', 'transport.vehicleName'])->get());
         } else {
-          $accommodationBookings = $this->filterPackageGeneratedBookings($trip->accommodationBookings ?? collect());
-          $activityBookings = $this->filterPackageGeneratedBookings($trip->activityBookings ?? collect());
-          $transportBookings = $this->filterPackageGeneratedBookings($trip->transportBookings()->with(['transport.operator.profile', 'transport.vehicleName'])->get() ?? collect());
+          abort_unless(
+              AccommodationBooking::where('trip_id', $trip->id)->paymentComplete()->exists()
+              || ActivityBooking::where('trip_id', $trip->id)->paymentComplete()->exists()
+              || TransportBooking::where('trip_id', $trip->id)->paymentComplete()->exists(),
+              404
+          );
+          $accommodationBookings = $this->filterPackageGeneratedBookings(AccommodationBooking::where('trip_id', $trip->id)->paymentComplete()->with(['accommodation'])->get());
+          $activityBookings = $this->filterPackageGeneratedBookings(ActivityBooking::where('trip_id', $trip->id)->paymentComplete()->with(['activity'])->get());
+          $transportBookings = $this->filterPackageGeneratedBookings(TransportBooking::where('trip_id', $trip->id)->paymentComplete()->with(['transport.operator.profile', 'transport.vehicleName'])->get());
         }
 
         $invoiceParentBookings = $this->getInvoiceParentBookings($trip, $selectedBookingRef);
@@ -2503,7 +2543,14 @@ HTML;
         ->where('trip_id', $trip->id);
 
       if (!$bookingRef) {
-        return $query->get();
+        $paidReferenceIds = \App\Models\BookingRef::where('trip_id', $trip->id)
+          ->where(function ($referenceQuery) {
+            $referenceQuery->whereHas('paymentTransactions', fn ($paymentQuery) => $paymentQuery->paymentComplete())
+              ->orWhereHas('paymentTransaction', fn ($paymentQuery) => $paymentQuery->paymentComplete());
+          })
+          ->pluck('id');
+
+        return $query->whereIn('booking_ref_id', $paidReferenceIds)->get();
       }
 
       if (\Illuminate\Support\Facades\Schema::hasColumn('bookings', 'booking_ref_id')) {

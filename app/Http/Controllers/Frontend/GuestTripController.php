@@ -38,10 +38,16 @@ class GuestTripController extends Controller
         if (!empty($tripIds)) {
             // Show trips in table view (same as authenticated customers)
             $trips = Trip::with([
-                'accommodationBookings.guests',
-                'activityBookings.guests'
+                'accommodationBookings' => fn ($query) => $query->paymentComplete()->with('guests'),
+                'activityBookings' => fn ($query) => $query->paymentComplete()->with('guests'),
+                'transportBookings' => fn ($query) => $query->paymentComplete()->with(['transport.operator.profile', 'transport.vehicleName', 'guests']),
             ])
                 ->whereIn('id', $tripIds)
+                ->where(function ($query) {
+                    $query->whereHas('accommodationBookings', fn ($bookingQuery) => $bookingQuery->paymentComplete())
+                        ->orWhereHas('activityBookings', fn ($bookingQuery) => $bookingQuery->paymentComplete())
+                        ->orWhereHas('transportBookings', fn ($bookingQuery) => $bookingQuery->paymentComplete());
+                })
                 ->orderBy('start_date', 'desc')
                 ->get();
 
@@ -54,14 +60,19 @@ class GuestTripController extends Controller
         }
 
         // Fallback: Show bookings directly if no trips
-        [$accommodationBookings, $activityBookings] = $this->getGuestBookings($otpToken);
+        [$accommodationBookings, $activityBookings, $transportBookings] = $this->getGuestBookings($otpToken);
 
-        if ($accommodationBookings->isEmpty() && $activityBookings->isEmpty()) {
-            return view('frontend.guest-trip', compact('otpToken'))
+        if ($accommodationBookings->isEmpty() && $activityBookings->isEmpty() && $transportBookings->isEmpty()) {
+            return view('frontend.guest-trip', [
+                'otpToken' => $otpToken,
+                'accommodationBookings' => collect(),
+                'activityBookings' => collect(),
+                'transportBookings' => collect(),
+            ])
                 ->with('guestMode', true);
         }
 
-        return view('frontend.guest-trip', compact('otpToken', 'accommodationBookings', 'activityBookings'))
+        return view('frontend.guest-trip', compact('otpToken', 'accommodationBookings', 'activityBookings', 'transportBookings'))
             ->with('guestMode', true);
     }
 
@@ -74,19 +85,25 @@ class GuestTripController extends Controller
 
         $this->authenticateGuest($otpToken);
 
-        $trip->load('bookings.lineItems.travellers', 'travellers');
+        $trip->load([
+            'bookings' => fn ($query) => $query->paymentComplete()->with('lineItems.travellers'),
+            'travellers',
+        ]);
 
         $accommodationBookings = (new \App\Http\Controllers\Frontend\TripController())->filterPackageGeneratedBookings(AccommodationBooking::where('trip_id', $trip->id)
+            ->paymentComplete()
             ->with(['accommodation', 'room', 'guests'])
             ->orderBy('check_in_date', 'asc')
             ->get());
 
         $activityBookings = (new \App\Http\Controllers\Frontend\TripController())->filterPackageGeneratedBookings(ActivityBooking::where('trip_id', $trip->id)
+            ->paymentComplete()
             ->with(['activity', 'guests'])
             ->orderBy('activity_date', 'asc')
             ->get());
 
         $transportBookings = (new \App\Http\Controllers\Frontend\TripController())->filterPackageGeneratedBookings(TransportBooking::where('trip_id', $trip->id)
+            ->paymentComplete()
             ->with(['transport.operator.profile', 'transport.vehicleName', 'driver'])
             ->orderBy('pickup_date', 'asc')
             ->get());
@@ -144,7 +161,7 @@ class GuestTripController extends Controller
         $serviceType = strtolower((string) ($request?->query('service_type') ?? ''));
 
         $packageLineItem = \App\Models\BookingLineItem::where('id', $bookingId)
-            ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id))
+            ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id)->paymentComplete())
             ->with('booking')
             ->first();
 
@@ -154,6 +171,7 @@ class GuestTripController extends Controller
             $packageLineItem = null;
             $booking = AccommodationBooking::where('id', $bookingId)
                 ->where('trip_id', $trip->id)
+                ->paymentComplete()
                 ->with(['accommodation', 'room', 'guests'])
                 ->first();
         }
@@ -161,6 +179,7 @@ class GuestTripController extends Controller
         if (!$booking) {
             $booking = ActivityBooking::where('id', $bookingId)
                 ->where('trip_id', $trip->id)
+                ->paymentComplete()
                 ->with(['activity.operator', 'activity.operationsStaffing', 'activity.schedulingTimeSlots', 'guests'])
                 ->first();
         }
@@ -168,6 +187,7 @@ class GuestTripController extends Controller
         if (!$booking) {
             $booking = TransportBooking::where('id', $bookingId)
                 ->where('trip_id', $trip->id)
+                ->paymentComplete()
                 ->with(['transport.operator.profile', 'transport.vehicleName', 'driver', 'guests'])
                 ->first();
         }
@@ -971,24 +991,40 @@ HTML;
     protected function getGuestTripIds(GuestOtpToken $otpToken)
     {
         $accommodationTripIds = AccommodationBooking::where('guest_email', $otpToken->email)
+            ->paymentComplete()
             ->pluck('trip_id')
             ->filter()
             ->unique()
             ->toArray();
 
         $activityTripIds = ActivityBooking::where('guest_email', $otpToken->email)
+            ->paymentComplete()
             ->pluck('trip_id')
             ->filter()
             ->unique()
             ->toArray();
 
         $tokenAccommodationTripIds = AccommodationBooking::where('guest_otp_token_id', $otpToken->id)
+            ->paymentComplete()
             ->pluck('trip_id')
             ->filter()
             ->unique()
             ->toArray();
 
         $tokenActivityTripIds = ActivityBooking::where('guest_otp_token_id', $otpToken->id)
+            ->paymentComplete()
+            ->pluck('trip_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+        $transportTripIds = TransportBooking::where('guest_email', $otpToken->email)
+            ->paymentComplete()
+            ->pluck('trip_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+        $tokenTransportTripIds = TransportBooking::where('guest_otp_token_id', $otpToken->id)
+            ->paymentComplete()
             ->pluck('trip_id')
             ->filter()
             ->unique()
@@ -998,34 +1034,48 @@ HTML;
             $accommodationTripIds,
             $activityTripIds,
             $tokenAccommodationTripIds,
-            $tokenActivityTripIds
+            $tokenActivityTripIds,
+            $transportTripIds,
+            $tokenTransportTripIds
         )));
     }
 
     protected function getGuestBookings(GuestOtpToken $otpToken)
     {
         $accommodationBookings = AccommodationBooking::where(function ($query) use ($otpToken) {
-                $query->where('guest_email', $otpToken->email);
+                $query->where('guest_email', $otpToken->email)
+                    ->orWhere('guest_otp_token_id', $otpToken->id);
             })
-            ->orWhere('guest_otp_token_id', $otpToken->id)
+            ->paymentComplete()
             ->with(['accommodation', 'room', 'guests'])
             ->orderBy('check_in_date', 'asc')
             ->get();
 
         $activityBookings = ActivityBooking::where(function ($query) use ($otpToken) {
-                $query->where('guest_email', $otpToken->email);
+                $query->where('guest_email', $otpToken->email)
+                    ->orWhere('guest_otp_token_id', $otpToken->id);
             })
-            ->orWhere('guest_otp_token_id', $otpToken->id)
+            ->paymentComplete()
             ->with(['activity', 'guests'])
             ->orderBy('activity_date', 'asc')
             ->get();
 
-        return [$accommodationBookings, $activityBookings];
+        $transportBookings = TransportBooking::where(function ($query) use ($otpToken) {
+                $query->where('guest_email', $otpToken->email)
+                    ->orWhere('guest_otp_token_id', $otpToken->id);
+            })
+            ->paymentComplete()
+            ->with(['transport', 'guests'])
+            ->orderBy('pickup_date', 'asc')
+            ->get();
+
+        return [$accommodationBookings, $activityBookings, $transportBookings];
     }
 
     protected function attachTripsToGuestBookings(GuestOtpToken $otpToken)
     {
         $accommodationBookings = AccommodationBooking::whereNull('trip_id')
+            ->paymentComplete()
             ->where(function ($query) use ($otpToken) {
                 $query->where('guest_otp_token_id', $otpToken->id)
                       ->orWhere(function ($subQuery) use ($otpToken) {
@@ -1035,6 +1085,7 @@ HTML;
             ->get();
 
         $activityBookings = ActivityBooking::whereNull('trip_id')
+            ->paymentComplete()
             ->where(function ($query) use ($otpToken) {
                 $query->where('guest_otp_token_id', $otpToken->id)
                       ->orWhere(function ($subQuery) use ($otpToken) {
@@ -1043,7 +1094,15 @@ HTML;
             })
             ->get();
 
-        $allBookings = $accommodationBookings->concat($activityBookings);
+        $transportBookings = TransportBooking::whereNull('trip_id')
+            ->paymentComplete()
+            ->where(function ($query) use ($otpToken) {
+                $query->where('guest_otp_token_id', $otpToken->id)
+                    ->orWhere('guest_email', $otpToken->email);
+            })
+            ->get();
+
+        $allBookings = $accommodationBookings->concat($activityBookings)->concat($transportBookings);
 
         foreach ($allBookings as $booking) {
             if ($booking->trip_id) {
@@ -1052,7 +1111,11 @@ HTML;
 
             $startDate = $booking->check_in_date ?? $booking->activity_date ?? now()->toDateString();
             $endDate = $booking->check_out_date ?? $booking->activity_date ?? $startDate;
-            $title = $booking instanceof AccommodationBooking ? 'Accommodation Trip' : 'Activity Trip';
+            $title = match (true) {
+                $booking instanceof AccommodationBooking => 'Accommodation Trip',
+                $booking instanceof ActivityBooking => 'Activity Trip',
+                default => 'Transport Trip',
+            };
 
             $trip = Trip::create([
                 'traveler_account_id' => null,
@@ -1123,9 +1186,18 @@ HTML;
     {
         return AccommodationBooking::where('trip_id', $trip->id)
                 ->where('guest_email', $otpToken->email)
+                ->paymentComplete()
                 ->exists()
             || ActivityBooking::where('trip_id', $trip->id)
                 ->where('guest_email', $otpToken->email)
+                ->paymentComplete()
+                ->exists()
+            || TransportBooking::where('trip_id', $trip->id)
+                ->where(function ($query) use ($otpToken) {
+                    $query->where('guest_email', $otpToken->email)
+                        ->orWhere('guest_otp_token_id', $otpToken->id);
+                })
+                ->paymentComplete()
                 ->exists();
     }
 
@@ -1133,12 +1205,21 @@ HTML;
     {
         $booking = AccommodationBooking::where('id', $bookingId)
             ->where('trip_id', $trip->id)
+            ->paymentComplete()
             ->with('guests')
             ->first();
 
         if (!$booking) {
             $booking = ActivityBooking::where('id', $bookingId)
                 ->where('trip_id', $trip->id)
+                ->paymentComplete()
+                ->with('guests')
+                ->first();
+        }
+        if (!$booking) {
+            $booking = TransportBooking::where('id', $bookingId)
+                ->where('trip_id', $trip->id)
+                ->paymentComplete()
                 ->with('guests')
                 ->first();
         }
@@ -1158,7 +1239,7 @@ HTML;
         $serviceType = strtolower((string) ($request?->query('service_type') ?? ''));
 
         $packageLineItem = \App\Models\BookingLineItem::where('id', $bookingId)
-            ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id))
+            ->whereHas('booking', fn ($query) => $query->where('trip_id', $trip->id)->paymentComplete())
             ->with('booking')
             ->first();
 

@@ -3054,6 +3054,14 @@ class BookingController extends Controller
 
     public function paymentCallback(Request $request, \App\Services\BookingOrderStatusSynchronizer $statusSynchronizer)
     {
+        $callbackSecret = (string) config('app.Againgencypayment.callback_secret', '');
+        $providedSecret = (string) $request->header('X-Callback-Secret', '');
+        if ($callbackSecret === '' || !hash_equals($callbackSecret, $providedSecret)) {
+            Log::warning('Againgency payment callback rejected because its callback secret was missing or invalid');
+
+            return response()->json(['error' => 'Invalid payment callback credentials'], 403);
+        }
+
         $transactionRef = $request->input('transaction_ref') ?: $request->input('reference');
         if (!$transactionRef) {
             return response()->json(['error' => 'Missing payment reference'], 400);
@@ -3090,9 +3098,9 @@ class BookingController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function paymentReturn(Request $request, \App\Services\BookingOrderStatusSynchronizer $statusSynchronizer)
+    public function paymentReturn(Request $request)
     {
-        $status = AgaingencyPaymentService::resolveCallbackStatus($request->input('status', $request->input('payment_status', 'pending')));
+        $status = 'pending';
         $transactionRef = $request->input('transaction_ref') ?: $request->input('reference');
         $primaryRef = $request->input('ref');
         $agentSettlementBlocked = false;
@@ -3106,17 +3114,6 @@ class BookingController extends Controller
                         'booking_id' => $paymentTransaction->booking_id,
                         'booking_ref_id' => $paymentTransaction->booking_ref_id,
                     ]);
-                } else {
-                    $paymentId = AgaingencyPaymentService::parsePaymentId($request->json()->all() ?: $request->all());
-                    $notificationTripId = $this->applyAgencyPaymentStatus(
-                        $paymentTransaction,
-                        $status,
-                        $paymentId,
-                        $statusSynchronizer
-                    );
-                    if ($notificationTripId) {
-                        $this->sendGuestBookingOtpNotificationsForTrip($notificationTripId);
-                    }
                 }
             }
         }
@@ -3194,6 +3191,9 @@ class BookingController extends Controller
         DB::transaction(function () use ($paymentTransaction, $status, $paymentId, $statusSynchronizer, &$notificationTripId): void {
             $lockedPayment = PaymentTransaction::whereKey($paymentTransaction->id)->lockForUpdate()->firstOrFail();
             $previousStatus = $lockedPayment->status;
+            if ($previousStatus === 'paid' && $status !== 'refunded') {
+                return;
+            }
             $lockedPayment->status = $status;
             if ($paymentId && empty($lockedPayment->payment_id)) {
                 $lockedPayment->payment_id = $paymentId;

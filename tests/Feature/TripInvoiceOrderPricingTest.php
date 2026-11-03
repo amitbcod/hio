@@ -64,6 +64,17 @@ class TripInvoiceOrderPricingTest extends TestCase
             $table->timestamps();
         });
 
+        Schema::create('payment_transactions', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('booking_id')->nullable();
+            $table->unsignedBigInteger('booking_ref_id')->nullable();
+            $table->decimal('amount', 10, 2)->default(0);
+            $table->string('method')->nullable();
+            $table->string('status')->default('pending');
+            $table->string('settlement_status')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('booking_line_items', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('booking_id');
@@ -80,6 +91,7 @@ class TripInvoiceOrderPricingTest extends TestCase
         Schema::create('activity_bookings', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('trip_id');
+            $table->unsignedBigInteger('booking_ref_id')->nullable();
             $table->unsignedInteger('adults')->default(1);
             $table->unsignedInteger('children')->default(0);
             $table->string('booking_status')->nullable();
@@ -89,6 +101,7 @@ class TripInvoiceOrderPricingTest extends TestCase
         Schema::create('accommodation_bookings', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('trip_id');
+            $table->unsignedBigInteger('booking_ref_id')->nullable();
             $table->unsignedSmallInteger('adults')->default(2);
             $table->unsignedSmallInteger('children')->default(0);
             $table->timestamps();
@@ -161,6 +174,7 @@ class TripInvoiceOrderPricingTest extends TestCase
                 'booking_ref_code' => $case['code'],
                 'total_amount' => $case['amount'],
             ]);
+            $this->createPaidTransaction($reference);
             $references[$case['type']] = $reference;
 
             $booking = Booking::create([
@@ -207,6 +221,7 @@ class TripInvoiceOrderPricingTest extends TestCase
             'created_at' => '2026-09-29 10:20:00',
             'updated_at' => '2026-09-29 10:20:00',
         ]);
+        $this->createPaidTransaction($firstReference);
         $secondReference = BookingRef::create([
             'trip_id' => $trip->id,
             'booking_ref_code' => 'BR-LEGACY-2',
@@ -214,6 +229,7 @@ class TripInvoiceOrderPricingTest extends TestCase
             'created_at' => '2026-09-29 10:40:00',
             'updated_at' => '2026-09-29 10:40:00',
         ]);
+        $this->createPaidTransaction($secondReference);
 
         foreach ([['amount' => 100, 'created_at' => '2026-09-29 10:10:00'], ['amount' => 200, 'created_at' => '2026-09-29 10:30:00']] as $order) {
             $booking = Booking::create([
@@ -403,8 +419,15 @@ class TripInvoiceOrderPricingTest extends TestCase
             'title' => 'Group participant update test',
             'status' => 'planned',
         ]);
+        $reference = BookingRef::create([
+            'trip_id' => $trip->id,
+            'booking_ref_code' => 'BR-GUEST-UPDATE',
+            'total_amount' => 100,
+        ]);
+        $this->createPaidTransaction($reference);
         $parentBooking = Booking::create([
             'trip_id' => $trip->id,
+            'booking_ref_id' => $reference->id,
             'booking_type' => 'open-group',
             'total_amount' => 100,
             'status' => 'pending',
@@ -457,8 +480,15 @@ class TripInvoiceOrderPricingTest extends TestCase
             'title' => 'Package participant count test',
             'status' => 'planned',
         ]);
+        $reference = BookingRef::create([
+            'trip_id' => $trip->id,
+            'booking_ref_code' => 'BR-PACKAGE-GUESTS',
+            'total_amount' => 200,
+        ]);
+        $this->createPaidTransaction($reference);
         $parentBooking = Booking::create([
             'trip_id' => $trip->id,
+            'booking_ref_id' => $reference->id,
             'booking_type' => 'open-group',
             'total_amount' => 200,
             'status' => 'pending',
@@ -511,8 +541,15 @@ class TripInvoiceOrderPricingTest extends TestCase
             'title' => 'Accommodation participant count test',
             'status' => 'planned',
         ]);
+        $reference = BookingRef::create([
+            'trip_id' => $trip->id,
+            'booking_ref_code' => 'BR-ACCOMMODATION-GUESTS',
+            'total_amount' => 300,
+        ]);
+        $this->createPaidTransaction($reference);
         $booking = \App\Models\AccommodationBooking::create([
             'trip_id' => $trip->id,
+            'booking_ref_id' => $reference->id,
             'adults' => 2,
             'children' => 1,
         ]);
@@ -763,4 +800,15 @@ class TripInvoiceOrderPricingTest extends TestCase
         $this->assertFalse($availability->isAvailable($incompleteTrip, $activity, 'activity'));
     }
 
+    private function createPaidTransaction(BookingRef $reference): void
+    {
+        DB::table('payment_transactions')->insert([
+            'booking_ref_id' => $reference->id,
+            'amount' => $reference->total_amount ?? 1,
+            'method' => 'card',
+            'status' => 'paid',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
 }

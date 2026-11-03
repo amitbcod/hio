@@ -70,6 +70,7 @@ class TripController extends Controller
 
             if ($accommodationIds->isNotEmpty()) {
                 $query->whereHas('accommodationBookings', fn ($bookingQuery) => $bookingQuery
+                    ->paymentComplete()
                     ->whereIn('accommodation_id', $accommodationIds));
                 $hasOwnedServices = true;
             }
@@ -77,6 +78,7 @@ class TripController extends Controller
             if ($activityIds->isNotEmpty()) {
                 $method = $hasOwnedServices ? 'orWhereHas' : 'whereHas';
                 $query->{$method}('activityBookings', fn ($bookingQuery) => $bookingQuery
+                    ->paymentComplete()
                     ->whereIn('activity_id', $activityIds));
                 $hasOwnedServices = true;
             }
@@ -84,6 +86,7 @@ class TripController extends Controller
             if ($transportIds->isNotEmpty()) {
                 $method = $hasOwnedServices ? 'orWhereHas' : 'whereHas';
                 $query->{$method}('transportBookings', fn ($bookingQuery) => $bookingQuery
+                    ->paymentComplete()
                     ->whereIn('transport_id', $transportIds));
                 $hasOwnedServices = true;
             }
@@ -112,26 +115,16 @@ class TripController extends Controller
             ->with([
                 'traveler',
                 'travellers',
-                'bookingRefs',
+                'bookingRefs' => fn ($query) => $query->where(function ($referenceQuery) {
+                    $referenceQuery->whereHas('paymentTransactions', fn ($paymentQuery) => $paymentQuery->paymentComplete())
+                        ->orWhereHas('paymentTransaction', fn ($paymentQuery) => $paymentQuery->paymentComplete());
+                }),
                 'bookingRefs.paymentTransactions',
                 'bookingRefs.paymentTransaction',
-                'bookings.lineItems.travellers',
-                'bookings.payments',
-                'accommodationBookings.accommodation',
-                'accommodationBookings.room',
-                'accommodationBookings.bookingRef',
-                'accommodationBookings.guests',
-                'activityBookings.activity.schedulingTimeSlots',
-                'activityBookings.activityTimeSlot',
-                'activityBookings.bookingRef',
-                'activityBookings.guests',
-                'transportBookings.transport.operator.profile',
-                'transportBookings.transport.vehicleName',
-                'transportBookings.pickupDriver',
-                'transportBookings.returnDriver',
-                'transportBookings.driver',
-                'transportBookings.bookingRef',
-                'transportBookings.guests',
+                'bookings' => fn ($query) => $query->paymentComplete()->with(['lineItems.travellers', 'payments']),
+                'accommodationBookings' => fn ($query) => $query->paymentComplete()->with(['accommodation', 'room', 'bookingRef.paymentTransactions', 'bookingRef.paymentTransaction', 'guests']),
+                'activityBookings' => fn ($query) => $query->paymentComplete()->with(['activity.schedulingTimeSlots', 'activityTimeSlot', 'bookingRef.paymentTransactions', 'bookingRef.paymentTransaction', 'guests']),
+                'transportBookings' => fn ($query) => $query->paymentComplete()->with(['transport.operator.profile', 'transport.vehicleName', 'pickupDriver', 'returnDriver', 'driver', 'bookingRef.paymentTransactions', 'bookingRef.paymentTransaction', 'guests']),
                 'actionDeadlines',
             ])
             ->orderBy('created_at', 'desc')
@@ -221,16 +214,9 @@ class TripController extends Controller
         $trips = Trip::whereIn('id', $tripIds)
             ->with([
                 'bookings.payments',
-                'accommodationBookings.accommodation',
-                'accommodationBookings.guests',
-                'activityBookings.activity',
-                'activityBookings.activityTimeSlot',
-                'activityBookings.guests',
-                'transportBookings.transport.operator.profile',
-                'transportBookings.pickupDriver',
-                'transportBookings.returnDriver',
-                'transportBookings.driver',
-                'transportBookings.guests',
+                'accommodationBookings' => fn ($query) => $query->paymentComplete()->with(['accommodation', 'guests']),
+                'activityBookings' => fn ($query) => $query->paymentComplete()->with(['activity', 'activityTimeSlot', 'guests']),
+                'transportBookings' => fn ($query) => $query->paymentComplete()->with(['transport.operator.profile', 'pickupDriver', 'returnDriver', 'driver', 'guests']),
                 'actionDeadlines',
             ])
             ->orderByDesc('id')

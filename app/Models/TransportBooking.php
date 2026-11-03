@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasPaymentCompleteScope;
 use App\Models\Concerns\ScopesToAdminCountry;
 
 class TransportBooking extends Model
 {
     use ScopesToAdminCountry;
+    use HasPaymentCompleteScope;
 
     public const STATUS_PROCESSING = 'Processing';
     public const STATUS_PENDING = 'Pending';

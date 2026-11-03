@@ -2181,6 +2181,7 @@ class ActivityController extends Controller
         $activityIds = Activity::where('operator_id', $operator->id)->pluck('id');
 
         $bookings = \App\Models\ActivityBooking::whereIn('activity_id', $activityIds)
+            ->paymentComplete()
             ->with(['bookingRef', 'activity', 'guests'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
@@ -2199,6 +2200,7 @@ class ActivityController extends Controller
 
         $booking = \App\Models\ActivityBooking::whereIn('activity_id', $activityIds)
             ->where('id', $bookingId)
+            ->paymentComplete()
             ->with(['activity.schedulingTimeSlots', 'guests', 'scheduleChanges.actor'])
             ->firstOrFail();
         $postponementActions = app(\App\Services\BookingPostponementService::class)
@@ -2218,6 +2220,7 @@ class ActivityController extends Controller
 
         $booking = \App\Models\ActivityBooking::whereIn('activity_id', $activityIds)
             ->where('id', $bookingId)
+            ->paymentComplete()
             ->firstOrFail();
 
         $request->validate([

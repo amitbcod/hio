@@ -29,6 +29,7 @@ class AdminGroupSettlementTest extends TestCase
 
         config([
             'database.default' => 'admin_group_settlement_test',
+            'app.Againgencypayment.callback_secret' => 'test-callback-secret',
             'database.connections.admin_group_settlement_test' => [
                 'driver' => 'sqlite',
                 'database' => ':memory:',
@@ -125,11 +126,13 @@ class AdminGroupSettlementTest extends TestCase
         $order['payment']->transaction_ref = 'unreviewed-agent-payment';
         $order['payment']->save();
 
+        $callbackRequest = Request::create('/booking/payment/callback', 'POST', [
+            'transaction_ref' => 'unreviewed-agent-payment',
+            'status' => 'success',
+        ]);
+        $callbackRequest->headers->set('X-Callback-Secret', 'test-callback-secret');
         $callback = (new BookingController())->paymentCallback(
-            Request::create('/booking/payment/callback', 'POST', [
-                'transaction_ref' => 'unreviewed-agent-payment',
-                'status' => 'success',
-            ]),
+            $callbackRequest,
             app(BookingOrderStatusSynchronizer::class)
         );
         $this->assertSame(409, $callback->getStatusCode());
@@ -289,17 +292,31 @@ class AdminGroupSettlementTest extends TestCase
             'booking_status' => 'Pending',
         ]);
 
+        $callbackRequest = Request::create('/booking/payment/callback', 'POST', [
+            'transaction_ref' => 'agency-test-ref',
+            'status' => 'success',
+        ]);
+        $callbackRequest->headers->set('X-Callback-Secret', 'test-callback-secret');
         $response = (new BookingController())->paymentCallback(
-            Request::create('/booking/payment/callback', 'POST', [
-                'transaction_ref' => 'agency-test-ref',
-                'status' => 'success',
-            ]),
+            $callbackRequest,
             app(BookingOrderStatusSynchronizer::class)
         );
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertServiceStatuses(2, 'Processing');
         $this->assertServiceStatuses(1, 'Pending');
+
+        $lateFailureRequest = Request::create('/booking/payment/callback', 'POST', [
+            'transaction_ref' => 'agency-test-ref',
+            'status' => 'failed',
+        ]);
+        $lateFailureRequest->headers->set('X-Callback-Secret', 'test-callback-secret');
+        (new BookingController())->paymentCallback(
+            $lateFailureRequest,
+            app(BookingOrderStatusSynchronizer::class)
+        );
+        $this->assertSame('paid', DB::table('payment_transactions')->where('id', 2)->value('status'));
+        $this->assertServiceStatuses(2, 'Processing');
 
         DB::table('payment_transactions')->where('id', 2)->update(['status' => 'pending']);
         foreach (['accommodation_bookings', 'activity_bookings', 'transport_bookings'] as $table) {
@@ -315,9 +332,58 @@ class AdminGroupSettlementTest extends TestCase
             app(BookingOrderStatusSynchronizer::class)
         );
 
-        $this->assertSame('paid', DB::table('payment_transactions')->where('id', 2)->value('status'));
-        $this->assertServiceStatuses(2, 'Processing');
+        $this->assertSame('pending', DB::table('payment_transactions')->where('id', 2)->value('status'));
+        $this->assertServiceStatuses(2, 'Pending');
         $this->assertServiceStatuses(1, 'Pending');
+    }
+
+    public function test_unpaid_service_bookings_are_not_payment_complete_until_settlement(): void
+    {
+        DB::table('payment_transactions')->insert([
+            'booking_id' => 1,
+            'booking_ref_id' => 1,
+            'amount' => 2885,
+            'method' => 'bank_transfer',
+            'status' => 'pending',
+            'settlement_status' => 'pending_verification',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertSame(0, \App\Models\AccommodationBooking::paymentComplete()->count());
+        $this->assertSame(0, \App\Models\ActivityBooking::paymentComplete()->count());
+        $this->assertSame(0, \App\Models\TransportBooking::paymentComplete()->count());
+
+        DB::table('payment_transactions')->where('booking_ref_id', 1)->update([
+            'status' => 'paid',
+            'settlement_status' => 'verified_settled',
+        ]);
+
+        $this->assertSame(2, \App\Models\AccommodationBooking::paymentComplete()->count());
+        $this->assertSame(2, \App\Models\ActivityBooking::paymentComplete()->count());
+        $this->assertSame(2, \App\Models\TransportBooking::paymentComplete()->count());
+
+        DB::table('payment_transactions')->where('booking_ref_id', 1)->update([
+            'status' => 'refunded',
+            'settlement_status' => 'verified_settled',
+        ]);
+
+        $this->assertSame(0, \App\Models\AccommodationBooking::paymentComplete()->count());
+        $this->assertSame(0, \App\Models\ActivityBooking::paymentComplete()->count());
+        $this->assertSame(0, \App\Models\TransportBooking::paymentComplete()->count());
+    }
+
+    public function test_payment_callback_rejects_missing_callback_secret(): void
+    {
+        $response = (new BookingController())->paymentCallback(
+            Request::create('/booking/payment/callback', 'POST', [
+                'transaction_ref' => 'unknown-reference',
+                'status' => 'success',
+            ]),
+            app(BookingOrderStatusSynchronizer::class)
+        );
+
+        $this->assertSame(403, $response->getStatusCode());
     }
 
     public function test_frontend_group_orders_are_not_eligible_for_admin_settlement(): void

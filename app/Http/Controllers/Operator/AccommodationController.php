@@ -2815,6 +2815,7 @@ class AccommodationController extends Controller
         }
 
         $bookingRows = AccommodationBooking::where('accommodation_id', $accommodation->id)
+            ->paymentComplete()
             ->whereDate('check_in_date', '<=', $monthEnd->toDateString())
             ->whereDate('check_out_date', '>=', $monthStart->toDateString())
             ->whereIn('booking_status', ['Pending', 'Confirmed'])
@@ -3397,6 +3398,7 @@ class AccommodationController extends Controller
         
         // Get bookings for these accommodations
         $bookings = AccommodationBooking::whereIn('accommodation_id', $accommodationIds)
+            ->paymentComplete()
             ->with(['bookingRef', 'accommodation', 'room'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
@@ -3421,6 +3423,7 @@ class AccommodationController extends Controller
         // Get the booking with relationships
         $booking = AccommodationBooking::whereIn('accommodation_id', $accommodationIds)
             ->where('id', $bookingId)
+            ->paymentComplete()
             ->with(['accommodation', 'room', 'guests', 'scheduleChanges.actor'])
             ->firstOrFail();
         $postponementActions = app(\App\Services\BookingPostponementService::class)
@@ -3444,6 +3447,7 @@ class AccommodationController extends Controller
 
         $booking = AccommodationBooking::whereIn('accommodation_id', $accommodationIds)
             ->where('id', $bookingId)
+            ->paymentComplete()
             ->firstOrFail();
 
         $request->validate([

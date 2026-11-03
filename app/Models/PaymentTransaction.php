@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\Concerns\ScopesToAdminCountry;
 
 class PaymentTransaction extends Model
@@ -33,6 +34,17 @@ class PaymentTransaction extends Model
         'submitted_at' => 'datetime',
         'verified_at' => 'datetime',
     ];
+
+    public function scopePaymentComplete(Builder $query): Builder
+    {
+        return $query->where(function (Builder $paidQuery): void {
+            $paidQuery->where('status', 'paid')
+                ->orWhere(function (Builder $settlementQuery): void {
+                    $settlementQuery->where('settlement_status', 'verified_settled')
+                        ->whereNotIn('status', ['failed', 'refunded']);
+                });
+            });
+    }
 
     public function booking()
     {

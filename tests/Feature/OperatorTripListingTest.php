@@ -7,8 +7,10 @@ use App\Models\AccommodationBooking;
 use App\Models\AccommodationRoom;
 use App\Models\Activity;
 use App\Models\ActivityBooking;
+use App\Models\Booking;
 use App\Models\BookingRef;
 use App\Models\Operator;
+use App\Models\PaymentTransaction;
 use App\Models\Transport;
 use App\Models\TransportBooking;
 use App\Models\Trip;
@@ -293,14 +295,19 @@ class OperatorTripListingTest extends TestCase
             ['name' => 'David Jones', 'relationship' => 'guest'],
         ]);
 
-        $visibleRef = BookingRef::create([
-            'id' => 1,
-            'trip_id' => 1,
-            'booking_ref_code' => 'BR-OP-001',
-            'created_at' => '2026-10-20 14:35:22',
-            'updated_at' => '2026-10-20 14:35:22',
-        ]);
-        $mixedRef = BookingRef::create(['id' => 2, 'trip_id' => 3, 'booking_ref_code' => 'BR-OP-003']);
+        $visibleRef = $this->createPaidReference(
+            $visibleTrip,
+            'BR-OP-001',
+            '2026-10-20 14:35:22'
+        );
+        $mixedRef = $this->createPaidReference(
+            $mixedTrip,
+            'BR-OP-003'
+        );
+        $secondVisibleRef = $this->createPaidReference(
+            $visibleTrip,
+            'BR-OP-001-B'
+        );
 
         AccommodationBooking::create(['id' => 1, 'trip_id' => 1, 'booking_ref_id' => $visibleRef->id, 'accommodation_id' => 1, 'room_id' => $room->id, 'booking_reference' => 'ACC-001', 'booking_status' => 'Confirmed', 'check_in_date' => '2026-10-01', 'check_out_date' => '2026-10-03', 'rooms_booked' => 2, 'adults' => 2, 'children' => 1, 'total_amount' => 120.00]);
         \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'accommodation', 'guest_number' => 1, 'first_name' => 'John', 'last_name' => 'Smith']);
@@ -314,7 +321,6 @@ class OperatorTripListingTest extends TestCase
         $visibleTransportBooking->forceFill(['trip_id' => 1, 'booking_ref_id' => $visibleRef->id])->save();
         \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'transport', 'guest_number' => 1, 'first_name' => 'Sarah', 'last_name' => 'Smith']);
         \App\Models\BookingGuest::create(['booking_id' => 1, 'booking_type' => 'transport', 'guest_number' => 2, 'first_name' => 'David', 'last_name' => 'Smith']);
-        $secondVisibleRef = BookingRef::create(['id' => 3, 'trip_id' => 1, 'booking_ref_code' => 'BR-OP-001-B']);
         ActivityBooking::create(['id' => 3, 'trip_id' => 1, 'booking_ref_id' => $secondVisibleRef->id, 'activity_id' => 1, 'booking_reference' => 'ACT-001-B', 'booking_status' => 'Confirmed', 'total_amount' => 40.00]);
 
         AccommodationBooking::create(['id' => 2, 'trip_id' => 3, 'booking_ref_id' => $mixedRef->id, 'accommodation_id' => 2, 'booking_reference' => 'ACC-OTHER', 'booking_status' => 'Cancelled', 'total_amount' => 60.00]);
@@ -330,6 +336,7 @@ class OperatorTripListingTest extends TestCase
         AccommodationBooking::create(['id' => 3, 'trip_id' => 2, 'booking_ref_id' => 99, 'accommodation_id' => 2, 'booking_reference' => 'ACC-HIDDEN', 'booking_status' => 'Confirmed', 'total_amount' => 70.00]);
 
         $completeTrip = Trip::create(['id' => 4, 'traveler_account_id' => $accountHolder->id, 'title' => 'Complete Trip']);
+        $completeRef = $this->createPaidReference($completeTrip, 'BR-OP-COMPLETE');
         $completeTrip->travellers()->create([
             'name' => 'Sarah Jones',
             'relationship' => 'lead',
@@ -343,6 +350,7 @@ class OperatorTripListingTest extends TestCase
         $completeBooking = AccommodationBooking::create([
             'id' => 4,
             'trip_id' => $completeTrip->id,
+            'booking_ref_id' => $completeRef->id,
             'accommodation_id' => $ownedAccommodation->id,
             'room_id' => $room->id,
             'booking_reference' => 'ACC-COMPLETE',
@@ -372,6 +380,7 @@ class OperatorTripListingTest extends TestCase
         ]);
 
         $categoryMismatchTrip = Trip::create(['id' => 5, 'traveler_account_id' => $accountHolder->id, 'title' => 'Category Mismatch Trip']);
+        $categoryMismatchRef = $this->createPaidReference($categoryMismatchTrip, 'BR-OP-CATEGORY');
         $categoryMismatchTrip->travellers()->createMany([
             ['name' => 'John Smith', 'relationship' => 'self'],
             ['name' => 'Sarah Jones', 'relationship' => 'guest'],
@@ -380,6 +389,7 @@ class OperatorTripListingTest extends TestCase
         $categoryMismatchBooking = ActivityBooking::create([
             'id' => 4,
             'trip_id' => $categoryMismatchTrip->id,
+            'booking_ref_id' => $categoryMismatchRef->id,
             'activity_id' => $ownedActivity->id,
             'booking_reference' => 'ACT-CATEGORY-MISMATCH',
             'booking_status' => 'Confirmed',
@@ -433,7 +443,7 @@ class OperatorTripListingTest extends TestCase
         ], false);
         $response->assertDontSee('>Traveller</th>', false);
         $response->assertSee('name="traveller_information"', false);
-        $response->assertSee('Next Step:</strong> Awaiting Payment', false);
+        $response->assertSee('Next Step:</strong> No Action Required', false);
         $response->assertDontSee('background:#16a34a');
         $response->assertDontSee('Hidden Trip');
         $response->assertDontSee('Private Guest');
@@ -538,14 +548,19 @@ class OperatorTripListingTest extends TestCase
             ['pickup_date' => '2026-10-23', 'pickup_time' => '10:00:00'],
             ['pickup_date' => '2026-10-20', 'pickup_time' => '16:00:00'],
         ] as $details) {
+            $reference = $this->createPaidReference($trip, 'BR-TRANSPORT-' . $details['pickup_date']);
             $booking = TransportBooking::create([
                 'transport_id' => $transport->id,
+                'booking_ref_id' => $reference->id,
                 'booking_status' => 'Processing',
                 'route_from' => 'Airport',
                 'route_to' => 'North',
                 ...$details,
             ]);
-            $booking->forceFill(['trip_id' => $trip->id])->save();
+            $booking->forceFill([
+                'trip_id' => $trip->id,
+                'booking_ref_id' => $reference->id,
+            ])->save();
         }
 
         $activity = Activity::create([
@@ -554,19 +569,26 @@ class OperatorTripListingTest extends TestCase
             'activity_name' => 'Island Tour',
         ]);
         $activityFirstTrip = Trip::create(['id' => 11, 'title' => 'Activity Before Transport']);
+        $activityReference = $this->createPaidReference($activityFirstTrip, 'BR-ACTIVITY-DATE');
         ActivityBooking::create([
             'trip_id' => $activityFirstTrip->id,
+            'booking_ref_id' => $activityReference->id,
             'activity_id' => $activity->id,
             'booking_status' => 'Confirmed',
             'activity_date' => '2026-10-19',
         ]);
+        $transportReference = $this->createPaidReference($activityFirstTrip, 'BR-LATER-TRANSPORT');
         $laterTransport = TransportBooking::create([
             'transport_id' => $transport->id,
+            'booking_ref_id' => $transportReference->id,
             'booking_status' => 'Confirmed',
             'pickup_date' => '2026-10-20',
             'pickup_time' => '16:00:00',
         ]);
-        $laterTransport->forceFill(['trip_id' => $activityFirstTrip->id])->save();
+        $laterTransport->forceFill([
+            'trip_id' => $activityFirstTrip->id,
+            'booking_ref_id' => $transportReference->id,
+        ])->save();
 
         $response = $this->actingAs($operator, 'operator')->get(route('operator.trips.index'));
 
@@ -790,5 +812,35 @@ class OperatorTripListingTest extends TestCase
         $this->assertSame('payment', $blockedNextAction['type']);
         $this->assertSame('due', $blockedDueAction['status'] ?? null, json_encode($blockedDueAction));
         $this->assertSame('na', collect($blockedTripData->next_actions)->first()['status']);
+    }
+
+    private function createPaidReference(Trip $trip, string $code, ?string $createdAt = null): BookingRef
+    {
+        $referenceAttributes = [
+            'trip_id' => $trip->id,
+            'booking_ref_code' => $code,
+        ];
+        if ($createdAt !== null) {
+            $referenceAttributes['created_at'] = $createdAt;
+            $referenceAttributes['updated_at'] = $createdAt;
+        }
+
+        $reference = BookingRef::create($referenceAttributes);
+        $booking = Booking::create([
+            'trip_id' => $trip->id,
+            'booking_ref_id' => $reference->id,
+            'total_amount' => 1,
+            'status' => 'confirmed',
+            'booking_type' => 'direct',
+        ]);
+        PaymentTransaction::create([
+            'booking_id' => $booking->id,
+            'booking_ref_id' => $reference->id,
+            'amount' => 1,
+            'method' => 'card',
+            'status' => 'paid',
+        ]);
+
+        return $reference;
     }
 }

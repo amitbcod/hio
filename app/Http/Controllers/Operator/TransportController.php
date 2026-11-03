@@ -1463,6 +1463,7 @@ class TransportController extends Controller
 
         // Get bookings for all transports
         $bookings = TransportBooking::whereIn('transport_id', $transports)
+            ->paymentComplete()
             ->with(['bookingRef', 'transport.operator.profile', 'transport.vehicleName', 'travelerAccount', 'vehicle', 'pickupDriver', 'returnDriver', 'currentAssignment.vehicle', 'currentAssignment.driver'])
             ->orderBy('booked_at', 'desc')
             ->paginate(20);
@@ -1478,6 +1479,7 @@ class TransportController extends Controller
         }
 
         $bookings = $transport->bookings()
+            ->paymentComplete()
             ->with('vehicle')
             ->orderBy('booked_at', 'desc')
             ->paginate(20);
@@ -1506,7 +1508,7 @@ class TransportController extends Controller
             'assignments.driver',
             'assignments.assignedBy',
             'scheduleChanges.actor',
-        ])->findOrFail($bookingId);
+        ])->paymentComplete()->findOrFail($bookingId);
         if ($booking->transport_id !== $transport->id) {
             abort(403);
         }
@@ -1559,6 +1561,7 @@ class TransportController extends Controller
 
         $booking = TransportBooking::whereIn('transport_id', $transportIds)
             ->where('id', $bookingId)
+            ->paymentComplete()
             ->firstOrFail();
 
         return $this->updateBookingStatusForActor($request, $booking, $operator, false);
@@ -1567,6 +1570,7 @@ class TransportController extends Controller
     public function updateBookingStatusForActor(Request $request, TransportBooking $booking, $actor, bool $isAdmin = false)
     {
         if (!$isAdmin) {
+            abort_unless($booking->paymentComplete()->exists(), 404);
             $transport = Transport::findOrFail($booking->transport_id);
             if ($transport->operator_id !== $actor->id) {
                 abort(403);
@@ -1608,7 +1612,7 @@ class TransportController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $booking = TransportBooking::findOrFail($bookingId);
+        $booking = TransportBooking::paymentComplete()->findOrFail($bookingId);
         $transport = Transport::findOrFail($booking->transport_id);
         
         if ($transport->operator_id !== $operator->id) {
@@ -1676,6 +1680,7 @@ class TransportController extends Controller
     public function assignDriversForActor(Request $request, TransportBooking $booking, $actor, bool $isAdmin = false)
     {
         if (!$isAdmin) {
+            abort_unless($booking->paymentComplete()->exists(), 404);
             $transport = Transport::findOrFail($booking->transport_id);
             if ($transport->operator_id !== $actor->id) {
                 return response()->json(['error' => 'Unauthorized'], 403);
@@ -1897,6 +1902,7 @@ class TransportController extends Controller
         if ($transport->operator_id !== $operator->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
+        abort_unless($booking->paymentComplete()->exists(), 404);
 
         $drivers = $booking->drivers()
             ->get([
