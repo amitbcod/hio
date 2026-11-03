@@ -17,4 +17,18 @@ trait HasPaymentCompleteScope
             });
         });
     }
+
+    public function scopeCustomerVisible(Builder $query): Builder
+    {
+        return $query->where(function (Builder $visibleQuery): void {
+            $visibleQuery->paymentComplete()
+                ->orWhere(function (Builder $codQuery): void {
+                    $codQuery->whereRaw('LOWER(payment_method) = ?', ['cod'])
+                        ->whereHas('bookingRef', static function (Builder $referenceQuery): void {
+                            $referenceQuery->whereDoesntHave('paymentTransactions')
+                                ->whereDoesntHave('paymentTransaction');
+                        });
+                });
+        });
+    }
 }

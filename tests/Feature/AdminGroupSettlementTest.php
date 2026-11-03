@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -373,6 +374,69 @@ class AdminGroupSettlementTest extends TestCase
         $this->assertSame(0, \App\Models\TransportBooking::paymentComplete()->count());
     }
 
+    public function test_customer_visible_scope_includes_cod_orders_but_hides_unpaid_online_orders(): void
+    {
+        foreach (['accommodation_bookings', 'activity_bookings', 'transport_bookings'] as $table) {
+            DB::table($table)->where('booking_ref_id', 1)->update(['payment_method' => 'COD']);
+        }
+
+        $this->assertSame(2, \App\Models\AccommodationBooking::customerVisible()->count());
+        $this->assertSame(2, \App\Models\ActivityBooking::customerVisible()->count());
+        $this->assertSame(2, \App\Models\TransportBooking::customerVisible()->count());
+
+        DB::table('booking_refs')->insert([
+            'id' => 2,
+            'trip_id' => 1,
+            'booking_ref_code' => 'BR-202-20261001-ONLINE',
+            'total_amount' => 100,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('payment_transactions')->insert([
+            'booking_id' => 2,
+            'booking_ref_id' => 2,
+            'amount' => 100,
+            'method' => 'card',
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('accommodation_bookings')->insert([
+            'booking_ref_id' => 2,
+            'accommodation_id' => 1,
+            'booking_reference' => 'ACC-ONLINE',
+            'payment_method' => 'Againgency',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('activity_bookings')->insert([
+            'booking_ref_id' => 2,
+            'activity_id' => 1,
+            'booking_reference' => 'ACT-ONLINE',
+            'payment_method' => 'Againgency',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('transport_bookings')->insert([
+            'booking_ref_id' => 2,
+            'transport_id' => 1,
+            'booking_reference' => 'TRS-ONLINE',
+            'payment_method' => 'Againgency',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertSame(2, \App\Models\AccommodationBooking::customerVisible()->count());
+        $this->assertSame(2, \App\Models\ActivityBooking::customerVisible()->count());
+        $this->assertSame(2, \App\Models\TransportBooking::customerVisible()->count());
+
+        DB::table('payment_transactions')->where('booking_ref_id', 2)->update(['status' => 'paid']);
+
+        $this->assertSame(3, \App\Models\AccommodationBooking::customerVisible()->count());
+        $this->assertSame(3, \App\Models\ActivityBooking::customerVisible()->count());
+        $this->assertSame(3, \App\Models\TransportBooking::customerVisible()->count());
+    }
+
     public function test_payment_callback_rejects_missing_callback_secret(): void
     {
         $response = (new BookingController())->paymentCallback(
@@ -384,6 +448,119 @@ class AdminGroupSettlementTest extends TestCase
         );
 
         $this->assertSame(403, $response->getStatusCode());
+    }
+
+    public function test_payment_callback_accepts_its_transaction_bound_callback_url_token(): void
+    {
+        DB::table('payment_transactions')->insert([
+            'booking_id' => 1,
+            'booking_ref_id' => 1,
+            'amount' => 2885,
+            'method' => 'againgency',
+            'status' => 'pending',
+            'transaction_ref' => 'signed-callback-ref',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $token = hash_hmac('sha256', 'signed-callback-ref', (string) config('app.key'));
+        $request = Request::create('/booking/payment/callback?transaction_ref=signed-callback-ref&callback_token=' . $token, 'POST', [], [], [], [], json_encode([
+            'payload' => [
+                'payments' => [
+                    ['status' => 'success', 'id' => 'provider-payment-id'],
+                ],
+            ],
+        ]));
+
+        $response = (new BookingController())->paymentCallback(
+            $request,
+            app(BookingOrderStatusSynchronizer::class)
+        );
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('paid', DB::table('payment_transactions')
+            ->where('transaction_ref', 'signed-callback-ref')
+            ->value('status'));
+        $this->assertSame('provider-payment-id', DB::table('payment_transactions')
+            ->where('transaction_ref', 'signed-callback-ref')
+            ->value('payment_id'));
+        $this->assertServiceStatuses(1, 'Processing');
+        $this->assertSame(2, \App\Models\TransportBooking::where('booking_ref_id', 1)->customerVisible()->count());
+    }
+
+    public function test_payment_callback_url_uses_a_public_configured_origin(): void
+    {
+        config(['app.Againgencypayment.callback_base_url' => 'https://public-tunnel.example.test/']);
+
+        $callbackUrl = \App\Services\AgaingencyPaymentService::paymentCallbackUrl('public-callback-ref');
+        parse_str((string) parse_url($callbackUrl, PHP_URL_QUERY), $query);
+
+        $this->assertSame('https', parse_url($callbackUrl, PHP_URL_SCHEME));
+        $this->assertSame('public-tunnel.example.test', parse_url($callbackUrl, PHP_URL_HOST));
+        $this->assertSame('/booking/payment/callback', parse_url($callbackUrl, PHP_URL_PATH));
+        $this->assertSame('public-callback-ref', $query['transaction_ref']);
+        $this->assertSame(
+            hash_hmac('sha256', 'public-callback-ref', (string) config('app.key')),
+            $query['callback_token']
+        );
+    }
+
+    public function test_payment_callback_route_excludes_csrf_middleware(): void
+    {
+        $route = app('router')->getRoutes()->getByName('frontend.booking.payment.callback');
+
+        $this->assertContains(
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+            $route->excludedMiddleware()
+        );
+        $this->assertContains(
+            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+            $route->excludedMiddleware()
+        );
+    }
+
+    public function test_payment_return_verifies_provider_status_and_exposes_paid_order(): void
+    {
+        config([
+            'app.Againgencypayment.api_base_url' => 'https://gateway.example.test/api/v1',
+            'app.Againgencypayment.api_key' => 'test-api-key',
+        ]);
+        DB::table('payment_transactions')->insert([
+            'id' => 2,
+            'booking_id' => 1,
+            'booking_ref_id' => 1,
+            'amount' => 2885,
+            'method' => 'againgency',
+            'status' => 'pending',
+            'payment_id' => 'provider-payment-2',
+            'transaction_ref' => 'agency-test-ref',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        Http::fake([
+            'gateway.example.test/api/v1/payments/provider-payment-2' => Http::response([
+                'meta' => ['status' => 'SUCCESS'],
+                'payload' => [
+                    'id' => 'provider-payment-2',
+                    'status' => 'COMPLETED',
+                    'state' => 'CHARGED',
+                ],
+            ]),
+        ]);
+
+        (new BookingController())->paymentReturn(
+            Request::create('/booking/payment/return', 'GET', [
+                'transaction_ref' => 'agency-test-ref',
+                'status' => 'failed',
+                'ref' => 'ACC-AGENCY',
+            ]),
+            app(BookingOrderStatusSynchronizer::class)
+        );
+
+        $this->assertSame('paid', DB::table('payment_transactions')->where('id', 2)->value('status'));
+        $this->assertServiceStatuses(1, 'Processing');
+        $this->assertSame(2, \App\Models\TransportBooking::where('booking_ref_id', 1)->customerVisible()->count());
+        Http::assertSent(static fn ($request): bool => $request->url() === 'https://gateway.example.test/api/v1/payments/provider-payment-2'
+            && $request->hasHeader('X-API-KEY', 'test-api-key'));
     }
 
     public function test_frontend_group_orders_are_not_eligible_for_admin_settlement(): void
@@ -536,6 +713,7 @@ class AdminGroupSettlementTest extends TestCase
             $table->unsignedInteger('rooms_booked')->default(1);
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->string('booking_status')->nullable();
+            $table->string('payment_method')->nullable();
             $table->unsignedBigInteger('guest_otp_token_id')->nullable();
             $table->timestamps();
         });
@@ -556,6 +734,7 @@ class AdminGroupSettlementTest extends TestCase
             $table->unsignedInteger('children')->default(0);
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->string('booking_status')->nullable();
+            $table->string('payment_method')->nullable();
             $table->unsignedBigInteger('guest_otp_token_id')->nullable();
             $table->timestamps();
         });
@@ -578,6 +757,7 @@ class AdminGroupSettlementTest extends TestCase
             $table->unsignedInteger('adults')->default(1);
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->string('booking_status')->nullable();
+            $table->string('payment_method')->nullable();
             $table->timestamps();
         });
     }

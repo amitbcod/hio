@@ -2848,7 +2848,7 @@ class BookingController extends Controller
                 session(['operator_token' => $operatorToken]);
             }
 
-            $callbackUrl = route('frontend.booking.payment.callback');
+            $callbackUrl = AgaingencyPaymentService::paymentCallbackUrl($transactionRef);
             $returnParams = ['status' => 'success', 'ref' => $primaryRef, 'transaction_ref' => $transactionRef];
             $failureParams = ['status' => 'failed', 'ref' => $primaryRef, 'transaction_ref' => $transactionRef];
             if ($service = session('booking_service')) {
@@ -3054,17 +3054,23 @@ class BookingController extends Controller
 
     public function paymentCallback(Request $request, \App\Services\BookingOrderStatusSynchronizer $statusSynchronizer)
     {
-        $callbackSecret = (string) config('app.Againgencypayment.callback_secret', '');
-        $providedSecret = (string) $request->header('X-Callback-Secret', '');
-        if ($callbackSecret === '' || !hash_equals($callbackSecret, $providedSecret)) {
-            Log::warning('Againgency payment callback rejected because its callback secret was missing or invalid');
-
-            return response()->json(['error' => 'Invalid payment callback credentials'], 403);
-        }
-
         $transactionRef = $request->input('transaction_ref') ?: $request->input('reference');
         if (!$transactionRef) {
             return response()->json(['error' => 'Missing payment reference'], 400);
+        }
+
+        $callbackSecret = (string) config('app.Againgencypayment.callback_secret', '');
+        $providedSecret = (string) $request->header('X-Callback-Secret', '');
+        $expectedCallbackToken = hash_hmac('sha256', (string) $transactionRef, (string) config('app.key'));
+        $providedCallbackToken = (string) $request->query('callback_token', '');
+        $hasValidConfiguredSecret = $callbackSecret !== ''
+            && hash_equals($callbackSecret, $providedSecret);
+        $hasValidCallbackToken = $providedCallbackToken !== ''
+            && hash_equals($expectedCallbackToken, $providedCallbackToken);
+        if (!$hasValidConfiguredSecret && !$hasValidCallbackToken) {
+            Log::warning('Againgency payment callback rejected because its callback secret was missing or invalid');
+
+            return response()->json(['error' => 'Invalid payment callback credentials'], 403);
         }
 
         $paymentTransaction = PaymentTransaction::where('transaction_ref', $transactionRef)->first();
@@ -3083,8 +3089,17 @@ class BookingController extends Controller
             ], 409);
         }
 
-        $status = AgaingencyPaymentService::resolveCallbackStatus($request->input('status', $request->input('payment_status', 'pending')));
-        $paymentId = AgaingencyPaymentService::parsePaymentId($request->json()->all() ?: $request->all());
+        $callbackPayload = $request->json()->all() ?: $request->all();
+        $status = AgaingencyPaymentService::parseCallbackStatus($callbackPayload);
+        if ($status === null) {
+            Log::warning('Againgency payment callback rejected because its payment status was missing', [
+                'transaction_ref' => $transactionRef,
+            ]);
+
+            return response()->json(['error' => 'Missing payment status'], 422);
+        }
+
+        $paymentId = AgaingencyPaymentService::parsePaymentId($callbackPayload);
         $notificationTripId = $this->applyAgencyPaymentStatus(
             $paymentTransaction,
             $status,
@@ -3098,7 +3113,10 @@ class BookingController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function paymentReturn(Request $request)
+    public function paymentReturn(
+        Request $request,
+        \App\Services\BookingOrderStatusSynchronizer $statusSynchronizer
+    )
     {
         $status = 'pending';
         $transactionRef = $request->input('transaction_ref') ?: $request->input('reference');
@@ -3114,6 +3132,27 @@ class BookingController extends Controller
                         'booking_id' => $paymentTransaction->booking_id,
                         'booking_ref_id' => $paymentTransaction->booking_ref_id,
                     ]);
+                } elseif ($paymentTransaction->payment_id) {
+                    try {
+                        $status = AgaingencyPaymentService::getPaymentStatus($paymentTransaction->payment_id);
+                        if ($status !== 'pending') {
+                            $notificationTripId = $this->applyAgencyPaymentStatus(
+                                $paymentTransaction,
+                                $status,
+                                $paymentTransaction->payment_id,
+                                $statusSynchronizer
+                            );
+                            if ($notificationTripId) {
+                                $this->sendGuestBookingOtpNotificationsForTrip($notificationTripId);
+                            }
+                        }
+                    } catch (\RuntimeException $exception) {
+                        Log::warning('Againgency payment return could not verify provider status', [
+                            'transaction_ref' => $transactionRef,
+                            'payment_transaction_id' => $paymentTransaction->id,
+                            'error' => $exception->getMessage(),
+                        ]);
+                    }
                 }
             }
         }

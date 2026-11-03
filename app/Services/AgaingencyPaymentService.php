@@ -15,6 +15,22 @@ class AgaingencyPaymentService
         return self::createPaymentSession($orderId, $transactionRef, $customerEmail, $customerName, $amount, $currency, $successUrl, $failureUrl, $callbackUrl, $startDate, $endDate)['payment_url'];
     }
 
+    public static function paymentCallbackUrl(string $transactionRef): string
+    {
+        $parameters = [
+            'transaction_ref' => $transactionRef,
+            'callback_token' => hash_hmac('sha256', $transactionRef, (string) config('app.key')),
+        ];
+        $relativeUrl = route('frontend.booking.payment.callback', $parameters, false);
+        $callbackBaseUrl = trim((string) config('app.Againgencypayment.callback_base_url', ''));
+
+        if ($callbackBaseUrl === '') {
+            return route('frontend.booking.payment.callback', $parameters);
+        }
+
+        return rtrim($callbackBaseUrl, '/') . '/' . ltrim($relativeUrl, '/');
+    }
+
     public static function createPaymentSession(string $orderId, string $transactionRef, string $customerEmail, string $customerName, float $amount, string $currency, string $successUrl, string $failureUrl, string $callbackUrl, ?string $startDate = null, ?string $endDate = null): array
     {
         $startTime = microtime(true);
@@ -166,13 +182,14 @@ class AgaingencyPaymentService
             ];
         }
 
+        $logPayload = self::sanitizeCallbackTokens($payload);
         $logger->debug('Againgency Payment Request Payload', [
             'correlation_id' => $correlationId,
             'endpoint' => $endpoint,
             'method' => 'POST',
             'api_version' => $useNewApi ? 'v2 (API Key)' : 'v1 (Legacy)',
-            'payload' => $payload,
-            'payments' => $payload['payments'] ?? null,
+            'payload' => $logPayload,
+            'payments' => $logPayload['payments'] ?? null,
         ]);
 
         $request = Http::timeout(30)
@@ -214,7 +231,7 @@ class AgaingencyPaymentService
                 'Againgency',
                 'create_payment_url',
                 $correlationId,
-                $payload,
+                $logPayload,
                 [],
                 $e->getMessage(),
                 microtime(true) - $startTime
@@ -253,7 +270,7 @@ class AgaingencyPaymentService
                 'Againgency',
                 'create_payment_url',
                 $correlationId,
-                $payload,
+                $logPayload,
                 json_decode($errorBody, true) ?? [],
                 'HTTP Error: ' . $response->status(),
                 microtime(true) - $startTime
@@ -312,7 +329,7 @@ class AgaingencyPaymentService
             'Againgency',
             'create_payment_url',
             $correlationId,
-            $payload,
+            $logPayload,
             $body,
             null,
             microtime(true) - $startTime
@@ -335,6 +352,84 @@ class AgaingencyPaymentService
             'failed', 'declined', 'rejected', 'cancelled' => 'failed',
             default => 'pending',
         };
+    }
+
+    public static function parseCallbackStatus(array $body): ?string
+    {
+        $statusCandidates = [
+            data_get($body, 'payload.payments.0.status'),
+            data_get($body, 'payload.payment.status'),
+            data_get($body, 'data.payment.status'),
+            data_get($body, 'payments.0.status'),
+            data_get($body, 'payment.status'),
+            data_get($body, 'data.status'),
+            data_get($body, 'payload.status'),
+            data_get($body, 'payment_status'),
+            data_get($body, 'status'),
+        ];
+
+        foreach ($statusCandidates as $status) {
+            if (is_string($status) && trim($status) !== '') {
+                return self::resolveCallbackStatus($status);
+            }
+        }
+
+        return null;
+    }
+
+    public static function getPaymentStatus(string $paymentId): string
+    {
+        $config = config('app.Againgencypayment');
+        if (empty($config['api_key'])) {
+            throw new \RuntimeException('Againgency API key is not configured.');
+        }
+
+        $endpoint = rtrim(self::getApiBaseUrl(), '/') . '/payments/' . rawurlencode($paymentId);
+        $response = Http::timeout(30)
+            ->acceptJson()
+            ->withHeaders(['X-API-KEY' => $config['api_key']])
+            ->get($endpoint);
+
+        if (!$response->successful()) {
+            Log::warning('Againgency payment status lookup failed', [
+                'payment_id' => $paymentId,
+                'http_status' => $response->status(),
+            ]);
+
+            throw new \RuntimeException('Failed to retrieve payment status from Againgency.');
+        }
+
+        $body = $response->json();
+        $payment = data_get($body, 'payload.payment', data_get($body, 'payment', data_get($body, 'payload')));
+        if (!is_array($payment) || (string) ($payment['id'] ?? '') !== $paymentId) {
+            throw new \RuntimeException('Againgency returned an invalid payment status response.');
+        }
+
+        return self::resolveProviderPaymentStatus(
+            (string) ($payment['status'] ?? ''),
+            (string) ($payment['state'] ?? '')
+        );
+    }
+
+    public static function resolveProviderPaymentStatus(string $status, string $state): string
+    {
+        $status = strtoupper(trim($status));
+        $state = strtoupper(trim($state));
+
+        if (in_array($state, ['REFUNDED', 'PARTIALLY_REFUNDED'], true)) {
+            return 'refunded';
+        }
+
+        if ($status === 'COMPLETED' && in_array($state, ['CHARGED', 'CAPTURED', 'PROCESSED', 'PAID'], true)) {
+            return 'paid';
+        }
+
+        if (in_array($status, ['FAILED', 'CANCELED'], true)
+            || in_array($state, ['DECLINED', 'ERROR', 'EXPIRED', 'REVOKED', 'VOIDED'], true)) {
+            return 'failed';
+        }
+
+        return 'pending';
     }
 
     public static function getPaymentCallbacks(string $paymentId): array
@@ -525,5 +620,18 @@ class AgaingencyPaymentService
         }
 
         return strlen($value) <= 8 ? str_repeat('*', strlen($value)) : '***' . substr($value, -4);
+    }
+
+    private static function sanitizeCallbackTokens(array $payload): array
+    {
+        foreach ($payload as $key => $value) {
+            if (is_array($value)) {
+                $payload[$key] = self::sanitizeCallbackTokens($value);
+            } elseif ($key === 'callback_url' && is_string($value)) {
+                $payload[$key] = preg_replace('/([?&]callback_token=)[^&]+/', '$1[redacted]', $value);
+            }
+        }
+
+        return $payload;
     }
 }

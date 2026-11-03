@@ -71,7 +71,12 @@ Route::get('/booking/checkout',     [BookingController::class, 'checkout'])->nam
 
 // Place order (allows both guest and authenticated)
 Route::post('/booking/place-order', [BookingController::class, 'placeOrder'])->name('frontend.booking.place-order');
-Route::match(['get', 'post'], '/booking/payment/callback', [BookingController::class, 'paymentCallback'])->name('frontend.booking.payment.callback');
+Route::match(['get', 'post'], '/booking/payment/callback', [BookingController::class, 'paymentCallback'])
+    ->name('frontend.booking.payment.callback')
+    ->withoutMiddleware([
+        \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+        \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+    ]);
 Route::get('/booking/payment/return', [BookingController::class, 'paymentReturn'])->name('frontend.booking.payment.return');
 
 Route::post('/booking/save-guest', [BookingController::class, 'saveGuest'])->name('frontend.booking.save-guest');

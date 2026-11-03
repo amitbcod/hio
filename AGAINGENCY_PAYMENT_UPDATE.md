@@ -197,3 +197,7 @@ AGAINCENCY_PAYMENT_AUTH_METHOD=AUTH
 3. Monitor logs in `storage/logs/payment/` directory
 4. Confirm with Againgency/Ecommpay team that new format is accepted
 5. Deploy to production once confirmed
+
+## Payment Return Verification
+
+The browser return URL is not accepted as proof of payment. On return, the application checks the payment ID against Againgency's authenticated `GET /payments/{payment_id}` endpoint and marks the transaction paid only when the provider reports `COMPLETED` with a charged/captured/processed/paid state. This also allows local development orders to be reconciled when the provider cannot reach a localhost callback URL. The callback endpoint remains authenticated and CSRF-exempt for provider-to-server requests.
