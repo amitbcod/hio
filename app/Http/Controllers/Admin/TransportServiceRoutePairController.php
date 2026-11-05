@@ -23,7 +23,9 @@ class TransportServiceRoutePairController extends Controller
         $pairs = TransportServiceRoutePair::where('country_id', $countryId)
             ->orderBy('service_type')->orderBy('route_from')->orderBy('route_to')->get();
         $regions = Region::where('country_id', $countryId)->orderBy('name')->pluck('name')->toArray();
-        $countries = Country::where('is_active', true)->orWhereKey($countryId)->orderBy('name')->get();
+        $countries = Country::where(function ($query) use ($countryId): void {
+            $query->where('is_active', true)->orWhere('id', $countryId);
+        })->orderBy('name')->get();
         $serviceTypes = [
             'airport_transfer' => 'Airport Transfer',
             'activity_transfer' => 'Activity Transfer',

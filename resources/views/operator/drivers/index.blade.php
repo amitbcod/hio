@@ -14,7 +14,10 @@
                     <h2 style="font-weight:700;margin:0;">Driver Management</h2>
                     <p style="margin:6px 0 0 0;color:#666;">Manage and track your drivers</p>
                 </div>
-                <div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <a href="{{ route('operator.trips.index') }}" class="btn" style="background:#f0f0f0;color:#333;padding:8px 14px;border-radius:6px;border:1px solid #ddd;text-decoration:none;">
+                        <i class="fa-solid fa-arrow-left"></i> Back
+                    </a>
                     <a href="{{ route('operator.drivers.create') }}" class="btn" style="background:#19b5b5;color:#fff;padding:8px 14px;border-radius:6px;border:none;">+ Add New Driver</a>
                 </div>
             </div>

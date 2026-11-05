@@ -82,6 +82,19 @@ class MpoOnboardingTest extends TestCase
         $this->assertDatabaseMissing('admin_users', ['email' => 'second-mpo@example.test']);
     }
 
+    public function test_global_admin_can_open_the_country_mpo_edit_form(): void
+    {
+        $country = $this->country('Mauritius', 'MU');
+        $globalAdmin = $this->globalAdmin();
+        $mpo = $this->mpo($country);
+
+        $this->withSession(['admin_id' => $globalAdmin->id])
+            ->get(route('admin.country-admins.edit', $mpo))
+            ->assertOk()
+            ->assertSee('Edit MPO')
+            ->assertSee('value="' . $country->id . '" selected', false);
+    }
+
     public function test_admin_created_mpo_can_set_password_sign_in_and_open_own_profile(): void
     {
         Mail::fake();
@@ -137,7 +150,7 @@ class MpoOnboardingTest extends TestCase
 
         $this->get(route('mpo.profile'))
             ->assertOk()
-            ->assertSee('MPO onboarding sections')
+            ->assertSee('MPO navigation')
             ->assertSee('Compliances')
             ->assertDontSee('Dashboard');
 

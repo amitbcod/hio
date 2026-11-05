@@ -143,11 +143,6 @@ class AuthController extends Controller
         $permissions = app(MpoStaffPermissionService::class);
         foreach ([
             ['users', 'mpo.users'],
-            ['profile', 'mpo.profile'],
-            ['compliance', 'mpo.compliances'],
-            ['capacity-permissions', 'mpo.capacity-permissions'],
-            ['collaboration-agreements', 'mpo.collaboration-agreements'],
-            ['accounting', 'mpo.accounting-commission'],
         ] as [$module, $route]) {
             if ($permissions->can($staffUser, $module, 'read')) {
                 return route($route);

@@ -26,29 +26,30 @@ class ServiceBookingController extends Controller
 
     public function show(Request $request, string $serviceType, int $booking, BookingPostponementService $postponements)
     {
-        [$staff, $owner, $module] = $this->context($request, $serviceType, 'read');
+        [$actor, $owner, $module, $isMpoOwner] = $this->context($request, $serviceType, 'read');
         $record = $this->booking($serviceType, $booking);
         $this->assertCountryOwnership($record, $owner->country_id);
         $record = $postponements->loadForDetails($serviceType, $booking);
-        $postponementActions = $postponements->details($record, $serviceType, false);
+        $postponementActions = $postponements->details($record, $serviceType, $isMpoOwner);
 
         return view('mpo.operations.booking-show', [
             'booking' => $record,
             'serviceType' => $serviceType,
             'module' => ['module' => $module, ...config("mpo_staff.registry.{$module}")],
             'postponementActions' => $postponementActions,
-            'staff' => $staff,
+            'staff' => $actor,
             'permissions' => $this->permissions,
+            'isMpoOwner' => $isMpoOwner,
             ...$this->transportAssignmentOptions($record, $serviceType),
         ]);
     }
 
     public function update(Request $request, string $serviceType, int $booking, BookingPostponementService $postponements)
     {
-        [$staff, $owner] = $this->context($request, $serviceType, 'update');
+        [$actor, $owner, , $isMpoOwner] = $this->context($request, $serviceType, 'update');
         $record = $this->booking($serviceType, $booking);
         $this->assertCountryOwnership($record, $owner->country_id);
-        $postponements->postpone($request, $serviceType, $booking, $staff, false, true);
+        $postponements->postpone($request, $serviceType, $booking, $actor, $isMpoOwner, ! $isMpoOwner);
 
         return back()->with('success', __('booking_postponement.success'));
     }
@@ -66,13 +67,13 @@ class ServiceBookingController extends Controller
             'Cancelled' => 'cancel',
             default => 'process',
         };
-        [$staff, $owner, $module] = $this->context($request, $serviceType, $action);
+        [$actor, $owner, $module, $isMpoOwner] = $this->context($request, $serviceType, $action);
         $record = $this->booking($serviceType, $booking);
         $this->assertCountryOwnership($record, $owner->country_id);
 
         if ($serviceType === 'transport') {
             return app(\App\Http\Controllers\Operator\TransportController::class)
-                ->updateBookingStatusForActor($request, $record, $staff, true);
+                ->updateBookingStatusForActor($request, $record, $actor, $isMpoOwner);
         }
 
         if ($record->booking_status === 'Cancelled') {
@@ -89,22 +90,28 @@ class ServiceBookingController extends Controller
 
     public function activitySlots(Request $request, int $booking, BookingPostponementService $postponements)
     {
-        [$staff, $owner] = $this->context($request, 'activity', 'update');
+        [$actor, $owner, , $isMpoOwner] = $this->context($request, 'activity', 'update');
         $record = $this->booking('activity', $booking);
         $this->assertCountryOwnership($record, $owner->country_id);
         $date = $request->validate(['date' => ['required', 'date_format:Y-m-d']])['date'];
 
         return response()->json([
-            'slots' => $postponements->activitySlotsForDate($booking, $date, $staff, false, true),
+            'slots' => $postponements->activitySlotsForDate(
+                $booking,
+                $date,
+                $actor,
+                $isMpoOwner,
+                ! $isMpoOwner,
+            ),
         ]);
     }
 
     public function assignTransport(Request $request, int $booking)
     {
-        [$staff, $owner, $module] = $this->context($request, 'transport', null);
+        [$actor, $owner, $module, $isMpoOwner] = $this->context($request, 'transport', null);
         abort_unless(
-            $this->permissions->can($staff, $module, 'assign')
-                || $this->permissions->can($staff, $module, 'reassign'),
+            $this->permissions->can($actor, $module, 'assign')
+                || $this->permissions->can($actor, $module, 'reassign'),
             403,
         );
         $record = $this->booking('transport', $booking);
@@ -114,30 +121,34 @@ class ServiceBookingController extends Controller
             || $record->pickup_driver_id
             || $record->return_driver_id;
         $action = $assigned ? 'reassign' : 'assign';
-        abort_unless($this->permissions->can($staff, $module, $action), 403);
+        abort_unless($this->permissions->can($actor, $module, $action), 403);
 
         return app(\App\Http\Controllers\Operator\TransportController::class)
-            ->assignDriversForActor($request, $record, $staff, true);
+            ->assignDriversForActor($request, $record, $actor, $isMpoOwner);
     }
 
     private function context(Request $request, string $serviceType, ?string $action): array
     {
-        $staff = $request->attributes->get('mpo_staff_user');
+        $actor = $request->attributes->get('mpo_staff_user');
         $owner = $request->attributes->get('mpo_admin');
-        abort_unless(
-            $staff instanceof MpoStaffUser
-                && $owner instanceof AdminUser
-                && $owner->admin_type === 'mpo'
-                && (int) $staff->admin_user_id === (int) $owner->id,
-            403,
-        );
+        abort_unless($owner instanceof AdminUser && $owner->admin_type === 'mpo', 403);
+        $isMpoOwner = ! $request->attributes->has('mpo_staff_user');
+        if ($isMpoOwner) {
+            $actor = $owner;
+        }
+        $isMpoOwner = $isMpoOwner
+            && $actor instanceof AdminUser
+            && (int) $actor->id === (int) $owner->id;
+        $isMpoStaff = $actor instanceof MpoStaffUser
+            && (int) $actor->admin_user_id === (int) $owner->id;
+        abort_unless($isMpoOwner || $isMpoStaff, 403);
         abort_unless(isset(self::BOOKING_MODULES[$serviceType]), 404);
         $module = self::BOOKING_MODULES[$serviceType]['module'];
         if ($action !== null) {
-            abort_unless($this->permissions->can($staff, $module, $action), 403);
+            abort_unless($this->permissions->can($actor, $module, $action), 403);
         }
 
-        return [$staff, $owner, $module];
+        return [$actor, $owner, $module, $isMpoOwner];
     }
 
     private function booking(string $serviceType, int $booking): AccommodationBooking|ActivityBooking|TransportBooking

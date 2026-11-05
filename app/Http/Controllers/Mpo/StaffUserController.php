@@ -93,6 +93,9 @@ class StaffUserController extends Controller
             ->orderBy('name')
             ->get();
         $roleOptions = $this->permissions->assignableRoles($actor);
+        if (! $staffUser && $actor instanceof MpoStaffUser) {
+            $roleOptions = [$this->permissions->canonicalRole($actor->role)];
+        }
         $staffRole = $staffUser ? $this->permissions->canonicalRole($staffUser->role) : null;
         if ($staffUser && ! in_array($staffRole, $roleOptions, true)) {
             $roleOptions[] = $staffRole;
@@ -143,6 +146,9 @@ class StaffUserController extends Controller
         }
 
         $roleOptions = $this->permissions->assignableRoles($actor);
+        if (! $staffUser && $actor instanceof MpoStaffUser) {
+            $roleOptions = [$this->permissions->canonicalRole($actor->role)];
+        }
         if ($staffUser && $this->permissions->canonicalRole($staffUser->role) === $request->input('role')) {
             $roleOptions[] = $this->permissions->canonicalRole($staffUser->role);
         }
@@ -153,7 +159,15 @@ class StaffUserController extends Controller
             abort_unless($this->permissions->roleAssignable($actor, $data['role']), 403, 'You cannot assign this role.');
         }
         if (! $staffUser) {
-            abort_unless($this->permissions->roleAssignable($actor, $data['role']), 403, 'You cannot assign this role.');
+            if ($actor instanceof MpoStaffUser) {
+                abort_unless(
+                    $this->permissions->canonicalRole($data['role']) === $this->permissions->canonicalRole($actor->role),
+                    403,
+                    'MPO staff may create users only in their own role.',
+                );
+            } else {
+                abort_unless($this->permissions->roleAssignable($actor, $data['role']), 403, 'You cannot assign this role.');
+            }
         }
         if ($staffUser
             && $staffUser->status === 'Active'

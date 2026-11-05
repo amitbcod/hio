@@ -59,7 +59,9 @@ class PlaceController extends Controller
         return view('admin.places.edit', [
             'place' => $place,
             'regions' => $regions,
-            'countries' => Country::where('is_active', true)->orWhereKey($place->country_id)->orderBy('name')->get(),
+            'countries' => Country::where(function ($query) use ($place): void {
+                $query->where('is_active', true)->orWhere('id', $place->country_id);
+            })->orderBy('name')->get(),
             'isMpo' => CountryAccess::isMpoAdmin(),
         ]);
     }

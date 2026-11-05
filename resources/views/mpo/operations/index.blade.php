@@ -5,7 +5,9 @@
 @section('content')
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div>
-            <p class="text-muted mb-0">{{ $definition['description'] }}</p>
+            @if(filled($definition['description']))
+                <p class="text-muted mb-0">{{ $definition['description'] }}</p>
+            @endif
         </div>
         <span class="badge text-bg-secondary">
             {{ isset($definition['booking_type']) ? 'Booking access' : 'Read only' }}
@@ -43,7 +45,7 @@
                     @empty
                         <tr>
                             <td class="text-center text-muted py-4" colspan="{{ count($definition['columns']) + (isset($definition['booking_type']) ? 1 : 0) }}">
-                                No records found for this country.
+                                No records found.
                             </td>
                         </tr>
                     @endforelse

@@ -86,8 +86,10 @@ class CountryAdminController extends Controller
     public function edit(AdminUser $administrator)
     {
         abort_unless($administrator->admin_type === 'mpo', 404);
-        $countries = Country::query()->where('is_active', true)
-            ->orWhereKey($administrator->country_id)
+        $countries = Country::query()->where(function ($query) use ($administrator): void {
+            $query->where('is_active', true)
+                ->orWhere('id', $administrator->country_id);
+        })
             ->orderBy('name')
             ->get();
 

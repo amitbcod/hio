@@ -15,8 +15,8 @@
         'booking' => $booking,
         'serviceType' => $serviceType,
         'postponementActions' => $postponementActions,
-        'isAdmin' => false,
-        'isMpoStaff' => true,
+        'isAdmin' => $isMpoOwner,
+        'isMpoStaff' => ! $isMpoOwner,
     ])
 
     <div class="card mb-4">

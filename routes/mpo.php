@@ -8,6 +8,7 @@ use App\Http\Controllers\Mpo\OperationalModuleController;
 use App\Http\Controllers\Mpo\RolePermissionController;
 use App\Http\Controllers\Mpo\ServiceBookingController;
 use App\Http\Controllers\Mpo\StaffUserController;
+use App\Http\Middleware\MpoOwnerOnly;
 use App\Http\Middleware\MpoPortalAuthMiddleware;
 use App\Http\Middleware\MpoStaffModuleAccess;
 use App\Http\Middleware\MpoStaffOperationalAccess;
@@ -30,14 +31,26 @@ Route::prefix('mpo')->name('mpo.')->group(function () {
     })->name('register.step2');
 
     Route::middleware(MpoPortalAuthMiddleware::class)->group(function (): void {
-        Route::get('profile', [ProfileController::class, 'show'])->middleware(MpoStaffModuleAccess::class.':profile,read')->name('profile');
-        Route::post('profile', [ProfileController::class, 'save'])->middleware(MpoStaffModuleAccess::class.':profile,update')->name('profile.save');
-        Route::get('compliances', [ComplianceController::class, 'show'])->middleware(MpoStaffModuleAccess::class.':compliance,read')->name('compliances');
-        Route::post('compliances', [ComplianceController::class, 'submit'])->middleware(MpoStaffModuleAccess::class.':compliance,update')->name('compliances.save');
-        Route::get('compliances/{compliance}/{document}', [ComplianceController::class, 'download'])
-            ->middleware(MpoStaffModuleAccess::class.':compliance,read')
-            ->whereIn('document', ['proof-of-license', 'insurance-certificate'])
-            ->name('compliances.download');
+        Route::middleware(MpoOwnerOnly::class)->group(function (): void {
+            Route::get('profile', [ProfileController::class, 'show'])->name('profile');
+            Route::post('profile', [ProfileController::class, 'save'])->name('profile.save');
+            Route::get('compliances', [ComplianceController::class, 'show'])->name('compliances');
+            Route::post('compliances', [ComplianceController::class, 'submit'])->name('compliances.save');
+            Route::get('compliances/{compliance}/{document}', [ComplianceController::class, 'download'])
+                ->whereIn('document', ['proof-of-license', 'insurance-certificate'])
+                ->name('compliances.download');
+            Route::get('collaboration-agreements', [ProfileController::class, 'collaborationAgreements'])->name('collaboration-agreements');
+            Route::put('collaboration-agreements/contacts/{contactType}', [\App\Http\Controllers\Mpo\CollaborationAgreementController::class, 'updateContact'])
+                ->whereIn('contactType', ['management', 'accounting'])
+                ->name('collaboration-agreements.contacts.update');
+            Route::get('collaboration-agreements/documents/{document}', [\App\Http\Controllers\Mpo\CollaborationAgreementController::class, 'download'])
+                ->whereNumber('document')
+                ->name('collaboration-agreements.documents.download');
+            Route::get('accounting-commission', [\App\Http\Controllers\Mpo\AccountingCommissionController::class, 'show'])->name('accounting-commission');
+            Route::put('accounting-commission', [\App\Http\Controllers\Mpo\AccountingCommissionController::class, 'update'])->name('accounting-commission.update');
+            Route::get('accounting-payouts', [\App\Http\Controllers\Mpo\AccountingPayoutController::class, 'show'])->name('accounting-payouts');
+            Route::put('accounting-payouts', [\App\Http\Controllers\Mpo\AccountingPayoutController::class, 'update'])->name('accounting-payouts.update');
+        });
         Route::get('users', [StaffUserController::class, 'index'])->name('users');
         Route::get('users/create', [StaffUserController::class, 'create'])->name('users.create');
         Route::post('users', [StaffUserController::class, 'store'])->name('users.store');
@@ -47,21 +60,10 @@ Route::prefix('mpo')->name('mpo.')->group(function () {
         Route::put('users/{staffUser}', [StaffUserController::class, 'update'])->whereNumber('staffUser')->name('users.update');
         Route::post('users/{staffUser}/status', [StaffUserController::class, 'updateStatus'])->whereNumber('staffUser')->name('users.status');
         Route::post('users/{staffUser}/reset-password', [StaffUserController::class, 'sendPasswordReset'])->whereNumber('staffUser')->name('users.send-password-reset');
-        Route::get('capacity-permissions-and-roles', [RolePermissionController::class, 'index'])->middleware(MpoStaffModuleAccess::class.':capacity-permissions,read')->name('capacity-permissions');
-        Route::put('capacity-permissions-and-roles', [RolePermissionController::class, 'update'])->middleware(MpoStaffModuleAccess::class.':capacity-permissions,update')->name('capacity-permissions.update');
-        Route::get('collaboration-agreements', [ProfileController::class, 'collaborationAgreements'])->middleware(MpoStaffModuleAccess::class.':collaboration-agreements,read')->name('collaboration-agreements');
-        Route::put('collaboration-agreements/contacts/{contactType}', [\App\Http\Controllers\Mpo\CollaborationAgreementController::class, 'updateContact'])
-            ->whereIn('contactType', ['management', 'accounting'])
-            ->middleware(MpoStaffModuleAccess::class.':collaboration-agreements,update')
-            ->name('collaboration-agreements.contacts.update');
-        Route::get('collaboration-agreements/documents/{document}', [\App\Http\Controllers\Mpo\CollaborationAgreementController::class, 'download'])
-            ->whereNumber('document')
-            ->middleware(MpoStaffModuleAccess::class.':collaboration-agreements,read')
-            ->name('collaboration-agreements.documents.download');
-        Route::get('accounting-commission', [\App\Http\Controllers\Mpo\AccountingCommissionController::class, 'show'])->middleware(MpoStaffModuleAccess::class.':accounting,read')->name('accounting-commission');
-        Route::put('accounting-commission', [\App\Http\Controllers\Mpo\AccountingCommissionController::class, 'update'])->middleware(MpoStaffModuleAccess::class.':accounting,update')->name('accounting-commission.update');
-        Route::get('accounting-payouts', [\App\Http\Controllers\Mpo\AccountingPayoutController::class, 'show'])->middleware(MpoStaffModuleAccess::class.':accounting,read')->name('accounting-payouts');
-        Route::put('accounting-payouts', [\App\Http\Controllers\Mpo\AccountingPayoutController::class, 'update'])->middleware(MpoStaffModuleAccess::class.':accounting,update')->name('accounting-payouts.update');
+        Route::middleware(MpoOwnerOnly::class)->group(function (): void {
+            Route::get('capacity-permissions-and-roles', [RolePermissionController::class, 'index'])->name('capacity-permissions');
+            Route::put('capacity-permissions-and-roles', [RolePermissionController::class, 'update'])->name('capacity-permissions.update');
+        });
         Route::get('operations/{module}', [OperationalModuleController::class, 'index'])
             ->whereIn('module', array_keys(config('mpo_staff.registry', [])))
             ->middleware(MpoStaffOperationalAccess::class)

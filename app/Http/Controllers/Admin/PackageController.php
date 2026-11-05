@@ -114,7 +114,9 @@ class PackageController extends Controller
         // show the same step1 view but with package data
         return view('admin.packages.create-step1', [
             'package' => $package,
-            'countries' => Country::where('is_active', true)->orWhereKey($package->country_id)->orderBy('name')->get(),
+            'countries' => Country::where(function ($query) use ($package): void {
+                $query->where('is_active', true)->orWhere('id', $package->country_id);
+            })->orderBy('name')->get(),
             'isMpo' => CountryAccess::isMpoAdmin(),
         ]);
     }

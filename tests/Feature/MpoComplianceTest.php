@@ -201,13 +201,17 @@ class MpoComplianceTest extends TestCase
         $this->withSession(['admin_id' => $admin->id])
             ->patch(route('admin.country-admins.compliance.save', $mpo), $this->validSubmission([
                 'business_license_number' => 'Updated License 2',
-                'proof_of_license' => null,
+                'proof_of_license' => UploadedFile::fake()->createWithContent(
+                    'replacement-license.pdf',
+                    "%PDF-1.4\nReplacement license\n",
+                ),
                 'insurance_certificate' => null,
             ]))
             ->assertRedirect(route('admin.country-admins.compliance.show', $mpo));
 
         $this->assertSame('pending_verification', $compliance->fresh()->verification_status);
         Storage::disk('local')->assertExists($compliance->fresh()->proof_of_license_path);
+        Storage::disk('local')->assertExists($oldInsurance);
         Storage::disk('local')->assertMissing($oldProof);
     }
 
@@ -222,6 +226,7 @@ class MpoComplianceTest extends TestCase
             'reviewed_by_admin_id' => $admin->id,
             'reviewed_at' => now(),
         ]);
+        $mpo->unsetRelation('compliance');
 
         $this->actingAs($mpo, 'mpo')
             ->post(route('mpo.profile.save'), [
@@ -264,7 +269,12 @@ class MpoComplianceTest extends TestCase
         $mpo = $this->mpo();
         $countryAdmin = $this->globalAdmin();
         $countryAdmin->admin_type = 'mpo';
-        $countryAdmin->country_id = $mpo->country_id;
+        $countryAdmin->country_id = Country::query()->create([
+            'name' => 'Separate country for invalid admin session',
+            'currency_code' => 'USD',
+            'time_zone' => 'UTC',
+            'is_active' => true,
+        ])->id;
         $countryAdmin->save();
         $compliance = $this->submitAsMpo($mpo);
 
@@ -298,8 +308,8 @@ class MpoComplianceTest extends TestCase
     private function mpo(string $email = 'mpo@example.test', bool $withProfile = true): AdminUser
     {
         $country = Country::query()->firstOrCreate(
-            ['name' => 'Mauritius'],
-            ['iso_code' => 'MU', 'currency_code' => 'MUR', 'time_zone' => 'Indian/Mauritius', 'is_active' => true],
+            ['name' => 'Mauritius '.str_replace(['@', '.'], '-', $email)],
+            ['iso_code' => null, 'currency_code' => 'MUR', 'time_zone' => 'Indian/Mauritius', 'is_active' => true],
         );
 
         return AdminUser::query()->create(array_merge([

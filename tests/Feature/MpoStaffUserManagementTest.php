@@ -80,8 +80,100 @@ class MpoStaffUserManagementTest extends TestCase
             ->assertSee('Owned Region')
             ->assertDontSee('Foreign Region')
             ->assertSee('Regions')
+            ->assertDontSee('Country Id')
+            ->assertDontSee('Regions configured for this MPO country.')
+            ->assertDontSee('this MPO country')
+            ->assertDontSee('this country')
             ->assertDontSee('Payment Transactions');
         $this->assertSame(1, substr_count($response->getContent(), '<h1'));
+        $this->assertSame(2, substr_count($response->getContent(), '<th scope="col">'));
+    }
+
+    public function test_mpo_owner_can_access_country_scoped_modules_without_staff_permissions(): void
+    {
+        $mpo = $this->mpo();
+        $otherMpo = $this->mpo('other-owner-module@example.test');
+        Region::query()->create(['name' => 'Owned Region', 'country_id' => $mpo->country_id]);
+        Region::query()->create(['name' => 'Foreign Region', 'country_id' => $otherMpo->country_id]);
+
+        $this->actingAs($mpo, 'mpo')
+            ->get(route('mpo.operations.module', ['module' => 'regions']))
+            ->assertOk()
+            ->assertSee('Owned Region')
+            ->assertDontSee('Foreign Region')
+            ->assertDontSee('Country Id')
+            ->assertDontSee('Regions configured for this MPO country.')
+            ->assertDontSee('this MPO country')
+            ->assertDontSee('this country');
+    }
+
+    public function test_global_admin_regions_page_shows_country_id_and_country_description(): void
+    {
+        $mpo = $this->mpo();
+        $region = Region::query()->create([
+            'name' => 'Global Admin Region',
+            'country_id' => $mpo->country_id,
+        ]);
+        $globalAdmin = $this->globalAdmin();
+
+        $this->withSession(['admin_id' => $globalAdmin->id])
+            ->get(route('admin.regions.index'))
+            ->assertOk()
+            ->assertSee('Country ID')
+            ->assertSee('Regions configured for this MPO country.')
+            ->assertSee('>'.$region->country_id.'</td>', false)
+            ->assertSee($region->name);
+    }
+
+    public function test_mpo_onboarding_is_owner_only_and_payout_status_stays_incomplete_until_configured(): void
+    {
+        $mpo = $this->mpo();
+        $staff = $this->staff($mpo, 'Profile Reader');
+        $profile = $this->module('profile', 'Profile');
+        $this->rolePermission($mpo, 'Finance', $profile, 'read', true, false);
+
+        $this->actingAs($mpo, 'mpo')
+            ->get(route('mpo.profile'))
+            ->assertOk()
+            ->assertSee('Trips')
+            ->assertSee('Operators')
+            ->assertSee('MPO Setup')
+            ->assertSee('Accounting Payouts')
+            ->assertSee('Not Started');
+        $this->assertDatabaseMissing('mpo_payout_configurations', ['admin_user_id' => $mpo->id]);
+
+        foreach ([
+            'mpo.profile',
+            'mpo.compliances',
+            'mpo.collaboration-agreements',
+            'mpo.accounting-commission',
+            'mpo.accounting-payouts',
+        ] as $route) {
+            $this->actingAs($staff, 'mpo_staff')
+                ->get(route($route))
+                ->assertForbidden();
+        }
+    }
+
+    public function test_mpo_owner_can_open_booking_details_only_for_its_assigned_country(): void
+    {
+        $mpo = $this->mpo();
+        $otherMpo = $this->mpo('other-booking-owner@example.test');
+        $ownedBooking = $this->accommodationBooking($mpo, 'OWNED-BOOKING');
+        $foreignBooking = $this->accommodationBooking($otherMpo, 'FOREIGN-BOOKING');
+
+        $this->actingAs($mpo, 'mpo')
+            ->get(route('mpo.operations.booking.show', [
+                'serviceType' => 'accommodation',
+                'booking' => $ownedBooking->id,
+            ]))
+            ->assertOk()
+            ->assertSee('OWNED-BOOKING');
+
+        $this->get(route('mpo.operations.booking.show', [
+            'serviceType' => 'accommodation',
+            'booking' => $foreignBooking->id,
+        ]))->assertNotFound();
     }
 
     public function test_section_capacity_grants_every_supported_booking_action_for_each_service(): void
@@ -465,9 +557,23 @@ class MpoStaffUserManagementTest extends TestCase
                     ],
                 ],
             ]))
+            ->assertSessionHasErrors('role');
+
+        $this->assertDatabaseMissing('mpo_staff_users', ['email' => 'staff@example.test']);
+
+        $this->actingAs($staff, 'mpo_staff')
+            ->post(route('mpo.users.store'), $this->validPayload([
+                'permission_overrides' => [
+                    'profile' => [
+                        'read' => ['effect' => 'allow', 'can_delegate' => '1'],
+                        'update' => ['effect' => 'allow', 'can_delegate' => '1'],
+                    ],
+                ],
+            ]))
             ->assertRedirect(route('mpo.users'));
 
         $created = MpoStaffUser::query()->where('email', 'staff@example.test')->firstOrFail();
+        $this->assertSame('Finance', $created->role);
         $this->assertSame($mpo->id, $created->admin_user_id);
         $this->assertDatabaseHas('mpo_staff_permission_overrides', [
             'mpo_staff_user_id' => $created->id,
@@ -480,7 +586,7 @@ class MpoStaffUserManagementTest extends TestCase
         $this->actingAs($staff, 'mpo_staff')
             ->post(route('mpo.users.store'), $this->validPayload([
                 'email' => 'forbidden@example.test',
-                'role' => 'Support',
+                'role' => 'Finance',
                 'permission_overrides' => [
                     'users' => ['disable' => ['effect' => 'allow']],
                 ],
@@ -489,7 +595,7 @@ class MpoStaffUserManagementTest extends TestCase
 
         $this->post(route('mpo.users.store'), $this->validPayload([
             'email' => 'forbidden-role@example.test',
-            'role' => 'Admin',
+            'role' => 'Support',
         ]))->assertSessionHasErrors('role');
 
         $otherMpo = $this->mpo('other-owner@example.test');
@@ -611,7 +717,7 @@ class MpoStaffUserManagementTest extends TestCase
         ]);
     }
 
-    public function test_role_configuration_requires_explicit_staff_permission_and_delegated_role(): void
+    public function test_only_mpo_owner_can_configure_roles_even_when_staff_has_capacity_permissions(): void
     {
         $mpo = $this->mpo();
         $staff = $this->staff($mpo, 'Supervisor', 'supervisor@example.test', 'Supervisor');
@@ -619,6 +725,7 @@ class MpoStaffUserManagementTest extends TestCase
         $users = $this->module('users', 'Users');
         $profile = $this->module('profile', 'Profile');
         $this->rolePermission($mpo, 'Supervisor', $capacity, 'read', true, true);
+        $this->rolePermission($mpo, 'Supervisor', $users, 'read', true, false);
 
         $this->actingAs($staff, 'mpo_staff')
             ->get(route('mpo.capacity-permissions', ['role' => 'Support']))
@@ -644,18 +751,21 @@ class MpoStaffUserManagementTest extends TestCase
         $this->assertTrue($permissionService->roleAssignable($staff, 'Support'));
         $this->assertTrue($permissionService->canConfigureRole($staff, 'Support'));
 
-        $rolePage = $this->actingAs($staff, 'mpo_staff')
-            ->get(route('mpo.capacity-permissions', ['role' => 'Support']));
-        $rolePage->assertOk()
-            ->assertSee('Support');
+        $usersPage = $this->actingAs($staff, 'mpo_staff')
+            ->get(route('mpo.users'))
+            ->assertOk()
+            ->assertDontSee('Capacity Permissions and Roles');
+        $this->assertStringNotContainsString('capacity-permissions-and-roles', $usersPage->getContent());
+        $this->get(route('mpo.capacity-permissions', ['role' => 'Support']))
+            ->assertForbidden();
         $this->put(route('mpo.capacity-permissions.update'), [
             'role' => 'Support',
             'permissions' => [
                 'profile' => ['read' => ['allowed' => '1', 'can_delegate' => '0']],
             ],
-        ])->assertRedirect(route('mpo.capacity-permissions', ['role' => 'Support']));
+        ])->assertForbidden();
 
-        $this->assertDatabaseHas('mpo_role_module_permissions', [
+        $this->assertDatabaseMissing('mpo_role_module_permissions', [
             'admin_user_id' => $mpo->id,
             'role' => 'Support',
             'module_id' => $profile->id,
@@ -688,7 +798,7 @@ class MpoStaffUserManagementTest extends TestCase
         ]);
     }
 
-    public function test_role_changes_are_immediately_enforced_and_unsupported_scopes_fail_closed(): void
+    public function test_staff_cannot_access_mpo_setup_routes_even_with_module_permissions(): void
     {
         $mpo = $this->mpo();
         $staff = $this->staff($mpo, 'Profile Reader', 'profile-reader@example.test', 'Finance');
@@ -697,7 +807,7 @@ class MpoStaffUserManagementTest extends TestCase
 
         $this->actingAs($staff, 'mpo_staff')
             ->get(route('mpo.profile'))
-            ->assertOk();
+            ->assertForbidden();
 
         MpoRoleModulePermission::query()
             ->where('admin_user_id', $mpo->id)
@@ -740,7 +850,7 @@ class MpoStaffUserManagementTest extends TestCase
 
         $this->actingAs($actor, 'mpo_staff')
             ->post(route('mpo.users.store'), $this->validPayload([
-                'role' => 'Support',
+                'role' => 'Finance',
                 'permission_overrides' => [
                     'profile' => ['read' => ['effect' => 'allow', 'can_delegate' => '1']],
                 ],
@@ -850,17 +960,26 @@ class MpoStaffUserManagementTest extends TestCase
         $this->assertNull($staff->fresh()->last_login);
     }
 
-    public function test_accounting_only_staff_can_log_in_to_their_accounting_module(): void
+    public function test_authorized_accounting_staff_can_access_operational_transactions_but_not_setup(): void
     {
         $mpo = $this->mpo();
         $staff = $this->staff($mpo, 'Accountant', 'accountant@example.test', 'Finance');
-        $accounting = $this->module('accounting', 'Accounting');
-        $this->rolePermission($mpo, 'Finance', $accounting, 'read', true, false);
+        $transactions = $this->module('payment-transactions', 'Payment Transactions');
+        $this->rolePermission($mpo, 'Finance', $transactions, 'read', true, false);
 
         $this->post(route('mpo.login'), [
             'email' => $staff->email,
             'password' => 'StaffPassword1!',
-        ])->assertRedirect(route('mpo.accounting-commission'));
+        ])->assertRedirect(route('mpo.operations.module', ['module' => 'payment-transactions']));
+
+        $this->get(route('mpo.operations.module', ['module' => 'payment-transactions']))
+            ->assertOk()
+            ->assertSee('Payment Transactions');
+        $this->actingAs($staff, 'mpo_staff')
+            ->get(route('mpo.accounting-commission'))
+            ->assertForbidden();
+        $this->get(route('mpo.accounting-payouts'))
+            ->assertForbidden();
     }
 
     public function test_admin_oversight_is_global_admin_only_and_mpo_staff_cannot_use_admin_routes(): void

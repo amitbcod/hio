@@ -122,7 +122,7 @@ class MpoAccountingCommissionTest extends TestCase
             ->assertSessionHasErrors(['bank.iban', 'bank.swift_bic', 'vat_number', 'responsible_accountant_user_id']);
     }
 
-    public function test_staff_accounting_permission_and_accountant_eligibility_are_mpo_scoped(): void
+    public function test_staff_cannot_access_or_change_mpo_accounting_setup_even_with_accounting_permissions(): void
     {
         $mpo = $this->mpo();
         $other = $this->mpo('other@example.test');
@@ -148,27 +148,12 @@ class MpoAccountingCommissionTest extends TestCase
 
         $this->actingAs($staff, 'mpo_staff')
             ->get(route('mpo.accounting-commission'))
-            ->assertOk()
-            ->assertSee('Accountant — Finance')
-            ->assertDontSee('Other Accountant');
+            ->assertForbidden();
 
         $this->put(route('mpo.accounting-commission.update'), $this->validPayload([
             'responsible_accountant_user_id' => $otherStaff->id,
-        ]))->assertSessionHasErrors('responsible_accountant_user_id');
-
-        $this->actingAs($staff->fresh(), 'mpo_staff')
-            ->put(route('mpo.accounting-commission.update'), $this->validPayload([
-                'responsible_accountant_user_id' => $staff->id,
-            ]))->assertRedirect();
-        $this->assertDatabaseHas('mpo_accounting_configurations', [
-            'admin_user_id' => $mpo->id,
-            'responsible_accountant_user_id' => $staff->id,
-        ]);
-
-        $disabled = $this->staff($mpo, 'Disabled Accountant', 'disabled@example.test', 'Finance', 'Disabled');
-        $this->put(route('mpo.accounting-commission.update'), $this->validPayload([
-            'responsible_accountant_user_id' => $disabled->id,
-        ]))->assertSessionHasErrors('responsible_accountant_user_id');
+        ]))->assertForbidden();
+        $this->assertDatabaseMissing('mpo_accounting_configurations', ['admin_user_id' => $mpo->id]);
     }
 
     public function test_only_global_admin_can_open_admin_review_and_configured_country_rate_is_global_admin_controlled(): void

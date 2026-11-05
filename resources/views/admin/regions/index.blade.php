@@ -3,6 +3,7 @@
 @section('content')
     <div class="container">
         <h1>Regions</h1>
+        <p>Regions configured for this MPO country.</p>
 
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
@@ -15,6 +16,7 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Country ID</th>
                         <th>Country</th>
                         <th>Actions</th>
                     </tr>
@@ -23,6 +25,7 @@
                     @foreach($regions as $region)
                         <tr>
                             <td>{{ $region->name }}</td>
+                            <td>{{ $region->country_id }}</td>
                             <td>{{ $region->country?->name ?? 'Unassigned' }}</td>
                             <td>
                                 <a class="btn btn-sm btn-secondary" href="{{ route('admin.regions.edit', $region->id) }}">Edit</a>
