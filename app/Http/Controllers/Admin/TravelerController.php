@@ -12,13 +12,18 @@ use App\Models\Traveller;
 use App\Models\Booking;
 use App\Models\BookingLineItem;
 use App\Services\TripService;
+use App\Support\CountryAccess;
 
 class TravelerController extends Controller
 {
     public function index()
     {
         if (!session('admin_id')) return redirect()->route('admin.login');
-        $travellers = TravelerAccount::with('profile')->orderBy('created_at', 'desc')->paginate(20);
+        $query = TravelerAccount::with('profile');
+        if (CountryAccess::isMpoAdmin()) {
+            $query->whereHas('trips');
+        }
+        $travellers = $query->orderBy('created_at', 'desc')->paginate(20);
         return view('admin.travellers.index', compact('travellers'));
     }
 

@@ -9,11 +9,14 @@
     @stack('styles')
 </head>
 <body class="admin-mpo-layout{{ request()->routeIs('admin.login') ? ' admin-mpo-layout--auth' : '' }}">
+    @php
+        $isMpoAdmin = request()->attributes->get('mpo_admin') instanceof \App\Models\AdminUser;
+    @endphp
     <header class="admin-mpo-header">
         <button type="button" class="admin-mpo-menu-toggle" data-admin-mpo-sidebar-toggle aria-controls="admin-mpo-sidebar" aria-expanded="false">
             Menu
         </button>
-        <a class="admin-mpo-brand" href="{{ route('admin.dashboard') }}">
+        <a class="admin-mpo-brand" href="{{ $isMpoAdmin ? route('mpo.dashboard') : route('admin.dashboard') }}">
             <img src="{{ asset('images/holidays-io-logo.png') }}" alt="Holidays.io" width="130">
         </a>
         <div class="admin-mpo-account">
@@ -26,7 +29,7 @@
                 @endif
             </span>
             @if(session('admin_id'))
-                <form action="{{ route('admin.logout') }}" method="POST">
+                <form action="{{ $isMpoAdmin ? route('mpo.logout') : route('admin.logout') }}" method="POST">
                     @csrf
                     <button type="submit" class="btn btn-outline-primary btn-sm">Logout</button>
                 </form>
@@ -37,7 +40,12 @@
     </header>
     <div class="admin-mpo-shell">
         <aside class="admin-mpo-sidebar" id="admin-mpo-sidebar" aria-label="Admin and MPO navigation">
-            @if(isset($sidebar) && view()->exists($sidebar))
+            @if($isMpoAdmin)
+                @include('mpo.partials.sidebar', [
+                    'mpoAdmin' => request()->attributes->get('mpo_admin'),
+                    'mpoStaffUser' => null,
+                ])
+            @elseif(isset($sidebar) && view()->exists($sidebar))
                 @include($sidebar)
             @else
                 @include('admin._sidebar')

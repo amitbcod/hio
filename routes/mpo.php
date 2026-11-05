@@ -3,6 +3,7 @@
 use App\Http\Controllers\Mpo\AccountActivationController;
 use App\Http\Controllers\Mpo\AuthController;
 use App\Http\Controllers\Mpo\ComplianceController;
+use App\Http\Controllers\Mpo\DashboardController;
 use App\Http\Controllers\Mpo\ProfileController;
 use App\Http\Controllers\Mpo\OperationalModuleController;
 use App\Http\Controllers\Mpo\RolePermissionController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Mpo\ServiceBookingController;
 use App\Http\Controllers\Mpo\StaffUserController;
 use App\Http\Middleware\MpoOwnerOnly;
 use App\Http\Middleware\MpoPortalAuthMiddleware;
+use App\Http\Middleware\MpoRegistrationComplete;
 use App\Http\Middleware\MpoStaffModuleAccess;
 use App\Http\Middleware\MpoStaffOperationalAccess;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +33,19 @@ Route::prefix('mpo')->name('mpo.')->group(function () {
     })->name('register.step2');
 
     Route::middleware(MpoPortalAuthMiddleware::class)->group(function (): void {
+        Route::middleware([MpoOwnerOnly::class, MpoRegistrationComplete::class])->group(function (): void {
+            Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+            Route::post('dashboard/mpos/{mpoId}/approve', [DashboardController::class, 'approveMpo'])->whereNumber('mpoId')->name('dashboard.mpo.approve');
+            Route::post('dashboard/mpos/{mpoId}/reject', [DashboardController::class, 'rejectMpo'])->whereNumber('mpoId')->name('dashboard.mpo.reject');
+            Route::post('dashboard/businesses/{business}/approve', [\App\Http\Controllers\Admin\DashboardController::class, 'approveBusiness'])->name('dashboard.business.approve');
+            Route::post('dashboard/businesses/{business}/reject', [\App\Http\Controllers\Admin\DashboardController::class, 'rejectBusiness'])->name('dashboard.business.reject');
+            Route::post('dashboard/accommodations/{accommodation}/approve', [\App\Http\Controllers\Admin\DashboardController::class, 'approveAccommodation'])->name('dashboard.accommodation.approve');
+            Route::post('dashboard/accommodations/{accommodation}/reject', [\App\Http\Controllers\Admin\DashboardController::class, 'rejectAccommodation'])->name('dashboard.accommodation.reject');
+            Route::post('dashboard/activities/{activity}/approve', [\App\Http\Controllers\Admin\DashboardController::class, 'approveActivity'])->name('dashboard.activity.approve');
+            Route::post('dashboard/activities/{activity}/reject', [\App\Http\Controllers\Admin\DashboardController::class, 'rejectActivity'])->name('dashboard.activity.reject');
+            Route::post('dashboard/transports/{transport}/approve', [\App\Http\Controllers\Admin\DashboardController::class, 'approveTransport'])->name('dashboard.transport.approve');
+            Route::post('dashboard/transports/{transport}/reject', [\App\Http\Controllers\Admin\DashboardController::class, 'rejectTransport'])->name('dashboard.transport.reject');
+        });
         Route::middleware(MpoOwnerOnly::class)->group(function (): void {
             Route::get('profile', [ProfileController::class, 'show'])->name('profile');
             Route::post('profile', [ProfileController::class, 'save'])->name('profile.save');

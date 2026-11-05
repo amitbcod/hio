@@ -54,6 +54,9 @@ trait ScopesToAdminCountry
     {
         abort_if($countryId === null, 403);
 
+        $recordCountryId = $model->getAttribute('country_id');
+        abort_if($recordCountryId !== null && (int) $recordCountryId !== $countryId, 403);
+
         $ownerCountryId = CountryOwnership::resolve($model);
         abort_if($ownerCountryId !== null && $ownerCountryId !== $countryId, 403);
     }

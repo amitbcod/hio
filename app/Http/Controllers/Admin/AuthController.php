@@ -36,7 +36,7 @@ class AuthController extends Controller
                 session()->regenerate();
                 Auth::guard('mpo')->login($admin);
 
-                return redirect()->route('mpo.profile');
+                return redirect()->route(app(\App\Services\MpoRegistrationCompletionService::class)->nextRoute($admin));
             }
 
             session()->regenerate();

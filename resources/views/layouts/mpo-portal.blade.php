@@ -1,4 +1,10 @@
 @php($mpoPortalAccount = request()->attributes->get('mpo_admin'))
+@php($mpoPortalHome = route('mpo.profile'))
+@if($mpoPortalAccount instanceof \App\Models\AdminUser
+    && ! request()->attributes->has('mpo_staff_user')
+    && app(\App\Services\MpoRegistrationCompletionService::class)->state($mpoPortalAccount)['complete'])
+    @php($mpoPortalHome = route('mpo.dashboard'))
+@endif
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +21,7 @@
         <button type="button" class="admin-mpo-menu-toggle" data-admin-mpo-sidebar-toggle aria-controls="mpo-sidebar" aria-expanded="false">
             Menu
         </button>
-        <a class="admin-mpo-brand" href="{{ route('mpo.profile') }}">
+        <a class="admin-mpo-brand" href="{{ $mpoPortalHome }}">
             <img src="{{ asset('images/holidays-io-logo.png') }}" alt="Holidays.io" width="130">
         </a>
         <div class="admin-mpo-account">

@@ -8,6 +8,7 @@ use App\Models\Business;
 use App\Models\Mpo;
 use App\Models\MpoStaffUser;
 use App\Services\MpoStaffPermissionService;
+use App\Services\MpoRegistrationCompletionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -94,7 +95,7 @@ class AuthController extends Controller
             Auth::guard('mpo')->login($adminMpo);
             session()->regenerate();
 
-            return redirect()->route('mpo.profile');
+            return redirect()->route(app(MpoRegistrationCompletionService::class)->nextRoute($adminMpo));
         }
 
         $mpo = Mpo::whereRaw('LOWER(email) = ?', [$email])->first();

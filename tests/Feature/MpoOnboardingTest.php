@@ -4,7 +4,12 @@ namespace Tests\Feature;
 
 use App\Mail\MpoAccountActivation;
 use App\Models\AdminUser;
+use App\Models\Business;
 use App\Models\Country;
+use App\Models\MpoAccountingConfiguration;
+use App\Models\MpoCollaborationAgreement;
+use App\Models\MpoCompliance;
+use App\Models\MpoPayoutConfiguration;
 use App\Models\Region;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -129,6 +134,7 @@ class MpoOnboardingTest extends TestCase
         $this->get(route('mpo.profile'))
             ->assertOk()
             ->assertSee('MPO Profile')
+            ->assertSee('class="admin-mpo-brand" href="'.route('mpo.profile').'"', false)
             ->assertSee('Mauritius')
             ->assertSee('Incomplete')
             ->assertDontSee('MPO ID')
@@ -156,6 +162,234 @@ class MpoOnboardingTest extends TestCase
 
         $this->get(route('admin.dashboard'))
             ->assertRedirect(route('mpo.profile'));
+    }
+
+    public function test_completed_mpo_registration_redirects_to_country_dashboard_without_payout_setup(): void
+    {
+        $country = $this->country('Mauritius', 'MU');
+        $otherCountry = $this->country('France', 'FR');
+        $country->vat_percentage = '15.0000';
+        $country->save();
+        $mpo = $this->mpo($country, 'complete-mpo@example.test');
+        $ownedBusiness = Business::query()->create([
+            'business_id' => 'BUS-MU-DASHBOARD',
+            'legal_name' => 'Mauritius Pending Business',
+            'country_id' => $country->id,
+            'status' => 'pending',
+        ]);
+        $foreignBusiness = Business::query()->create([
+            'business_id' => 'BUS-FR-DASHBOARD',
+            'legal_name' => 'France Private Business',
+            'country_id' => $otherCountry->id,
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($mpo, 'mpo')
+            ->post(route('mpo.profile.save'), $this->validProfile())
+            ->assertRedirect(route('mpo.profile'));
+
+        MpoCollaborationAgreement::query()->create([
+            'admin_user_id' => $mpo->id,
+            'agreement_id' => 'MPO-AGR-000001',
+            'agreement_type' => 'mpo',
+            'onboarding_date' => now()->toDateString(),
+            'start_date' => now()->toDateString(),
+            'commission_model' => 'percentage',
+            'commission_value' => '10.0000',
+            'status' => 'Active',
+            'management_contact_name' => 'Manager',
+            'management_contact_email' => 'manager@example.test',
+            'management_contact_phone' => '+23012345678',
+            'management_contact_mobile' => '+23012345678',
+            'accounting_contact_name' => 'Accountant',
+            'accounting_contact_email' => 'accounting@example.test',
+            'accounting_contact_phone' => '+23012345678',
+            'accounting_contact_mobile' => '+23012345678',
+        ]);
+        MpoAccountingConfiguration::query()->create([
+            'admin_user_id' => $mpo->id,
+            'vat_number' => 'VAT-123',
+            'bank_details' => [
+                'account_holder_name' => 'MPO Bank Holder',
+                'iban' => 'GB82WEST12345698765432',
+                'bank_name' => 'Example Bank',
+                'swift_bic' => 'DEUTDEFF',
+            ],
+        ]);
+        $mpo->compliance()->create([
+            'business_license_number' => 'LIC-123',
+            'license_type' => 'tour_operator',
+            'license_expiry_date' => now()->addYear()->toDateString(),
+            'proof_of_license_path' => 'compliance/license.pdf',
+            'insurance_certificate_path' => 'compliance/insurance.pdf',
+            'verification_status' => 'verified',
+        ]);
+        MpoPayoutConfiguration::query()->create([
+            'admin_user_id' => $mpo->id,
+            'payment_schedule' => null,
+            'payout_method' => null,
+        ]);
+
+        \Illuminate\Support\Facades\Auth::guard('mpo')->logout();
+        $this->post(route('mpo.login'), [
+            'email' => $mpo->email,
+            'password' => 'InitialPass123!',
+        ])->assertRedirect(route('mpo.dashboard'));
+
+        $this->get(route('mpo.dashboard'))
+            ->assertOk()
+            ->assertSee('<h1 class="h3 mb-4">Dashboard</h1>', false)
+            ->assertSee('class="admin-mpo-brand" href="'.route('mpo.dashboard').'"', false)
+            ->assertSee('Mauritius Pending Business')
+            ->assertDontSee('France Private Business')
+            ->assertSee('Pending MPO Accounts')
+            ->assertSee('Pending Businesses')
+            ->assertSee('Accommodation Approvals')
+            ->assertSee('Vehicle Approvals')
+            ->assertSee('Activity Approvals')
+            ->assertSee('Feedback')
+            ->assertSee('Operators')
+            ->assertSee('Agents')
+            ->assertSee('Travellers')
+            ->assertSee('Accommodation Bookings')
+            ->assertSee('Transport Bookings')
+            ->assertSee('MPO Setup')
+            ->assertSee('In Progress')
+            ->assertSee('<details class="list-group-item p-0 mt-2">', false)
+            ->assertDontSee('<details class="list-group-item p-0 mt-2" open', false);
+
+        $this->post(route('mpo.dashboard.business.approve', $foreignBusiness))
+            ->assertForbidden();
+        $this->assertDatabaseHas('businesses', ['id' => $foreignBusiness->id, 'status' => 'pending']);
+
+        $this->post(route('mpo.dashboard.business.approve', $ownedBusiness))
+            ->assertRedirect(route('mpo.dashboard'));
+        $this->assertDatabaseHas('businesses', ['id' => $ownedBusiness->id, 'status' => 'active']);
+        $this->get(route('mpo.dashboard'))->assertOk();
+        $this->get(route('mpo.accounting-payouts'))->assertOk();
+        $this->get(route('admin.trips.index'))->assertOk();
+
+        $this->post(route('mpo.logout'))->assertRedirect(route('mpo.login'));
+        $this->post(route('mpo.login'), [
+            'email' => $mpo->email,
+            'password' => 'InitialPass123!',
+        ])->assertRedirect(route('mpo.dashboard'));
+
+        $this->post(route('mpo.logout'))->assertRedirect(route('mpo.login'));
+        $this->post(route('admin.login'), [
+            'email' => $mpo->email,
+            'password' => 'InitialPass123!',
+        ])->assertRedirect(route('mpo.dashboard'));
+    }
+
+    public function test_completed_payout_configuration_does_not_change_dashboard_authorization(): void
+    {
+        $country = $this->country('Mauritius', 'MU');
+        $country->vat_percentage = '15.0000';
+        $country->save();
+        $mpo = $this->mpo($country, 'payout-complete-mpo@example.test');
+        $this->completeMandatoryRegistration($mpo);
+        MpoPayoutConfiguration::query()->create([
+            'admin_user_id' => $mpo->id,
+            'payout_id' => 'MPO-PAYOUT-000001',
+            'payment_schedule' => 'Monthly',
+            'payout_method' => 'Bank',
+        ]);
+        $this->assertSame([
+            'complete' => true,
+            'profile' => true,
+            'compliance' => true,
+            'agreement' => true,
+            'accounting' => true,
+        ], array_intersect_key(
+            app(\App\Services\MpoRegistrationCompletionService::class)->state($mpo),
+            array_flip(['complete', 'profile', 'compliance', 'agreement', 'accounting']),
+        ));
+
+        $this->actingAs($mpo, 'mpo')
+            ->get(route('mpo.dashboard'))
+            ->assertOk()
+            ->assertSee('<h1 class="h3 mb-4">Dashboard</h1>', false)
+            ->assertSee('Operators')
+            ->assertSee('MPO Setup')
+            ->assertSee('Completed');
+    }
+
+    public function test_unverified_compliance_redirects_to_compliance_setup(): void
+    {
+        $country = $this->country('Mauritius', 'MU');
+        $country->vat_percentage = '15.0000';
+        $country->save();
+        $mpo = $this->mpo($country, 'pending-compliance-mpo@example.test');
+        $this->completeMandatoryRegistration($mpo, includeCompliance: false);
+        $mpo->compliance()->create([
+            'business_license_number' => 'LIC-123',
+            'license_type' => 'tour_operator',
+            'license_expiry_date' => now()->addYear()->toDateString(),
+            'proof_of_license_path' => 'compliance/license.pdf',
+            'insurance_certificate_path' => 'compliance/insurance.pdf',
+            'verification_status' => 'pending_verification',
+        ]);
+
+        $this->actingAs($mpo, 'mpo')
+            ->get(route('mpo.dashboard'))
+            ->assertRedirect(route('mpo.compliances'));
+    }
+
+    private function completeMandatoryRegistration(AdminUser $mpo, bool $includeCompliance = true): void
+    {
+        $this->actingAs($mpo, 'mpo')
+            ->post(route('mpo.profile.save'), $this->validProfile())
+            ->assertRedirect(route('mpo.profile'));
+
+        MpoCollaborationAgreement::query()->create([
+            'admin_user_id' => $mpo->id,
+            'agreement_id' => 'MPO-AGR-'.$mpo->id,
+            'agreement_type' => 'mpo',
+            'onboarding_date' => now()->toDateString(),
+            'start_date' => now()->toDateString(),
+            'commission_model' => 'percentage',
+            'commission_value' => '10.0000',
+            'status' => 'Active',
+            'management_contact_name' => 'Manager',
+            'management_contact_email' => 'manager@example.test',
+            'management_contact_phone' => '+23012345678',
+            'management_contact_mobile' => '+23012345678',
+            'accounting_contact_name' => 'Accountant',
+            'accounting_contact_email' => 'accounting@example.test',
+            'accounting_contact_phone' => '+23012345678',
+            'accounting_contact_mobile' => '+23012345678',
+        ]);
+        MpoAccountingConfiguration::query()->create([
+            'admin_user_id' => $mpo->id,
+            'vat_number' => 'VAT-123',
+            'bank_details' => [
+                'account_holder_name' => 'MPO Bank Holder',
+                'iban' => 'GB82WEST12345698765432',
+                'bank_name' => 'Example Bank',
+                'swift_bic' => 'DEUTDEFF',
+            ],
+        ]);
+        if ($includeCompliance) {
+            $mpo->compliance()->create([
+                'business_license_number' => 'LIC-123',
+                'license_type' => 'tour_operator',
+                'license_expiry_date' => now()->addYear()->toDateString(),
+                'proof_of_license_path' => 'compliance/license.pdf',
+                'insurance_certificate_path' => 'compliance/insurance.pdf',
+                'verification_status' => 'verified',
+            ]);
+        }
+    }
+
+    public function test_mpo_dashboard_is_blocked_until_mandatory_registration_steps_are_complete(): void
+    {
+        $mpo = $this->mpo($this->country('Mauritius', 'MU'));
+
+        $this->actingAs($mpo, 'mpo')
+            ->get(route('mpo.dashboard'))
+            ->assertRedirect(route('mpo.profile'))
+            ->assertSessionHas('warning');
     }
 
     public function test_mpo_can_save_complete_profile_without_changing_country_or_another_account(): void

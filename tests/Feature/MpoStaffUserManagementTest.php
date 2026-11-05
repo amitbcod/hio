@@ -135,11 +135,12 @@ class MpoStaffUserManagementTest extends TestCase
         $this->actingAs($mpo, 'mpo')
             ->get(route('mpo.profile'))
             ->assertOk()
-            ->assertSee('Trips')
-            ->assertSee('Operators')
             ->assertSee('MPO Setup')
             ->assertSee('Accounting Payouts')
-            ->assertSee('Not Started');
+            ->assertSee('Not Started')
+            ->assertDontSee('Dashboard')
+            ->assertDontSee('Trips')
+            ->assertDontSee('Operators');
         $this->assertDatabaseMissing('mpo_payout_configurations', ['admin_user_id' => $mpo->id]);
 
         foreach ([
@@ -808,6 +809,7 @@ class MpoStaffUserManagementTest extends TestCase
         $this->actingAs($staff, 'mpo_staff')
             ->get(route('mpo.profile'))
             ->assertForbidden();
+        $this->get(route('mpo.dashboard'))->assertForbidden();
 
         MpoRoleModulePermission::query()
             ->where('admin_user_id', $mpo->id)

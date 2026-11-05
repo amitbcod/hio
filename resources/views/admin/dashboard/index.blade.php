@@ -11,6 +11,28 @@
             @endforeach
         </div>
     @endif
+    <div class="row g-3 mb-4">
+        @foreach([
+            ['Pending MPO Accounts', $summaryCounts['pendingMpos'], '#pending-mpo-accounts'],
+            ['Pending Businesses', $summaryCounts['businesses'], '#pending-businesses'],
+            ['Pending Accommodation Approvals', $summaryCounts['pendingAccommodations'], '#pending-accommodation-approvals'],
+            ['Pending Vehicle Approvals', $summaryCounts['pendingTransports'], '#pending-vehicle-approvals'],
+            ['Pending Activity Approvals', $summaryCounts['pendingActivities'], '#pending-activity-approvals'],
+            ['Feedback Submitted', $summaryCounts['feedbacks'], '#feedback'],
+        ] as [$label, $count, $target])
+            <div class="col-12 col-sm-6 col-xl-4">
+                <a href="{{ $target }}" class="card h-100 text-decoration-none shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted">{{ $label }}</div>
+                        <div class="display-6 fw-semibold">{{ $count }}</div>
+                        <span class="small">View items</span>
+                    </div>
+                </a>
+            </div>
+        @endforeach
+    </div>
+
+    <section id="pending-mpo-accounts">
     <h5 class="mt-3">Pending MPO Accounts</h5>
     <table class="table">
         <thead>
@@ -34,7 +56,9 @@
             @endforelse
         </tbody>
     </table>
+    </section>
 
+    <section id="pending-businesses">
     <h5 class="mt-3">Pending Businesses</h5>
     <table class="table">
         <thead>
@@ -58,7 +82,9 @@
             @endforelse
         </tbody>
     </table>
+    </section>
 
+    <section id="pending-accommodation-approvals">
     <h5 class="mt-5">Pending Accommodation Approvals</h5>
     <table class="table">
         <thead>
@@ -100,7 +126,9 @@
             @endforelse
         </tbody>
     </table>
+    </section>
 
+    <section id="pending-vehicle-approvals">
     <h5 class="mt-5">Pending Vehicle Approvals</h5>
     <table class="table">
         <thead>
@@ -140,7 +168,9 @@
             @endforelse
         </tbody>
     </table>
+    </section>
 
+    <section id="pending-activity-approvals">
     <h5 class="mt-5">Pending Activity Approvals</h5>
     <table class="table">
         <thead>
@@ -180,7 +210,9 @@
             @endforelse
         </tbody>
     </table>
+    </section>
 
+    <section id="feedback">
     <h5 class="mt-5">Feedback Submitted</h5>
     <table class="table">
         <thead>
@@ -214,5 +246,6 @@
             @endforelse
         </tbody>
     </table>
+    </section>
 </div>
 @endsection

@@ -70,12 +70,29 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('admin.dashboard.index', compact('businesses', 'pendingAccommodations', 'pendingActivities', 'pendingTransports', 'pendingMpos', 'feedbacks'));
+        $summaryCounts = [
+            'pendingMpos' => $pendingMpos->count(),
+            'businesses' => $businesses->count(),
+            'pendingAccommodations' => $pendingAccommodations->count(),
+            'pendingTransports' => $pendingTransports->count(),
+            'pendingActivities' => $pendingActivities->count(),
+            'feedbacks' => $feedbacks->count(),
+        ];
+
+        return view('admin.dashboard.index', compact(
+            'businesses',
+            'pendingAccommodations',
+            'pendingActivities',
+            'pendingTransports',
+            'pendingMpos',
+            'feedbacks',
+            'summaryCounts'
+        ));
     }
 
     public function approveBusiness(Request $request, Business $business)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if ($response = $this->authorizeApprovalRequest($request)) return $response;
         $business->status = 'active';
         $business->save();
 
@@ -95,20 +112,20 @@ class DashboardController extends Controller
             Mail::to($op->email)->send(new BusinessApproved($business, $op));
         }
 
-        return redirect()->route('admin.dashboard')->with('success', 'Business has been approved.');
+        return redirect()->route($this->dashboardRoute($request))->with('success', 'Business has been approved.');
     }
 
     public function rejectBusiness(Request $request, Business $business)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if ($response = $this->authorizeApprovalRequest($request)) return $response;
         $business->status = 'suspended';
         $business->save();
-        return redirect()->route('admin.dashboard')->with('success', 'Business rejected/suspended.');
+        return redirect()->route($this->dashboardRoute($request))->with('success', 'Business rejected/suspended.');
     }
 
     public function approveMpo(Request $request, Mpo $mpo)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if ($response = $this->authorizeApprovalRequest($request)) return $response;
 
         $mpo->account_status = 'active';
         $mpo->admin_approve_flag = 1;
@@ -116,29 +133,29 @@ class DashboardController extends Controller
         $mpo->approved_at = now();
         $mpo->save();
 
-        return redirect()->route('admin.dashboard')->with('success', 'MPO account approved by admin.');
+        return redirect()->route($this->dashboardRoute($request))->with('success', 'MPO account approved by admin.');
     }
 
     public function rejectMpo(Request $request, Mpo $mpo)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if ($response = $this->authorizeApprovalRequest($request)) return $response;
 
         $mpo->account_status = 'suspended';
         $mpo->admin_approve_flag = 0;
         $mpo->save();
 
-        return redirect()->route('admin.dashboard')->with('success', 'MPO account rejected by admin.');
+        return redirect()->route($this->dashboardRoute($request))->with('success', 'MPO account rejected by admin.');
     }
 
     public function approveAccommodation(Request $request, Accommodation $accommodation)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if ($response = $this->authorizeApprovalRequest($request)) return $response;
 
         $data = $request->validate([
             'approval_notes' => 'nullable|string|max:2000',
         ]);
 
-        $adminId = (int) session('admin_id');
+        $adminId = $this->approvalActorId($request);
 
         $accommodation->update([
             'approval_status' => 'Approved',
@@ -152,18 +169,18 @@ class DashboardController extends Controller
             'step13_publish' => 1,
         ]);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Accommodation approved and now visible on frontend.');
+        return redirect()->route($this->dashboardRoute($request))->with('success', 'Accommodation approved and now visible on frontend.');
     }
 
     public function rejectAccommodation(Request $request, Accommodation $accommodation)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if ($response = $this->authorizeApprovalRequest($request)) return $response;
 
         $data = $request->validate([
             'approval_notes' => 'nullable|string|max:2000',
         ]);
 
-        $adminId = (int) session('admin_id');
+        $adminId = $this->approvalActorId($request);
 
         $accommodation->update([
             'approval_status' => 'Rejected',
@@ -177,18 +194,18 @@ class DashboardController extends Controller
             'step13_publish' => 1,
         ]);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Accommodation rejected. Operator can update and resubmit.');
+        return redirect()->route($this->dashboardRoute($request))->with('success', 'Accommodation rejected. Operator can update and resubmit.');
     }
 
     public function approveActivity(Request $request, Activity $activity)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if ($response = $this->authorizeApprovalRequest($request)) return $response;
 
         $data = $request->validate([
             'approval_notes' => 'nullable|string|max:2000',
         ]);
 
-        $adminId = (int) session('admin_id');
+        $adminId = $this->approvalActorId($request);
 
         $activity->update([
             'approval_status' => 'Approved',
@@ -199,18 +216,18 @@ class DashboardController extends Controller
             'step13_publish' => 1,
         ]);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Activity approved and now visible on frontend.');
+        return redirect()->route($this->dashboardRoute($request))->with('success', 'Activity approved and now visible on frontend.');
     }
 
     public function rejectActivity(Request $request, Activity $activity)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if ($response = $this->authorizeApprovalRequest($request)) return $response;
 
         $data = $request->validate([
             'approval_notes' => 'nullable|string|max:2000',
         ]);
 
-        $adminId = (int) session('admin_id');
+        $adminId = $this->approvalActorId($request);
 
         $activity->update([
             'approval_status' => 'Rejected',
@@ -220,18 +237,18 @@ class DashboardController extends Controller
             'approval_notes' => $data['approval_notes'] ?? null,
         ]);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Activity rejected. Operator can update and resubmit.');
+        return redirect()->route($this->dashboardRoute($request))->with('success', 'Activity rejected. Operator can update and resubmit.');
     }
 
     public function approveTransport(Request $request, Transport $transport)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if ($response = $this->authorizeApprovalRequest($request)) return $response;
 
         $data = $request->validate([
             'approval_notes' => 'nullable|string|max:2000',
         ]);
 
-        $adminId = (int) session('admin_id');
+        $adminId = $this->approvalActorId($request);
 
         $transport->update([
             'approval_status' => 'Approved',
@@ -245,18 +262,18 @@ class DashboardController extends Controller
             'step7_publish' => 1,
         ]);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Transport approved and now visible on frontend.');
+        return redirect()->route($this->dashboardRoute($request))->with('success', 'Transport approved and now visible on frontend.');
     }
 
     public function rejectTransport(Request $request, Transport $transport)
     {
-        if (!session('admin_id')) return redirect()->route('admin.login');
+        if ($response = $this->authorizeApprovalRequest($request)) return $response;
 
         $data = $request->validate([
             'approval_notes' => 'nullable|string|max:2000',
         ]);
 
-        $adminId = (int) session('admin_id');
+        $adminId = $this->approvalActorId($request);
 
         $transport->update([
             'approval_status' => 'Rejected',
@@ -270,6 +287,37 @@ class DashboardController extends Controller
             'step7_publish' => 0,
         ]);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Transport rejected. Operator can update and resubmit.');
+        return redirect()->route($this->dashboardRoute($request))->with('success', 'Transport rejected. Operator can update and resubmit.');
+    }
+
+    private function authorizeApprovalRequest(Request $request): ?\Illuminate\Http\RedirectResponse
+    {
+        if (session('admin_id')) {
+            return null;
+        }
+
+        $mpo = $request->attributes->get('mpo_admin');
+        if ($request->routeIs('mpo.dashboard.*')
+            && $mpo instanceof \App\Models\AdminUser
+            && $mpo->admin_type === 'mpo'
+            && ! $request->attributes->has('mpo_staff_user')) {
+            return null;
+        }
+
+        return redirect()->route($request->routeIs('mpo.*') ? 'mpo.login' : 'admin.login');
+    }
+
+    private function approvalActorId(Request $request): int
+    {
+        $mpo = $request->attributes->get('mpo_admin');
+
+        return $request->routeIs('mpo.dashboard.*') && $mpo instanceof \App\Models\AdminUser
+            ? (int) $mpo->id
+            : (int) session('admin_id');
+    }
+
+    private function dashboardRoute(Request $request): string
+    {
+        return $request->routeIs('mpo.dashboard.*') ? 'mpo.dashboard' : 'admin.dashboard';
     }
 }

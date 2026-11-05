@@ -13,19 +13,15 @@ class AdminAuthMiddleware
     public function handle(Request $request, Closure $next)
     {
         CountryAccess::clearCache();
-        if (! session('admin_id')) {
-            $mpo = Auth::guard('mpo')->user();
-            if (Auth::guard('mpo_staff')->check()
-                || ($request->routeIs('admin.dashboard') && $mpo instanceof AdminUser && $mpo->admin_type === 'mpo')) {
-                return redirect()->route('mpo.profile');
-            }
+        if (! session('admin_id') && Auth::guard('mpo_staff')->check()) {
+            return redirect()->route('mpo.profile');
         }
 
         $admin = session('admin_id')
             ? AdminUser::query()->find(session('admin_id'))
-            : null;
+            : Auth::guard('mpo')->user();
 
-        if (! $admin || $admin->status !== 'active') {
+        if (! $admin instanceof AdminUser || $admin->status !== 'active') {
             session()->forget('admin_id');
 
             return redirect()->route('admin.login');
@@ -39,10 +35,26 @@ class AdminAuthMiddleware
                     ->withErrors(['email' => 'This MPO account has no active country assignment.']);
             }
 
-            session()->forget(['admin_id', 'admin_country_id']);
+            $request->attributes->set('mpo_admin', $admin);
             Auth::guard('mpo')->login($admin);
 
-            return redirect()->route('mpo.profile');
+            $completion = app(\App\Services\MpoRegistrationCompletionService::class);
+            if ($request->routeIs('admin.dashboard')) {
+                return redirect()->route($completion->nextRoute($admin));
+            }
+
+            if (! \App\Support\MpoAdminRouteAccess::allows($request)) {
+                return redirect()->route('admin.login');
+            }
+
+            if (! $completion->state($admin)['complete']) {
+                return redirect()->route($completion->nextRoute($admin))
+                    ->with('warning', 'Complete all mandatory MPO onboarding steps before accessing country administration.');
+            }
+
+            session(['admin_id' => $admin->id]);
+
+            return $next($request);
         }
 
         return $next($request);
