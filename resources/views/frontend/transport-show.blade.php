@@ -621,36 +621,37 @@
                 <div class="transport-description-items">
                     @php
                         $locale = app()->getLocale();
+                        $descriptionSanitizer = app(\App\Support\TransportDescriptionHtmlSanitizer::class);
                     @endphp
 
                     @if($locale === 'fr' && !empty($transport['long_description_fr']))
-                        <div class="service-desc-item">{!! $transport['long_description_fr'] !!}</div>
+                        <div class="service-desc-item">{!! $descriptionSanitizer->sanitize($transport['long_description_fr']) !!}</div>
                     @elseif(!empty($transport['long_description']))
-                        <div class="service-desc-item">{!! $transport['long_description'] !!}</div>
+                        <div class="service-desc-item">{!! $descriptionSanitizer->sanitize($transport['long_description']) !!}</div>
                     @endif
 
                     @if($locale === 'fr' && !empty($transport['inclusions_fr']))
                         <h4>{{ __('transport.inclusions') }}</h4>
-                        <div class="service-desc-item">{!! $transport['inclusions_fr'] !!}</div>
+                        <div class="service-desc-item">{!! $descriptionSanitizer->sanitize($transport['inclusions_fr']) !!}</div>
                     @elseif(!empty($transport['inclusions']))
                         <h4>{{ __('transport.inclusions') }}</h4>
-                        <div class="service-desc-item">{!! $transport['inclusions'] !!}</div>
+                        <div class="service-desc-item">{!! $descriptionSanitizer->sanitize($transport['inclusions']) !!}</div>
                     @endif
 
                     @if($locale === 'fr' && !empty($transport['exclusions_fr']))
                         <h4>{{ __('transport.exclusions') }}</h4>
-                        <div class="service-desc-item">{!! $transport['exclusions_fr'] !!}</div>
+                        <div class="service-desc-item">{!! $descriptionSanitizer->sanitize($transport['exclusions_fr']) !!}</div>
                     @elseif(!empty($transport['exclusions']))
                         <h4>{{ __('transport.exclusions') }}</h4>
-                        <div class="service-desc-item">{!! $transport['exclusions'] !!}</div>
+                        <div class="service-desc-item">{!! $descriptionSanitizer->sanitize($transport['exclusions']) !!}</div>
                     @endif
 
                     @if($locale === 'fr' && !empty($transport['pickup_instructions_fr']))
                         <h4>{{ __('transport.pickup_instructions') }}</h4>
-                        <div class="service-desc-item">{!! $transport['pickup_instructions_fr'] !!}</div>
+                        <div class="service-desc-item">{!! $descriptionSanitizer->sanitize($transport['pickup_instructions_fr']) !!}</div>
                     @elseif(!empty($transport['pickup_instructions']))
                         <h4>{{ __('transport.pickup_instructions') }}</h4>
-                        <div class="service-desc-item">{!! $transport['pickup_instructions'] !!}</div>
+                        <div class="service-desc-item">{!! $descriptionSanitizer->sanitize($transport['pickup_instructions']) !!}</div>
                     @endif
                 </div>
             </div>

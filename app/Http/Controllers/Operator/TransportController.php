@@ -14,6 +14,7 @@ use App\Models\TransportVehicle;
 use App\Models\OperatorDriver;
 use App\Models\MpoStaffUser;
 use App\Services\TransportAvailabilityService;
+use App\Support\TransportDescriptionHtmlSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
@@ -1264,6 +1265,11 @@ class TransportController extends Controller
             abort(403);
         }
 
+        $sanitizer = app(TransportDescriptionHtmlSanitizer::class);
+        foreach (TransportDescriptionHtmlSanitizer::FIELDS as $field) {
+            $transport->{$field} = $sanitizer->sanitize($transport->{$field});
+        }
+
         return view('operator.transport.step6-service-description', compact('transport'));
     }
 
@@ -1317,28 +1323,44 @@ class TransportController extends Controller
             abort(403);
         }
 
-        $textColumnRule = static function (string $fieldLabel): array {
-            return [
-                'nullable',
-                'string',
-                static function ($attribute, $value, $fail) use ($fieldLabel) {
-                    if (is_string($value) && strlen($value) > 65535) {
-                        $fail("The {$fieldLabel} exceeds the database limit of 65,535 bytes. Please shorten it and try again.");
-                    }
-                },
-            ];
-        };
-
         $validated = $request->validate([
             'long_description' => 'nullable|string',
-            'long_description_fr' => $textColumnRule('French long description'),
+            'long_description_fr' => 'nullable|string',
             'inclusions' => 'nullable|string',
-            'inclusions_fr' => $textColumnRule('French inclusions'),
+            'inclusions_fr' => 'nullable|string',
             'exclusions' => 'nullable|string',
-            'exclusions_fr' => $textColumnRule('French exclusions'),
+            'exclusions_fr' => 'nullable|string',
             'pickup_instructions' => 'nullable|string',
-            'pickup_instructions_fr' => $textColumnRule('French pickup instructions'),
+            'pickup_instructions_fr' => 'nullable|string',
         ]);
+
+        $fieldLabels = [
+            'long_description' => 'Long description',
+            'long_description_fr' => 'French long description',
+            'inclusions' => 'Inclusions',
+            'inclusions_fr' => 'French inclusions',
+            'exclusions' => 'Exclusions',
+            'exclusions_fr' => 'French exclusions',
+            'pickup_instructions' => 'Pickup instructions',
+            'pickup_instructions_fr' => 'French pickup instructions',
+        ];
+        $sanitizer = app(TransportDescriptionHtmlSanitizer::class);
+        $sizeErrors = [];
+
+        foreach ($fieldLabels as $field => $label) {
+            if (! array_key_exists($field, $validated)) {
+                continue;
+            }
+
+            $validated[$field] = $sanitizer->sanitize($validated[$field]);
+            if (is_string($validated[$field]) && strlen($validated[$field]) > 65535) {
+                $sizeErrors[$field] = "{$label} exceeds the database limit of 65,535 bytes after sanitization. Please shorten it and try again.";
+            }
+        }
+
+        if ($sizeErrors !== []) {
+            throw ValidationException::withMessages($sizeErrors);
+        }
 
         try {
             $transport->update(array_merge($validated, [
