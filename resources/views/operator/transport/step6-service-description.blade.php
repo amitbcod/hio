@@ -40,48 +40,48 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('operator.transport.step6-service-description.save', $transport->id) }}">
+            <form id="transport-service-description-form" method="POST" action="{{ route('operator.transport.step6-service-description.save', $transport->id) }}">
                 @csrf
                 <div style="background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,0.04);margin-bottom:16px;">
                     <div id="service-description-client-error" class="alert alert-danger" role="alert" style="display:none;"></div>
                     <div class="mb-3">
                         <label class="form-label">Long Description</label>
-                        <textarea name="long_description" id="long_description" class="form-control" style="display:none;">{{ old('long_description', $transport->long_description) }}</textarea>
+                        <textarea name="long_description" id="long_description" class="form-control" data-old-input="{{ session()->hasOldInput('long_description') ? '1' : '0' }}" style="display:none;">{{ old('long_description', $transport->long_description) }}</textarea>
                         <div id="long_description_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:160px;"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Long Description (Français)</label>
-                        <textarea name="long_description_fr" id="long_description_fr" class="form-control" style="display:none;">{{ old('long_description_fr', $transport->long_description_fr) }}</textarea>
+                        <textarea name="long_description_fr" id="long_description_fr" class="form-control" data-old-input="{{ session()->hasOldInput('long_description_fr') ? '1' : '0' }}" style="display:none;">{{ old('long_description_fr', $transport->long_description_fr) }}</textarea>
                         <div id="long_description_fr_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:160px;"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Inclusions</label>
-                        <textarea name="inclusions" id="inclusions" class="form-control" style="display:none;">{{ old('inclusions', $transport->inclusions) }}</textarea>
+                        <textarea name="inclusions" id="inclusions" class="form-control" data-old-input="{{ session()->hasOldInput('inclusions') ? '1' : '0' }}" style="display:none;">{{ old('inclusions', $transport->inclusions) }}</textarea>
                         <div id="inclusions_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Inclusions (Français)</label>
-                        <textarea name="inclusions_fr" id="inclusions_fr" class="form-control" style="display:none;">{{ old('inclusions_fr', $transport->inclusions_fr) }}</textarea>
+                        <textarea name="inclusions_fr" id="inclusions_fr" class="form-control" data-old-input="{{ session()->hasOldInput('inclusions_fr') ? '1' : '0' }}" style="display:none;">{{ old('inclusions_fr', $transport->inclusions_fr) }}</textarea>
                         <div id="inclusions_fr_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Exclusions</label>
-                        <textarea name="exclusions" id="exclusions" class="form-control" style="display:none;">{{ old('exclusions', $transport->exclusions) }}</textarea>
+                        <textarea name="exclusions" id="exclusions" class="form-control" data-old-input="{{ session()->hasOldInput('exclusions') ? '1' : '0' }}" style="display:none;">{{ old('exclusions', $transport->exclusions) }}</textarea>
                         <div id="exclusions_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Exclusions (Français)</label>
-                        <textarea name="exclusions_fr" id="exclusions_fr" class="form-control" style="display:none;">{{ old('exclusions_fr', $transport->exclusions_fr) }}</textarea>
+                        <textarea name="exclusions_fr" id="exclusions_fr" class="form-control" data-old-input="{{ session()->hasOldInput('exclusions_fr') ? '1' : '0' }}" style="display:none;">{{ old('exclusions_fr', $transport->exclusions_fr) }}</textarea>
                         <div id="exclusions_fr_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Pickup Instructions</label>
-                        <textarea name="pickup_instructions" id="pickup_instructions" class="form-control" style="display:none;">{{ old('pickup_instructions', $transport->pickup_instructions) }}</textarea>
+                        <textarea name="pickup_instructions" id="pickup_instructions" class="form-control" data-old-input="{{ session()->hasOldInput('pickup_instructions') ? '1' : '0' }}" style="display:none;">{{ old('pickup_instructions', $transport->pickup_instructions) }}</textarea>
                         <div id="pickup_instructions_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Pickup Instructions (Français)</label>
-                        <textarea name="pickup_instructions_fr" id="pickup_instructions_fr" class="form-control" style="display:none;">{{ old('pickup_instructions_fr', $transport->pickup_instructions_fr) }}</textarea>
+                        <textarea name="pickup_instructions_fr" id="pickup_instructions_fr" class="form-control" data-old-input="{{ session()->hasOldInput('pickup_instructions_fr') ? '1' : '0' }}" style="display:none;">{{ old('pickup_instructions_fr', $transport->pickup_instructions_fr) }}</textarea>
                         <div id="pickup_instructions_fr_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
                     </div>
                 </div>
@@ -94,7 +94,7 @@
     <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
     <script>
         (function () {
-            const form = document.querySelector('form');
+            const form = document.getElementById('transport-service-description-form');
             const fields = [
                 { textareaId: 'long_description', editorId: 'long_description_editor', placeholder: 'Write the full description of the transport service...' },
                 { textareaId: 'long_description_fr', editorId: 'long_description_fr_editor', placeholder: 'Écrivez la description complète du service en français...' },
@@ -135,21 +135,35 @@
                     }
                 }
 
-                quill.on('text-change', function () {
+                const editorState = {
+                    quill: quill,
+                    textarea: textarea,
+                    dirty: textarea.dataset.oldInput === '1'
+                };
+                textarea.disabled = !editorState.dirty;
+
+                quill.on('text-change', function (delta, oldDelta, source) {
+                    if (source !== 'user') return;
+
+                    editorState.dirty = true;
+                    textarea.disabled = false;
                     const html = quill.root.innerHTML;
                     textarea.value = html === '<p><br></p>' ? '' : html;
                 });
 
-                editors.push(quill);
+                editors.push(editorState);
             });
 
             form.addEventListener('submit', function (event) {
-                editors.forEach(function (quill) {
-                    const html = quill.root.innerHTML;
-                    const textarea = document.querySelector('textarea[id="' + quill.container.id.replace('_editor', '') + '"]');
-                    if (textarea) {
-                        textarea.value = html === '<p><br></p>' ? '' : html;
+                editors.forEach(function (editor) {
+                    if (!editor.dirty) {
+                        editor.textarea.disabled = true;
+                        return;
                     }
+
+                    const html = editor.quill.root.innerHTML;
+                    editor.textarea.value = html === '<p><br></p>' ? '' : html;
+                    editor.textarea.disabled = false;
                 });
 
                 const textColumnFields = [
@@ -160,7 +174,7 @@
                 ];
                 const oversizedFields = textColumnFields.filter(function (field) {
                     const textarea = document.getElementById(field.id);
-                    return textarea && new TextEncoder().encode(textarea.value).length > 65535;
+                    return textarea && !textarea.disabled && new TextEncoder().encode(textarea.value).length > 65535;
                 });
                 const errorBox = document.getElementById('service-description-client-error');
 

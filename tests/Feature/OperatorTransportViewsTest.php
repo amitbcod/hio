@@ -83,6 +83,28 @@ class OperatorTransportViewsTest extends TestCase
         $this->assertStringContainsString('Basic details', $html);
     }
 
+    public function test_service_description_form_only_submits_changed_editor_fields(): void
+    {
+        $transport = new Transport([
+            'id' => 17,
+            'operator_id' => 10,
+            'long_description' => '<p>Existing description</p>',
+            'inclusions' => '<p>Existing inclusions</p>',
+        ]);
+
+        $html = view('operator.transport.step6-service-description', compact('transport'))
+            ->with('errors', new \Illuminate\Support\ViewErrorBag())
+            ->render();
+
+        $this->assertSame(8, substr_count($html, 'data-old-input="0"'));
+        $this->assertStringContainsString('id="transport-service-description-form"', $html);
+        $this->assertStringContainsString("getElementById('transport-service-description-form')", $html);
+        $this->assertStringContainsString('dirty: textarea.dataset.oldInput === \'1\'', $html);
+        $this->assertStringContainsString('if (source !== \'user\') return;', $html);
+        $this->assertStringContainsString('if (!editor.dirty)', $html);
+        $this->assertStringContainsString('!textarea.disabled && new TextEncoder()', $html);
+    }
+
     public function test_postponement_partial_does_not_duplicate_operator_success_flash(): void
     {
         session()->put('success', 'Booking status updated to Confirmed.');
