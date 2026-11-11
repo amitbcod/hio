@@ -43,6 +43,16 @@ class MpoStaffUser extends Authenticatable implements CanResetPasswordContract
         return $this->belongsTo(AdminUser::class, 'admin_user_id');
     }
 
+    public function createdByAdmin(): BelongsTo
+    {
+        return $this->belongsTo(AdminUser::class, 'created_by_admin_user_id');
+    }
+
+    public function createdByStaffUser(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'created_by_staff_user_id');
+    }
+
     public function permissionOverrides(): HasMany
     {
         return $this->hasMany(MpoStaffPermissionOverride::class);

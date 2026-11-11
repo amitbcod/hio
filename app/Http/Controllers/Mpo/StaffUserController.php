@@ -38,6 +38,9 @@ class StaffUserController extends Controller
         $this->assertCanManage($actor, 'read');
 
         $query = $owner->staffUsers()->with('permissionOverrides.module');
+        if ($actor instanceof MpoStaffUser) {
+            $query->where('created_by_staff_user_id', $actor->id);
+        }
         $search = trim((string) $request->query('search', ''));
         if ($search !== '') {
             $query->where(function (Builder $builder) use ($search): void {
@@ -184,6 +187,11 @@ class StaffUserController extends Controller
             $record = $staffUser ?? new MpoStaffUser;
             if (! $staffUser) {
                 $record->admin_user_id = $owner->id;
+                if ($actor instanceof MpoStaffUser) {
+                    $record->created_by_staff_user_id = $actor->id;
+                } else {
+                    $record->created_by_admin_user_id = $owner->id;
+                }
                 $record->password_hash = Hash::make($data['password']);
                 $record->status = 'Active';
                 $record->account_reset_required = false;
@@ -245,7 +253,7 @@ class StaffUserController extends Controller
     {
         [$owner, $actor, $isAdminView] = $context;
         $this->assertCanManage($actor, 'read');
-        $staffUser = $this->target($owner, $staffUserId)->load('permissionOverrides.module');
+        $staffUser = $this->target($owner, $actor, $staffUserId)->load('permissionOverrides.module');
 
         return view('mpo.users.show', [
             'mpoAdmin' => $owner,
@@ -261,28 +269,28 @@ class StaffUserController extends Controller
     {
         $context = $this->context($request);
 
-        return $this->renderForm($context, $this->target($context[0], $staffUser)->load('permissionOverrides.module'));
+        return $this->renderForm($context, $this->target($context[0], $context[1], $staffUser)->load('permissionOverrides.module'));
     }
 
     public function adminEdit(Request $request, AdminUser $administrator, int $staffUser)
     {
         $context = $this->adminContext($administrator);
 
-        return $this->renderForm($context, $this->target($context[0], $staffUser)->load('permissionOverrides.module'));
+        return $this->renderForm($context, $this->target($context[0], $context[1], $staffUser)->load('permissionOverrides.module'));
     }
 
     public function update(Request $request, int $staffUser)
     {
         $context = $this->context($request);
 
-        return $this->saveUser($request, $context, $this->target($context[0], $staffUser));
+        return $this->saveUser($request, $context, $this->target($context[0], $context[1], $staffUser));
     }
 
     public function adminUpdate(Request $request, AdminUser $administrator, int $staffUser)
     {
         $context = $this->adminContext($administrator);
 
-        return $this->saveUser($request, $context, $this->target($context[0], $staffUser));
+        return $this->saveUser($request, $context, $this->target($context[0], $context[1], $staffUser));
     }
 
     public function updateStatus(Request $request, int $staffUser)
@@ -299,7 +307,7 @@ class StaffUserController extends Controller
     {
         [$owner, $actor, $isAdminView] = $context;
         $this->assertCanManage($actor, 'disable');
-        $staffUser = $this->target($owner, $staffUserId);
+        $staffUser = $this->target($owner, $actor, $staffUserId);
         abort_if($actor instanceof MpoStaffUser && (int) $actor->id === (int) $staffUser->id, 403, 'You cannot change your own account status.');
         $data = $request->validate([
             'status' => ['required', Rule::in(['Active', 'Disabled'])],
@@ -356,7 +364,7 @@ class StaffUserController extends Controller
     {
         [$owner, $actor, $isAdminView] = $context;
         $this->assertCanManage($actor, 'reset_password');
-        $staffUser = $this->target($owner, $staffUserId);
+        $staffUser = $this->target($owner, $actor, $staffUserId);
         abort_if($actor instanceof MpoStaffUser && (int) $actor->id === (int) $staffUser->id, 403, 'You cannot reset your own password from here.');
 
         try {
@@ -462,9 +470,14 @@ class StaffUserController extends Controller
         return [$administrator, $administrator, true];
     }
 
-    private function target(AdminUser $owner, int $staffUserId): MpoStaffUser
+    private function target(AdminUser $owner, AdminUser|MpoStaffUser $actor, int $staffUserId): MpoStaffUser
     {
-        return $owner->staffUsers()->whereKey($staffUserId)->firstOrFail();
+        $query = $owner->staffUsers()->whereKey($staffUserId);
+        if ($actor instanceof MpoStaffUser) {
+            $query->where('created_by_staff_user_id', $actor->id);
+        }
+
+        return $query->firstOrFail();
     }
 
     private function assertCanManage(AdminUser|MpoStaffUser $actor, string $action, ?MpoStaffUser $target = null): void

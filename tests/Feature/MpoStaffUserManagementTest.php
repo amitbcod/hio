@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\AdminUser;
 use App\Models\Accommodation;
 use App\Models\AccommodationBooking;
+use App\Models\AdminUser;
 use App\Models\Country;
 use App\Models\Module;
 use App\Models\MpoRoleDelegation;
@@ -13,6 +13,7 @@ use App\Models\MpoRoleModuleSetting;
 use App\Models\MpoStaffUser;
 use App\Models\Region;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
@@ -473,6 +474,136 @@ class MpoStaffUserManagementTest extends TestCase
         $this->assertSame($mpo->id, $staff->admin_user_id);
     }
 
+    public function test_main_mpo_and_staff_users_are_scoped_by_country_and_staff_creator(): void
+    {
+        $mpoA = $this->mpo('country-a-owner@example.test');
+        $mpoB = $this->mpo('country-b-owner@example.test');
+        $mainCreated = $this->staff($mpoA, 'Main Created User', 'main-created@example.test');
+        $actorA1 = $this->staff($mpoA, 'MPO A1', 'mpo-a1@example.test');
+        $actorA2 = $this->staff($mpoA, 'MPO A2', 'mpo-a2@example.test');
+        $actorB1 = $this->staff($mpoB, 'MPO B1', 'mpo-b1@example.test');
+        $usersModule = $this->module('users', 'Users');
+        foreach ([$mpoA, $mpoB] as $mpo) {
+            foreach (['read', 'create', 'update', 'disable', 'reset_password'] as $action) {
+                $this->rolePermission($mpo, 'Finance', $usersModule, $action, true, true);
+            }
+        }
+
+        $a1Created = $this->staff($mpoA, 'A1 Created User', 'a1-created@example.test');
+        $a1Created->forceFill([
+            'created_by_admin_user_id' => null,
+            'created_by_staff_user_id' => $actorA1->id,
+        ])->save();
+        $a2Created = $this->staff($mpoA, 'A2 Created User', 'a2-created@example.test');
+        $a2Created->forceFill([
+            'created_by_admin_user_id' => null,
+            'created_by_staff_user_id' => $actorA2->id,
+        ])->save();
+        $b1Created = $this->staff($mpoB, 'B1 Created User', 'b1-created@example.test');
+        $b1Created->forceFill([
+            'created_by_admin_user_id' => null,
+            'created_by_staff_user_id' => $actorB1->id,
+        ])->save();
+
+        $this->actingAs($mpoA, 'mpo')
+            ->get(route('mpo.users'))
+            ->assertOk()
+            ->assertSee('MPO Setup')
+            ->assertSee(route('mpo.users'), false)
+            ->assertSee('Main Created User')
+            ->assertSee('A1 Created User')
+            ->assertSee('A2 Created User')
+            ->assertDontSee('B1 Created User');
+
+        $this->actingAs($actorA1, 'mpo_staff')
+            ->get(route('mpo.users'))
+            ->assertOk()
+            ->assertSee('A1 Created User')
+            ->assertDontSee('Main Created User')
+            ->assertDontSee('A2 Created User')
+            ->assertDontSee('B1 Created User');
+        $this->get(route('mpo.users.show', $a1Created->id))->assertOk();
+        $this->get(route('mpo.users.edit', $a1Created->id))
+            ->assertOk()
+            ->assertSee('list-group-item-action active', false);
+        $this->get(route('mpo.users.show', $mainCreated->id))->assertNotFound();
+
+        $this->actingAs($actorA1, 'mpo_staff')
+            ->get(route('mpo.users', ['search' => 'A2 Created']))
+            ->assertOk()
+            ->assertDontSee('A2 Created User')
+            ->assertDontSee('A1 Created User');
+
+        $this->actingAs($actorA2, 'mpo_staff')
+            ->get(route('mpo.users'))
+            ->assertOk()
+            ->assertSee('A2 Created User')
+            ->assertDontSee('A1 Created User');
+
+        $this->actingAs($actorB1, 'mpo_staff')
+            ->get(route('mpo.users'))
+            ->assertOk()
+            ->assertSee('B1 Created User')
+            ->assertDontSee('A1 Created User');
+
+        $this->actingAs($actorA1, 'mpo_staff')
+            ->get(route('mpo.users.show', $a2Created->id))
+            ->assertNotFound();
+        $this->get(route('mpo.users.edit', $a2Created->id))->assertNotFound();
+        $this->put(route('mpo.users.update', $a2Created->id), [
+            'full_name' => 'Unauthorized Change',
+        ])->assertNotFound();
+        $this->post(route('mpo.users.status', $a2Created->id), ['status' => 'Disabled'])
+            ->assertNotFound();
+        $this->post(route('mpo.users.send-password-reset', $a2Created->id))
+            ->assertNotFound();
+
+        Auth::guard('mpo_staff')->logout();
+        $this->actingAs($mpoA, 'mpo')
+            ->get(route('mpo.users.edit', $a2Created->id))
+            ->assertOk()
+            ->assertSee('list-group-item-action active', false);
+        $this->put(route('mpo.users.update', $a2Created->id), [
+            'full_name' => 'A2 User Updated By Main',
+            'email' => $a2Created->email,
+            'mobile' => '',
+            'role' => 'Finance',
+            'password' => '',
+            'password_confirmation' => '',
+        ])->assertRedirect(route('mpo.users'));
+        $this->assertSame('A2 User Updated By Main', $a2Created->fresh()->full_name);
+        $this->get(route('mpo.users.show', $b1Created->id))->assertNotFound();
+        $this->get(route('mpo.users.show', $a1Created->id))->assertOk();
+
+        $this->actingAs($actorA1, 'mpo_staff')
+            ->post(route('mpo.users.store'), $this->validPayload([
+                'full_name' => 'Creator Is Server Controlled',
+                'email' => 'creator-is-server-controlled@example.test',
+                'created_by_admin_user_id' => $mpoB->id,
+                'created_by_staff_user_id' => $actorA2->id,
+                'permission_overrides' => [],
+            ]))
+            ->assertRedirect(route('mpo.users'));
+        $createdByA1 = MpoStaffUser::query()
+            ->where('email', 'creator-is-server-controlled@example.test')
+            ->firstOrFail();
+        $this->assertSame($mpoA->id, $createdByA1->admin_user_id);
+        $this->assertNull($createdByA1->created_by_admin_user_id);
+        $this->assertSame($actorA1->id, $createdByA1->created_by_staff_user_id);
+
+        Auth::guard('mpo_staff')->logout();
+        $this->actingAs($mpoA, 'mpo')
+            ->get(route('mpo.users'))
+            ->assertSee('Creator Is Server Controlled');
+
+        Auth::guard('mpo_staff')->logout();
+        $this->actingAs($mpoB, 'mpo')
+            ->get(route('mpo.users'))
+            ->assertOk()
+            ->assertSee('B1 Created User')
+            ->assertDontSee('A1 Created User');
+    }
+
     public function test_owner_can_create_staff_with_server_controlled_ownership_and_hashed_password(): void
     {
         $mpo = $this->mpo();
@@ -496,6 +627,8 @@ class MpoStaffUserManagementTest extends TestCase
 
         $staff = MpoStaffUser::query()->where('email', 'new-staff@example.test')->firstOrFail();
         $this->assertSame($mpo->id, $staff->admin_user_id);
+        $this->assertSame($mpo->id, $staff->created_by_admin_user_id);
+        $this->assertNull($staff->created_by_staff_user_id);
         $this->assertSame('New Staff', $staff->full_name);
         $this->assertSame('Active', $staff->status);
         $this->assertNull($staff->last_login);
@@ -877,6 +1010,10 @@ class MpoStaffUserManagementTest extends TestCase
         $mpo = $this->mpo();
         $actor = $this->staff($mpo, 'Supervisor', 'supervisor@example.test', 'Supervisor');
         $target = $this->staff($mpo, 'Target User', 'target@example.test', 'Support');
+        $target->forceFill([
+            'created_by_admin_user_id' => null,
+            'created_by_staff_user_id' => $actor->id,
+        ])->save();
         $users = $this->module('users', 'Users');
         $this->rolePermission($mpo, 'Supervisor', $users, 'read', true, false);
 
@@ -912,6 +1049,10 @@ class MpoStaffUserManagementTest extends TestCase
         $mpo = $this->mpo();
         $staff = $this->staff($mpo, 'Finance', 'finance@example.test', 'Finance');
         $target = $this->staff($mpo, 'Target', 'target@example.test', 'Support');
+        $target->forceFill([
+            'created_by_admin_user_id' => null,
+            'created_by_staff_user_id' => $staff->id,
+        ])->save();
         $users = $this->module('users', 'Users');
         $this->rolePermission($mpo, 'Finance', $users, 'update', true, true);
         $this->rolePermission($mpo, 'Finance', $users, 'read', true, true);
@@ -1056,6 +1197,8 @@ class MpoStaffUserManagementTest extends TestCase
 
         return MpoStaffUser::query()->create([
             'admin_user_id' => $mpo->id,
+            'created_by_admin_user_id' => $mpo->id,
+            'created_by_staff_user_id' => null,
             'full_name' => $name,
             'email' => str_replace('staff@example.test', 'staff'.$counter.'@example.test', $email),
             'password_hash' => Hash::make('StaffPassword1!'),
