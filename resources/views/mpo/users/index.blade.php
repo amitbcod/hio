@@ -80,6 +80,21 @@
                     $access = collect($permissionService->effectiveMatrix($staffUser))
                         ->map(fn ($actions) => collect($actions)->filter(fn ($permission) => $permission['allowed'])->keys())
                         ->filter(fn ($actions) => $actions->isNotEmpty());
+                    $accessEntries = $access
+                        ->map(function ($actions, $module) {
+                            $label = $actions
+                                ->map(fn ($action) => config('mpo_staff.actions.'.$action, $action))
+                                ->implode(', ');
+
+                            return [
+                                'module' => $module,
+                                'label' => $label,
+                            ];
+                        })
+                        ->values()
+                        ->all();
+                    $visibleAccess = array_slice($accessEntries, 0, 2);
+                    $hiddenAccess = array_slice($accessEntries, 2);
                 @endphp
                 <tr>
                     <td>{{ $staffUser->id }}</td>
@@ -88,11 +103,28 @@
                     <td>{{ $staffUser->mobile ?: '—' }}</td>
                     <td>{{ $permissionService->canonicalRole($staffUser->role) }}</td>
                     <td>
-                        @forelse($access as $module => $actions)
-                            <span class="badge text-bg-light border">{{ $module }}: {{ $actions->map(fn ($action) => config('mpo_staff.actions.'.$action, $action))->implode(', ') }}</span>
-                        @empty
+                        @if($accessEntries === [])
                             <span class="text-muted">No module access</span>
-                        @endforelse
+                        @else
+                            <div class="d-flex flex-column gap-1">
+                                @foreach($visibleAccess as $entry)
+                                    <span class="badge text-bg-light border align-self-start text-start">
+                                        {{ $entry['module'] }}: {{ \Illuminate\Support\Str::limit($entry['label'], 60) }}
+                                    </span>
+                                @endforeach
+
+                                @if($hiddenAccess !== [])
+                                    <div class="access-more d-none d-flex flex-column gap-1">
+                                        @foreach($hiddenAccess as $entry)
+                                            <span class="badge text-bg-light border align-self-start text-start">
+                                                {{ $entry['module'] }}: {{ \Illuminate\Support\Str::limit($entry['label'], 60) }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-start access-toggle" data-expanded="false">View more</button>
+                                @endif
+                            </div>
+                        @endif
                     </td>
                     <td><span class="badge text-bg-{{ $staffUser->status === 'Active' ? 'success' : 'secondary' }}">{{ $staffUser->status }}</span></td>
                     <td>{{ $staffUser->last_login?->timezone(config('app.timezone'))->format('d M Y H:i') ?? 'Never logged in' }}</td>
@@ -125,4 +157,21 @@
     </table>
 </div>
 {{ $staffUsers->links('pagination::bootstrap-5') }}
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.access-toggle').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const container = this.previousElementSibling;
+                const expanded = this.dataset.expanded === 'true';
+
+                this.dataset.expanded = expanded ? 'false' : 'true';
+                this.textContent = expanded ? 'View more' : 'View less';
+                container.classList.toggle('d-none', expanded);
+            });
+        });
+    });
+</script>
+@endpush
 @endsection
