@@ -282,7 +282,10 @@ Route::prefix('operator')->name('operator.')->group(function () {
 
         // Transport Step 6: Service Description
         Route::get('transport/{transport}/step6-service-description', [\App\Http\Controllers\Operator\TransportController::class, 'step6ServiceDescription'])->name('transport.step6-service-description.show');
-        Route::post('transport/{transport}/step6-service-description', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep6ServiceDescription'])->name('transport.step6-service-description.save');
+        Route::post('transport/{transport}/step6-service-description/descriptions', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep6ServiceDescription'])->defaults('section', 'descriptions')->name('transport.step6-service-description.descriptions.save');
+        Route::post('transport/{transport}/step6-service-description/inclusions', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep6ServiceDescription'])->defaults('section', 'inclusions')->name('transport.step6-service-description.inclusions.save');
+        Route::post('transport/{transport}/step6-service-description/exclusions', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep6ServiceDescription'])->defaults('section', 'exclusions')->name('transport.step6-service-description.exclusions.save');
+        Route::post('transport/{transport}/step6-service-description/pickup-instructions', [\App\Http\Controllers\Operator\TransportController::class, 'saveStep6ServiceDescription'])->defaults('section', 'pickup-instructions')->name('transport.step6-service-description.pickup-instructions.save');
         
         // Transport Step 7: SEO & Social
         Route::get('transport/{transport}/step6-seo', [\App\Http\Controllers\Operator\TransportController::class, 'step6Seo'])->name('transport.step6.show');

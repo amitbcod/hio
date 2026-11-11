@@ -15,107 +15,101 @@
                 <p style="margin:8px 0 0 0;color:#666;">Add the full service description and key service details for the transport listing.</p>
             </div>
 
-            @if ($errors->any())
-                @php
-                    $fieldLabels = [
-                        'long_description' => 'Long Description',
-                        'long_description_fr' => 'Long Description (Français)',
-                        'inclusions' => 'Inclusions',
-                        'inclusions_fr' => 'Inclusions (Français)',
-                        'exclusions' => 'Exclusions',
-                        'exclusions_fr' => 'Exclusions (Français)',
-                        'pickup_instructions' => 'Pickup Instructions',
-                        'pickup_instructions_fr' => 'Pickup Instructions (Français)',
-                    ];
-                @endphp
-                <div class="alert alert-danger" role="alert">
-                    <strong>Please review the following fields:</strong>
-                    <ul class="mb-0 mt-2">
-                        @foreach ($errors->getMessages() as $field => $messages)
-                            @foreach ($messages as $message)
-                                <li><strong>{{ $fieldLabels[$field] ?? 'Service description' }}:</strong> {{ $message }}</li>
-                            @endforeach
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+            @php
+                $descriptionSections = [
+                    'descriptions' => [
+                        'title' => 'Long Description',
+                        'button' => 'Save Descriptions',
+                        'route' => 'operator.transport.step6-service-description.descriptions.save',
+                        'fields' => [
+                            ['name' => 'long_description', 'label' => 'Long Description', 'placeholder' => 'Write the full description of the transport service...', 'height' => 160],
+                            ['name' => 'long_description_fr', 'label' => 'Long Description (Français)', 'placeholder' => 'Écrivez la description complète du service en français...', 'height' => 160],
+                        ],
+                    ],
+                    'inclusions' => [
+                        'title' => 'Inclusions',
+                        'button' => 'Save Inclusions',
+                        'route' => 'operator.transport.step6-service-description.inclusions.save',
+                        'fields' => [
+                            ['name' => 'inclusions', 'label' => 'Inclusions', 'placeholder' => 'List what is included...', 'height' => 120],
+                            ['name' => 'inclusions_fr', 'label' => 'Inclusions (Français)', 'placeholder' => 'Listez ce qui est inclus (français)...', 'height' => 120],
+                        ],
+                    ],
+                    'exclusions' => [
+                        'title' => 'Exclusions',
+                        'button' => 'Save Exclusions',
+                        'route' => 'operator.transport.step6-service-description.exclusions.save',
+                        'fields' => [
+                            ['name' => 'exclusions', 'label' => 'Exclusions', 'placeholder' => 'List what is not included...', 'height' => 120],
+                            ['name' => 'exclusions_fr', 'label' => 'Exclusions (Français)', 'placeholder' => 'Listez ce qui n\'est pas inclus (français)...', 'height' => 120],
+                        ],
+                    ],
+                    'pickup-instructions' => [
+                        'title' => 'Pickup Instructions',
+                        'button' => 'Save Pickup Instructions',
+                        'route' => 'operator.transport.step6-service-description.pickup-instructions.save',
+                        'fields' => [
+                            ['name' => 'pickup_instructions', 'label' => 'Pickup Instructions', 'placeholder' => 'Provide pickup instructions...', 'height' => 120],
+                            ['name' => 'pickup_instructions_fr', 'label' => 'Pickup Instructions (Français)', 'placeholder' => 'Instructions de prise en charge (français)...', 'height' => 120],
+                        ],
+                    ],
+                ];
+            @endphp
 
-            <form id="transport-service-description-form" method="POST" action="{{ route('operator.transport.step6-service-description.save', $transport->id) }}">
-                @csrf
-                <div style="background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,0.04);margin-bottom:16px;">
-                    <div id="service-description-client-error" class="alert alert-danger" role="alert" style="display:none;"></div>
-                    <div class="mb-3">
-                        <label class="form-label">Long Description</label>
-                        <textarea name="long_description" id="long_description" class="form-control" data-old-input="{{ session()->hasOldInput('long_description') ? '1' : '0' }}" style="display:none;">{{ old('long_description', $transport->long_description) }}</textarea>
-                        <div id="long_description_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:160px;"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Long Description (Français)</label>
-                        <textarea name="long_description_fr" id="long_description_fr" class="form-control" data-old-input="{{ session()->hasOldInput('long_description_fr') ? '1' : '0' }}" style="display:none;">{{ old('long_description_fr', $transport->long_description_fr) }}</textarea>
-                        <div id="long_description_fr_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:160px;"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Inclusions</label>
-                        <textarea name="inclusions" id="inclusions" class="form-control" data-old-input="{{ session()->hasOldInput('inclusions') ? '1' : '0' }}" style="display:none;">{{ old('inclusions', $transport->inclusions) }}</textarea>
-                        <div id="inclusions_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Inclusions (Français)</label>
-                        <textarea name="inclusions_fr" id="inclusions_fr" class="form-control" data-old-input="{{ session()->hasOldInput('inclusions_fr') ? '1' : '0' }}" style="display:none;">{{ old('inclusions_fr', $transport->inclusions_fr) }}</textarea>
-                        <div id="inclusions_fr_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Exclusions</label>
-                        <textarea name="exclusions" id="exclusions" class="form-control" data-old-input="{{ session()->hasOldInput('exclusions') ? '1' : '0' }}" style="display:none;">{{ old('exclusions', $transport->exclusions) }}</textarea>
-                        <div id="exclusions_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Exclusions (Français)</label>
-                        <textarea name="exclusions_fr" id="exclusions_fr" class="form-control" data-old-input="{{ session()->hasOldInput('exclusions_fr') ? '1' : '0' }}" style="display:none;">{{ old('exclusions_fr', $transport->exclusions_fr) }}</textarea>
-                        <div id="exclusions_fr_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Pickup Instructions</label>
-                        <textarea name="pickup_instructions" id="pickup_instructions" class="form-control" data-old-input="{{ session()->hasOldInput('pickup_instructions') ? '1' : '0' }}" style="display:none;">{{ old('pickup_instructions', $transport->pickup_instructions) }}</textarea>
-                        <div id="pickup_instructions_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Pickup Instructions (Français)</label>
-                        <textarea name="pickup_instructions_fr" id="pickup_instructions_fr" class="form-control" data-old-input="{{ session()->hasOldInput('pickup_instructions_fr') ? '1' : '0' }}" style="display:none;">{{ old('pickup_instructions_fr', $transport->pickup_instructions_fr) }}</textarea>
-                        <div id="pickup_instructions_fr_editor" style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:120px;"></div>
-                    </div>
-                </div>
-                <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">Save and Continue</button>
-            </form>
+            @foreach($descriptionSections as $sectionKey => $section)
+                <form id="transport-service-description-{{ $sectionKey }}-form"
+                      data-description-form
+                      method="POST"
+                      action="{{ route($section['route'], $transport->id) }}"
+                      style="background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,0.04);margin-bottom:16px;">
+                    @csrf
+                    <h3 style="font-size:1.2rem;font-weight:600;margin-bottom:16px;">{{ $section['title'] }}</h3>
+
+                    @if(session('transport_description_saved_section') === $sectionKey)
+                        <div class="alert alert-success" role="status">{{ session('transport_description_success') }}</div>
+                    @endif
+
+                    @foreach($section['fields'] as $field)
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ $field['name'] }}_editor">{{ $field['label'] }}</label>
+                            <textarea name="{{ $field['name'] }}"
+                                      id="{{ $field['name'] }}"
+                                      class="form-control"
+                                      data-quill-textarea
+                                      data-editor-id="{{ $field['name'] }}_editor"
+                                      data-label="{{ $field['label'] }}"
+                                      style="display:none;">{{ old($field['name'], $transport->{$field['name']}) }}</textarea>
+                            <div id="{{ $field['name'] }}_editor"
+                                 data-quill-editor
+                                 data-placeholder="{{ $field['placeholder'] }}"
+                                 style="background:#fff;border:1px solid #ddd;border-radius:4px;min-height:{{ $field['height'] }}px;"></div>
+                            @error($field['name'])
+                                <div class="text-danger small mt-1" role="alert">{{ $message }}</div>
+                            @enderror
+                            <div class="text-danger small mt-1" data-client-error role="alert" style="display:none;"></div>
+                        </div>
+                    @endforeach
+
+                    <button type="submit" class="btn" style="background:#19b5b5;color:#fff;padding:10px 20px;border-radius:4px;border:none;">
+                        {{ $section['button'] }}
+                    </button>
+                </form>
+            @endforeach
         </div>
     </div>
 </div>
-    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
-    <script>
-        (function () {
-            const form = document.getElementById('transport-service-description-form');
-            const fields = [
-                { textareaId: 'long_description', editorId: 'long_description_editor', placeholder: 'Write the full description of the transport service...' },
-                { textareaId: 'long_description_fr', editorId: 'long_description_fr_editor', placeholder: 'Écrivez la description complète du service en français...' },
-                { textareaId: 'inclusions', editorId: 'inclusions_editor', placeholder: 'List what is included...' },
-                { textareaId: 'inclusions_fr', editorId: 'inclusions_fr_editor', placeholder: 'Listez ce qui est inclus (français)...' },
-                { textareaId: 'exclusions', editorId: 'exclusions_editor', placeholder: 'List what is not included...' },
-                { textareaId: 'exclusions_fr', editorId: 'exclusions_fr_editor', placeholder: 'Listez ce qui n\'est pas inclus (français)...' },
-                { textareaId: 'pickup_instructions', editorId: 'pickup_instructions_editor', placeholder: 'Provide pickup instructions...' },
-                { textareaId: 'pickup_instructions_fr', editorId: 'pickup_instructions_fr_editor', placeholder: 'Instructions de prise en charge (français)...' }
-            ];
-
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+<script>
+    (function () {
+        document.querySelectorAll('[data-description-form]').forEach(function (form) {
             const editors = [];
 
-            fields.forEach(function (field) {
-                const textarea = document.getElementById(field.textareaId);
-                const editorEl = document.getElementById(field.editorId);
-                if (!textarea || !editorEl) return;
-
-                const quill = new Quill('#' + field.editorId, {
+            form.querySelectorAll('[data-quill-textarea]').forEach(function (textarea) {
+                const editorElement = form.querySelector('#' + textarea.dataset.editorId);
+                const quill = new Quill(editorElement, {
                     theme: 'snow',
-                    placeholder: field.placeholder,
+                    placeholder: editorElement.dataset.placeholder,
                     modules: {
                         toolbar: [
                             [{ header: [1, 2, 3, false] }],
@@ -135,61 +129,43 @@
                     }
                 }
 
-                const editorState = {
-                    quill: quill,
-                    textarea: textarea,
-                    dirty: textarea.dataset.oldInput === '1'
-                };
-                textarea.disabled = !editorState.dirty;
-
-                quill.on('text-change', function (delta, oldDelta, source) {
-                    if (source !== 'user') return;
-
-                    editorState.dirty = true;
-                    textarea.disabled = false;
-                    const html = quill.root.innerHTML;
-                    textarea.value = html === '<p><br></p>' ? '' : html;
-                });
-
-                editors.push(editorState);
+                editors.push({ quill: quill, textarea: textarea });
             });
 
             form.addEventListener('submit', function (event) {
-                editors.forEach(function (editor) {
-                    if (!editor.dirty) {
-                        editor.textarea.disabled = true;
-                        return;
-                    }
+                if (form.dataset.submitting === '1') {
+                    event.preventDefault();
+                    return;
+                }
 
+                let firstInvalidField = null;
+                editors.forEach(function (editor) {
                     const html = editor.quill.root.innerHTML;
                     editor.textarea.value = html === '<p><br></p>' ? '' : html;
-                    editor.textarea.disabled = false;
+
+                    const error = editor.textarea.parentElement.querySelector('[data-client-error]');
+                    if (new TextEncoder().encode(editor.textarea.value).length > 65535) {
+                        error.textContent = editor.textarea.dataset.label + ' exceeds the 65,535-byte database limit. Please shorten it before saving.';
+                        error.style.display = 'block';
+                        firstInvalidField = firstInvalidField || editor.textarea;
+                    } else {
+                        error.textContent = '';
+                        error.style.display = 'none';
+                    }
                 });
 
-                const textColumnFields = [
-                    { id: 'long_description_fr', label: 'Long Description (Français)' },
-                    { id: 'inclusions_fr', label: 'Inclusions (Français)' },
-                    { id: 'exclusions_fr', label: 'Exclusions (Français)' },
-                    { id: 'pickup_instructions_fr', label: 'Pickup Instructions (Français)' }
-                ];
-                const oversizedFields = textColumnFields.filter(function (field) {
-                    const textarea = document.getElementById(field.id);
-                    return textarea && !textarea.disabled && new TextEncoder().encode(textarea.value).length > 65535;
-                });
-                const errorBox = document.getElementById('service-description-client-error');
-
-                if (oversizedFields.length && errorBox) {
+                if (firstInvalidField) {
                     event.preventDefault();
-                    errorBox.textContent = oversizedFields.map(function (field) {
-                        return field.label + ' exceeds the 65,535-byte database limit. Please shorten it before saving.';
-                    }).join(' ');
-                    errorBox.style.display = 'block';
-                    errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                } else if (errorBox) {
-                    errorBox.style.display = 'none';
-                    errorBox.textContent = '';
+                    firstInvalidField.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
                 }
+
+                form.dataset.submitting = '1';
+                const submitButton = form.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.textContent = 'Saving...';
             });
-        })();
-    </script>
+        });
+    })();
+</script>
 @endsection

@@ -83,7 +83,7 @@ class OperatorTransportViewsTest extends TestCase
         $this->assertStringContainsString('Basic details', $html);
     }
 
-    public function test_service_description_form_only_submits_changed_editor_fields(): void
+    public function test_service_description_page_renders_four_scoped_quill_forms(): void
     {
         $transport = new Transport([
             'id' => 17,
@@ -96,13 +96,15 @@ class OperatorTransportViewsTest extends TestCase
             ->with('errors', new \Illuminate\Support\ViewErrorBag())
             ->render();
 
-        $this->assertSame(8, substr_count($html, 'data-old-input="0"'));
-        $this->assertStringContainsString('id="transport-service-description-form"', $html);
-        $this->assertStringContainsString("getElementById('transport-service-description-form')", $html);
-        $this->assertStringContainsString('dirty: textarea.dataset.oldInput === \'1\'', $html);
-        $this->assertStringContainsString('if (source !== \'user\') return;', $html);
-        $this->assertStringContainsString('if (!editor.dirty)', $html);
-        $this->assertStringContainsString('!textarea.disabled && new TextEncoder()', $html);
+        $this->assertSame(4, substr_count($html, '<form id="transport-service-description-'));
+        $this->assertStringContainsString('Save Descriptions', $html);
+        $this->assertStringContainsString('Save Inclusions', $html);
+        $this->assertStringContainsString('Save Exclusions', $html);
+        $this->assertStringContainsString('Save Pickup Instructions', $html);
+        $this->assertStringContainsString('const html = editor.quill.root.innerHTML;', $html);
+        $this->assertStringContainsString('form.dataset.submitting = \'1\';', $html);
+        $this->assertStringContainsString("form.querySelectorAll('[data-quill-textarea]')", $html);
+        $this->assertStringNotContainsString('data-old-input=', $html);
     }
 
     public function test_postponement_partial_does_not_duplicate_operator_success_flash(): void

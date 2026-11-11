@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use RuntimeException;
+
 class TransportDescriptionHtmlSanitizer
 {
     public const FIELDS = [
@@ -31,7 +33,14 @@ class TransportDescriptionHtmlSanitizer
             'tel' => true,
         ]);
         $config->set('Core.Encoding', 'UTF-8');
-        $config->set('Cache.SerializerPath', storage_path('framework/cache/data'));
+        $cachePath = storage_path('framework/cache/data');
+        if (! is_dir($cachePath) && ! mkdir($cachePath, 0755, true) && ! is_dir($cachePath)) {
+            throw new RuntimeException('Unable to create the HTML Purifier cache directory.');
+        }
+        if (! is_writable($cachePath)) {
+            throw new RuntimeException('The HTML Purifier cache directory is not writable by the application.');
+        }
+        $config->set('Cache.SerializerPath', $cachePath);
 
         $this->purifier = new \HTMLPurifier($config);
     }

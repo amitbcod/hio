@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Operator;
 
 use App\Http\Controllers\Controller;
 use App\Models\Region;
+use App\Models\Operator;
+use App\Models\OperatorUser;
 use App\Models\Transport;
 use App\Models\TransportRate;
 use App\Models\TransportBooking;
@@ -25,9 +27,40 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class TransportController extends Controller
 {
+    private const SERVICE_DESCRIPTION_SECTIONS = [
+        'descriptions' => [
+            'fields' => ['long_description', 'long_description_fr'],
+            'success' => 'Descriptions saved successfully.',
+        ],
+        'inclusions' => [
+            'fields' => ['inclusions', 'inclusions_fr'],
+            'success' => 'Inclusions saved successfully.',
+        ],
+        'exclusions' => [
+            'fields' => ['exclusions', 'exclusions_fr'],
+            'success' => 'Exclusions saved successfully.',
+        ],
+        'pickup-instructions' => [
+            'fields' => ['pickup_instructions', 'pickup_instructions_fr'],
+            'success' => 'Pickup instructions saved successfully.',
+        ],
+    ];
+
+    private const SERVICE_DESCRIPTION_FIELD_LABELS = [
+        'long_description' => 'Long Description',
+        'long_description_fr' => 'Long Description (Français)',
+        'inclusions' => 'Inclusions',
+        'inclusions_fr' => 'Inclusions (Français)',
+        'exclusions' => 'Exclusions',
+        'exclusions_fr' => 'Exclusions (Français)',
+        'pickup_instructions' => 'Pickup Instructions',
+        'pickup_instructions_fr' => 'Pickup Instructions (Français)',
+    ];
+
     public function index()
     {
         $operator = Auth::guard('operator')->user() ?? Auth::guard('operator_staff')->user();
@@ -1260,10 +1293,8 @@ class TransportController extends Controller
 
     public function step6ServiceDescription(Transport $transport)
     {
-        $operator = Auth::guard('operator')->user() ?? Auth::guard('operator_staff')->user();
-        if (!$operator || $transport->operator_id !== $operator->id) {
-            abort(403);
-        }
+        $operatorId = $this->authenticatedTransportOwnerId();
+        abort_unless($operatorId !== null && (int) $transport->operator_id === $operatorId, 403);
 
         $sanitizer = app(TransportDescriptionHtmlSanitizer::class);
         foreach (TransportDescriptionHtmlSanitizer::FIELDS as $field) {
@@ -1316,45 +1347,24 @@ class TransportController extends Controller
         return redirect()->route('operator.transport.step3.show', $transport->id)->with('success', 'Car rental prices saved. Continue to media step.');
     }
 
-    public function saveStep6ServiceDescription(Request $request, Transport $transport)
+    public function saveStep6ServiceDescription(Request $request, Transport $transport, string $section)
     {
-        $operator = Auth::guard('operator')->user() ?? Auth::guard('operator_staff')->user();
-        if (!$operator || $transport->operator_id !== $operator->id) {
-            abort(403);
-        }
+        $operatorId = $this->authenticatedTransportOwnerId();
+        abort_unless($operatorId !== null && (int) $transport->operator_id === $operatorId, 403);
 
-        $validated = $request->validate([
-            'long_description' => 'nullable|string',
-            'long_description_fr' => 'nullable|string',
-            'inclusions' => 'nullable|string',
-            'inclusions_fr' => 'nullable|string',
-            'exclusions' => 'nullable|string',
-            'exclusions_fr' => 'nullable|string',
-            'pickup_instructions' => 'nullable|string',
-            'pickup_instructions_fr' => 'nullable|string',
-        ]);
-
-        $fieldLabels = [
-            'long_description' => 'Long description',
-            'long_description_fr' => 'French long description',
-            'inclusions' => 'Inclusions',
-            'inclusions_fr' => 'French inclusions',
-            'exclusions' => 'Exclusions',
-            'exclusions_fr' => 'French exclusions',
-            'pickup_instructions' => 'Pickup instructions',
-            'pickup_instructions_fr' => 'French pickup instructions',
-        ];
+        abort_unless(isset(self::SERVICE_DESCRIPTION_SECTIONS[$section]), 404);
+        $sectionConfig = self::SERVICE_DESCRIPTION_SECTIONS[$section];
+        $rules = array_fill_keys($sectionConfig['fields'], 'present|nullable|string');
+        $validated = $request->validate($rules);
         $sanitizer = app(TransportDescriptionHtmlSanitizer::class);
+        $sectionValues = [];
         $sizeErrors = [];
 
-        foreach ($fieldLabels as $field => $label) {
-            if (! array_key_exists($field, $validated)) {
-                continue;
-            }
-
-            $validated[$field] = $sanitizer->sanitize($validated[$field]);
-            if (is_string($validated[$field]) && strlen($validated[$field]) > 65535) {
-                $sizeErrors[$field] = "{$label} exceeds the database limit of 65,535 bytes after sanitization. Please shorten it and try again.";
+        foreach ($sectionConfig['fields'] as $field) {
+            $sectionValues[$field] = $sanitizer->sanitize($validated[$field]) ?? '';
+            if (strlen($sectionValues[$field]) > 65535) {
+                $sizeErrors[$field] = self::SERVICE_DESCRIPTION_FIELD_LABELS[$field]
+                    .' exceeds the database limit of 65,535 bytes after sanitization. Please shorten it and try again.';
             }
         }
 
@@ -1362,22 +1372,53 @@ class TransportController extends Controller
             throw ValidationException::withMessages($sizeErrors);
         }
 
+        $allFieldsComplete = true;
+        foreach (TransportDescriptionHtmlSanitizer::FIELDS as $field) {
+            $value = $sectionValues[$field] ?? $transport->getAttribute($field);
+            if ($value === null) {
+                $allFieldsComplete = false;
+                break;
+            }
+        }
+
         try {
-            $transport->update(array_merge($validated, [
-                'step6_service_description' => 1,
+            $saved = $transport->update(array_merge($sectionValues, [
+                'step6_service_description' => $allFieldsComplete ? 1 : 0,
             ]));
+            if (! $saved) {
+                throw new RuntimeException('The transport service description section could not be saved.');
+            }
         } catch (QueryException $exception) {
             if ($exception->getCode() !== '22001' && (int) ($exception->errorInfo[1] ?? 0) !== 1406) {
                 throw $exception;
             }
 
-            throw ValidationException::withMessages([
-                'long_description' => 'One or more service description fields exceed the database storage limit. Please shorten the content and try again.',
-            ]);
+            $message = 'One or more fields in this section exceed the database storage limit. Please shorten the content and try again.';
+            throw ValidationException::withMessages(array_fill_keys($sectionConfig['fields'], $message));
         }
 
-        return redirect()->route('operator.transport.step6.show', $transport->id)
-            ->with('success', 'Service description details saved.');
+        return redirect()->route('operator.transport.step6-service-description.show', $transport->id)
+            ->with('transport_description_saved_section', $section)
+            ->with('transport_description_success', $sectionConfig['success']);
+    }
+
+    private function authenticatedTransportOwnerId(): ?int
+    {
+        $operator = Auth::guard('operator')->user();
+        if ($operator instanceof Operator) {
+            return (int) $operator->id;
+        }
+
+        $staffUser = Auth::guard('operator_staff')->user();
+        if (! $staffUser instanceof OperatorUser) {
+            return null;
+        }
+
+        $operatorId = Operator::query()
+            ->where('operator_id', $staffUser->operator_id)
+            ->value('id');
+
+        return $operatorId === null ? null : (int) $operatorId;
     }
 
     // ════════════════════════════════════════════════════════════════════════
