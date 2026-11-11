@@ -4,21 +4,35 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\BookingWidget;
+use App\Models\Operator;
+use App\Models\OperatorUser;
 use App\Models\Region;
+use App\Services\OperatorStaffPermissionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class BookingWidgetController extends Controller
 {
+    private function operatorAccount(Request $request): Operator
+    {
+        $actor = $request->user('operator') ?? $request->user('operator_staff');
+        if ($actor instanceof Operator) {
+            return $actor;
+        }
+
+        abort_unless($actor instanceof OperatorUser, 403);
+
+        $operator = app(OperatorStaffPermissionService::class)->owner($actor);
+        abort_unless($operator, 403);
+
+        return $operator;
+    }
+
     public function generate(Request $request)
     {
-        $user = Auth::user();
-        abort_unless($user, 403);
-
-        // ensure operator can only generate for themselves
-        $widget = BookingWidget::firstOrNew(['operator_id' => $user->id]);
+        $operator = $this->operatorAccount($request);
+        $widget = BookingWidget::firstOrNew(['operator_id' => $operator->id]);
         $widget->widget_token = Str::random(48);
         $widget->is_active = true;
         $widget->save();
@@ -28,10 +42,8 @@ class BookingWidgetController extends Controller
 
     public function showScript(Request $request)
     {
-        $user = Auth::user();
-        abort_unless($user, 403);
-
-        $widget = BookingWidget::where('operator_id', $user->id)->first();
+        $operator = $this->operatorAccount($request);
+        $widget = BookingWidget::where('operator_id', $operator->id)->first();
         return view('operator.booking-widget-script', ['widget' => $widget]);
     }
 

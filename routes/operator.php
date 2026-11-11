@@ -17,6 +17,7 @@ Route::prefix('operator')->name('operator.')->group(function () {
     Route::middleware([
         'auth:operator,operator_staff',
         \App\Http\Middleware\RestrictOperatorServiceModules::class,
+        \App\Http\Middleware\AuthorizeOperatorStaffPermissions::class,
     ])->group(function () {
         Route::get('profile', [ProfileController::class, 'showProfile'])->name('profile');
         Route::get('trips', [\App\Http\Controllers\Operator\TripController::class, 'index'])->name('trips.index');

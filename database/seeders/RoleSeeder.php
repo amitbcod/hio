@@ -34,6 +34,14 @@ class RoleSeeder extends Seeder
                 $attributes['business_id'] = null;
                 $values['business_id'] = null;
             }
+            if (Schema::hasColumn('roles', 'scope')) {
+                $attributes['scope'] = 'global';
+                $values['scope'] = 'global';
+            }
+            if (Schema::hasColumn('roles', 'role_scope_key')) {
+                $attributes['role_scope_key'] = 'global:0';
+                $values['role_scope_key'] = 'global:0';
+            }
 
             \Spatie\Permission\Models\Role::updateOrCreate($attributes, $values);
         }

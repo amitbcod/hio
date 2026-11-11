@@ -1,7 +1,10 @@
 <div>
     @php
-        $operator = auth()->user();
+        $operator = auth('operator')->user() ?? auth('operator_staff')->user();
         $business = null;
+        $isHeadOfDepartment = $operator instanceof \App\Models\OperatorUser;
+        $canShowStaffSetup = ! $isHeadOfDepartment
+            || app(\App\Services\OperatorStaffPermissionService::class)->canManageUsers($operator, 'read');
         
         // Load business if operator is linked
         if (!empty($operator->business_id)) {
@@ -17,6 +20,7 @@
         @include('operator.management._sidebar')
 
         {{-- Registration Steps as Collapsible Section --}}
+        @if($canShowStaffSetup)
         <div style="background: #4c938d;color: #ffffff;margin-top: 0;padding: 0px 0px;">
             <div style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 14px; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between;" onclick="document.getElementById('registrationStepsCollapse').classList.toggle('hidden');">
                 <span>PROFILE SETUP</span>
@@ -24,8 +28,6 @@
             </div>
             <ul id="registrationStepsCollapse" class="hidden" style="list-style: none; padding: 0; margin: 0;">
                 @php 
-                    $isHeadOfDepartment = auth('operator_staff')->check();
-                    
                     $stepNumberMap = [
                         1 => 1,
                         2 => 2,
@@ -57,9 +59,9 @@
                     }
                     
                     $progress = isset($progress) ? $progress : (
-                        !empty(auth()->user()->business_id)
-                            ? \App\Models\OperatorRegistrationProgress::where('business_id', auth()->user()->business_id)->first()
-                            : \App\Models\OperatorRegistrationProgress::where('operator_id', auth()->user()->operator_id ?? null)->first()
+                        !empty($operator->business_id)
+                            ? \App\Models\OperatorRegistrationProgress::where('business_id', $operator->business_id)->first()
+                            : \App\Models\OperatorRegistrationProgress::where('operator_id', $operator->operator_id ?? null)->first()
                     );
                 @endphp
                 @foreach($steps as $step => $info)
@@ -126,13 +128,15 @@
         <style>
             .hidden { display: none !important; }
         </style>
+        @endif
 
     @else
         {{-- Show Registration Sidebar for Non-Approved Business --}}
+        @if($canShowStaffSetup)
         <h3 class="sidebar-title">Profile Creation</h3>
         <ul style="list-style: none; padding: 0; margin: 0;">
             @php 
-                $isHeadOfDepartment = auth('operator_staff')->check();
+                $isHeadOfDepartment = $operator instanceof \App\Models\OperatorUser;
                 
                 $stepNumberMap = [
                     1 => 1,
@@ -165,9 +169,9 @@
                 }
                 
                 $progress = isset($progress) ? $progress : (
-                    !empty(auth()->user()->business_id)
-                        ? \App\Models\OperatorRegistrationProgress::where('business_id', auth()->user()->business_id)->first()
-                        : \App\Models\OperatorRegistrationProgress::where('operator_id', auth()->user()->operator_id ?? null)->first()
+                    !empty($operator->business_id)
+                        ? \App\Models\OperatorRegistrationProgress::where('business_id', $operator->business_id)->first()
+                        : \App\Models\OperatorRegistrationProgress::where('operator_id', $operator->operator_id ?? null)->first()
                 );
             @endphp
             @foreach($steps as $step => $info)
@@ -218,5 +222,6 @@
                 </li>
             @endforeach
         </ul>
+        @endif
     @endif
 </div>

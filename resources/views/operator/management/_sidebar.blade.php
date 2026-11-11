@@ -1,13 +1,48 @@
 <div>
 @php
     $operatorSelectedServices = request()->attributes->get('operator.selected_services', []);
+    $operatorActor = auth('operator')->user() ?? auth('operator_staff')->user();
+    $operatorIsStaff = $operatorActor instanceof \App\Models\OperatorUser;
+    $operatorPermissions = app(\App\Services\OperatorStaffPermissionService::class);
+    $routeUriFor = fn (string $routeName): ?string => app('router')->getRoutes()->getByName($routeName)?->uri();
+    $canReadRoute = fn (string $routeName): bool => ! $operatorIsStaff
+        || $operatorPermissions->canAccessRoute(
+            $operatorActor,
+            $routeName,
+            'GET',
+            [],
+            $routeUriFor($routeName),
+        );
+    $canCreateRoute = fn (string $routeName): bool => ! $operatorIsStaff
+        || $operatorPermissions->canAccessRoute(
+            $operatorActor,
+            $routeName,
+            'POST',
+            [],
+            $routeUriFor($routeName),
+        );
+    $canCreateStaffUsers = ! $operatorIsStaff
+        || $operatorPermissions->canManageUsers($operatorActor, 'create');
+
     $canManageAccommodation = in_array('Accommodation', $operatorSelectedServices, true);
     $canManageActivity = in_array('Activity', $operatorSelectedServices, true);
     $canManageTransport = in_array('Transport', $operatorSelectedServices, true);
+    if ($operatorIsStaff) {
+        $canManageAccommodation = $canReadRoute('operator.accommodation.index')
+            || $canCreateRoute('operator.accommodation.create')
+            || $canReadRoute('operator.accommodation.bookings');
+        $canManageActivity = $canReadRoute('operator.activity.index')
+            || $canCreateRoute('operator.activity.create')
+            || $canReadRoute('operator.activity.bookings');
+        $canManageTransport = $canReadRoute('operator.transport.index')
+            || $canReadRoute('operator.transport.bookings')
+            || $canReadRoute('operator.drivers.index');
+    }
 @endphp
 
 @php $isTripManagement = request()->routeIs('operator.trips.*'); @endphp
 
+@if($canReadRoute('operator.trips.index'))
 <div class="dropdownToggle" 
      style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
    Trips
@@ -22,6 +57,7 @@
         </a>
     </li>
 </ul>
+@endif
 
 @if($canManageAccommodation)
 <div class="dropdownToggle" 
@@ -31,27 +67,34 @@
 </div>
 
 <ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: none;">
+    @if($canCreateRoute('operator.accommodation.create'))
     <li class="add-section" style="padding: 8px 36px;">
         <a href="{{ route('operator.accommodation.create') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
           + Add New Property
         </a>
     </li>
+    @endif
+    @if($canReadRoute('operator.accommodation.index'))
     <li style="padding: 8px 36px;">
         <a href="{{ route('operator.accommodation.index') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
            Accommodation Listing
         </a>
     </li>
+    @endif
+    @if($canReadRoute('operator.accommodation.bookings'))
     <li style="padding: 8px 36px;">
         <a href="{{ route('operator.accommodation.bookings') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
            Accommodation Bookings
         </a>
     </li>
+    @endif
 </ul>
 @endif
 
+@if($canReadRoute('operator.shared-carts.index') || $canCreateRoute('operator.shared-carts.create'))
 <div class="dropdownToggle" 
      style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; border-top: 1px solid rgba(255,255,255,0.2);">
    Shared Trip Links
@@ -59,19 +102,24 @@
 </div>
 
 <ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: none;">
+    @if($canCreateRoute('operator.shared-carts.create'))
     <li class="add-section" style="padding: 8px 36px;">
         <a href="{{ route('operator.shared-carts.create') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
           + Create New Link
         </a>
     </li>
+    @endif
+    @if($canReadRoute('operator.shared-carts.index'))
     <li style="padding: 8px 36px;">
         <a href="{{ route('operator.shared-carts.index') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
            View All Links
         </a>
     </li>
+    @endif
 </ul>
+@endif
 
 
 
@@ -85,27 +133,34 @@
 </div>
 
 <ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: none;">
+    @if($canCreateRoute('operator.activity.create'))
     <li class="add-section" style="padding: 8px 36px;">
         <a href="{{ route('operator.activity.create') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
            + Add New Activity
         </a>
     </li>
+    @endif
+    @if($canReadRoute('operator.activity.index'))
     <li style="padding: 8px 36px;">
         <a href="{{ route('operator.activity.index') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
            Activity Listing
         </a>
     </li>
+    @endif
+    @if($canReadRoute('operator.activity.bookings'))
     <li style="padding: 8px 36px;">
         <a href="{{ route('operator.activity.bookings') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
            Activity Bookings
         </a>
     </li>
+    @endif
 </ul>
 @endif
 
+@if($canReadRoute('operator.feedback.index'))
 <div class="dropdownToggle" 
      style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
    Feedback
@@ -120,6 +175,7 @@
         </a>
     </li>
 </ul>
+@endif
 
 {{-- Transport Management Section --}}
 
@@ -139,29 +195,36 @@
            + Basic details
         </a>
     </li> -->
+    @if($canReadRoute('operator.transport.index'))
     <li style="padding: 8px 36px;">
         <a href="{{ route('operator.transport.index') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
            Vehicle Listing
         </a>
     </li>
+    @endif
+    @if($canReadRoute('operator.transport.bookings'))
     <li style="padding: 8px 36px;">
         <a href="{{ route('operator.transport.bookings') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
            Transport Bookings
         </a>
     </li>
+    @endif
+    @if($canReadRoute('operator.drivers.index'))
     <li style="padding: 8px 36px;">
         <a href="{{ route('operator.drivers.index') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;{{ $isDriverManagement ? 'background:rgba(255,255,255,0.18);' : '' }}">
            Driver Management
         </a>
     </li>
+    @endif
 </ul>
 @endif
 
 {{-- Staff Management Section --}}
 
+@if($canReadRoute('operator.register.step6'))
 <div class="dropdownToggle" 
      style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
    Staff Management
@@ -169,12 +232,14 @@
 </div>
 
 <ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: none;">
+    @if($canCreateStaffUsers)
     <li class="add-section" style="padding: 8px 36px;">
         <a href="{{ route('operator.register.step6') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
            + Add Staff Member
         </a>
     </li>
+    @endif
     <li style="padding: 8px 36px;">
         <a href="{{ route('operator.register.step6') }}"
            style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;">
@@ -182,7 +247,9 @@
         </a>
     </li>
 </ul>
+@endif
 
+@if($canReadRoute('operator.booking-widget.script'))
 <div class="dropdownToggle" 
      style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
    Widgets
@@ -197,6 +264,7 @@
         </a>
     </li>
 </ul>
+@endif
 
     <!-- <ul style="list-style: none; padding: 0; margin: 0;">
         @php

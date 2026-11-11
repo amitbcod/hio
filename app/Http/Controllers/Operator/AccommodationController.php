@@ -12,12 +12,35 @@ use App\Models\AccommodationPromotion;
 use App\Models\AccommodationInventory;
 use App\Models\AccommodationBooking;
 use App\Models\Business;
+use App\Models\Operator;
+use App\Models\OperatorUser;
 use App\Services\OperatorBookingNotificationService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class AccommodationController extends Controller
 {
+    private ?Operator $resolvedOperatorAccount = null;
+
+    protected function operatorAccount(): Operator
+    {
+        if ($this->resolvedOperatorAccount) {
+            return $this->resolvedOperatorAccount;
+        }
+
+        $actor = auth('operator')->user() ?? auth('operator_staff')->user();
+        if ($actor instanceof Operator) {
+            return $this->resolvedOperatorAccount = $actor;
+        }
+
+        abort_unless($actor instanceof OperatorUser, 403);
+
+        $operator = app(\App\Services\OperatorStaffPermissionService::class)->owner($actor);
+        abort_unless($operator, 403);
+
+        return $this->resolvedOperatorAccount = $operator;
+    }
+
     /**
      * Check preconditions before accommodation setup
      * 
@@ -29,10 +52,10 @@ class AccommodationController extends Controller
      */
     protected function checkPreconditions()
     {
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
         
         // Check operator account status
-        if (!$operator || $operator->account_status !== 'active') {
+        if ($operator->account_status !== 'active') {
             return redirect()->route('operator.profile')
                 ->with('error', 'Your operator account must be active to manage accommodations.');
         }
@@ -60,7 +83,7 @@ class AccommodationController extends Controller
     {
         if ($redirect = $this->checkPreconditions()) return $redirect;
         
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
         $accommodations = Accommodation::where('operator_id', $operator->id)
             ->orWhere('business_id', $operator->business_id)
             ->get();
@@ -75,7 +98,7 @@ class AccommodationController extends Controller
     {
         if ($redirect = $this->checkPreconditions()) return $redirect;
         
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
         $accommodation = null;
         
         return view('operator.accommodation.step1_basics', compact('operator', 'accommodation'));
@@ -112,7 +135,7 @@ class AccommodationController extends Controller
     {
         if ($redirect = $this->checkPreconditions()) return $redirect;
         
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
         
         $request->validate([
             'property_name' => 'required|string|max:255',
@@ -202,7 +225,7 @@ class AccommodationController extends Controller
         $accommodation = Accommodation::findOrFail($id);
         
         // Authorization check
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
             abort(403);
@@ -217,7 +240,7 @@ class AccommodationController extends Controller
     public function editStep1($id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
         
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -233,7 +256,7 @@ class AccommodationController extends Controller
     public function update(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
         
         // Authorization check
         if ($accommodation->operator_id !== $operator->id && 
@@ -331,7 +354,7 @@ class AccommodationController extends Controller
     public function step2Reservation($id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
         
         // Authorization check
         if ($accommodation->operator_id !== $operator->id && 
@@ -354,7 +377,7 @@ class AccommodationController extends Controller
     public function step3Photos($id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -383,7 +406,7 @@ class AccommodationController extends Controller
     public function saveStep3Photos(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -515,7 +538,7 @@ class AccommodationController extends Controller
     public function deleteMedia($id, $mediaId)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -545,7 +568,7 @@ class AccommodationController extends Controller
     public function step4Compliance($id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -577,7 +600,7 @@ class AccommodationController extends Controller
     public function saveStep4Compliance(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -690,7 +713,7 @@ class AccommodationController extends Controller
     public function saveStep2(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
         
         // Authorization check
         if ($accommodation->operator_id !== $operator->id && 
@@ -758,7 +781,7 @@ class AccommodationController extends Controller
     public function step5Accounting($id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user()->load('accounting');
+        $operator = $this->operatorAccount()->load('accounting');
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -779,7 +802,7 @@ class AccommodationController extends Controller
     public function saveStep5Accounting(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -855,7 +878,7 @@ class AccommodationController extends Controller
     public function step6PoliciesRules($id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -878,7 +901,7 @@ class AccommodationController extends Controller
     public function saveStep6PoliciesRules(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1065,7 +1088,7 @@ class AccommodationController extends Controller
     public function step7RoomsUnits($id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1091,7 +1114,7 @@ class AccommodationController extends Controller
     public function saveRoom(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1200,7 +1223,7 @@ class AccommodationController extends Controller
     public function editRoom($id, AccommodationRoom $room)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1218,7 +1241,7 @@ class AccommodationController extends Controller
     public function updateRoom(Request $request, $id, AccommodationRoom $room)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1319,7 +1342,7 @@ class AccommodationController extends Controller
     public function deleteRoom($id, AccommodationRoom $room)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1338,7 +1361,7 @@ class AccommodationController extends Controller
     public function step8RatePlans($id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1385,7 +1408,7 @@ class AccommodationController extends Controller
     public function saveRatePlan(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1433,7 +1456,7 @@ class AccommodationController extends Controller
     public function editRatePlan($id, AccommodationRate $plan)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1451,7 +1474,7 @@ class AccommodationController extends Controller
     public function updateRatePlan(Request $request, $id, AccommodationRate $plan)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1485,7 +1508,7 @@ class AccommodationController extends Controller
     public function deleteRatePlan($id, AccommodationRate $plan)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1509,7 +1532,7 @@ class AccommodationController extends Controller
             $accommodation = Accommodation::findOrFail($id);
             \Log::info('Accommodation found', ['accommodation_id' => $accommodation->id]);
             
-            $operator = auth()->user();
+            $operator = $this->operatorAccount();
             \Log::info('Operator found', ['operator_id' => $operator->id ?? null]);
 
             if ($accommodation->operator_id !== $operator->id && 
@@ -1636,7 +1659,7 @@ class AccommodationController extends Controller
     public function removePlanFromRoom(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1673,7 +1696,7 @@ class AccommodationController extends Controller
     public function step9SeasonPricing($id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1764,7 +1787,7 @@ class AccommodationController extends Controller
     public function saveSeasonPricing(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1859,7 +1882,7 @@ class AccommodationController extends Controller
     public function saveFees(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1895,7 +1918,7 @@ class AccommodationController extends Controller
     public function getFees(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -1915,7 +1938,7 @@ class AccommodationController extends Controller
     public function setDefaultPrice(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2003,7 +2026,7 @@ class AccommodationController extends Controller
     public function editSeasonPricing($id, $pricingId)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2027,7 +2050,7 @@ class AccommodationController extends Controller
     public function getPackagePrice(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2059,7 +2082,7 @@ class AccommodationController extends Controller
     public function setPackagePrice(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2128,7 +2151,7 @@ class AccommodationController extends Controller
     public function getGroupPrice(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2160,7 +2183,7 @@ class AccommodationController extends Controller
     public function setGroupPrice(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2227,7 +2250,7 @@ class AccommodationController extends Controller
     public function updateSeasonPricing(Request $request, $id, $pricingId)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2291,7 +2314,7 @@ class AccommodationController extends Controller
     public function deleteSeasonPricing(Request $request, $id, $pricingId)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2316,7 +2339,7 @@ class AccommodationController extends Controller
     public function addSeasonalEntry(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2416,7 +2439,7 @@ class AccommodationController extends Controller
     public function deleteSeasonalEntry(Request $request, $id, $entryId)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2446,7 +2469,7 @@ class AccommodationController extends Controller
     public function updateSeasonalEntry(Request $request, $id, $entryId)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2521,7 +2544,7 @@ class AccommodationController extends Controller
     public function step10InventoryAllotment($id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2551,7 +2574,7 @@ class AccommodationController extends Controller
     public function saveInventoryAllotment(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2634,7 +2657,7 @@ class AccommodationController extends Controller
     public function deleteInventoryAllotment(Request $request, $id, $inventoryId)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2660,7 +2683,7 @@ class AccommodationController extends Controller
     public function getInventoryAllotment(Request $request, $id, $inventoryId)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2703,7 +2726,7 @@ class AccommodationController extends Controller
     public function showInventoryAllotment(Request $request, $id, $inventoryId)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -2734,7 +2757,7 @@ class AccommodationController extends Controller
     public function bookingReport(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id &&
             $accommodation->business_id !== $operator->business_id) {
@@ -2971,7 +2994,7 @@ class AccommodationController extends Controller
     public function step11Promotions($id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -3050,7 +3073,7 @@ class AccommodationController extends Controller
     public function savePromotion(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -3161,7 +3184,7 @@ class AccommodationController extends Controller
     public function getPromotion(Request $request, $id, $promotionId)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -3201,7 +3224,7 @@ class AccommodationController extends Controller
     public function deletePromotion(Request $request, $id, $promotionId)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && 
             $accommodation->business_id !== $operator->business_id) {
@@ -3228,7 +3251,7 @@ class AccommodationController extends Controller
     public function step12Seo(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && $accommodation->business_id !== $operator->business_id) {
             abort(403);
@@ -3242,7 +3265,7 @@ class AccommodationController extends Controller
     public function saveStep12Seo(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         if ($accommodation->operator_id !== $operator->id && $accommodation->business_id !== $operator->business_id) {
             abort(403);
@@ -3300,7 +3323,7 @@ class AccommodationController extends Controller
     public function step13Publish($id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         // Check ownership
         if ($accommodation->operator_id !== $operator->id) {
@@ -3322,7 +3345,7 @@ class AccommodationController extends Controller
     public function submitForApproval(Request $request, $id)
     {
         $accommodation = Accommodation::findOrFail($id);
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         // Check ownership
         if ($accommodation->operator_id !== $operator->id) {
@@ -3389,7 +3412,7 @@ class AccommodationController extends Controller
     {
         if ($redirect = $this->checkPreconditions()) return $redirect;
         
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
         
         // Get all accommodations for this operator
         $accommodationIds = Accommodation::where('operator_id', $operator->id)
@@ -3413,7 +3436,7 @@ class AccommodationController extends Controller
     {
         if ($redirect = $this->checkPreconditions()) return $redirect;
         
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
         
         // Get all accommodations for this operator
         $accommodationIds = Accommodation::where('operator_id', $operator->id)
@@ -3439,7 +3462,7 @@ class AccommodationController extends Controller
     {
         if ($redirect = $this->checkPreconditions()) return $redirect;
 
-        $operator = auth()->user();
+        $operator = $this->operatorAccount();
 
         $accommodationIds = Accommodation::where('operator_id', $operator->id)
             ->orWhere('business_id', $operator->business_id)

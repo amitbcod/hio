@@ -22,20 +22,16 @@
 
             <table class="table">
                 <thead>
-                    <tr><th>Name</th><th>Scope</th><th>Permissions</th><th>Actions</th></tr>
+                    <tr><th>Name</th><th>Scope</th><th>Configured staff actions</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                     @foreach($roles as $role)
                         <tr>
                             <td>{{ $role->name }}</td>
-                            <td>{{ $role->business_id ? 'Business' : 'Global' }}</td>
-                            <td>{{ implode(', ', $role->permissions->pluck('name')->toArray()) }}</td>
+                            <td>{{ ($role->scope ?? 'business') === 'global' ? 'Global' : (($role->scope ?? '') === 'country' ? 'Country' : 'Business (legacy)') }}</td>
+                            <td>{{ $role->configured_actions }}</td>
                             <td>
-                                @if(!empty(auth()->user()->business_id) && (is_null($role->business_id) || ($role->business_id ?? null) == auth()->user()->business_id))
-                                    <a class="btn btn-sm btn-secondary" href="{{ route('operator.roles.permissions', $role->id) }}">Manage Permissions</a>
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
+                                <a class="btn btn-sm btn-secondary" href="{{ route('operator.roles.permissions', $role->id) }}">Manage Permissions</a>
                             </td>
                         </tr>
                     @endforeach

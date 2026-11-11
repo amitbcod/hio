@@ -3,194 +3,150 @@
 namespace App\Http\Controllers\Operator;
 
 use App\Http\Controllers\Controller;
+use App\Models\Module;
+use App\Models\Operator;
+use App\Models\OperatorRoleModulePermission;
+use App\Services\OperatorStaffPermissionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller
 {
-    public function index(Request $request)
+    public function __construct(private readonly OperatorStaffPermissionService $permissions) {}
+
+    public function index()
     {
-        $operator = auth()->user();
-
-        // Only show roles for the operator's business (and global roles)
-        // If Spatie not available, return empty list and notice
-        if (!class_exists(\Spatie\Permission\Models\Role::class) || !\Illuminate\Support\Facades\Schema::hasTable('roles')) {
-            $roles = collect();
-            return view('operator.roles.index', compact('roles'))->with('error', 'Role management is not available until permissions are installed.');
-        }
-
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('roles', 'business_id')) {
-            $roles = Role::orderBy('name')->get();
-        } else {
-            $roles = Role::where(function($q) use ($operator) {
-                $q->whereNull('business_id');
-                if (!empty($operator->business_id)) {
-                    $q->orWhere('business_id', $operator->business_id);
-                }
-            })->orderBy('name')->get();
+        [$owner, $actor] = $this->context();
+        abort_unless($actor instanceof Operator, 403, 'Only the main Operator can manage staff roles.');
+        $roles = $this->permissions->roleCatalog($owner);
+        foreach ($roles as $role) {
+            $role->setAttribute(
+                'configured_actions',
+                collect($this->permissions->roleMatrixFor($owner, $role->name))
+                    ->sum(fn (array $module): int => collect($module)->where('allowed', true)->count()),
+            );
         }
 
         return view('operator.roles.index', compact('roles'));
     }
 
-    public function store(Request $request)
+    public function store()
     {
-        $operator = auth()->user();
-
-        // Owners are NOT allowed to create roles; only admins create new roles
-        return redirect()->route('operator.roles.index')->with('error', 'Only admins can create roles.');
+        abort(403, 'Operator roles are managed centrally by Global Admin and MPO.');
     }
 
-    public function edit(Role $role)
+    public function edit()
     {
-        $operator = auth()->user();
-        // only operators belonging to the same business (or global roles) may edit
-        if (empty($operator->business_id) || !((is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id))) {
-            return redirect()->route('operator.roles.index')->with('error', 'Unauthorized action.');
-        }
-
-        return view('operator.roles.edit', compact('role'));
+        abort(403, 'Operator roles are managed centrally by Global Admin and MPO.');
     }
 
-    public function update(Request $request, Role $role)
+    public function update()
     {
-        $operator = auth()->user();
-        if (empty($operator->business_id) || !((is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id))) {
-            return redirect()->route('operator.roles.index')->with('error', 'Unauthorized action.');
-        }
-
-        $request->validate([
-            'name' => 'required|string|max:191',
-        ]);
-
-        $role->name = $request->name;
-        $role->save();
-
-        return redirect()->route('operator.roles.index')->with('success', 'Role updated.');
+        abort(403, 'Operator roles are managed centrally by Global Admin and MPO.');
     }
 
-    public function destroy(Role $role)
+    public function destroy()
     {
-        $operator = auth()->user();
-        if (empty($operator->business_id) || !((is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id))) {
-            return redirect()->route('operator.roles.index')->with('error', 'Unauthorized action.');
-        }
-
-        $role->delete();
-        return redirect()->route('operator.roles.index')->with('success', 'Role deleted.');
+        abort(403, 'Operator roles are managed centrally by Global Admin and MPO.');
     }
 
     public function permissions(Role $role)
     {
-        $operator = auth()->user();
+        [$owner, $actor] = $this->context();
+        abort_unless($actor instanceof Operator, 403, 'Only the main Operator can configure role access.');
+        abort_unless($this->permissions->roleAssignable($owner, $role), 404);
 
-        // Operators in the same business (or global roles) may manage permissions
-        if (empty($operator->business_id) || !(is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id)) {
-            return redirect()->route('operator.roles.index')->with('error', 'Unauthorized action.');
-        }
+        $modules = $this->permissions->availableModules($owner);
+        $roleMatrix = $this->permissions->roleMatrixFor($owner, $role->name);
+        $roles = $this->permissions->roleCatalog($owner);
 
-        // Load modules and role-module permissions if available
-        $modules = \App\Models\Module::orderBy('name')->get();
-
-        // Build list of roles owner may pick (global + business-scoped)
-        $roles = collect();
-        if (\Illuminate\Support\Facades\Schema::hasTable('roles')) {
-            $query = Role::query();
-            if (\Illuminate\Support\Facades\Schema::hasColumn('roles', 'business_id')) {
-                $query->where(function($q) use ($operator) {
-                    $q->whereNull('business_id');
-                    if (!empty($operator->business_id)) {
-                        $q->orWhere('business_id', $operator->business_id);
-                    }
-                });
-            }
-            $roles = $query->orderBy('name')->get();
-        }
-
-        $roleModulePermissions = collect();
-        if (\Illuminate\Support\Facades\Schema::hasTable('role_module_permissions')) {
-            $roleModulePermissions = \App\Models\RoleModulePermission::where('role_id', $role->id)
-                ->get()
-                ->keyBy(function($row){ return $row->module->slug ?? $row->module_id; });
-        }
-
-        // For backwards-compat: also provide Spatie permissions list if present
-        $permissions = collect();
-        $rolePerms = [];
-        if (class_exists(\Spatie\Permission\Models\Permission::class) && \Illuminate\Support\Facades\Schema::hasTable('permissions')) {
-            $permissions = Permission::orderBy('name')->get();
-            $rolePerms = $role->permissions->pluck('name')->toArray();
-        }
-
-        return view('operator.roles.permissions', compact('role', 'roles', 'modules', 'roleModulePermissions', 'permissions', 'rolePerms'));
+        return view('operator.roles.permissions', compact('role', 'roles', 'modules', 'roleMatrix'));
     }
 
     public function updatePermissions(Request $request, Role $role)
     {
-        \Log::debug('updatePermissions called', ['role_id' => $role->id, 'request_permissions' => $request->permissions]);
+        [$owner, $actor] = $this->context();
+        abort_unless($actor instanceof Operator, 403, 'Only the main Operator can configure role access.');
+        abort_unless($this->permissions->roleAssignable($owner, $role), 404);
 
-        $operator = auth()->user();
-
-        if (empty($operator->business_id) || !(is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id)) {
-            \Log::debug('unauthorized in updatePermissions', ['operator' => $operator ? $operator->id : null, 'operator_business' => $operator->business_id ?? null, 'role_business' => $role->business_id ?? null]);
-            return redirect()->route('operator.roles.index')->with('error', 'Unauthorized action.');
-        }
-
-        $request->validate([
-            'permissions' => 'nullable|array',
+        $data = $request->validate([
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['array'],
+            'permissions.*.*' => ['array'],
+            'permissions.*.*.allowed' => ['nullable', 'boolean'],
+            'permissions.*.*.can_delegate' => ['nullable', 'boolean'],
         ]);
 
-        $operator = auth()->user();
-        // Only operators in the same business (or global roles) may update role module perms
-        if (empty($operator->business_id) || !(is_null($role->business_id) || ($role->business_id ?? null) == $operator->business_id)) {
-            \Log::debug('unauthorized (2) in updatePermissions', ['operator' => $operator->id ?? null, 'operator_business' => $operator->business_id ?? null, 'role_business' => $role->business_id ?? null]);
-            return redirect()->route('operator.roles.index')->with('error', 'Unauthorized action.');
-        }
+        $availableModules = $this->permissions->availableModules($owner)->keyBy('slug');
+        $actions = array_keys(config('operator_staff.actions', []));
+        $submitted = $data['permissions'] ?? [];
 
-        // If role-module-permissions table exists, save per-module flags
-        if (\Illuminate\Support\Facades\Schema::hasTable('role_module_permissions')) {
-            \Log::debug('role_module_permissions table exists');
-            $payload = $request->input('permissions', []); // expected shape: ['account' => ['Read','Create']]
-            \Log::debug('payload', ['payload' => $payload]);
-
-            foreach ($payload as $moduleSlug => $actions) {
-                $module = \App\Models\Module::where('slug', $moduleSlug)->orWhere('name', $moduleSlug)->first();
-                if (!$module) {
-                    \Log::debug('module not found for slug', ['slug' => $moduleSlug]);
-                    continue;
-                }
-
-                $row = \App\Models\RoleModulePermission::firstOrNew([
-                    'role_id' => $role->id,
-                    'module_id' => $module->id,
-                    'business_id' => $operator->business_id,
-                ]);
-
-                $row->can_read = in_array('Read', $actions);
-                $row->can_create = in_array('Create', $actions);
-                $row->can_update = in_array('Update', $actions);
-                $row->can_approve = in_array('Approve', $actions);
-                $row->can_publish = in_array('Publish', $actions);
-                $row->save();
-                \Log::info('RoleModulePermission saved', ['role_id' => $role->id, 'module' => $module->slug, 'flags' => [
-                    'read' => $row->can_read,
-                    'create' => $row->can_create,
-                    'update' => $row->can_update,
-                    'approve' => $row->can_approve,
-                    'publish' => $row->can_publish,
-                ]]);
+        foreach ($submitted as $slug => $permissionActions) {
+            abort_unless($availableModules->has($slug), 422, 'The submitted module is not available for this Operator.');
+            foreach ($permissionActions as $action => $values) {
+                abort_unless(in_array($action, $actions, true), 422, 'This permission action is not supported.');
+                $allowed = (bool) ($values['allowed'] ?? false);
+                $canDelegate = (bool) ($values['can_delegate'] ?? false);
+                abort_if($canDelegate && ! $allowed, 422, 'A delegated action must first be granted.');
             }
-
-            return redirect()->route('operator.roles.index')->with('success', 'Role module permissions updated.');
         }
 
-        \Log::debug('role_module_permissions table does not exist - falling back');
+        DB::transaction(function () use ($owner, $role, $availableModules, $actions, $submitted): void {
+            foreach ($availableModules as $slug => $module) {
+                foreach ($actions as $action) {
+                    $values = $submitted[$slug][$action] ?? [];
+                    $allowed = (bool) ($values['allowed'] ?? false);
+                    $canDelegate = $allowed && (bool) ($values['can_delegate'] ?? false);
 
-        // Fallback: sync Spatie permissions
-        $perms = $request->permissions ?? [];
-        $role->syncPermissions($perms);
+                    OperatorRoleModulePermission::query()->updateOrCreate(
+                        [
+                            'operator_id' => $owner->id,
+                            'role_name' => $role->name,
+                            'module_id' => $module->id,
+                            'action' => $action,
+                        ],
+                        [
+                            'is_allowed' => $allowed,
+                            'can_delegate' => $canDelegate,
+                        ],
+                    );
 
-        return redirect()->route('operator.roles.index')->with('success', 'Role permissions updated.');
+                    if (! $allowed || ! $canDelegate) {
+                        $staff = \App\Models\OperatorUser::query()
+                            ->where('operator_id', $owner->operator_id)
+                            ->where('business_id', $owner->business_id)
+                            ->where('role', $role->name)
+                            ->get();
+
+                        foreach ($staff as $user) {
+                            if (! $allowed) {
+                                $user->permissionOverrides()
+                                    ->where('module_id', $module->id)
+                                    ->where('action', $action)
+                                    ->delete();
+                            }
+                            app(OperatorStaffPermissionService::class)
+                                ->pruneDescendantGrants($user, $slug, $action);
+                        }
+                    }
+                }
+            }
+        });
+
+        return redirect()
+            ->route('operator.roles.permissions', $role)
+            ->with('success', 'Role access limits saved. Staff permissions remain individually assigned.');
+    }
+
+    private function context(): array
+    {
+        $actor = auth('operator')->user() ?? auth('operator_staff')->user();
+        abort_unless($actor instanceof Operator || $actor instanceof \App\Models\OperatorUser, 403);
+        $owner = $this->permissions->owner($actor);
+        abort_unless($owner, 403, 'Operator account not found.');
+
+        return [$owner, $actor];
     }
 }

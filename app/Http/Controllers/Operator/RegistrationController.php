@@ -14,99 +14,146 @@ use App\Models\OperatorAccountingPayout;
 use App\Models\OperatorServiceOperation;
 use App\Models\OperatorRoleAccessMapping;
 use App\Models\Business; 
+use App\Services\OperatorStaffPermissionService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 use App\Mail\AgreementConfirmed;
 use Illuminate\Validation\Rule;
 
 class RegistrationController extends Controller
 {
-   /* public function editStep6User($userId) {
-        $operator = auth()->user();
-        $user = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->where('id', $userId)->firstOrFail();
-        $users = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->get();
-        $progress = \App\Models\OperatorRegistrationProgress::where('operator_id', $operator->operator_id)->first();
-        return view('operator.registration.step6_users', compact('users', 'progress', 'user'));
-    }*/
-
     public function editStep6User($userId)
-{
-    $operator = auth()->user();
+    {
+        [$actor, , $permissions] = $this->operatorStaffContext();
+        abort_unless($permissions->canManageUsers($actor, 'update'), 403);
+        $permissions->manageableStaffQuery($actor)->findOrFail($userId);
 
-    // Prefer business-scoped users when operator is linked to a business
-    if (!empty($operator->business_id)) {
-        $user = \App\Models\OperatorUser::where('id', $userId)->where('business_id', $operator->business_id)->firstOrFail();
-        $users = \App\Models\OperatorUser::where('business_id', $operator->business_id)->get();
-    } else {
-        $user = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->where('id', $userId)->firstOrFail();
-        $users = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->get();
+        return redirect()->route('operator.register.step6', ['edit_user' => $userId]);
     }
 
-    // ✅ use imported model
-    // Prefer business-scoped mappings when linked
-    $query = OperatorRoleAccessMapping::whereIn('user_id', $users->pluck('id'));
-    if (!empty($operator->business_id)) {
-        $query->where('business_id', $operator->business_id);
-    }
-    $roleAccessMappings = $query->get();
+    public function updateStep6User(Request $request, $userId)
+    {
+        [$actor, $owner, $permissions] = $this->operatorStaffContext();
+        abort_unless($permissions->canManageUsers($actor, 'update'), 403);
+        $user = $permissions->manageableStaffQuery($actor)->findOrFail($userId);
 
-    // ✅ group by user_id for JS modal prefill
-    $roleAccessMappingsByUser = $roleAccessMappings->groupBy('user_id');
-
-    $progress = \App\Models\OperatorRegistrationProgress::where(
-        'operator_id',
-        $operator->operator_id
-    )->first();
-
-    return view(
-        'operator.registration.step6_users',
-        compact(
-            'users',
-            'progress',
-            'user',
-            'roleAccessMappingsByUser'
-        )
-    );
-}
-
-    public function updateStep6User(Request $request, $userId) {
-        $operator = auth()->user();
-        // Ensure user is in the same business when linked, otherwise restrict by operator
-        if (!empty($operator->business_id)) {
-            $user = \App\Models\OperatorUser::where('id', $userId)->where('business_id', $operator->business_id)->firstOrFail();
+        $rules = [
+            'full_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:191', Rule::unique('operator_users', 'email')->ignore($user->id)],
+            'mobile' => ['nullable', 'string', 'max:20'],
+            'password' => ['nullable', 'string', 'min:8'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['array'],
+            'permissions.*.*' => ['array'],
+            'permissions.*.*.allowed' => ['nullable', 'boolean'],
+            'permissions.*.*.can_delegate' => ['nullable', 'boolean'],
+        ];
+        if ($actor instanceof Operator) {
+            $rules['role'] = ['required', 'string'];
         } else {
-            $user = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->where('id', $userId)->firstOrFail();
+            $rules['role'] = ['prohibited'];
         }
-        $request->validate([
-            'full_name' => 'required',
-            'email' => 'required|email|unique:operator_users,email,' . $user->id,
-            'mobile' => 'required',
-            'role' => 'required',
-            'access_rights' => 'nullable|array',
-        ]);
-        $user->full_name = $request->full_name;
-        $user->email = $request->email;
-        $user->mobile = $request->mobile;
-        if ($request->filled('password')) {
-            $user->password_hash = bcrypt($request->password);
-            $user->account_reset_required = 1;
+        $data = $request->validate($rules);
+
+        $role = $actor instanceof Operator ? $data['role'] : $actor->role;
+        abort_unless($permissions->roleAssignable($actor, $role), 403, 'You cannot assign this role.');
+        $permissions->validatePermissionPayload($actor, $role, $data['permissions'] ?? []);
+
+        DB::transaction(function () use ($data, $user, $role, $actor, $owner, $permissions): void {
+            $user->full_name = $data['full_name'];
+            $user->email = $data['email'];
+            $user->mobile = $data['mobile'] ?? null;
+            $user->role = $role;
+            if (! empty($data['password'])) {
+                $user->password_hash = bcrypt($data['password']);
+                $user->account_reset_required = 1;
+            }
+            $user->save();
+            $this->syncStaffPermissionOverrides(
+                $user,
+                $actor,
+                $owner,
+                $permissions,
+                $role,
+                $data['permissions'] ?? [],
+            );
+        });
+
+        foreach ($permissions->availableModules($owner) as $module) {
+            foreach (array_keys(config('operator_staff.actions', [])) as $action) {
+                $permissions->pruneDescendantGrants($user, $module->slug, $action);
+            }
         }
-        $user->role = $request->role;
-        $user->access_rights = $request->access_rights ? json_encode($request->access_rights) : null;
-        $user->save();
-        return redirect()->route('operator.register.step6')->with('success', 'User updated successfully!');
+
+        return redirect()->route('operator.register.step6')->with('success', 'User updated successfully.');
     }
 
-    public function deleteStep6User($userId) {
-        $operator = auth()->user();
-        // Ensure user is in the same business when linked, otherwise restrict by operator
-        if (!empty($operator->business_id)) {
-            $user = \App\Models\OperatorUser::where('id', $userId)->where('business_id', $operator->business_id)->firstOrFail();
-        } else {
-            $user = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->where('id', $userId)->firstOrFail();
-        }
+    public function deleteStep6User($userId)
+    {
+        [$actor, , $permissions] = $this->operatorStaffContext();
+        abort_unless($actor instanceof Operator, 403, 'Only the main Operator can delete staff accounts.');
+        $user = $permissions->manageableStaffQuery($actor)->findOrFail($userId);
         $user->delete();
-        return redirect()->route('operator.register.step6')->with('success', 'User deleted successfully!');
+
+        return redirect()->route('operator.register.step6')->with('success', 'User deleted successfully.');
+    }
+
+    private function operatorStaffContext(): array
+    {
+        $actor = auth('operator')->user() ?? auth('operator_staff')->user();
+        abort_unless($actor instanceof Operator || $actor instanceof OperatorUser, 403);
+        $permissions = app(OperatorStaffPermissionService::class);
+        $owner = $permissions->owner($actor);
+        abort_unless($owner, 403, 'Operator account not found.');
+
+        return [$actor, $owner, $permissions];
+    }
+
+    private function syncStaffPermissionOverrides(
+        OperatorUser $target,
+        Operator|OperatorUser $actor,
+        Operator $owner,
+        OperatorStaffPermissionService $permissions,
+        string $role,
+        array $payload,
+    ): void {
+        $modules = $permissions->availableModules($owner);
+        $roleMatrix = $permissions->roleMatrixFor($owner, $role);
+
+        foreach ($modules as $module) {
+            foreach (array_keys(config('operator_staff.actions', [])) as $action) {
+                if ($actor instanceof OperatorUser
+                    && ! $permissions->canDelegate($actor, $module->slug, $action)) {
+                    $target->permissionOverrides()
+                        ->where('module_id', $module->id)
+                        ->where('action', $action)
+                        ->delete();
+                    continue;
+                }
+                $values = $payload[$module->slug][$action] ?? [];
+                $allowed = (bool) ($values['allowed'] ?? false);
+                $canDelegate = $allowed && (bool) ($values['can_delegate'] ?? false)
+                    && (bool) ($roleMatrix[$module->slug][$action]['can_delegate'] ?? false);
+                $override = $target->permissionOverrides()->firstOrNew([
+                    'module_id' => $module->id,
+                    'action' => $action,
+                ]);
+                if (! $allowed) {
+                    if ($override->exists) {
+                        $override->delete();
+                    }
+                    continue;
+                }
+
+                $override->fill([
+                    'effect' => 'allow',
+                    'can_delegate' => $canDelegate,
+                    'granted_by_operator_user_id' => $actor instanceof OperatorUser ? $actor->id : null,
+                ]);
+                $override->save();
+            }
+        }
     }
     /**
      * Handle unauthenticated users for registration steps.
@@ -687,181 +734,119 @@ class RegistrationController extends Controller
     }
 
 
-    /*public function step6Users(Request $request) {
-        if (!$this->checkStepAccess(6)) {
+    public function step6Users(Request $request)
+    {
+        [$actor, $owner, $permissions] = $this->operatorStaffContext();
+        if ($actor instanceof Operator && ! $this->checkStepAccess(6)) {
             return redirect()->route('operator.register.step2')->with('error', 'Please complete previous steps first.');
         }
-        $operator = auth()->user();
-        $users = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->get();
-        $roleAccessMappings = \App\Models\OperatorRoleAccessMapping::whereIn('user_id', $users->pluck('id'))->get() ?? collect();
-        $progress = \App\Models\OperatorRegistrationProgress::where('operator_id', $operator->operator_id)->first();
-        return view('operator.registration.step6_users', compact('users', 'roleAccessMappings', 'progress'));
-    }*/
+        abort_unless($permissions->canManageUsers($actor, 'read'), 403);
 
-        public function step6Users(Request $request)
-{
-    if (!$this->checkStepAccess(6)) {
-        return redirect()
-            ->route('operator.register.step2')
-            ->with('error', 'Please complete previous steps first.');
-    }
+        $users = $permissions->manageableStaffQuery($actor)
+            ->with('permissionOverrides.module')
+            ->orderBy('full_name')
+            ->get();
+        $roles = $actor instanceof Operator
+            ? $permissions->roleCatalog($owner)
+            : collect();
+        $modules = $permissions->availableModules($owner);
+        $rolePermissionOptions = [];
+        $permissionGrantsByUser = [];
 
-    $operator = auth()->user();
-
-    // Prefer business-scoped users when operator is linked to a business
-    if (!empty($operator->business_id)) {
-        $users = \App\Models\OperatorUser::where('business_id', $operator->business_id)->get();
-    } else {
-        $users = \App\Models\OperatorUser::where('operator_id', $operator->operator_id)->get();
-    }
-
-    $roleAccessMappings = \App\Models\OperatorRoleAccessMapping::whereIn(
-        'user_id',
-        $users->pluck('id')
-    )->get();
-
-    // ✅ GROUP BY USER ID (KEY FIX)
-    $roleAccessMappingsByUser = $roleAccessMappings->groupBy('user_id');
-
-    // Fetch roles available to this operator's business (or global roles)
-    $roles = collect();
-    if (class_exists(\Spatie\Permission\Models\Role::class) && \Illuminate\Support\Facades\Schema::hasTable('roles')) {
-        if (\Illuminate\Support\Facades\Schema::hasColumn('roles', 'business_id')) {
-            $roles = \Spatie\Permission\Models\Role::where(function($q) use ($operator) {
-                $q->whereNull('business_id');
-                if (!empty($operator->business_id)) {
-                    $q->orWhere('business_id', $operator->business_id);
-                }
-            })->orderBy('name')->get();
-        } else {
-            $roles = \Spatie\Permission\Models\Role::orderBy('name')->get();
+        foreach ($roles as $role) {
+            $rolePermissionOptions[$role->name] = $permissions->assignablePermissionMatrix($actor, $role->name);
         }
-    }
+        if ($actor instanceof OperatorUser) {
+            $rolePermissionOptions[$actor->role] = $permissions->assignablePermissionMatrix($actor, $actor->role);
+        }
 
-    // Load dynamic modules available for this business (or global modules)
-    $modules = \App\Models\Module::orderBy('name')->get();
+        foreach ($users as $user) {
+            foreach ($user->permissionOverrides as $override) {
+                $slug = $override->module?->slug;
+                if ($slug && $override->effect === 'allow') {
+                    $permissionGrantsByUser[$user->id][$slug][$override->action] = [
+                        'allowed' => true,
+                        'can_delegate' => (bool) $override->can_delegate,
+                    ];
+                }
+            }
+        }
 
-    // group by user id for JS modal prefill
-    $roleAccessMappingsByUser = $roleAccessMappings->groupBy('user_id');
+        $progress = $this->getProgressForOperator($owner);
 
-    $progress = $this->getProgressForOperator($operator);
-
-    return view(
-        'operator.registration.step6_users',
-        compact(
+        return view('operator.registration.step6_users', compact(
             'users',
             'progress',
-            'roleAccessMappingsByUser',
-            'roles'
-        )
-    );
-}
-
-
-    /*public function saveStep6Users(Request $request) {
-        $operator = auth()->user();
-        $request->validate([
-            'full_name' => 'required',
-            'email' => 'required|email|unique:operator_users,email',
-            'mobile' => 'required',
-            'password' => 'required|min:8',
-            'role' => 'required',
-            'access_rights' => 'nullable|array',
-        ]);
-        $user = new \App\Models\OperatorUser();
-        $user->user_id = uniqid('OPU');
-        $user->operator_id = $operator->operator_id;
-        $user->full_name = $request->full_name;
-        $user->email = $request->email;
-        $user->mobile = $request->mobile;
-        $user->password_hash = bcrypt($request->password);
-        $user->role = $request->role;
-        $user->access_rights = $request->access_rights ? json_encode($request->access_rights) : null;
-        $user->status = 'Active';
-        $user->account_reset_required = 1;
-        $user->created_by = $operator->id;
-        $user->save();
-        // Mark step as complete
-        \App\Models\OperatorRegistrationProgress::updateOrCreate(
-            ['operator_id' => $operator->operator_id],
-            ['step6_users' => 1, 'current_step' => 7]
-        );
-        return redirect()->route('operator.register.step6')->with('success', 'New user added successfully!');
-    }*/
-
-        public function saveStep6Users(Request $request)
-{
-    $operator = auth()->user();
-
-    $request->validate([
-        'full_name' => 'required|string|max:255',
-        'email' => 'required|email|unique:operator_users,email',
-        'mobile' => 'required|string|max:20',
-        'password' => 'required|string|min:8',
-        'role' => 'required|string',
-    ]);
-
-    $user = new OperatorUser();
-    $user->user_id = uniqid('OPU');
-    $user->operator_id = $operator->operator_id;
-    // Associate with business when operator belongs to one
-    if (!empty($operator->business_id)) {
-        $user->business_id = $operator->business_id;
+            'roles',
+            'modules',
+            'rolePermissionOptions',
+            'permissionGrantsByUser',
+            'actor',
+            'permissions',
+        ));
     }
-    $user->full_name = $request->full_name;
-    $user->email = $request->email;
-    $user->mobile = $request->mobile;
-    $user->password_hash = bcrypt($request->password);
-    // keep human-readable role for legacy display, but authoritative role will be assigned via Spatie
-    $user->role = $request->role;
-    $user->status = 'Active';
-    $user->account_reset_required = 1;
-    $user->created_by = $operator->id;
 
-    $user->save();
+    public function saveStep6Users(Request $request)
+    {
+        [$actor, $owner, $permissions] = $this->operatorStaffContext();
+        abort_unless($permissions->canManageUsers($actor, 'create'), 403);
 
-    // Assign role via Spatie, ensuring role belongs to this business (if applicable)
-    try {
-        $roleName = $request->role;
-        $roleModel = null;
-
-        // If Spatie not available, skip role assignment but keep human-readable role value
-        if (!class_exists(\Spatie\Permission\Models\Role::class) || !\Illuminate\Support\Facades\Schema::hasTable('roles')) {
-            \Log::warning('Spatie Role model not available - role not assigned programmatically');
+        $rules = [
+            'full_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:191', 'unique:operator_users,email'],
+            'mobile' => ['nullable', 'string', 'max:20'],
+            'password' => ['required', 'string', 'min:8'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['array'],
+            'permissions.*.*' => ['array'],
+            'permissions.*.*.allowed' => ['nullable', 'boolean'],
+            'permissions.*.*.can_delegate' => ['nullable', 'boolean'],
+        ];
+        if ($actor instanceof Operator) {
+            $rules['role'] = ['required', 'string'];
         } else {
-            if (!empty($operator->business_id)) {
-                $roleModel = \Spatie\Permission\Models\Role::where('name', $roleName)
-                    ->where('business_id', $operator->business_id)
-                    ->first();
-            }
-            // fallback to global role (no business_id)
-            if (!$roleModel) {
-                $roleModel = \Spatie\Permission\Models\Role::where('name', $roleName)
-                    ->whereNull('business_id')
-                    ->first();
-            }
-            if ($roleModel) {
-                $user->assignRole($roleModel->name);
-            } else {
-                // If the role wasn't found for this business, remove the created user and report error
-                $user->delete();
-                return redirect()->back()->withErrors(['role' => 'Selected role not found for this business.'])->withInput();
-            }
+            $rules['role'] = ['prohibited'];
         }
-    } catch (\Exception $e) {
-        // Log and continue; role assignment failed
-        \Log::error('saveStep6Users - role assignment error', ['err' => $e->getMessage()]);
+        $data = $request->validate($rules);
+        $role = $actor instanceof Operator ? $data['role'] : $actor->role;
+        abort_unless($permissions->roleAssignable($actor, $role), 403, 'You cannot assign this role.');
+        $permissions->validatePermissionPayload($actor, $role, $data['permissions'] ?? []);
+
+        DB::transaction(function () use ($data, $role, $actor, $owner, $permissions): void {
+            $user = new OperatorUser();
+            $user->user_id = 'OPU'.\Illuminate\Support\Str::random(12);
+            $user->operator_id = $owner->operator_id;
+            $user->business_id = $owner->business_id;
+            $user->full_name = $data['full_name'];
+            $user->email = $data['email'];
+            $user->mobile = $data['mobile'] ?? null;
+            $user->password_hash = bcrypt($data['password']);
+            $user->role = $role;
+            $user->status = 'Active';
+            $user->account_reset_required = 1;
+            $user->created_by = $owner->id;
+            $user->created_by_operator_user_id = $actor instanceof OperatorUser ? $actor->id : null;
+            $user->save();
+
+            $this->syncStaffPermissionOverrides(
+                $user,
+                $actor,
+                $owner,
+                $permissions,
+                $role,
+                $data['permissions'] ?? [],
+            );
+        });
+
+        if ($actor instanceof Operator) {
+            OperatorRegistrationProgress::updateOrCreate(
+                ['operator_id' => $owner->operator_id],
+                ['step6_users' => 1, 'current_step' => 7],
+            );
+        }
+
+        return redirect()->route('operator.register.step6')->with('success', 'New staff user created successfully.');
     }
-
-    // mark step as complete
-    OperatorRegistrationProgress::updateOrCreate(
-        ['operator_id' => $operator->operator_id],
-        ['step6_users' => 1, 'current_step' => 4]
-    );
-
-    // Redirect to System Processes (step4) which displays as step 5
-    return redirect()->route('operator.register.step4')->with('success', 'New user added successfully!');
-}
     public function step7Accounting(Request $request) {
         if (!$this->checkStepAccess(7)) {
             return redirect()->route('operator.register.step2')->with('error', 'Please complete previous steps first.');

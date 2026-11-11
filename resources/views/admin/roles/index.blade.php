@@ -12,16 +12,23 @@
             <form method="POST" action="{{ route('admin.roles.store') }}">
                 @csrf
                 <div class="row">
-                    <div class="col-md-6">
-                        <label>Role Name</label>
-                        <input type="text" name="name" class="form-control" required>
-                    </div>
                     <div class="col-md-4">
-                        <label>Assign to Business (optional)</label>
-                        <select name="business_id" class="form-control">
-                            <option value="">Global (all businesses)</option>
-                            @foreach(\App\Models\Business::orderBy('legal_name')->get() as $b)
-                                <option value="{{ $b->id }}">{{ $b->legal_name }}</option>
+                        <label class="form-label">Role Name</label>
+                        <input type="text" name="name" class="form-control" maxlength="150" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Scope</label>
+                        <select name="scope" class="form-select" id="role-scope" required>
+                            <option value="global">Global</option>
+                            <option value="country">Country</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="role-country-field" hidden>
+                        <label class="form-label">Country</label>
+                        <select name="country_id" class="form-select">
+                            <option value="">Select a country</option>
+                            @foreach(\App\Models\Country::orderBy('name')->get() as $country)
+                                <option value="{{ $country->id }}">{{ $country->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -36,13 +43,39 @@
     <div class="card">
         <div class="card-body">
             <table class="table">
-                <thead><tr><th>Name</th><th>Scope</th><th>Permissions</th></tr></thead>
+                <thead><tr><th>Name</th><th>Scope</th><th>Actions</th></tr></thead>
                 <tbody>
                     @foreach($roles as $role)
                         <tr>
-                            <td>{{ $role->name }}</td>
-                            <td>{{ $role->business_id ? (\App\Models\Business::find($role->business_id)->legal_name ?? 'Business') : 'Global'}}</td>
-                            <td>{{ implode(', ', $role->permissions->pluck('name')->toArray()) }}</td>
+                            <td>
+                                <form method="POST" action="{{ route('admin.roles.update', $role) }}" class="d-flex gap-2">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="text" name="name" class="form-control" value="{{ $role->name }}" maxlength="150" required>
+                                    <select name="scope" class="form-select" style="max-width: 150px" onchange="toggleRoleCountry(this)">
+                                        <option value="global" @selected(($role->scope ?? 'business') === 'global')>Global</option>
+                                        <option value="country" @selected(($role->scope ?? '') === 'country')>Country</option>
+                                        @if(($role->scope ?? '') === 'business')
+                                            <option value="country" selected>Country (legacy)</option>
+                                        @endif
+                                    </select>
+                                    <select name="country_id" class="form-select role-country" style="max-width: 200px" @if(($role->scope ?? '') !== 'country') hidden @endif>
+                                        <option value="">Select a country</option>
+                                        @foreach(\App\Models\Country::orderBy('name')->get() as $country)
+                                            <option value="{{ $country->id }}" @selected((int) $role->country_id === (int) $country->id)>{{ $country->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-primary">Save</button>
+                                </form>
+                            </td>
+                            <td>{{ ($role->scope ?? 'business') === 'global' ? 'Global' : (($role->scope ?? '') === 'country' ? (\App\Models\Country::find($role->country_id)->name ?? 'Country') : 'Legacy business scope') }}</td>
+                            <td>
+                                <form method="POST" action="{{ route('admin.roles.destroy', $role) }}" onsubmit="return confirm('Delete this role?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -50,4 +83,19 @@
         </div>
     </div>
 </div>
+<script>
+    const newScope = document.getElementById('role-scope');
+    const newCountryField = document.getElementById('role-country-field');
+    function updateNewRoleScope() {
+        newCountryField.hidden = newScope.value !== 'country';
+        newCountryField.querySelector('select').required = newScope.value === 'country';
+    }
+    newScope.addEventListener('change', updateNewRoleScope);
+    updateNewRoleScope();
+    function toggleRoleCountry(select) {
+        const country = select.closest('form').querySelector('.role-country');
+        country.hidden = select.value !== 'country';
+        country.required = select.value === 'country';
+    }
+</script>
 @endsection

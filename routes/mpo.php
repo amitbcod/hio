@@ -47,6 +47,10 @@ Route::prefix('mpo')->name('mpo.')->group(function () {
             Route::post('dashboard/transports/{transport}/reject', [\App\Http\Controllers\Admin\DashboardController::class, 'rejectTransport'])->name('dashboard.transport.reject');
         });
         Route::middleware(MpoOwnerOnly::class)->group(function (): void {
+            Route::get('operator-roles', [\App\Http\Controllers\Mpo\OperatorRoleController::class, 'index'])->name('operator-roles.index');
+            Route::post('operator-roles', [\App\Http\Controllers\Mpo\OperatorRoleController::class, 'store'])->name('operator-roles.store');
+            Route::put('operator-roles/{role}', [\App\Http\Controllers\Mpo\OperatorRoleController::class, 'update'])->name('operator-roles.update');
+            Route::delete('operator-roles/{role}', [\App\Http\Controllers\Mpo\OperatorRoleController::class, 'destroy'])->name('operator-roles.destroy');
             Route::get('profile', [ProfileController::class, 'show'])->name('profile');
             Route::post('profile', [ProfileController::class, 'save'])->name('profile.save');
             Route::get('compliances', [ComplianceController::class, 'show'])->name('compliances');

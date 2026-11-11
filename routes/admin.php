@@ -56,6 +56,8 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
 
         Route::get('roles', [\App\Http\Controllers\Admin\RoleController::class, 'index'])->name('roles.index');
         Route::post('roles', [\App\Http\Controllers\Admin\RoleController::class, 'store'])->name('roles.store');
+        Route::put('roles/{role}', [\App\Http\Controllers\Admin\RoleController::class, 'update'])->name('roles.update');
+        Route::delete('roles/{role}', [\App\Http\Controllers\Admin\RoleController::class, 'destroy'])->name('roles.destroy');
         Route::get('modules', [\App\Http\Controllers\Admin\ModuleController::class, 'index'])->name('modules.index');
         Route::get('modules/create', [\App\Http\Controllers\Admin\ModuleController::class, 'create'])->name('modules.create');
         Route::post('modules', [\App\Http\Controllers\Admin\ModuleController::class, 'store'])->name('modules.store');

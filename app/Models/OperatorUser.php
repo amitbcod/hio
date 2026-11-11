@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Models\Concerns\ScopesToAdminCountry;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OperatorUser extends Authenticatable
 {
@@ -30,5 +32,20 @@ class OperatorUser extends Authenticatable
     public function accounting()
     {
         return $this->hasOne(OperatorAccountingPayout::class, 'business_id', 'business_id');
+    }
+
+    public function createdByStaffUser(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'created_by_operator_user_id');
+    }
+
+    public function createdStaffUsers(): HasMany
+    {
+        return $this->hasMany(self::class, 'created_by_operator_user_id');
+    }
+
+    public function permissionOverrides(): HasMany
+    {
+        return $this->hasMany(OperatorStaffPermissionOverride::class, 'operator_user_id');
     }
 }

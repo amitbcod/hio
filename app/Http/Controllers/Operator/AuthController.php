@@ -25,15 +25,13 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        // Try first as OperatorUser (from operator_users table) with role "Head of Department"
+        // Try first as an Operator staff account.
         $operatorUser = OperatorUser::where('email', $request->email)->first();
         if ($operatorUser && \Illuminate\Support\Facades\Hash::check($request->password, $operatorUser->password_hash)) {
-            // Only allow Head of Department role to login
-            if (($operatorUser->role ?? '') !== 'Head of Department') {
-                return back()->withErrors(['email' => 'Only Head of Department role can login via this interface.']);
+            if ($operatorUser->status !== 'Active') {
+                return back()->withErrors(['email' => 'This staff account is inactive. Please contact the Operator account owner.']);
             }
 
-            // Check if user's business exists (no strict status requirement)
             if (!empty($operatorUser->business_id)) {
                 $business = Business::find($operatorUser->business_id);
                 if (!$business) {
@@ -43,36 +41,25 @@ class AuthController extends Controller
                 return back()->withErrors(['email' => 'User is not linked to a business. Please contact support.']);
             }
 
-            // Verify that the Head of Department role has at least read permission on the Users module
-            try {
-                $roleModel = \Spatie\Permission\Models\Role::where('name', 'Head of Department')
-                    ->where('business_id', $operatorUser->business_id)
-                    ->first();
-
-                if ($roleModel && \Illuminate\Support\Facades\Schema::hasTable('role_module_permissions')) {
-                    // Find the Users module and check if role has at least read permission
-                    $usersModule = \App\Models\Module::where('slug', 'users')->orWhere('name', 'Users')->first();
-                    if ($usersModule) {
-                        $hasPermission = \App\Models\RoleModulePermission::where('role_id', $roleModel->id)
-                            ->where('module_id', $usersModule->id)
-                            ->where('can_read', true)
-                            ->exists();
-
-                        if (!$hasPermission) {
-                            return back()->withErrors(['email' => 'Your role does not have permission to access required modules.']);
-                        }
-                    }
+            \Illuminate\Support\Facades\Auth::guard('operator_staff')->login($operatorUser);
+            $permissions = app(\App\Services\OperatorStaffPermissionService::class);
+            foreach ([
+                ['users', 'operator.register.step6'],
+                ['trips', 'operator.trips.index'],
+                ['accommodations', 'operator.accommodation.index'],
+                ['activities', 'operator.activity.index'],
+                ['transport', 'operator.transport.index'],
+            ] as [$module, $route]) {
+                if (\Illuminate\Support\Facades\Route::has($route) && $permissions->can($operatorUser, $module, 'read')) {
+                    return redirect()->route($route);
                 }
-            } catch (\Exception $e) {
-                \Log::warning('AuthController::login - permission check failed', ['error' => $e->getMessage()]);
-                // Don't block login if permission check fails; log and continue
             }
 
-            // Login using the operator_staff guard for OperatorUser
-            \Illuminate\Support\Facades\Auth::guard('operator_staff')->login($operatorUser);
+            Auth::guard('operator_staff')->logout();
 
-            // Redirect Head of Department users to Users & Staff page
-            return redirect()->route('operator.register.step6');
+            return redirect()->route('operator.login')->withErrors([
+                'email' => 'No Operator modules are currently assigned to this staff account. Please contact the account owner.',
+            ]);
         }
 
         // Fall back: try to authenticate as Operator (from operators table)

@@ -93,7 +93,11 @@ Route::get('/feedback/send/{trip}', [FeedbackController::class, 'sendRequest'])-
 use App\Http\Controllers\Frontend\BookingWidgetController;
 
 // Operator booking widget management
-Route::middleware(['auth'])->prefix('operator')->group(function () {
+Route::middleware([
+    'auth:operator,operator_staff',
+    \App\Http\Middleware\RestrictOperatorServiceModules::class,
+    \App\Http\Middleware\AuthorizeOperatorStaffPermissions::class,
+])->prefix('operator')->group(function () {
     Route::post('/booking-widget/generate', [BookingWidgetController::class, 'generate'])->name('operator.booking-widget.generate');
     Route::get('/booking-widget/script', [BookingWidgetController::class, 'showScript'])->name('operator.booking-widget.script');
 });

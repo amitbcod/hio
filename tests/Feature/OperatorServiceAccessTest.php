@@ -6,6 +6,7 @@ use App\Http\Middleware\RestrictOperatorServiceModules;
 use App\Models\Operator;
 use App\Models\OperatorProfile;
 use App\Models\OperatorUser;
+use App\Services\OperatorStaffPermissionService;
 use App\Services\OperatorServiceAccess;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
@@ -185,6 +186,26 @@ class OperatorServiceAccessTest extends TestCase
         $this->assertStringContainsString('Activity Management', $sidebar);
         $this->assertStringNotContainsString('Property Management', $sidebar);
         $this->assertStringNotContainsString('Transport Management', $sidebar);
+    }
+
+    public function test_staff_sidebar_only_shows_links_allowed_by_effective_permissions(): void
+    {
+        $staff = new OperatorUser(['operator_id' => 'OP-STAFF', 'business_id' => 20]);
+        auth('operator_staff')->setUser($staff);
+
+        $permissions = \Mockery::mock(OperatorStaffPermissionService::class);
+        $permissions->shouldReceive('canAccessRoute')
+            ->andReturnUsing(fn ($actor, $routeName): bool => $routeName === 'operator.accommodation.index');
+        $permissions->shouldReceive('canManageUsers')->andReturn(false);
+        $this->app->instance(OperatorStaffPermissionService::class, $permissions);
+
+        $sidebar = view('operator.management._sidebar')->render();
+
+        $this->assertStringContainsString('Accommodation Listing', $sidebar);
+        $this->assertStringNotContainsString('+ Add New Property', $sidebar);
+        $this->assertStringNotContainsString('Activity Management', $sidebar);
+        $this->assertStringNotContainsString('Staff Management', $sidebar);
+        $this->assertStringNotContainsString('Widgets', $sidebar);
     }
 
     public function test_operator_navigation_links_prefer_trip_listing_over_accommodation_default(): void
