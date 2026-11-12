@@ -92,7 +92,7 @@ return new class extends Migration
                     $table->string('action', 32);
                     $table->string('effect', 8);
                     $table->boolean('can_delegate')->default(false);
-                    $table->foreignId('granted_by_operator_user_id')->nullable();
+                    $table->unsignedBigInteger('granted_by_operator_user_id')->nullable();
                     $table->timestamps();
                     $table->unique(
                         ['operator_user_id', 'module_id', 'action'],

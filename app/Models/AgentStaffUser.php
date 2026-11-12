@@ -27,6 +27,16 @@ class AgentStaffUser extends Authenticatable
         return $this->belongsTo(AgentAccount::class, 'agent_account_id');
     }
 
+    public function creator()
+    {
+        return $this->belongsTo(self::class, 'created_by_agent_staff_user_id');
+    }
+
+    public function createdStaffUsers()
+    {
+        return $this->hasMany(self::class, 'created_by_agent_staff_user_id');
+    }
+
     public function permissions()
     {
         return $this->hasMany(AgentStaffPermission::class);

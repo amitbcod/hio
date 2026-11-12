@@ -8,7 +8,9 @@
         <h1 class="h3 mb-1">Group Bookings</h1>
         <p class="text-muted mb-0">Bookings created by {{ $agent->agency_name }}.</p>
     </div>
-    <a class="btn btn-primary" href="{{ route('agent.closed-groups.book') }}">Create Group Booking</a>
+    @if($agentCan('reservation', 'create'))
+        <a class="btn btn-primary" href="{{ route('agent.closed-groups.book') }}">Create Group Booking</a>
+    @endif
 </div>
 
 <div class="card">

@@ -33,21 +33,25 @@
             <a class="btn btn-sm btn-outline-primary" href="{{ route('agent.closed-groups.bank-transfer-proof.download', $booking->id) }}">Download submitted proof</a>
         </div>
     @elseif($payment)
-        <p class="text-muted">Upload the bank-transfer receipt for this booking. Accepted formats: PDF, PNG, JPG or JPEG; maximum 5 MB.</p>
-        <form method="POST" enctype="multipart/form-data" action="{{ route('agent.closed-groups.bank-transfer-proof', $booking->id) }}" class="row g-3">
-            @csrf
-            <div class="col-md-4">
-                <label class="form-label" for="bank_transfer_date">Date of Transfer <span class="text-danger">*</span></label>
-                <input class="form-control" id="bank_transfer_date" name="bank_transfer_date" type="date" value="{{ old('bank_transfer_date', now()->toDateString()) }}" max="{{ now()->toDateString() }}" required>
-            </div>
-            <div class="col-md-8">
-                <label class="form-label" for="receipt">Upload Bank Transfer Receipt <span class="text-danger">*</span></label>
-                <input class="form-control" id="receipt" name="receipt" type="file" accept=".pdf,.png,.jpg,.jpeg" required>
-            </div>
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary">Submit Bank Transfer Proof</button>
-            </div>
-        </form>
+        @if($agentCan('reservation', 'update'))
+            <p class="text-muted">Upload the bank-transfer receipt for this booking. Accepted formats: PDF, PNG, JPG or JPEG; maximum 5 MB.</p>
+            <form method="POST" enctype="multipart/form-data" action="{{ route('agent.closed-groups.bank-transfer-proof', $booking->id) }}" class="row g-3">
+                @csrf
+                <div class="col-md-4">
+                    <label class="form-label" for="bank_transfer_date">Date of Transfer <span class="text-danger">*</span></label>
+                    <input class="form-control" id="bank_transfer_date" name="bank_transfer_date" type="date" value="{{ old('bank_transfer_date', now()->toDateString()) }}" max="{{ now()->toDateString() }}" required>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label" for="receipt">Upload Bank Transfer Receipt <span class="text-danger">*</span></label>
+                    <input class="form-control" id="receipt" name="receipt" type="file" accept=".pdf,.png,.jpg,.jpeg" required>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Submit Bank Transfer Proof</button>
+                </div>
+            </form>
+        @else
+            <p class="text-muted mb-0">You can view this booking, but do not have permission to submit bank-transfer proof.</p>
+        @endif
     @else
         <div class="alert alert-secondary mb-0">Payment details are not available for this booking yet.</div>
     @endif

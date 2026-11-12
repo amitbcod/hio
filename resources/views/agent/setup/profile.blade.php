@@ -2,7 +2,11 @@
 @section('title', 'Agent Profile')
 @section('content')
 <h1 class="h3 mb-4">Agent Profile</h1>
+@if(!$agentCan('profile', 'update'))
+    <div class="alert alert-info">You have read-only access to this profile.</div>
+@endif
 <form method="POST" action="{{ route('agent.profile.save') }}" enctype="multipart/form-data" class="card"><div class="card-body">@csrf
+    <fieldset @disabled(!$agentCan('profile', 'update'))>
     <div class="mb-3"><label class="form-label">Agent ID</label><input class="form-control" value="{{ $agent->agent_id }}" disabled></div>
     <div class="mb-3"><label class="form-label">Agency Name</label><input class="form-control" value="{{ $agent->agency_name }}" disabled></div>
     <div class="mb-3"><label class="form-label">Contact Person</label><input class="form-control" value="{{ $agent->contact_person }}" disabled></div>
@@ -15,6 +19,9 @@
     <fieldset class="mb-3"><legend class="fs-6">Focus Segments</legend>@foreach(['Accommodation','Transport','Activities','Packages'] as $segment)<label class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="focus_segments[]" value="{{ $segment }}" @checked(in_array($segment, old('focus_segments', $profile?->focus_segments ?? [])))>{{ $segment }}</label>@endforeach</fieldset>
     <div class="mb-3"><label class="form-label">Agency Logo</label><input class="form-control" type="file" name="logo" accept="image/jpeg,image/png,image/webp"></div>
     <div class="mb-3"><label class="form-label">Agency Description (max 500 characters)</label><textarea class="form-control" name="description" maxlength="500" rows="4">{{ old('description', $profile?->description) }}</textarea></div>
-    <button class="btn btn-primary">Save and Continue</button>
+    </fieldset>
+    @if($agentCan('profile', 'update'))
+        <button class="btn btn-primary">Save and Continue</button>
+    @endif
 </div></form>
 @endsection

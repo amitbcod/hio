@@ -40,10 +40,16 @@ class OperatorRoleController extends Controller
         $roleAttributes = [
             'name' => $data['name'],
             'guard_name' => 'web',
-            'scope' => 'country',
-            'country_id' => $owner->country_id,
-            'role_scope_key' => 'country:'.$owner->country_id,
         ];
+        if (Schema::hasColumn('roles', 'scope')) {
+            $roleAttributes['scope'] = 'country';
+        }
+        if (Schema::hasColumn('roles', 'country_id')) {
+            $roleAttributes['country_id'] = $owner->country_id;
+        }
+        if (Schema::hasColumn('roles', 'role_scope_key')) {
+            $roleAttributes['role_scope_key'] = 'country:'.$owner->country_id;
+        }
         if (Schema::hasColumn('roles', 'business_id')) {
             $roleAttributes['business_id'] = null;
         }
@@ -63,8 +69,20 @@ class OperatorRoleController extends Controller
 
         DB::transaction(function () use ($role, $data): void {
             $oldName = $role->name;
-            $role->name = $data['name'];
-            $role->save();
+            $attributes = ['name' => $data['name']];
+            if (Schema::hasColumn('roles', 'scope')) {
+                $attributes['scope'] = $role->scope;
+            }
+            if (Schema::hasColumn('roles', 'country_id')) {
+                $attributes['country_id'] = $role->country_id;
+            }
+            if (Schema::hasColumn('roles', 'role_scope_key')) {
+                $attributes['role_scope_key'] = $role->role_scope_key;
+            }
+            if (Schema::hasColumn('roles', 'business_id')) {
+                $attributes['business_id'] = $role->business_id;
+            }
+            $role->forceFill($attributes)->save();
             if ($oldName !== $role->name && \Illuminate\Support\Facades\Schema::hasTable('operator_users')) {
                 \App\Models\OperatorUser::query()->where('role', $oldName)->update(['role' => $role->name]);
                 if (\Illuminate\Support\Facades\Schema::hasTable('operator_role_module_permissions')) {

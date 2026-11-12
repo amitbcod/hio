@@ -1,5 +1,4 @@
 @php
-    $agentPanelOwner = $agentPanelUser instanceof \App\Models\AgentAccount;
     $agentPanelLinks = [
         [
             'label' => 'Dashboard',
@@ -49,7 +48,7 @@
 <nav class="agent-nav" aria-label="Agent navigation">
     <div class="agent-nav-label">Workspace</div>
     @foreach($agentPanelLinks as $link)
-        @if($link['module'] === null || $agentPanelOwner || ($agentPanelUser instanceof \App\Models\AgentStaffUser && app(\App\Services\AgentPermissionService::class)->can($agentPanelUser, $link['module'], 'read')))
+        @if($link['module'] === null || $agentCan($link['module'], 'read'))
             <a
                 class="agent-nav-link{{ request()->routeIs($link['active']) ? ' active' : '' }}"
                 href="{{ route($link['route']) }}"

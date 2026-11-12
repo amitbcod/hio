@@ -12,12 +12,6 @@
         ? \Illuminate\Support\Carbon::parse($complianceDocument->expiry_date)->startOfDay()
         : null;
     $agentDashboardUser = auth('agent_staff')->user();
-    $canReadReservations = !$agentDashboardUser
-        || app(\App\Services\AgentPermissionService::class)->can($agentDashboardUser, 'reservation', 'read');
-    $canReadProfile = !$agentDashboardUser
-        || app(\App\Services\AgentPermissionService::class)->can($agentDashboardUser, 'profile', 'read');
-    $canReadCompliance = !$agentDashboardUser
-        || app(\App\Services\AgentPermissionService::class)->can($agentDashboardUser, 'compliance', 'read');
 @endphp
 
 <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
@@ -34,6 +28,7 @@
     <div class="alert alert-warning" role="status">Your account is awaiting Admin/MPO review.</div>
 @endif
 
+@if($agentCan('reservation', 'read'))
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl">
         <div class="card h-100"><div class="card-body">
@@ -66,6 +61,7 @@
         </div></div>
     </div>
 </div>
+@endif
 
 <div class="row g-4">
     <div class="col-lg-7">
@@ -79,11 +75,11 @@
                     <h3 class="h6">Setup in progress</h3>
                     <p class="text-muted">Complete the required agency information and documents.</p>
                     <div class="d-flex flex-wrap gap-2">
-                        @if($canReadProfile && !$progress->profile_complete)
-                            <a class="btn btn-outline-primary btn-sm" href="{{ route('agent.profile') }}">Complete profile</a>
+                        @if($agentCan('profile', 'read') && !$progress->profile_complete)
+                            <a class="btn btn-outline-primary btn-sm" href="{{ route('agent.profile') }}">{{ $agentCan('profile', 'update') ? 'Complete profile' : 'View profile' }}</a>
                         @endif
-                        @if($canReadCompliance && $progress->profile_complete && !$progress->compliance_complete)
-                            <a class="btn btn-outline-primary btn-sm" href="{{ route('agent.compliance') }}">Complete compliance</a>
+                        @if($agentCan('compliance', 'read') && $progress->profile_complete && !$progress->compliance_complete)
+                            <a class="btn btn-outline-primary btn-sm" href="{{ route('agent.compliance') }}">{{ $agentCan('compliance', 'update') ? 'Complete compliance' : 'View compliance' }}</a>
                         @endif
                     </div>
                 @endif
@@ -106,16 +102,16 @@
         <section class="card h-100">
             <div class="card-header py-3">Quick Actions</div>
             <div class="card-body d-flex flex-column align-items-start gap-2">
-                @if($canReadReservations)
+                @if($agentCan('reservation', 'read'))
                     <a class="btn btn-primary" href="{{ route('agent.closed-groups.index') }}">View Group Bookings</a>
-                    @if($agent->account_status === 'approved')
+                    @if($agent->account_status === 'approved' && $agentCan('reservation', 'create'))
                         <a class="btn btn-outline-primary" href="{{ route('agent.closed-groups.book') }}">Create Group Booking</a>
                     @endif
                 @endif
-                @if($canReadProfile)
+                @if($agentCan('profile', 'read'))
                     <a class="btn btn-outline-secondary" href="{{ route('agent.profile') }}">Agency Profile</a>
                 @endif
-                @if($canReadCompliance)
+                @if($agentCan('compliance', 'read'))
                     <a class="btn btn-outline-secondary" href="{{ route('agent.compliance') }}">Compliance Documents</a>
                 @endif
             </div>

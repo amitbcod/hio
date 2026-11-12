@@ -72,7 +72,7 @@ class AgentOnboardingTest extends TestCase
             'password' => 'Password123!',
         ])->assertRedirect(route('agent.dashboard'));
         $this->assertAuthenticatedAs($applicant, 'agent_staff');
-        $this->get(route('agent.users'))->assertForbidden();
+        $this->get(route('agent.users'))->assertRedirect(route('agent.profile'));
     }
 
     public function test_non_owner_registration_requires_owner_details_and_retains_them_after_validation_errors(): void
@@ -407,7 +407,7 @@ class AgentOnboardingTest extends TestCase
         $this->assertTrue(app(\App\Services\AgentPermissionService::class)->canAccessSetup($applicant, 'users', 'create'));
 
         $progress->update(['users_complete' => true]);
-        $this->assertFalse(app(\App\Services\AgentPermissionService::class)->canAccessSetup($applicant, 'users', 'create'));
+        $this->assertTrue(app(\App\Services\AgentPermissionService::class)->canAccessSetup($applicant, 'users', 'create'));
         $progress->update([
             'profile_complete' => true,
             'compliance_complete' => true,
@@ -432,6 +432,7 @@ class AgentOnboardingTest extends TestCase
 
     public function test_primary_applicant_can_edit_agent_users_and_save_explicit_access_rights(): void
     {
+        $this->seed(\Database\Seeders\ModuleSeeder::class);
         $country = $this->country();
         $agent = AgentAccount::query()->create([
             'agent_id' => 'AGT-USER-ADMIN',
@@ -465,11 +466,6 @@ class AgentOnboardingTest extends TestCase
             'role' => 'Accountant',
             'status' => 'Active',
         ]);
-        $module = \App\Models\Module::query()->create([
-            'name' => 'Test Module',
-            'slug' => 'test-module',
-        ]);
-
         $this->actingAs($primary, 'agent_staff')
             ->get(route('agent.users'))
             ->assertOk()
@@ -481,13 +477,17 @@ class AgentOnboardingTest extends TestCase
             ->assertSee('Module Access Rights')
             ->assertSee('Save User and Access Rights');
 
+        $permissionService = app(\App\Services\AgentPermissionService::class);
+        $this->assertTrue($permissionService->canManageUsers($primary, 'update'));
+        $this->assertContains('read', $permissionService->assignableMatrix($primary, 'Accountant')['reservation']);
+        $this->assertTrue($permissionService->targetIsManageable($primary, $user));
+
         $this->put(route('agent.users.update', $user), [
             'full_name' => 'Updated Accountant',
             'email' => 'updated-accountant@example.test',
             'mobile' => '+23057011234',
             'role' => 'Accountant',
-            'permission_modules' => \App\Models\Module::query()->pluck('slug')->all(),
-            'module_actions' => [$module->slug => ['read', 'update']],
+            'module_actions' => ['reservation' => ['read']],
         ])->assertRedirect(route('agent.users'));
 
         $this->assertDatabaseHas('agent_staff_users', [
@@ -499,16 +499,16 @@ class AgentOnboardingTest extends TestCase
         ]);
         $this->assertDatabaseHas('agent_staff_permissions', [
             'agent_staff_user_id' => $user->id,
-            'module_id' => $module->id,
+            'module_id' => \App\Models\Module::query()->where('slug', 'reservation')->value('id'),
             'can_read' => true,
-            'can_update' => true,
+            'can_update' => false,
             'can_create' => false,
         ]);
-        $this->assertTrue(app(\App\Services\AgentPermissionService::class)->can($user, 'test-module', 'update'));
-        $this->get(route('agent.users'))->assertSee('Test Module: Read, Update');
+        $this->assertTrue(app(\App\Services\AgentPermissionService::class)->can($user, 'reservation', 'read'));
+        $this->assertFalse(app(\App\Services\AgentPermissionService::class)->can($user, 'test-module', 'update'));
+        $this->get(route('agent.users'))->assertSee('Closed Group Bookings: Read');
         $this->get(route('agent.users.edit', $user))
-            ->assertSee('name="module_actions[test-module][]" value="read" checked', false)
-            ->assertSee('name="module_actions[test-module][]" value="update" checked', false);
+            ->assertSee('name="module_actions[reservation][]" value="read" checked', false);
 
         $this->post(route('agent.users.save'), [
             'full_name' => 'New Accountant',
@@ -516,13 +516,13 @@ class AgentOnboardingTest extends TestCase
             'mobile' => '+23057011235',
             'password' => 'Password123!',
             'role' => 'Accountant',
-            'permission_modules' => \App\Models\Module::query()->pluck('slug')->all(),
-            'module_actions' => [$module->slug => ['read', 'create']],
-        ])->assertRedirect(route('agent.operations'));
+            'module_actions' => ['reservation' => ['read']],
+        ])->assertRedirect(route('agent.users'));
 
         $newUser = AgentStaffUser::query()->where('email', 'new-accountant@example.test')->firstOrFail();
-        $this->assertTrue(app(\App\Services\AgentPermissionService::class)->can($newUser, 'test-module', 'create'));
-        $this->get(route('agent.users'))->assertSee('Test Module: Read, Create');
+        $this->assertTrue(app(\App\Services\AgentPermissionService::class)->can($newUser, 'reservation', 'read'));
+        $this->assertSame($primary->id, $newUser->created_by_agent_staff_user_id);
+        $this->get(route('agent.users'))->assertSee('new-accountant@example.test');
     }
 
     public function test_agent_cannot_skip_an_incomplete_previous_setup_step(): void

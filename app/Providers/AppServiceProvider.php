@@ -6,6 +6,7 @@ use App\Auth\MpoUserProvider;
 use App\Models\BookingWidget;
 use App\Models\Operator;
 use App\Models\OperatorProfile;
+use App\Services\AgentPermissionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
@@ -29,6 +30,16 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
         Auth::provider('mpo', function ($app, array $config): MpoUserProvider {
             return new MpoUserProvider($app['hash'], $config['model']);
+        });
+
+        View::composer('agent.*', function ($view): void {
+            $actor = Auth::guard('agent')->user() ?? Auth::guard('agent_staff')->user();
+            $permissions = app(AgentPermissionService::class);
+
+            $view->with(
+                'agentCan',
+                static fn (string $module, string $action = 'read'): bool => $permissions->canForActor($actor, $module, $action),
+            );
         });
 
         View::composer('frontend.*', function ($view) {

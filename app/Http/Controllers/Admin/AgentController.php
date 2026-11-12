@@ -85,6 +85,11 @@ class AgentController extends Controller
         ]);
 
         $roleChanged = $user->role !== $data['role'];
+        abort_if(
+            $roleChanged && $user->createdStaffUsers()->exists(),
+            422,
+            'A staff role cannot be changed while that user has created staff members.',
+        );
         $user->update($data);
         if ($roleChanged) {
             $permissions->applyRoleDefaults($user);

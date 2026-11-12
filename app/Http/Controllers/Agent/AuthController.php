@@ -237,6 +237,18 @@ class AuthController extends Controller
             Auth::guard('agent')->login($agent);
             $agent->forceFill(['last_login' => now()])->save();
 
+            $progress = $agent->setupProgress()->first();
+            foreach ([
+                'profile_complete' => 'agent.profile',
+                'compliance_complete' => 'agent.compliance',
+                'users_complete' => 'agent.users',
+                'operations_complete' => 'agent.operations',
+            ] as $field => $route) {
+                if (! $progress?->{$field}) {
+                    return redirect()->route($route);
+                }
+            }
+
             return redirect()->route('agent.dashboard');
         }
 

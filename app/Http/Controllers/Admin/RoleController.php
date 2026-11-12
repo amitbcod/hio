@@ -43,13 +43,21 @@ class RoleController extends Controller
         $roleAttributes = [
             'name' => $data['name'],
             'guard_name' => 'web',
-            'scope' => $data['scope'],
-            'country_id' => $data['scope'] === 'country' ? $data['country_id'] : null,
-            'role_scope_key' => $data['scope'] === 'country' ? 'country:'.$data['country_id'] : 'global:0',
         ];
+
+        if (Schema::hasColumn('roles', 'scope')) {
+            $roleAttributes['scope'] = $data['scope'];
+        }
+        if (Schema::hasColumn('roles', 'country_id')) {
+            $roleAttributes['country_id'] = $data['scope'] === 'country' ? $data['country_id'] : null;
+        }
+        if (Schema::hasColumn('roles', 'role_scope_key')) {
+            $roleAttributes['role_scope_key'] = $data['scope'] === 'country' ? 'country:'.$data['country_id'] : 'global:0';
+        }
         if (Schema::hasColumn('roles', 'business_id')) {
             $roleAttributes['business_id'] = null;
         }
+
         Role::forceCreate($roleAttributes);
 
         return redirect()->route('admin.roles.index')->with('success', 'Role created successfully.');
@@ -82,10 +90,16 @@ class RoleController extends Controller
             $oldName = $role->name;
             $roleAttributes = [
                 'name' => $data['name'],
-                'scope' => $data['scope'],
-                'country_id' => $data['scope'] === 'country' ? $data['country_id'] : null,
-                'role_scope_key' => $data['scope'] === 'country' ? 'country:'.$data['country_id'] : 'global:0',
             ];
+            if (Schema::hasColumn('roles', 'scope')) {
+                $roleAttributes['scope'] = $data['scope'];
+            }
+            if (Schema::hasColumn('roles', 'country_id')) {
+                $roleAttributes['country_id'] = $data['scope'] === 'country' ? $data['country_id'] : null;
+            }
+            if (Schema::hasColumn('roles', 'role_scope_key')) {
+                $roleAttributes['role_scope_key'] = $data['scope'] === 'country' ? 'country:'.$data['country_id'] : 'global:0';
+            }
             if (Schema::hasColumn('roles', 'business_id')) {
                 $roleAttributes['business_id'] = null;
             }

@@ -14,6 +14,7 @@ class AgentStaffPermission extends Model
         'can_update' => 'boolean',
         'can_approve' => 'boolean',
         'can_publish' => 'boolean',
+        'can_delegate' => 'boolean',
     ];
 
     public function module()
