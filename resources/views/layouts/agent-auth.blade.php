@@ -55,7 +55,10 @@
     <main class="agent-auth-wrap">
         <div class="agent-auth-card">
             <section class="agent-auth-form">
-                @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
+                @php($successMessage = session('success') ?: session('status'))
+                @if($successMessage)
+                    <div class="alert alert-success" role="status">{{ $successMessage }}</div>
+                @endif
                 @if(session('error'))<div class="alert alert-warning" role="alert">{{ session('error') }}</div>@endif
                 @if($errors->any())
                     <div class="alert alert-danger" role="alert">

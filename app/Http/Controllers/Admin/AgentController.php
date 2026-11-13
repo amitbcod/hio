@@ -48,16 +48,6 @@ class AgentController extends Controller
             422,
             'Business owner approval is required before approving this Agent account.'
         );
-        $progress = $agent->setupProgress()->first();
-        abort_unless(
-            $progress
-                && $progress->profile_complete
-                && $progress->compliance_complete
-                && $progress->users_complete
-                && $progress->operations_complete,
-            422,
-            'Complete all Agent setup steps before approving this account.'
-        );
         $agent->update([
             'account_status' => 'approved',
             'approved_at' => now(),

@@ -37,6 +37,8 @@ Route::prefix('mpo')->name('mpo.')->group(function () {
             Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
             Route::post('dashboard/mpos/{mpoId}/approve', [DashboardController::class, 'approveMpo'])->whereNumber('mpoId')->name('dashboard.mpo.approve');
             Route::post('dashboard/mpos/{mpoId}/reject', [DashboardController::class, 'rejectMpo'])->whereNumber('mpoId')->name('dashboard.mpo.reject');
+            Route::post('dashboard/agents/{agent}/approve', [DashboardController::class, 'approveAgent'])->whereNumber('agent')->name('dashboard.agent.approve');
+            Route::post('dashboard/agents/{agent}/suspend', [DashboardController::class, 'suspendAgent'])->whereNumber('agent')->name('dashboard.agent.suspend');
             Route::post('dashboard/businesses/{business}/approve', [\App\Http\Controllers\Admin\DashboardController::class, 'approveBusiness'])->name('dashboard.business.approve');
             Route::post('dashboard/businesses/{business}/reject', [\App\Http\Controllers\Admin\DashboardController::class, 'rejectBusiness'])->name('dashboard.business.reject');
             Route::post('dashboard/accommodations/{accommodation}/approve', [\App\Http\Controllers\Admin\DashboardController::class, 'approveAccommodation'])->name('dashboard.accommodation.approve');

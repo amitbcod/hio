@@ -22,7 +22,7 @@ class ControllerVerification extends Model
         return $this->belongsTo(Business::class, 'business_id');
     }
 
-    public function requester()
+    public function getRequesterAttribute()
     {
         if (!empty($this->requester_agent_staff_user_id)) {
             return AgentStaffUser::find($this->requester_agent_staff_user_id);

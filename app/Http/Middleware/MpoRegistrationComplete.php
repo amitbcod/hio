@@ -15,6 +15,13 @@ class MpoRegistrationComplete
             return $next($request);
         }
 
+        $routeName = $request->route()?->getName();
+        if (in_array($routeName, ['mpo.dashboard.agent.approve', 'mpo.dashboard.agent.suspend'], true)
+            || $request->is('mpo/dashboard/agents/*/approve')
+            || $request->is('mpo/dashboard/agents/*/suspend')) {
+            return $next($request);
+        }
+
         $mpo = $request->attributes->get('mpo_admin');
         abort_unless($mpo instanceof AdminUser, 403);
 

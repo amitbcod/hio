@@ -169,8 +169,10 @@
             </nav>
 
             <div class="agent-content">
-                @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
-                @if(session('status'))<div class="alert alert-success" role="status">{{ session('status') }}</div>@endif
+                @php($successMessage = session('success') ?: session('status'))
+                @if($successMessage)
+                    <div class="alert alert-success" role="status">{{ $successMessage }}</div>
+                @endif
                 @if(session('error'))<div class="alert alert-warning" role="alert">{{ session('error') }}</div>@endif
                 @if($errors->any())
                     <div class="alert alert-danger" role="alert">

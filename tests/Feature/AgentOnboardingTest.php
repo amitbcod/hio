@@ -348,6 +348,46 @@ class AgentOnboardingTest extends TestCase
         ]);
     }
 
+    public function test_global_admin_can_approve_owner_agent_before_setup_is_complete(): void
+    {
+        $country = $this->country();
+        $admin = AdminUser::query()->create([
+            'name' => 'Admin',
+            'email' => 'admin@example.test',
+            'password_hash' => Hash::make('Password123!'),
+            'status' => 'active',
+            'role' => 'super_admin',
+        ]);
+        $agent = AgentAccount::query()->create([
+            'agent_id' => 'AGT-INCOMPLETE-SETUP-ADMIN',
+            'country_id' => $country->id,
+            'agency_name' => 'Island Travel',
+            'contact_person' => 'A. Agent',
+            'email' => 'agent@example.test',
+            'office_phone' => '+23012345678',
+            'emergency_mobile' => '+23087654321',
+            'password_hash' => Hash::make('Password123!'),
+            'account_status' => 'pending',
+            'is_owner' => 'yes',
+        ]);
+        $agent->setupProgress()->create();
+
+        $this->withSession(['admin_id' => $admin->id])
+            ->get(route('admin.agents.show', $agent))
+            ->assertOk()
+            ->assertSee('action="'.route('admin.agents.approve', $agent).'"', false)
+            ->assertDontSee('<button class="btn btn-success" disabled', false);
+
+        $this->withSession(['admin_id' => $admin->id])
+            ->post(route('admin.agents.approve', $agent))
+            ->assertRedirect(route('admin.agents.show', $agent));
+
+        $this->assertDatabaseHas('agent_accounts', [
+            'id' => $agent->id,
+            'account_status' => 'approved',
+        ]);
+    }
+
     public function test_agent_login_redirects_to_the_first_incomplete_setup_step(): void
     {
         $country = $this->country();
@@ -525,15 +565,75 @@ class AgentOnboardingTest extends TestCase
         $this->get(route('agent.users'))->assertSee('new-accountant@example.test');
     }
 
-    public function test_agent_cannot_skip_an_incomplete_previous_setup_step(): void
+    public function test_agent_registration_flash_message_renders_once_on_login_page(): void
     {
         $country = $this->country();
+
+        $this->from(route('agent.register'))->post(route('agent.register.store'), [
+            'agency_name' => 'Island Travel',
+            'contact_person' => 'A. Agent',
+            'is_owner' => 'yes',
+            'applicant_email' => 'agent@example.test',
+            'applicant_mobile' => '+230 57011234',
+            'applicant_full_name' => 'A. Agent',
+            'applicant_role' => 'Consultant',
+            'email' => 'agency@example.test',
+            'office_phone' => '+23012345678',
+            'emergency_mobile' => '+23087654321',
+            'country_id' => $country->id,
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'terms' => '1',
+        ])->assertRedirect(route('agent.login'));
+
+        $message = 'Registration received. Sign in to complete your Agent setup while your account is pending review.';
+        $content = $this->get(route('agent.login'))->getContent();
+
+        $this->assertSame(1, substr_count($content, $message));
+    }
+
+    public function test_mpo_can_approve_pending_agent_from_its_country(): void
+    {
+        $country = $this->country();
+        $mpo = \App\Models\AdminUser::query()->create([
+            'email' => 'mpo@example.test',
+            'password_hash' => Hash::make('Password123!'),
+            'admin_type' => 'mpo',
+            'country_id' => $country->id,
+            'status' => 'active',
+            'name' => 'MPO Manager',
+        ]);
         $agent = AgentAccount::query()->create([
             'agent_id' => 'AGT-TEST-0002',
             'country_id' => $country->id,
             'agency_name' => 'Island Travel',
             'contact_person' => 'A. Agent',
             'email' => 'agent@example.test',
+            'office_phone' => '+23012345678',
+            'emergency_mobile' => '+23087654321',
+            'password_hash' => Hash::make('Password123!'),
+            'account_status' => 'pending',
+        ]);
+        $this->actingAs($mpo, 'mpo')
+            ->post(route('mpo.dashboard.agent.approve', $agent))
+            ->assertRedirect(route('mpo.dashboard'));
+
+        $this->assertDatabaseHas('agent_accounts', [
+            'id' => $agent->id,
+            'account_status' => 'approved',
+            'country_id' => $country->id,
+        ]);
+    }
+
+    public function test_agent_cannot_skip_an_incomplete_previous_setup_step(): void
+    {
+        $country = $this->country();
+        $agent = AgentAccount::query()->create([
+            'agent_id' => 'AGT-TEST-0003',
+            'country_id' => $country->id,
+            'agency_name' => 'Island Travel',
+            'contact_person' => 'A. Agent',
+            'email' => 'agent2@example.test',
             'office_phone' => '+23012345678',
             'emergency_mobile' => '+23087654321',
             'password_hash' => Hash::make('Password123!'),

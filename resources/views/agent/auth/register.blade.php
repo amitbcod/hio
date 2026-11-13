@@ -51,7 +51,7 @@
             </select>
         </div>
     </div>
-    <div id="agent-owner-fields" class="mb-3" @if(old('is_owner', 'yes') !== 'no') hidden @endif>
+    <div id="agent-owner-fields" class="mb-3"{{ old('is_owner', 'yes') === 'no' ? '' : ' hidden' }}>
         <h2 class="h5">Owner Information</h2>
         <div class="mb-3">
             <label class="form-label" for="owner_full_name">Owner's Full Name <span class="text-danger">*</span></label>

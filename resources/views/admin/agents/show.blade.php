@@ -74,12 +74,10 @@
     </div></div>
     <div class="d-flex gap-2">
         @if($agent->account_status !== 'approved')
-            @php($progress = $agent->setupProgress)
-            @if(($agent->is_owner !== 'no' || $agent->ownerVerifications->contains('status', 'accepted'))
-                && $progress?->profile_complete && $progress?->compliance_complete && $progress?->users_complete && $progress?->operations_complete)
+            @if($agent->is_owner !== 'no' || $agent->ownerVerifications->contains('status', 'accepted'))
                 <form method="POST" action="{{ route('admin.agents.approve', $agent) }}">@csrf<button class="btn btn-success">Approve Agent</button></form>
             @else
-                <button class="btn btn-success" disabled title="{{ $agent->is_owner === 'no' && !$agent->ownerVerifications->contains('status', 'accepted') ? 'Business owner approval is required before Agent approval' : 'Complete all setup steps before approval' }}">Approve Agent</button>
+                <button class="btn btn-success" disabled title="Business owner approval is required before Agent approval">Approve Agent</button>
             @endif
         @endif
         @if($agent->account_status !== 'suspended')

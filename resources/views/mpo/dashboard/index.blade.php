@@ -8,6 +8,7 @@
 <div class="row g-3 mb-4">
     @foreach([
         ['Pending MPO Accounts', $pendingMpos->count(), '#pending-mpos'],
+        ['Pending Agent Accounts', $pendingAgents->count(), '#pending-agents'],
         ['Pending Businesses', $businesses->count(), '#pending-businesses'],
         ['Accommodation Approvals', $accommodations->count(), '#pending-accommodations'],
         ['Vehicle Approvals', $transports->count(), '#pending-transports'],
@@ -42,6 +43,31 @@
                 </td>
             </tr>
         @empty<tr><td colspan="5">No pending MPO accounts.</td></tr>@endforelse
+        </tbody>
+    </table></div>
+</section>
+
+<section id="pending-agents" class="mb-5">
+    <h2 class="h5">Pending Agent Accounts</h2>
+    <div class="table-responsive"><table class="table table-striped align-middle">
+        <thead><tr><th>Agency</th><th>Email</th><th>Country</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+        @forelse($pendingAgents as $item)
+            <tr>
+                <td>{{ $item->agency_name }}</td>
+                <td>{{ $item->email }}</td>
+                <td>{{ $item->country?->name ?? 'N/A' }}</td>
+                <td>{{ ucfirst(str_replace('_', ' ', $item->account_status)) }}</td>
+                <td class="text-nowrap">
+                    @if($item->account_status === 'pending' && ($item->is_owner === 'yes' || $item->ownerVerifications()->where('status', 'accepted')->exists()))
+                        <form method="POST" action="{{ route('mpo.dashboard.agent.approve', $item) }}" class="d-inline">@csrf<button class="btn btn-sm btn-success">Approve</button></form>
+                    @else
+                        <button class="btn btn-sm btn-success" disabled>Approve</button>
+                    @endif
+                    <form method="POST" action="{{ route('mpo.dashboard.agent.suspend', $item) }}" class="d-inline">@csrf<button class="btn btn-sm btn-outline-danger">Suspend</button></form>
+                </td>
+            </tr>
+        @empty<tr><td colspan="5">No pending agent accounts.</td></tr>@endforelse
         </tbody>
     </table></div>
 </section>
