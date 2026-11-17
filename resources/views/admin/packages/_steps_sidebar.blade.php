@@ -1,12 +1,12 @@
 <div style="padding:12px 0;">
     @php $steps = [
-        ['label' => 'Step 1: Package Creation', 'route' => (isset($package) && $package->exists) ? route('admin.packages.edit', $package->id) : route('admin.packages.create')],
-        ['label' => 'Step 2: Add Package', 'route' => (isset($package) && $package->exists) ? route('admin.packages.step2', $package->id) : '#'],
-        ['label' => 'Step 3: Allocation', 'route' => (isset($package) && $package->exists) ? route('admin.packages.step3', $package->id) : '#'],
-        ['label' => 'Step 4: Pricing & Rate Plan', 'route' => (isset($package) && $package->exists) ? route('admin.packages.step4', $package->id) : '#'],
-        ['label' => 'Step 5: Content & CMS', 'route' => (isset($package) && $package->exists) ? route('admin.packages.step5', $package->id) : '#'],
-        ['label' => 'Step 6: Day-wise Itinerary', 'route' => (isset($package) && $package->exists) ? route('admin.packages.step6', $package->id) : '#'],
-        ['label' => 'Step 7: Payment & Policies', 'route' => (isset($package) && $package->exists) ? route('admin.packages.step7', $package->id) : '#'],
+        ['label' => 'Step 1: Package Creation', 'route' => (isset($package) && $package->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.packages.edit'), $package->id) : route(\App\Support\MpoManagementRoutes::name('admin.packages.create'))],
+        ['label' => 'Step 2: Add Package', 'route' => (isset($package) && $package->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.packages.step2'), $package->id) : '#'],
+        ['label' => 'Step 3: Allocation', 'route' => (isset($package) && $package->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.packages.step3'), $package->id) : '#'],
+        ['label' => 'Step 4: Pricing & Rate Plan', 'route' => (isset($package) && $package->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.packages.step4'), $package->id) : '#'],
+        ['label' => 'Step 5: Content & CMS', 'route' => (isset($package) && $package->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.packages.step5'), $package->id) : '#'],
+        ['label' => 'Step 6: Day-wise Itinerary', 'route' => (isset($package) && $package->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.packages.step6'), $package->id) : '#'],
+        ['label' => 'Step 7: Payment & Policies', 'route' => (isset($package) && $package->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.packages.step7'), $package->id) : '#'],
     ]; @endphp
 
     <div>

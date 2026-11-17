@@ -1,12 +1,12 @@
 <div style="padding:12px 0;">
     @php $steps = [
-        ['label' => 'Step 1: Group Creation', 'route' => (isset($group) && $group->exists) ? route('admin.groups.edit', $group->id) : route('admin.groups.create')],
-        ['label' => 'Step 2: Add Group', 'route' => (isset($group) && $group->exists) ? route('admin.groups.step2', $group->id) : '#'],
-        ['label' => 'Step 3: Allocation', 'route' => (isset($group) && $group->exists) ? route('admin.groups.step3', $group->id) : '#'],
-        ['label' => 'Step 4: Pricing & Rate Plan', 'route' => (isset($group) && $group->exists) ? route('admin.groups.step4', $group->id) : '#'],
-        ['label' => 'Step 5: Content & CMS', 'route' => (isset($group) && $group->exists) ? route('admin.groups.step5', $group->id) : '#'],
-        ['label' => 'Step 6: Day-wise Itinerary', 'route' => (isset($group) && $group->exists) ? route('admin.groups.step6', $group->id) : '#'],
-        ['label' => 'Step 7: Payment & Policies', 'route' => (isset($group) && $group->exists) ? route('admin.groups.step7', $group->id) : '#'],
+        ['label' => 'Step 1: Group Creation', 'route' => (isset($group) && $group->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.groups.edit'), $group->id) : route(\App\Support\MpoManagementRoutes::name('admin.groups.create'))],
+        ['label' => 'Step 2: Add Group', 'route' => (isset($group) && $group->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.groups.step2'), $group->id) : '#'],
+        ['label' => 'Step 3: Allocation', 'route' => (isset($group) && $group->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.groups.step3'), $group->id) : '#'],
+        ['label' => 'Step 4: Pricing & Rate Plan', 'route' => (isset($group) && $group->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.groups.step4'), $group->id) : '#'],
+        ['label' => 'Step 5: Content & CMS', 'route' => (isset($group) && $group->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.groups.step5'), $group->id) : '#'],
+        ['label' => 'Step 6: Day-wise Itinerary', 'route' => (isset($group) && $group->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.groups.step6'), $group->id) : '#'],
+        ['label' => 'Step 7: Payment & Policies', 'route' => (isset($group) && $group->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.groups.step7'), $group->id) : '#'],
     ]; @endphp
 
     <div>

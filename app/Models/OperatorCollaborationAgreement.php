@@ -21,7 +21,7 @@ class OperatorCollaborationAgreement extends Model
     }
 
     protected $casts = [
-        'commission_value' => 'float',
+        'commission_value' => 'decimal:2',
         'marketing_contribution_percent' => 'float',
     ];
 }

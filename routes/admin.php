@@ -16,6 +16,26 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     Route::post('logout', [AdminAuthController::class, 'logout'])->name('logout');
 
     Route::middleware(GlobalAdminMiddleware::class)->group(function (): void {
+        Route::get('accounting-settlements', [\App\Http\Controllers\Admin\FinancialSettlementController::class, 'index'])
+            ->name('accounting-settlements.index');
+        Route::get('accounting-settlements/{settlement}', [\App\Http\Controllers\Admin\FinancialSettlementController::class, 'show'])
+            ->whereNumber('settlement')
+            ->name('accounting-settlements.show');
+        Route::get('accounting-settlements/{settlement}/transfers/{transfer}/evidence', [\App\Http\Controllers\Admin\FinancialSettlementController::class, 'downloadEvidence'])
+            ->whereNumber('settlement')
+            ->whereNumber('transfer')
+            ->name('accounting-settlements.transfers.evidence');
+        Route::post('accounting-settlements/{settlement}/transfers/{transfer}/verify', [\App\Http\Controllers\Admin\FinancialSettlementController::class, 'verify'])
+            ->whereNumber('settlement')
+            ->whereNumber('transfer')
+            ->name('accounting-settlements.transfers.verify');
+        Route::post('accounting-settlements/{settlement}/issue-invoice', [\App\Http\Controllers\Admin\FinancialSettlementController::class, 'issueInvoice'])
+            ->whereNumber('settlement')
+            ->name('accounting-settlements.invoice.issue');
+        Route::post('accounting-settlements/{settlement}/acknowledge-receipt', [\App\Http\Controllers\Admin\FinancialSettlementController::class, 'acknowledgeReceipt'])
+            ->whereNumber('settlement')
+            ->name('accounting-settlements.receipt.acknowledge');
+
         Route::get('countries', [\App\Http\Controllers\Admin\CountryController::class, 'index'])->name('countries.index');
         Route::get('countries/create', [\App\Http\Controllers\Admin\CountryController::class, 'create'])->name('countries.create');
         Route::post('countries', [\App\Http\Controllers\Admin\CountryController::class, 'store'])->name('countries.store');
@@ -86,6 +106,18 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     // Admin transport approvals
     Route::post('transports/{transport}/approve', [DashboardController::class, 'approveTransport'])->name('transport.approve');
     Route::post('transports/{transport}/reject', [DashboardController::class, 'rejectTransport'])->name('transport.reject');
+    Route::middleware(GlobalAdminMiddleware::class)->group(function (): void {
+        Route::get('transport', [\App\Http\Controllers\Admin\TransportListingController::class, 'index'])->name('transport.index');
+        Route::get('transport/{transport}', [\App\Http\Controllers\Admin\TransportListingController::class, 'show'])
+            ->whereNumber('transport')
+            ->name('transport.show');
+        Route::get('transport/{transport}/edit', [\App\Http\Controllers\Admin\TransportListingController::class, 'edit'])
+            ->whereNumber('transport')
+            ->name('transport.edit');
+        Route::put('transport/{transport}', [\App\Http\Controllers\Admin\TransportListingController::class, 'update'])
+            ->whereNumber('transport')
+            ->name('transport.update');
+    });
 
     // Admin operators management (CRUD)
     Route::get('operators', [\App\Http\Controllers\Admin\OperatorController::class, 'index'])->name('operators.index');
@@ -302,43 +334,45 @@ Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminAut
     Route::put('places/{place}', [\App\Http\Controllers\Admin\PlaceController::class, 'update'])->name('places.update');
     Route::delete('places/{place}', [\App\Http\Controllers\Admin\PlaceController::class, 'destroy'])->name('places.destroy');
 
-    // Admin package management (multi-step). Step 1: package creation
-    Route::get('packages', [\App\Http\Controllers\Admin\PackageController::class, 'index'])->name('packages.index');
-    Route::get('packages/create', [\App\Http\Controllers\Admin\PackageController::class, 'create'])->name('packages.create');
-    Route::post('packages', [\App\Http\Controllers\Admin\PackageController::class, 'store'])->name('packages.store');
-    Route::get('packages/{package}/edit', [\App\Http\Controllers\Admin\PackageController::class, 'edit'])->name('packages.edit');
-    Route::post('packages/{package}', [\App\Http\Controllers\Admin\PackageController::class, 'update'])->name('packages.update');
-    Route::get('packages/{package}/step2', [\App\Http\Controllers\Admin\PackageController::class, 'step2'])->name('packages.step2');
-    Route::post('packages/{package}/step2', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep2'])->name('packages.step2.store');
-    Route::get('packages/{package}/step3', [\App\Http\Controllers\Admin\PackageController::class, 'step3'])->name('packages.step3');
-    Route::post('packages/{package}/step3', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep3'])->name('packages.step3.store');
-    Route::get('packages/{package}/step4', [\App\Http\Controllers\Admin\PackageController::class, 'step4'])->name('packages.step4');
-    Route::post('packages/{package}/step4', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep4'])->name('packages.step4.store');
-    Route::get('packages/{package}/step5', [\App\Http\Controllers\Admin\PackageController::class, 'step5'])->name('packages.step5');
-    Route::post('packages/{package}/step5', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep5'])->name('packages.step5.store');
-    Route::get('packages/{package}/step6', [\App\Http\Controllers\Admin\PackageController::class, 'step6'])->name('packages.step6');
-    Route::post('packages/{package}/step6', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep6'])->name('packages.step6.store');
-    Route::get('packages/{package}/step7', [\App\Http\Controllers\Admin\PackageController::class, 'step7'])->name('packages.step7');
-    Route::post('packages/{package}/step7', [\App\Http\Controllers\Admin\PackageController::class, 'saveStep7'])->name('packages.step7.save');
+    Route::middleware(GlobalAdminMiddleware::class)->group(function (): void {
+        // Admin package management (multi-step). Step 1: package creation
+        Route::get('packages', [\App\Http\Controllers\Admin\PackageController::class, 'index'])->name('packages.index');
+        Route::get('packages/create', [\App\Http\Controllers\Admin\PackageController::class, 'create'])->name('packages.create');
+        Route::post('packages', [\App\Http\Controllers\Admin\PackageController::class, 'store'])->name('packages.store');
+        Route::get('packages/{package}/edit', [\App\Http\Controllers\Admin\PackageController::class, 'edit'])->name('packages.edit');
+        Route::post('packages/{package}', [\App\Http\Controllers\Admin\PackageController::class, 'update'])->name('packages.update');
+        Route::get('packages/{package}/step2', [\App\Http\Controllers\Admin\PackageController::class, 'step2'])->name('packages.step2');
+        Route::post('packages/{package}/step2', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep2'])->name('packages.step2.store');
+        Route::get('packages/{package}/step3', [\App\Http\Controllers\Admin\PackageController::class, 'step3'])->name('packages.step3');
+        Route::post('packages/{package}/step3', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep3'])->name('packages.step3.store');
+        Route::get('packages/{package}/step4', [\App\Http\Controllers\Admin\PackageController::class, 'step4'])->name('packages.step4');
+        Route::post('packages/{package}/step4', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep4'])->name('packages.step4.store');
+        Route::get('packages/{package}/step5', [\App\Http\Controllers\Admin\PackageController::class, 'step5'])->name('packages.step5');
+        Route::post('packages/{package}/step5', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep5'])->name('packages.step5.store');
+        Route::get('packages/{package}/step6', [\App\Http\Controllers\Admin\PackageController::class, 'step6'])->name('packages.step6');
+        Route::post('packages/{package}/step6', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep6'])->name('packages.step6.store');
+        Route::get('packages/{package}/step7', [\App\Http\Controllers\Admin\PackageController::class, 'step7'])->name('packages.step7');
+        Route::post('packages/{package}/step7', [\App\Http\Controllers\Admin\PackageController::class, 'saveStep7'])->name('packages.step7.save');
 
-    // Admin group management (multi-step). Step 1: group creation
-    Route::get('groups', [\App\Http\Controllers\Admin\GroupController::class, 'index'])->name('groups.index');
-    Route::get('groups/create', [\App\Http\Controllers\Admin\GroupController::class, 'create'])->name('groups.create');
-    Route::post('groups', [\App\Http\Controllers\Admin\GroupController::class, 'store'])->name('groups.store');
-    Route::get('groups/{group}/edit', [\App\Http\Controllers\Admin\GroupController::class, 'edit'])->name('groups.edit');
-    Route::post('groups/{group}', [\App\Http\Controllers\Admin\GroupController::class, 'update'])->name('groups.update');
-    Route::get('groups/{group}/step2', [\App\Http\Controllers\Admin\GroupController::class, 'step2'])->name('groups.step2');
-    Route::post('groups/{group}/step2', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep2'])->name('groups.step2.store');
-    Route::get('groups/{group}/step3', [\App\Http\Controllers\Admin\GroupController::class, 'step3'])->name('groups.step3');
-    Route::post('groups/{group}/step3', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep3'])->name('groups.step3.store');
-    Route::get('groups/{group}/step4', [\App\Http\Controllers\Admin\GroupController::class, 'step4'])->name('groups.step4');
-    Route::post('groups/{group}/step4', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep4'])->name('groups.step4.store');
-    Route::get('groups/{group}/step5', [\App\Http\Controllers\Admin\GroupController::class, 'step5'])->name('groups.step5');
-    Route::post('groups/{group}/step5', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep5'])->name('groups.step5.store');
-    Route::get('groups/{group}/step6', [\App\Http\Controllers\Admin\GroupController::class, 'step6'])->name('groups.step6');
-    Route::post('groups/{group}/step6', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep6'])->name('groups.step6.store');
-    Route::get('groups/{group}/step7', [\App\Http\Controllers\Admin\GroupController::class, 'step7'])->name('groups.step7');
-    Route::post('groups/{group}/step7', [\App\Http\Controllers\Admin\GroupController::class, 'saveStep7'])->name('groups.step7.save');
+        // Admin group management (multi-step). Step 1: group creation
+        Route::get('groups', [\App\Http\Controllers\Admin\GroupController::class, 'index'])->name('groups.index');
+        Route::get('groups/create', [\App\Http\Controllers\Admin\GroupController::class, 'create'])->name('groups.create');
+        Route::post('groups', [\App\Http\Controllers\Admin\GroupController::class, 'store'])->name('groups.store');
+        Route::get('groups/{group}/edit', [\App\Http\Controllers\Admin\GroupController::class, 'edit'])->name('groups.edit');
+        Route::post('groups/{group}', [\App\Http\Controllers\Admin\GroupController::class, 'update'])->name('groups.update');
+        Route::get('groups/{group}/step2', [\App\Http\Controllers\Admin\GroupController::class, 'step2'])->name('groups.step2');
+        Route::post('groups/{group}/step2', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep2'])->name('groups.step2.store');
+        Route::get('groups/{group}/step3', [\App\Http\Controllers\Admin\GroupController::class, 'step3'])->name('groups.step3');
+        Route::post('groups/{group}/step3', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep3'])->name('groups.step3.store');
+        Route::get('groups/{group}/step4', [\App\Http\Controllers\Admin\GroupController::class, 'step4'])->name('groups.step4');
+        Route::post('groups/{group}/step4', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep4'])->name('groups.step4.store');
+        Route::get('groups/{group}/step5', [\App\Http\Controllers\Admin\GroupController::class, 'step5'])->name('groups.step5');
+        Route::post('groups/{group}/step5', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep5'])->name('groups.step5.store');
+        Route::get('groups/{group}/step6', [\App\Http\Controllers\Admin\GroupController::class, 'step6'])->name('groups.step6');
+        Route::post('groups/{group}/step6', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep6'])->name('groups.step6.store');
+        Route::get('groups/{group}/step7', [\App\Http\Controllers\Admin\GroupController::class, 'step7'])->name('groups.step7');
+        Route::post('groups/{group}/step7', [\App\Http\Controllers\Admin\GroupController::class, 'saveStep7'])->name('groups.step7.save');
+    });
 
     // Closed Group Booking wizard (admin)
     Route::get('closed-groups/book', [\App\Http\Controllers\Admin\ClosedGroupBookingController::class, 'create'])->name('closed-groups.book');

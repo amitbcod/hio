@@ -6,7 +6,7 @@
 <div class="container mt-0">
     <div class="row">
         <div id="sidebar" class="col-md-3 net-section">
-            @include('operator.registration._sidebar_main')
+            @include('operator.registration._sidebar_main', ['currentStep' => null])
         </div>
         <div class="col-md-9 my-pro">
             <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);margin-bottom:16px;margin-top:0px;">

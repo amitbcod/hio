@@ -3,6 +3,8 @@
 namespace App\Support;
 
 use App\Models\AdminUser;
+use App\Models\MpoStaffUser;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CountryAccess
@@ -21,6 +23,10 @@ class CountryAccess
             return $mpoAdmin->admin_type === 'mpo';
         }
 
+        if (request()->is('mpo/*') && self::authenticatedMpoAdmin() !== null) {
+            return true;
+        }
+
         return request()->is('admin/*') && self::admin()['admin_type'] === 'mpo';
     }
 
@@ -29,6 +35,11 @@ class CountryAccess
         $mpoAdmin = request()->attributes->get('mpo_admin');
         if ($mpoAdmin instanceof AdminUser && $mpoAdmin->admin_type === 'mpo') {
             return $mpoAdmin->country_id === null ? null : (int) $mpoAdmin->country_id;
+        }
+
+        $authenticatedMpo = request()->is('mpo/*') ? self::authenticatedMpoAdmin() : null;
+        if ($authenticatedMpo !== null) {
+            return $authenticatedMpo->country_id === null ? null : (int) $authenticatedMpo->country_id;
         }
 
         $admin = self::admin();
@@ -62,5 +73,20 @@ class CountryAccess
             'admin_type' => $admin?->admin_type === 'mpo' ? 'mpo' : 'global',
             'country_id' => $admin?->country_id === null ? null : (int) $admin->country_id,
         ];
+    }
+
+    private static function authenticatedMpoAdmin(): ?AdminUser
+    {
+        $staff = Auth::guard('mpo_staff')->user();
+        if ($staff instanceof MpoStaffUser) {
+            $mpoAdmin = $staff->mpo;
+            if ($mpoAdmin instanceof AdminUser && $mpoAdmin->admin_type === 'mpo') {
+                return $mpoAdmin;
+            }
+        }
+
+        $user = Auth::guard('mpo')->user();
+
+        return $user instanceof AdminUser && $user->admin_type === 'mpo' ? $user : null;
     }
 }

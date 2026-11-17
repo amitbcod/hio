@@ -40,6 +40,20 @@
     }
 @endphp
 
+@if($canReadRoute('operator.payouts.index'))
+    <div style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2);">
+        Billing and Accounting
+    </div>
+    <ul style="list-style: none; padding: 0; margin: 0 0 12px 0;">
+        <li style="padding: 8px 36px;">
+            <a href="{{ route('operator.payouts.index') }}"
+               style="display:block;color:#fff;text-decoration:none;font-weight:600;font-size:12px;{{ request()->routeIs('operator.payouts.*') ? 'background:rgba(255,255,255,0.18);' : '' }}">
+                Payouts
+            </a>
+        </li>
+    </ul>
+@endif
+
 @php $isTripManagement = request()->routeIs('operator.trips.*'); @endphp
 
 @if($canReadRoute('operator.trips.index'))

@@ -3077,7 +3077,7 @@ class BookingController extends Controller
         if (!$paymentTransaction) {
             return response()->json(['error' => 'Payment transaction not found'], 404);
         }
-        if ($this->isAgentBooking($paymentTransaction)) {
+        if ($this->requiresAdminSettlementForAgentBooking($paymentTransaction)) {
             Log::warning('Payment callback blocked for Agent booking; Admin settlement is required', [
                 'booking_id' => $paymentTransaction->booking_id,
                 'booking_ref_id' => $paymentTransaction->booking_ref_id,
@@ -3106,6 +3106,9 @@ class BookingController extends Controller
             $paymentId,
             $statusSynchronizer
         );
+        if ($status === 'paid') {
+            $this->sendBookingConfirmationNotificationsForPayment($paymentTransaction);
+        }
         if ($notificationTripId) {
             $this->sendGuestBookingOtpNotificationsForTrip($notificationTripId);
         }
@@ -3126,7 +3129,7 @@ class BookingController extends Controller
         if ($transactionRef) {
             $paymentTransaction = PaymentTransaction::where('transaction_ref', $transactionRef)->first();
             if ($paymentTransaction) {
-                if ($this->isAgentBooking($paymentTransaction)) {
+                if ($this->requiresAdminSettlementForAgentBooking($paymentTransaction)) {
                     $agentSettlementBlocked = true;
                     Log::warning('Payment return blocked for Agent booking; Admin settlement is required', [
                         'booking_id' => $paymentTransaction->booking_id,
@@ -3142,6 +3145,9 @@ class BookingController extends Controller
                                 $paymentTransaction->payment_id,
                                 $statusSynchronizer
                             );
+                            if ($status === 'paid') {
+                                $this->sendBookingConfirmationNotificationsForPayment($paymentTransaction);
+                            }
                             if ($notificationTripId) {
                                 $this->sendGuestBookingOtpNotificationsForTrip($notificationTripId);
                             }
@@ -3211,12 +3217,39 @@ class BookingController extends Controller
     //  PRIVATE HELPERS
     // ═══════════════════════════════════════════════════════════════════════
 
-    private function isAgentBooking(PaymentTransaction $paymentTransaction): bool
+    private function requiresAdminSettlementForAgentBooking(PaymentTransaction $paymentTransaction): bool
     {
         return Booking::query()
             ->whereKey($paymentTransaction->booking_id)
+            ->where('booking_type', 'open-group')
             ->whereNotNull('agent_account_id')
             ->exists();
+    }
+
+    private function sendBookingConfirmationNotificationsForPayment(PaymentTransaction $paymentTransaction): void
+    {
+        $bookingRefId = $paymentTransaction->booking_ref_id
+            ?: Booking::query()->whereKey($paymentTransaction->booking_id)->value('booking_ref_id');
+
+        if (!$bookingRefId) {
+            Log::warning('Booking confirmation emails skipped because the paid transaction has no booking reference.', [
+                'payment_transaction_id' => $paymentTransaction->id,
+                'booking_id' => $paymentTransaction->booking_id,
+            ]);
+
+            return;
+        }
+
+        try {
+            app(\App\Services\BookingEmailNotificationService::class)
+                ->notifyBookingReference((int) $bookingRefId);
+        } catch (\Throwable $exception) {
+            Log::error('Booking confirmation notification processing failed after payment confirmation.', [
+                'payment_transaction_id' => $paymentTransaction->id,
+                'booking_ref_id' => $bookingRefId,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     private function applyAgencyPaymentStatus(

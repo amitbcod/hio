@@ -92,10 +92,14 @@ class PackageController extends Controller
         return true;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $packages = Package::with('country')->latest()->paginate(20);
-        return view('admin.packages.index', compact('packages'));
+        return view('admin.packages.index', [
+            'packages' => $packages,
+            'canCreate' => $this->can($request, 'create'),
+            'canUpdate' => $this->can($request, 'update'),
+        ]);
     }
 
     public function create()
@@ -104,7 +108,7 @@ class PackageController extends Controller
         $package = new Package();
         return view('admin.packages.create-step1', [
             'package' => $package,
-            'countries' => Country::where('is_active', true)->orderBy('name')->get(),
+            'countries' => $this->countriesForForm(),
             'isMpo' => CountryAccess::isMpoAdmin(),
         ]);
     }
@@ -114,9 +118,7 @@ class PackageController extends Controller
         // show the same step1 view but with package data
         return view('admin.packages.create-step1', [
             'package' => $package,
-            'countries' => Country::where(function ($query) use ($package): void {
-                $query->where('is_active', true)->orWhere('id', $package->country_id);
-            })->orderBy('name')->get(),
+            'countries' => $this->countriesForForm((int) $package->country_id),
             'isMpo' => CountryAccess::isMpoAdmin(),
         ]);
     }
@@ -135,12 +137,16 @@ class PackageController extends Controller
             'maximum_pax' => 'nullable|integer|min:1',
         ]);
 
-        $data['created_by'] = session('admin_id') ?? null;
+        $data['created_by'] = $request->attributes->get('mpo_admin')?->id ?? session('admin_id');
         $data['country_id'] = $countryId;
-
         $package = Package::create($data);
 
-        return redirect()->route('admin.packages.step2', $package->id)->with('success', 'Step 1 saved. Proceed to Step 2.');
+        if (! $this->can($request, 'update')) {
+            return redirect()->route(\App\Support\MpoManagementRoutes::name('admin.packages.index'))
+                ->with('success', 'Package created as a draft. Update permission is required to complete its setup.');
+        }
+
+        return redirect()->route(\App\Support\MpoManagementRoutes::name('admin.packages.step2'), $package->id)->with('success', 'Step 1 saved. Proceed to Step 2.');
     }
 
     public function update(Request $request, Package $package)
@@ -161,7 +167,7 @@ class PackageController extends Controller
         CountryOwnership::assertItineraryCountry($package->itinerary ?? [], $countryId);
         $package->update($data);
 
-        return redirect()->route('admin.packages.step2', $package->id)->with('success', 'Step 1 updated. Proceed to Step 2.');
+        return redirect()->route(\App\Support\MpoManagementRoutes::name('admin.packages.step2'), $package->id)->with('success', 'Step 1 updated. Proceed to Step 2.');
     }
 
     private function countryId(Request $request, ?int $fallback = null): int
@@ -175,6 +181,27 @@ class PackageController extends Controller
         ]);
 
         return (int) ($data['country_id'] ?? $fallback);
+    }
+
+    private function countriesForForm(?int $recordCountryId = null)
+    {
+        $query = Country::query()->where('is_active', true);
+        $mpoCountryId = CountryAccess::countryId();
+        if ($mpoCountryId !== null) {
+            $query->whereKey($mpoCountryId);
+        } elseif ($recordCountryId !== null) {
+            $query->orWhereKey($recordCountryId);
+        }
+
+        return $query->orderBy('name')->get();
+    }
+
+    private function can(Request $request, string $action): bool
+    {
+        $staff = $request->attributes->get('mpo_staff_user');
+
+        return ! ($staff instanceof \App\Models\MpoStaffUser)
+            || app(\App\Services\MpoStaffPermissionService::class)->can($staff, 'packages', $action);
     }
 
     public function step2(Package $package, Request $request)
@@ -332,7 +359,7 @@ class PackageController extends Controller
         $package->itinerary = $mergedItinerary;
         $package->save();
 
-        return redirect()->route('admin.packages.step3', $package->id)->with('success', 'Package itinerary saved.');
+        return redirect()->route(\App\Support\MpoManagementRoutes::name('admin.packages.step3'), $package->id)->with('success', 'Package itinerary saved.');
     }
 
     /**
@@ -555,7 +582,7 @@ class PackageController extends Controller
         $package->itinerary = $itinerary;
         $package->save();
 
-        return redirect()->route('admin.packages.step4', $package->id)->with('success', 'Accommodation allocation saved.');
+        return redirect()->route(\App\Support\MpoManagementRoutes::name('admin.packages.step4'), $package->id)->with('success', 'Accommodation allocation saved.');
     }
 
     public function step4(Package $package)
@@ -954,7 +981,7 @@ class PackageController extends Controller
         $package->itinerary = $itinerary;
         $package->save();
 
-        return redirect()->route('admin.packages.step5', $package->id)->with('success', 'Package pricing saved.');
+        return redirect()->route(\App\Support\MpoManagementRoutes::name('admin.packages.step5'), $package->id)->with('success', 'Package pricing saved.');
     }
 
     /**
@@ -1041,7 +1068,7 @@ class PackageController extends Controller
         $package->itinerary = $itinerary;
         $package->save();
 
-        return redirect()->route('admin.packages.step6', $package->id)->with('success', 'Step 5 saved.');
+        return redirect()->route(\App\Support\MpoManagementRoutes::name('admin.packages.step6'), $package->id)->with('success', 'Step 5 saved.');
     }
 
     /**
@@ -1078,7 +1105,7 @@ class PackageController extends Controller
         $package->itinerary = $itinerary;
         $package->save();
 
-        return redirect()->route('admin.packages.step7', $package->id)->with('success', 'Day-wise itinerary saved.');
+        return redirect()->route(\App\Support\MpoManagementRoutes::name('admin.packages.step7'), $package->id)->with('success', 'Day-wise itinerary saved.');
     }
 
     public function step7(Package $package)
@@ -1226,10 +1253,10 @@ class PackageController extends Controller
         $package->save();
 
         if ($data['action'] === 'published') {
-            return redirect()->route('admin.packages.index')->with('success', 'Package status updated to Published.');
+            return redirect()->route(\App\Support\MpoManagementRoutes::name('admin.packages.index'))->with('success', 'Package status updated to Published.');
         }
 
-        return redirect()->route('admin.packages.index')->with('success', 'Package status updated to Draft.');
+        return redirect()->route(\App\Support\MpoManagementRoutes::name('admin.packages.index'))->with('success', 'Package status updated to Draft.');
     }
 
     protected function buildEffectivePackagePolicy(Package $package, array $itinerary = []): array

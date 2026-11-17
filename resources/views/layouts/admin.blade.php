@@ -11,6 +11,7 @@
 <body class="admin-mpo-layout{{ request()->routeIs('admin.login') ? ' admin-mpo-layout--auth' : '' }}">
     @php
         $isMpoAdmin = request()->attributes->get('mpo_admin') instanceof \App\Models\AdminUser;
+        $mpoStaffUser = request()->attributes->get('mpo_staff_user');
     @endphp
     <header class="admin-mpo-header">
         <button type="button" class="admin-mpo-menu-toggle" data-admin-mpo-sidebar-toggle aria-controls="admin-mpo-sidebar" aria-expanded="false">
@@ -21,14 +22,28 @@
         </a>
         <div class="admin-mpo-account">
             <span class="admin-mpo-account-label">
-                @if(session('admin_id'))
+                @if($mpoStaffUser instanceof \App\Models\MpoStaffUser)
+                    {{ $mpoStaffUser->email ?? 'MPO Staff' }}
+                @elseif($isMpoAdmin && request()->attributes->get('mpo_admin') instanceof \App\Models\AdminUser)
+                    {{ request()->attributes->get('mpo_admin')->email ?? 'MPO Admin' }}
+                @elseif(session('admin_id'))
                     @php $admin = \App\Models\AdminUser::find(session('admin_id')); @endphp
                     {{ $admin->email ?? 'Admin' }}
                 @else
                     Admin Portal
                 @endif
             </span>
-            @if(session('admin_id'))
+            @if($mpoStaffUser instanceof \App\Models\MpoStaffUser)
+                <form action="{{ route('mpo.logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-primary btn-sm">Logout</button>
+                </form>
+            @elseif($isMpoAdmin && ! session('admin_id'))
+                <form action="{{ route('mpo.logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-primary btn-sm">Logout</button>
+                </form>
+            @elseif(session('admin_id'))
                 <form action="{{ $isMpoAdmin ? route('mpo.logout') : route('admin.logout') }}" method="POST">
                     @csrf
                     <button type="submit" class="btn btn-outline-primary btn-sm">Logout</button>
@@ -43,7 +58,7 @@
             @if($isMpoAdmin)
                 @include('mpo.partials.sidebar', [
                     'mpoAdmin' => request()->attributes->get('mpo_admin'),
-                    'mpoStaffUser' => null,
+                    'mpoStaffUser' => $mpoStaffUser,
                 ])
             @elseif(isset($sidebar) && view()->exists($sidebar))
                 @include($sidebar)

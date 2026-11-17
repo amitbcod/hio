@@ -19,6 +19,20 @@ Route::prefix('operator')->name('operator.')->group(function () {
         \App\Http\Middleware\RestrictOperatorServiceModules::class,
         \App\Http\Middleware\AuthorizeOperatorStaffPermissions::class,
     ])->group(function () {
+        Route::get('payouts', [\App\Http\Controllers\Operator\FinancialPayoutController::class, 'index'])->name('payouts.index');
+        Route::get('payouts/{settlement}', [\App\Http\Controllers\Operator\FinancialPayoutController::class, 'show'])
+            ->whereNumber('settlement')
+            ->name('payouts.show');
+        Route::get('payouts/{settlement}/transfers/{transfer}/evidence', [\App\Http\Controllers\Operator\FinancialPayoutController::class, 'downloadEvidence'])
+            ->whereNumber('settlement')
+            ->whereNumber('transfer')
+            ->name('payouts.transfers.evidence');
+        Route::post('payouts/request', [\App\Http\Controllers\Operator\FinancialPayoutController::class, 'request'])
+            ->name('payouts.store');
+        Route::post('payouts/{settlement}/acknowledge', [\App\Http\Controllers\Operator\FinancialPayoutController::class, 'acknowledge'])
+            ->whereNumber('settlement')
+            ->name('payouts.acknowledge');
+
         Route::get('profile', [ProfileController::class, 'showProfile'])->name('profile');
         Route::get('trips', [\App\Http\Controllers\Operator\TripController::class, 'index'])->name('trips.index');
         Route::post('bookings/{serviceType}/{booking}/postpone', [\App\Http\Controllers\BookingPostponementController::class, 'operator'])

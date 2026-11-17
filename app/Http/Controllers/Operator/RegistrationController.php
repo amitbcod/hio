@@ -646,7 +646,7 @@ class RegistrationController extends Controller
 
     public function saveStep5Collaboration(Request $request) {
         $request->validate([
-            'agreement_type' => 'required',
+            'agreement_type' => ['required', Rule::in(['Listing Only', 'OTO', 'Widget Only', 'OTO + Widget', 'Full Service'])],
             'contact_management_name' => 'required',
             'contact_management_email' => 'nullable|email',
             'contact_management_phone' => 'nullable',
@@ -658,12 +658,17 @@ class RegistrationController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date',
             'renewal_date' => 'required|date',
-            'commission_model' => 'required',
-            'commission_value' => 'required|numeric',
             'marketing_contribution_percent' => 'required|numeric',
             'status' => 'required',
         ]);
         $operator = auth()->user();
+        $commissionValues = [
+            'Listing Only' => 0,
+            'OTO' => 20,
+            'Widget Only' => 15,
+            'OTO + Widget' => 20,
+            'Full Service' => 25,
+        ];
         $data = [
             'agreement_type' => $request->agreement_type,
             'contact_management_name' => $request->contact_management_name,
@@ -677,8 +682,8 @@ class RegistrationController extends Controller
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'renewal_date' => $request->renewal_date,
-            'commission_model' => $request->commission_model,
-            'commission_value' => $request->commission_value,
+            'commission_model' => 'percentage',
+            'commission_value' => $commissionValues[$request->agreement_type],
             'marketing_contribution_percent' => $request->marketing_contribution_percent,
             'status' => $request->status,
         ];

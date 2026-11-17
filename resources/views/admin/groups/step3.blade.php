@@ -9,7 +9,7 @@
         <p style="color:#666;margin-top:6px;">Select rooms for each day from the accommodation chosen in Step 2. Use filters to narrow results.</p>
     </div>
 
-    <form method="POST" action="{{ route('admin.groups.step3.store', $group->id) }}">
+    <form method="POST" action="{{ route(\App\Support\MpoManagementRoutes::name('admin.groups.step3.store'), $group->id) }}">
         @csrf
 
         @php $itinerary = $group->itinerary ?? []; @endphp
@@ -237,7 +237,7 @@
             @endforeach
 
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;">
-                <a href="{{ route('admin.groups.step2', $group->id) }}" class="btn btn-light">Back</a>
+                <a href="{{ route(\App\Support\MpoManagementRoutes::name('admin.groups.step2'), $group->id) }}" class="btn btn-light">Back</a>
                 <button type="submit" class="btn btn-primary">Save Allocation & Continue</button>
             </div>
         </div>

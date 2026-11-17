@@ -18,7 +18,7 @@
             </div>
 
             <div style="border:1px solid #e4e7eb;border-radius:10px;overflow:hidden;background:#fff;">
-                <form method="POST" action="{{ route('admin.packages.step7.save', $package->id) }}">
+                <form method="POST" action="{{ route(\App\Support\MpoManagementRoutes::name('admin.packages.step7.save'), $package->id) }}">
                     @csrf
                     <input type="hidden" name="action" value="draft">
                 <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
@@ -164,7 +164,7 @@
             </div>
 
             <div class="d-flex justify-content-between mt-4 align-items-center">
-                <a href="{{ route('admin.packages.step6', $package->id) }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route(\App\Support\MpoManagementRoutes::name('admin.packages.step6'), $package->id) }}" class="btn btn-outline-secondary">Back</a>
 
                 <div class="d-flex gap-2">
                     <div class="d-flex gap-2">

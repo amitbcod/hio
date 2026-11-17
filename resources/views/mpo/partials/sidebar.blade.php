@@ -67,6 +67,12 @@
             </div>
         </details>
     @elseif($mpoStaffUser)
+        @if(app(\App\Services\MpoStaffPermissionService::class)->can($mpoStaffUser, 'accounting', 'read'))
+            <a href="{{ route('mpo.accounting-settlements.index') }}"
+               class="list-group-item list-group-item-action{{ request()->routeIs('mpo.accounting-settlements.*') ? ' active' : '' }}">
+                <i class="fa-solid fa-file-invoice-dollar me-2" aria-hidden="true"></i>Financial Settlements
+            </a>
+        @endif
         @foreach($mpoUserLinks as $link)
             @if(app(\App\Services\MpoStaffPermissionService::class)->can($mpoStaffUser, $moduleForRoute[$link['route']], 'read'))
                 <a href="{{ route($link['route']) }}"
@@ -77,8 +83,13 @@
         @endforeach
         @foreach(config('mpo_staff.registry', []) as $module => $definition)
             @if(app(\App\Services\MpoStaffPermissionService::class)->can($mpoStaffUser, $module, 'read'))
-                <a href="{{ route('mpo.operations.module', ['module' => $module]) }}"
-                   class="list-group-item list-group-item-action{{ request()->routeIs('mpo.operations.module') && request()->route('module') === $module ? ' active' : '' }}">
+                <a href="{{ match ($module) {
+                    'transport' => route('mpo.transport.index'),
+                    'groups' => route('mpo.groups.index'),
+                    'packages' => route('mpo.packages.index'),
+                    default => route('mpo.operations.module', ['module' => $module]),
+                } }}"
+                   class="list-group-item list-group-item-action{{ (($module === 'transport' || $module === 'groups' || $module === 'packages') && request()->routeIs('mpo.'.$module.'.*')) || (request()->routeIs('mpo.operations.module') && request()->route('module') === $module) ? ' active' : '' }}">
                     {{ $definition['name'] }}
                 </a>
             @endif
@@ -116,5 +127,11 @@
                 @endforeach
             </div>
         </details>
+    @endif
+    @if(! $mpoStaffUser && ($completionState['complete'] ?? false))
+        <a href="{{ route('mpo.accounting-settlements.index') }}"
+           class="list-group-item list-group-item-action{{ request()->routeIs('mpo.accounting-settlements.*') ? ' active' : '' }}">
+            <i class="fa-solid fa-file-invoice-dollar me-2" aria-hidden="true"></i>Financial Settlements
+        </a>
     @endif
 </div>

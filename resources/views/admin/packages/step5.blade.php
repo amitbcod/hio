@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('admin.packages.step5.store', $package->id) }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route(\App\Support\MpoManagementRoutes::name('admin.packages.step5.store'), $package->id) }}" enctype="multipart/form-data">
         @csrf
         @php
             $c = $content ?? [];
@@ -144,7 +144,7 @@
                 </div>
 
                 <div class="d-flex justify-content-between mt-4">
-                    <a href="{{ route('admin.packages.step4', $package->id) }}" class="btn btn-outline-secondary">Back</a>
+                    <a href="{{ route(\App\Support\MpoManagementRoutes::name('admin.packages.step4'), $package->id) }}" class="btn btn-outline-secondary">Back</a>
                     <div>
                         <button type="submit" class="btn btn-success">Next: Day-wise Itinerary</button>
                     </div>

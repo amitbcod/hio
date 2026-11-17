@@ -22,8 +22,6 @@ class MpoAdminRouteAccess
         'admin.transport.bookings',
         'admin.payment-transactions.index',
         'admin.payment-transactions.show',
-        'admin.packages.index',
-        'admin.groups.index',
         'admin.vehicle-types.index',
         'admin.vehicle-names.index',
         'admin.regions.index',

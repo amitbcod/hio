@@ -27,7 +27,7 @@
                 @endif
 
                 <div class="group-plan-card">
-                    <form id="group-step1-form" method="POST" action="{{ (isset($group) && $group->exists) ? route('admin.groups.update', $group->id) : route('admin.groups.store') }}">
+                    <form id="group-step1-form" method="POST" action="{{ (isset($group) && $group->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.groups.update'), $group->id) : route(\App\Support\MpoManagementRoutes::name('admin.groups.store')) }}">
                         @csrf
 
                         <div class="group-plan-step-label">Step 1: Group Plan Creation</div>

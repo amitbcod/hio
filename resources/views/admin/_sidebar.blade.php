@@ -33,12 +33,10 @@
     @if(! $isMpoAdmin || \App\Support\MpoAdminRouteAccess::showsInSidebar('admin.activity.index'))
         <a href="{{ route('admin.activity.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/activity*') ? 'active' : '' }}">Activities</a>
     @endif
-    @if(! $isMpoAdmin || \App\Support\MpoAdminRouteAccess::showsInSidebar('admin.packages.index'))
-        <a href="{{ route('admin.packages.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/packages*') ? 'active' : '' }}">Packages</a>
-    @endif
-    @if(! $isMpoAdmin || \App\Support\MpoAdminRouteAccess::showsInSidebar('admin.groups.index'))
-        <a href="{{ route('admin.groups.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/groups*') ? 'active' : '' }}">Groups</a>
-    @endif
+    <a href="{{ $isMpoAdmin ? route('mpo.transport.index') : route('admin.transport.index') }}"
+       class="list-group-item list-group-item-action {{ request()->routeIs('mpo.transport.*', 'admin.transport.*') ? 'active' : '' }}">Transport</a>
+    <a href="{{ $isMpoAdmin ? route('mpo.packages.index') : route('admin.packages.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/packages*') || request()->is('mpo/packages*') ? 'active' : '' }}">Packages</a>
+    <a href="{{ $isMpoAdmin ? route('mpo.groups.index') : route('admin.groups.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/groups*') || request()->is('mpo/groups*') ? 'active' : '' }}">Groups</a>
 
     @unless($isMpoAdmin)
         <a href="{{ route('admin.closed-groups.book') }}" class="list-group-item list-group-item-action {{ request()->is('admin/closed-groups/book*') ? 'active' : '' }}">Closed Group Booking</a>
@@ -55,6 +53,7 @@
         @endif
     @endforeach
     @unless($isMpoAdmin)
+        <a href="{{ route('admin.accounting-settlements.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/accounting-settlements*') ? 'active' : '' }}">Financial Settlements</a>
         <a href="{{ route('admin.shared-carts.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/shared-carts*') ? 'active' : '' }}">Shared Cart Links</a>
         <div class="list-group-item list-group-item-action font-weight-bold">Policy</div>
         <a href="{{ route('admin.policy.package-default-policy') }}" class="list-group-item list-group-item-action {{ request()->is('admin/policy/package-default-policy*') ? 'active' : '' }}">Package Default Policy</a>

@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('admin.groups.step4.store', $group->id) }}">
+    <form method="POST" action="{{ route(\App\Support\MpoManagementRoutes::name('admin.groups.step4.store'), $group->id) }}">
         @csrf
         @php
             $itinerary = $group->itinerary ?? [];
@@ -386,7 +386,7 @@
                 @endforeach
 
                 <div class="d-flex justify-content-between mt-4">
-                    <a href="{{ route('admin.groups.step3', $group->id) }}" class="btn btn-light">Back</a>
+                    <a href="{{ route(\App\Support\MpoManagementRoutes::name('admin.groups.step3'), $group->id) }}" class="btn btn-light">Back</a>
                     <button type="submit" class="btn btn-primary">Next: Content</button>
                 </div>
             </div>

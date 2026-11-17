@@ -26,7 +26,7 @@
             @endif
 
             <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
-                <form id="package-step1-form" method="POST" action="{{ (isset($package) && $package->exists) ? route('admin.packages.update', $package->id) : route('admin.packages.store') }}">
+                <form id="package-step1-form" method="POST" action="{{ (isset($package) && $package->exists) ? route(\App\Support\MpoManagementRoutes::name('admin.packages.update'), $package->id) : route(\App\Support\MpoManagementRoutes::name('admin.packages.store')) }}">
                     @csrf
 
                     @unless($isMpo)

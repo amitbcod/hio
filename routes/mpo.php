@@ -48,6 +48,136 @@ Route::prefix('mpo')->name('mpo.')->group(function () {
             Route::post('dashboard/transports/{transport}/approve', [\App\Http\Controllers\Admin\DashboardController::class, 'approveTransport'])->name('dashboard.transport.approve');
             Route::post('dashboard/transports/{transport}/reject', [\App\Http\Controllers\Admin\DashboardController::class, 'rejectTransport'])->name('dashboard.transport.reject');
         });
+        Route::middleware([
+            MpoRegistrationComplete::class,
+            \App\Http\Middleware\MpoStaffModuleAccess::class.':transport,read',
+        ])->group(function (): void {
+            Route::get('transport', [\App\Http\Controllers\Mpo\TransportListingController::class, 'index'])->name('transport.index');
+            Route::get('transport/{transport}', [\App\Http\Controllers\Mpo\TransportListingController::class, 'show'])
+                ->whereNumber('transport')
+                ->name('transport.show');
+        });
+        Route::middleware([
+            MpoRegistrationComplete::class,
+            \App\Http\Middleware\MpoStaffModuleAccess::class.':transport,update',
+        ])->group(function (): void {
+            Route::get('transport/{transport}/edit', [\App\Http\Controllers\Mpo\TransportListingController::class, 'edit'])
+                ->whereNumber('transport')
+                ->name('transport.edit');
+            Route::put('transport/{transport}', [\App\Http\Controllers\Mpo\TransportListingController::class, 'update'])
+                ->whereNumber('transport')
+                ->name('transport.update');
+        });
+        Route::middleware([
+            MpoRegistrationComplete::class,
+            MpoStaffModuleAccess::class.':groups,read',
+        ])->group(function (): void {
+            Route::get('groups', [\App\Http\Controllers\Admin\GroupController::class, 'index'])->name('groups.index');
+        });
+        Route::middleware([
+            MpoRegistrationComplete::class,
+            MpoStaffModuleAccess::class.':groups,create',
+        ])->group(function (): void {
+            Route::get('groups/create', [\App\Http\Controllers\Admin\GroupController::class, 'create'])->name('groups.create');
+            Route::post('groups', [\App\Http\Controllers\Admin\GroupController::class, 'store'])->name('groups.store');
+        });
+        Route::middleware([
+            MpoRegistrationComplete::class,
+            MpoStaffModuleAccess::class.':groups,update',
+        ])->group(function (): void {
+            Route::get('groups/{group}/edit', [\App\Http\Controllers\Admin\GroupController::class, 'edit'])->whereNumber('group')->name('groups.edit');
+            Route::post('groups/{group}', [\App\Http\Controllers\Admin\GroupController::class, 'update'])->whereNumber('group')->name('groups.update');
+            Route::get('groups/{group}/step2', [\App\Http\Controllers\Admin\GroupController::class, 'step2'])->whereNumber('group')->name('groups.step2');
+            Route::post('groups/{group}/step2', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep2'])->whereNumber('group')->name('groups.step2.store');
+            Route::get('groups/{group}/step3', [\App\Http\Controllers\Admin\GroupController::class, 'step3'])->whereNumber('group')->name('groups.step3');
+            Route::post('groups/{group}/step3', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep3'])->whereNumber('group')->name('groups.step3.store');
+            Route::get('groups/{group}/step4', [\App\Http\Controllers\Admin\GroupController::class, 'step4'])->whereNumber('group')->name('groups.step4');
+            Route::post('groups/{group}/step4', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep4'])->whereNumber('group')->name('groups.step4.store');
+            Route::get('groups/{group}/step5', [\App\Http\Controllers\Admin\GroupController::class, 'step5'])->whereNumber('group')->name('groups.step5');
+            Route::post('groups/{group}/step5', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep5'])->whereNumber('group')->name('groups.step5.store');
+            Route::get('groups/{group}/step6', [\App\Http\Controllers\Admin\GroupController::class, 'step6'])->whereNumber('group')->name('groups.step6');
+            Route::post('groups/{group}/step6', [\App\Http\Controllers\Admin\GroupController::class, 'storeStep6'])->whereNumber('group')->name('groups.step6.store');
+            Route::get('groups/{group}/step7', [\App\Http\Controllers\Admin\GroupController::class, 'step7'])->whereNumber('group')->name('groups.step7');
+            Route::post('groups/{group}/step7', [\App\Http\Controllers\Admin\GroupController::class, 'saveStep7'])->whereNumber('group')->name('groups.step7.save');
+        });
+        Route::middleware([
+            MpoRegistrationComplete::class,
+            MpoStaffModuleAccess::class.':packages,read',
+        ])->group(function (): void {
+            Route::get('packages', [\App\Http\Controllers\Admin\PackageController::class, 'index'])->name('packages.index');
+        });
+        Route::middleware([
+            MpoRegistrationComplete::class,
+            MpoStaffModuleAccess::class.':packages,create',
+        ])->group(function (): void {
+            Route::get('packages/create', [\App\Http\Controllers\Admin\PackageController::class, 'create'])->name('packages.create');
+            Route::post('packages', [\App\Http\Controllers\Admin\PackageController::class, 'store'])->name('packages.store');
+        });
+        Route::middleware([
+            MpoRegistrationComplete::class,
+            MpoStaffModuleAccess::class.':packages,update',
+        ])->group(function (): void {
+            Route::get('packages/{package}/edit', [\App\Http\Controllers\Admin\PackageController::class, 'edit'])->whereNumber('package')->name('packages.edit');
+            Route::post('packages/{package}', [\App\Http\Controllers\Admin\PackageController::class, 'update'])->whereNumber('package')->name('packages.update');
+            Route::get('packages/{package}/step2', [\App\Http\Controllers\Admin\PackageController::class, 'step2'])->whereNumber('package')->name('packages.step2');
+            Route::post('packages/{package}/step2', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep2'])->whereNumber('package')->name('packages.step2.store');
+            Route::get('packages/{package}/step3', [\App\Http\Controllers\Admin\PackageController::class, 'step3'])->whereNumber('package')->name('packages.step3');
+            Route::post('packages/{package}/step3', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep3'])->whereNumber('package')->name('packages.step3.store');
+            Route::get('packages/{package}/step4', [\App\Http\Controllers\Admin\PackageController::class, 'step4'])->whereNumber('package')->name('packages.step4');
+            Route::post('packages/{package}/step4', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep4'])->whereNumber('package')->name('packages.step4.store');
+            Route::get('packages/{package}/step5', [\App\Http\Controllers\Admin\PackageController::class, 'step5'])->whereNumber('package')->name('packages.step5');
+            Route::post('packages/{package}/step5', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep5'])->whereNumber('package')->name('packages.step5.store');
+            Route::get('packages/{package}/step6', [\App\Http\Controllers\Admin\PackageController::class, 'step6'])->whereNumber('package')->name('packages.step6');
+            Route::post('packages/{package}/step6', [\App\Http\Controllers\Admin\PackageController::class, 'storeStep6'])->whereNumber('package')->name('packages.step6.store');
+            Route::get('packages/{package}/step7', [\App\Http\Controllers\Admin\PackageController::class, 'step7'])->whereNumber('package')->name('packages.step7');
+            Route::post('packages/{package}/step7', [\App\Http\Controllers\Admin\PackageController::class, 'saveStep7'])->whereNumber('package')->name('packages.step7.save');
+        });
+        Route::middleware([
+            MpoRegistrationComplete::class,
+            \App\Http\Middleware\MpoStaffModuleAccess::class.':accounting,read',
+        ])->group(function (): void {
+            Route::get('accounting-settlements', [\App\Http\Controllers\Mpo\FinancialSettlementController::class, 'index'])
+                ->name('accounting-settlements.index');
+            Route::get('accounting-settlements/{settlement}', [\App\Http\Controllers\Mpo\FinancialSettlementController::class, 'show'])
+                ->whereNumber('settlement')
+                ->name('accounting-settlements.show');
+            Route::get('accounting-settlements/{settlement}/transfers/{transfer}/evidence', [\App\Http\Controllers\Mpo\FinancialSettlementController::class, 'downloadEvidence'])
+                ->whereNumber('settlement')
+                ->whereNumber('transfer')
+                ->name('accounting-settlements.transfers.evidence');
+        });
+        Route::middleware([
+            MpoRegistrationComplete::class,
+            \App\Http\Middleware\MpoStaffModuleAccess::class.':accounting,create',
+        ])->group(function (): void {
+            Route::post('accounting-settlements/generate', [\App\Http\Controllers\Mpo\FinancialSettlementController::class, 'generate'])
+                ->name('accounting-settlements.generate');
+        });
+        Route::middleware([
+            MpoRegistrationComplete::class,
+            \App\Http\Middleware\MpoStaffModuleAccess::class.':accounting,update',
+        ])->group(function (): void {
+            Route::post('accounting-settlements/{settlement}/transfers', [\App\Http\Controllers\Mpo\FinancialSettlementController::class, 'recordTransfer'])
+                ->whereNumber('settlement')
+                ->name('accounting-settlements.transfers.store');
+        });
+        Route::middleware([
+            MpoRegistrationComplete::class,
+            \App\Http\Middleware\MpoStaffModuleAccess::class.':accounting,approve',
+        ])->group(function (): void {
+            Route::post('accounting-settlements/{settlement}/authorize', [\App\Http\Controllers\Mpo\FinancialSettlementController::class, 'authorizeOperatorPayout'])
+                ->whereNumber('settlement')
+                ->name('accounting-settlements.authorize');
+        });
+        Route::middleware([
+            MpoRegistrationComplete::class,
+            \App\Http\Middleware\MpoStaffModuleAccess::class.':accounting,approve',
+        ])->group(function (): void {
+            Route::post('accounting-settlements/{settlement}/transfers/{transfer}/verify-operator', [\App\Http\Controllers\Mpo\FinancialSettlementController::class, 'verifyOperatorTransfer'])
+                ->whereNumber('settlement')
+                ->whereNumber('transfer')
+                ->name('accounting-settlements.transfers.verify-operator');
+        });
         Route::middleware(MpoOwnerOnly::class)->group(function (): void {
             Route::get('operator-roles', [\App\Http\Controllers\Mpo\OperatorRoleController::class, 'index'])->name('operator-roles.index');
             Route::post('operator-roles', [\App\Http\Controllers\Mpo\OperatorRoleController::class, 'store'])->name('operator-roles.store');

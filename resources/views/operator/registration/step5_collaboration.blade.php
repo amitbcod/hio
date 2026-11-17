@@ -114,7 +114,7 @@
                 </div>
                 <div class="form-group mb-2">
                     <label>Commission Model</label>
-                    <input type="text" name="commission_model" class="form-control" value="{{ old('commission_model', $collab->commission_model ?? 0) }}" readonly>
+                    <input type="text" name="commission_model" class="form-control" value="Percentage" readonly>
                 </div>
                 <div class="form-group mb-2">
                     <label>Commission Value %</label>

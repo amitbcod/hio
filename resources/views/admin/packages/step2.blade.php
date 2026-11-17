@@ -13,7 +13,7 @@
         <h5 style="background:#0e8f84;color:#fff;padding:10px;border-radius:6px;display:inline-block;">Step 2: Add Package</h5>
 
         @php $itinerary = $package->itinerary ?? []; @endphp
-        <form method="POST" action="{{ route('admin.packages.step2.store', $package->id) }}">
+        <form method="POST" action="{{ route(\App\Support\MpoManagementRoutes::name('admin.packages.step2.store'), $package->id) }}">
             @csrf
 
             {{-- Removed separate search fields; selects are searchable via Select2 --}}
@@ -112,7 +112,7 @@
             @endforeach
 
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;">
-                <a href="{{ route('admin.packages.create') }}" class="btn btn-light">Back</a>
+                <a href="{{ route(\App\Support\MpoManagementRoutes::name('admin.packages.edit'), $package->id) }}" class="btn btn-light">Back</a>
                 <button type="submit" class="btn btn-primary next-prefix">Next: Allocation</button>
             </div>
         </form>

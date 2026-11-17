@@ -23,7 +23,7 @@
         @endif
 
         @php $itinerary = $group->itinerary ?? []; @endphp
-        <form method="POST" action="{{ route('admin.groups.step2.store', $group->id) }}">
+        <form method="POST" action="{{ route(\App\Support\MpoManagementRoutes::name('admin.groups.step2.store'), $group->id) }}">
             @csrf
 
             @foreach($dates as $i => $date)
@@ -124,7 +124,7 @@
             @endforeach
 
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;">
-                <a href="{{ route('admin.groups.edit', $group->id) }}" class="btn btn-light">Back</a>
+                <a href="{{ route(\App\Support\MpoManagementRoutes::name('admin.groups.edit'), $group->id) }}" class="btn btn-light">Back</a>
                 <button type="submit" class="btn btn-primary next-prefix">Next: Group Allocation</button>
             </div>
         </form>

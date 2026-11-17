@@ -3,7 +3,7 @@
 @section('content')
 <div class="container mt-5">
     <h2>Packages</h2>
-    <p><a href="{{ route('admin.packages.create') }}" class="btn btn-primary">Create New Package</a></p>
+    @if($canCreate)<p><a href="{{ route(\App\Support\MpoManagementRoutes::name('admin.packages.create')) }}" class="btn btn-primary">Create New Package</a></p>@endif
     @if($packages->count())
         <table class="table table-striped">
             <thead>
@@ -33,8 +33,8 @@
                     <td>{{ optional($p->available_from)->toDateString() }}</td>
                     <td>{{ optional($p->available_to)->toDateString() }}</td>
                     <td style="white-space:nowrap;">
-                        <a href="{{ route('admin.packages.step2', $p->id) }}" class="btn btn-sm btn-secondary">Edit Itinerary</a>
-                        <a href="{{ route('admin.packages.index') }}?duplicate={{ $p->id }}" class="btn btn-sm btn-light">Duplicate</a>
+                        @if($canUpdate)<a href="{{ route(\App\Support\MpoManagementRoutes::name('admin.packages.step2'), $p->id) }}" class="btn btn-sm btn-secondary">Edit Itinerary</a>@endif
+                        @if($canCreate)<a href="{{ route(\App\Support\MpoManagementRoutes::name('admin.packages.index')) }}?duplicate={{ $p->id }}" class="btn btn-sm btn-light">Duplicate</a>@endif
                     </td>
                 </tr>
             @endforeach

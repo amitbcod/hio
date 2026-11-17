@@ -4,7 +4,7 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Groups</h2>
-        <a href="{{ route('admin.groups.create') }}" class="btn btn-primary">Add New Group</a>
+        @if($canCreate)<a href="{{ route(\App\Support\MpoManagementRoutes::name('admin.groups.create')) }}" class="btn btn-primary">Add New Group</a>@endif
     </div>
 
     <div class="card shadow-sm">
@@ -41,7 +41,7 @@
                             <td>{{ optional($group->available_to)->toDateString() ?? '-' }}</td>
                             <td>{{ $group->created_at ? $group->created_at->format('d M Y') : '-' }}</td>
                             <td>
-                                <a href="{{ route('admin.groups.edit', $group->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                @if($canUpdate)<a href="{{ route(\App\Support\MpoManagementRoutes::name('admin.groups.edit'), $group->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>@endif
                             </td>
                         </tr>
                     @empty

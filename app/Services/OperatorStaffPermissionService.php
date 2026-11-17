@@ -145,6 +145,8 @@ class OperatorStaffPermissionService
             $module = 'users';
         } elseif (str_contains($routeName, 'postpone.activity-slots')) {
             $module = 'activity-bookings';
+        } elseif (str_starts_with($routeName, 'operator.payouts.')) {
+            $module = 'accounting';
         } elseif (str_starts_with($routeName, 'operator.bookings.postpone')
             || str_starts_with($routeUri, 'operator/bookings/')) {
             $module = match (strtolower((string) ($routeParameters['serviceType'] ?? ''))) {

@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('admin.packages.step4.store', $package->id) }}">
+    <form method="POST" action="{{ route(\App\Support\MpoManagementRoutes::name('admin.packages.step4.store'), $package->id) }}">
         @csrf
         @php
             $itinerary = $package->itinerary ?? [];
@@ -423,7 +423,7 @@
                 @endforeach
 
                 <div class="d-flex justify-content-between align-items-center mt-4">
-                    <a href="{{ route('admin.packages.step3', $package->id) }}" class="btn btn-light border">Back</a>
+                    <a href="{{ route(\App\Support\MpoManagementRoutes::name('admin.packages.step3'), $package->id) }}" class="btn btn-light border">Back</a>
                     <button type="submit" class="btn btn-primary px-4">Save Pricing</button>
                 </div>
             </div>

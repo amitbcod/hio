@@ -196,6 +196,17 @@ class ClosedGroupSettlementController extends Controller
             $statusSynchronizer->markProcessingForBookingReference((int) $order['booking_ref']->id);
         });
 
+        try {
+            app(\App\Services\BookingEmailNotificationService::class)
+                ->notifyBookingReference((int) $order['booking_ref']->id, 'group');
+        } catch (\Throwable $exception) {
+            \Log::error('Agent booking confirmation notification processing failed after settlement verification.', [
+                'booking_ref_id' => $order['booking_ref']->id,
+                'payment_transaction_id' => $order['payment']->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
         return redirect()->route('admin.closed-groups.settlement', ['booking_reference' => $bookingRef->booking_ref_code])
             ->with('status', 'Bank transfer verified and settled.');
     }

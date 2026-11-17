@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('admin.packages.step6.store', $package->id) }}">
+    <form method="POST" action="{{ route(\App\Support\MpoManagementRoutes::name('admin.packages.step6.store'), $package->id) }}">
         @csrf
 
         <div class="card border-0 shadow-sm" style="border-radius:14px; overflow:hidden;">
@@ -29,7 +29,7 @@
                 @endfor
 
                 <div class="d-flex justify-content-between mt-4">
-                    <a href="{{ route('admin.packages.step5', $package->id) }}" class="btn btn-outline-secondary">Back</a>
+                    <a href="{{ route(\App\Support\MpoManagementRoutes::name('admin.packages.step5'), $package->id) }}" class="btn btn-outline-secondary">Back</a>
                     <div>
                         <button type="submit" class="btn btn-primary">Next: Payment & Policies</button>
                     </div>

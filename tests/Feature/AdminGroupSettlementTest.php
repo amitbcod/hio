@@ -17,6 +17,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -42,6 +43,185 @@ class AdminGroupSettlementTest extends TestCase
         DB::setDefaultConnection('admin_group_settlement_test');
         $this->createSchema();
         $this->seedAdminGroupOrder();
+        Mail::fake();
+    }
+
+    public function test_successful_payment_sends_one_confirmation_and_operator_emails_once(): void
+    {
+        DB::table('bookings')->where('id', 1)->update([
+            'booking_type' => 'accommodation',
+            'agent_account_id' => 17,
+        ]);
+        DB::table('payment_transactions')->insert([
+            'booking_id' => 1,
+            'booking_ref_id' => 1,
+            'amount' => 2885,
+            'method' => 'againgency',
+            'status' => 'pending',
+            'transaction_ref' => 'email-payment-ref',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $this->addOperatorsAndServiceContacts();
+
+        $request = Request::create('/booking/payment/callback', 'POST', [
+            'transaction_ref' => 'email-payment-ref',
+            'status' => 'success',
+        ]);
+        $request->headers->set('X-Callback-Secret', 'test-callback-secret');
+
+        $controller = new BookingController();
+        $controller->paymentCallback($request, app(BookingOrderStatusSynchronizer::class));
+        $controller->paymentCallback($request, app(BookingOrderStatusSynchronizer::class));
+
+        Mail::assertSent(\App\Mail\BookingNotification::class, 4);
+        Mail::assertSent(\App\Mail\BookingNotification::class, fn ($mail): bool =>
+            $mail->audience === 'traveller'
+            && $mail->bookingReference === 'BR-202-20261001-2885'
+            && $mail->hasTo('lead@example.test')
+            && $mail->traveller['email'] === 'lead@example.test'
+            && $mail->services !== []
+            && $mail->render() !== ''
+        );
+        Mail::assertSent(\App\Mail\BookingNotification::class, fn ($mail): bool =>
+            $mail->audience === 'operator'
+            && $mail->hasTo('accommodation@example.test')
+            && $mail->bookingReference === 'BR-202-20261001-2885'
+            && collect($mail->services)->every(fn (array $service): bool => $service['type'] === 'Accommodation')
+            && $mail->render() !== ''
+        );
+        Mail::assertSent(\App\Mail\BookingNotification::class, fn ($mail): bool =>
+            $mail->audience === 'operator'
+            && $mail->hasTo('activity@example.test')
+            && collect($mail->services)->every(fn (array $service): bool => $service['type'] === 'Activity')
+        );
+        Mail::assertSent(\App\Mail\BookingNotification::class, fn ($mail): bool =>
+            $mail->audience === 'operator'
+            && $mail->hasTo('transport@example.test')
+            && collect($mail->services)->every(fn (array $service): bool => $service['type'] === 'Transport')
+        );
+        $this->assertSame(4, DB::table('booking_email_notifications')->where('status', 'dispatched')->count());
+    }
+
+    public function test_failed_payment_does_not_send_booking_confirmation_emails(): void
+    {
+        DB::table('payment_transactions')->insert([
+            'booking_id' => 1,
+            'booking_ref_id' => 1,
+            'amount' => 2885,
+            'method' => 'againgency',
+            'status' => 'pending',
+            'transaction_ref' => 'failed-email-payment-ref',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $this->addOperatorsAndServiceContacts();
+
+        $request = Request::create('/booking/payment/callback', 'POST', [
+            'transaction_ref' => 'failed-email-payment-ref',
+            'status' => 'failed',
+        ]);
+        $request->headers->set('X-Callback-Secret', 'test-callback-secret');
+
+        $controller = new BookingController();
+        $pendingRequest = Request::create('/booking/payment/callback', 'POST', [
+            'transaction_ref' => 'failed-email-payment-ref',
+            'status' => 'pending',
+        ]);
+        $pendingRequest->headers->set('X-Callback-Secret', 'test-callback-secret');
+        $controller->paymentCallback($pendingRequest, app(BookingOrderStatusSynchronizer::class));
+        $controller->paymentCallback($request, app(BookingOrderStatusSynchronizer::class));
+
+        Mail::assertNothingSent();
+        $this->assertSame(0, DB::table('booking_email_notifications')->count());
+    }
+
+    public function test_missing_email_recipients_are_logged_and_retried_on_a_later_paid_notification_attempt(): void
+    {
+        DB::table('payment_transactions')->insert([
+            'booking_id' => 1,
+            'booking_ref_id' => 1,
+            'amount' => 2885,
+            'method' => 'againgency',
+            'status' => 'pending',
+            'transaction_ref' => 'missing-email-payment-ref',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $this->addOperatorsAndServiceContacts();
+        DB::table('travellers')->where('trip_id', 1)->update(['email' => null]);
+        DB::table('operators')->update(['email' => null]);
+
+        $request = Request::create('/booking/payment/callback', 'POST', [
+            'transaction_ref' => 'missing-email-payment-ref',
+            'status' => 'success',
+        ]);
+        $request->headers->set('X-Callback-Secret', 'test-callback-secret');
+        (new BookingController())->paymentCallback($request, app(BookingOrderStatusSynchronizer::class));
+
+        Mail::assertNothingSent();
+        $this->assertSame(4, DB::table('booking_email_notifications')->where('status', 'failed')->count());
+        $this->assertSame(4, DB::table('booking_email_notifications')->where('attempts', 1)->count());
+
+        DB::table('travellers')->where('trip_id', 1)->update(['email' => 'lead@example.test']);
+        DB::table('operators')->where('id', 1)->update(['email' => 'accommodation@example.test']);
+        DB::table('operators')->where('id', 2)->update(['email' => 'activity@example.test']);
+        DB::table('operators')->where('id', 3)->update(['email' => 'transport@example.test']);
+        app(\App\Services\BookingEmailNotificationService::class)->notifyBookingReference(1);
+
+        Mail::assertSent(\App\Mail\BookingNotification::class, 4);
+        $this->assertSame(4, DB::table('booking_email_notifications')->where('status', 'dispatched')->count());
+        $this->assertSame(4, DB::table('booking_email_notifications')->where('attempts', 2)->count());
+    }
+
+    public function test_agent_booking_emails_send_only_after_admin_verifies_settlement(): void
+    {
+        DB::table('agent_accounts')->insert([
+            'id' => 1,
+            'agency_name' => 'Example Agency',
+            'contact_person' => 'Agency Contact',
+        ]);
+        DB::table('bookings')->where('id', 1)->update([
+            'is_admin_created' => false,
+            'agent_account_id' => 1,
+            'agent_verification_status' => 'verified',
+        ]);
+        DB::table('payment_transactions')->insert([
+            'booking_id' => 1,
+            'booking_ref_id' => 1,
+            'amount' => 2885,
+            'method' => 'bank_transfer',
+            'status' => 'pending',
+            'transaction_ref' => 'agent-bank-transfer-ref',
+            'settlement_status' => 'pending_verification',
+            'bank_transfer_receipt_path' => 'receipt.pdf',
+            'submitted_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $this->addOperatorsAndServiceContacts();
+
+        $blockedCallback = Request::create('/booking/payment/callback', 'POST', [
+            'transaction_ref' => PaymentTransaction::where('booking_ref_id', 1)->value('transaction_ref'),
+            'status' => 'success',
+        ]);
+        $blockedCallback->headers->set('X-Callback-Secret', 'test-callback-secret');
+        $response = (new BookingController())->paymentCallback(
+            $blockedCallback,
+            app(BookingOrderStatusSynchronizer::class)
+        );
+        $this->assertSame(409, $response->getStatusCode());
+        Mail::assertNothingSent();
+
+        (new ClosedGroupSettlementController())->verify(
+            BookingRef::findOrFail(1),
+            app(AdminGroupBookingSettlementService::class),
+            app(BookingOrderStatusSynchronizer::class)
+        );
+
+        Mail::assertSent(\App\Mail\BookingNotification::class, 4);
+        $this->assertSame('paid', PaymentTransaction::where('booking_ref_id', 1)->value('status'));
+        $this->assertSame(4, DB::table('booking_email_notifications')->where('status', 'dispatched')->count());
     }
 
     public function test_it_looks_up_the_admin_group_by_common_reference_and_uses_persisted_amounts(): void
@@ -559,6 +739,11 @@ class AdminGroupSettlementTest extends TestCase
         $this->assertSame('paid', DB::table('payment_transactions')->where('id', 2)->value('status'));
         $this->assertServiceStatuses(1, 'Processing');
         $this->assertSame(2, \App\Models\TransportBooking::where('booking_ref_id', 1)->customerVisible()->count());
+        Mail::assertSent(\App\Mail\BookingNotification::class, fn ($mail): bool =>
+            $mail->audience === 'traveller'
+            && $mail->hasTo('lead@example.test')
+            && $mail->bookingReference === 'BR-202-20261001-2885'
+        );
         Http::assertSent(static fn ($request): bool => $request->url() === 'https://gateway.example.test/api/v1/payments/provider-payment-2'
             && $request->hasHeader('X-API-KEY', 'test-api-key'));
     }
@@ -691,16 +876,52 @@ class AdminGroupSettlementTest extends TestCase
             $table->timestamp('verified_at')->nullable();
             $table->timestamps();
         });
+        Schema::create('operators', function (Blueprint $table): void {
+            $table->id();
+            $table->string('full_name')->nullable();
+            $table->string('email')->nullable();
+            $table->string('name')->nullable();
+            $table->timestamps();
+        });
+        Schema::create('booking_email_notifications', function (Blueprint $table): void {
+            $table->id();
+            $table->string('notification_key', 191)->unique();
+            $table->unsignedBigInteger('booking_ref_id')->nullable();
+            $table->unsignedBigInteger('trip_id')->nullable();
+            $table->string('audience', 24);
+            $table->unsignedBigInteger('related_operator_id')->nullable();
+            $table->json('service_booking_ids')->nullable();
+            $table->string('recipient_email')->nullable();
+            $table->string('status', 24)->default('pending');
+            $table->unsignedInteger('attempts')->default(0);
+            $table->timestamp('processing_at')->nullable();
+            $table->timestamp('dispatched_at')->nullable();
+            $table->timestamp('failed_at')->nullable();
+            $table->text('failure_reason')->nullable();
+            $table->timestamps();
+        });
+        Schema::create('transport_vehicle_names', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name')->nullable();
+        });
+        Schema::create('transport_vehicles', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('transport_id')->nullable();
+            $table->unsignedBigInteger('vehicle_name_id')->nullable();
+            $table->string('vehicle_name')->nullable();
+        });
         Schema::create('accommodations', function (Blueprint $table): void {
             $table->id();
             $table->string('property_name')->nullable();
             $table->string('name')->nullable();
+            $table->unsignedBigInteger('operator_id')->nullable();
             $table->timestamp('deleted_at')->nullable();
         });
         Schema::create('accommodation_rooms', function (Blueprint $table): void {
             $table->id();
             $table->string('room_name')->nullable();
             $table->string('room_type')->nullable();
+            $table->string('name')->nullable();
         });
         Schema::create('accommodation_bookings', function (Blueprint $table): void {
             $table->id();
@@ -711,7 +932,13 @@ class AdminGroupSettlementTest extends TestCase
             $table->date('check_in_date')->nullable();
             $table->date('check_out_date')->nullable();
             $table->unsignedInteger('rooms_booked')->default(1);
+            $table->unsignedInteger('adults')->nullable();
+            $table->unsignedInteger('children')->nullable();
+            $table->string('guest_name')->nullable();
+            $table->string('guest_email')->nullable();
+            $table->string('guest_phone')->nullable();
             $table->decimal('total_amount', 10, 2)->default(0);
+            $table->string('currency')->nullable();
             $table->string('booking_status')->nullable();
             $table->string('payment_method')->nullable();
             $table->unsignedBigInteger('guest_otp_token_id')->nullable();
@@ -721,6 +948,7 @@ class AdminGroupSettlementTest extends TestCase
             $table->id();
             $table->string('activity_name')->nullable();
             $table->string('name')->nullable();
+            $table->unsignedBigInteger('operator_id')->nullable();
             $table->timestamp('deleted_at')->nullable();
         });
         Schema::create('activity_bookings', function (Blueprint $table): void {
@@ -729,10 +957,14 @@ class AdminGroupSettlementTest extends TestCase
             $table->unsignedBigInteger('activity_id');
             $table->string('booking_reference');
             $table->string('variant_name')->nullable();
+            $table->string('guest_name')->nullable();
+            $table->string('guest_email')->nullable();
+            $table->string('guest_phone')->nullable();
             $table->date('activity_date')->nullable();
             $table->unsignedInteger('adults')->default(1);
             $table->unsignedInteger('children')->default(0);
             $table->decimal('total_amount', 10, 2)->default(0);
+            $table->string('currency')->nullable();
             $table->string('booking_status')->nullable();
             $table->string('payment_method')->nullable();
             $table->unsignedBigInteger('guest_otp_token_id')->nullable();
@@ -742,20 +974,31 @@ class AdminGroupSettlementTest extends TestCase
             $table->id();
             $table->string('vehicle_display_name')->nullable();
             $table->string('vehicle_name')->nullable();
+            $table->unsignedBigInteger('operator_id')->nullable();
             $table->timestamp('deleted_at')->nullable();
         });
         Schema::create('transport_bookings', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('booking_ref_id');
             $table->unsignedBigInteger('transport_id');
+            $table->unsignedBigInteger('transport_vehicle_id')->nullable();
             $table->string('booking_reference');
             $table->date('pickup_date')->nullable();
+            $table->string('pickup_time')->nullable();
             $table->date('return_date')->nullable();
             $table->string('route_from')->nullable();
             $table->string('route_to')->nullable();
+            $table->string('pickup_address')->nullable();
+            $table->string('dropoff_address')->nullable();
+            $table->string('other_vehicle_name')->nullable();
+            $table->string('guest_name')->nullable();
+            $table->string('guest_email')->nullable();
+            $table->string('guest_phone')->nullable();
             $table->unsignedInteger('total_passengers')->default(1);
             $table->unsignedInteger('adults')->default(1);
+            $table->unsignedInteger('children')->default(0);
             $table->decimal('total_amount', 10, 2)->default(0);
+            $table->string('currency')->nullable();
             $table->string('booking_status')->nullable();
             $table->string('payment_method')->nullable();
             $table->timestamps();
@@ -787,6 +1030,18 @@ class AdminGroupSettlementTest extends TestCase
             ['booking_ref_id' => 1, 'transport_id' => 1, 'booking_reference' => 'TRS-1', 'pickup_date' => '2026-10-01', 'route_from' => 'Airport', 'route_to' => 'South East', 'total_passengers' => 2, 'total_amount' => 75, 'booking_status' => 'Pending'],
             ['booking_ref_id' => 1, 'transport_id' => 2, 'booking_reference' => 'TRS-2', 'pickup_date' => '2026-10-02', 'route_from' => 'Airport', 'route_to' => 'South East', 'total_passengers' => 2, 'total_amount' => 50, 'booking_status' => 'Pending'],
         ]);
+    }
+
+    private function addOperatorsAndServiceContacts(): void
+    {
+        DB::table('operators')->insert([
+            ['id' => 1, 'full_name' => 'Accommodation Operator', 'email' => 'accommodation@example.test'],
+            ['id' => 2, 'full_name' => 'Activity Operator', 'email' => 'activity@example.test'],
+            ['id' => 3, 'full_name' => 'Transport Operator', 'email' => 'transport@example.test'],
+        ]);
+        DB::table('accommodations')->where('id', 1)->update(['operator_id' => 1]);
+        DB::table('activities')->whereIn('id', [1, 2])->update(['operator_id' => 2]);
+        DB::table('transports')->whereIn('id', [1, 2])->update(['operator_id' => 3]);
     }
 
     private function assertServiceStatuses(int $bookingReferenceId, string $status): void
