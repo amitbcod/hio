@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Model;
 
 class AdminUser extends Model implements AuthenticatableContract
 {
     use Authenticatable;
+    use Notifiable;
 
     protected $table = 'admin_users';
 

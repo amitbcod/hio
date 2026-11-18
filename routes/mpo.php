@@ -169,15 +169,6 @@ Route::prefix('mpo')->name('mpo.')->group(function () {
                 ->whereNumber('settlement')
                 ->name('accounting-settlements.authorize');
         });
-        Route::middleware([
-            MpoRegistrationComplete::class,
-            \App\Http\Middleware\MpoStaffModuleAccess::class.':accounting,approve',
-        ])->group(function (): void {
-            Route::post('accounting-settlements/{settlement}/transfers/{transfer}/verify-operator', [\App\Http\Controllers\Mpo\FinancialSettlementController::class, 'verifyOperatorTransfer'])
-                ->whereNumber('settlement')
-                ->whereNumber('transfer')
-                ->name('accounting-settlements.transfers.verify-operator');
-        });
         Route::middleware(MpoOwnerOnly::class)->group(function (): void {
             Route::get('operator-roles', [\App\Http\Controllers\Mpo\OperatorRoleController::class, 'index'])->name('operator-roles.index');
             Route::post('operator-roles', [\App\Http\Controllers\Mpo\OperatorRoleController::class, 'store'])->name('operator-roles.store');

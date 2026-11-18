@@ -53,7 +53,7 @@ class FinancialSettlement extends Model
 
     public function getVerifiedAmountAttribute(): string
     {
-        return FinancialAmount::sum($this->transfers()->where('status', 'Verified')->pluck('amount'));
+        return FinancialAmount::sum($this->transfers()->whereIn('status', ['Transfer Verified', 'Verified'])->pluck('amount'));
     }
 
     public function getOutstandingAmountAttribute(): string

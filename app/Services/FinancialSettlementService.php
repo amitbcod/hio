@@ -9,15 +9,19 @@ use App\Models\FinancialBookingReview;
 use App\Models\FinancialSettlement;
 use App\Models\FinancialSettlementEvent;
 use App\Models\FinancialSettlementItem;
+use App\Models\FinancialSettlementTransfer;
 use App\Models\Operator;
+use App\Models\OperatorUser;
 use App\Models\OperatorAccountingPayout;
 use App\Models\OperatorCollaborationAgreement;
 use App\Models\TransportBooking;
+use App\Notifications\FinancialSettlementTransferNotification;
 use App\Support\FinancialAmount;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -120,9 +124,14 @@ class FinancialSettlementService
         DB::transaction(function () use ($settlement, $data, $actorType, $actorId): void {
             $locked = FinancialSettlement::query()->lockForUpdate()->findOrFail($settlement->id);
             $allowedStatuses = $locked->settlement_type === self::HIO_SLA
-                ? ['Payable', 'Partially Paid', 'Awaiting Verification']
+                ? ['Payable', 'Partially Paid', 'Awaiting Verification', 'Transfer Initiated']
                 : ['Authorised', 'Partially Paid', 'Transfer Initiated'];
             abort_unless(in_array($locked->status, $allowedStatuses, true), 409, 'This settlement must be invoiced or authorised before recording a transfer.');
+            abort_if(
+                $locked->transfers()->where('transaction_number', $data['transaction_number'])->exists(),
+                409,
+                'This transaction reference has already been recorded for the settlement.',
+            );
             $receivedCents = FinancialAmount::cents(FinancialAmount::sum($locked->transfers()->pluck('amount')));
             $amountCents = FinancialAmount::cents($data['amount']);
             abort_if($amountCents <= 0 || $receivedCents + $amountCents > FinancialAmount::cents($locked->net_amount), 422, 'Transfer amount exceeds the remaining settlement balance.');
@@ -134,7 +143,7 @@ class FinancialSettlementService
                 'transferred_on' => $data['transferred_on'],
                 'amount' => FinancialAmount::decimal($amountCents),
                 'currency' => $locked->currency,
-                'status' => 'Recorded',
+                'status' => 'Transfer Initiated',
                 'evidence_path' => $data['evidence_path'],
                 'notes' => $data['notes'] ?? null,
                 'recorded_by_type' => $actorType,
@@ -142,9 +151,10 @@ class FinancialSettlementService
             ]);
 
             $from = $locked->status;
-            $locked->status = $locked->settlement_type === self::HIO_SLA ? 'Awaiting Verification' : 'Transfer Initiated';
+            $locked->status = 'Transfer Initiated';
             $locked->saveOrFail();
             $this->event($locked, 'transfer_recorded', $from, $locked->status, $actorType, $actorId, $data['notes'] ?? null, $transfer->id);
+            DB::afterCommit(fn () => $this->notifyTransferRecipient($locked, $transfer));
         });
     }
 
@@ -207,15 +217,38 @@ class FinancialSettlementService
         DB::transaction(function () use ($settlement, $transferId, $actorType, $actorId): void {
             $locked = FinancialSettlement::query()->lockForUpdate()->findOrFail($settlement->id);
             $transfer = $locked->transfers()->lockForUpdate()->findOrFail($transferId);
-            abort_unless($transfer->status === 'Recorded', 409, 'This transfer has already been verified.');
-            $transfer->status = 'Verified';
+            $isHioSettlement = $locked->settlement_type === self::HIO_SLA;
+            abort_unless(
+                ($isHioSettlement && $actorType === 'global_admin')
+                    || (! $isHioSettlement && $locked->settlement_type === self::OPERATOR_PAYOUT
+                        && in_array($actorType, ['operator', 'operator_staff'], true)),
+                403,
+                'Only the payment beneficiary can confirm receipt.',
+            );
+            if (! $isHioSettlement) {
+                $operatorId = $actorType === 'operator'
+                    ? $actorId
+                    : app(\App\Services\OperatorStaffPermissionService::class)
+                        ->owner(OperatorUser::query()->findOrFail($actorId))?->id;
+                abort_unless((int) $operatorId === (int) $locked->operator_id, 403, 'This payout belongs to another Operator.');
+            }
+            $allowedSettlementStatuses = $isHioSettlement
+                ? ['Transfer Initiated', 'Awaiting Verification', 'Partially Paid']
+                : ['Transfer Initiated', 'Partially Paid'];
+            abort_unless(in_array($locked->status, $allowedSettlementStatuses, true), 409, 'This settlement has no initiated transfer awaiting confirmation.');
+            abort_unless(
+                in_array($transfer->status, ['Transfer Initiated', 'Recorded'], true),
+                409,
+                'This transfer has already been verified or was not initiated.',
+            );
+            $transfer->status = 'Transfer Verified';
             $transfer->verified_by_type = $actorType;
             $transfer->verified_by_id = $actorId;
             $transfer->verified_at = now();
             $transfer->saveOrFail();
 
             $verifiedCents = FinancialAmount::cents(FinancialAmount::sum(
-                $locked->transfers()->where('status', 'Verified')->pluck('amount'),
+                $locked->transfers()->whereIn('status', ['Transfer Verified', 'Verified'])->pluck('amount'),
             ));
             $from = $locked->status;
             if ($verifiedCents >= FinancialAmount::cents($locked->net_amount)) {
@@ -225,7 +258,35 @@ class FinancialSettlementService
             }
             $locked->saveOrFail();
             $this->event($locked, 'transfer_verified', $from, $locked->status, $actorType, $actorId, null, $transfer->id);
+            DB::afterCommit(fn () => $this->notifyMpoOfVerification($locked, $transfer));
         });
+    }
+
+    private function notifyTransferRecipient(
+        FinancialSettlement $settlement,
+        FinancialSettlementTransfer $transfer,
+    ): void {
+        $notification = new FinancialSettlementTransferNotification($settlement, $transfer, 'initiated');
+        if ($settlement->settlement_type === self::HIO_SLA) {
+            $recipients = AdminUser::query()
+                ->where('admin_type', '!=', 'mpo')
+                ->where('status', 'active')
+                ->get();
+        } else {
+            $recipients = Operator::query()->withoutGlobalScopes()->whereKey($settlement->operator_id)->get();
+        }
+
+        Notification::send($recipients, $notification);
+    }
+
+    private function notifyMpoOfVerification(
+        FinancialSettlement $settlement,
+        FinancialSettlementTransfer $transfer,
+    ): void {
+        $mpo = $settlement->mpo()->first();
+        if ($mpo) {
+            $mpo->notify(new FinancialSettlementTransferNotification($settlement, $transfer, 'verified'));
+        }
     }
 
     public function acknowledgeOperatorPayment(FinancialSettlement $settlement, string $actorType, int $actorId): void

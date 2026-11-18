@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminUser;
 use App\Models\Country;
 use App\Models\FinancialSettlement;
 use App\Services\FinancialSettlementService;
@@ -38,22 +39,26 @@ class FinancialSettlementController extends Controller
             'isGlobalAdmin' => true,
             'canGenerate' => false,
             'canRecordTransfer' => false,
-            'canVerifyOperatorTransfer' => false,
         ]);
     }
 
     public function show(int $settlement)
     {
+        $admin = AdminUser::query()->findOrFail(session('admin_id'));
         $record = FinancialSettlement::query()
             ->with(['operator.business', 'mpo', 'country', 'items', 'transfers', 'events'])
             ->findOrFail($settlement);
 
         return view('accounting.settlements.show', [
             'settlement' => $record,
+            'transferNotifications' => $admin->notifications()
+                ->where('type', \App\Notifications\FinancialSettlementTransferNotification::class)
+                ->latest()
+                ->limit(10)
+                ->get(),
             'isGlobalAdmin' => true,
             'canRecordTransfer' => false,
             'canAuthorizeOperatorPayout' => false,
-            'canVerifyOperatorTransfer' => false,
             'canVerifyHioTransfer' => $record->settlement_type === 'hio_sla',
             'canIssueHioInvoice' => $record->settlement_type === 'hio_sla'
                 && $record->status === 'Statement Generated',

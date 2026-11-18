@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Mpo;
 use App\Http\Controllers\Controller;
 use App\Models\AdminUser;
 use App\Models\FinancialSettlement;
-use App\Models\FinancialSettlementTransfer;
 use App\Models\MpoStaffUser;
 use App\Services\FinancialSettlementService;
 use App\Services\MpoStaffPermissionService;
@@ -48,7 +47,6 @@ class FinancialSettlementController extends Controller
             'canGenerate' => $this->can($request, 'create'),
             'canRecordTransfer' => $this->can($request, 'update'),
             'canAuthorizeOperatorPayout' => $this->can($request, 'approve'),
-            'canVerifyOperatorTransfer' => $this->can($request, 'approve'),
         ]);
     }
 
@@ -62,11 +60,14 @@ class FinancialSettlementController extends Controller
 
         return view('accounting.settlements.show', [
             'settlement' => $record,
+            'transferNotifications' => $mpo->notifications()
+                ->where('type', \App\Notifications\FinancialSettlementTransferNotification::class)
+                ->latest()
+                ->limit(10)
+                ->get(),
             'isGlobalAdmin' => false,
             'canRecordTransfer' => $this->can($request, 'update'),
             'canAuthorizeOperatorPayout' => $this->can($request, 'approve')
-                && $record->settlement_type === 'operator_payout',
-            'canVerifyOperatorTransfer' => $this->can($request, 'approve')
                 && $record->settlement_type === 'operator_payout',
             'canAcknowledge' => false,
         ]);
@@ -110,24 +111,6 @@ class FinancialSettlementController extends Controller
 
         return redirect()->route('mpo.accounting-settlements.show', $record)
             ->with('success', 'Transfer evidence recorded; the beneficiary must verify receipt before the settlement is marked paid.');
-    }
-
-    public function verifyOperatorTransfer(
-        Request $request,
-        int $settlement,
-        int $transfer,
-        FinancialSettlementService $settlements,
-    ) {
-        [$mpo, $staff] = $this->context($request);
-        $record = FinancialSettlement::query()
-            ->where('mpo_admin_user_id', $mpo->id)
-            ->where('settlement_type', 'operator_payout')
-            ->findOrFail($settlement);
-        abort_unless($record->transfers()->whereKey($transfer)->exists(), 404);
-        $settlements->verifyTransfer($record, $transfer, $staff ? 'mpo_staff' : 'mpo', (int) ($staff?->id ?? $mpo->id));
-
-        return redirect()->route('mpo.accounting-settlements.show', $record)
-            ->with('success', 'Operator transfer verified.');
     }
 
     public function authorizeOperatorPayout(

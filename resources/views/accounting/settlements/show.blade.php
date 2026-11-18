@@ -12,6 +12,16 @@
 
     @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
     @if($errors->any())<div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+    @if($transferNotifications->isNotEmpty())
+        <section class="alert alert-info">
+            <strong>Settlement notifications</strong>
+            <ul class="mb-0 mt-2">
+                @foreach($transferNotifications as $notification)
+                    <li><a href="{{ $notification->data['url'] }}">{{ $notification->data['title'] }}</a> — {{ $notification->data['message'] }}</li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
 
     <div class="card mb-3"><div class="card-body">
         <div class="row g-3">
@@ -92,11 +102,9 @@
                     <td>{{ $transfer->status }}</td><td><a href="{{ $isGlobalAdmin ? route('admin.accounting-settlements.transfers.evidence', [$settlement, $transfer]) : route('mpo.accounting-settlements.transfers.evidence', [$settlement, $transfer]) }}">View evidence</a></td>
                     <td>
                         @if($canVerifyHioTransfer ?? false)
-                            @if($transfer->status === 'Recorded')
-                                <form method="POST" action="{{ route('admin.accounting-settlements.transfers.verify', [$settlement, $transfer]) }}">@csrf<button class="btn btn-sm btn-success">Verify HIO receipt</button></form>
+                            @if(in_array($transfer->status, ['Transfer Initiated', 'Recorded'], true))
+                                <form method="POST" action="{{ route('admin.accounting-settlements.transfers.verify', [$settlement, $transfer]) }}">@csrf<button class="btn btn-sm btn-success">Confirm receipt</button></form>
                             @endif
-                        @elseif($canVerifyOperatorTransfer && $transfer->status === 'Recorded')
-                            <form method="POST" action="{{ route('mpo.accounting-settlements.transfers.verify-operator', [$settlement, $transfer]) }}">@csrf<button class="btn btn-sm btn-success">Verify operator receipt</button></form>
                         @else
                             —
                         @endif
@@ -109,7 +117,7 @@
 
     @php
         $transferAllowed = $settlement->settlement_type === 'hio_sla'
-            ? in_array($settlement->status, ['Payable', 'Partially Paid', 'Awaiting Verification'], true)
+            ? in_array($settlement->status, ['Payable', 'Partially Paid', 'Awaiting Verification', 'Transfer Initiated'], true)
             : in_array($settlement->status, ['Authorised', 'Partially Paid', 'Transfer Initiated'], true);
     @endphp
     @if($canRecordTransfer && $transferAllowed && (float) $settlement->outstanding_amount > 0)
@@ -133,6 +141,10 @@
             @csrf
             <button class="btn btn-success">Acknowledge HIO receipt</button>
         </form>
+    @endif
+
+    @if(! $isGlobalAdmin && $settlement->status === 'Transfer Initiated')
+        <div class="alert alert-info">Transfer initiated. Receipt confirmation is pending from the payment recipient.</div>
     @endif
 
     <section class="card">

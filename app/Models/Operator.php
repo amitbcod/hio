@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Auth\Authenticatable;
 use App\Models\Concerns\ScopesToAdminCountry;
+use Illuminate\Notifications\Notifiable;
 
 class Operator extends Model implements AuthenticatableContract
 {
     use Authenticatable;
     use ScopesToAdminCountry;
+    use Notifiable;
 
     protected $table = 'operators';
     protected $guarded = [];

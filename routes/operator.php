@@ -29,9 +29,10 @@ Route::prefix('operator')->name('operator.')->group(function () {
             ->name('payouts.transfers.evidence');
         Route::post('payouts/request', [\App\Http\Controllers\Operator\FinancialPayoutController::class, 'request'])
             ->name('payouts.store');
-        Route::post('payouts/{settlement}/acknowledge', [\App\Http\Controllers\Operator\FinancialPayoutController::class, 'acknowledge'])
+        Route::post('payouts/{settlement}/transfers/{transfer}/confirm-receipt', [\App\Http\Controllers\Operator\FinancialPayoutController::class, 'confirmReceipt'])
             ->whereNumber('settlement')
-            ->name('payouts.acknowledge');
+            ->whereNumber('transfer')
+            ->name('payouts.transfers.confirm-receipt');
 
         Route::get('profile', [ProfileController::class, 'showProfile'])->name('profile');
         Route::get('trips', [\App\Http\Controllers\Operator\TripController::class, 'index'])->name('trips.index');

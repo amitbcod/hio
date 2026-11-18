@@ -42,7 +42,14 @@ class FinancialPayoutController extends Controller
 
         return view('operator.payouts.show', [
             'payout' => $payout,
-            'canAcknowledge' => $payout->status === 'Paid' && $this->can($request, 'update', $permissions),
+            'transferNotifications' => $owner->notifications()
+                ->where('type', \App\Notifications\FinancialSettlementTransferNotification::class)
+                ->latest()
+                ->limit(10)
+                ->get(),
+            'canConfirmReceipt' => in_array($payout->status, ['Transfer Initiated', 'Partially Paid'], true)
+                && $payout->transfers->contains(fn ($transfer) => in_array($transfer->status, ['Transfer Initiated', 'Recorded'], true))
+                && $this->can($request, 'update', $permissions),
         ]);
     }
 
@@ -58,7 +65,13 @@ class FinancialPayoutController extends Controller
                 : 'No new eligible On Request bookings were available.');
     }
 
-    public function acknowledge(Request $request, int $settlement, FinancialSettlementService $settlements, OperatorStaffPermissionService $permissions)
+    public function confirmReceipt(
+        Request $request,
+        int $settlement,
+        int $transfer,
+        FinancialSettlementService $settlements,
+        OperatorStaffPermissionService $permissions,
+    )
     {
         $owner = $this->owner($request, $permissions);
         abort_unless($this->can($request, 'update', $permissions), 403);
@@ -67,10 +80,16 @@ class FinancialPayoutController extends Controller
             ->where('operator_id', $owner->id)
             ->findOrFail($settlement);
         $actor = $request->user('operator_staff') ?? $owner;
-        $settlements->acknowledgeOperatorPayment($payout, $actor instanceof OperatorUser ? 'operator_staff' : 'operator', (int) $actor->id);
+        abort_unless($payout->transfers()->whereKey($transfer)->exists(), 404);
+        $settlements->verifyTransfer(
+            $payout,
+            $transfer,
+            $actor instanceof OperatorUser ? 'operator_staff' : 'operator',
+            (int) $actor->id,
+        );
 
         return redirect()->route('operator.payouts.show', $payout)
-            ->with('success', 'Receipt acknowledged.');
+            ->with('success', 'Transfer receipt confirmed.');
     }
 
     public function downloadEvidence(
