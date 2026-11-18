@@ -48,6 +48,7 @@ class CountryAdminController extends Controller
     public function store(Request $request)
     {
         $data = $this->validated($request);
+        $country = Country::query()->findOrFail($data['country_id']);
         $administrator = new AdminUser;
         $administrator->name = $data['name'];
         $administrator->email = $data['email'];
@@ -62,7 +63,11 @@ class CountryAdminController extends Controller
         $token = Str::random(64);
         $administrator->mpo_password_setup_token_hash = hash('sha256', $token);
         $administrator->mpo_password_setup_expires_at = now()->addHours(24);
-        $administrator->save();
+        DB::transaction(function () use ($administrator, $country, $data): void {
+            $country->vat_percentage = $data['vat_percentage'] ?? 0;
+            $country->save();
+            $administrator->save();
+        });
 
         try {
             Mail::to($administrator->email)->send(new \App\Mail\MpoAccountActivation(
@@ -112,7 +117,11 @@ class CountryAdminController extends Controller
         if (filled($data['password'] ?? null)) {
             $administrator->password_hash = Hash::make($data['password']);
         }
-        DB::transaction(function () use ($administrator, $countryChanged, $wasActive): void {
+        $country = Country::query()->findOrFail($data['country_id']);
+        DB::transaction(function () use ($administrator, $country, $data, $countryChanged, $wasActive): void {
+            $country->vat_percentage = $data['vat_percentage'] ?? 0;
+            $country->save();
+
             if (! $administrator->save()) {
                 throw new \RuntimeException('The MPO account could not be saved.');
             }
@@ -146,6 +155,7 @@ class CountryAdminController extends Controller
             ],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'password' => [$administrator ? 'nullable' : 'required', 'string', 'min:8', 'confirmed'],
+            'vat_percentage' => ['nullable', 'numeric', 'between:0,100', 'decimal:0,4'],
         ], [
             'country_id.unique' => 'This country is already assigned to an MPO.',
         ]);

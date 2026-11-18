@@ -8,7 +8,6 @@ use App\Models\Business;
 use App\Models\Country;
 use App\Models\MpoAccountingConfiguration;
 use App\Models\MpoCollaborationAgreement;
-use App\Models\MpoCompliance;
 use App\Models\MpoPayoutConfiguration;
 use App\Models\Region;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -36,12 +35,14 @@ class MpoOnboardingTest extends TestCase
                 'status' => 'active',
                 'password' => 'InitialPass123!',
                 'password_confirmation' => 'InitialPass123!',
+                'vat_percentage' => '18.5000',
             ])
             ->assertRedirect(route('admin.country-admins.index'));
 
         $mpo = AdminUser::query()->where('email', 'mpo@example.test')->firstOrFail();
         $this->assertSame('mpo', $mpo->admin_type);
         $this->assertSame($country->id, $mpo->country_id);
+        $this->assertSame('18.5000', $country->fresh()->vat_percentage);
         $this->assertTrue(Hash::check('InitialPass123!', $mpo->password_hash));
         $this->assertNotNull($mpo->mpo_password_setup_token_hash);
 
@@ -97,7 +98,57 @@ class MpoOnboardingTest extends TestCase
             ->get(route('admin.country-admins.edit', $mpo))
             ->assertOk()
             ->assertSee('Edit MPO')
-            ->assertSee('value="' . $country->id . '" selected', false);
+            ->assertSee('Country VAT / Tax (%)')
+            ->assertSee('value="'.$country->id.'" data-vat-percentage="0.0000" selected', false);
+    }
+
+    public function test_global_admin_can_update_country_vat_from_the_mpo_form_and_defaults_to_zero(): void
+    {
+        Mail::fake();
+        $country = $this->country('Mauritius', 'MU');
+        $globalAdmin = $this->globalAdmin();
+
+        $this->withSession(['admin_id' => $globalAdmin->id])
+            ->post(route('admin.country-admins.store'), [
+                'name' => 'Island MPO',
+                'email' => 'mpo-vat@example.test',
+                'country_id' => $country->id,
+                'status' => 'active',
+                'password' => 'InitialPass123!',
+                'password_confirmation' => 'InitialPass123!',
+            ])
+            ->assertRedirect(route('admin.country-admins.index'));
+
+        $mpo = AdminUser::query()->where('email', 'mpo-vat@example.test')->firstOrFail();
+        $this->assertSame('0.0000', $country->fresh()->vat_percentage);
+
+        $this->withSession(['admin_id' => $globalAdmin->id])
+            ->put(route('admin.country-admins.update', $mpo), [
+                'name' => $mpo->name,
+                'email' => $mpo->email,
+                'country_id' => $country->id,
+                'status' => 'active',
+                'vat_percentage' => '17.2500',
+                'password' => '',
+                'password_confirmation' => '',
+            ])
+            ->assertRedirect(route('admin.country-admins.index'));
+
+        $this->assertSame('17.2500', $country->fresh()->vat_percentage);
+
+        $this->withSession(['admin_id' => $globalAdmin->id])
+            ->put(route('admin.country-admins.update', $mpo), [
+                'name' => $mpo->name,
+                'email' => $mpo->email,
+                'country_id' => $country->id,
+                'status' => 'active',
+                'vat_percentage' => '100.0001',
+                'password' => '',
+                'password_confirmation' => '',
+            ])
+            ->assertSessionHasErrors('vat_percentage');
+
+        $this->assertSame('17.2500', $country->fresh()->vat_percentage);
     }
 
     public function test_admin_created_mpo_can_set_password_sign_in_and_open_own_profile(): void

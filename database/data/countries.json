@@ -1,0 +1,2472 @@
+[
+    {
+        "name":  "Afghanistan",
+        "iso_code":  "AF",
+        "currency_code":  "AFN",
+        "time_zone":  "Asia/Kabul",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Albania",
+        "iso_code":  "AL",
+        "currency_code":  "ALL",
+        "time_zone":  "Europe/Tirane",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Algeria",
+        "iso_code":  "DZ",
+        "currency_code":  "DZD",
+        "time_zone":  "Africa/Algiers",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Andorra",
+        "iso_code":  "AD",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Andorra",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Angola",
+        "iso_code":  "AO",
+        "currency_code":  "AOA",
+        "time_zone":  "Africa/Luanda",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Anguilla",
+        "iso_code":  "AI",
+        "currency_code":  "XCD",
+        "time_zone":  "America/Anguilla",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Antarctica",
+        "iso_code":  "AQ",
+        "currency_code":  "XCD",
+        "time_zone":  "Antarctica/McMurdo, Antarctica/Casey, Antarctica/Davis, Antarctica/DumontDUrville, Antarctica/Mawson, Antarctica/Palmer, Antarctica/Rothera, Antarctica/Syowa, Antarctica/Troll, Antarctica/Vostok",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Antigua \u0026 Barbuda",
+        "iso_code":  "AG",
+        "currency_code":  "XCD",
+        "time_zone":  "America/Antigua",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Argentina",
+        "iso_code":  "AR",
+        "currency_code":  "ARS",
+        "time_zone":  "America/Argentina/Buenos_Aires, America/Argentina/Cordoba, America/Argentina/Salta, America/Argentina/Jujuy, America/Argentina/Tucuman, America/Argentina/Catamarca, America/Argentina/La_Rioja, America/Argentina/San_Juan, America/Argentina/Mendoza, America/Argentina/San_Luis, America/Argentina/Rio_Gallegos, America/Argentina/Ushuaia",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Armenia",
+        "iso_code":  "AM",
+        "currency_code":  "AMD",
+        "time_zone":  "Asia/Yerevan",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Aruba",
+        "iso_code":  "AW",
+        "currency_code":  "AWG",
+        "time_zone":  "America/Aruba",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Australia",
+        "iso_code":  "AU",
+        "currency_code":  "AUD",
+        "time_zone":  "Australia/Lord_Howe, Antarctica/Macquarie, Australia/Hobart, Australia/Melbourne, Australia/Sydney, Australia/Broken_Hill, Australia/Brisbane, Australia/Lindeman, Australia/Adelaide, Australia/Darwin, Australia/Perth, Australia/Eucla",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Austria",
+        "iso_code":  "AT",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Vienna",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Azerbaijan",
+        "iso_code":  "AZ",
+        "currency_code":  "AZN",
+        "time_zone":  "Asia/Baku",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Bahamas",
+        "iso_code":  "BS",
+        "currency_code":  "BSD",
+        "time_zone":  "America/Nassau",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Bahrain",
+        "iso_code":  "BH",
+        "currency_code":  "BHD",
+        "time_zone":  "Asia/Bahrain",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Bangladesh",
+        "iso_code":  "BD",
+        "currency_code":  "BDT",
+        "time_zone":  "Asia/Dhaka",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Barbados",
+        "iso_code":  "BB",
+        "currency_code":  "BBD",
+        "time_zone":  "America/Barbados",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Belarus",
+        "iso_code":  "BY",
+        "currency_code":  "BYN",
+        "time_zone":  "Europe/Minsk",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Belgium",
+        "iso_code":  "BE",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Brussels",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Belize",
+        "iso_code":  "BZ",
+        "currency_code":  "BZD",
+        "time_zone":  "America/Belize",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Benin",
+        "iso_code":  "BJ",
+        "currency_code":  "XOF",
+        "time_zone":  "Africa/Porto-Novo",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Bermuda",
+        "iso_code":  "BM",
+        "currency_code":  "BMD",
+        "time_zone":  "Atlantic/Bermuda",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Bhutan",
+        "iso_code":  "BT",
+        "currency_code":  "BTN",
+        "time_zone":  "Asia/Thimphu",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Bolivia",
+        "iso_code":  "BO",
+        "currency_code":  "BOB",
+        "time_zone":  "America/La_Paz",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Bosnia \u0026 Herzegovina",
+        "iso_code":  "BA",
+        "currency_code":  "BAM",
+        "time_zone":  "Europe/Sarajevo",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Botswana",
+        "iso_code":  "BW",
+        "currency_code":  "BWP",
+        "time_zone":  "Africa/Gaborone",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Bouvet Island",
+        "iso_code":  "BV",
+        "currency_code":  null,
+        "time_zone":  null,
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Brazil",
+        "iso_code":  "BR",
+        "currency_code":  "BRL",
+        "time_zone":  "America/Noronha, America/Belem, America/Fortaleza, America/Recife, America/Araguaina, America/Maceio, America/Bahia, America/Sao_Paulo, America/Campo_Grande, America/Cuiaba, America/Santarem, America/Porto_Velho, America/Boa_Vista, America/Manaus, America/Eirunepe, America/Rio_Branco",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Britain (UK)",
+        "iso_code":  "GB",
+        "currency_code":  "GBP",
+        "time_zone":  "Europe/London",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "British Indian Ocean Territory",
+        "iso_code":  "IO",
+        "currency_code":  "USD",
+        "time_zone":  "Indian/Chagos",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Brunei",
+        "iso_code":  "BN",
+        "currency_code":  "BND",
+        "time_zone":  "Asia/Brunei",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Bulgaria",
+        "iso_code":  "BG",
+        "currency_code":  "BGN",
+        "time_zone":  "Europe/Sofia",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Burkina Faso",
+        "iso_code":  "BF",
+        "currency_code":  "XOF",
+        "time_zone":  "Africa/Ouagadougou",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Burundi",
+        "iso_code":  "BI",
+        "currency_code":  "BIF",
+        "time_zone":  "Africa/Bujumbura",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Cambodia",
+        "iso_code":  "KH",
+        "currency_code":  "KHR",
+        "time_zone":  "Asia/Phnom_Penh",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Cameroon",
+        "iso_code":  "CM",
+        "currency_code":  "XAF",
+        "time_zone":  "Africa/Douala",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Canada",
+        "iso_code":  "CA",
+        "currency_code":  "CAD",
+        "time_zone":  "America/St_Johns, America/Halifax, America/Glace_Bay, America/Moncton, America/Goose_Bay, America/Blanc-Sablon, America/Toronto, America/Iqaluit, America/Atikokan, America/Winnipeg, America/Resolute, America/Rankin_Inlet, America/Regina, America/Swift_Current, America/Edmonton, America/Cambridge_Bay, America/Inuvik, America/Creston, America/Dawson_Creek, America/Fort_Nelson, America/Whitehorse, America/Dawson, America/Vancouver",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Cape Verde",
+        "iso_code":  "CV",
+        "currency_code":  "CVE",
+        "time_zone":  "Atlantic/Cape_Verde",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Caribbean NL",
+        "iso_code":  "BQ",
+        "currency_code":  "USD",
+        "time_zone":  "America/Kralendijk",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Cayman Islands",
+        "iso_code":  "KY",
+        "currency_code":  "KYD",
+        "time_zone":  "America/Cayman",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Central African Rep.",
+        "iso_code":  "CF",
+        "currency_code":  "XAF",
+        "time_zone":  "Africa/Bangui",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Chad",
+        "iso_code":  "TD",
+        "currency_code":  "XAF",
+        "time_zone":  "Africa/Ndjamena",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Chile",
+        "iso_code":  "CL",
+        "currency_code":  "CLP",
+        "time_zone":  "America/Santiago, America/Punta_Arenas, Pacific/Easter",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "China",
+        "iso_code":  "CN",
+        "currency_code":  "CNY",
+        "time_zone":  "Asia/Shanghai, Asia/Urumqi",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Christmas Island",
+        "iso_code":  "CX",
+        "currency_code":  null,
+        "time_zone":  "Indian/Christmas",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Cocos (Keeling) Islands",
+        "iso_code":  "CC",
+        "currency_code":  null,
+        "time_zone":  "Indian/Cocos",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Colombia",
+        "iso_code":  "CO",
+        "currency_code":  "COP",
+        "time_zone":  "America/Bogota",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Comoros",
+        "iso_code":  "KM",
+        "currency_code":  "KMF",
+        "time_zone":  "Indian/Comoro",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Congo (Dem. Rep.)",
+        "iso_code":  "CD",
+        "currency_code":  "CDF",
+        "time_zone":  "Africa/Kinshasa, Africa/Lubumbashi",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Congo (Rep.)",
+        "iso_code":  "CG",
+        "currency_code":  "XAF",
+        "time_zone":  "Africa/Brazzaville",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Cook Islands",
+        "iso_code":  "CK",
+        "currency_code":  "NZD",
+        "time_zone":  "Pacific/Rarotonga",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Costa Rica",
+        "iso_code":  "CR",
+        "currency_code":  "CRC",
+        "time_zone":  "America/Costa_Rica",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Croatia",
+        "iso_code":  "HR",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Zagreb",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Cuba",
+        "iso_code":  "CU",
+        "currency_code":  "CUP",
+        "time_zone":  "America/Havana",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Curaçao",
+        "iso_code":  "CW",
+        "currency_code":  "ANG",
+        "time_zone":  "America/Curacao",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Cyprus",
+        "iso_code":  "CY",
+        "currency_code":  "EUR",
+        "time_zone":  "Asia/Nicosia, Asia/Famagusta",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Czech Republic",
+        "iso_code":  "CZ",
+        "currency_code":  "CZK",
+        "time_zone":  "Europe/Prague",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Côte d\u0027Ivoire",
+        "iso_code":  "CI",
+        "currency_code":  "XOF",
+        "time_zone":  "Africa/Abidjan",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Denmark",
+        "iso_code":  "DK",
+        "currency_code":  "DKK",
+        "time_zone":  "Europe/Copenhagen",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Djibouti",
+        "iso_code":  "DJ",
+        "currency_code":  "DJF",
+        "time_zone":  "Africa/Djibouti",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Dominica",
+        "iso_code":  "DM",
+        "currency_code":  "XCD",
+        "time_zone":  "America/Dominica",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Dominican Republic",
+        "iso_code":  "DO",
+        "currency_code":  "DOP",
+        "time_zone":  "America/Santo_Domingo",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "East Timor",
+        "iso_code":  "TL",
+        "currency_code":  "USD",
+        "time_zone":  "Asia/Dili",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Ecuador",
+        "iso_code":  "EC",
+        "currency_code":  "USD",
+        "time_zone":  "America/Guayaquil, Pacific/Galapagos",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Egypt",
+        "iso_code":  "EG",
+        "currency_code":  "EGP",
+        "time_zone":  "Africa/Cairo",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "El Salvador",
+        "iso_code":  "SV",
+        "currency_code":  "USD",
+        "time_zone":  "America/El_Salvador",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Equatorial Guinea",
+        "iso_code":  "GQ",
+        "currency_code":  "XAF",
+        "time_zone":  "Africa/Malabo",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Eritrea",
+        "iso_code":  "ER",
+        "currency_code":  "ERN",
+        "time_zone":  "Africa/Asmara",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Estonia",
+        "iso_code":  "EE",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Tallinn",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Eswatini (Swaziland)",
+        "iso_code":  "SZ",
+        "currency_code":  "SZL",
+        "time_zone":  "Africa/Mbabane",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Ethiopia",
+        "iso_code":  "ET",
+        "currency_code":  "ETB",
+        "time_zone":  "Africa/Addis_Ababa",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Falkland Islands",
+        "iso_code":  "FK",
+        "currency_code":  "FKP",
+        "time_zone":  "Atlantic/Stanley",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Faroe Islands",
+        "iso_code":  "FO",
+        "currency_code":  "DKK",
+        "time_zone":  "Atlantic/Faroe",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Fiji",
+        "iso_code":  "FJ",
+        "currency_code":  "FJD",
+        "time_zone":  "Pacific/Fiji",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Finland",
+        "iso_code":  "FI",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Helsinki",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "France",
+        "iso_code":  "FR",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Paris",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "French Guiana",
+        "iso_code":  "GF",
+        "currency_code":  "EUR",
+        "time_zone":  "America/Cayenne",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "French Polynesia",
+        "iso_code":  "PF",
+        "currency_code":  "XPF",
+        "time_zone":  "Pacific/Tahiti, Pacific/Marquesas, Pacific/Gambier",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "French S. Terr.",
+        "iso_code":  "TF",
+        "currency_code":  "EUR",
+        "time_zone":  "Indian/Kerguelen",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Gabon",
+        "iso_code":  "GA",
+        "currency_code":  "XAF",
+        "time_zone":  "Africa/Libreville",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Gambia",
+        "iso_code":  "GM",
+        "currency_code":  "GMD",
+        "time_zone":  "Africa/Banjul",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Georgia",
+        "iso_code":  "GE",
+        "currency_code":  "GEL",
+        "time_zone":  "Asia/Tbilisi",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Germany",
+        "iso_code":  "DE",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Berlin, Europe/Busingen",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Ghana",
+        "iso_code":  "GH",
+        "currency_code":  "GHS",
+        "time_zone":  "Africa/Accra",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Gibraltar",
+        "iso_code":  "GI",
+        "currency_code":  "GIP",
+        "time_zone":  "Europe/Gibraltar",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Greece",
+        "iso_code":  "GR",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Athens",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Greenland",
+        "iso_code":  "GL",
+        "currency_code":  "DKK",
+        "time_zone":  "America/Nuuk, America/Danmarkshavn, America/Scoresbysund, America/Thule",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Grenada",
+        "iso_code":  "GD",
+        "currency_code":  "XCD",
+        "time_zone":  "America/Grenada",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Guadeloupe",
+        "iso_code":  "GP",
+        "currency_code":  "EUR",
+        "time_zone":  "America/Guadeloupe",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Guam",
+        "iso_code":  "GU",
+        "currency_code":  "USD",
+        "time_zone":  "Pacific/Guam",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Guatemala",
+        "iso_code":  "GT",
+        "currency_code":  "GTQ",
+        "time_zone":  "America/Guatemala",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Guernsey",
+        "iso_code":  "GG",
+        "currency_code":  "GBP",
+        "time_zone":  "Europe/Guernsey",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Guinea",
+        "iso_code":  "GN",
+        "currency_code":  "GNF",
+        "time_zone":  "Africa/Conakry",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Guinea-Bissau",
+        "iso_code":  "GW",
+        "currency_code":  "XOF",
+        "time_zone":  "Africa/Bissau",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Guyana",
+        "iso_code":  "GY",
+        "currency_code":  "GYD",
+        "time_zone":  "America/Guyana",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Haiti",
+        "iso_code":  "HT",
+        "currency_code":  "HTG",
+        "time_zone":  "America/Port-au-Prince",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Heard Island \u0026 McDonald Islands",
+        "iso_code":  "HM",
+        "currency_code":  "AUD",
+        "time_zone":  null,
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Honduras",
+        "iso_code":  "HN",
+        "currency_code":  "HNL",
+        "time_zone":  "America/Tegucigalpa",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Hong Kong",
+        "iso_code":  "HK",
+        "currency_code":  "HKD",
+        "time_zone":  "Asia/Hong_Kong",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Hungary",
+        "iso_code":  "HU",
+        "currency_code":  "HUF",
+        "time_zone":  "Europe/Budapest",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Iceland",
+        "iso_code":  "IS",
+        "currency_code":  "ISK",
+        "time_zone":  "Atlantic/Reykjavik",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Indonesia",
+        "iso_code":  "ID",
+        "currency_code":  "IDR",
+        "time_zone":  "Asia/Jakarta, Asia/Pontianak, Asia/Makassar, Asia/Jayapura",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Iran",
+        "iso_code":  "IR",
+        "currency_code":  "IRR",
+        "time_zone":  "Asia/Tehran",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Iraq",
+        "iso_code":  "IQ",
+        "currency_code":  "IQD",
+        "time_zone":  "Asia/Baghdad",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Ireland",
+        "iso_code":  "IE",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Dublin",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Isle of Man",
+        "iso_code":  "IM",
+        "currency_code":  "GBP",
+        "time_zone":  "Europe/Isle_of_Man",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Israel",
+        "iso_code":  "IL",
+        "currency_code":  "ILS",
+        "time_zone":  "Asia/Jerusalem",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Italy",
+        "iso_code":  "IT",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Rome",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Jamaica",
+        "iso_code":  "JM",
+        "currency_code":  "JMD",
+        "time_zone":  "America/Jamaica",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Japan",
+        "iso_code":  "JP",
+        "currency_code":  "JPY",
+        "time_zone":  "Asia/Tokyo",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Jersey",
+        "iso_code":  "JE",
+        "currency_code":  "GBP",
+        "time_zone":  "Europe/Jersey",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Jordan",
+        "iso_code":  "JO",
+        "currency_code":  "JOD",
+        "time_zone":  "Asia/Amman",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Kazakhstan",
+        "iso_code":  "KZ",
+        "currency_code":  "KZT",
+        "time_zone":  "Asia/Almaty, Asia/Qyzylorda, Asia/Qostanay, Asia/Aqtobe, Asia/Aqtau, Asia/Atyrau, Asia/Oral",
+        "is_active":  true,
+        "vat_percentage":  null,
+        "created_at":  null,
+        "updated_at":  null
+    },
+    {
+        "name":  "Kenya",
+        "iso_code":  "KE",
+        "currency_code":  "KES",
+        "time_zone":  "Africa/Nairobi",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Kiribati",
+        "iso_code":  "KI",
+        "currency_code":  "AUD",
+        "time_zone":  "Pacific/Tarawa, Pacific/Kanton, Pacific/Kiritimati",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Korea (North)",
+        "iso_code":  "KP",
+        "currency_code":  "KPW",
+        "time_zone":  "Asia/Pyongyang",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Korea (South)",
+        "iso_code":  "KR",
+        "currency_code":  "KRW",
+        "time_zone":  "Asia/Seoul",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Kuwait",
+        "iso_code":  "KW",
+        "currency_code":  "KWD",
+        "time_zone":  "Asia/Kuwait",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Kyrgyzstan",
+        "iso_code":  "KG",
+        "currency_code":  "KGS",
+        "time_zone":  "Asia/Bishkek",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Laos",
+        "iso_code":  "LA",
+        "currency_code":  "LAK",
+        "time_zone":  "Asia/Vientiane",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Latvia",
+        "iso_code":  "LV",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Riga",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Lebanon",
+        "iso_code":  "LB",
+        "currency_code":  "LBP",
+        "time_zone":  "Asia/Beirut",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Lesotho",
+        "iso_code":  "LS",
+        "currency_code":  "LSL",
+        "time_zone":  "Africa/Maseru",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Liberia",
+        "iso_code":  "LR",
+        "currency_code":  "LRD",
+        "time_zone":  "Africa/Monrovia",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Libya",
+        "iso_code":  "LY",
+        "currency_code":  "LYD",
+        "time_zone":  "Africa/Tripoli",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Liechtenstein",
+        "iso_code":  "LI",
+        "currency_code":  "CHF",
+        "time_zone":  "Europe/Vaduz",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Lithuania",
+        "iso_code":  "LT",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Vilnius",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Luxembourg",
+        "iso_code":  "LU",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Luxembourg",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Macau",
+        "iso_code":  "MO",
+        "currency_code":  "MOP",
+        "time_zone":  "Asia/Macau",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Madagascar",
+        "iso_code":  "MG",
+        "currency_code":  "MGA",
+        "time_zone":  "Indian/Antananarivo",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Malawi",
+        "iso_code":  "MW",
+        "currency_code":  "MWK",
+        "time_zone":  "Africa/Blantyre",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Malaysia",
+        "iso_code":  "MY",
+        "currency_code":  "MYR",
+        "time_zone":  "Asia/Kuala_Lumpur, Asia/Kuching",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Maldives",
+        "iso_code":  "MV",
+        "currency_code":  "MVR",
+        "time_zone":  "Indian/Maldives",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Mali",
+        "iso_code":  "ML",
+        "currency_code":  "XOF",
+        "time_zone":  "Africa/Bamako",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Malta",
+        "iso_code":  "MT",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Malta",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Marshall Islands",
+        "iso_code":  "MH",
+        "currency_code":  "USD",
+        "time_zone":  "Pacific/Majuro, Pacific/Kwajalein",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Martinique",
+        "iso_code":  "MQ",
+        "currency_code":  "EUR",
+        "time_zone":  "America/Martinique",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Mauritania",
+        "iso_code":  "MR",
+        "currency_code":  "MRU",
+        "time_zone":  "Africa/Nouakchott",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Mayotte",
+        "iso_code":  "YT",
+        "currency_code":  "EUR",
+        "time_zone":  "Indian/Mayotte",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Mexico",
+        "iso_code":  "MX",
+        "currency_code":  "MXN",
+        "time_zone":  "America/Mexico_City, America/Cancun, America/Merida, America/Monterrey, America/Matamoros, America/Chihuahua, America/Ciudad_Juarez, America/Ojinaga, America/Mazatlan, America/Bahia_Banderas, America/Hermosillo, America/Tijuana",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Micronesia",
+        "iso_code":  "FM",
+        "currency_code":  "USD",
+        "time_zone":  "Pacific/Chuuk, Pacific/Pohnpei, Pacific/Kosrae",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Moldova",
+        "iso_code":  "MD",
+        "currency_code":  "MDL",
+        "time_zone":  "Europe/Chisinau",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Monaco",
+        "iso_code":  "MC",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Monaco",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Mongolia",
+        "iso_code":  "MN",
+        "currency_code":  "MNT",
+        "time_zone":  "Asia/Ulaanbaatar, Asia/Hovd, Asia/Choibalsan",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Montenegro",
+        "iso_code":  "ME",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Podgorica",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Montserrat",
+        "iso_code":  "MS",
+        "currency_code":  "XCD",
+        "time_zone":  "America/Montserrat",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Morocco",
+        "iso_code":  "MA",
+        "currency_code":  "MAD",
+        "time_zone":  "Africa/Casablanca",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Mozambique",
+        "iso_code":  "MZ",
+        "currency_code":  "MZN",
+        "time_zone":  "Africa/Maputo",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Myanmar (Burma)",
+        "iso_code":  "MM",
+        "currency_code":  "MMK",
+        "time_zone":  "Asia/Yangon",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Namibia",
+        "iso_code":  "NA",
+        "currency_code":  "NAD",
+        "time_zone":  "Africa/Windhoek",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Nauru",
+        "iso_code":  "NR",
+        "currency_code":  "AUD",
+        "time_zone":  "Pacific/Nauru",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Nepal",
+        "iso_code":  "NP",
+        "currency_code":  "NPR",
+        "time_zone":  "Asia/Kathmandu",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Netherlands",
+        "iso_code":  "NL",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Amsterdam",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "New Caledonia",
+        "iso_code":  "NC",
+        "currency_code":  "XPF",
+        "time_zone":  "Pacific/Noumea",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "New Zealand",
+        "iso_code":  "NZ",
+        "currency_code":  "NZD",
+        "time_zone":  "Pacific/Auckland, Pacific/Chatham",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Nicaragua",
+        "iso_code":  "NI",
+        "currency_code":  "NIO",
+        "time_zone":  "America/Managua",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Niger",
+        "iso_code":  "NE",
+        "currency_code":  "XOF",
+        "time_zone":  "Africa/Niamey",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Nigeria",
+        "iso_code":  "NG",
+        "currency_code":  "NGN",
+        "time_zone":  "Africa/Lagos",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Niue",
+        "iso_code":  "NU",
+        "currency_code":  "NZD",
+        "time_zone":  "Pacific/Niue",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Norfolk Island",
+        "iso_code":  "NF",
+        "currency_code":  "AUD",
+        "time_zone":  "Pacific/Norfolk",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "North Macedonia",
+        "iso_code":  "MK",
+        "currency_code":  "MKD",
+        "time_zone":  "Europe/Skopje",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Northern Mariana Islands",
+        "iso_code":  "MP",
+        "currency_code":  "USD",
+        "time_zone":  "Pacific/Saipan",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Norway",
+        "iso_code":  "NO",
+        "currency_code":  "NOK",
+        "time_zone":  "Europe/Oslo",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Oman",
+        "iso_code":  "OM",
+        "currency_code":  "OMR",
+        "time_zone":  "Asia/Muscat",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Pakistan",
+        "iso_code":  "PK",
+        "currency_code":  "PKR",
+        "time_zone":  "Asia/Karachi",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Palau",
+        "iso_code":  "PW",
+        "currency_code":  "USD",
+        "time_zone":  "Pacific/Palau",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Palestine",
+        "iso_code":  "PS",
+        "currency_code":  "ILS",
+        "time_zone":  "Asia/Gaza, Asia/Hebron",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Panama",
+        "iso_code":  "PA",
+        "currency_code":  "PAB",
+        "time_zone":  "America/Panama",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Papua New Guinea",
+        "iso_code":  "PG",
+        "currency_code":  "PGK",
+        "time_zone":  "Pacific/Port_Moresby, Pacific/Bougainville",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Paraguay",
+        "iso_code":  "PY",
+        "currency_code":  "PYG",
+        "time_zone":  "America/Asuncion",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Peru",
+        "iso_code":  "PE",
+        "currency_code":  "PEN",
+        "time_zone":  "America/Lima",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Philippines",
+        "iso_code":  "PH",
+        "currency_code":  "PHP",
+        "time_zone":  "Asia/Manila",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Pitcairn",
+        "iso_code":  "PN",
+        "currency_code":  "NZD",
+        "time_zone":  "Pacific/Pitcairn",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Poland",
+        "iso_code":  "PL",
+        "currency_code":  "PLN",
+        "time_zone":  "Europe/Warsaw",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Portugal",
+        "iso_code":  "PT",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Lisbon, Atlantic/Madeira, Atlantic/Azores",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Puerto Rico",
+        "iso_code":  "PR",
+        "currency_code":  "USD",
+        "time_zone":  "America/Puerto_Rico",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Qatar",
+        "iso_code":  "QA",
+        "currency_code":  "QAR",
+        "time_zone":  "Asia/Qatar",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Romania",
+        "iso_code":  "RO",
+        "currency_code":  "RON",
+        "time_zone":  "Europe/Bucharest",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Russia",
+        "iso_code":  "RU",
+        "currency_code":  "RUB",
+        "time_zone":  "Europe/Kaliningrad, Europe/Moscow, Europe/Kirov, Europe/Volgograd, Europe/Astrakhan, Europe/Saratov, Europe/Ulyanovsk, Europe/Samara, Asia/Yekaterinburg, Asia/Omsk, Asia/Novosibirsk, Asia/Barnaul, Asia/Tomsk, Asia/Novokuznetsk, Asia/Krasnoyarsk, Asia/Irkutsk, Asia/Chita, Asia/Yakutsk, Asia/Khandyga, Asia/Vladivostok, Asia/Ust-Nera, Asia/Magadan, Asia/Sakhalin, Asia/Srednekolymsk, Asia/Kamchatka, Asia/Anadyr",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Rwanda",
+        "iso_code":  "RW",
+        "currency_code":  "RWF",
+        "time_zone":  "Africa/Kigali",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Réunion",
+        "iso_code":  "RE",
+        "currency_code":  "EUR",
+        "time_zone":  "Indian/Reunion",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Samoa (American)",
+        "iso_code":  "AS",
+        "currency_code":  "USD",
+        "time_zone":  "Pacific/Pago_Pago",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Samoa (western)",
+        "iso_code":  "WS",
+        "currency_code":  "WST",
+        "time_zone":  "Pacific/Apia",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "San Marino",
+        "iso_code":  "SM",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/San_Marino",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Sao Tome \u0026 Principe",
+        "iso_code":  "ST",
+        "currency_code":  "STN",
+        "time_zone":  "Africa/Sao_Tome",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Saudi Arabia",
+        "iso_code":  "SA",
+        "currency_code":  "SAR",
+        "time_zone":  "Asia/Riyadh",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Senegal",
+        "iso_code":  "SN",
+        "currency_code":  "XOF",
+        "time_zone":  "Africa/Dakar",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Serbia",
+        "iso_code":  "RS",
+        "currency_code":  "RSD",
+        "time_zone":  "Europe/Belgrade",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Seychelles",
+        "iso_code":  "SC",
+        "currency_code":  "SCR",
+        "time_zone":  "Indian/Mahe",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Sierra Leone",
+        "iso_code":  "SL",
+        "currency_code":  "SLL",
+        "time_zone":  "Africa/Freetown",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Singapore",
+        "iso_code":  "SG",
+        "currency_code":  "SGD",
+        "time_zone":  "Asia/Singapore",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Slovakia",
+        "iso_code":  "SK",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Bratislava",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Slovenia",
+        "iso_code":  "SI",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Ljubljana",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Solomon Islands",
+        "iso_code":  "SB",
+        "currency_code":  "SBD",
+        "time_zone":  "Pacific/Guadalcanal",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Somalia",
+        "iso_code":  "SO",
+        "currency_code":  "SOS",
+        "time_zone":  "Africa/Mogadishu",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "South Africa",
+        "iso_code":  "ZA",
+        "currency_code":  "ZAR",
+        "time_zone":  "Africa/Johannesburg",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "South Georgia \u0026 the South Sandwich Islands",
+        "iso_code":  "GS",
+        "currency_code":  "GBP",
+        "time_zone":  "Atlantic/South_Georgia",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "South Sudan",
+        "iso_code":  "SS",
+        "currency_code":  "SSP",
+        "time_zone":  "Africa/Juba",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Spain",
+        "iso_code":  "ES",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Madrid, Africa/Ceuta, Atlantic/Canary",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Sri Lanka",
+        "iso_code":  "LK",
+        "currency_code":  "LKR",
+        "time_zone":  "Asia/Colombo",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "St Barthelemy",
+        "iso_code":  "BL",
+        "currency_code":  "EUR",
+        "time_zone":  "America/St_Barthelemy",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "St Helena",
+        "iso_code":  "SH",
+        "currency_code":  "SHP",
+        "time_zone":  "Atlantic/St_Helena",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "St Kitts \u0026 Nevis",
+        "iso_code":  "KN",
+        "currency_code":  "XCD",
+        "time_zone":  "America/St_Kitts",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "St Lucia",
+        "iso_code":  "LC",
+        "currency_code":  "XCD",
+        "time_zone":  "America/St_Lucia",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "St Maarten (Dutch)",
+        "iso_code":  "SX",
+        "currency_code":  "ANG",
+        "time_zone":  "America/Lower_Princes",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "St Martin (French)",
+        "iso_code":  "MF",
+        "currency_code":  "EUR",
+        "time_zone":  "America/Marigot",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "St Pierre \u0026 Miquelon",
+        "iso_code":  "PM",
+        "currency_code":  "EUR",
+        "time_zone":  "America/Miquelon",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "St Vincent",
+        "iso_code":  "VC",
+        "currency_code":  "XCD",
+        "time_zone":  "America/St_Vincent",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Sudan",
+        "iso_code":  "SD",
+        "currency_code":  "SDG",
+        "time_zone":  "Africa/Khartoum",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Suriname",
+        "iso_code":  "SR",
+        "currency_code":  "SRD",
+        "time_zone":  "America/Paramaribo",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Svalbard \u0026 Jan Mayen",
+        "iso_code":  "SJ",
+        "currency_code":  "NOK",
+        "time_zone":  "Arctic/Longyearbyen",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Sweden",
+        "iso_code":  "SE",
+        "currency_code":  "SEK",
+        "time_zone":  "Europe/Stockholm",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Switzerland",
+        "iso_code":  "CH",
+        "currency_code":  "CHF",
+        "time_zone":  "Europe/Zurich",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Syria",
+        "iso_code":  "SY",
+        "currency_code":  "SYP",
+        "time_zone":  "Asia/Damascus",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Taiwan",
+        "iso_code":  "TW",
+        "currency_code":  "TWD",
+        "time_zone":  "Asia/Taipei",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Tajikistan",
+        "iso_code":  "TJ",
+        "currency_code":  "TJS",
+        "time_zone":  "Asia/Dushanbe",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Tanzania",
+        "iso_code":  "TZ",
+        "currency_code":  "TZS",
+        "time_zone":  "Africa/Dar_es_Salaam",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Thailand",
+        "iso_code":  "TH",
+        "currency_code":  "THB",
+        "time_zone":  "Asia/Bangkok",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Togo",
+        "iso_code":  "TG",
+        "currency_code":  "XOF",
+        "time_zone":  "Africa/Lome",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Tokelau",
+        "iso_code":  "TK",
+        "currency_code":  "NZD",
+        "time_zone":  "Pacific/Fakaofo",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Tonga",
+        "iso_code":  "TO",
+        "currency_code":  "TOP",
+        "time_zone":  "Pacific/Tongatapu",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Trinidad \u0026 Tobago",
+        "iso_code":  "TT",
+        "currency_code":  "TTD",
+        "time_zone":  "America/Port_of_Spain",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Tunisia",
+        "iso_code":  "TN",
+        "currency_code":  "TND",
+        "time_zone":  "Africa/Tunis",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Turkey",
+        "iso_code":  "TR",
+        "currency_code":  "TRY",
+        "time_zone":  "Europe/Istanbul",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Turkmenistan",
+        "iso_code":  "TM",
+        "currency_code":  "TMT",
+        "time_zone":  "Asia/Ashgabat",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Turks \u0026 Caicos Is",
+        "iso_code":  "TC",
+        "currency_code":  "USD",
+        "time_zone":  "America/Grand_Turk",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Tuvalu",
+        "iso_code":  "TV",
+        "currency_code":  "AUD",
+        "time_zone":  "Pacific/Funafuti",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "US minor outlying islands",
+        "iso_code":  "UM",
+        "currency_code":  "USD",
+        "time_zone":  "Pacific/Midway, Pacific/Wake",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Uganda",
+        "iso_code":  "UG",
+        "currency_code":  "UGX",
+        "time_zone":  "Africa/Kampala",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Ukraine",
+        "iso_code":  "UA",
+        "currency_code":  "UAH",
+        "time_zone":  "Europe/Simferopol, Europe/Kyiv",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "United Arab Emirates",
+        "iso_code":  "AE",
+        "currency_code":  "AED",
+        "time_zone":  "Asia/Dubai",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "United States",
+        "iso_code":  "US",
+        "currency_code":  "USD",
+        "time_zone":  "America/New_York, America/Detroit, America/Kentucky/Louisville, America/Kentucky/Monticello, America/Indiana/Indianapolis, America/Indiana/Vincennes, America/Indiana/Winamac, America/Indiana/Marengo, America/Indiana/Petersburg, America/Indiana/Vevay, America/Chicago, America/Indiana/Tell_City, America/Indiana/Knox, America/Menominee, America/North_Dakota/Center, America/North_Dakota/New_Salem, America/North_Dakota/Beulah, America/Denver, America/Boise, America/Phoenix, America/Los_Angeles, America/Anchorage, America/Juneau, America/Sitka, America/Metlakatla, America/Yakutat, America/Nome, America/Adak, Pacific/Honolulu",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Uruguay",
+        "iso_code":  "UY",
+        "currency_code":  "UYU",
+        "time_zone":  "America/Montevideo",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Uzbekistan",
+        "iso_code":  "UZ",
+        "currency_code":  "UZS",
+        "time_zone":  "Asia/Samarkand, Asia/Tashkent",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Vanuatu",
+        "iso_code":  "VU",
+        "currency_code":  "VUV",
+        "time_zone":  "Pacific/Efate",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Vatican City",
+        "iso_code":  "VA",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Vatican",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Venezuela",
+        "iso_code":  "VE",
+        "currency_code":  "VES",
+        "time_zone":  "America/Caracas",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Vietnam",
+        "iso_code":  "VN",
+        "currency_code":  "VND",
+        "time_zone":  "Asia/Ho_Chi_Minh",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Virgin Islands (UK)",
+        "iso_code":  "VG",
+        "currency_code":  "USD",
+        "time_zone":  "America/Tortola",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Virgin Islands (US)",
+        "iso_code":  "VI",
+        "currency_code":  "USD",
+        "time_zone":  "America/St_Thomas",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Wallis \u0026 Futuna",
+        "iso_code":  "WF",
+        "currency_code":  "XPF",
+        "time_zone":  "Pacific/Wallis",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Western Sahara",
+        "iso_code":  "EH",
+        "currency_code":  "MAD",
+        "time_zone":  "Africa/El_Aaiun",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Yemen",
+        "iso_code":  "YE",
+        "currency_code":  "YER",
+        "time_zone":  "Asia/Aden",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Zambia",
+        "iso_code":  "ZM",
+        "currency_code":  "ZMW",
+        "time_zone":  "Africa/Lusaka",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Zimbabwe",
+        "iso_code":  "ZW",
+        "currency_code":  "ZWL",
+        "time_zone":  "Africa/Harare",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    },
+    {
+        "name":  "Åland Islands",
+        "iso_code":  "AX",
+        "currency_code":  "EUR",
+        "time_zone":  "Europe/Mariehamn",
+        "is_active":  true,
+        "vat_percentage":  0,
+        "created_at":  "2026-11-18 15:32:09",
+        "updated_at":  "2026-11-18 15:32:09"
+    }
+]
