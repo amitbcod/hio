@@ -18,6 +18,26 @@ class MpoAccountingCommissionTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_country_listing_keeps_long_timezone_lists_from_expanding_the_table(): void
+    {
+        $admin = $this->globalAdmin();
+        $country = Country::query()->create([
+            'name' => 'Aardvark Timezone Country',
+            'iso_code' => 'WT',
+            'currency_code' => 'USD',
+            'time_zone' => 'America/First, America/Second, America/Third',
+            'is_active' => true,
+        ]);
+
+        $this->withSession(['admin_id' => $admin->id])
+            ->get(route('admin.countries.index'))
+            ->assertOk()
+            ->assertSee('countries-table')
+            ->assertSee('America/First (+2 more)')
+            ->assertSee('Active')
+            ->assertSee(route('admin.countries.edit', $country));
+    }
+
     public function test_mpo_view_resolves_its_country_vat_rate_and_canonical_agreement_terms(): void
     {
         $mpo = $this->mpo('owner@example.test', '19.5000');
