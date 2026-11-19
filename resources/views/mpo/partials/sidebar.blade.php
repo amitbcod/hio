@@ -12,7 +12,6 @@
         ['label' => 'Accounting Commission', 'route' => 'mpo.accounting-commission', 'active' => 'mpo.accounting-commission', 'icon' => 'fa-percent'],
         ['label' => 'Accounting Payouts', 'route' => 'mpo.accounting-payouts', 'active' => 'mpo.accounting-payouts', 'icon' => 'fa-money-bill-transfer'],
         ['label' => 'Users', 'route' => 'mpo.users', 'active' => 'mpo.users*', 'icon' => 'fa-users'],
-        ['label' => 'Operator Roles', 'route' => 'mpo.operator-roles.index', 'active' => 'mpo.operator-roles*', 'icon' => 'fa-user-shield'],
     ];
     $completionState = $mpoStaffUser
         ? []
@@ -31,7 +30,7 @@
 <div class="list-group admin-mpo-nav" role="navigation" aria-label="MPO navigation">
     @if(! $mpoStaffUser && ($completionState['complete'] ?? false))
         @include('admin._sidebar')
-        <details class="list-group-item p-0 mt-2" @if(request()->routeIs('mpo.users*', 'mpo.operator-roles*')) open @endif>
+        <details class="list-group-item p-0 mt-2" open>
             <summary class="list-group-item list-group-item-action">MPO Setup</summary>
             <div class="list-group">
                 @foreach($mpoSetupLinks as $link)
@@ -95,7 +94,7 @@
             @endif
         @endforeach
     @else
-        <details class="list-group-item p-0" @if(request()->routeIs('mpo.users*', 'mpo.operator-roles*')) open @endif>
+        <details class="list-group-item p-0" open>
             <summary class="list-group-item list-group-item-action">MPO Setup</summary>
             <div class="list-group">
                 @foreach($mpoSetupLinks as $link)

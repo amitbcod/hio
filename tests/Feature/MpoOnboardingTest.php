@@ -306,8 +306,7 @@ class MpoOnboardingTest extends TestCase
             ->assertSee('Transport Bookings')
             ->assertSee('MPO Setup')
             ->assertSee('In Progress')
-            ->assertSee('<details class="list-group-item p-0 mt-2">', false)
-            ->assertDontSee('<details class="list-group-item p-0 mt-2" open', false);
+            ->assertSee('<details class="list-group-item p-0 mt-2" open', false);
 
         $this->post(route('mpo.dashboard.business.approve', $foreignBusiness))
             ->assertForbidden();
