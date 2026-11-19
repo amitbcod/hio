@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Throwable;
@@ -63,11 +64,94 @@ class CountryAdminController extends Controller
         $token = Str::random(64);
         $administrator->mpo_password_setup_token_hash = hash('sha256', $token);
         $administrator->mpo_password_setup_expires_at = now()->addHours(24);
-        DB::transaction(function () use ($administrator, $country, $data): void {
-            $country->vat_percentage = $data['vat_percentage'] ?? 0;
-            $country->save();
-            $administrator->save();
-        });
+
+        $document = null;
+        if ($request->hasFile('responsibilities_document')) {
+            $file = $request->file('responsibilities_document');
+            $path = $file->store('mpo-agreements', 'local');
+            if (! is_string($path) || $path === '') {
+                throw new \RuntimeException('The responsibilities document could not be stored.');
+            }
+            $originalName = basename(str_replace('\\', '/', $file->getClientOriginalName()));
+            $document = [
+                'path' => $path,
+                'name' => preg_replace('/[^A-Za-z0-9._ -]/', '_', $originalName) ?: 'responsibilities-document',
+                'mime' => $file->getMimeType() ?: 'application/octet-stream',
+                'size' => (int) $file->getSize(),
+            ];
+        }
+
+        try {
+            DB::transaction(function () use ($administrator, $country, $data, $document): void {
+                $country->vat_percentage = $data['vat_percentage'] ?? 0;
+                $country->save();
+                $administrator->save();
+
+                $agreement = $administrator->collaborationAgreements()->create([
+                    'agreement_type' => $data['agreement_type'],
+                    'onboarding_date' => $administrator->mpo_onboarded_at?->toDateString(),
+                    'start_date' => $data['start_date'],
+                    'commission_model' => $data['commission_model'],
+                    'commission_value' => $data['commission_value'],
+                    'marketing_contribution_percent' => $data['marketing_contribution_percent'] ?? null,
+                    'marketing_contribution_payer' => ($data['marketing_contribution_percent'] ?? null) !== null
+                        ? $data['marketing_contribution_payer']
+                        : null,
+                    'status' => 'Draft',
+                ]);
+                $agreement->agreement_id = 'MPO-AGR-'.str_pad((string) $agreement->id, 6, '0', STR_PAD_LEFT);
+                $agreement->saveOrFail();
+
+                $actor = AdminUser::query()
+                    ->whereKey(session('admin_id'))
+                    ->where('admin_type', 'global')
+                    ->first();
+                $terms = [
+                    'agreement_type' => $agreement->agreement_type,
+                    'start_date' => $agreement->start_date?->toDateString(),
+                    'commission_model' => $agreement->commission_model,
+                    'commission_value' => (string) $agreement->commission_value,
+                    'marketing_contribution_percent' => $agreement->marketing_contribution_percent === null
+                        ? null
+                        : (string) $agreement->marketing_contribution_percent,
+                    'marketing_contribution_payer' => $agreement->marketing_contribution_payer,
+                ];
+                $agreement->events()->create([
+                    'event_type' => 'created',
+                    'changes' => ['terms' => $terms],
+                    'actor_type' => $actor?->admin_type ?? 'system',
+                    'actor_id' => $actor?->id,
+                ]);
+
+                if ($document) {
+                    $agreement->documents()->create([
+                        'storage_path' => $document['path'],
+                        'original_name' => $document['name'],
+                        'mime_type' => $document['mime'],
+                        'size_bytes' => $document['size'],
+                        'uploaded_by_admin_id' => $actor?->id,
+                        'is_current' => true,
+                    ]);
+                    $agreement->events()->create([
+                        'event_type' => 'document_uploaded',
+                        'changes' => [
+                            'name' => $document['name'],
+                            'size_bytes' => $document['size'],
+                        ],
+                        'actor_type' => $actor?->admin_type ?? 'system',
+                        'actor_id' => $actor?->id,
+                    ]);
+                }
+            });
+        } catch (Throwable $exception) {
+            if ($document && ! Storage::disk('local')->delete($document['path'])) {
+                Log::error('MPO agreement document cleanup failed after MPO creation rollback.', [
+                    'storage_path' => $document['path'],
+                    'exception' => $exception->getMessage(),
+                ]);
+            }
+            throw $exception;
+        }
 
         try {
             Mail::to($administrator->email)->send(new \App\Mail\MpoAccountActivation(
@@ -142,7 +226,7 @@ class CountryAdminController extends Controller
 
     private function validated(Request $request, ?AdminUser $administrator = null): array
     {
-        return $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:191'],
             'email' => ['required', 'email', 'max:191', Rule::unique('admin_users', 'email')->ignore($administrator?->id)],
             'country_id' => [
@@ -156,7 +240,29 @@ class CountryAdminController extends Controller
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'password' => [$administrator ? 'nullable' : 'required', 'string', 'min:8', 'confirmed'],
             'vat_percentage' => ['nullable', 'numeric', 'between:0,100', 'decimal:0,4'],
-        ], [
+        ];
+
+        if (! $administrator) {
+            $rules += [
+                'agreement_type' => ['required', Rule::in(['mpo'])],
+                'start_date' => [
+                    'required',
+                    'date',
+                    ...($request->input('status') === 'active' ? ['after_or_equal:'.now()->toDateString()] : []),
+                ],
+                'commission_model' => ['required', Rule::in(['percentage'])],
+                'commission_value' => ['required', 'numeric', 'between:0,100', 'decimal:0,4'],
+                'marketing_contribution_percent' => ['nullable', 'numeric', 'between:0,100', 'decimal:0,4'],
+                'marketing_contribution_payer' => [
+                    'nullable',
+                    'required_with:marketing_contribution_percent',
+                    Rule::in(['mpo', 'operator']),
+                ],
+                'responsibilities_document' => ['nullable', 'file', 'mimes:pdf,docx', 'max:10240'],
+            ];
+        }
+
+        return $request->validate($rules, [
             'country_id.unique' => 'This country is already assigned to an MPO.',
         ]);
     }

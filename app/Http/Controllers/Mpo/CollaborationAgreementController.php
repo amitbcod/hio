@@ -90,10 +90,18 @@ class CollaborationAgreementController extends Controller
     public function adminCreate(AdminUser $administrator)
     {
         $this->ensureMpo($administrator);
+        $savedTerms = $administrator->collaborationAgreements()->latest('id')->first();
 
         return view('admin.country-admins.collaboration-agreement-form', [
             'administrator' => $administrator->load('country'),
-            'agreement' => new MpoCollaborationAgreement(['agreement_type' => 'mpo', 'commission_model' => 'percentage']),
+            'agreement' => new MpoCollaborationAgreement([
+                'agreement_type' => $savedTerms?->agreement_type ?? 'mpo',
+                'start_date' => $savedTerms?->start_date,
+                'commission_model' => $savedTerms?->commission_model ?? 'percentage',
+                'commission_value' => $savedTerms?->commission_value,
+                'marketing_contribution_percent' => $savedTerms?->marketing_contribution_percent,
+                'marketing_contribution_payer' => $savedTerms?->marketing_contribution_payer,
+            ]),
             'isCreate' => true,
         ]);
     }

@@ -57,6 +57,29 @@ class MpoCollaborationAgreementTest extends TestCase
         ]);
     }
 
+    public function test_admin_agreement_create_form_prefills_terms_from_the_latest_saved_agreement(): void
+    {
+        $mpo = $this->mpo();
+        $admin = $this->globalAdmin();
+        $agreement = $this->agreement($mpo);
+        $agreement->update([
+            'start_date' => '2026-12-01',
+            'commission_value' => '12.5000',
+            'marketing_contribution_percent' => '2.2500',
+            'marketing_contribution_payer' => 'operator',
+        ]);
+
+        $this->withSession(['admin_id' => $admin->id])
+            ->get(route('admin.country-admins.collaboration-agreements.create', $mpo))
+            ->assertOk()
+            ->assertSee('<option value="mpo" selected>MPO Agreement</option>', false)
+            ->assertSee('value="2026-12-01"', false)
+            ->assertSee('<option value="percentage" selected>Percentage</option>', false)
+            ->assertSee('value="12.5000"', false)
+            ->assertSee('value="2.2500"', false)
+            ->assertSee('<option value="operator" selected>Operator</option>', false);
+    }
+
     public function test_mpo_sees_only_its_agreement_and_cannot_change_terms_or_download_another_document(): void
     {
         Storage::fake('local');
