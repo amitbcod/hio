@@ -392,7 +392,7 @@ class ActivityController extends Controller
                 foreach ($vehicleTypes as $idx => $type) {
                     $grouped[] = ['type' => $type, 'image' => $vehicleImages[$idx] ?? null];
                 }
-                $activity->vehicle_details = $grouped;
+                $activity->vehicle_images = $grouped;
             }
 
             // Handle video
