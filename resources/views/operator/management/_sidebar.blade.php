@@ -23,6 +23,7 @@
         );
     $canCreateStaffUsers = ! $operatorIsStaff
         || $operatorPermissions->canManageUsers($operatorActor, 'create');
+    $isRoleManagement = request()->routeIs('operator.roles.*');
 
     $canManageAccommodation = in_array('Accommodation', $operatorSelectedServices, true);
     $canManageActivity = in_array('Activity', $operatorSelectedServices, true);
@@ -242,10 +243,10 @@
 <div class="dropdownToggle" 
      style="padding: 12px 20px; font-weight: bold; letter-spacing: 1px; font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
    Staff Management
-    <span class="dropdownArrow" style="transition: transform 0.3s;">▼</span>
+    <span class="dropdownArrow" style="transition: transform 0.3s;{{ $isRoleManagement ? ' transform: rotate(180deg);' : '' }}">▼</span>
 </div>
 
-<ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: none;">
+<ul class="dropdownMenu" style="list-style: none; padding: 0; margin: 0 0 12px 0; display: {{ $isRoleManagement ? 'block' : 'none' }};">
     @if($canCreateStaffUsers)
     <li class="add-section" style="padding: 8px 36px;">
         <a href="{{ route('operator.register.step6') }}"
@@ -260,6 +261,14 @@
            Manage Staff
         </a>
     </li>
+    @if(! $operatorIsStaff)
+    <li style="padding: 8px 36px;">
+        <a href="{{ route('operator.roles.index') }}"
+           style="display: block;color: #fff;border-radius: 4px;text-align: left;text-decoration: none;font-weight: 600;font-size: 12px;transition: all 0.3s;{{ $isRoleManagement ? ' background:rgba(255,255,255,0.18);' : '' }}">
+           Roles
+        </a>
+    </li>
+    @endif
 </ul>
 @endif
 

@@ -9,6 +9,7 @@ use App\Models\OperatorUser;
 use App\Services\FinancialSettlementService;
 use App\Services\OperatorStaffPermissionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class FinancialPayoutController extends Controller
@@ -42,11 +43,13 @@ class FinancialPayoutController extends Controller
 
         return view('operator.payouts.show', [
             'payout' => $payout,
-            'transferNotifications' => $owner->notifications()
-                ->where('type', \App\Notifications\FinancialSettlementTransferNotification::class)
-                ->latest()
-                ->limit(10)
-                ->get(),
+            'transferNotifications' => Schema::hasTable('notifications')
+                ? $owner->notifications()
+                    ->where('type', \App\Notifications\FinancialSettlementTransferNotification::class)
+                    ->latest()
+                    ->limit(10)
+                    ->get()
+                : collect(),
             'canConfirmReceipt' => in_array($payout->status, ['Transfer Initiated', 'Partially Paid'], true)
                 && $payout->transfers->contains(fn ($transfer) => in_array($transfer->status, ['Transfer Initiated', 'Recorded'], true))
                 && $this->can($request, 'update', $permissions),

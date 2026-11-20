@@ -565,5 +565,30 @@ class OperatorRegisterTest extends TestCase
         });
     }
 
+    public function test_operator_can_access_system_processes_without_adding_staff()
+    {
+        $operator = \App\Models\Operator::create([
+            'operator_id' => uniqid('OP'),
+            'user_type' => 'Operator',
+            'is_owner' => 'yes',
+            'email' => 'optional-staff@example.com',
+            'phone' => '+441234567922',
+            'full_name' => 'Optional Staff Operator',
+            'business_legal_name' => 'Optional Staff Ltd',
+            'account_status' => 'active',
+            'password_hash' => bcrypt('Password123!'),
+        ]);
+
+        \App\Models\OperatorRegistrationProgress::create([
+            'operator_id' => $operator->operator_id,
+            'step5_collaboration' => 1,
+            'step6_users' => 0,
+            'current_step' => 6,
+        ]);
+
+        $this->actingAs($operator)
+            ->get(route('operator.register.step4'))
+            ->assertOk();
+    }
 
 }

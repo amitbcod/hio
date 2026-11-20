@@ -1,5 +1,6 @@
 <div>
     @php
+        $currentStep = $currentStep ?? null;
         $operator = auth('operator')->user() ?? auth('operator_staff')->user();
         $business = null;
         $isHeadOfDepartment = $operator instanceof \App\Models\OperatorUser;
@@ -50,7 +51,7 @@
                             1 => ['label' => 'Registration', 'route' => null, 'progress' => 'step1_password'],
                             2 => ['label' => 'Profile', 'route' => 'operator.register.step2', 'progress' => 'step2_profile'],
                             3 => ['label' => 'Collaboration Agreement', 'route' => 'operator.register.step5', 'progress' => 'step5_collaboration'],
-                            4 => ['label' => 'Users & Staff', 'route' => 'operator.register.step6', 'progress' => 'step6_users'],
+                            4 => ['label' => 'Users & Staff (Optional)', 'route' => 'operator.register.step6', 'progress' => 'step6_users'],
                             5 => ['label' => 'System Processes', 'route' => 'operator.register.step4', 'progress' => 'step4_system_process'],
                             6 => ['label' => 'Accounting & Payouts', 'route' => 'operator.register.step7', 'progress' => 'step7_accounting'],
                             7 => ['label' => 'Service Operations', 'route' => 'operator.register.step8', 'progress' => 'step8_operations'],
@@ -74,7 +75,7 @@
                                 $progressMap = [
                                     2 => 'step2_profile',
                                     3 => 'step5_collaboration',
-                                    4 => 'step6_users',
+                                    4 => 'step5_collaboration',
                                     5 => 'step4_system_process',
                                     6 => 'step7_accounting',
                                     7 => 'step8_operations',
@@ -149,7 +150,9 @@
                     9 => 8,
                 ];
                 
-                $displayCurrentStep = isset($stepNumberMap[$currentStep]) ? $stepNumberMap[$currentStep] : $currentStep;
+                $displayCurrentStep = $currentStep !== null && isset($stepNumberMap[$currentStep])
+                    ? $stepNumberMap[$currentStep]
+                    : $currentStep;
                 
                 if ($isHeadOfDepartment) {
                     $steps = [
@@ -160,7 +163,7 @@
                         1 => ['label' => 'Registration', 'route' => null, 'progress' => 'step1_password'],
                         2 => ['label' => 'Profile', 'route' => 'operator.register.step2', 'progress' => 'step2_profile'],
                         3 => ['label' => 'Collaboration Agreement', 'route' => 'operator.register.step5', 'progress' => 'step5_collaboration'],
-                        4 => ['label' => 'Users & Staff', 'route' => 'operator.register.step6', 'progress' => 'step6_users'],
+                        4 => ['label' => 'Users & Staff (Optional)', 'route' => 'operator.register.step6', 'progress' => 'step6_users'],
                         5 => ['label' => 'System Processes', 'route' => 'operator.register.step4', 'progress' => 'step4_system_process'],
                         6 => ['label' => 'Accounting & Payouts', 'route' => 'operator.register.step7', 'progress' => 'step7_accounting'],
                         7 => ['label' => 'Service Operations', 'route' => 'operator.register.step8', 'progress' => 'step8_operations'],
@@ -184,7 +187,7 @@
                             $progressMap = [
                                 2 => 'step2_profile',
                                 3 => 'step5_collaboration',
-                                4 => 'step6_users',
+                                4 => 'step5_collaboration',
                                 5 => 'step4_system_process',
                                 6 => 'step7_accounting',
                                 7 => 'step8_operations',

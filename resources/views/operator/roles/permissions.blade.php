@@ -1,9 +1,26 @@
 @extends('layouts.app')
 
+@section('title', 'Manage Role Permissions')
+
 @section('content')
-<div class="col-md-10 offset-md-1">
-    <div class="card mt-5">
-        <div class="card-body">
+<div class="container-fluid mt-0">
+    <div class="row">
+        <div id="sidebar" class="col-md-3 net-section">
+            @include('operator.registration._sidebar_main')
+        </div>
+        <div class="col-md-9 my-pro">
+            <div class="container-middle">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                    <div>
+                        <h2 class="fw-bold mb-2">Manage Permissions</h2>
+                        <p class="text-muted mb-0">Configure the maximum permissions for this Operator's staff role.</p>
+                    </div>
+                </div>
+                <section class="card border-0 shadow-sm" style="border-radius:16px;overflow:hidden;">
+                    <div class="card-header bg-white border-bottom px-3 px-lg-4 py-3">
+                        <h5 class="mb-0 fw-bold">Role Access Limits</h5>
+                    </div>
+                    <div class="card-body px-3 px-lg-4 py-4">
             <h4>Manage Permissions</h4>
             <p class="text-muted">Configure the maximum permissions for this Operator's staff using this role. Individual staff access is assigned separately and cannot exceed these limits or the creator's current permissions.</p>
 
@@ -71,7 +88,10 @@
                 </div>
                 <button class="btn btn-success">Save Role Limits</button>
                 <a href="{{ route('operator.roles.index') }}" class="btn btn-secondary">Back</a>
-            </form>
+                </form>
+                    </div>
+                </section>
+            </div>
         </div>
     </div>
 </div>

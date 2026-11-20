@@ -3,7 +3,7 @@
 @section('progressbar')
 @php
     $completionPercent = isset($progress)
-        ? round((($progress->step2_profile ?? 0)+($progress->step3_legal ?? 0)+($progress->step4_system_process ?? 0)+($progress->step5_collaboration ?? 0)+($progress->step6_users ?? 0)+($progress->step7_accounting ?? 0)+($progress->step8_operations ?? 0)+($progress->step9_review ?? 0))/8*100)
+        ? round((($progress->step2_profile ?? 0)+($progress->step3_legal ?? 0)+($progress->step4_system_process ?? 0)+($progress->step5_collaboration ?? 0)+($progress->step7_accounting ?? 0)+($progress->step8_operations ?? 0)+($progress->step9_review ?? 0))/7*100)
         : 0;
 @endphp
 
@@ -24,6 +24,10 @@
         <div class="container-middle team-member-new">
 
             <h2 class="mb-4 fw-bold">Users & Staff Management</h2>
+            <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span>Adding staff users is optional. You can continue without creating any.</span>
+                <a href="{{ route('operator.register.step4') }}" class="btn btn-primary">Continue to System Processes</a>
+            </div>
 
             @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show">

@@ -189,7 +189,7 @@ class RegistrationController extends Controller
             2 => null,                 // Step 2 always accessible
             5 => 'step2_profile',      // Step 5 (Collaboration) requires step 2 (Profile)
             6 => 'step5_collaboration', // Step 6 (Users) requires step 5 (Collaboration)
-            4 => 'step6_users',        // Step 4 (System Processes) requires step 6 (Users)
+            4 => 'step5_collaboration', // Step 4 (System Processes) can follow Collaboration; Users is optional
             7 => 'step4_system_process', // Step 7 (Accounting) requires step 4 (System Processes)
             8 => 'step7_accounting',   // Step 8 (Operations) requires step 7 (Accounting)
             9 => 'step8_operations',   // Step 9 (Review) requires step 8 (Operations)

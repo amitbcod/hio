@@ -9,6 +9,7 @@ use App\Models\MpoStaffUser;
 use App\Services\FinancialSettlementService;
 use App\Services\MpoStaffPermissionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class FinancialSettlementController extends Controller
@@ -60,11 +61,13 @@ class FinancialSettlementController extends Controller
 
         return view('accounting.settlements.show', [
             'settlement' => $record,
-            'transferNotifications' => $mpo->notifications()
-                ->where('type', \App\Notifications\FinancialSettlementTransferNotification::class)
-                ->latest()
-                ->limit(10)
-                ->get(),
+            'transferNotifications' => Schema::hasTable('notifications')
+                ? $mpo->notifications()
+                    ->where('type', \App\Notifications\FinancialSettlementTransferNotification::class)
+                    ->latest()
+                    ->limit(10)
+                    ->get()
+                : collect(),
             'isGlobalAdmin' => false,
             'canRecordTransfer' => $this->can($request, 'update'),
             'canAuthorizeOperatorPayout' => $this->can($request, 'approve')
