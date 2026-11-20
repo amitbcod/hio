@@ -97,7 +97,9 @@
                     <option value="{{ $staff->id }}" @selected((string) old('responsible_accountant_user_id', $configuration?->responsible_accountant_user_id) === (string) $staff->id)>{{ $staff->full_name }} — {{ $staff->role }}</option>
                 @endforeach
             </select>
-            @if($eligibleAccountants === [])<div class="form-text">No active MPO staff member with Accounting Read permission is available.</div>@endif
+            @if($eligibleAccountants === [])
+                <div class="form-text">Please add a Finance user with Accounting Read permission first. <a href="{{ route('mpo.users.create') }}">Click here</a> to create one.</div>
+            @endif
             @error('responsible_accountant_user_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
         </div>
     </section>
